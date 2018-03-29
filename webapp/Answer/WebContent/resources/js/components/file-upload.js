@@ -1,0 +1,1 @@
+Vue.component('file-upload', VueUploadComponent);

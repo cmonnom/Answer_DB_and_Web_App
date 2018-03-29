@@ -1,0 +1,100 @@
+package utsw.bicf.answer.clarity.api.utils;
+
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import utsw.bicf.answer.clarity.api.model.ClarityValue;
+
+public class TypeUtils {
+	
+	static final DateTimeFormatter localDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+	public static final DateTimeFormatter localDateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+	public static final DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	public static final DateTimeFormatter shortMonthYearFormatter = DateTimeFormatter.ofPattern("MMM yyyy");
+	public static final DateTimeFormatter shortDayMonthYearFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
+	static final NumberFormat pctFormatter = NumberFormat.getPercentInstance();
+	static final DateFormat sqlDateFormatter = DateFormat.getDateTimeInstance();
+	
+	static {
+		pctFormatter.setMaximumFractionDigits(2);
+	}
+	
+	public static LocalDate parseSQLDateToLocalDate(Date date) throws ParseException {
+		if (date == null) {
+			return null;
+		}
+		return date.toLocalDate();
+	}
+	
+	public static LocalDateTime parseSQLDateToLocalDateTime(Date date) throws ParseException {
+		if (date == null) {
+			return null;
+		}
+		return LocalDateTime.parse(sqlDateFormatter.format(date));
+	}
+	
+	public static LocalDateTime parseDateToLocalDateTime(LocalDate date) throws ParseException {
+		if (date == null) {
+			return null;
+		}
+		return date.atStartOfDay();
+	}
+	
+	public static LocalDateTime parseDateToLocalDateTime(ClarityValue dateValue) throws ParseException {
+		if (dateValue == null || dateValue.getValue() == null) {
+			return null;
+		}
+		String dateString = dateValue.getValue() + " 00:00";
+		return LocalDateTime.parse(dateString, localDateTimeFormatter);
+	}
+	
+	public static LocalDateTime parseDateToLocalDateTime(String dateString) throws ParseException {
+		if (dateString == null) {
+			return null;
+		}
+		return LocalDateTime.parse(dateString + " 00:00", localDateTimeFormatter);
+	}
+	
+	public static LocalDate parseMonthDateToLocalDate(String monthDate) {
+		if (monthDate == null || monthDate.equals("")) {
+			return null;
+		}
+		monthDate += "-01";
+		return LocalDate.parse(monthDate, monthFormatter);
+	}
+	
+	public static LocalDate getLastDayOfMonthLocalDate(LocalDate firstDayOfMonthDate) {
+		if (firstDayOfMonthDate == null) {
+			return null;
+		}
+		return firstDayOfMonthDate.plusMonths(1).minusDays(1);
+	}
+	
+	public static Float doubleToFloat(Double value) {
+		return value != null ? value.floatValue() : null;
+	}
+	
+	public static Integer StringToInt(String value) {
+		return value != null ? Integer.parseInt(value) : null;
+	}
+	
+	public static String toPercentString(Float value) {
+		return pctFormatter.format(value);
+	}
+
+	public static boolean notNullNotEmpty(String value) {
+		return value != null && !value.equals("");
+	}
+	
+	public static Boolean intToBoolean(Integer value) {
+		if (value == null) {
+			return null;
+		}
+		return value == 1 ? true : false;
+	}
+}

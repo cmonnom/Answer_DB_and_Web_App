@@ -1,0 +1,153 @@
+.main-menu-hover {
+    background-color: rgb(25, 118, 210);
+}
+
+.list__tile .avatar, .list__tile__action {
+    min-width: 25px;
+}
+
+.is-dragging {
+    background-color: orange !important;
+    opacity: 0.1;
+}
+
+th, td {
+    border: 1px solid #dbdbdb;
+}
+
+tr:nth-child(even) {background-color: #fafafa}
+
+.dense-tiles .list__tile {
+    height: fit-content;
+}
+
+a {
+    text-decoration: none;
+}
+
+
+.hovering-tile {
+    /*transition:background .3s cubic-bezier(.25,.8,.5,1);*/
+    will-change:background;
+}
+
+.navigation-drawer {
+    z-index: 4; /* so that the sticky header hack doesn't go above it */
+}
+
+.rotate270 {
+    transform: rotate(270deg);
+}
+
+.rotate180 {
+    transform: rotate(180deg);
+}
+
+.rotate90 {
+    transform: rotate(90deg);
+}
+
+.full-size-chart {
+    position: relative; 
+    height: calc(100%);
+}
+
+.toolbar__title {
+    overflow: visible;
+}
+
+.selectable {
+    user-select: text;
+    cursor: text;
+}
+
+.toolbar-fixed-bottom {
+    bottom: 0;
+    top:auto;
+    position: fixed;
+}
+
+.zc-legend-marker-area,.zc-legend-item-area {
+    cursor: pointer !important;
+}
+
+.opaque {
+    opacity: 1;
+}
+
+.transparent50 {
+    opacity: 0.1;
+}
+
+.soft-transition {
+    transition: .3s cubic-bezier(.25,.8,.5,1);
+}
+
+.flex-toolbar {
+    margin-top: -64px;
+}
+
+/* .select-file input[type=file] {
+    position: absolute;
+    filter: alpha(opacity=0);
+    opacity: 0;
+  } */
+
+.div-button {
+    border-style: none;
+    border-top-style: none;
+    border-right-style: none;
+    border-bottom-style: none;
+    border-left-style: none;
+    cursor: pointer;
+}
+
+.gray-background {
+    background-color: #fafafa !important;
+}
+
+.flex {
+    flex: 0 1 auto;
+  }
+
+.flex.grow {
+    flex-grow: 0;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.mt-6 {
+    margin-top: 64px !important;
+}
+
+/* .input-group label {
+   white-space: normal; 
+   overflow: inherit;
+} */
+
+/* To center header title */
+.table-sorting-icon {
+    margin-left: -20px;
+}
+
+table.table tbody td, table.table tbody th {
+    height: unset;
+}
+
+table.table tbody td:first-child, table.table tbody td:not(:first-child), table.table tbody th:first-child, table.table tbody th:not(:first-child), table.table thead td:first-child, table.table thead td:not(:first-child), table.table thead th:first-child, table.table thead th:not(:first-child) {
+    padding: 5px 24px;
+}
+
+.container.grid-list-md .layout:not(:only-child) {
+    margin: unset;
+}
+
+.input-group--text-field.input-group--textarea:not(.input-group--full-width) .input-group__input {
+    padding: 10px 5px 10px 5px;
+}
+
+.row-highlight {
+    font-weight: bold !important;
+}
