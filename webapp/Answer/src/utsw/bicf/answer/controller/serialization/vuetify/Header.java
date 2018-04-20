@@ -22,7 +22,7 @@ public class Header {
 	Boolean isPassable;
 	Boolean isActionable;
 	String width;
-	
+	Boolean buttons; //to allow buttons instead of text in a cell
 	
 	public Header(String text, String value, Units unit, ToolTip toolTip, Boolean isPassable) {
 		this.text = text;
@@ -161,6 +161,24 @@ public class Header {
 
 	public void setIsActionable(Boolean isActionable) {
 		this.isActionable = isActionable;
+	}
+
+	public Boolean getButtons() {
+		return buttons;
+	}
+
+	public void setButtons(Boolean buttons) {
+		this.buttons = buttons;
+	}
+	
+	public String getOneLineText() {
+		if (text != null) {
+			return text;
+		}
+		if (textPart2 != null) {
+			return textPart1 + " " + textPart2;
+		}
+		return textPart1;
 	}
 
 }

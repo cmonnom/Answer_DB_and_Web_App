@@ -81,5 +81,8 @@ public class User {
 		this.permission = permission;
 	}
 	
+	public String getFullName() {
+		return this.first + " " + this.last;
+	}
 	
 }

@@ -36,6 +36,9 @@ public class PermissionUtils {
 
 	public static boolean canProceed(User user, Method method) throws IOException {
 		PermissionUtils controllerPermission = permissionPerUrl.get(method.getName());
+		if (user != null && user.getPermission().getAdmin()) {
+			return true;
+		}
 		if (controllerPermission != null) {
 			return canProceed(user, controllerPermission.canView, controllerPermission.canEdit, controllerPermission.canFinalize);
 		}

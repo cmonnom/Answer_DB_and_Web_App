@@ -14,6 +14,7 @@ public class TypeUtils {
 	
 	static final DateTimeFormatter localDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 	public static final DateTimeFormatter localDateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+	
 	public static final DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	public static final DateTimeFormatter shortMonthYearFormatter = DateTimeFormatter.ofPattern("MMM yyyy");
 	public static final DateTimeFormatter shortDayMonthYearFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy");

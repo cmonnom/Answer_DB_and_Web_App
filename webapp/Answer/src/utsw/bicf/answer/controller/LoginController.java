@@ -33,8 +33,9 @@ public class LoginController {
 	LDAPAuthentication ldapUtils;
 
 	@RequestMapping("/login")
-	public String login(Model model) throws IOException {
-		ControllerUtil.initializeModel(model, servletContext);
+	public String login(Model model, HttpSession session) throws IOException {
+		User user = (User) session.getAttribute("user");
+		ControllerUtil.initializeModel(model, servletContext, user);
 		return "login";
 	}
 
@@ -49,8 +50,6 @@ public class LoginController {
 		if (user == null) {
 			proceed = false;
 		}
-		//TODO REMOVE THIS!!!!!!! For Testing Only
-//		boolean proceed = true; //proceed regardless of login!!!!
 		if (proceed) {
 			session.setAttribute("user", user);
 			return new TargetPage(true, "login successful", (String) model.asMap().get("urlRedirect"), true).toJSONString();

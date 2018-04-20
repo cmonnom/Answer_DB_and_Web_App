@@ -122,6 +122,10 @@ a {
     margin-top: 64px !important;
 }
 
+.pt-6 {
+    padding-top: 64px !important;
+}
+
 /* .input-group label {
    white-space: normal; 
    overflow: inherit;
@@ -150,4 +154,8 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 
 .row-highlight {
     font-weight: bold !important;
+}
+
+.table-btn {
+    margin: 0px;
 }

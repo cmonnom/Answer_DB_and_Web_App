@@ -138,6 +138,15 @@ const NewCase = {
         </v-btn>
     </v-toolbar>
 
+    <div>
+        <v-text-field :textarea="true" ref="emailContent">
+
+        </v-text-field>
+        <div>
+            {{ parsedResponse }}
+        </div>
+    </div>
+
     <v-layout row wrap v-if="importVisible">
         <v-flex>
             <v-card flat class="gray-background">
@@ -278,8 +287,10 @@ const NewCase = {
 
 
     </div>
-</div>`, data() { return { files: [], uploadUrl: webAppRoot + "/importMDAFile", uploading: false, patientTables: [], caseId: null,
-loading: false,      helpVisible: false,
+</div>`, data() {
+        return {
+            files: [], uploadUrl: webAppRoot + "/importMDAFile", uploading: false, patientTables: [], caseId: null,
+            loading: false, helpVisible: false,
             importVisible: true,
             currentFile: null,
             patientDetailsVisible: false,
@@ -295,7 +306,8 @@ loading: false,      helpVisible: false,
             annotationDialogVisible: false,
             snackBarVisible: false,
             snackBarMessage: "",
-            patient: null
+            patient: null,
+            parsedResponse: ""
         }
     },
     methods: {
@@ -398,11 +410,11 @@ loading: false,      helpVisible: false,
         },
         formatLocalAnnotations(annotations, showUser) {
             var formatted = [];
-            for (var i = 0 ; i < annotations.length; i++) {
+            for (var i = 0; i < annotations.length; i++) {
                 var annotation = "";
                 if (showUser) {
                     annotation = "<b>" + annotations[i].user.first + " "
-                 + annotations[i].user.last+ "</b>: ";
+                        + annotations[i].user.last + "</b>: ";
                 }
                 annotation += annotations[i].text.replace(/\n/g, "<br/>") + "<br/>";
                 formatted.push(annotation);
@@ -413,7 +425,7 @@ loading: false,      helpVisible: false,
             //first make a copy of annotations for editing
             //this will allow to cancel without modifying the existing annotations
             this.userEditingAnnotations = [];
-            for (var i = 0 ; i < this.userAnnotations.length; i++) {
+            for (var i = 0; i < this.userAnnotations.length; i++) {
                 this.userEditingAnnotations.push(JSON.parse(JSON.stringify(this.userAnnotations[i])));
                 this.userEditingGeneId = this.userAnnotations[i].gene.geneId;
             }
@@ -421,20 +433,20 @@ loading: false,      helpVisible: false,
         },
         cancelAnnotations() {
             this.annotationDialogVisible = false;
-            this.$nextTick(function() {
+            this.$nextTick(function () {
                 //wait until dialog is closed
                 this.userEditingAnnotations = [];
             });
         },
         saveAnnotations() {
-            
+
             this.annotationDialogVisible = false;
             //copy edits to original annotations
             // setTimeout(function() {
             //     this.userAnnotations = this.userEditingAnnotations;
             // }, 2000);
             var editedAnnotations = this.$refs.editAnnotation;
-            for (var i = 0 ; i < editedAnnotations.length; i++) {
+            for (var i = 0; i < editedAnnotations.length; i++) {
                 if (!this.userAnnotations[i]) {
                     this.userAnnotations.push({
                         annotationId: -1
@@ -451,7 +463,7 @@ loading: false,      helpVisible: false,
                 markedForDeletion: false,
                 isVisible: true
             });
-            this.$nextTick(function() {
+            this.$nextTick(function () {
                 this.$refs.editAnnotation[this.$refs.editAnnotation.length - 1].focus();
                 $vuetify.goTo("textarea:last-child");
             });
@@ -503,6 +515,22 @@ loading: false,      helpVisible: false,
                     else {
                         this.handleDialogs(response.data, this.commitAnnotations);
                     }
+                })
+                .catch(error => {
+                    alert(error);
+                });
+        },
+        parseMDAEmail() {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/parseMDAEmail",
+                params: {
+                    emailContent: JSON.stringify(this.$refs.emailContent.inputValue),
+                    token: "G13qIPyP3mLO1wrYLao0RhIm8gqQmQk4qsBxsL5fnW72YwYeVj6Lkr7ivx7dAHyjod9gAjBdGuSF43kQRsZkgcYFNB19Pjk5Gd0Jz5F81DPr500VjMJrq9vth0tu3w7H"
+                }
+            })
+                .then(response => {
+                    this.parsedResponse = response.data;
                 })
                 .catch(error => {
                     alert(error);

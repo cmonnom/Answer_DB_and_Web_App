@@ -34,6 +34,12 @@ public class FinalReport {
 	
 	@Column(name="date_created")
 	LocalDateTime dateCreated;
+	
+	@Column(name="version")
+	Integer version;
+	
+	@Column(name="caseId")
+	String caseId;
 
 	public Integer getFinalReportId() {
 		return finalReportId;
@@ -65,6 +71,22 @@ public class FinalReport {
 
 	public void setDateCreated(LocalDateTime dateCreated) {
 		this.dateCreated = dateCreated;
+	}
+
+	public Integer getVersion() {
+		return version;
+	}
+
+	public void setVersion(Integer version) {
+		this.version = version;
+	}
+
+	public String getCaseId() {
+		return caseId;
+	}
+
+	public void setCaseId(String caseId) {
+		this.caseId = caseId;
 	}
 
 	

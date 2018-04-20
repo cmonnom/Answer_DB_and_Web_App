@@ -5,6 +5,7 @@ Vue.component('data-table', {
         "table-title": { default: "Table", type: String },
         "data-url": "",
         "expanded-data-url": "",
+        "expanded-data-url2": "",
         "initial-sort": { default: "id", type: String },
         "sort-descending": { default: false, type: Boolean },
         "toolbar-visible": { default: true, type: Boolean },
@@ -12,8 +13,10 @@ Vue.component('data-table', {
         "no-data-text": { default: "Fetching data...", type: String },
         "fixed": { default: true, type: Boolean },
         "advance-filtering": { default: false, type: Boolean },
-        "enable-selection": {default: false, type: Boolean},
-        "action1-param": {default: "", type: String}
+        "export-enabled": { default: false, type: Boolean },
+        "enable-selection": { default: false, type: Boolean },
+        "action1-param": { default: "", type: String },
+        "show-pagination": { default: true, type: Boolean }
 
     },
     template: `<div>
@@ -28,10 +31,10 @@ Vue.component('data-table', {
           <slot name="title"></slot>
         </v-container>
       </v-flex>
-      <v-flex xs7 class="text-xs-right">
+      <v-flex xs7 class="text-xs-right" v-show="showPagination">
         <div class="title white--text pr-1 pt-4 mt-1">Rows:</div>
       </v-flex>
-      <v-flex xs3>
+      <v-flex xs3 v-show="showPagination">
         <v-container>
           <v-text-field solo single-line hide-details light v-model="pagination.rowsPerPage"></v-text-field>
         </v-container>
@@ -55,6 +58,13 @@ Vue.component('data-table', {
       </v-btn>
       <span>Filter Menu</span>
     </v-tooltip>
+
+    <v-tooltip bottom v-if="exportEnabled">
+    <v-btn icon @click="exportToCSV" slot="activator">
+      <v-icon>file_download</v-icon>
+    </v-btn>
+    <span>Export to CSV<br/>(works with Filter Menu)</span>
+  </v-tooltip>
 
     <v-tooltip bottom>
       <v-btn icon @click="showDraggableHeader=!showDraggableHeader" slot="activator">
@@ -209,8 +219,7 @@ Vue.component('data-table', {
           <v-tooltip bottom v-if="header.toolTip">
             <span slot="activator" v-html="formattedHeader(header)">
             </span>
-            <span>
-              {{ header.toolTip.text }}
+            <span v-html="header.toolTip.text">
             </span>
           </v-tooltip>
           <span v-if="!header.toolTip" v-html="formattedHeader(header)">
@@ -248,14 +257,21 @@ Vue.component('data-table', {
             </v-tooltip>
             <span v-if="!(props.item.tooltips && props.item.tooltips[header.value])"
             v-html="formattedItem(header, props.item[header.value])"></span>
-          <v-icon color="green" v-if="header.isPassable === true && props.item[header.value] && props.item[header.value].pass">check_circle</v-icon>
-          <v-icon color="red" v-if="header.isPassable === true && props.item[header.value] && !props.item[header.value].pass">cancel</v-icon>
-          <v-icon color="green" v-if="header.isActionable === true && props.item[header.value] && props.item[header.value].pass">check_circle</v-icon>
-          <v-tooltip bottom>
-          <v-btn :ripple="false" slot="activator" icon @click="header['itemAction'](props.item)" v-if="header.itemAction" >
+            <v-icon color="green" v-if="showPassFlag(header, props.item)">check_circle</v-icon>
+            <v-icon color="red" v-if="showFailFlag(header, props.item)">cancel</v-icon>
+          <!-- <v-icon color="green" v-if="header.isActionable === true && props.item[header.value] && props.item[header.value].pass">check_circle</v-icon> -->
+          <v-tooltip bottom v-if="header.itemAction">
+          <v-btn :ripple="false" slot="activator" icon @click="header['itemAction'](props.item)"  >
               <v-icon >keyboard_arrow_right</v-icon>
           </v-btn>
           <span>{{ header.actionTooltip }}</span>
+          </v-tooltip>
+
+          <v-tooltip bottom v-if="header.buttons" v-for="(button, index) in props.item.buttons" :key="index" >
+            <v-btn class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item)" slot="activator" :color="button.color">
+              <v-icon>{{ button.icon }}</v-icon>
+            </v-btn>
+            <span v-html="button.tooltip"></span>
           </v-tooltip>
         </td>
       </tr>
@@ -286,18 +302,19 @@ Vue.component('data-table', {
           <tr @click="expandRow(props.item[uniqueIdField], props)">
             <td v-for="header in expandedHeaders" :class="alignHeader(header)">
               <span>{{ formattedItem(header, props.item[header.value]) }}</span>
-              <v-icon color="green" v-if="header.isPassable === true && props.item[header.value] && props.item[header.value].pass">check_circle</v-icon>
-              <v-icon color="red" v-if="header.isPassable === true && props.item[header.value] && !props.item[header.value].pass">cancel</v-icon>
+              <v-icon color="green" v-if="showPassFlag(header, props.item)">check_circle</v-icon>
+              <v-icon color="red" v-if="showFailFlag(header, props.item)">cancel</v-icon>
             </td>
           </tr>
         </template>
 
       </v-data-table>
+
     </template>
 
   </v-data-table>
   <!-- external pagination -->
-  <div class="text-xs-center pt-3">
+  <div class="text-xs-center pt-3" v-show="showPagination">
     <v-pagination v-model="pagination.page" :length="pages" :total-visible="10"></v-pagination>
   </div>
 
@@ -326,9 +343,11 @@ Vue.component('data-table', {
             expandedUniqueId: "",
             expandedItems: [],
             expandedHeaders: [],
-            expandedHeaderOrder:[],
+            expandedHeaderOrder: [],
             filters: [],
-            highlight: null //use this to change the style of a row should have the value of item.[uniqueIdField]
+            highlight: null, //use this to change the style of a row should have the value of item.[uniqueIdField]
+            doExport: false, //if true, the table will be exported as a CSV
+            csvContent: ""
         }
     },
     methods: {
@@ -368,29 +387,35 @@ Vue.component('data-table', {
                 url: this.dataUrl,
                 params: {
                     'filters': JSON.stringify(this.filters),
-                    action1Param: this.action1Param
+                    action1Param: this.action1Param,
+                    doExport: this.doExport
                 }
             }).then(response => {
-                    if (response.data.isAllowed) {
-                        if (this.headers.length != response.data.headers.length) {
-                            //just a refresh. Keep the headerOrder in place
-                            //in case the user modified the column order
-                            this.headerOrder = response.data.headerOrder;
-                        }
-                        this.headers = response.data.headers;
-                        // for (var i = 0; i < this.headers.length; i++) {
-                        //     this.headers[i].width = "400px";
-                        // }
-                        this.items = response.data.items;
-                        this.pagination.totalItems = this.items.length;
-                        this.uniqueIdField = response.data.uniqueIdField;
-                        this.createFilters(response.data.dataFiltersMap)
+                if (response.data.isAllowed) {
+                    if (this.headers.length != response.data.headers.length) {
+                        //just a refresh. Keep the headerOrder in place
+                        //in case the user modified the column order
+                        this.headerOrder = response.data.headerOrder;
                     }
-                    else {
-                        this.handleDialogs(response, this.getAjaxData);
+                    this.headers = response.data.headers;
+                    // for (var i = 0; i < this.headers.length; i++) {
+                    //     this.headers[i].width = "400px";
+                    // }
+                    this.items = response.data.items;
+                    this.pagination.totalItems = this.items.length;
+                    this.uniqueIdField = response.data.uniqueIdField;
+                    this.createFilters(response.data.dataFiltersMap)
+                    if (this.doExport) {
+                        this.csvContent = response.data.csvContent;
+                        this.createCSVFile();
                     }
-                    this.stopLoading();
-                })
+                }
+                else {
+                    this.handleDialogs(response, this.getAjaxData);
+                }
+                this.stopLoading();
+                this.doExport = false;
+            })
                 .catch(error => {
                     this.stopLoading();
                     alert(error);
@@ -426,7 +451,7 @@ Vue.component('data-table', {
                         type = "Number";
                         if (filter) {
                             minValue = filter.minValue ? filter.minValue + "" : ""; //change into a String to avoid parsing issues with minNode.textValue() on the backend
-                            maxValue = filter.maxValue ? filter.maxValue + "": "";
+                            maxValue = filter.maxValue ? filter.maxValue + "" : "";
                         }
                     }
                     this.filters.push({
@@ -471,6 +496,8 @@ Vue.component('data-table', {
         stopLoading() {
             this.loading = false;
         },
+        //In most cases, the response contains data for only one table
+        //use this method to manually update the data
         manualData(response) {
             if (this.headers.length != response.data.headers.length) {
                 //just a refresh. Keep the headerOrder in place
@@ -478,12 +505,23 @@ Vue.component('data-table', {
                 this.headerOrder = response.data.headerOrder;
             }
             this.headers = response.data.headers;
-            // for (var i = 0; i < this.headers.length; i++) {
-            //     this.headers[i].width = "400px";
-            // }
             this.items = response.data.items;
             this.pagination.totalItems = this.items.length;
             this.uniqueIdField = response.data.uniqueIdField;
+            this.stopLoading();
+        },
+        //If the response contains data for multiple tables
+        //use this method to only pass the data for the current table
+        manualDataFiltered(data) {
+            if (this.headers.length != data.headers.length) {
+                //just a refresh. Keep the headerOrder in place
+                //in case the user modified the column order
+                this.headerOrder = data.headerOrder;
+            }
+            this.headers = data.headers;
+            this.items = data.items;
+            this.pagination.totalItems = this.items.length;
+            this.uniqueIdField = data.uniqueIdField;
             this.stopLoading();
         },
         manualDataError() {
@@ -638,6 +676,12 @@ Vue.component('data-table', {
             if (header.isPassable === true || header.isActionable === true) {
                 itemString = item.value;
             }
+            else if (header.buttons) {
+                itemString = "";
+                for (var i = 0; i < buttons.length; i++) {
+                    itemString += buttons
+                }
+            }
             else {
                 itemString = item;
             }
@@ -666,7 +710,7 @@ Vue.component('data-table', {
             this.startLoading();
             axios.get(this.expandedDataUrl, {
                 params: {
-                    'sampleId': this.expandedUniqueId
+                    'uniqueId': this.expandedUniqueId + ""
                 }
             })
                 .then(response => {
@@ -677,9 +721,6 @@ Vue.component('data-table', {
                             this.expandedHeaderOrder = response.data.headerOrder;
                         }
                         this.expandedHeaders = response.data.headers;
-                        // for (var i = 0; i < this.headers.length; i++) {
-                        //     this.headers[i].width = "400px";
-                        // }
                         this.expandedItems = response.data.items;
                         this.calcExpandedWidth();
                     }
@@ -713,7 +754,7 @@ Vue.component('data-table', {
                     this.toUnselect.push(props.item);
                 }
             }
-            else if (props.item.isSelected === false){//about to be selected. Remove from unselected list
+            else if (props.item.isSelected === false) {//about to be selected. Remove from unselected list
                 //remove from unselected
                 var indexToRemove = -1;
                 for (var i = 0; i < this.toUnselect.length; i++) {
@@ -728,6 +769,33 @@ Vue.component('data-table', {
             }
             props.item.isSelected = !props.item.isSelected;
             props.selected = props.item.isSelected;
+        },
+        showPassFlag(header, item) {
+            return header.isPassable === true
+                && item[header.value]
+                && item[header.value].pass === true;
+        },
+        showFailFlag(header, item) {
+            return header.isPassable === true
+                && item[header.value]
+                && item[header.value].pass === false;
+        },
+        handleButtonTriggered(action, item) {
+            bus.$emit(action, item);
+        },
+        exportToCSV() {
+            this.doExport = true;
+            this.getAjaxData();
+        },
+        createCSVFile() {
+            var hiddenElement = document.createElement('a');
+            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(this.csvContent);
+            //hiddenElement.target = '_blank';
+            hiddenElement.download = this.tableTitle.replace(" ", "_") + '_data.csv';
+            document.body.appendChild(hiddenElement);
+            hiddenElement.click();
+            document.body.removeChild(hiddenElement);
+
         }
     },
     computed: {
@@ -769,7 +837,7 @@ Vue.component('data-table', {
             descending: this.sortDescending,
             rowsPerPage: 10
         }
-      
+
 
     },
     destroyed: function () {

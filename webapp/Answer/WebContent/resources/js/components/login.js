@@ -69,7 +69,7 @@ Vue.component('login', {
                 ajax.then(response => {
                     var data = response.data;
                     if (data.success) {
-                        this.answer();
+                        this.clear();
                         if (this.popup) {
                             bus.$emit("login-success");
                         }

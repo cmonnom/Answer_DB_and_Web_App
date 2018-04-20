@@ -18,11 +18,27 @@ var router = new VueRouter({
 			}
 		},
 		{
+			path: webAppRoot + '/openCase/:id',
+			name: 'OpenCase',
+			component: OpenCase,
+			meta: {
+				title: 'OpenCase Id: '
+			}
+		},
+		{
 			path: webAppRoot + '/newCase',
 			name: 'NewCase',
 			component: NewCase,
 			meta: {
 				title: 'New Case'
+			}
+		},
+		{
+			path: webAppRoot + '/admin',
+			name: 'Admin',
+			component: Admin,
+			meta: {
+				title: 'Admin'
 			}
 		},
 		{

@@ -1,10 +1,12 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <script>
         const webAppRoot = "${pageContext.request.contextPath}";
+        const isAdmin = "${isAdmin}" === 'true';
 </script>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css">
 <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/main.css?timestamp=${timestamp}">

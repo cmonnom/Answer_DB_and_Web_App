@@ -1,9 +1,12 @@
 package utsw.bicf.answer.controller.serialization.vuetify;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.vuetify.Header;
@@ -27,6 +30,8 @@ public abstract class Summary<T> {
 	List<String> headerOrder;
 	String uniqueIdField;
 	Boolean isAllowed;
+	
+	String csvContent;
 	
 	public Summary(List<T> items, String uniqueIdField) {
 		this.items = items;
@@ -90,6 +95,43 @@ public abstract class Summary<T> {
 		this.isAllowed = isAllowed;
 	}
 	
+	public String getCsvContent() {
+		return csvContent;
+	}
+
+	public void setCsvContent(String csvContent) {
+		this.csvContent = csvContent;
+	}
 	
-	
+	public void createCSVContent() throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		StringBuilder csvContent = new StringBuilder(
+				this.getHeaders().stream().filter(header -> header.buttons == null || !header.buttons).map(header -> header.getOneLineText()).collect(Collectors.joining(",")))
+				.append("\n");
+		List<String> rows = new ArrayList<String>();
+		String json = this.createVuetifyObjectJSON();
+		if (json != null && !json.equals("")) {
+			JsonNode jsonNode = mapper.readTree(json);
+			if (jsonNode != null) {
+				JsonNode items = jsonNode.get("items");
+				for (JsonNode item : items) {
+					List<String> row = new ArrayList<String>();
+					for (Header header : this.getHeaders()) {
+						if (header.buttons == null || !header.buttons) {
+							String value = item.get(header.getValue()).asText(); // get the item value matching the header
+							// could be a PassableValue
+							if ((value == null || value.equals("")) && item.get(header.getValue()) != null
+									&& item.get(header.getValue()).get("value") != null) {
+								value = item.get(header.getValue()).get("value").asText();
+							}
+							row.add((value == null || value.equals("null")) ? "" : value.replaceAll(",", ""));
+						}
+					}
+					rows.add(row.stream().collect(Collectors.joining(",")));
+				}
+				csvContent.append(rows.stream().collect(Collectors.joining("\n")));
+			}
+		}
+		this.setCsvContent(csvContent.toString());
+	}
 }

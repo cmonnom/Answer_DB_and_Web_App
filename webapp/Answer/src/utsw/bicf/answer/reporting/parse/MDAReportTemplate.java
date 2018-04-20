@@ -15,11 +15,15 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 public class MDAReportTemplate {
 
 	File sourceHTML;
 	String mrn;
+	String patient;
 	Map<String, AnnotationRow> annotationRows = null;
 	Map<String, FrequencyRow> frequencyRows = null;
 	List<BiomarkerTrialsRow> selectedBiomarkers = null;
@@ -29,14 +33,17 @@ public class MDAReportTemplate {
 		this.sourceHTML = sourceHTML;
 		init();
 	}
-
-	private void init() throws IOException {
-		if (!sourceHTML.exists()) {
-			throw new FileNotFoundException();
+	
+	public MDAReportTemplate(String emailContent) {
+		if (emailContent != null && !emailContent.equals("")) {
+			Document htmlDoc = Jsoup.parse(emailContent);
+			parseEmail(htmlDoc);
 		}
-		Document htmlDoc = Jsoup.parse(sourceHTML, "UTF-8");
-
+	}
+	
+	private void parseEmail(Document htmlDoc) {
 		this.mrn = htmlDoc.select("b:contains(MRN:)").first().nextElementSibling().nextSibling().outerHtml();
+		this.patient = htmlDoc.select("b:contains(Patient:)").first().nextElementSibling().nextSibling().outerHtml();
 
 		Elements tables = htmlDoc.select("table");
 		for (Element table : tables) {
@@ -52,6 +59,14 @@ public class MDAReportTemplate {
 				relevantBiomarkers = parseBiomarkerTable(table, "relevant");
 			}
 		}
+	}
+
+	private void init() throws IOException {
+		if (!sourceHTML.exists()) {
+			throw new FileNotFoundException();
+		}
+		Document htmlDoc = Jsoup.parse(sourceHTML, "UTF-8");
+		parseEmail(htmlDoc);
 	}
 
 	private Map<String, AnnotationRow> parseAnnotationTable(Element table) {
@@ -181,14 +196,19 @@ public class MDAReportTemplate {
 		}
 		return headerMap;
 	}
-
-	public File getSourceHTML() {
-		return sourceHTML;
+	
+	public String createObjectJSON() throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writeValueAsString(this);
 	}
 
-	public void setSourceHTML(File sourceHTML) {
-		this.sourceHTML = sourceHTML;
-	}
+//	public File getSourceHTML() {
+//		return sourceHTML;
+//	}
+//
+//	public void setSourceHTML(File sourceHTML) {
+//		this.sourceHTML = sourceHTML;
+//	}
 
 	public String getMrn() {
 		return mrn;
@@ -228,6 +248,14 @@ public class MDAReportTemplate {
 
 	public void setRelevantBiomarkers(List<BiomarkerTrialsRow> relevantBiomarkers) {
 		this.relevantBiomarkers = relevantBiomarkers;
+	}
+
+	public String getPatient() {
+		return patient;
+	}
+
+	public void setPatient(String patient) {
+		this.patient = patient;
 	}
 
 }

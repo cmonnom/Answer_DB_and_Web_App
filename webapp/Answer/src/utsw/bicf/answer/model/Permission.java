@@ -31,6 +31,9 @@ public class Permission {
 	
 	@Column(name="finalize")
 	Boolean finalize;
+	
+	@Column(name="admin")
+	Boolean admin;
 
 	public Integer getPermissionId() {
 		return permissionId;
@@ -70,6 +73,14 @@ public class Permission {
 
 	public void setFinalize(Boolean finalize) {
 		this.finalize = finalize;
+	}
+
+	public Boolean getAdmin() {
+		return admin;
+	}
+
+	public void setAdmin(Boolean admin) {
+		this.admin = admin;
 	}
 	
 	
