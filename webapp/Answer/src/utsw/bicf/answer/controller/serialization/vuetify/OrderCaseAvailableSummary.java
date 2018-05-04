@@ -17,7 +17,9 @@ public class OrderCaseAvailableSummary extends Summary<OrderCaseAvailable>{
 	public void initializeHeaders() {
 		headers.add(new Header(new String[] {"Epic","Order Nb"}, "epicOrderNumber"));
 		headers.add(new Header(new String[] {"Epic", "Order Date"}, "epicOrderDate"));
-		headers.add(new Header("ICD 10", "icd10"));
+		Header icd10 = new Header("ICD 10", "icd10");
+		icd10.setWidth("200px");
+		headers.add(icd10);
 		headers.add(new Header(new String[] {"Date", "Received"}, "dateReceived"));
 		Header actions = new Header(new String[] {"Assign", "To"}, "actions");
 		actions.setButtons(true);

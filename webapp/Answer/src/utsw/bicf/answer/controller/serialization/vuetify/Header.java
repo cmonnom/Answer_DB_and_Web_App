@@ -21,8 +21,10 @@ public class Header {
 	Units unit;
 	Boolean isPassable;
 	Boolean isActionable;
+	Boolean isFlag;
 	String width;
 	Boolean buttons; //to allow buttons instead of text in a cell
+	Boolean isHidden;
 	
 	public Header(String text, String value, Units unit, ToolTip toolTip, Boolean isPassable) {
 		this.text = text;
@@ -180,5 +182,22 @@ public class Header {
 		}
 		return textPart1;
 	}
+
+	public Boolean getIsHidden() {
+		return isHidden;
+	}
+
+	public void setIsHidden(Boolean isHidden) {
+		this.isHidden = isHidden;
+	}
+
+	public Boolean getIsFlag() {
+		return isFlag;
+	}
+
+	public void setIsFlag(Boolean isFlag) {
+		this.isFlag = isFlag;
+	}
+
 
 }

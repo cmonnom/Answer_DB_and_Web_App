@@ -1,5 +1,7 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -7,11 +9,24 @@ public class Variant {
 	
 	String chrom;
 	String geneName;
-	String effect;
+	List<String> effects;
 	String notation;
 	String tumorAltFrequency;
-	Integer pos;
 	Integer tumorAltDepth;
+	Integer tumorTotalDepth;
+	String normalAltFrequency;
+	Integer normalAltDepth;
+	Integer normalTotalDepth;
+	String rnaAltFrequency;
+	Integer rnaAltDepth;
+	Integer rnaTotalDepth;
+	Integer pos;
+	List<String> callSet;
+	String type;
+	List<Integer> cosmicPatients;
+	List<String> id; //list of external database ids (dbsnp, cosmic, etc)
+	String alt;
+	List<String> filters; //list of filers
 	
 	
 	public Variant() {
@@ -39,13 +54,13 @@ public class Variant {
 	}
 
 
-	public String getEffect() {
-		return effect;
+	public List<String> getEffects() {
+		return effects;
 	}
 
 
-	public void setEffect(String effect) {
-		this.effect = effect;
+	public void setEffect(List<String> effects) {
+		this.effects = effects;
 	}
 
 
@@ -86,6 +101,101 @@ public class Variant {
 
 	public void setTumorAltDepth(Integer tumorAltDepth) {
 		this.tumorAltDepth = tumorAltDepth;
+	}
+
+
+	public List<String> getCallSet() {
+		return callSet;
+	}
+
+
+	public void setCallSet(List<String> callSet) {
+		this.callSet = callSet;
+	}
+
+
+	public String getType() {
+		return type;
+	}
+
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+
+	public List<Integer> getCosmicPatients() {
+		return cosmicPatients;
+	}
+
+
+	public void setCosmicPatients(List<Integer> cosmicPatients) {
+		this.cosmicPatients = cosmicPatients;
+	}
+
+
+	public List<String> getId() {
+		return id;
+	}
+
+
+	public void setId(List<String> id) {
+		this.id = id;
+	}
+
+
+	public String getAlt() {
+		return alt;
+	}
+
+
+	public void setAlt(String alt) {
+		this.alt = alt;
+	}
+
+
+	public List<String> getFilters() {
+		return filters;
+	}
+
+
+	public void setFilter(List<String> filters) {
+		this.filters = filters;
+	}
+
+
+	public Integer getTumorTotalDepth() {
+		return tumorTotalDepth;
+	}
+
+
+	public String getNormalAltFrequency() {
+		return normalAltFrequency;
+	}
+
+
+	public Integer getNormalAltDepth() {
+		return normalAltDepth;
+	}
+
+
+	public Integer getNormalTotalDepth() {
+		return normalTotalDepth;
+	}
+
+
+	public String getRnaAltFrequency() {
+		return rnaAltFrequency;
+	}
+
+
+	public Integer getRnaAltDepth() {
+		return rnaAltDepth;
+	}
+
+
+	public Integer getRnaTotalDepth() {
+		return rnaTotalDepth;
 	}
 
 

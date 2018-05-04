@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/main.css?timestamp=${timestamp}">
 
 
-<link rel="shortcut icon" type="image/x-icon" href="http://www.utsouthwestern.net/favicon.ico" />
+<link rel="shortcut icon" type="image/x-icon" href="https://www.utsouthwestern.net/favicon.ico" />
 
 
 <script src="https://unpkg.com/vue/dist/vue.js"></script>

@@ -6,6 +6,7 @@ const Home = {
       <v-toolbar dark color="primary">
         <v-toolbar-title class="white--text">Assign case: {{ currentEpicOrderNumber }}</v-toolbar-title>
       </v-toolbar>
+      <v-card-title>Pick who should work on this case:</v-card-title>
       <v-card-text>
         <!-- <v-list>
           <v-list-tile class="dense-tiles" v-for="(user, index) in allUsers" :key="index">
@@ -37,21 +38,21 @@ const Home = {
 
     <v-tooltip bottom>
         <v-btn icon @click="toggleTable('available')" slot="activator">
-            <v-icon :color="caseAvailableTableVisible ? 'warning' : ''">mdi-table</v-icon>
+            <v-icon :color="caseAvailableTableVisible ? 'lime accent-2' : ''">mdi-table</v-icon>
         </v-btn>
         <span>Show/Hide Cases Available</span>
     </v-tooltip>
 
     <v-tooltip bottom>
         <v-btn icon @click="toggleTable('forUser')" slot="activator">
-            <v-icon :color="caseForUserTableVisible ? 'warning' : ''">mdi-table</v-icon>
+            <v-icon :color="caseForUserTableVisible ? 'lime accent-2' : ''">mdi-table</v-icon>
         </v-btn>
         <span>Show/Hide My Cases</span>
     </v-tooltip>
 
     <v-tooltip bottom>
         <v-btn icon @click="toggleTable('assigned')" slot="activator">
-            <v-icon :color="caseAssignedTableVisible ? 'warning' : ''">mdi-table</v-icon>
+            <v-icon :color="caseAssignedTableVisible ? 'lime accent-2' : ''">mdi-table</v-icon>
         </v-btn>
         <span>Show/Hide Cases Assigned</span>
     </v-tooltip>

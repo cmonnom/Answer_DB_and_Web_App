@@ -24,7 +24,7 @@ response.setDateHeader ("Expires", 0);
 						<div id="app">
 							<v-app>
 								<error-handler></error-handler>
-								
+								<main-menu ref="main-menu"></main-menu>
 								<v-content>
 									<v-container app fluid>
 										<!-- 		ADDING PAGE SPECIFIC CONTENT HERE FROM VUE ROUTER-->
@@ -34,7 +34,6 @@ response.setDateHeader ("Expires", 0);
 										</div>
 									</v-container>
 								</v-content>
-								<main-menu></main-menu>
 							</v-app>
 						</div>
 

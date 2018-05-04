@@ -1,10 +1,11 @@
 //Main left side menu. main-template includes this component
 Vue.component('main-menu', {
 	props: {
-		baseUrl: { type: String, default: webAppRoot }
+		baseUrl: {type: String, default: webAppRoot},
+		width: {type: Number, default: 200}
 	},
-	template: `<v-navigation-drawer permanent app width="200" :mini-variant.sync="isMinied">
-	<v-toolbar flat :extended="isMinied ? false : true">
+	template: `<v-navigation-drawer app permanent :width="width" :mini-variant.sync="isMinied">
+	<v-toolbar flat :extended="isMinied ? false : true" style="height:128px">
 		<img :src="baseUrl + '/resources/images/answer-logo-medium.png'" alt="Answer" width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
 	</v-toolbar>
 	<v-divider></v-divider>
@@ -108,6 +109,14 @@ Vue.component('main-menu', {
 				return isVisible && menuItem.adminOnly === isAdmin;
 			}
 			return isVisible;
+		},
+		emitMenuChanged() {
+			if (this.isMinied) {
+				bus.$emit('menu-shrinked', [this, null]);
+			}
+			else {
+				bus.$emit('menu-expanded', [this, null]);
+			}
 		}
 	},
 	created: function () {
@@ -115,9 +124,32 @@ Vue.component('main-menu', {
 		bus.$on('shrink-menu', () => {
 			this.isMinied = true;
 		});
+		bus.$on('expand-menu', () => {
+			this.isMinied = false;
+        });
 		bus.$on('clear-item-selected', args => {
 			this.caseItemSelected = "";
 		});
+		bus.$on('need-layout-resize', args => {
+			 //resize the main content because it does not happen automatically
+			 this.$nextTick(function() {
+				 document.getElementsByClassName("content")[0].style.paddingLeft = this.width + "px";
+				 var titlebars = document.getElementsByClassName("toolbar toolbar--fixed");
+				 for (var i = 0; i < titlebars.length; i++) {
+					 titlebars[i].style.paddingLeft = this.width + "px";
+				 }
+
+			 });
+		});
+	},
+	destroyed: function() {
+		bus.$off('shrink-menu');
+		bus.$off('expand-menu');
+		bus.$off('clear-item-selected');
+		bus.$off('need-layout-resize');
+	},
+	watch: {
+		isMinied: 'emitMenuChanged'
 	}
 
 

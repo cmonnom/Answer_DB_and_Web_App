@@ -122,6 +122,10 @@ a {
     margin-top: 64px !important;
 }
 
+.mt-12 {
+    margin-top: 128px !important;
+}
+
 .pt-6 {
     padding-top: 64px !important;
 }
@@ -141,7 +145,7 @@ table.table tbody td, table.table tbody th {
 }
 
 table.table tbody td:first-child, table.table tbody td:not(:first-child), table.table tbody th:first-child, table.table tbody th:not(:first-child), table.table thead td:first-child, table.table thead td:not(:first-child), table.table thead th:first-child, table.table thead th:not(:first-child) {
-    padding: 5px 24px;
+    padding: 5px 12px;
 }
 
 .container.grid-list-md .layout:not(:only-child) {
@@ -156,6 +160,34 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
     font-weight: bold !important;
 }
 
+/* .follow-scroll-right-side {
+     position: fixed;
+    right: 0px; 
+} */
+
+/* remove padding underneath checkboxes */
+.no-height > .input-group__details {
+    min-height: auto !important;
+}
+
 .table-btn {
     margin: 0px;
+}
+
+.draggable {
+    cursor: move;
+}
+
+.draggable > .chip__content {
+    cursor: move;
+}
+
+.expandable-filter {
+    position: relative;
+    left: -12px;
+    min-width: 472px; /* to use most of the navigation drawer width */
+}
+
+.expansion-panel__header {
+    padding-left: 12px;
 }
