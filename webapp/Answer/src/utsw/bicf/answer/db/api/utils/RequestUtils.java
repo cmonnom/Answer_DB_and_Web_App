@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,16 +18,25 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.params.HttpParams;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.controller.serialization.DataFilterList;
+import utsw.bicf.answer.controller.serialization.DataTableFilter;
+import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.extmapping.VariantFilter;
+import utsw.bicf.answer.model.extmapping.VariantFilterList;
 
 /**
  * All API requests to the annotation DB should
@@ -54,6 +64,10 @@ public class RequestUtils {
 	private ObjectMapper mapper = new ObjectMapper();
 	
 	private void addAuthenticationHeader(HttpGet requestMethod) {
+		requestMethod.setHeader(HttpHeaders.AUTHORIZATION, createAuthHeader());
+	}
+	
+	private void addAuthenticationHeader(HttpPost requestMethod) {
 		requestMethod.setHeader(HttpHeaders.AUTHORIZATION, createAuthHeader());
 	}
 	
@@ -111,14 +125,22 @@ public class RequestUtils {
 		return ajaxResponse;
 	}
 
-	public OrderCase getCaseDetails(String caseId) throws ClientProtocolException, IOException, URISyntaxException {
+	public OrderCase getCaseDetails(String caseId, String filters) throws ClientProtocolException, IOException, URISyntaxException {
+		VariantFilterList filterList = parseFilters(filters);
+		String filterParam = filterList.createJSON();
+		System.out.println(filterParam);
+		
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId);
 		URI uri = new URI(sbUrl.toString());
 		
 		requestGet = new HttpGet(uri);
-		
 		addAuthenticationHeader(requestGet);
+		
+		//TODO Ben needs to build the API for filtering
+//		requestPost = new HttpPost(uri);
+//		addAuthenticationHeader(requestPost);
+//		requestPost.setEntity(new StringEntity(filterParam, ContentType.APPLICATION_JSON));
 
 		HttpResponse response = client.execute(requestGet);
 
@@ -128,6 +150,98 @@ public class RequestUtils {
 			return orderCase;
 		}
 		return null;
+	}
+	
+	/**
+	 * Create a list of active filters (filters with values)
+	 * to be passed to the AnswerDB API.
+	 * It's up to the API to figure out which values/fields are populated
+	 * @param filters
+	 * @return
+	 * @throws JsonParseException
+	 * @throws JsonMappingException
+	 * @throws IOException
+	 */
+	private VariantFilterList parseFilters(String filters) throws JsonParseException, JsonMappingException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		DataFilterList filterList = mapper.readValue(filters, DataFilterList.class);
+//		}
+		List<VariantFilter> activeFilters = new ArrayList<VariantFilter>();
+		for (DataTableFilter filter : filterList.getFilters()) {
+			if (filter.isBoolean() != null && filter.isBoolean()) {
+				if (filter.getValueTrue() != null || filter.getValueFalse() != null) {
+					VariantFilter vf = new VariantFilter(filter.getFieldName());
+					if (filter.getValueTrue() != null && filter.getValueTrue()) {
+						if (filter.getFieldName().equals(Variant.FIELD_FILTERS)) {
+							vf.getStringValues().add(Variant.VALUE_PASS);
+						}
+						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)) {
+							vf.getStringValues().add(""); //TODO
+						}
+					}
+					if (filter.getValueFalse() != null && filter.getValueFalse()) {
+						if (filter.getFieldName().equals(Variant.FIELD_FILTERS)) {
+							vf.getStringValues().add(Variant.VALUE_FAIL);
+						}
+						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)) {
+							vf.getStringValues().add(""); //TODO
+						}
+					}
+					activeFilters.add(vf);
+				}
+			}
+			else if (filter.isCheckBox() != null && filter.isCheckBox()) {
+				VariantFilter vf = new VariantFilter(filter.getFieldName());
+				List<SearchItem> checkBoxes = filter.getCheckBoxes();
+				for (SearchItem cb : checkBoxes) {
+					if (cb.getValue() != null && (boolean) cb.getValue()) {
+						vf.getStringValues().add(cb.getName().replaceAll(" ", "_").toLowerCase());
+					}
+				}
+				if (!vf.getStringValues().isEmpty() ) {
+					activeFilters.add(vf);
+				}
+			}
+			else if (filter.isDate() != null && filter.isDate()) {
+				//TODO
+			}
+			else if (filter.isNumber() != null && filter.isNumber()) {
+				if (filter.getMinValue() != null || filter.getMaxValue() != null) {
+					VariantFilter vf = new VariantFilter(filter.getFieldName());
+					if (filter.getMinValue() != null) {
+						if (vf.getField().contains("Frequency")) { //frequencies are converted to pct. Need to revert it to ratio
+							vf.setMinValue(filter.getMinValue() / 100);
+						}
+						else {
+							vf.setMinValue(filter.getMinValue());
+						}
+					}
+					if (filter.getMaxValue() != null) {
+						if (vf.getField().contains("Frequency")) { //frequencies are converted to pct. Need to revert it to ratio
+							vf.setMaxValue(filter.getMaxValue() / 100);
+						}
+						else {
+							vf.setMaxValue(filter.getMaxValue());
+						}
+					}
+					activeFilters.add(vf);
+				}
+			}
+			else if (filter.isSelect() != null && filter.isSelect() && filter.getValue() != null) {
+				VariantFilter vf = new VariantFilter(filter.getFieldName());
+				vf.setValue(filter.getValue());
+				activeFilters.add(vf);
+			}
+			else if (filter.isString() != null && filter.isString()) {
+				VariantFilter vf = new VariantFilter(filter.getFieldName());
+				vf.setValue(filter.getValue());
+				activeFilters.add(vf);
+			}
+				
+		}
+		VariantFilterList list = new VariantFilterList();
+		list.setFilters(activeFilters);
+		return list;
 	}
 
 	

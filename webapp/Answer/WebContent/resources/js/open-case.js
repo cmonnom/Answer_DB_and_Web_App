@@ -144,7 +144,7 @@ const OpenCase = {
         <v-spacer></v-spacer>
         <v-tooltip bottom>
             <v-btn :disabled="patientTables.length == 0" flat icon @click="patientDetailsVisible = !patientDetailsVisible" slot="activator"
-                :color="patientDetailsVisible ? 'warning' : ''">
+                :color="patientDetailsVisible ? 'lime accent-2' : ''">
                 <v-icon>perm_identity</v-icon>
             </v-btn>
             <span>Patient Details</span>
@@ -198,7 +198,7 @@ const OpenCase = {
     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="Variants" initial-sort="chromPos"
         no-data-text="No Data" :enable-selection="true">
         <v-tooltip bottom slot="action1">
-            <v-btn slot="activator" flat icon @click="toggleFilters" :color="advanceFilteringVisible ? 'warning' : 'white'">
+            <v-btn slot="activator" flat icon @click="toggleFilters" :color="advanceFilteringVisible ? 'lime accent-2' : 'white'">
                 <v-icon>filter_list</v-icon>
             </v-btn>
             <span>Advanced Filtering</span>
@@ -206,13 +206,13 @@ const OpenCase = {
     </data-table>
 </div>` , data() {
         return {
-            loading: true, 
-            patientTables: [], 
-            patientDetailsVisible: true, 
-            caseName: "", 
-            caseId: "", 
-            advanceFilteringVisible: false, 
-            filters: [], 
+            loading: true,
+            patientTables: [],
+            patientDetailsVisible: true,
+            caseName: "",
+            caseId: "",
+            advanceFilteringVisible: false,
+            filters: [],
             effects: [],
             filtersValid: true,
             numberRules: [v => !isNaN(v) || 'Only numbers'],
@@ -232,9 +232,14 @@ const OpenCase = {
         },
         getAjaxData() {
             this.loading = true;
-            axios.get(webAppRoot + "/getCaseDetails", {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/getCaseDetails",
                 params: {
                     caseId: this.$route.params.id
+                },
+                data: {
+                    filters: this.filters
                 }
             })
                 .then(response => {
@@ -248,7 +253,7 @@ const OpenCase = {
                         this.filterNeedsReload = false;
                     }
                     else {
-                        this.handleDialogs(response, this.getAjaxData);
+                        this.handleDialogs(response.data, this.getAjaxData);
                     }
                     this.loading = false;
                 })
@@ -361,8 +366,8 @@ const OpenCase = {
                 return false; //handled in a separate chip
             }
             if (filter.isNumber) {
-                return (filter.minValue != null && filter.minValue != "") 
-                || (filter.maxValue != null && filter.maxValue != "")
+                return (filter.minValue != null && filter.minValue !== "")
+                    || (filter.maxValue != null && filter.maxValue !== "")
             }
             if (filter.isDate) {
                 return filter.minDateValue != null || filter.maxDateValue != null;
@@ -370,15 +375,24 @@ const OpenCase = {
             if (filter.isBoolean) {
                 return filter.valueTrue == true || filter.valueFalse == true;
             }
-            return filter.value != null && filter.value != "";
+            return filter.value != null && filter.value !== "";
         },
         isCheckBoxFilterUsed(checkBox) {
             return checkBox.value == true;
         },
         isInputNumberValid(filter) {
             if (filter.isNumber) {
-                return (filter.minValue == "" || !isNaN(filter.minValue)) 
-                || (filter.maxValue == "" || !isNaN(filter.minValue)); 
+                var isValid = (filter.minValue === "" || !isNaN(filter.minValue))
+                && (filter.maxValue === "" || !isNaN(filter.maxValue));
+                if (isValid) {
+                    if (filter.minValue !== "" && filter.minValue != null) {
+                        filter.minValue = parseFloat(filter.minValue);
+                    }
+                    if (filter.maxValue !== "" && filter.maxValue != null) {
+                        filter.maxValue = parseFloat(filter.maxValue);
+                    }
+                }
+                return isValid;
             }
             return true;
         }
@@ -388,8 +402,8 @@ const OpenCase = {
         bus.$emit("clear-item-selected", [this]);
         this.getVariantFilters();
     },
-    destroyed: function() {
-	},
+    destroyed: function () {
+    },
     watch: {
         '$route': 'getAjaxData',
         'scrollPos': 'scrollWithBar'

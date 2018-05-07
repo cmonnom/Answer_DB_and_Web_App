@@ -61,7 +61,7 @@ public class OpenCaseRow {
 		this.filters = variant.getFilters();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
-		boolean failed = filters.contains("FailedQC");
+		boolean failed = filters.contains(Variant.VALUE_FAIL);
 		if (failed) {
 			icons.add(new VuetifyIcon("cancel", "red", "Failed QC"));
 		}

@@ -7,6 +7,24 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Variant {
 	
+	//keep the name of fields in the JSON sent by MangoDB static
+	//so they can all be centralized here
+	public static final String FIELD_CHROM = "chrom";
+	public static final String FIELD_TUMOR_ALT_FREQUENCY = "tumorAltFrequency";
+	public static final String FIELD_TUMOR_TOTAL_DEPTH = "tumorTotalDepth";
+	public static final String FIELD_NORMAL_ALT_FREQUENCY = "normalAltFrequency";
+	public static final String FIELD_NORMAL_TOTAL_DEPTH = "normalTotalDepth";
+	public static final String FIELD_RNA_ALT_FREQUENCY = "rnaAltFrequency";
+	public static final String FIELD_RNA_TOTAL_DEPTH = "rnaTotalDepth";
+	public static final String FIELD_EFFECTS = "effects";
+	public static final String FIELD_ANNOTATIONS = "annotations"; //TODO
+	public static final String FIELD_FILTERS = "filters";
+	
+	//Some values like filter pass/fail need to be translated into boolean
+	//keep the values expected in the JSON string here
+	public static final String VALUE_PASS = "PASS";
+	public static final String VALUE_FAIL = "FailedQC";
+	
 	String chrom;
 	String geneName;
 	List<String> effects;

@@ -9,11 +9,15 @@ public class DataTableFilter {
 
 	
 	
+	public DataTableFilter() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
 	String headerText;
 	String headerTextTrue; //for booleans
 	String headerTextFalse; //for booleans
 	String fieldName;
-	String type;
 	String value;
 	Boolean valueTrue; //for booleans
 	Boolean valueFalse; //for booleans
@@ -116,17 +120,14 @@ public class DataTableFilter {
 
 	public void setString(Boolean isString) {
 		this.isString = isString;
-		this.type = "String";
 	}
 
 	public void setNumber(Boolean isNumber) {
 		this.isNumber = isNumber;
-		this.type = "Number";
 	}
 
 	public void setDate(Boolean isDate) {
 		this.isDate = isDate;
-		this.type = "Date";
 	}
 
 	public Boolean isSelect() {
@@ -135,7 +136,6 @@ public class DataTableFilter {
 
 	public void setSelect(Boolean isSelect) {
 		this.isSelect = isSelect;
-		this.type = "Select";
 	}
 
 	public Boolean isBoolean() {
@@ -144,7 +144,6 @@ public class DataTableFilter {
 
 	public void setBoolean(Boolean isBoolean) {
 		this.isBoolean = isBoolean;
-		this.type = "Boolean";
 	}
 
 	public List<SearchItem> getSelectItems() {
@@ -161,14 +160,6 @@ public class DataTableFilter {
 
 	public void setHeaderText(String headerText) {
 		this.headerText = headerText;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
 	}
 
 	public String getHeaderTextTrue() {
@@ -209,7 +200,6 @@ public class DataTableFilter {
 
 	public void setCheckBox(Boolean isCheckBox) {
 		this.isCheckBox = isCheckBox;
-		this.type = "CheckBox";
 	}
 
 	public List<SearchItem> getCheckBoxes() {

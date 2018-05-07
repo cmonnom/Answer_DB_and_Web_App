@@ -11,12 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
@@ -26,6 +28,7 @@ import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
@@ -54,7 +57,8 @@ public class OpenCaseController {
 	
 	@RequestMapping(value = "/getCaseDetails")
 	@ResponseBody
-	public String getCaseDetails(Model model, HttpSession session, @RequestParam String caseId)
+	public String getCaseDetails(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestBody String filters)
 			throws Exception {
 		
 		User user = (User) session.getAttribute("user"); //to verify that the user is assigned to the case
@@ -65,7 +69,15 @@ public class OpenCaseController {
 		if (cases != null) {
 			for (OrderCase c : cases) {
 				if (c.getCaseId().equals(caseId)) {
-					detailedCase = utils.getCaseDetails(caseId);
+					detailedCase = utils.getCaseDetails(caseId, filters);
+					if (!detailedCase.getAssignedTo().contains(user.getUserId().toString())) {
+						//user is not assigned to this case
+						AjaxResponse response = new AjaxResponse();
+						response.setIsAllowed(false);
+						response.setSuccess(false);
+						response.setMessage(user.getFullName() + " is not assigned to this case");
+						return response.createObjectJSON();
+					}
 					break; //found that the case exists
 				}
 			}
@@ -92,15 +104,15 @@ public class OpenCaseController {
 		filters.add(chrFilter);
 		chrFilter.setSelectItems(selectItems);
 		
-		DataTableFilter passQCFilter = new DataTableFilter("Pass QC", "Fail QC", "filters");
+		DataTableFilter passQCFilter = new DataTableFilter("Pass QC", "Fail QC", Variant.FIELD_FILTERS);
 		passQCFilter.setBoolean(true);
 		filters.add(passQCFilter);
 		
-		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Unknown", "annotations");
+		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Unknown", Variant.FIELD_ANNOTATIONS);
 		annotatedFilter.setBoolean(true);
 		filters.add(annotatedFilter);
 		
-		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", "tumorAltFrequency");
+		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", Variant.FIELD_TUMOR_ALT_FREQUENCY);
 		tafFilter.setNumber(true);
 		filters.add(tafFilter);
 		
@@ -108,11 +120,11 @@ public class OpenCaseController {
 //		tumorDepthFilter.setNumber(true);
 //		filters.add(tumorDepthFilter);
 		
-		DataTableFilter tumorTotalDepthFilter = new DataTableFilter("Tumor Total Depth", "tumorTotalDepth");
+		DataTableFilter tumorTotalDepthFilter = new DataTableFilter("Tumor Total Depth", Variant.FIELD_TUMOR_TOTAL_DEPTH);
 		tumorTotalDepthFilter.setNumber(true);
 		filters.add(tumorTotalDepthFilter);
 		
-		DataTableFilter nafFilter = new DataTableFilter("Normal Alt %", "normalAltFrequency");
+		DataTableFilter nafFilter = new DataTableFilter("Normal Alt %", Variant.FIELD_NORMAL_ALT_FREQUENCY);
 		nafFilter.setNumber(true);
 		filters.add(nafFilter);
 		
@@ -120,11 +132,11 @@ public class OpenCaseController {
 //		normalDepthFilter.setNumber(true);
 //		filters.add(normalDepthFilter);
 		
-		DataTableFilter normalTotalDepthFilter = new DataTableFilter("Normal Total Depth", "normalTotalDepth");
+		DataTableFilter normalTotalDepthFilter = new DataTableFilter("Normal Total Depth", Variant.FIELD_NORMAL_TOTAL_DEPTH);
 		normalTotalDepthFilter.setNumber(true);
 		filters.add(normalTotalDepthFilter);
 		
-		DataTableFilter rafFilter = new DataTableFilter("Rna Alt %", "rnaAltFrequency");
+		DataTableFilter rafFilter = new DataTableFilter("Rna Alt %", Variant.FIELD_RNA_ALT_FREQUENCY);
 		rafFilter.setNumber(true);
 		filters.add(rafFilter);
 		
@@ -132,11 +144,11 @@ public class OpenCaseController {
 //		rnaDepthFilter.setNumber(true);
 //		filters.add(rnaDepthFilter);
 		
-		DataTableFilter rnaTotalDepthFilter = new DataTableFilter("RNA Total Depth", "rnaTotalDepth");
+		DataTableFilter rnaTotalDepthFilter = new DataTableFilter("RNA Total Depth", Variant.FIELD_RNA_TOTAL_DEPTH);
 		rnaTotalDepthFilter.setNumber(true);
 		filters.add(rnaTotalDepthFilter);
 		
-		DataTableFilter effectFilter= new DataTableFilter("Effects", "effects");
+		DataTableFilter effectFilter= new DataTableFilter("Effects", Variant.FIELD_EFFECTS);
 		effectFilter.setCheckBox(true);
 		filters.add(effectFilter);
 		
