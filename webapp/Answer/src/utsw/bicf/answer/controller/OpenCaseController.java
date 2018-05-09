@@ -23,11 +23,14 @@ import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterItems;
+import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSummary;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.security.PermissionUtils;
 
@@ -39,6 +42,8 @@ public class OpenCaseController {
 		PermissionUtils.permissionPerUrl.put("openCase", new PermissionUtils(true, false, false));
 		PermissionUtils.permissionPerUrl.put("getCaseDetails", new PermissionUtils(true, false, false));
 		PermissionUtils.permissionPerUrl.put("getVariantFilters", new PermissionUtils(true, false, false));
+		PermissionUtils.permissionPerUrl.put("getVariantDetails", new PermissionUtils(true, false, false));
+		
 	}
 
 	@Autowired
@@ -104,6 +109,10 @@ public class OpenCaseController {
 		filters.add(chrFilter);
 		chrFilter.setSelectItems(selectItems);
 		
+		DataTableFilter geneFilter = new DataTableFilter("Gene Name", Variant.FIELD_GENE_NAME);
+		geneFilter.setString(true);
+		filters.add(geneFilter);
+		
 		DataTableFilter passQCFilter = new DataTableFilter("Pass QC", "Fail QC", Variant.FIELD_FILTERS);
 		passQCFilter.setBoolean(true);
 		filters.add(passQCFilter);
@@ -157,4 +166,35 @@ public class OpenCaseController {
 		return  items.createVuetifyObjectJSON();
 		
 	}
+	
+	@RequestMapping(value = "/getVariantDetails")
+	@ResponseBody
+	public String getVariantDetails(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestParam String chrom, @RequestParam Integer pos, @RequestParam String alt)
+			throws Exception {
+		
+		//send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		Variant variantDetails = utils.getVariantDetails(caseId, chrom, pos, alt);
+		VariantVcfAnnotationSummary summaryCanonical = null;
+		VariantVcfAnnotationSummary summaryOthers = null;
+		VariantDetailsSummary summary = null; 
+		if (variantDetails != null) {
+			List<VCFAnnotation> vcfAnnotations = variantDetails.getVcfAnnotations();
+			if (!vcfAnnotations.isEmpty()) {
+				List<VCFAnnotation> canonicalAnnotation = new ArrayList<VCFAnnotation>();
+				canonicalAnnotation.add(vcfAnnotations.get(0));
+				List<VCFAnnotation> otherAnnotations = new ArrayList<VCFAnnotation>();
+				otherAnnotations.addAll(vcfAnnotations);
+				otherAnnotations.remove(0);
+				summaryCanonical = new VariantVcfAnnotationSummary(canonicalAnnotation, "proteinPosition");
+				summaryOthers = new VariantVcfAnnotationSummary(otherAnnotations, "proteinPosition");
+				summary = new VariantDetailsSummary(variantDetails, summaryCanonical, summaryOthers);
+			}
+			return summary.createVuetifyObjectJSON();
+		}
+		return null;
+		
+	}
+	
 }

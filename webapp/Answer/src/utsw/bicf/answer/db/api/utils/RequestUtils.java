@@ -128,21 +128,20 @@ public class RequestUtils {
 	public OrderCase getCaseDetails(String caseId, String filters) throws ClientProtocolException, IOException, URISyntaxException {
 		VariantFilterList filterList = parseFilters(filters);
 		String filterParam = filterList.createJSON();
-		System.out.println(filterParam);
 		
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("case/").append(caseId);
+		sbUrl.append("case/").append(caseId).append("/filter");
 		URI uri = new URI(sbUrl.toString());
 		
-		requestGet = new HttpGet(uri);
-		addAuthenticationHeader(requestGet);
+//		requestGet = new HttpGet(uri);
+//		addAuthenticationHeader(requestGet);
 		
 		//TODO Ben needs to build the API for filtering
-//		requestPost = new HttpPost(uri);
-//		addAuthenticationHeader(requestPost);
-//		requestPost.setEntity(new StringEntity(filterParam, ContentType.APPLICATION_JSON));
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		requestPost.setEntity(new StringEntity(filterParam, ContentType.APPLICATION_JSON));
 
-		HttpResponse response = client.execute(requestGet);
+		HttpResponse response = client.execute(requestPost);
 
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
@@ -187,7 +186,9 @@ public class RequestUtils {
 							vf.getStringValues().add(""); //TODO
 						}
 					}
-					activeFilters.add(vf);
+					if (!vf.getStringValues().isEmpty()) {
+						activeFilters.add(vf);
+					}
 				}
 			}
 			else if (filter.isCheckBox() != null && filter.isCheckBox()) {
@@ -242,6 +243,38 @@ public class RequestUtils {
 		VariantFilterList list = new VariantFilterList();
 		list.setFilters(activeFilters);
 		return list;
+	}
+
+	/**
+	 * Get all information about a variant, including annotations
+	 * @param caseId
+	 * @param chrom
+	 * @param pos
+	 * @param alt
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
+	public Variant getVariantDetails(String caseId, String chrom, Integer pos, String alt) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("variant").append("?caseId=").append(caseId)
+		.append("&chrom=").append(chrom)
+		.append("&pos=").append(pos)
+		.append("&alt=").append(alt);
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+		
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			Variant variant = mapper.readValue(response.getEntity().getContent(), Variant.class);
+			return variant;
+		}
+		return null;
 	}
 
 	

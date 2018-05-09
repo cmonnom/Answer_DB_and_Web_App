@@ -16,6 +16,7 @@ public class OpenCaseRow {
 	String chrom;
 	Integer pos;
 	String chromPos;
+	String geneName;
 	String geneVariant;
 	String effects;
 	String notation;
@@ -40,23 +41,26 @@ public class OpenCaseRow {
 	List<Button> buttons = new ArrayList<Button>();
 	
 	public OpenCaseRow(Variant variant) {
+		this.chrom = variant.getChrom();
+		this.pos = variant.getPos();
 		this.chromPos = variant.getChrom().toUpperCase() + ":" + variant.getPos();
+		this.geneName = variant.getGeneName();
 		this.geneVariant = variant.getGeneName() + " " + variant.getNotation();
 		this.effects = variant.getEffects() != null ? variant.getEffects().stream().collect(Collectors.joining("<br/>")) : null;
 		this.notation = variant.getNotation();
 		this.tumorAltFrequency = variant.getTumorAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getTumorAltFrequency()) * 100) : null;
 		this.tumorAltDepth = variant.getTumorAltDepth();
 		this.tumorTotalDepth = variant.getTumorTotalDepth();
-		this.normalAltFrequency = variant.getNormalAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getTumorAltFrequency()) * 100) : null;
+		this.normalAltFrequency = variant.getNormalAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getNormalAltFrequency()) * 100) : null;
 		this.normalAltDepth = variant.getNormalAltDepth();
 		this.normalTotalDepth = variant.getNormalTotalDepth();
-		this.rnaAltFrequency = variant.getRnaAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getTumorAltFrequency()) * 100) : null;
+		this.rnaAltFrequency = variant.getRnaAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getRnaAltFrequency()) * 100) : null;
 		this.rnaAltDepth = variant.getRnaAltDepth();
 		this.rnaTotalDepth = variant.getRnaTotalDepth();
 		this.callSet = variant.getCallSet();
 		this.type = variant.getType();
 		this.cosmicPatients = variant.getCosmicPatients();
-		this.externalIds = variant.getId();
+		this.externalIds = variant.getIds();
 		this.alt = variant.getAlt();
 		this.filters = variant.getFilters();
 		
@@ -193,6 +197,11 @@ public class OpenCaseRow {
 
 	public Integer getRnaTotalDepth() {
 		return rnaTotalDepth;
+	}
+
+
+	public String getGeneName() {
+		return geneName;
 	}
 
 

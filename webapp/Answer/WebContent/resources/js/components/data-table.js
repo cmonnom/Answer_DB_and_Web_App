@@ -15,15 +15,21 @@ Vue.component('data-table', {
         "advance-filtering": { default: false, type: Boolean },
         "export-enabled": { default: false, type: Boolean },
         "enable-selection": { default: false, type: Boolean },
+        "enable-select-all": { default: false, type: Boolean },
         "action1-param": { default: "", type: String },
-        "show-pagination": { default: true, type: Boolean }
+        "show-pagination": { default: true, type: Boolean },
+        "show-row-count": { default: false, type: Boolean },
+        "title-icon": { default: null, type: String }
 
     },
     template: `<div>
 
   <!-- Top tool bar with menu options -->
   <v-toolbar dark color="primary" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
-    <v-toolbar-title class="white--text">{{ tableTitle }}</v-toolbar-title>
+    <v-icon v-if="titleIcon">{{ titleIcon }}</v-icon>
+    <v-toolbar-title class="white--text">{{ tableTitle }}
+      <span v-if="showRowCount" v-html="getRowCount()"></span>
+    </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-layout justify-end>
       <v-flex class="text-xs-right">
@@ -60,11 +66,12 @@ Vue.component('data-table', {
     </v-tooltip>
 
     <v-tooltip bottom v-if="exportEnabled">
-    <v-btn icon @click="exportToCSV" slot="activator">
-      <v-icon>file_download</v-icon>
-    </v-btn>
-    <span>Export to CSV<br/>(works with Filter Menu)</span>
-  </v-tooltip>
+      <v-btn icon @click="exportToCSV" slot="activator">
+        <v-icon>file_download</v-icon>
+      </v-btn>
+      <span>Export to CSV
+        <br/>(works with Filter Menu)</span>
+    </v-tooltip>
 
     <v-tooltip bottom>
       <v-btn icon @click="showDraggableHeader=!showDraggableHeader" slot="activator">
@@ -111,15 +118,16 @@ Vue.component('data-table', {
       <v-card>
         <draggable :list="headerOrder" @start="draggingStarted" @end="itemDragging=''" class="draggable">
           <v-chip label v-for="header in headerOrder" :key="header" color="primary" text-color="white" :class="[{'is-dragging':isDragging(header)}, 'elevation-1', 'draggable']"
-            :id="header" >
+            :id="header">
             <!-- <v-avatar>
               <v-icon>swap_horiz</v-icon>
             </v-avatar> -->
             <span class="draggable">{{ getHeaderByValue(header) }}</span>
             <v-tooltip bottom>
               <v-btn slot="activator" :color="getHeaderButtonColor(header)" icon flat small @click="toggleHeaderHidden(header)">
-                <v-icon>visibility</v-icon></v-btn>
-                <span>Show/Hide Header</span>
+                <v-icon>visibility</v-icon>
+              </v-btn>
+              <span>Show/Hide Header</span>
             </v-tooltip>
           </v-chip>
         </draggable>
@@ -137,7 +145,7 @@ Vue.component('data-table', {
         </div>
         <v-spacer></v-spacer>
         <v-btn color="primary" @click="clearFilters">
-        Clear
+          Clear
         </v-btn>
         <v-btn color="primary" @click="filterData">
           Refresh
@@ -162,10 +170,10 @@ Vue.component('data-table', {
             <v-layout row>
               <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
               <v-flex xs4>
-                <v-text-field  class="no-height" :name="filter.headerValue + '-min'" label="Min" v-model="filter.minValue"></v-text-field>
+                <v-text-field class="no-height" :name="filter.headerValue + '-min'" label="Min" v-model="filter.minValue"></v-text-field>
               </v-flex>
               <v-flex xs4>
-                <v-text-field  class="no-height" :name="filter.headerValue + '-max'" label="Max" v-model="filter.maxValue"></v-text-field>
+                <v-text-field class="no-height" :name="filter.headerValue + '-max'" label="Max" v-model="filter.maxValue"></v-text-field>
               </v-flex>
             </v-layout>
           </v-flex>
@@ -176,7 +184,7 @@ Vue.component('data-table', {
               <v-flex xs4>
                 <v-menu lazy :v-model="false" transition="scale-transition" offset-y full-width :nudge-right="40" max-width="290px" min-width="290px"
                   :close-on-content-click="true">
-                  <v-text-field  class="no-height" slot="activator" label="From" v-model="filter.minValue" prepend-icon="event" readonly></v-text-field>
+                  <v-text-field class="no-height" slot="activator" label="From" v-model="filter.minValue" prepend-icon="event" readonly></v-text-field>
                   <v-date-picker v-model="filter.minValue" no-title scrollable>
                     <v-spacer></v-spacer>
                   </v-date-picker>
@@ -186,7 +194,7 @@ Vue.component('data-table', {
                 <v-menu lazy :v-model="false" transition="scale-transition" offset-y full-width :nudge-right="40" max-width="290px" min-width="290px"
                   :close-on-content-click="true">
                   <v-text-field class="no-height" slot="activator" label="To" v-model="filter.maxValue" prepend-icon="event" readonly></v-text-field>
-                  <v-date-picker  v-model="filter.maxValue" no-title scrollable>
+                  <v-date-picker v-model="filter.maxValue" no-title scrollable>
                     <v-spacer></v-spacer>
                   </v-date-picker>
                 </v-menu>
@@ -204,19 +212,14 @@ Vue.component('data-table', {
 
   <v-data-table :id="tableId" v-model="selected" v-bind:headers="headers" v-bind:items="items" v-bind:search="search" hide-actions
     v-bind:pagination.sync="pagination" :item-key="uniqueIdField" :no-data-text="noDataText" :loading="loading" :class="['elevation-1', toolbarVisible ? 'mt-1' : '']"
-    :custom-sort="customSort">
+    :custom-sort="customSort" ref="dataTable">
     <template slot="headers" slot-scope="props">
       <tr>
-          <th v-if="enableSelection" class="primary white--text" style="width:50px">
-              <v-checkbox
-                hide-details
-                @click.native="toggleAll"
-                :input-value="props.all"
-                :indeterminate="props.indeterminate"
-              ></v-checkbox>
-            </th>
-          <th v-if="expandedDataUrl" class="primary">
-          </th>
+        <th v-if="enableSelection" class="primary white--text" style="width:50px">
+          <v-checkbox v-if="enableSelectAll" hide-details @click.native="toggleAll" :input-value="props.all" :indeterminate="props.indeterminate"></v-checkbox>
+        </th>
+        <th v-if="expandedDataUrl" class="primary">
+        </th>
         <th v-for="header in getSortedHeaders" :key="header.text" :class="['primary white--text', 'subheading', 'column sortable', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
           @click="changeSort(header.value)" :width="header.width" :style="'min-width:' + header.width">
           <v-icon class="table-sorting-icon">arrow_upward</v-icon>
@@ -233,68 +236,64 @@ Vue.component('data-table', {
       <tr v-show="headerOptionsVisible">
         <th v-if="enableSelection" class="primary white--text" style="width:50px"></th>
         <th v-if="expandedDataUrl" class="primary"></th>
-        <th v-for="header in getSortedHeaders" :key="header.text" :class="['primary white--text', 'subheading']"
-        :width="header.width" :style="'min-width:' + header.width">
+        <th v-for="header in getSortedHeaders" :key="header.text" :class="['primary white--text', 'subheading']" :width="header.width"
+          :style="'min-width:' + header.width">
           <v-tooltip bottom>
             <v-btn slot="activator" :color="getHeaderButtonColor(header, true)" icon flat small @click="toggleHeaderHidden(header, true)">
-              <v-icon >visibility</v-icon></v-btn>
-              <span>Show/Hide Header</span>
+              <v-icon>visibility</v-icon>
+            </v-btn>
+            <span>Show/Hide Header</span>
           </v-tooltip>
         </th>
       </tr>
     </template>
 
     <template slot="items" slot-scope="props">
-      <tr :active="props.selected" >
-          <td v-if="enableSelection" style="width:50px"
-          :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
-              <v-checkbox
-                primary
-                hide-details
-                :input-value="props.selected"
-                @click="handleSelectionChange(props)"
-                v-model="props.item.isSelected"
-                :ripple="false"
-              ></v-checkbox>
-            </td>
-        <td v-if="expandedDataUrl" class="pl-0 pr-0" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']"
-        @click="expandRow(props.item[uniqueIdField], props)">
-          <v-btn flat icon small><v-icon :class="[props.expanded ? 'rotate180' : 'rotate90']">expand_less</v-icon>
+      <tr :active="props.selected">
+        <td v-if="enableSelection" style="width:50px" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
+          <v-checkbox primary hide-details :input-value="props.selected" @click="handleSelectionChange(props)" v-model="props.item.isSelected"
+            :ripple="false"></v-checkbox>
+        </td>
+        <td v-if="expandedDataUrl" class="pl-0 pr-0" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']" @click="expandRow(props.item[uniqueIdField], props)">
+          <v-btn flat icon small>
+            <v-icon :class="[props.expanded ? 'rotate180' : 'rotate90']">expand_less</v-icon>
           </v-btn>
         </td>
-        <td v-for="header in getSortedHeaders" :class="[alignHeader(header), isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']" >
-            <v-tooltip bottom v-if="props.item.tooltips && props.item.tooltips[header.value]"
-            max-width="500px">
-                <span slot="activator">
-                  {{ formattedItem(header, props.item[header.value]) }}
-                </span>
-                <span v-html="props.item.tooltips[header.value]">
-                </span>
-            </v-tooltip>
-            <span v-if="!(props.item.tooltips && props.item.tooltips[header.value])"
-            v-html="formattedItem(header, props.item[header.value])"></span>
-            
-            <span v-if="props.item[header.value]">
+        <td v-for="header in getSortedHeaders" :class="[alignHeader(header), isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
+
+
+          <v-tooltip bottom v-if="props.item.tooltips && props.item.tooltips[header.value]" max-width="500px">
+            <span slot="activator">
+              {{ formattedItem(header, props.item[header.value]) }}
+            </span>
+            <span v-html="props.item.tooltips[header.value]">
+            </span>
+          </v-tooltip>
+          <span v-if="!(props.item.tooltips && props.item.tooltips[header.value])" v-html="formattedItem(header, props.item[header.value])"></span>
+
+          <span v-if="props.item[header.value]">
             <v-tooltip bottom v-for="(icon, index) in props.item[header.value].iconFlags" :key="index" v-if="header.isFlag">
-            <v-icon slot="activator" 
-              :color="icon.color">
+              <v-icon slot="activator" :color="icon.color">
                 {{ icon.iconName }}
               </v-icon>
               <span> {{ icon.tooltip }}</span>
             </v-tooltip>
           </span>
 
-            <v-icon color="green" v-if="showPassFlag(header, props.item)">check_circle</v-icon>
-            <v-icon color="red" v-if="showFailFlag(header, props.item)">cancel</v-icon>
+          <v-icon color="green" v-if="showPassFlag(header, props.item)">check_circle</v-icon>
+          <v-icon color="red" v-if="showFailFlag(header, props.item)">cancel</v-icon>
           <!-- <v-icon color="green" v-if="header.isActionable === true && props.item[header.value] && props.item[header.value].pass">check_circle</v-icon> -->
+
+          <!-- action button in after  cell content  -->
           <v-tooltip bottom v-if="header.itemAction">
-          <v-btn :ripple="false" slot="activator" icon @click="header['itemAction'](props.item)"  >
-              <v-icon >keyboard_arrow_right</v-icon>
-          </v-btn>
-          <span>{{ header.actionTooltip }}</span>
+            <v-btn :ripple="false" slot="activator" flat small icon @click="header['itemAction'](props.item)">
+              <v-icon v-if="!header.actionIcon">keyboard_arrow_right</v-icon>
+              <v-icon v-if="header.actionIcon"> {{ header.actionIcon }}</v-icon>
+            </v-btn>
+            <span>{{ header.actionTooltip }}</span>
           </v-tooltip>
 
-          <v-tooltip bottom v-if="header.buttons" v-for="(button, index) in props.item.buttons" :key="index" >
+          <v-tooltip bottom v-if="header.buttons" v-for="(button, index) in props.item.buttons" :key="index">
             <v-btn class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item)" slot="activator" :color="button.color">
               <v-icon>{{ button.icon }}</v-icon>
             </v-btn>
@@ -303,15 +302,14 @@ Vue.component('data-table', {
         </td>
       </tr>
     </template>
-<!-- expanded row dynamically loaded when user clicks on row -->
-    <template v-if="expandedDataUrl" slot="expand" slot-scope="props" >
-      <v-data-table id="expandedTableId" ref="expandedTableId" v-model="selected" v-bind:headers="expandedHeaders" v-bind:items="expandedItems" hide-actions
-        :item-key="uniqueIdField" no-data-text="No Data Found" :loading="loading" :class="['pl-5', 'pb-1', 'elevation-1', toolbarVisible ? 'mt-1' : '']"
+    <!-- expanded row dynamically loaded when user clicks on row -->
+    <template v-if="expandedDataUrl" slot="expand" slot-scope="props">
+      <v-data-table id="expandedTableId" ref="expandedTableId" v-model="selected" v-bind:headers="expandedHeaders" v-bind:items="expandedItems"
+        hide-actions :item-key="uniqueIdField" no-data-text="No Data Found" :loading="loading" :class="['pl-5', 'pb-1', 'elevation-1', toolbarVisible ? 'mt-1' : '']"
         :custom-sort="customSort">
         <template slot="headers" slot-scope="props">
           <tr>
-            <th v-for="header in expandedHeaders" :key="header.text" :class="['cyan white--text', 'subheading', 'column sortable']"
-             :width="header.width">
+            <th v-for="header in expandedHeaders" :key="header.text" :class="['cyan white--text', 'subheading', 'column sortable']" :width="header.width">
               <v-tooltip bottom v-if="header.toolTip">
                 <span slot="activator" v-html="formattedHeader(header)">
                 </span>
@@ -329,7 +327,7 @@ Vue.component('data-table', {
           <tr @click="expandRow(props.item[uniqueIdField], props)">
             <td v-for="header in expandedHeaders" :class="alignHeader(header)">
               <span>{{ formattedItem(header, props.item[header.value]) }}</span>
-              
+
               <v-icon color="green" v-if="showPassFlag(header, props.item)">check_circle</v-icon>
               <v-icon color="red" v-if="showFailFlag(header, props.item)">cancel</v-icon>
             </td>
@@ -596,7 +594,7 @@ Vue.component('data-table', {
                 headerObject = header;
             }
             if (headerObject) {
-                return headerObject.isHidden ? 'white' : 'lime accent-2';
+                return headerObject.isHidden ? 'white' : 'amber accent-2';
             }
             return '';
         },
@@ -761,7 +759,7 @@ Vue.component('data-table', {
             return itemString;
         },
         isHighlighted(itemUniqueField) {
-            return this.highlight == itemUniqueField;
+            return this.highlight === itemUniqueField;
         },
         createTableId() {
             // Need to create a unique unique for each table
@@ -840,6 +838,14 @@ Vue.component('data-table', {
             props.item.isSelected = !props.item.isSelected;
             props.selected = props.item.isSelected;
         },
+        addToSelection(item) {
+            // item.isSelected = true;
+            this.handleSelectionChange({item: item});
+        },
+        removeFromSelection(item) {
+            // item.isSelected = false;
+            this.handleSelectionChange({item: item});
+        },
         showPassFlag(header, item) {
             return header.isPassable === true
                 && item[header.value]
@@ -866,6 +872,13 @@ Vue.component('data-table', {
             hiddenElement.click();
             document.body.removeChild(hiddenElement);
 
+        },
+        getRowCount() {
+            if (this.$refs.dataTable) {
+                var rowCount = this.$refs.dataTable.itemsLength;
+                return "(" + rowCount + " row" + (rowCount > 1 ? "s" : "") + ")";
+            }
+            return null;
         }
     },
     computed: {

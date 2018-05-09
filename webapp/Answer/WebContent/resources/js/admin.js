@@ -9,14 +9,20 @@ const Admin = {
 
   <!-- edit user dialog -->
   <v-dialog v-model="editUserDialogVisible" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
-      <v-toolbar dark color="primary" fixed>
+  <v-card>
+      <v-toolbar dark color="primary">
           <v-toolbar-title class="white--text">
               {{ editAdd }} User: {{ currentEditUserFullName }}
           </v-toolbar-title>
           <v-spacer></v-spacer>
+          <v-tooltip bottom>
+          <v-btn icon @click="cancelEdits()" slot="activator">
+              <v-icon>close</v-icon>
+          </v-btn>
+          <span>Cancel</span>
+      </v-tooltip>
         </v-toolbar>
-    <v-card>
-      <v-card-text :style="getDialogMaxHeight()" class="pt-6">
+      <v-card-text :style="getDialogMaxHeight()">
         <v-container grid-list-md fluid class="pt-2">
         <v-layout row wrap>
           <v-flex xs3>
@@ -160,7 +166,8 @@ const Admin = {
             
         },
         getDialogMaxHeight() {
-            return "max-height:" + window.innerHeight - 100 + "px; overflow-y: auto";
+            var height = window.innerHeight - 120;
+            return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: auto";
         },
         handleAdminChanged() {
             if (this.editAdmin) {

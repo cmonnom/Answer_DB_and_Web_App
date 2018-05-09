@@ -191,3 +191,7 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 .expansion-panel__header {
     padding-left: 12px;
 }
+
+.soft-grey-background {
+    background-color: #fafafa !important;
+}

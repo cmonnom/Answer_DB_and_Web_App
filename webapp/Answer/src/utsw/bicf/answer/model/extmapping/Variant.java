@@ -3,6 +3,8 @@ package utsw.bicf.answer.model.extmapping;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Variant {
@@ -10,6 +12,7 @@ public class Variant {
 	//keep the name of fields in the JSON sent by MangoDB static
 	//so they can all be centralized here
 	public static final String FIELD_CHROM = "chrom";
+	public static final String FIELD_GENE_NAME = "geneName";
 	public static final String FIELD_TUMOR_ALT_FREQUENCY = "tumorAltFrequency";
 	public static final String FIELD_TUMOR_TOTAL_DEPTH = "tumorTotalDepth";
 	public static final String FIELD_NORMAL_ALT_FREQUENCY = "normalAltFrequency";
@@ -24,6 +27,8 @@ public class Variant {
 	//keep the values expected in the JSON string here
 	public static final String VALUE_PASS = "PASS";
 	public static final String VALUE_FAIL = "FailedQC";
+	
+	Boolean isAllowed = true;
 	
 	String chrom;
 	String geneName;
@@ -42,10 +47,11 @@ public class Variant {
 	List<String> callSet;
 	String type;
 	List<Integer> cosmicPatients;
-	List<String> id; //list of external database ids (dbsnp, cosmic, etc)
+	List<String> ids; //list of external database ids (dbsnp, cosmic, etc)
 	String alt;
 	List<String> filters; //list of filers
 	
+	List<VCFAnnotation> vcfAnnotations;
 	
 	public Variant() {
 		
@@ -152,13 +158,13 @@ public class Variant {
 	}
 
 
-	public List<String> getId() {
-		return id;
+	public List<String> getIds() {
+		return ids;
 	}
 
 
-	public void setId(List<String> id) {
-		this.id = id;
+	public void setIds(List<String> ids) {
+		this.ids = ids;
 	}
 
 
@@ -214,6 +220,21 @@ public class Variant {
 
 	public Integer getRnaTotalDepth() {
 		return rnaTotalDepth;
+	}
+
+
+	public List<VCFAnnotation> getVcfAnnotations() {
+		return vcfAnnotations;
+	}
+
+
+	public Boolean getIsAllowed() {
+		return isAllowed;
+	}
+
+
+	public void setIsAllowed(Boolean isAllowed) {
+		this.isAllowed = isAllowed;
 	}
 
 

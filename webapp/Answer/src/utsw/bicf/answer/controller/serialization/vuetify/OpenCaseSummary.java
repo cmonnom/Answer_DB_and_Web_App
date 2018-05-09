@@ -64,9 +64,10 @@ public class OpenCaseSummary extends Summary<OpenCaseRow> {
 	@Override
 	public void initializeHeaders() {
 		Header chromPos = new Header("CHR", "chromPos");
+		chromPos.setWidth("200px");
 		headers.add(chromPos);
-		Header geneVariant = new Header("GeneVariant", "geneVariant");
-		geneVariant.setWidth("200px");
+		Header geneVariant = new Header("Gene Variant", "geneVariant");
+		geneVariant.setWidth("225px");
 		headers.add(geneVariant);
 		Header iconFlags = new Header("Flags", "iconFlags");
 		iconFlags.setWidth("100px");
