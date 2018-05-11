@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
@@ -43,7 +41,8 @@ public class OpenCaseController {
 		PermissionUtils.permissionPerUrl.put("getCaseDetails", new PermissionUtils(true, false, false));
 		PermissionUtils.permissionPerUrl.put("getVariantFilters", new PermissionUtils(true, false, false));
 		PermissionUtils.permissionPerUrl.put("getVariantDetails", new PermissionUtils(true, false, false));
-		
+		PermissionUtils.permissionPerUrl.put("saveVariantSelection", new PermissionUtils(true, true, false));
+		PermissionUtils.permissionPerUrl.put("commitAnnotations", new PermissionUtils(true, true, false));
 	}
 
 	@Autowired
@@ -87,7 +86,7 @@ public class OpenCaseController {
 				}
 			}
 		}
-		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "chromPos");
+		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "chromPos", user);
 		return summary.createVuetifyObjectJSON();
 		
 	}
@@ -169,13 +168,12 @@ public class OpenCaseController {
 	
 	@RequestMapping(value = "/getVariantDetails")
 	@ResponseBody
-	public String getVariantDetails(Model model, HttpSession session, @RequestParam String caseId,
-			@RequestParam String chrom, @RequestParam Integer pos, @RequestParam String alt)
+	public String getVariantDetails(Model model, HttpSession session, @RequestParam String variantId)
 			throws Exception {
 		
 		//send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		Variant variantDetails = utils.getVariantDetails(caseId, chrom, pos, alt);
+		Variant variantDetails = utils.getVariantDetails(variantId);
 		VariantVcfAnnotationSummary summaryCanonical = null;
 		VariantVcfAnnotationSummary summaryOthers = null;
 		VariantDetailsSummary summary = null; 
@@ -194,6 +192,32 @@ public class OpenCaseController {
 			return summary.createVuetifyObjectJSON();
 		}
 		return null;
+		
+	}
+	
+	@RequestMapping(value = "/saveVariantSelection")
+	@ResponseBody
+	public String saveVariantSelection(Model model, HttpSession session,
+			@RequestBody String selectedVariantIds, @RequestParam String caseId)
+			throws Exception {
+		RequestUtils utils = new RequestUtils(modelDAO);
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		utils.saveVariantSelection(response, caseId, selectedVariantIds);
+		return response.createObjectJSON();
+		
+	}
+	
+	@RequestMapping(value = "/commitAnnotations")
+	@ResponseBody
+	public String commitAnnotations(Model model, HttpSession session,
+			@RequestBody String annotations, @RequestParam String caseId)
+			throws Exception {
+		RequestUtils utils = new RequestUtils(modelDAO);
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		utils.commitAnnotation(response, caseId, annotations);
+		return response.createObjectJSON();
 		
 	}
 	

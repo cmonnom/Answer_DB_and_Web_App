@@ -2,6 +2,9 @@ package utsw.bicf.answer.reporting.parse;
 
 public class AnnotationCategory {
 	
+	public AnnotationCategory() {
+	}
+
 	String title;
 	String text;
 	

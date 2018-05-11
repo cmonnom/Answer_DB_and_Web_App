@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import utsw.bicf.answer.controller.serialization.Units;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.FinalReport;
+import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.OpenCaseRow;
@@ -23,12 +24,14 @@ public class OpenCaseSummary extends Summary<OpenCaseRow> {
 	String caseId;
 	String caseName;
 	List<String> effects; //unique list of effects. Used for filtering by checking which effects should be included
+	Integer userId;
 
-	public OpenCaseSummary(ModelDAO modelDAO, OrderCase aCase, FinalReport finalReport, String uniqueIdField) {
+	public OpenCaseSummary(ModelDAO modelDAO, OrderCase aCase, FinalReport finalReport, String uniqueIdField, User user) {
 		super(createRows(modelDAO, aCase), uniqueIdField);
 		this.patientInfo = new PatientInfo(aCase, finalReport);
 		this.caseId = aCase.getCaseId();
 		this.caseName = aCase.getCaseName();
+		this.userId = user.getUserId();
 		effects = getUniqueEffects(aCase);
 	}
 
@@ -70,7 +73,7 @@ public class OpenCaseSummary extends Summary<OpenCaseRow> {
 		geneVariant.setWidth("225px");
 		headers.add(geneVariant);
 		Header iconFlags = new Header("Flags", "iconFlags");
-		iconFlags.setWidth("100px");
+		iconFlags.setWidth("150px");
 		iconFlags.setIsFlag(true);
 		headers.add(iconFlags);
 		Header effects = new Header("Effects", "effects");
@@ -132,6 +135,14 @@ public class OpenCaseSummary extends Summary<OpenCaseRow> {
 
 	public void setEffects(List<String> effects) {
 		this.effects = effects;
+	}
+
+	public Integer getUserId() {
+		return userId;
+	}
+
+	public void setUserId(Integer userId) {
+		this.userId = userId;
 	}
 
 }

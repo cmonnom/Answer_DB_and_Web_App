@@ -1,5 +1,11 @@
 const OpenCase = {
     template: `<div>
+
+    <v-snackbar :timeout="2000" :bottom="true" v-model="snackBarVisible">
+        {{ snackBarMessage }}
+        <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
+    </v-snackbar>
+
     <!-- save selection dialog -->
     <v-dialog v-model="saveDialogVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
@@ -20,8 +26,8 @@ const OpenCase = {
                 </data-table>
             </v-card-text>
             <v-card-actions>
-                <v-tooltip bottom>
-                    <v-btn color="primary" @click="saveSelection()" slot="activator">Save
+                <v-tooltip top>
+                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator">Save
                         <v-icon right dark>save</v-icon>
                     </v-btn>
                     <span>Save Variant</span>
@@ -68,6 +74,22 @@ const OpenCase = {
                     <span>Show/Hide Other VCF Annotations</span>
                 </v-tooltip>
                 <v-tooltip bottom>
+                    <v-btn :disabled="mdaAnnotations == ''" icon flat :color="(mdaAnnotationsVisible && mdaAnnotations !== '') ? 'amber accent-2' : ''"
+                        @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" slot="activator">
+                        <v-icon v-if="mdaAnnotations">mdi-message-bulleted</v-icon>
+                        <v-icon v-if="!mdaAnnotations">mdi-message-bulleted-off</v-icon>
+                    </v-btn>
+                    <span>Show/Hide MDA Annotations</span>
+                </v-tooltip>
+                <v-tooltip bottom>
+                    <v-btn :disabled="utswAnnotationsFormatted.length == 0" icon flat :color="(utswAnnotationsVisible && utswAnnotationsFormatted.length > 0) ? 'amber accent-2' : ''"
+                        @click="utswAnnotationsVisible = !utswAnnotationsVisible" slot="activator">
+                        <v-icon v-if="utswAnnotationsFormatted.length > 0">mdi-message-bulleted</v-icon>
+                        <v-icon v-if="utswAnnotationsFormatted.length == 0">mdi-message-bulleted-off</v-icon>
+                    </v-btn>
+                    <span>Show/Hide UTSW Annotations</span>
+                </v-tooltip>
+                <v-tooltip bottom>
                     <v-btn icon @click="variantDetailsVisible = false" slot="activator">
                         <v-icon>close</v-icon>
                     </v-btn>
@@ -84,7 +106,7 @@ const OpenCase = {
                             <v-card>
                                 <v-toolbar dark color="primary">
                                     <v-toolbar-title>
-                                        <v-icon>zoom_in</v-icon>
+                                        <v-icon color="amber accent-2">zoom_in</v-icon>
                                         Variant Details
                                     </v-toolbar-title>
 
@@ -108,8 +130,27 @@ const OpenCase = {
                                                                 <v-layout class="full-width">
                                                                     <v-flex xs12 class="text-xs-left grow">
                                                                         <span class="selectable">{{ item.label }}:</span>
-                                                                        <span v-if="!item.links" v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
-                                                                        <v-tooltip v-if="item.links" bottom v-for="id in item.ids" :key="id">
+                                                                        <span v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
+                                                                    </v-flex>
+                                                                </v-layout>
+                                                            </v-list-tile-content>
+                                                        </v-list-tile>
+                                                    </v-list>
+                                                </v-card-text>
+                                            </v-card>
+                                        </v-flex>
+                                    </v-layout>
+                                    <v-layout row wrap>
+                                        <v-flex xs12 v-for="table in linkTable" :key="table.name">
+                                            <v-card flat>
+                                                <v-card-text>
+                                                    <v-list class="dense-tiles">
+                                                        <v-list-tile v-for="item in table.items" :key="item.label">
+                                                            <v-list-tile-content class="pb-2">
+                                                                <v-layout class="full-width">
+                                                                    <v-flex xs12 class="text-xs-left grow">
+                                                                        <span class="selectable">{{ item.label }}:</span>
+                                                                        <v-tooltip v-if="item.links && id !== null" bottom v-for="id in item.ids" :key="id">
                                                                             <v-btn @click="handleIdLink(id)" slot="activator" v-html="formatIdLinkLabel(id, item)">
                                                                             </v-btn>
                                                                             <span>Open in new tab</span>
@@ -137,15 +178,57 @@ const OpenCase = {
                                 title-icon="table_chart">
                             </data-table>
                         </v-flex>
+                        <!-- MDA Annotation card -->
+                        <v-flex xs12 v-show="mdaAnnotationsVisible">
+                            <v-card>
+                                <v-toolbar dark color="primary">
+                                    <v-toolbar-title>
+                                        <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
+                                        MD Anderson Annotations
+                                    </v-toolbar-title>
+                                    <v-spacer></v-spacer>
+                                    <v-tooltip bottom>
+                                        <v-btn icon @click="mdaAnnotationsVisible = false" slot="activator">
+                                            <v-icon>close</v-icon>
+                                        </v-btn>
+                                        <span>Close</span>
+                                    </v-tooltip>
+                                </v-toolbar>
+                                <v-card-text v-for="(annotation, index) in mdaAnnotations.annotations" :key="index" v-html="annotation">
+                                </v-card-text>
+                            </v-card>
+
+                        </v-flex>
+                        <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsFormatted.length > 0">
+                            <v-card>
+                                <v-toolbar dark color="primary">
+                                    <v-toolbar-title>
+                                        <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
+                                        UTSW Annotations
+                                    </v-toolbar-title>
+                                    <v-spacer></v-spacer>
+                                    <v-tooltip bottom>
+                                        <v-btn icon @click="utswAnnotationsVisible = false" slot="activator">
+                                            <v-icon>close</v-icon>
+                                        </v-btn>
+                                        <span>Close</span>
+                                    </v-tooltip>
+                                </v-toolbar>
+                                <v-card-text v-for="(annotation, index) in utswAnnotationsFormatted" :key="index" v-html="annotation">
+
+                                </v-card-text>
+                            </v-card>
+
+                        </v-flex>
                     </v-layout>
                 </v-container>
             </v-card-text>
             <v-card-actions>
-                <v-tooltip bottom>
-                    <v-btn color="primary" @click="addAnnotation()" slot="activator">Add
+                <v-tooltip top>
+                    <v-btn color="primary" @click="startUserAnnotations()" slot="activator">Add
                         <v-icon right dark>note_add</v-icon>
                     </v-btn>
-                    <span>Create a new UTSW Annotation</span>
+                    <span>Create/Edit Your Annotations</span>
                 </v-tooltip>
                 <v-btn v-if="!currentRow.isSelected" :disabled="saveDialogVisible" color="success" @click="selectVariantForReport()" slot="activator">Select Variant
                     <v-icon right dark>done</v-icon>
@@ -159,6 +242,80 @@ const OpenCase = {
             </v-card-actions>
         </v-card>
     </v-dialog>
+
+    <!-- annotation dialog -->
+    <v-dialog v-model="annotationDialogVisible" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
+        <v-card ref="annotationDialog" class="soft-grey-background">
+            <v-toolbar dark color="primary" class="mb-2">
+                <v-toolbar-title>Your Annotations for variant: {{ currentVariant.geneName }} {{ currentVariant.notation }}</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-tooltip bottom>
+                    <v-btn icon @click="annotationDialogVisible = false" slot="activator">
+                        <v-icon>close</v-icon>
+                    </v-btn>
+                    <span>Close Annotations</span>
+                </v-tooltip>
+            </v-toolbar>
+            <v-card-text :style="getDialogMaxHeight()">
+                <v-card v-if="userEditingAnnotations.length == 0">
+                    <v-card-text>
+                        Click on
+                        <v-btn color="primary" @click="addCustomAnnotation()">Add
+                            <v-icon right dark>playlist_add</v-icon>
+                        </v-btn> to create a new annotation.
+                    </v-card-text>
+                </v-card>
+                <v-layout color="primary" row wrap v-for="(annotation, index) in userEditingAnnotations" :key="index">
+                    <v-flex xs12>
+                        <v-card class="mb-3">
+                            <v-card-text>
+                                <v-layout row wrap>
+                                    <v-flex xs12>
+                                        <span v-if="annotation.createdDate">
+                                            <b>Created on:</b> {{ annotation.createdDate }}</span>
+                                        <span v-if="annotation.modifiedDate" class="pl-4">
+                                            <b>Modified on:</b> {{ annotation.modifiedDate }}</span>
+                                        <v-tooltip bottom>
+                                            <v-btn slot="activator" icon flat @click="annotation.isVisible = !annotation.isVisible">
+                                                <v-icon v-show="!annotation.isVisible">visibility</v-icon>
+                                                <v-icon v-show="annotation.isVisible">visibility_off</v-icon>
+                                            </v-btn>
+                                            <span>Show/Hide Annotation</span>
+                                        </v-tooltip>
+                                        <v-tooltip bottom>
+                                            <v-btn slot="activator" icon flat @click="annotation.markedForDeletion = !annotation.markedForDeletion">
+                                                <v-icon>delete</v-icon>
+                                            </v-btn>
+                                            <span>Delete Annotation</span>
+                                        </v-tooltip>
+                                        <span class="pl-4" v-show="annotation.markedForDeletion">This annotation will be deleted on SAVE. Click CANCEL or
+                                            <v-icon>delete</v-icon> to cancel.
+                                        </span>
+                                    </v-flex>
+                                    <v-flex xs12>
+                                        <v-text-field v-show="annotation.isVisible" :textarea="true" ref="editAnnotation" :value="annotation.text" class="mr-2" :disabled="annotation.markedForDeletion">
+                                        </v-text-field>
+                                    </v-flex>
+                                </v-layout>
+                            </v-card-text>
+                        </v-card>
+                    </v-flex>
+                </v-layout>
+            </v-card-text>
+            <v-card-actions>
+                <v-btn color="primary" @click="addCustomAnnotation()">Add
+                    <v-icon right dark>playlist_add</v-icon>
+                </v-btn>
+                <v-btn color="success" @click="saveAnnotations()">Save
+                    <v-icon right dark>save</v-icon>
+                </v-btn>
+                <v-btn color="error" @click="cancelAnnotations()">Cancel
+                    <v-icon right dark>cancel</v-icon>
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
+
     <!-- advanced filtering side drawer -->
     <div v-if="advanceFilteringVisible">
         <v-navigation-drawer app width="500" class="elevation-5">
@@ -216,10 +373,10 @@ const OpenCase = {
 
                         <v-flex xs12 v-if="filter.isSelect">
                             <v-layout>
-                                    <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
+                                <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                                 <v-flex xs7>
-                                    <v-select class="no-height" v-bind:items="filter.selectItems" v-model="filter.value" item-text="name" item-value="value" :label="filter.headerText"
-                                        @input="filterNeedsReload = true" auto autocomplete clearable></v-select>
+                                    <v-select class="no-height" v-bind:items="filter.selectItems" v-model="filter.value" item-text="name" item-value="value"
+                                        :label="filter.headerText" @input="filterNeedsReload = true" auto autocomplete clearable></v-select>
                                 </v-flex>
                             </v-layout>
                         </v-flex>
@@ -251,7 +408,7 @@ const OpenCase = {
 
                         <v-flex xs12 v-if="filter.isString">
                             <v-layout>
-                                    <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
+                                <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                                 <v-flex xs7>
                                     <v-text-field class="no-height" :name="filter.fieldName" :label="filter.headerText" v-model="filter.value" @input="filterNeedsReload = true"></v-text-field>
                                 </v-flex>
@@ -309,12 +466,12 @@ const OpenCase = {
         <v-spacer></v-spacer>
         <v-tooltip bottom>
             <v-btn :disabled="patientTables.length == 0" flat icon @click="patientDetailsVisible = !patientDetailsVisible" slot="activator"
-            :color="patientDetailsVisible ? 'amber accent-2' : ''">
-            <!-- <v-icon>perm_identity</v-icon> -->
-            <v-icon>assignment_ind</v-icon>
-        </v-btn>
-        <span>Show/Hide Patient Details</span>
-    </v-tooltip>
+                :color="patientDetailsVisible ? 'amber accent-2' : ''">
+                <!-- <v-icon>perm_identity</v-icon> -->
+                <v-icon>assignment_ind</v-icon>
+            </v-btn>
+            <span>Show/Hide Patient Details</span>
+        </v-tooltip>
         <v-tooltip bottom>
             <v-btn flat icon @click="openSaveDialog()" slot="activator" :color="saveDialogVisible ? 'amber accent-2' : ''">
                 <v-icon>save</v-icon>
@@ -323,13 +480,13 @@ const OpenCase = {
         </v-tooltip>
     </v-toolbar>
     <v-progress-linear v-if="!caseName" :indeterminate="true"></v-progress-linear>
-    
+
     <v-layout v-if="patientDetailsVisible">
         <v-flex xs12 md12 lg10 xl9>
             <div class="text-xs-center pb-3">
                 <v-toolbar dark color="primary">
                     <!-- <v-icon>perm_identity</v-icon> -->
-                    <v-icon>assignment_ind</v-icon>
+                    <v-icon :color="patientDetailsVisible ? 'amber accent-2' : ''">assignment_ind</v-icon>
                     <v-toolbar-title>Patient Details</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-tooltip bottom>
@@ -378,7 +535,10 @@ const OpenCase = {
             <span>Advanced Filtering</span>
         </v-tooltip>
     </data-table>
-</div>` , data() { return { loading: true, patientTables: [], patientDetailsVisible: true, caseName: "",      caseId: "",
+</div>`, data() {
+        return {
+            loading: true, patientTables: [], patientDetailsVisible: true, caseName: "",
+            caseId: "",
             advanceFilteringVisible: false,
             filters: [],
             effects: [],
@@ -390,91 +550,84 @@ const OpenCase = {
             currentRow: {},
             currentVariantFlags: [],
             variantDataTables: [],
+            linkTable: [],
             saveDialogVisible: false,
             annotationVariantDetailsVisible: true,
             annotationVariantCanonicalVisible: true,
             annotationVariantOtherVisible: true,
+            saveVariantDisabled: true,
+            annotationDialogVisible: false,
+            userAnnotations: [],
+            userEditingAnnotations: [],
+            snackBarMessage: "",
+            snackBarVisible: false,
+            utswAnnotations: [],
+            utswAnnotationsFormatted: [],
+            mdaAnnotations: "",
+            mdaAnnotationsFormatted: [],
+            mdaAnnotationsVisible: true,
+            utswAnnotationsVisible: true
         }
     }, methods: {
         handleDialogs(response, callback) {
             if (response.isXss) {
-                bus.$emit("xss-error", [this, response.reason]);
-            }
-            else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
-            }
-            else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
-            }
+                bus.$emit("xss-error",
+                    [this, response.reason]);
+            } else if (response.isLogin) { bus.$emit("login-needed", [this, callback]) } else if (response.success
+                === false) { bus.$emit("some-error", [this, response.message]); }
         },
         getDialogMaxHeight() {
-            var height = window.innerHeight - 120;
-            return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: auto";
+            var height = window.innerHeight
+                - 120; return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: auto";
         },
         getAjaxData() {
-            this.loading = true;
-            axios({
-                method: 'post',
-                url: webAppRoot + "/getCaseDetails",
-                params: {
-                    caseId: this.$route.params.id
-                },
-                data: {
-                    filters: this.filters
-                }
-            })
-                .then(response => {
+            this.loading
+                = true; axios({
+                    method: 'post', url: webAppRoot + "/getCaseDetails", params: { caseId: this.$route.params.id }, data: {
+                        filters:
+                            this.filters
+                    }
+                }).then(response => {
                     if (response.data.isAllowed) {
                         this.patientTables = response.data.patientInfo.patientTables;
                         this.caseName = response.data.caseName;
                         this.caseId = response.data.caseId;
                         this.$refs.geneVariantDetails.manualDataFiltered(response.data);
                         this.effects = response.data.effects;
+                        this.userId = response.data.userId;
                         this.populateCheckBoxes();
-                        this.filterNeedsReload = false;
-                        this.addHeaderAction(response);
+                        this.filterNeedsReload = false; this.addHeaderAction(response);
                     }
                     else {
                         this.handleDialogs(response.data, this.getAjaxData);
                     }
                     this.loading = false;
-                })
-                .catch(error => {
+                }
+                ).catch(error => {
                     this.loading = false;
                     console.log(error);
-                });
+                }
+                );
         },
         getVariantFilters() {
-            axios.get(webAppRoot + "/getVariantFilters", {
-                params: {
-                    caseId: this.$route.params.id
-                }
-            })
-                .then(response => {
+            axios.get(webAppRoot + "/getVariantFilters",
+                { params: { caseId: this.$route.params.id } }).then(response => {
                     if (response.data.isAllowed) {
                         this.filters = response.data.filters;
                         this.populateCheckBoxes();
-                    }
-                    else {
-                        this.handleDialogs(response, this.getVariantFilters);
-                    }
-                })
-                .catch(error => {
+                    } else { this.handleDialogs(response, this.getVariantFilters); }
+                }).catch(error => {
                     console.log(error);
                 });
         },
         populateCheckBoxes() {
-            for (var i = 0; i < this.filters.length; i++) {
-                var filter = this.filters[i];
-                if (filter.isCheckBox) {
+            for (var i = 0; i
+                < this.filters.length; i++) {
+                var filter = this.filters[i]; if (filter.isCheckBox) {
                     if (filter.fieldName == 'effects') {
-                        if (filter.checkBoxes.length > 0) {
-                            return;
-                        }
-                        filter.checkBoxes = [];
-                        for (var j = 0; j < this.effects.length; j++) {
-                            filter.checkBoxes.push({ name: this.effects[j], value: false });
-                        }
+                        if
+                        (filter.checkBoxes.length > 0) { return; } filter.checkBoxes = []; for (var j = 0; j
+                            < this.effects.length; j++) { filter.checkBoxes.push({ name: this.effects[j], value: false }); }
                     }
                 }
             }
@@ -484,10 +637,8 @@ const OpenCase = {
         },
         clearFilters() {
             for (var i = 0; i < this.filters.length; i++) {
-                var filter = this.filters[i];
-                this.clearFilter(filter);
-            }
-            this.getAjaxData();
+                var filter = this.filters[i]; this.clearFilter(filter);
+            } this.getAjaxData();
         },
         clearFilter(filter, doRefresh) {
             filter.value = null;
@@ -497,53 +648,46 @@ const OpenCase = {
             filter.maxDateValue = null;
             filter.valueTrue = false;
             filter.valueFalse = false;
-
             if (filter.isCheckBox) {
                 for (var i = 0; i < filter.checkBoxes.length; i++) {
                     filter.checkBoxes[i].value = false;
                 }
             }
-
-            if (doRefresh) { //refresh only if closing a chip
+            if (doRefresh) { //refresh only if closing a chip 
                 this.getAjaxData();
             }
         },
         clearCheckBoxFilter(checkBox) {
-            checkBox.value = false;
-            //TODO refresh
+            checkBox.value = false; //TODO refresh
         },
-        // display the content of the filter with the appropriate value min max etc
-        getFilterChip(filter) {
-            //TODO
+        // display the content of the filter with the appropriate value min max etc 
+        getFilterChip(filter) { //TODO 
             if (filter.isSelect) {
                 return filter.headerText + ": <b>" + filter.value + "</b>";
             }
             if (filter.isBoolean) {
-                return "Include " + filter.headerTextTrue + ": <b>" + (filter.valueTrue ? 'YES ' : 'NO ') + "</b><br/>"
-                    + "Include " + filter.headerTextFalse + ": <b>" + (filter.valueFalse ? 'YES' : 'NO') + "</b>"
-            }
-            if (filter.isString) {
+                return "Include " + filter.headerTextTrue
+                    + ": <b>" + (filter.valueTrue ? 'YES ' : 'NO ')
+                    + "</b><br/>" + "Include "
+                    + filter.headerTextFalse + ": <b>"
+                    + (filter.valueFalse ? 'YES' : 'NO') + "</b>";
+            } if (filter.isString) {
                 return filter.headerText + " contains <b>" + filter.value + "</b>";
-            }
-            if (filter.isNumber) {
-                // return (filter.minValue != null ? filter.minValue : '') + " <= " +  filter.headerText
-                // + " <= " + (filter.maxValue != null ? filter.maxValue : '');
-                return filter.headerText + ": <b>[ " + (filter.minValue != null ? filter.minValue : '') + ":"
+            } if (filter.isNumber) { // 
+                return filter.headerText + ": <b>[ "
+                    + (filter.minValue != null ? filter.minValue : '') + ":"
                     + (filter.maxValue != null ? filter.maxValue : '') + " ]</b>";
-            }
-            //TODO dates and numbers
+            } //TODO dates and numbers
             return filter.headerText;
-        },
-        getFilterCheckBoxChip(filter, checkBox) {
-            return filter.headerText + ": <b>" + checkBox.name + "</b>";
-        },
-        toggleFilters() {
+        }, getFilterCheckBoxChip(filter, checkBox) {
+            return filter.headerText + ": <b>" + checkBox.name
+                + "</b>";
+        }, toggleFilters() {
             this.advanceFilteringVisible = !this.advanceFilteringVisible;
             if (!this.advanceFilteringVisible) {
                 bus.$emit("need-layout-resize", this);
             }
-        },
-        isFilterUsed(filter) {
+        }, isFilterUsed(filter) {
             if (filter.isCheckBox) {
                 return false; //handled in a separate chip
             }
@@ -559,13 +703,9 @@ const OpenCase = {
             }
             return filter.value != null && filter.value !== "";
         },
-        isCheckBoxFilterUsed(checkBox) {
-            return checkBox.value == true;
-        },
-        isInputNumberValid(filter) {
+        isCheckBoxFilterUsed(checkBox) { return checkBox.value == true; }, isInputNumberValid(filter) {
             if (filter.isNumber) {
-                var isValid = (filter.minValue === "" || !isNaN(filter.minValue))
-                    && (filter.maxValue === "" || !isNaN(filter.maxValue));
+                var isValid = (filter.minValue === "" || !isNaN(filter.minValue)) && (filter.maxValue === "" || !isNaN(filter.maxValue));
                 if (isValid) {
                     if (filter.minValue !== "" && filter.minValue != null) {
                         filter.minValue = parseFloat(filter.minValue);
@@ -573,10 +713,8 @@ const OpenCase = {
                     if (filter.maxValue !== "" && filter.maxValue != null) {
                         filter.maxValue = parseFloat(filter.maxValue);
                     }
-                }
-                return isValid;
-            }
-            return true;
+                } return isValid;
+            } return true;
         },
         addHeaderAction(response) {
             for (var i = 0; i < response.data.headers.length; i++) {
@@ -587,108 +725,109 @@ const OpenCase = {
                     break;
                 }
             }
-        },
-        getVariantDetails(item) {
+        }, getVariantDetails(item) {
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
-            axios.get(webAppRoot + "/getVariantDetails", {
-                params: {
-                    caseId: this.$route.params.id,
-                    chrom: item.chrom,
-                    pos: item.pos,
-                    alt: item.alt
-                }
-            })
-                .then(response => {
-                    if (response.data.isAllowed) {
-                        this.currentVariant = response.data.variantDetails;
-                        this.variantDataTables = [];
-                        var infoTable = {
-                            name: "infoTable",
-                            items: [
-                                {
-                                    label: "Chromosome Position", value: this.currentVariant.chrom + ":" + this.currentVariant.pos
-                                },
-                                {
-                                    label: "Gene", value: this.currentVariant.geneName
-                                },
-                                {
-                                    label: "Notation", value: this.currentVariant.notation
-                                },
-                                {
-                                    label: "Alt", value: this.currentVariant.alt
-                                },
-                                {
-                                    label: "Type", value: this.currentVariant.type
-                                },
-                                {
-                                    label: "IDs", ids: this.currentVariant.ids, cosmicPatients: this.currentVariant.cosmicPatients,
-                                    links: true
-                                }
+            axios.get(webAppRoot + "/getVariantDetails", { params: { variantId: item.oid } }).then(response => {
+                if (response.data.isAllowed) {
+                    this.currentVariant = response.data.variantDetails;
+                    this.variantDataTables = [];
+                    var infoTable = {
+                        name: "infoTable",
+                        items: [{
+                            label: "Chromosome Position", value: this.currentVariant.chrom + ":"
+                                + this.currentVariant.pos
+                        },
+                        {
+                            label: "Gene", value: this.currentVariant.geneName
+                        },
+                        {
+                            label: "Notation", value:
+                                this.currentVariant.notation
+                        },
+                        {
+                            label: "Alt", value: this.currentVariant.alt
+                        },
+                        {
+                            label: "Type", value: this.currentVariant.type
+                        }]
+                    };
+                    this.variantDataTables.push(infoTable);
 
-                            ]
-                        };
-                        this.variantDataTables.push(infoTable);
-                        var depthTable = {
+                    this.linkTable = [{
+                        name: "linkTable", items: [
+                            {
+                                label: "IDs", ids:
+                                    this.currentVariant.ids, cosmicPatients: this.currentVariant.cosmicPatients, links: true
+                            }
+                        ]
+                    }];
+
+                    var depthTable =
+                        {
                             name: "depthTable",
                             items: [
                                 {
-                                    label: "Tumor Total Depth", value: this.currentVariant.tumorTotalDepth
+                                    label: "Tumor Total Depth",
+                                    value: this.currentVariant.tumorTotalDepth
                                 },
                                 {
-                                    label: "Tumor Alt Percent", value: this.formatPercent(this.currentVariant.tumorAltFrequency)
+                                    label:
+                                        "Tumor Alt Percent",
+                                    value: this.formatPercent(this.currentVariant.tumorAltFrequency)
                                 },
                                 {
-                                    label: "Normal Total Depth", value: this.currentVariant.normalTotalDepth
+                                    label: "Normal Total Depth",
+                                    value: this.currentVariant.normalTotalDepth
                                 },
                                 {
-                                    label: "Normal Alt Percent", value: this.formatPercent(this.currentVariant.normalAltFrequency)
+                                    label: "Normal Alt Percent",
+                                    value: this.formatPercent(this.currentVariant.normalAltFrequency)
+                                }, {
+                                    label: "RNA Total Depth",
+                                    value: this.currentVariant.rnaTotalDepth
                                 },
                                 {
-                                    label: "RNA Total Depth", value: this.currentVariant.rnaTotalDepth
-                                },
-                                {
-                                    label: "RNA Alt Percent", value: this.formatPercent(this.currentVariant.rnaAltFrequency)
+                                    label: "RNA Alt Percent",
+                                    value: this.formatPercent(this.currentVariant.rnaAltFrequency)
                                 }
                             ]
                         };
-                        this.variantDataTables.push(depthTable);
-                        var dataTable = {
-                            name: "dataTable",
-                            items: [
-                                {
-                                    label: "Callers", value: this.currentVariant.callSet.join(", ")
-                                },
-                                {
-                                    label: "Filters", value: this.currentVariant.filters.join(", ")
-                                }
-                            ]
-                        };
-                        this.variantDataTables.push(dataTable);
-
-                        this.$refs.canonicalVariantAnnotation.manualDataFiltered(response.data.canonicalSummary);
-                        this.$refs.otherVariantAnnotations.manualDataFiltered(response.data.otherSummary);
-
-                        this.variantDetailsVisible = true;
-                    }
-                    else {
-                        this.handleDialogs(response.data, this.getVariantDetails.bind(null, item));
-                    }
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-        },
-        updateVariantVcfAnnotationTable() {
+                    this.variantDataTables.push(depthTable);
+                    var dataTable = {
+                        name: "dataTable", items: [{
+                            label: "Callers",
+                            value: this.currentVariant.callSet.join(", ")
+                        }, {
+                            label: "Filters", value: this.currentVariant.filters.join(", ")
+                        }]
+                    };
+                    this.variantDataTables.push(dataTable);
+                    this.$refs.canonicalVariantAnnotation.manualDataFiltered(response.data.canonicalSummary);
+                    this.$refs.otherVariantAnnotations.manualDataFiltered(response.data.otherSummary);
+                    this.userAnnotations = this.currentVariant.referenceVariant.utsw_annotations.filter(a => a.userId == this.userId);
+                    this.utswAnnotations = this.currentVariant.referenceVariant.utsw_annotations;
+                    this.mdaAnnotations = this.currentVariant.mdaAnnotation ? this.currentVariant.mdaAnnotation : "";
+                    this.variantDetailsVisible = true;
+                } else {
+                    this.handleDialogs(response.data, this.getVariantDetails.bind(null,
+                        item));
+                }
+            }).catch(error => {
+                console.log(error);
+            });
+        }, updateVariantVcfAnnotationTable() {
             var items = this.currentVariant.vcfAnnotations;
             var headers = this.vcfAnnotationHeaders;
             var headerOrder = this.vcfAnnotationHeadersOrder;
             this.$refs.variantsSelected.manualDataFiltered(
-                { items: items, 
+                {
+                    items: items,
                     headers: headers,
                     uniqueFieldId: "cdnaPosition",
                     headerOrder: headerOrder
-             });
+                }
+            );
         },
         openVariant(item) {
             this.getVariantDetails(item);
@@ -696,31 +835,111 @@ const OpenCase = {
         handleIdLink(id) {
             var link = "";
             if (id.indexOf('rs') == 0) {
-                link = "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?searchType=adhoc_search&type=rs&rs=" + id;
+                link = "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=" + id;
+            } else if (id.indexOf('COSM') == 0) {
+                link = "http://www.google.com?search?q=" + id;
             }
-            else if (id.indexOf('COSM') == 0) {
-                link = "http://www.google.com?query=" + id;
-            }
-            window.open(link, "_blank");
+            else {
+                link = "https://www.bing.com/search?q=" + id;
+            } window.open(link, "_blank");
         },
         formatIdLinkLabel(id, item) {
-           var cosmicIds = item.ids.filter(id => id.indexOf('rs') != 0);
-           var index = cosmicIds.indexOf(id);
+            var cosmicIds = item.ids.filter(id => id.indexOf('COSM') == 0);
+            var index = cosmicIds.indexOf(id);
             if (id.indexOf('rs') == 0) {
                 return "&nbsp;" + id + "&nbsp;";
             }
             else if (id.indexOf('COSM') == 0) {
                 return "&nbsp;" + id + " (" + item.cosmicPatients[index] + ")&nbsp;";
             }
+            else {
+                return "&nbsp;" + id + "&nbsp;";
+            }
         },
         formatPercent(value) {
             if (value !== null && !isNaN(value)) {
-                return (Math.round(parseFloat(value) * 100000) / 1000) + "%";
-            }
-            return "";
+                return (Math.round(parseFloat(value)
+                    * 100000) / 1000) + "%";
+            } return "";
         },
-        addAnnotation() {
-            //TODO
+        formatLocalAnnotations(annotations, showUser) {
+            var formatted = [];
+            for
+            (var i = 0; i
+                < annotations.length; i++) {
+                var annotation = "";
+                if (showUser) {
+                    annotation = "<b>" + annotations[i].user.first + " " + annotations[i].user.last
+                        + "</b>: ";
+                } annotation += annotations[i].text.replace(/\n/g, "<br/>") + "<br/>";
+                formatted.push(annotation);
+            }
+            return formatted;
+        },
+        startUserAnnotations() {
+            //first make a copy of annotations for editing 
+            //this will allow to cancel without modifying the existing annotations 
+            this.userEditingAnnotations = [];
+            for (var i = 0; i < this.userAnnotations.length; i++) {
+                this.userEditingAnnotations.push(JSON.parse(JSON.stringify(this.userAnnotations[i])));
+            }
+            this.annotationDialogVisible = true;
+        },
+        formatAnnotations() {
+            this.utswAnnotationsFormatted = this.formatLocalAnnotations(this.utswAnnotations, true);
+            // this.userAnnotationsFormatted = this.formatLocalAnnotations(this.userAnnotations, false);
+        },
+        addCustomAnnotation() {
+            //TODO 
+            this.userEditingAnnotations.push({
+                text: "", markedForDeletion: false, isVisible: true
+            });
+            this.$nextTick(function () {
+                this.$refs.editAnnotation[this.$refs.editAnnotation.length - 1].focus(); this.$vuetify.goTo(
+                    "textarea:last-child");
+            });
+        }, saveAnnotations() {
+            this.annotationDialogVisible = false;
+            //copy edits to original annotations 
+            setTimeout(function () { // 
+                this.userAnnotations = this.userEditingAnnotations; // 
+            }, 2000);
+            var editedAnnotations = this.$refs.editAnnotation;
+            for (var i = 0; i < editedAnnotations.length; i++) {
+                if (!this.userAnnotations[i]) {
+                    this.userAnnotations.push({
+                        annotationId:
+                            -1
+                    });
+                } this.userAnnotations[i].text = editedAnnotations[i].inputValue;
+                this.userAnnotations[i].isVisible = this.userEditingAnnotations[i].isVisible;
+                this.userAnnotations[i].markedForDeletion = this.userEditingAnnotations[i].markedForDeletion;
+            } this.commitAnnotations();
+        },
+        commitAnnotations() {
+            axios.get("./commitAnnotations", {
+                params: { caseId: this.$route.params.id }, data: {
+                    annotations:
+                        this.userAnnotations,
+                }
+            }).then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    this.getVariantDetails(this.currentRow);
+                    this.snackBarMessage = "Annotation(s) Saved";
+                    this.snackBarVisible = true;
+                } else {
+                    this.handleDialogs(response.data, this.commitAnnotations);
+                }
+            })
+                .catch(error => {
+                    alert(error);
+                });
+        },
+        cancelAnnotations() {
+            this.annotationDialogVisible = false; this.$nextTick(function
+                () { //wait until dialog is closed 
+                this.userEditingAnnotations = [];
+            });
         },
         selectVariantForReport() {
             this.$refs.geneVariantDetails.addToSelection(this.currentRow);
@@ -732,32 +951,48 @@ const OpenCase = {
         },
         updateSelectedVariantTable() {
             var selectedVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected);
+            this.saveVariantDisabled = selectedVariants.length == 0;
             var headers = this.$refs.geneVariantDetails.headers;
-            var headerOrder = this.$refs.geneVariantDetails.headerOrder;
-            this.$refs.variantsSelected.manualDataFiltered(
-                { items: selectedVariants, 
-                    headers: headers,
-                    uniqueFieldId: "chromPos",
-                    headerOrder: headerOrder
-             });
+            var headerOrder = this.$refs.geneVariantDetails.headerOrder; this.$refs.variantsSelected.manualDataFiltered(
+                { items: selectedVariants, headers: headers, uniqueFieldId: "chromPos", headerOrder: headerOrder });
         },
-        openSaveDialog() {
-           this.updateSelectedVariantTable();
-            this.saveDialogVisible = true;
-        },
-        saveSelection() {
-            //TODO
+        openSaveDialog() { this.updateSelectedVariantTable(); this.saveDialogVisible = true; }, saveSelection() { //TODO 
+            var selectedVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
+            axios({
+                method:
+                    'post',
+                url: webAppRoot + "/saveVariantSelection",
+                params: {
+                    caseId: this.$route.params.id
+                }, data: {
+                    selectedVariantIds:
+                        selectedVariantIds
+                }
+            }).then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    this.saveDialogVisible = false;
+                    this.getAjaxData();
+                }
+                else {
+                    this.handleDialogs(response.data, this.saveSelection);
+                } this.loading =
+                    false;
+            }).catch(error => {
+                this.loading = false;
+                console.log(error);
+            });
         }
     },
     mounted: function () {
         this.getAjaxData();
-        bus.$emit("clear-item-selected", [this]);
-        this.getVariantFilters();
+        bus.$emit("clear-item-selected", [this]); this.getVariantFilters();
     },
     destroyed: function () {
+
     },
     watch: {
         '$route': 'getAjaxData',
         'scrollPos': 'scrollWithBar'
     }
+
 };

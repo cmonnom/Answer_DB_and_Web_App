@@ -36,6 +36,9 @@ public class AnnotationRow {
 	AnnotationCategory implication;
 	AnnotationCategory tumorInfo;
 	
+	public AnnotationRow() {
+	}
+
 	/**
 	 * Annotation is composed of 3 or 4 parts.
 	 * Need to separate them by their "title"

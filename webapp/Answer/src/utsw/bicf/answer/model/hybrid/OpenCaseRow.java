@@ -13,6 +13,7 @@ import utsw.bicf.answer.model.extmapping.Variant;
 
 public class OpenCaseRow {
 	
+	String oid; //variant id in MangoDB
 	String chrom;
 	Integer pos;
 	String chromPos;
@@ -36,11 +37,15 @@ public class OpenCaseRow {
 	String alt;
 	List<String> filters; //list of filers
 	FlagValue iconFlags;
+	Boolean isSelected;
+	Boolean mdaAnnotated;
+	Boolean utswAnnotated;
 	
 	
 	List<Button> buttons = new ArrayList<Button>();
 	
 	public OpenCaseRow(Variant variant) {
+		this.oid = variant.getMangoDBId().getOid();
 		this.chrom = variant.getChrom();
 		this.pos = variant.getPos();
 		this.chromPos = variant.getChrom().toUpperCase() + ":" + variant.getPos();
@@ -63,6 +68,10 @@ public class OpenCaseRow {
 		this.externalIds = variant.getIds();
 		this.alt = variant.getAlt();
 		this.filters = variant.getFilters();
+		this.isSelected = variant.getSelected();
+		this.mdaAnnotated = variant.getMdaAnnotated();
+		this.utswAnnotated = variant.getUtswAnnotated();
+		
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		boolean failed = filters.contains(Variant.VALUE_FAIL);
@@ -72,12 +81,17 @@ public class OpenCaseRow {
 		else {
 			icons.add(new VuetifyIcon("check_circle", "green", "Passed QC"));
 		}
-		boolean annotated = true;
-		if (annotated) {
-			icons.add(new VuetifyIcon("announcement", "green", "Annotated"));
+		if (mdaAnnotated) {
+			icons.add(new VuetifyIcon("mdi-message-bulleted", "green", "MDA Annotations"));
 		}
 		else {
-			icons.add(new VuetifyIcon("announcement", "grey", "No Annotations"));
+			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No MDA Annotations"));
+		}
+		if (utswAnnotated) {
+			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
+		}
+		else {
+			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
 		}
 		iconFlags = new FlagValue(icons);
 		
@@ -202,6 +216,16 @@ public class OpenCaseRow {
 
 	public String getGeneName() {
 		return geneName;
+	}
+
+
+	public String getOid() {
+		return oid;
+	}
+
+
+	public Boolean getIsSelected() {
+		return isSelected;
 	}
 
 

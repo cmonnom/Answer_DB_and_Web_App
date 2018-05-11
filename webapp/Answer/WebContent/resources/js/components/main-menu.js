@@ -56,7 +56,6 @@ Vue.component('main-menu', {
 		return {
 			menuItems: [
 				{ title: 'Home', iconBefore: 'home', name: 'Home', regularItem: true },
-				{ title: 'New Case', name: 'NewCase', regularItem: true },
 				{ title: 'Open Case', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseSearch: true },
 				// { title: 'Sample Coverage', name: 'SampleCoverageNoSampleNoChrom', regularItem: true },
 				// { title: 'Low Coverage', name: 'LowCoverageBrowser', regularItem: true },

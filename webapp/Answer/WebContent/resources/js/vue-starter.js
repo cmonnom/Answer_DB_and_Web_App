@@ -26,14 +26,6 @@ var router = new VueRouter({
 			}
 		},
 		{
-			path: webAppRoot + '/newCase',
-			name: 'NewCase',
-			component: NewCase,
-			meta: {
-				title: 'New Case'
-			}
-		},
-		{
 			path: webAppRoot + '/admin',
 			name: 'Admin',
 			component: Admin,

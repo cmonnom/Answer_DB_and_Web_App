@@ -195,3 +195,7 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 .soft-grey-background {
     background-color: #fafafa !important;
 }
+
+.card__text {
+    padding: 4px;
+}

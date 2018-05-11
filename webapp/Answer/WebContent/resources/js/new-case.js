@@ -32,71 +32,8 @@ const NewCase = {
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
 
-    <!-- annotation dialog -->
-    <v-dialog v-model="annotationDialogVisible" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
-        <v-card ref="annotationDialog" color="primary">
-            <v-card-title>
-                <span class="headline">Your Annotations for {{ variantAnnotated }}</span>
-            </v-card-title>
-            <v-card-text :style="getDialogMaxHeight()">
-                <v-card v-if="userEditingAnnotations.length == 0">
-                    <v-card-text>
-                        Click on
-                        <v-btn color="primary" @click="addAnnotation()">Add
-                            <v-icon right dark>playlist_add</v-icon>
-                        </v-btn> to create a new annotation.
-                    </v-card-text>
-                </v-card>
-                <v-layout color="primary" row wrap v-for="(annotation, index) in userEditingAnnotations" :key="index">
-                    <v-flex xs12>
-                        <v-card class="mb-3">
-                            <v-card-text>
-                                <v-layout row wrap>
-                                    <v-flex xs12>
-                                        <span v-if="annotation.createdDateFormatted">
-                                            <b>Created on:</b> {{ annotation.createdDateFormatted }}</span>
-                                        <span v-if="annotation.modifiedDateFormatted" class="pl-4">
-                                            <b>Modified on:</b> {{ annotation.modifiedDateFormatted }}</span>
-                                        <v-tooltip bottom>
-                                            <v-btn slot="activator" icon flat @click="annotation.isVisible = !annotation.isVisible">
-                                                <v-icon v-show="!annotation.isVisible">visibility</v-icon>
-                                                <v-icon v-show="annotation.isVisible">visibility_off</v-icon>
-                                            </v-btn>
-                                            <span>Show/Hide Annotation</span>
-                                        </v-tooltip>
-                                        <v-tooltip bottom>
-                                            <v-btn slot="activator" icon flat @click="annotation.markedForDeletion = !annotation.markedForDeletion">
-                                                <v-icon>delete</v-icon>
-                                            </v-btn>
-                                            <span>Delete Annotation</span>
-                                        </v-tooltip>
-                                        <span class="pl-4" v-show="annotation.markedForDeletion">This annotation will be deleted on SAVE. Click CANCEL or
-                                            <v-icon>delete</v-icon> to cancel.
-                                        </span>
-                                    </v-flex>
-                                    <v-flex xs12>
-                                        <v-text-field v-show="annotation.isVisible" :textarea="true" ref="editAnnotation" :value="annotation.text" class="mr-2" :disabled="annotation.markedForDeletion">
-                                        </v-text-field>
-                                    </v-flex>
-                                </v-layout>
-                            </v-card-text>
-                        </v-card>
-                    </v-flex>
-                </v-layout>
-            </v-card-text>
-            <v-card-actions>
-                <v-btn color="primary" @click="addAnnotation()">Add
-                    <v-icon right dark>playlist_add</v-icon>
-                </v-btn>
-                <v-btn color="success" @click="saveAnnotations()">Save
-                    <v-icon right dark>save</v-icon>
-                </v-btn>
-                <v-btn color="error" @click="cancelAnnotations()">Cancel
-                    <v-icon right dark>cancel</v-icon>
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+ 
+    
 
     <v-toolbar dark color="primary" fixed app>
         <v-toolbar-title class="white--text">
@@ -465,7 +402,7 @@ const NewCase = {
             });
             this.$nextTick(function () {
                 this.$refs.editAnnotation[this.$refs.editAnnotation.length - 1].focus();
-                $vuetify.goTo("textarea:last-child");
+                this.$vuetify.goTo("textarea:last-child");
             });
         },
         formatAnnotations() {

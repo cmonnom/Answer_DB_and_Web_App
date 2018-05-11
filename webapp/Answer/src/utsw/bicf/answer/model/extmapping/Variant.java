@@ -3,8 +3,9 @@ package utsw.bicf.answer.model.extmapping;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import utsw.bicf.answer.reporting.parse.AnnotationRow;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Variant {
@@ -30,6 +31,8 @@ public class Variant {
 	
 	Boolean isAllowed = true;
 	
+	@JsonProperty("_id")
+	MangoDBId mangoDBId;
 	String chrom;
 	String geneName;
 	List<String> effects;
@@ -50,8 +53,14 @@ public class Variant {
 	List<String> ids; //list of external database ids (dbsnp, cosmic, etc)
 	String alt;
 	List<String> filters; //list of filers
+	Boolean selected;
 	
 	List<VCFAnnotation> vcfAnnotations;
+	AnnotationRow mdaAnnotation;
+	ReferenceVariant referenceVariant;
+	Boolean mdaAnnotated;
+	Boolean utswAnnotated;
+	
 	
 	public Variant() {
 		
@@ -238,10 +247,34 @@ public class Variant {
 	}
 
 
+	public MangoDBId getMangoDBId() {
+		return mangoDBId;
+	}
 
 
+	public AnnotationRow getMdaAnnotation() {
+		return mdaAnnotation;
+	}
 
-	
+
+	public Boolean getSelected() {
+		return selected;
+	}
+
+
+	public ReferenceVariant getReferenceVariant() {
+		return referenceVariant;
+	}
+
+
+	public Boolean getMdaAnnotated() {
+		return mdaAnnotated;
+	}
+
+
+	public Boolean getUtswAnnotated() {
+		return utswAnnotated;
+	}
 
 
 }

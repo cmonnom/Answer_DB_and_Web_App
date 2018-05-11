@@ -26,7 +26,7 @@ Vue.component('data-table', {
 
   <!-- Top tool bar with menu options -->
   <v-toolbar dark color="primary" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
-    <v-icon v-if="titleIcon">{{ titleIcon }}</v-icon>
+    <v-icon v-if="titleIcon" color="amber accent-2">{{ titleIcon }}</v-icon>
     <v-toolbar-title class="white--text">{{ tableTitle }}
       <span v-if="showRowCount" v-html="getRowCount()"></span>
     </v-toolbar-title>

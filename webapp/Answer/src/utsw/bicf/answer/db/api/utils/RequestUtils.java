@@ -103,8 +103,8 @@ public class RequestUtils {
 	public AjaxResponse assignCaseToUser(List<User> users, String caseId) throws ClientProtocolException, IOException, URISyntaxException {
 		String userIds = users.stream().map(user -> user.getUserId().toString()).collect(Collectors.joining(","));
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("assigncase?caseId=")
-		.append(caseId).append("&userIds=").append(userIds);
+		sbUrl.append("case/").append(caseId).append("/assignusers")
+		.append("?userIds=").append(userIds);
 		URI uri = new URI(sbUrl.toString());
 		
 		requestPut = new HttpPut(uri);
@@ -248,20 +248,14 @@ public class RequestUtils {
 	/**
 	 * Get all information about a variant, including annotations
 	 * @param caseId
-	 * @param chrom
-	 * @param pos
-	 * @param alt
 	 * @return
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 * @throws URISyntaxException
 	 */
-	public Variant getVariantDetails(String caseId, String chrom, Integer pos, String alt) throws ClientProtocolException, IOException, URISyntaxException {
+	public Variant getVariantDetails(String variantId) throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("variant").append("?caseId=").append(caseId)
-		.append("&chrom=").append(chrom)
-		.append("&pos=").append(pos)
-		.append("&alt=").append(alt);
+		sbUrl.append("variant/").append(variantId);
 		URI uri = new URI(sbUrl.toString());
 		requestGet = new HttpGet(uri);
 		
@@ -275,6 +269,49 @@ public class RequestUtils {
 			return variant;
 		}
 		return null;
+	}
+
+	public void saveVariantSelection(AjaxResponse ajaxResponse, String caseId, String selectedVariantIds) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/selectvariants");
+		URI uri = new URI(sbUrl.toString());
+		
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		requestPost.setEntity(new StringEntity(selectedVariantIds, ContentType.APPLICATION_JSON));
+
+		HttpResponse response = client.execute(requestPost);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+		}
+		else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+	}
+
+	public void commitAnnotation(AjaxResponse ajaxResponse, String caseId, String annotations) throws URISyntaxException, ClientProtocolException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/saveAnnotation");
+		URI uri = new URI(sbUrl.toString());
+		
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		requestPost.setEntity(new StringEntity(annotations, ContentType.APPLICATION_JSON));
+
+		HttpResponse response = client.execute(requestPost);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+		}
+		else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		
 	}
 
 	

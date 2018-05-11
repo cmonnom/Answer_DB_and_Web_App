@@ -38,21 +38,21 @@ const Home = {
 
     <v-tooltip bottom>
         <v-btn icon @click="toggleTable('available')" slot="activator">
-            <v-icon :color="caseAvailableTableVisible ? 'lime accent-2' : ''">mdi-table</v-icon>
+            <v-icon :color="caseAvailableTableVisible ? 'amber accent-2' : ''">table_chart</v-icon>
         </v-btn>
         <span>Show/Hide Cases Available</span>
     </v-tooltip>
 
     <v-tooltip bottom>
         <v-btn icon @click="toggleTable('forUser')" slot="activator">
-            <v-icon :color="caseForUserTableVisible ? 'lime accent-2' : ''">mdi-table</v-icon>
+            <v-icon :color="caseForUserTableVisible ? 'amber accent-2' : ''">table_chart</v-icon>
         </v-btn>
         <span>Show/Hide My Cases</span>
     </v-tooltip>
 
     <v-tooltip bottom>
         <v-btn icon @click="toggleTable('assigned')" slot="activator">
-            <v-icon :color="caseAssignedTableVisible ? 'lime accent-2' : ''">mdi-table</v-icon>
+            <v-icon :color="caseAssignedTableVisible ? 'amber accent-2' : ''">table_chart</v-icon>
         </v-btn>
         <span>Show/Hide Cases Assigned</span>
     </v-tooltip>
@@ -62,21 +62,21 @@ const Home = {
     <v-slide-x-transition>
     <v-flex xs4 v-show="caseAvailableTableVisible" :class="['pr-2', tableFlex]">
       <data-table ref="casesAvailableTable" :fixed="false" :fetch-on-created="false" table-title="Cases Available" :initial-sort="'epicOrderDate'"
-        no-data-text="No Data" :show-pagination="false">
+        no-data-text="No Data" :show-pagination="false" title-icon="table_chart">
       </data-table>
     </v-flex>
   </v-slide-x-transition>
   <v-slide-x-transition>
     <v-flex xs4 v-show="caseForUserTableVisible" :class="['pr-2', tableFlex]">
       <data-table ref="casesForUserTable" :fixed="false" :fetch-on-created="false" table-title="My Cases" :initial-sort="'epicOrderDate'"
-        no-data-text="No Data" :show-pagination="false">
+        no-data-text="No Data" :show-pagination="false" title-icon="table_chart">
       </data-table>
     </v-flex>
   </v-slide-x-transition>
   <v-slide-x-transition>
     <v-flex xs4 v-show="caseAssignedTableVisible" :class="[tableFlex]">
       <data-table ref="casesAssignedTable" :fixed="false" :fetch-on-created="false" table-title="Cases Assigned" :initial-sort="'epicOrderDate'"
-        no-data-text="No Data" :show-pagination="false">
+        no-data-text="No Data" :show-pagination="false" title-icon="table_chart">
       </data-table>
     </v-flex>
   </v-slide-x-transition>
