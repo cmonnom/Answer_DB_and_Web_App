@@ -17,6 +17,7 @@ import utsw.bicf.answer.model.OrderCase;
 import utsw.bicf.answer.model.Permission;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.hybrid.UserTableRow;
 
 @Repository
@@ -188,6 +189,14 @@ public class ModelDAO {
 		String hql = "from Permission where name = :name";
 		return session.createQuery(hql, Permission.class)
 				.setParameter("name", name).uniqueResult();
+	}
+
+	@Transactional
+	public List<VariantFilterList> getVariantFilterListsForUser(User user) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from VariantFilterList where user = :user";
+		return session.createQuery(hql, VariantFilterList.class)
+				.setParameter("user", user).list();
 	}
 
 //	@Transactional

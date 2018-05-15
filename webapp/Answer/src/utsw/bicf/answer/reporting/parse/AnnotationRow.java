@@ -47,12 +47,17 @@ public class AnnotationRow {
 	 */
 	private void parseAnnotation() {
 		for (String c : annotations) {
-			if (c.startsWith(AnnotationCategory.GENE_FUNCTION_TITLE)) geneFunction = new AnnotationCategory(AnnotationCategory.GENE_FUNCTION_TITLE, c.replaceFirst(AnnotationCategory.GENE_FUNCTION_TITLE, ""));
-			else if(c.startsWith(AnnotationCategory.ALTERATION_FUNCTION_TITLE)) alterationFunction = new AnnotationCategory(AnnotationCategory.ALTERATION_FUNCTION_TITLE, c.replaceFirst(AnnotationCategory.ALTERATION_FUNCTION_TITLE, ""));
-			else if(c.startsWith(AnnotationCategory.ALTERATIONS_FUNCTION_TITLE)) alterationFunction = new AnnotationCategory(AnnotationCategory.ALTERATIONS_FUNCTION_TITLE, c.replaceFirst(AnnotationCategory.ALTERATIONS_FUNCTION_TITLE, ""));
-			else if(c.startsWith(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATION_TITLE)) implication = new AnnotationCategory(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATION_TITLE, c.replaceFirst(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATION_TITLE, ""));
-			else if(c.startsWith(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE)) implication = new AnnotationCategory(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE, c.replaceFirst(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE, ""));
-			else if(c.startsWith(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE)) tumorInfo = new AnnotationCategory(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE, c.replaceFirst(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE, ""));
+			String[] textItems = c.split(": ");
+			String text = null;
+			if (textItems.length > 1) {
+				text = textItems[1];
+			}
+			if (c.startsWith(AnnotationCategory.GENE_FUNCTION_TITLE)) geneFunction = new AnnotationCategory(AnnotationCategory.GENE_FUNCTION_TITLE, text == null ? c.replaceFirst(AnnotationCategory.GENE_FUNCTION_TITLE, "") : text);
+			else if(c.startsWith(AnnotationCategory.ALTERATION_FUNCTION_TITLE)) alterationFunction = new AnnotationCategory(AnnotationCategory.ALTERATION_FUNCTION_TITLE, text == null ? c.replaceFirst(AnnotationCategory.ALTERATION_FUNCTION_TITLE, "") : text);
+			else if(c.startsWith(AnnotationCategory.ALTERATIONS_FUNCTION_TITLE)) alterationFunction = new AnnotationCategory(AnnotationCategory.ALTERATIONS_FUNCTION_TITLE, text == null ? c.replaceFirst(AnnotationCategory.ALTERATIONS_FUNCTION_TITLE, "") : text);
+			else if(c.startsWith(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATION_TITLE)) implication = new AnnotationCategory(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATION_TITLE,text == null ? c.replaceFirst(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATION_TITLE, "") : text);
+			else if(c.startsWith(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE)) implication = new AnnotationCategory(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE,text == null ? c.replaceFirst(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE, "") : text);
+			else if(c.startsWith(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE)) tumorInfo = new AnnotationCategory(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE, text == null ? c.replaceFirst(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE, "") : text);
 		}
 		
 	}

@@ -17,7 +17,6 @@ public class ReferenceVariant {
 	String alt;
 	String reference;
 	String type;
-	@JsonProperty("utsw_annotations")
 	List<Annotation> utswAnnotations;
 
 	public ReferenceVariant() {

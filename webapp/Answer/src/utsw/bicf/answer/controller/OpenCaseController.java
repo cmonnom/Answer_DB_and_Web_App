@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,13 +21,19 @@ import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
+import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterItems;
+import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListItems;
+import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListSaved;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSummary;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.FilterStringValue;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.VariantFilter;
+import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
@@ -35,7 +42,7 @@ import utsw.bicf.answer.security.PermissionUtils;
 @Controller
 @RequestMapping("/")
 public class OpenCaseController {
-	
+
 	static {
 		PermissionUtils.permissionPerUrl.put("openCase", new PermissionUtils(true, false, false));
 		PermissionUtils.permissionPerUrl.put("getCaseDetails", new PermissionUtils(true, false, false));
@@ -43,6 +50,10 @@ public class OpenCaseController {
 		PermissionUtils.permissionPerUrl.put("getVariantDetails", new PermissionUtils(true, false, false));
 		PermissionUtils.permissionPerUrl.put("saveVariantSelection", new PermissionUtils(true, true, false));
 		PermissionUtils.permissionPerUrl.put("commitAnnotations", new PermissionUtils(true, true, false));
+		PermissionUtils.permissionPerUrl.put("saveCurrentFilters", new PermissionUtils(true, false, false));
+		PermissionUtils.permissionPerUrl.put("loadUserFilterSets", new PermissionUtils(true, false, false));
+		PermissionUtils.permissionPerUrl.put("deleteFilterSet", new PermissionUtils(true, false, false));
+
 	}
 
 	@Autowired
@@ -56,17 +67,14 @@ public class OpenCaseController {
 		User user = (User) session.getAttribute("user");
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
-	
-	
-	
+
 	@RequestMapping(value = "/getCaseDetails")
 	@ResponseBody
 	public String getCaseDetails(Model model, HttpSession session, @RequestParam String caseId,
-			@RequestBody String filters)
-			throws Exception {
-		
-		User user = (User) session.getAttribute("user"); //to verify that the user is assigned to the case
-		//send user to Ben's API
+			@RequestBody String filters) throws Exception {
+
+		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase[] cases = utils.getActiveCases();
 		OrderCase detailedCase = null;
@@ -75,28 +83,27 @@ public class OpenCaseController {
 				if (c.getCaseId().equals(caseId)) {
 					detailedCase = utils.getCaseDetails(caseId, filters);
 					if (!detailedCase.getAssignedTo().contains(user.getUserId().toString())) {
-						//user is not assigned to this case
+						// user is not assigned to this case
 						AjaxResponse response = new AjaxResponse();
 						response.setIsAllowed(false);
 						response.setSuccess(false);
 						response.setMessage(user.getFullName() + " is not assigned to this case");
 						return response.createObjectJSON();
 					}
-					break; //found that the case exists
+					break; // found that the case exists
 				}
 			}
 		}
 		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "chromPos", user);
 		return summary.createVuetifyObjectJSON();
-		
+
 	}
-	
+
 	@RequestMapping(value = "/getVariantFilters")
 	@ResponseBody
-	public String getVariantFilters(Model model, HttpSession session)
-			throws Exception {
+	public String getVariantFilters(Model model, HttpSession session) throws Exception {
 		List<DataTableFilter> filters = new ArrayList<DataTableFilter>();
-		
+
 		DataTableFilter chrFilter = new DataTableFilter("Chromosome", "chrom");
 		chrFilter.setSelect(true);
 		List<SearchItem> selectItems = new ArrayList<SearchItem>();
@@ -107,76 +114,80 @@ public class OpenCaseController {
 		selectItems.add(new SearchItemString("CHRY", "chrY"));
 		filters.add(chrFilter);
 		chrFilter.setSelectItems(selectItems);
-		
+
 		DataTableFilter geneFilter = new DataTableFilter("Gene Name", Variant.FIELD_GENE_NAME);
 		geneFilter.setString(true);
 		filters.add(geneFilter);
-		
+
 		DataTableFilter passQCFilter = new DataTableFilter("Pass QC", "Fail QC", Variant.FIELD_FILTERS);
 		passQCFilter.setBoolean(true);
 		filters.add(passQCFilter);
-		
+
 		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Unknown", Variant.FIELD_ANNOTATIONS);
 		annotatedFilter.setBoolean(true);
 		filters.add(annotatedFilter);
-		
+
 		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", Variant.FIELD_TUMOR_ALT_FREQUENCY);
 		tafFilter.setNumber(true);
 		filters.add(tafFilter);
-		
-//		DataTableFilter tumorDepthFilter = new DataTableFilter("Tumor Depth", "tumorAltDepth");
-//		tumorDepthFilter.setNumber(true);
-//		filters.add(tumorDepthFilter);
-		
-		DataTableFilter tumorTotalDepthFilter = new DataTableFilter("Tumor Total Depth", Variant.FIELD_TUMOR_TOTAL_DEPTH);
+
+		// DataTableFilter tumorDepthFilter = new DataTableFilter("Tumor Depth",
+		// "tumorAltDepth");
+		// tumorDepthFilter.setNumber(true);
+		// filters.add(tumorDepthFilter);
+
+		DataTableFilter tumorTotalDepthFilter = new DataTableFilter("Tumor Total Depth",
+				Variant.FIELD_TUMOR_TOTAL_DEPTH);
 		tumorTotalDepthFilter.setNumber(true);
 		filters.add(tumorTotalDepthFilter);
-		
+
 		DataTableFilter nafFilter = new DataTableFilter("Normal Alt %", Variant.FIELD_NORMAL_ALT_FREQUENCY);
 		nafFilter.setNumber(true);
 		filters.add(nafFilter);
-		
-//		DataTableFilter normalDepthFilter = new DataTableFilter("Normal Depth", "normalAltDepth");
-//		normalDepthFilter.setNumber(true);
-//		filters.add(normalDepthFilter);
-		
-		DataTableFilter normalTotalDepthFilter = new DataTableFilter("Normal Total Depth", Variant.FIELD_NORMAL_TOTAL_DEPTH);
+
+		// DataTableFilter normalDepthFilter = new DataTableFilter("Normal Depth",
+		// "normalAltDepth");
+		// normalDepthFilter.setNumber(true);
+		// filters.add(normalDepthFilter);
+
+		DataTableFilter normalTotalDepthFilter = new DataTableFilter("Normal Total Depth",
+				Variant.FIELD_NORMAL_TOTAL_DEPTH);
 		normalTotalDepthFilter.setNumber(true);
 		filters.add(normalTotalDepthFilter);
-		
+
 		DataTableFilter rafFilter = new DataTableFilter("Rna Alt %", Variant.FIELD_RNA_ALT_FREQUENCY);
 		rafFilter.setNumber(true);
 		filters.add(rafFilter);
-		
-//		DataTableFilter rnaDepthFilter = new DataTableFilter("RNA Depth", "rnaAltDepth");
-//		rnaDepthFilter.setNumber(true);
-//		filters.add(rnaDepthFilter);
-		
+
+		// DataTableFilter rnaDepthFilter = new DataTableFilter("RNA Depth",
+		// "rnaAltDepth");
+		// rnaDepthFilter.setNumber(true);
+		// filters.add(rnaDepthFilter);
+
 		DataTableFilter rnaTotalDepthFilter = new DataTableFilter("RNA Total Depth", Variant.FIELD_RNA_TOTAL_DEPTH);
 		rnaTotalDepthFilter.setNumber(true);
 		filters.add(rnaTotalDepthFilter);
-		
-		DataTableFilter effectFilter= new DataTableFilter("Effects", Variant.FIELD_EFFECTS);
+
+		DataTableFilter effectFilter = new DataTableFilter("Effects", Variant.FIELD_EFFECTS);
 		effectFilter.setCheckBox(true);
 		filters.add(effectFilter);
-		
+
 		VariantFilterItems items = new VariantFilterItems();
 		items.setFilters(filters);
-		return  items.createVuetifyObjectJSON();
-		
+		return items.createVuetifyObjectJSON();
+
 	}
-	
+
 	@RequestMapping(value = "/getVariantDetails")
 	@ResponseBody
-	public String getVariantDetails(Model model, HttpSession session, @RequestParam String variantId)
-			throws Exception {
-		
-		//send user to Ben's API
+	public String getVariantDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
+
+		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		Variant variantDetails = utils.getVariantDetails(variantId);
 		VariantVcfAnnotationSummary summaryCanonical = null;
 		VariantVcfAnnotationSummary summaryOthers = null;
-		VariantDetailsSummary summary = null; 
+		VariantDetailsSummary summary = null;
 		if (variantDetails != null) {
 			List<VCFAnnotation> vcfAnnotations = variantDetails.getVcfAnnotations();
 			if (!vcfAnnotations.isEmpty()) {
@@ -192,33 +203,125 @@ public class OpenCaseController {
 			return summary.createVuetifyObjectJSON();
 		}
 		return null;
-		
+
 	}
-	
+
 	@RequestMapping(value = "/saveVariantSelection")
 	@ResponseBody
-	public String saveVariantSelection(Model model, HttpSession session,
-			@RequestBody String selectedVariantIds, @RequestParam String caseId)
-			throws Exception {
+	public String saveVariantSelection(Model model, HttpSession session, @RequestBody String selectedVariantIds,
+			@RequestParam String caseId) throws Exception {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
 		utils.saveVariantSelection(response, caseId, selectedVariantIds);
 		return response.createObjectJSON();
-		
+
 	}
-	
+
 	@RequestMapping(value = "/commitAnnotations")
 	@ResponseBody
-	public String commitAnnotations(Model model, HttpSession session,
-			@RequestBody String annotations, @RequestParam String caseId)
-			throws Exception {
+	public String commitAnnotations(Model model, HttpSession session, @RequestBody String annotations,
+			@RequestParam String caseId) throws Exception {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
 		utils.commitAnnotation(response, caseId, annotations);
 		return response.createObjectJSON();
-		
+
 	}
-	
+
+	@RequestMapping(value = "/saveCurrentFilters")
+	@ResponseBody
+	@Transactional
+	public String saveCurrentFilters(Model model, HttpSession session, @RequestBody String filters,
+			@RequestParam Integer filterListId, @RequestParam String filterListName) throws Exception {
+		AjaxResponse response = new AjaxResponse();
+		User user = (User) session.getAttribute("user");
+		VariantFilterList filterList = null;
+		if (filterListId == -1) {
+			// create a new one
+			filterList = Utils.parseFilters(filters);
+			filterList.setUser(user);
+		} else {
+			filterList = modelDAO.getSessionFactory().getCurrentSession().get(VariantFilterList.class, filterListId);
+			if (filterList.getUser().getUserId() != user.getUserId()) {
+				response.setIsAllowed(false);
+				response.setSuccess(false);
+				response.setMessage("You are not allowed to modify this filter set");
+				return response.createObjectJSON();
+			}
+			if (filterList != null) { // update all filters by removing and replacing them
+				modelDAO.deleteObject(filterList);
+				filterList = Utils.parseFilters(filters);
+				filterList.setUser(user);
+				// for (VariantFilter filter : filterList.getFilters()) {
+				// for (FilterStringValue v : filter.getStringValues()) {
+				// modelDAO.deleteObject(v);
+				// }
+				// modelDAO.deleteObject(filter);
+				// }
+				// filterList.setFilters(newFilterList.getFilters());
+			}
+		}
+		filterList.setListName(filterListName);
+		modelDAO.saveObject(filterList);
+		for (VariantFilter filter : filterList.getFilters()) {
+			for (FilterStringValue v : filter.getStringValues()) {
+				modelDAO.saveObject(v);
+			}
+			modelDAO.saveObject(filter);
+		}
+		modelDAO.saveObject(filterList);
+
+		VariantFilterListSaved saveFilterSet = new VariantFilterListSaved();
+		saveFilterSet.setSavedFilterSet(filterList);
+
+		saveFilterSet.setIsAllowed(true);
+		saveFilterSet.setSuccess(true);
+		return saveFilterSet.createObjectJSON();
+
+	}
+
+	@RequestMapping(value = "/loadUserFilterSets")
+	@ResponseBody
+	public String loadUserFilterSets(Model model, HttpSession session) throws Exception {
+		User user = (User) session.getAttribute("user");
+		List<VariantFilterList> filters = modelDAO.getVariantFilterListsForUser(user);
+		VariantFilterListItems items = new VariantFilterListItems(filters);
+
+		return items.createVuetifyObjectJSON();
+
+	}
+
+	@RequestMapping(value = "/deleteFilterSet")
+	@ResponseBody
+	@Transactional
+	public String deleteFilterSet(Model model, HttpSession session, @RequestParam Integer filterSetId)
+			throws Exception {
+		AjaxResponse response = new AjaxResponse();
+		if (filterSetId < 0) {
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+			response.setMessage("Invalid filter set id");
+			return response.createObjectJSON();
+		}
+		User user = (User) session.getAttribute("user");
+		VariantFilterList filterList = modelDAO.getSessionFactory().getCurrentSession().get(VariantFilterList.class,
+				filterSetId);
+		if (filterList.getUser().getUserId() != user.getUserId()) {
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+			response.setMessage("You are not allowed to modify this filter set");
+			return response.createObjectJSON();
+		}
+		if (filterList != null) { // update all filters by removing and replacing them
+			modelDAO.deleteObject(filterList);
+		}
+
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		return response.createObjectJSON();
+
+	}
+
 }

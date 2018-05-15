@@ -19,15 +19,80 @@ Vue.component('data-table', {
         "action1-param": { default: "", type: String },
         "show-pagination": { default: true, type: Boolean },
         "show-row-count": { default: false, type: Boolean },
-        "title-icon": { default: null, type: String }
+        "title-icon": { default: null, type: String },
+        "show-left-menu": {default: true, type: Boolean}
 
     },
     template: `<div>
 
   <!-- Top tool bar with menu options -->
   <v-toolbar dark color="primary" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
-    <v-icon v-if="titleIcon" color="amber accent-2">{{ titleIcon }}</v-icon>
-    <v-toolbar-title class="white--text">{{ tableTitle }}
+    <!-- icon with no function -->
+    <v-icon v-if="titleIcon && !showLeftMenu" color="amber accent-2">{{ titleIcon }}</v-icon>
+    <!-- menu with same functions as left side icons -->
+    <v-tooltip class="ml-0" bottom v-if="showLeftMenu">
+      <v-menu offset-y offset-x slot="activator" class="ml-0">
+        <v-btn slot="activator" flat icon dark>
+          <v-icon v-if="!titleIcon">more_vert</v-icon>
+          <v-icon v-if="titleIcon" color="amber accent-2">{{ titleIcon }}</v-icon>
+        </v-btn>
+        <v-list>
+          
+            <slot name="action1MenuItem"></slot>
+            <slot name="action2MenuItem"></slot>
+            <slot name="action3MenuItem"></slot>
+          
+          <v-list-tile avatar @click="toggleSearchBar">
+              <v-list-tile-avatar>
+                <v-icon>search</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-content>
+                <v-list-tile-title>Filter Results</v-list-tile-title>
+              </v-list-tile-content>
+          </v-list-tile>
+
+          <v-list-tile avatar v-if="advanceFiltering" @click="toggleFilters">
+            <v-list-tile-avatar>
+              <v-icon>filter_list</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-title>Filter Menu</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+
+          <v-list-tile avatar v-if="exportEnabled" @click="exportToCSV">
+            <v-list-tile-avatar>
+              <v-icon>file_download</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content></v-list-tile-content>
+            <v-list-tile-title>Export to CSV</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+
+          <v-list-tile avatar @click="showDraggableHeader=!showDraggableHeader">
+            <v-list-tile-avatar>
+              <v-icon>swap_horiz</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-title>Move Columns</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+
+          <v-list-tile avatar @click="getAjaxData()">
+            <v-list-tile-avatar>
+              <v-icon>refresh</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-title>Refresh</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+
+        </v-list>
+      </v-menu>
+      <span>Table Menu</span>
+    </v-tooltip>
+
+    <v-toolbar-title class="white--text ml-0">{{ tableTitle }}
       <span v-if="showRowCount" v-html="getRowCount()"></span>
     </v-toolbar-title>
     <v-spacer></v-spacer>
@@ -52,21 +117,21 @@ Vue.component('data-table', {
     <slot name="action3"></slot>
 
     <v-tooltip bottom>
-      <v-btn icon @click="toggleSearchBar" slot="activator">
+      <v-btn flat icon @click="toggleSearchBar" slot="activator" :color="showSearchBar ? 'amber accent-2' : 'white'">
         <v-icon>search</v-icon>
       </v-btn>
       <span>Filter Results</span>
     </v-tooltip>
 
     <v-tooltip bottom v-if="advanceFiltering">
-      <v-btn icon @click="toggleFilters" slot="activator">
+      <v-btn flat icon @click="toggleFilters" slot="activator" :color="showDrawer ? 'amber accent-2' : 'white'">
         <v-icon>filter_list</v-icon>
       </v-btn>
       <span>Filter Menu</span>
     </v-tooltip>
 
     <v-tooltip bottom v-if="exportEnabled">
-      <v-btn icon @click="exportToCSV" slot="activator">
+      <v-btn flat icon @click="exportToCSV" slot="activator">
         <v-icon>file_download</v-icon>
       </v-btn>
       <span>Export to CSV
@@ -74,14 +139,14 @@ Vue.component('data-table', {
     </v-tooltip>
 
     <v-tooltip bottom>
-      <v-btn icon @click="showDraggableHeader=!showDraggableHeader" slot="activator">
+      <v-btn flat icon @click="showDraggableHeader=!showDraggableHeader" slot="activator" :color="showDraggableHeader ? 'amber accent-2' : 'white'">
         <v-icon>swap_horiz</v-icon>
       </v-btn>
       <span>Move Columns</span>
     </v-tooltip>
 
     <v-tooltip bottom>
-      <v-btn icon @click="getAjaxData()" slot="activator">
+      <v-btn flat icon @click="getAjaxData()" slot="activator">
         <v-icon>refresh</v-icon>
       </v-btn>
       <span>Refresh</span>
@@ -345,14 +410,7 @@ Vue.component('data-table', {
   </div>
 
 
-</div>`,
-    data() {
-        return {
-            selected: [],
-            toUnselect: [],
-            search: '',
-            headers: [],
-            headerOrder: [],
+</div>`, data() { return { selected: [], toUnselect: [], search: '', headers: [], headerOrder: [],
             uniqueIdField: "",
             isLoadingColor: "warning",
             loading: this.isLoadingColor,
