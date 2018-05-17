@@ -29,7 +29,7 @@ const OpenCase = {
                     </v-flex>
                     <!-- show active filters -->
                     <v-flex xs12>
-                            <v-divider></v-divider>
+                        <v-divider></v-divider>
                         <div class="pt-2 pb-2">
                             <v-chip v-if="isFilterUsed(filter)" label v-for="filter in filters" :key="filter.fieldName" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
                                 text-color="white">
@@ -68,7 +68,7 @@ const OpenCase = {
                     <span>Save Filter Set</span>
                 </v-tooltip>
                 <v-tooltip top>
-                    <v-btn color="warning" :disabled="saveFilterSetId == -1" @click="deleteFilterSet(saveFilterSetId)" slot="activator">
+                    <v-btn color="warning" :disabled="saveFilterSetId == -1" @click="deleteFilterSet()" slot="activator">
                         Delete
                         <v-icon right dark>delete</v-icon>
                     </v-btn>
@@ -116,7 +116,84 @@ const OpenCase = {
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
             <v-toolbar dark color="primary">
-                <v-toolbar-title>Annotations for variant: {{ currentVariant.geneName }} {{ currentVariant.notation }}
+                <v-menu offset-y offset-x class="ml-0">
+                    <v-btn slot="activator" flat icon dark>
+                        <v-icon>more_vert</v-icon>
+                    </v-btn>
+                    <v-list>
+
+                        <v-list-tile avatar @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible">
+                            <v-list-tile-avatar>
+                                <v-icon>zoom_in</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Show/Hide Variant Details</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile avatar @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible">
+                            <v-list-tile-avatar>
+                                <v-icon>table_chart</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Show/Hide Canonical VCF Annotations</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile avatar @click="annotationVariantOtherVisible = !annotationVariantOtherVisible">
+                            <v-list-tile-avatar>
+                                <v-icon>table_chart</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Show/Hide Other VCF Annotations</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
+
+                        <v-list-tile avatar @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" :disabled="!mdaAnnotationsExists()">
+                            <v-list-tile-avatar>
+                                <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
+                                <v-icon v-if="!mdaAnnotationsExists()">mdi-message-bulleted-off</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title v-if="mdaAnnotationsExists()">Show/Hide MDA Annotations</v-list-tile-title>
+                                <v-list-tile-title v-if="!mdaAnnotationsExists()">No MDA Annotations</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile avatar @click="utswAnnotationsVisible = !utswAnnotationsVisible" :disabled="!utswAnnotationsExists()">
+                            <v-list-tile-avatar>
+                                <v-icon v-if="utswAnnotationsExists()">mdi-message-bulleted</v-icon>
+                                <v-icon v-if="!utswAnnotationsExists()">mdi-message-bulleted-off</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title v-if="utswAnnotationsExists()">Show/Hide UTSW Annotations</v-list-tile-title>
+                                <v-list-tile-title v-if="!utswAnnotationsExists()">No UTSW Annotations</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile avatar @click="toggleBamViewer()">
+                            <v-list-tile-avatar>
+                                IGV
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Bam Viewer</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile avatar @click="closeVariantDetails()">
+                            <v-list-tile-avatar>
+                                <v-icon>close</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Close Variant</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
+
+                    </v-list>
+                </v-menu>
+                <v-toolbar-title class="ml-0">Annotations for variant: {{ currentVariant.geneName }} {{ currentVariant.notation }}
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -159,7 +236,13 @@ const OpenCase = {
                     <span v-if="!utswAnnotationsExists()">No UTSW Annotations</span>
                 </v-tooltip>
                 <v-tooltip bottom>
-                    <v-btn icon @click="variantDetailsVisible = false" slot="activator">
+                    <v-btn icon flat @click="toggleBamViewer()" slot="activator" :color="bamViewerVisible ? 'amber accent-2' : ''">
+                        IGV
+                    </v-btn>
+                    <span>Bam Viewer</span>
+                </v-tooltip>
+                <v-tooltip bottom>
+                    <v-btn icon @click="closeVariantDetails()" slot="activator">
                         <v-icon>close</v-icon>
                     </v-btn>
                     <span>Close Variant</span>
@@ -291,6 +374,28 @@ const OpenCase = {
 
                                 </v-card-text>
                             </v-card>
+                        </v-flex>
+                        <!-- bam viewer -->
+                        <v-flex xs12 v-show="bamViewerVisible" >
+                            <v-card>
+                                <v-toolbar dark color="primary">
+                                    <v-toolbar-title>
+                                        Bam Viewer
+                                    </v-toolbar-title>
+                                    <v-spacer></v-spacer>
+                                    <v-tooltip bottom>
+                                        <v-btn icon @click="toggleBamViewer()" slot="activator">
+                                            <v-icon>close</v-icon>
+                                        </v-btn>
+                                        <span>Close</span>
+                                    </v-tooltip>
+                                </v-toolbar>
+                                <v-card-text>
+                                    <bam-viewer ref="bamViewer"></bam-viewer>
+                                </v-card-text>
+                            </v-card>
+                        </v-flex>
+                        <v-flex xs12>
 
                         </v-flex>
                     </v-layout>
@@ -408,7 +513,7 @@ const OpenCase = {
                                     <v-list-tile-title>Clear Filters</v-list-tile-title>
                                 </v-list-tile-content>
                             </v-list-tile>
-                            
+
                             <v-list-tile avatar :disabled="filterSets.length == 0">
                                 <v-list-tile-avatar>
                                     <v-icon>mdi-filter-outline</v-icon>
@@ -433,7 +538,7 @@ const OpenCase = {
                                                         </v-btn>
                                                         <span>Delete Filter Set</span>
                                                     </v-tooltip>
-                                                  </v-list-tile-action>
+                                                </v-list-tile-action>
                                             </v-list-tile>
                                         </v-list>
                                     </v-menu>
@@ -500,7 +605,7 @@ const OpenCase = {
                                         </v-btn>
                                         <span>Delete Filter Set</span>
                                     </v-tooltip>
-                                  </v-list-tile-action>
+                                </v-list-tile-action>
                             </v-list-tile>
                         </v-list>
                     </v-menu>
@@ -508,11 +613,11 @@ const OpenCase = {
                 </v-tooltip>
 
                 <v-tooltip bottom>
-                        <v-btn slot="activator" flat icon @click="openSaveFiltersDialog()" :disabled="!filtersValid" color="primary">
-                            <v-icon>save</v-icon>
-                        </v-btn>
-                        <span>Edit/Save Current Filter Set</span>
-                    </v-tooltip>
+                    <v-btn slot="activator" flat icon @click="openSaveFiltersDialog()" :disabled="!filtersValid" color="primary">
+                        <v-icon>save</v-icon>
+                    </v-btn>
+                    <span>Edit/Save Current Filter Set</span>
+                </v-tooltip>
 
                 <v-tooltip bottom>
                     <v-btn slot="activator" flat icon :loading="loading" :color="filterNeedsReload ? 'warning' : 'primary'" @click="filterData"
@@ -762,11 +867,10 @@ const OpenCase = {
             </v-list-tile-content>
         </v-list-tile>
     </data-table>
-</div>`, data() {  return {
-            loading: true, patientTables: [],
-            patientDetailsVisible: true,
-            caseName: "",
-            caseId: "",
+
+
+
+</div>` , data() { return { loading: true, patientTables: [], patientDetailsVisible: true, caseName: "",      caseId: "",
             advanceFilteringVisible: false,
             filters: [],
             effects: [],
@@ -800,7 +904,8 @@ const OpenCase = {
             filterSetItems: [],
             saveFilterSetName: "",
             saveFilterSetId: -1,
-            saveFilterSetDialogVisible: false
+            saveFilterSetDialogVisible: false,
+            bamViewerVisible: false
         }
     }, methods: {
         handleDialogs(response, callback) {
@@ -835,7 +940,7 @@ const OpenCase = {
                     this.effects = response.data.effects;
                     this.userId = response.data.userId;
                     this.populateCheckBoxes();
-                    this.filterNeedsReload = false; 
+                    this.filterNeedsReload = false;
                     this.addHeaderAction(response);
                 }
                 else {
@@ -888,7 +993,7 @@ const OpenCase = {
             for (var i = 0; i < this.filters.length; i++) {
                 var filter = this.filters[i]; this.clearFilter(filter);
             }
-            this.currentFilterSet = ""; 
+            this.currentFilterSet = "";
             this.getAjaxData();
         },
         clearFilter(filter, doRefresh) {
@@ -905,7 +1010,7 @@ const OpenCase = {
                 }
             }
             if (doRefresh) { //refresh only if closing a chip
-                this.currentFilterSet = ""; 
+                this.currentFilterSet = "";
                 this.getAjaxData();
             }
         },
@@ -941,7 +1046,7 @@ const OpenCase = {
             if (!this.advanceFilteringVisible) {
                 bus.$emit("need-layout-resize", this);
             }
-        }, 
+        },
         isFilterUsed(filter) {
             if (filter.isCheckBox) {
                 return false; //handled in a separate chip
@@ -1065,6 +1170,7 @@ const OpenCase = {
                     this.utswAnnotations = this.currentVariant.referenceVariant.utswAnnotations;
                     this.mdaAnnotations = this.currentVariant.mdaAnnotation ? this.currentVariant.mdaAnnotation : "";
                     this.variantDetailsVisible = true;
+
                 } else {
                     this.handleDialogs(response.data, this.getVariantDetails.bind(null,
                         item));
@@ -1072,7 +1178,8 @@ const OpenCase = {
             }).catch(error => {
                 console.log(error);
             });
-        }, updateVariantVcfAnnotationTable() {
+        },
+        updateVariantVcfAnnotationTable() {
             var items = this.currentVariant.vcfAnnotations;
             var headers = this.vcfAnnotationHeaders;
             var headerOrder = this.vcfAnnotationHeadersOrder;
@@ -1212,9 +1319,9 @@ const OpenCase = {
             var headerOrder = this.$refs.geneVariantDetails.headerOrder; this.$refs.variantsSelected.manualDataFiltered(
                 { items: selectedVariants, headers: headers, uniqueFieldId: "chromPos", headerOrder: headerOrder });
         },
-        openSaveDialog() { 
-            this.updateSelectedVariantTable(); this.saveDialogVisible = true; 
-        }, 
+        openSaveDialog() {
+            this.updateSelectedVariantTable(); this.saveDialogVisible = true;
+        },
         saveSelection() { //TODO 
             var selectedVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
             axios({
@@ -1322,7 +1429,7 @@ const OpenCase = {
                 webAppRoot + "/loadUserFilterSets",
                 {
                     params: {
-                        
+
                     }
                 })
                 .then(response => {
@@ -1342,7 +1449,7 @@ const OpenCase = {
         loadSelectedFilterSet(filterSet) {
             this.clearFilters();
             this.currentFilterSet = this.filterSets.filter(f => f.variantFilterListId == filterSet.value)[0];
-            for (var i =0; i < this.currentFilterSet.filters.length; i++) {
+            for (var i = 0; i < this.currentFilterSet.filters.length; i++) {
                 var filter = this.currentFilterSet.filters[i];
                 var filterToPopulate = this.filters.filter(f => f.fieldName == filter.field)[0];
                 this.populateFilter(filterToPopulate, filter);
@@ -1350,13 +1457,13 @@ const OpenCase = {
             this.getAjaxData();
         },
         populateFilter(filterToPopulate, loadedFilter) {
-            var multiplier = 1; 
+            var multiplier = 1;
             if (filterToPopulate.fieldName.includes("Frequency")) {
                 multiplier = 100;
             }
             filterToPopulate.value = loadedFilter.value;
-            filterToPopulate.minValue =  loadedFilter.minValue * multiplier;
-            filterToPopulate.maxValue =  loadedFilter.maxValue * multiplier;
+            filterToPopulate.minValue = loadedFilter.minValue * multiplier;
+            filterToPopulate.maxValue = loadedFilter.maxValue * multiplier;
             filterToPopulate.minDateValue = null;
             filterToPopulate.maxDateValue = null;
             filterToPopulate.valueTrue = loadedFilter.valueTrue;
@@ -1378,8 +1485,34 @@ const OpenCase = {
         updateFilterNeedsReload(needsReload) {
             this.filterNeedsReload = needsReload;
             if (needsReload) {
-                this.currentFilterSet = ""; 
+                this.currentFilterSet = "";
             }
+        },
+        toggleBamViewer() {
+            if (this.bamViewerVisible) {
+                this.bamViewerVisible = false;
+                this.$refs.bamViewer.closeIGV();
+                return;
+            }
+            this.bamViewerVisible = true;
+            //get position for IGV
+            this.$nextTick(() => {
+                var igvRange = this.currentVariant.chrom + ":";
+                igvRange += this.currentVariant.pos - 500;
+                igvRange += "-";
+                igvRange += this.currentVariant.pos + 499;
+                // var bam = "http://localhost:8080/Answer/resources/bams/HD728.nanocourse.bam";
+                // var bai = "http://localhost:8080/Answer/resources/bams/HD728.nanocourse.bam.bai";
+                var bam = "http://localhost:8080/Answer/resources/bams/SHI710-27-6271_T_DNA_panel1385v2-1.final.bam";
+                var bai = "http://localhost:8080/Answer/resources/bams/SHI710-27-6271_T_DNA_panel1385v2-1.final.bai";
+                var label = "test";
+                this.$refs.bamViewer.openIGV(igvRange, bam, bai, label);
+            })
+        },
+        closeVariantDetails() {
+            this.variantDetailsVisible = false;
+            this.bamViewerVisible = false;
+            this.$refs.bamViewer.closeIGV();
         }
     },
     mounted: function () {
