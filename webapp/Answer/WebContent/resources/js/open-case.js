@@ -5,82 +5,9 @@ const OpenCase = {
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
-    <!-- save filter set dialog -->
-    <v-dialog v-model="saveFilterSetDialogVisible" max-width="500px">
-        <v-card class="soft-grey-background">
-            <v-toolbar dark color="primary">
-                <v-toolbar-title>Save Current Filter Set
-                </v-toolbar-title>
-                <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                    <v-btn icon @click="saveFilterSetDialogVisible = false" slot="activator">
-                        <v-icon>close</v-icon>
-                    </v-btn>
-                    <span>Close</span>
-                </v-tooltip>
-            </v-toolbar>
-            <v-card-text>
-                <v-layout row wrap class="pt-2 pl-2 pr-2">
-                    <v-flex xs4 v-if="saveFilterSetId == -1" class="subheading mt-4">Filter Set Name:</v-flex>
-                    <v-flex xs4 v-if="saveFilterSetId != -1" class="subheading mt-4">Modify Name:</v-flex>
-                    <v-flex xs8>
-                        <v-text-field v-model="saveFilterSetName" label="Filter Set Name">
-                        </v-text-field>
-                    </v-flex>
-                    <!-- show active filters -->
-                    <v-flex xs12>
-                        <v-divider></v-divider>
-                        <div class="pt-2 pb-2">
-                            <v-chip v-if="isFilterUsed(filter)" label v-for="filter in filters" :key="filter.fieldName" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
-                                text-color="white">
-                                <span v-html="getFilterChip(filter)"></span>
-                                <v-tooltip bottom>
-                                    <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)">
-                                        <v-icon>close</v-icon>
-                                    </v-btn>
-                                    <span>Clear Filter</span>
-                                </v-tooltip>
-                            </v-chip>
-                            <div v-if="filter.isCheckBox" v-for="filter in filters" :key="filter.fieldName">
-                                <v-chip v-if="isCheckBoxFilterUsed(checkBox)" label v-for="checkBox in filter.checkBoxes" :key="checkBox.name" color="primary"
-                                    text-color="white">
-                                    <span v-html="getFilterCheckBoxChip(filter, checkBox)"></span>
-                                    <v-tooltip bottom>
-                                        <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(checkBox)">
-                                            <v-icon>close</v-icon>
-                                        </v-btn>
-                                        <span>Clear Filter</span>
-                                    </v-tooltip>
-                                </v-chip>
-                            </div>
-                        </div>
-                        <v-divider></v-divider>
-                    </v-flex>
-                </v-layout>
-            </v-card-text>
-            <v-card-actions>
-                <v-tooltip top>
-                    <v-btn color="primary" :disabled="!saveFilterSetName" @click="saveCurrentFilters()" slot="activator">
-                        <span v-if="saveFilterSetId == -1">Create</span>
-                        <span v-if="saveFilterSetId != -1">Update</span>
-                        <v-icon right dark>save</v-icon>
-                    </v-btn>
-                    <span>Save Filter Set</span>
-                </v-tooltip>
-                <v-tooltip top>
-                    <v-btn color="warning" :disabled="saveFilterSetId == -1" @click="deleteFilterSet()" slot="activator">
-                        Delete
-                        <v-icon right dark>delete</v-icon>
-                    </v-btn>
-                    <span>Delete Filter Set</span>
-                </v-tooltip>
-                <v-btn color="error" @click="saveFilterSetDialogVisible = false" slot="activator">Cancel
-                    <v-icon right dark>cancel</v-icon>
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
-    <!-- save selection dialog -->
+    <advanced-filter ref="advanceFilter" @refresh-data="filterData" 
+    @save-filters="saveCurrentFilters"
+    @delete-filter="deleteFilterSet"></advanced-filter>
     <v-dialog v-model="saveDialogVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
             <v-toolbar dark color="primary">
@@ -494,268 +421,6 @@ const OpenCase = {
         </v-card>
     </v-dialog>
 
-    <!-- advanced filtering side drawer -->
-    <div v-if="advanceFilteringVisible">
-        <v-navigation-drawer app width="500" class="elevation-5">
-            <v-toolbar>
-                <v-tooltip class="ml-0" bottom>
-                    <v-menu offset-y offset-x slot="activator" class="ml-0">
-                        <v-btn slot="activator" flat icon dark>
-                            <v-icon color="amber accent-2">filter_list</v-icon>
-                        </v-btn>
-                        <v-list>
-
-                            <v-list-tile avatar @click="clearFilters">
-                                <v-list-tile-avatar>
-                                    <v-icon>mdi-filter-remove-outline</v-icon>
-                                </v-list-tile-avatar>
-                                <v-list-tile-content>
-                                    <v-list-tile-title>Clear Filters</v-list-tile-title>
-                                </v-list-tile-content>
-                            </v-list-tile>
-
-                            <v-list-tile avatar :disabled="filterSets.length == 0">
-                                <v-list-tile-avatar>
-                                    <v-icon>mdi-filter-outline</v-icon>
-                                </v-list-tile-avatar>
-                                <v-list-tile-content>
-                                    Load Filter Set
-                                </v-list-tile-content>
-                                <v-list-tile-action>
-                                    <v-menu open-on-hover offset-x :close-on-content-click="true">
-                                        <v-btn flat icon slot="activator">
-                                            <v-icon>keyboard_arrow_right</v-icon>
-                                        </v-btn>
-                                        <v-list>
-                                            <v-list-tile v-for="(filterSet, index) in filterSetItems" :key="index" @click="loadSelectedFilterSet(filterSet)">
-                                                <v-list-tile-content class="pr-4">
-                                                    {{ filterSet.name }}
-                                                </v-list-tile-content>
-                                                <v-list-tile-action>
-                                                    <v-tooltip bottom>
-                                                        <v-btn slot="activator" flat icon color="primary" @click.stop="deleteFilterSet(filterSet.value)">
-                                                            <v-icon>delete</v-icon>
-                                                        </v-btn>
-                                                        <span>Delete Filter Set</span>
-                                                    </v-tooltip>
-                                                </v-list-tile-action>
-                                            </v-list-tile>
-                                        </v-list>
-                                    </v-menu>
-                                </v-list-tile-action>
-                            </v-list-tile>
-
-                            <v-list-tile avatar @click="openSaveFiltersDialog()" :disabled="!filtersValid">
-                                <v-list-tile-avatar>
-                                    <v-icon>save</v-icon>
-                                </v-list-tile-avatar>
-                                <v-list-tile-content>
-                                    <v-list-tile-title>Edit/Save Current Filter Set</v-list-tile-title>
-                                </v-list-tile-content>
-                            </v-list-tile>
-
-                            <v-list-tile avatar @click="filterData" :disabled="!filtersValid">
-                                <v-list-tile-avatar>
-                                    <v-icon>refresh</v-icon>
-                                </v-list-tile-avatar>
-                                <v-list-tile-content>
-                                    <v-list-tile-title>Refresh</v-list-tile-title>
-                                </v-list-tile-content>
-                            </v-list-tile>
-
-                            <v-list-tile avatar @click="toggleFilters()">
-                                <v-list-tile-avatar>
-                                    <v-icon>close</v-icon>
-                                </v-list-tile-avatar>
-                                <v-list-tile-content>
-                                    <v-list-tile-title>Close Filter Menu</v-list-tile-title>
-                                </v-list-tile-content>
-                            </v-list-tile>
-
-
-                        </v-list>
-                    </v-menu>
-                    <span>Filter Menu</span>
-                </v-tooltip>
-                <div class="title ml-0">
-                    Filters
-                </div>
-                <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                    <v-btn slot="activator" flat icon color="primary" @click="clearFilters">
-                        <v-icon>mdi-filter-remove-outline</v-icon>
-                    </v-btn>
-                    <span>Clear Filters</span>
-                </v-tooltip>
-
-                <v-tooltip right>
-                    <v-menu slot="activator" open-on-hover offset-y :close-on-content-click="true" :disabled="filterSets.length == 0">
-                        <v-btn flat icon slot="activator" color="primary" :disabled="filterSets.length == 0">
-                            <v-icon>mdi-filter-outline</v-icon>
-                        </v-btn>
-                        <v-list>
-                            <v-list-tile v-for="(filterSet, index) in filterSetItems" :key="index" @click="loadSelectedFilterSet(filterSet)">
-                                <v-list-tile-content class="pr-4">
-                                    {{ filterSet.name }}
-                                </v-list-tile-content>
-                                <v-list-tile-action>
-                                    <v-tooltip bottom>
-                                        <v-btn slot="activator" flat icon color="primary" @click.stop="deleteFilterSet(filterSet.value)">
-                                            <v-icon>delete</v-icon>
-                                        </v-btn>
-                                        <span>Delete Filter Set</span>
-                                    </v-tooltip>
-                                </v-list-tile-action>
-                            </v-list-tile>
-                        </v-list>
-                    </v-menu>
-                    <span>Load Filter Set</span>
-                </v-tooltip>
-
-                <v-tooltip bottom>
-                    <v-btn slot="activator" flat icon @click="openSaveFiltersDialog()" :disabled="!filtersValid" color="primary">
-                        <v-icon>save</v-icon>
-                    </v-btn>
-                    <span>Edit/Save Current Filter Set</span>
-                </v-tooltip>
-
-                <v-tooltip bottom>
-                    <v-btn slot="activator" flat icon :loading="loading" :color="filterNeedsReload ? 'warning' : 'primary'" @click="filterData"
-                        :disabled="!filtersValid">
-                        <v-icon>refresh</v-icon>
-                    </v-btn>
-                    <span>Refresh</span>
-                </v-tooltip>
-
-                <v-tooltip bottom>
-                    <v-btn icon @click="toggleFilters()" slot="activator">
-                        <v-icon>close</v-icon>
-                    </v-btn>
-                    <span>Close Filter Menu</span>
-                </v-tooltip>
-            </v-toolbar>
-        </v-navigation-drawer>
-        <v-navigation-drawer app width="500" class="mt-6" height="calc(100% - 64px)">
-            <!-- displays which filters are active -->
-            <div v-if="currentFilterSet" class="pl-2 pt-2 subheading">Current Filter Set: {{ currentFilterSet.listName }}</div>
-            <div class="pt-2 pb-2">
-                <v-chip v-if="isFilterUsed(filter)" label v-for="filter in filters" :key="filter.fieldName" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
-                    text-color="white">
-                    <span v-html="getFilterChip(filter)"></span>
-                    <v-tooltip bottom>
-                        <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)">
-                            <v-icon>close</v-icon>
-                        </v-btn>
-                        <span>Clear Filter</span>
-                    </v-tooltip>
-                </v-chip>
-                <div v-if="filter.isCheckBox" v-for="filter in filters" :key="filter.fieldName">
-                    <v-chip v-if="isCheckBoxFilterUsed(checkBox)" label v-for="checkBox in filter.checkBoxes" :key="checkBox.name" color="primary"
-                        text-color="white">
-                        <span v-html="getFilterCheckBoxChip(filter, checkBox)"></span>
-                        <v-tooltip bottom>
-                            <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(checkBox)">
-                                <v-icon>close</v-icon>
-                            </v-btn>
-                            <span>Clear Filter</span>
-                        </v-tooltip>
-                    </v-chip>
-                </div>
-            </div>
-            <v-divider></v-divider>
-            <!-- list of possible filters -->
-            <v-container grid-list-md>
-                <v-form v-model="filtersValid">
-                    <v-layout row v-for="filter in filters" :key="filter.fieldName" class="pl-3 pr-3">
-
-                        <v-flex xs12 v-if="filter.isSelect">
-                            <v-layout>
-                                <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
-                                <v-flex xs7>
-                                    <v-select class="no-height" v-bind:items="filter.selectItems" v-model="filter.value" item-text="name" item-value="value"
-                                        :label="filter.headerText" @input="updateFilterNeedsReload(true)" auto autocomplete clearable></v-select>
-                                </v-flex>
-                            </v-layout>
-                        </v-flex>
-
-                        <v-flex xs12 v-if="filter.isBoolean">
-                            <v-layout row class="pt-3">
-                                <v-flex xs6>
-                                    <v-switch class="no-height" color="primary" :label="filter.headerTextTrue" v-model="filter.valueTrue" @change="updateFilterNeedsReload(true)"></v-switch>
-                                </v-flex>
-                                <v-flex xs6>
-                                    <v-switch class="no-height" color="primary" :label="filter.headerTextFalse" v-model="filter.valueFalse" @change="updateFilterNeedsReload(true)"></v-switch>
-                                </v-flex>
-                            </v-layout>
-                        </v-flex>
-
-                        <v-expansion-panel expand v-if="filter.isCheckBox" class="expandable-filter elevation-0">
-                            <v-expansion-panel-content :value="true">
-                                <div slot="header" class="subheading pl-1">{{ filter.headerText }}</div>
-                                <v-layout row wrap>
-                                    <v-flex xs12 lg6 v-for="(checkBox, index) in filter.checkBoxes" :key="index">
-                                        <v-tooltip bottom>
-                                            <v-checkbox color="primary" slot="activator" class="no-height" :label="checkBox.name" v-model="checkBox.value" @change="updateFilterNeedsReload(true)"></v-checkbox>
-                                            <span>{{ checkBox.name }}</span>
-                                        </v-tooltip>
-                                    </v-flex>
-                                </v-layout>
-                            </v-expansion-panel-content>
-                        </v-expansion-panel>
-
-                        <v-flex xs12 v-if="filter.isString">
-                            <v-layout>
-                                <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
-                                <v-flex xs7>
-                                    <v-text-field class="no-height" :name="filter.fieldName" :label="filter.headerText" v-model="filter.value" @input="updateFilterNeedsReload(true)"></v-text-field>
-                                </v-flex>
-                            </v-layout>
-                        </v-flex>
-
-                        <v-flex xs12 v-if="filter.isNumber">
-                            <v-layout row>
-                                <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
-                                <v-flex xs4>
-                                    <v-text-field class="no-height" :name="filter.fieldName + '-min'" label="Min" v-model="filter.minValue" :rules="numberRules"
-                                        @input="updateFilterNeedsReload(true)"></v-text-field>
-                                </v-flex>
-                                <v-flex xs4>
-                                    <v-text-field class="no-height" :name="filter.fieldName + '-max'" label="Max" v-model="filter.maxValue" :rules="numberRules"
-                                        @input="updateFilterNeedsReload(true)"></v-text-field>
-                                </v-flex>
-                            </v-layout>
-                        </v-flex>
-
-                        <v-flex xs12 v-if="filter.isDate">
-                            <v-layout row>
-                                <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
-                                <v-flex xs4>
-                                    <v-menu lazy :v-model="false" transition="scale-transition" offset-y full-width :nudge-right="40" max-width="290px" min-width="290px"
-                                        :close-on-content-click="true">
-                                        <v-text-field class="no-height" slot="activator" label="From" v-model="filter.minValue" prepend-icon="event" readonly @input="updateFilterNeedsReload(true)"></v-text-field>
-                                        <v-date-picker v-model="filter.minValue" no-title scrollable>
-                                            <v-spacer></v-spacer>
-                                        </v-date-picker>
-                                    </v-menu>
-                                </v-flex>
-                                <v-flex xs4>
-                                    <v-menu lazy :v-model="false" transition="scale-transition" offset-y full-width :nudge-right="40" max-width="290px" min-width="290px"
-                                        :close-on-content-click="true">
-                                        <v-text-field class="no-height" slot="activator" label="To" v-model="filter.maxValue" prepend-icon="event" readonly @input="updateFilterNeedsReload(true)"></v-text-field>
-                                        <v-date-picker v-model="filter.maxValue" no-title scrollable>
-                                            <v-spacer></v-spacer>
-                                        </v-date-picker>
-                                    </v-menu>
-                                </v-flex>
-                            </v-layout>
-                        </v-flex>
-                    </v-layout>
-                </v-form>
-            </v-container>
-        </v-navigation-drawer>
-    </div>
-    <!-- advanced filtering side drawer -->
-
     <v-toolbar dark color="primary" fixed app>
         <v-tooltip class="ml-0" bottom>
             <v-menu offset-y offset-x slot="activator" class="ml-0">
@@ -853,7 +518,7 @@ const OpenCase = {
     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="Variants" initial-sort="chromPos"
         no-data-text="No Data" :enable-selection="true" :show-row-count="true">
         <v-tooltip bottom slot="action1">
-            <v-btn slot="activator" flat icon @click="toggleFilters" :color="advanceFilteringVisible ? 'amber accent-2' : 'white'">
+            <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvanceFilteringVisible() ? 'amber accent-2' : 'white'">
                 <v-icon>filter_list</v-icon>
             </v-btn>
             <span>Advanced Filtering</span>
@@ -870,13 +535,14 @@ const OpenCase = {
 
 
 
-</div>` , data() { return { loading: true, patientTables: [], patientDetailsVisible: true, caseName: "",      caseId: "",
-            advanceFilteringVisible: false,
-            filters: [],
-            effects: [],
-            filtersValid: true,
-            numberRules: [v => !isNaN(v) || 'Only numbers'],
-            filterNeedsReload: true,
+</div>` ,
+    data() {
+        return {
+            loading: true,
+            patientTables: [],
+            patientDetailsVisible: true,
+            caseName: "",
+            caseId: "",
             variantDetailsVisible: false,
             currentVariant: {},
             currentRow: {},
@@ -899,12 +565,6 @@ const OpenCase = {
             mdaAnnotationsFormatted: [],
             mdaAnnotationsVisible: true,
             utswAnnotationsVisible: true,
-            currentFilterSet: "",
-            filterSets: [],
-            filterSetItems: [],
-            saveFilterSetName: "",
-            saveFilterSetId: -1,
-            saveFilterSetDialogVisible: false,
             bamViewerVisible: false
         }
     }, methods: {
@@ -921,6 +581,7 @@ const OpenCase = {
         },
         getAjaxData() {
             this.loading = true;
+            this.$refs.advanceFilter.loading = true;
             axios({
                 method: 'post',
                 url: webAppRoot + "/getCaseDetails",
@@ -928,8 +589,7 @@ const OpenCase = {
                     caseId: this.$route.params.id
                 },
                 data: {
-                    filters:
-                        this.filters
+                    filters: this.$refs.advanceFilter.filters
                 }
             }).then(response => {
                 if (response.data.isAllowed) {
@@ -937,19 +597,21 @@ const OpenCase = {
                     this.caseName = response.data.caseName;
                     this.caseId = response.data.caseId;
                     this.$refs.geneVariantDetails.manualDataFiltered(response.data);
-                    this.effects = response.data.effects;
+                    this.$refs.advanceFilter.effects = response.data.effects;
                     this.userId = response.data.userId;
-                    this.populateCheckBoxes();
-                    this.filterNeedsReload = false;
+                    this.$refs.advanceFilter.populateCheckBoxes();
+                    this.$refs.advanceFilter.filterNeedsReload = false;
                     this.addHeaderAction(response);
                 }
                 else {
                     this.handleDialogs(response.data, this.getAjaxData);
                 }
                 this.loading = false;
+                this.$refs.advanceFilter.loading = false;
             }
             ).catch(error => {
                 this.loading = false;
+                this.$refs.advanceFilter.loading = false;
                 console.log(error);
             }
             );
@@ -964,8 +626,7 @@ const OpenCase = {
                 })
                 .then(response => {
                     if (response.data.isAllowed) {
-                        this.filters = response.data.filters;
-                        this.populateCheckBoxes();
+                        this.$refs.advanceFilter.createFilters(response.data.filters);
                     }
                     else {
                         this.handleDialogs(response, this.getVariantFilters);
@@ -974,107 +635,14 @@ const OpenCase = {
                     console.log(error);
                 });
         },
-        populateCheckBoxes() {
-            for (var i = 0; i
-                < this.filters.length; i++) {
-                var filter = this.filters[i]; if (filter.isCheckBox) {
-                    if (filter.fieldName == 'effects') {
-                        if
-                        (filter.checkBoxes.length > 0) { return; } filter.checkBoxes = []; for (var j = 0; j
-                            < this.effects.length; j++) { filter.checkBoxes.push({ name: this.effects[j], value: false }); }
-                    }
-                }
-            }
+        isAdvanceFilteringVisible() {
+            return this.$refs.advanceFilter && this.$refs.advanceFilter.advanceFilteringVisible;
         },
         filterData() {
             this.getAjaxData();
         },
-        clearFilters() {
-            for (var i = 0; i < this.filters.length; i++) {
-                var filter = this.filters[i]; this.clearFilter(filter);
-            }
-            this.currentFilterSet = "";
-            this.getAjaxData();
-        },
-        clearFilter(filter, doRefresh) {
-            filter.value = null;
-            filter.minValue = null;
-            filter.maxValue = null;
-            filter.minDateValue = null;
-            filter.maxDateValue = null;
-            filter.valueTrue = false;
-            filter.valueFalse = false;
-            if (filter.isCheckBox) {
-                for (var i = 0; i < filter.checkBoxes.length; i++) {
-                    filter.checkBoxes[i].value = false;
-                }
-            }
-            if (doRefresh) { //refresh only if closing a chip
-                this.currentFilterSet = "";
-                this.getAjaxData();
-            }
-        },
-        clearCheckBoxFilter(checkBox) {
-            checkBox.value = false; //TODO refresh
-        },
-        // display the content of the filter with the appropriate value min max etc 
-        getFilterChip(filter) { //TODO 
-            if (filter.isSelect) {
-                return filter.headerText + ": <b>" + filter.value + "</b>";
-            }
-            if (filter.isBoolean) {
-                return "Include " + filter.headerTextTrue
-                    + ": <b>" + (filter.valueTrue ? 'YES ' : 'NO ')
-                    + "</b><br/>" + "Include "
-                    + filter.headerTextFalse + ": <b>"
-                    + (filter.valueFalse ? 'YES' : 'NO') + "</b>";
-            } if (filter.isString) {
-                return filter.headerText + " contains <b>" + filter.value + "</b>";
-            } if (filter.isNumber) { // 
-                return filter.headerText + ": <b>[ "
-                    + (filter.minValue != null ? filter.minValue : '') + ":"
-                    + (filter.maxValue != null ? filter.maxValue : '') + " ]</b>";
-            } //TODO dates and numbers
-            return filter.headerText;
-        },
-        getFilterCheckBoxChip(filter, checkBox) {
-            return filter.headerText + ": <b>" + checkBox.name
-                + "</b>";
-        },
         toggleFilters() {
-            this.advanceFilteringVisible = !this.advanceFilteringVisible;
-            if (!this.advanceFilteringVisible) {
-                bus.$emit("need-layout-resize", this);
-            }
-        },
-        isFilterUsed(filter) {
-            if (filter.isCheckBox) {
-                return false; //handled in a separate chip
-            }
-            if (filter.isNumber) {
-                return (filter.minValue != null && filter.minValue !== "")
-                    || (filter.maxValue != null && filter.maxValue !== "")
-            }
-            if (filter.isDate) {
-                return filter.minDateValue != null || filter.maxDateValue != null;
-            }
-            if (filter.isBoolean) {
-                return filter.valueTrue == true || filter.valueFalse == true;
-            }
-            return filter.value != null && filter.value !== "";
-        },
-        isCheckBoxFilterUsed(checkBox) { return checkBox.value == true; }, isInputNumberValid(filter) {
-            if (filter.isNumber) {
-                var isValid = (filter.minValue === "" || !isNaN(filter.minValue)) && (filter.maxValue === "" || !isNaN(filter.maxValue));
-                if (isValid) {
-                    if (filter.minValue !== "" && filter.minValue != null) {
-                        filter.minValue = parseFloat(filter.minValue);
-                    }
-                    if (filter.maxValue !== "" && filter.maxValue != null) {
-                        filter.maxValue = parseFloat(filter.maxValue);
-                    }
-                } return isValid;
-            } return true;
+            this.$refs.advanceFilter.toggleFilters();
         },
         addHeaderAction(response) {
             for (var i = 0; i < response.data.headers.length; i++) {
@@ -1343,8 +911,8 @@ const OpenCase = {
                 }
                 else {
                     this.handleDialogs(response.data, this.saveSelection);
-                } this.loading =
-                    false;
+                }
+                this.loading = false;
             }).catch(error => {
                 this.loading = false;
                 console.log(error);
@@ -1356,52 +924,38 @@ const OpenCase = {
         utswAnnotationsExists() {
             return this.utswAnnotationsFormatted.length > 0;
         },
-        openSaveFiltersDialog() {
-            if (this.currentFilterSet) {
-                this.saveFilterSetId = this.currentFilterSet.variantFilterListId;
-                this.saveFilterSetName = this.currentFilterSet.listName;
-            }
-            else { //this is a new filter set
-                this.saveFilterSetId = -1;
-                this.saveFilterSetName = "";
-            }
-            this.saveFilterSetDialogVisible = true;
-        },
         saveCurrentFilters() {
+            $refs.advanceFilter.loading = true;
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveCurrentFilters",
                 params: {
-                    filterListId: this.saveFilterSetId,
-                    filterListName: this.saveFilterSetName
+                    filterListId: this.$refs.advanceFilter.saveFilterSetId,
+                    filterListName: this.$refs.advanceFilter.saveFilterSetName
                 },
                 data: {
-                    filters:
-                        this.filters
+                    filters: this.$refs.advanceFilter.filters
                 }
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
                     this.loadUserFilterSets();
-                    this.currentFilterSet = response.data.savedFilterSet;
-                    this.saveFilterSetDialogVisible = false;
+                    this.$refs.advanceFilter.currentFilterSet = response.data.savedFilterSet;
+                    this.$refs.advanceFilter.saveFilterSetDialogVisible = false;
                     this.snackBarMessage = "Filter Set Saved";
                     this.snackBarVisible = true;
                 }
                 else {
                     this.handleDialogs(response.data, this.saveCurrentFilters);
                 }
-                this.loading = false;
+                this.$refs.advanceFilter.loading = false;
             }
             ).catch(error => {
-                this.loading = false;
+                this.$refs.advanceFilter.loading = false;
                 console.log(error);
             }
             );
         },
         deleteFilterSet(filterSetId) {
-            if (this.currentFilterSet && filterSetId == this.currentFilterSet.variantFilterListId) {
-                this.currentFilterSet = "";
-            }
             axios({
                 method: 'post',
                 url: webAppRoot + "/deleteFilterSet",
@@ -1411,7 +965,7 @@ const OpenCase = {
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
                     this.loadUserFilterSets();
-                    this.saveFilterSetDialogVisible = false;
+                    this.$refs.advanceFilter.saveFilterSetDialogVisible = false;
                     this.snackBarMessage = "Filter Set Deleted";
                     this.snackBarVisible = true;
                 }
@@ -1429,13 +983,12 @@ const OpenCase = {
                 webAppRoot + "/loadUserFilterSets",
                 {
                     params: {
-
                     }
                 })
                 .then(response => {
                     if (response.data.isAllowed) {
-                        this.filterSets = response.data.filters;
-                        this.filterSetItems = response.data.items;
+                        this.$refs.advanceFilter.filterSets = response.data.filters;
+                        this.$refs.advanceFilter.filterSetItems = response.data.items;
 
                     }
                     else {
@@ -1444,49 +997,6 @@ const OpenCase = {
                 }).catch(error => {
                     console.log(error);
                 });
-        },
-        // find the filterset loaded by the user and populates all the relevant form fields
-        loadSelectedFilterSet(filterSet) {
-            this.clearFilters();
-            this.currentFilterSet = this.filterSets.filter(f => f.variantFilterListId == filterSet.value)[0];
-            for (var i = 0; i < this.currentFilterSet.filters.length; i++) {
-                var filter = this.currentFilterSet.filters[i];
-                var filterToPopulate = this.filters.filter(f => f.fieldName == filter.field)[0];
-                this.populateFilter(filterToPopulate, filter);
-            }
-            this.getAjaxData();
-        },
-        populateFilter(filterToPopulate, loadedFilter) {
-            var multiplier = 1;
-            if (filterToPopulate.fieldName.includes("Frequency")) {
-                multiplier = 100;
-            }
-            filterToPopulate.value = loadedFilter.value;
-            filterToPopulate.minValue = loadedFilter.minValue * multiplier;
-            filterToPopulate.maxValue = loadedFilter.maxValue * multiplier;
-            filterToPopulate.minDateValue = null;
-            filterToPopulate.maxDateValue = null;
-            filterToPopulate.valueTrue = loadedFilter.valueTrue;
-            filterToPopulate.valueFalse = loadedFilter.valueFalse;
-            if (filterToPopulate.isCheckBox) {
-                for (var i = 0; i < filterToPopulate.checkBoxes.length; i++) {
-                    var field = filterToPopulate.checkBoxes[i].name.replace(/ /g, "_").toLowerCase();
-                    var checkboxHasValue = false;
-                    for (var j = 0; j < loadedFilter.stringValues.length; j++) {
-                        var currentCheckBoxValue = loadedFilter.stringValues[j].filterString;
-                        if (currentCheckBoxValue == field) {
-                            checkboxHasValue = true;
-                        }
-                    }
-                    filterToPopulate.checkBoxes[i].value = checkboxHasValue;
-                }
-            }
-        },
-        updateFilterNeedsReload(needsReload) {
-            this.filterNeedsReload = needsReload;
-            if (needsReload) {
-                this.currentFilterSet = "";
-            }
         },
         toggleBamViewer() {
             if (this.bamViewerVisible) {
