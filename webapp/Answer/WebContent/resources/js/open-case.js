@@ -5,15 +5,19 @@ const OpenCase = {
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
-    <advanced-filter ref="advanceFilter" @refresh-data="filterData" 
-    @save-filters="saveCurrentFilters"
-    @delete-filter="deleteFilterSet"></advanced-filter>
+    <advanced-filter ref="advanceFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"></advanced-filter>
     <v-dialog v-model="saveDialogVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
             <v-toolbar dark color="primary">
                 <v-toolbar-title>Review Selected Variants
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
+                <v-tooltip bottom>
+                    <v-btn icon @click="exportSelectedVariants" slot="activator">
+                        <v-icon>file_download</v-icon>
+                    </v-btn>
+                    <span>Export to CSV</span>
+                </v-tooltip>
                 <v-tooltip bottom>
                     <v-btn icon @click="saveDialogVisible = false" slot="activator">
                         <v-icon>close</v-icon>
@@ -36,9 +40,23 @@ const OpenCase = {
                 <v-btn color="error" @click="saveDialogVisible = false" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
+                <v-breadcrumbs>
+                    <v-icon slot="divider">chevron_right</v-icon>
+                    <v-breadcrumbs-item
+                      v-for="item in breadcrumbs"
+                      :key="item.text"
+                      :disabled="item.disabled"
+                    >
+                      {{ item.text }}
+                    </v-breadcrumbs-item>
+                  </v-breadcrumbs>
             </v-card-actions>
         </v-card>
     </v-dialog>
+
+    <!-- annotation dialog -->
+    <edit-annotations @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation"></edit-annotations>
+
     <!-- variant details dialog -->
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
@@ -99,12 +117,12 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="toggleBamViewer()">
+                        <v-list-tile avatar @click="openBamViewerLink()">
                             <v-list-tile-avatar>
                                 IGV
                             </v-list-tile-avatar>
                             <v-list-tile-content>
-                                <v-list-tile-title>Bam Viewer</v-list-tile-title>
+                                <v-list-tile-title>Open Bam Viewer in New Tab</v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
 
@@ -163,10 +181,10 @@ const OpenCase = {
                     <span v-if="!utswAnnotationsExists()">No UTSW Annotations</span>
                 </v-tooltip>
                 <v-tooltip bottom>
-                    <v-btn icon flat @click="toggleBamViewer()" slot="activator" :color="bamViewerVisible ? 'amber accent-2' : ''">
+                    <v-btn ref="bamViewerLink" icon flat slot="activator" :href="createBamViewerLink()" target="_blank" rel="noreferrer">
                         IGV
                     </v-btn>
-                    <span>Bam Viewer</span>
+                    <span>Open Bam Viewer in New Tab</span>
                 </v-tooltip>
                 <v-tooltip bottom>
                     <v-btn icon @click="closeVariantDetails()" slot="activator">
@@ -180,6 +198,12 @@ const OpenCase = {
             <v-card-text :style="getDialogMaxHeight()">
                 <v-container grid-list-md fluid>
                     <v-layout row wrap>
+                        <v-flex xs12 v-show="annotationAllHidden()">
+                            <p class="text-xs-right subheading">
+                                <v-icon style="transform: rotate(90deg) translateX(-5px);">keyboard_return</v-icon>
+                                <span>Click on a icon to show variant details.</span>
+                            </p>
+                        </v-flex>
                         <!-- card showing the same data as the summary row -->
                         <v-flex xs12 md12 lg9 xl7 v-show="annotationVariantDetailsVisible">
                             <v-card>
@@ -283,7 +307,7 @@ const OpenCase = {
 
                         </v-flex>
                         <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
-                            <v-card>
+                            <v-card class="soft-grey-background">
                                 <v-toolbar dark color="primary">
                                     <v-toolbar-title>
                                         <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
@@ -297,40 +321,61 @@ const OpenCase = {
                                         <span>Close</span>
                                     </v-tooltip>
                                 </v-toolbar>
-                                <v-card-text v-for="(annotation, index) in utswAnnotationsFormatted" :key="index" v-html="annotation">
-
-                                </v-card-text>
-                            </v-card>
-                        </v-flex>
-                        <!-- bam viewer -->
-                        <v-flex xs12 v-show="bamViewerVisible" >
-                            <v-card>
-                                <v-toolbar dark color="primary">
-                                    <v-toolbar-title>
-                                        Bam Viewer
-                                    </v-toolbar-title>
-                                    <v-spacer></v-spacer>
-                                    <v-tooltip bottom>
-                                        <v-btn icon @click="toggleBamViewer()" slot="activator">
-                                            <v-icon>close</v-icon>
-                                        </v-btn>
-                                        <span>Close</span>
-                                    </v-tooltip>
-                                </v-toolbar>
                                 <v-card-text>
-                                    <bam-viewer ref="bamViewer"></bam-viewer>
+                                    <v-card class="mb-2" v-for="(annotation, index) in utswAnnotationsFormatted" :key="index">
+                                        <v-card-text class="subheading">
+                                            <v-container grid-list-md fluid>
+                                                <v-layout row wrap>
+                                                    <v-flex xs12>
+                                                        From {{ annotation.fullName }} on
+                                                        <span v-text="parseDate(annotation.modifiedDate)"></span>
+                                                    </v-flex>
+                                                    <v-flex xs12>
+                                                        Scope:
+                                                        <v-tooltip bottom v-for="(scope, index) in annotation.scopes" :key="index">
+                                                            <v-chip disabled outline slot="activator">
+                                                                <span :class="scope ? 'green--text' : 'red--text'">{{ annotation.scopeLevels[index] }}</span>
+                                                                <v-icon right v-if="scope" color="green">check</v-icon>
+                                                                <v-icon right v-if="!scope" color="red">close</v-icon>
+                                                            </v-chip>
+                                                            <span v-html="annotation.scopeTooltip"> </span>
+                                                        </v-tooltip>
+                                                    </v-flex>
+                                                    <v-flex xs12>
+                                                        <span v-if="annotation.category" class="pr-1">
+                                                            <b>{{ annotation.category }}:</b>
+                                                        </span>
+                                                        <span v-html="annotation.text"></span>
+                                                    </v-flex>
+                                                    <v-flex xs12>
+                                                        <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>
+                                                        <v-tooltip v-if="id" bottom v-for="id in annotation.pmids" :key="id">
+                                                            <v-btn @click="handlePubMedIdLink(id)" slot="activator">
+                                                                {{ id }}
+                                                            </v-btn>
+                                                            <span>Open in new tab</span>
+                                                        </v-tooltip>
+                                                        <span v-if="annotation.nctids" class="selectable pl-2">Clinical Trials:</span>
+                                                        <v-tooltip v-if="id" bottom v-for="id in annotation.nctids" :key="id">
+                                                            <v-btn @click="handleNCTIdLink(id)" slot="activator">
+                                                                {{ id }}
+                                                            </v-btn>
+                                                            <span>Open in new tab</span>
+                                                        </v-tooltip>
+                                                    </v-flex>
+                                                </v-layout>
+                                            </v-container>
+                                        </v-card-text>
+                                    </v-card>
                                 </v-card-text>
                             </v-card>
-                        </v-flex>
-                        <v-flex xs12>
-
                         </v-flex>
                     </v-layout>
                 </v-container>
             </v-card-text>
             <v-card-actions>
                 <v-tooltip top>
-                    <v-btn color="primary" @click="startUserAnnotations()" slot="activator">Add
+                    <v-btn color="primary" @click="startUserAnnotations()" slot="activator">Add/Edit
                         <v-icon right dark>note_add</v-icon>
                     </v-btn>
                     <span>Create/Edit Your Annotations</span>
@@ -341,85 +386,24 @@ const OpenCase = {
                 <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible" color="warning" @click="removeVariantFromReport()" slot="activator">Unselect Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn color="error" @click="variantDetailsVisible = false" slot="activator">Cancel
+                <v-btn color="error" @click="closeVariantDetails()" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
+                <v-breadcrumbs>
+                    <v-icon slot="divider">chevron_right</v-icon>
+                    <v-breadcrumbs-item
+                      v-for="item in breadcrumbs"
+                      :key="item.text"
+                      :disabled="item.disabled"
+                    >
+                      {{ item.text }}
+                    </v-breadcrumbs-item>
+                  </v-breadcrumbs>
             </v-card-actions>
         </v-card>
     </v-dialog>
 
-    <!-- annotation dialog -->
-    <v-dialog v-model="annotationDialogVisible" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
-        <v-card ref="annotationDialog" class="soft-grey-background">
-            <v-toolbar dark color="primary" class="mb-2">
-                <v-toolbar-title>Your Annotations for variant: {{ currentVariant.geneName }} {{ currentVariant.notation }}</v-toolbar-title>
-                <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                    <v-btn icon @click="annotationDialogVisible = false" slot="activator">
-                        <v-icon>close</v-icon>
-                    </v-btn>
-                    <span>Close Annotations</span>
-                </v-tooltip>
-            </v-toolbar>
-            <v-card-text :style="getDialogMaxHeight()">
-                <v-card v-if="userEditingAnnotations.length == 0">
-                    <v-card-text>
-                        Click on
-                        <v-btn color="primary" @click="addCustomAnnotation()">Add
-                            <v-icon right dark>playlist_add</v-icon>
-                        </v-btn> to create a new annotation.
-                    </v-card-text>
-                </v-card>
-                <v-layout color="primary" row wrap v-for="(annotation, index) in userEditingAnnotations" :key="index">
-                    <v-flex xs12>
-                        <v-card class="mb-3">
-                            <v-card-text>
-                                <v-layout row wrap>
-                                    <v-flex xs12>
-                                        <span v-if="annotation.createdDate">
-                                            <b>Created on:</b> {{ annotation.createdDate }}</span>
-                                        <span v-if="annotation.modifiedDate" class="pl-4">
-                                            <b>Modified on:</b> {{ annotation.modifiedDate }}</span>
-                                        <v-tooltip bottom>
-                                            <v-btn slot="activator" icon flat @click="annotation.isVisible = !annotation.isVisible">
-                                                <v-icon v-show="!annotation.isVisible">visibility</v-icon>
-                                                <v-icon v-show="annotation.isVisible">visibility_off</v-icon>
-                                            </v-btn>
-                                            <span>Show/Hide Annotation</span>
-                                        </v-tooltip>
-                                        <v-tooltip bottom>
-                                            <v-btn slot="activator" icon flat @click="annotation.markedForDeletion = !annotation.markedForDeletion">
-                                                <v-icon>delete</v-icon>
-                                            </v-btn>
-                                            <span>Delete Annotation</span>
-                                        </v-tooltip>
-                                        <span class="pl-4" v-show="annotation.markedForDeletion">This annotation will be deleted on SAVE. Click CANCEL or
-                                            <v-icon>delete</v-icon> to cancel.
-                                        </span>
-                                    </v-flex>
-                                    <v-flex xs12>
-                                        <v-text-field v-show="annotation.isVisible" :textarea="true" ref="editAnnotation" :value="annotation.text" class="mr-2" :disabled="annotation.markedForDeletion">
-                                        </v-text-field>
-                                    </v-flex>
-                                </v-layout>
-                            </v-card-text>
-                        </v-card>
-                    </v-flex>
-                </v-layout>
-            </v-card-text>
-            <v-card-actions>
-                <v-btn color="primary" @click="addCustomAnnotation()">Add
-                    <v-icon right dark>playlist_add</v-icon>
-                </v-btn>
-                <v-btn color="success" @click="saveAnnotations()">Save
-                    <v-icon right dark>save</v-icon>
-                </v-btn>
-                <v-btn color="error" @click="cancelAnnotations()">Cancel
-                    <v-icon right dark>cancel</v-icon>
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+
 
     <v-toolbar dark color="primary" fixed app>
         <v-tooltip class="ml-0" bottom>
@@ -535,10 +519,13 @@ const OpenCase = {
 
 
 
-</div>` ,
-    data() {
+</div>` , data() {
         return {
             loading: true,
+            breadcrumbs: [{text: "You are here: Case Overview", disabled: true}],
+            breadcrumbItemVariantDetails: {text:"Variant Details", disabled: true},
+            breadcrumbItemReview:  {text:"Review Selected Variants", disabled: true},
+            breadcrumbItemEditAnnotation: {text:"Add / Edit Annotation", disabled: true},
             patientTables: [],
             patientDetailsVisible: true,
             caseName: "",
@@ -554,9 +541,9 @@ const OpenCase = {
             annotationVariantCanonicalVisible: true,
             annotationVariantOtherVisible: true,
             saveVariantDisabled: true,
-            annotationDialogVisible: false,
+            // annotationDialogVisible: false,
             userAnnotations: [],
-            userEditingAnnotations: [],
+            // userEditingAnnotations: [],
             snackBarMessage: "",
             snackBarVisible: false,
             utswAnnotations: [],
@@ -565,19 +552,26 @@ const OpenCase = {
             mdaAnnotationsFormatted: [],
             mdaAnnotationsVisible: true,
             utswAnnotationsVisible: true,
-            bamViewerVisible: false
+            bamViewerVisible: false,
+            externalWindow: null,
+            externalWindowOpen: false
         }
     }, methods: {
         handleDialogs(response, callback) {
             if (response.isXss) {
                 bus.$emit("xss-error",
                     [this, response.reason]);
-            } else if (response.isLogin) { bus.$emit("login-needed", [this, callback]) } else if (response.success
-                === false) { bus.$emit("some-error", [this, response.message]); }
+            }
+            else if (response.isLogin) {
+                bus.$emit("login-needed", [this, callback])
+            }
+            else if (response.success === false) {
+                bus.$emit("some-error", [this, response.message]);
+            }
         },
         getDialogMaxHeight() {
-            var height = window.innerHeight
-                - 120; return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: auto";
+            var height = window.innerHeight - 120;
+            return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: auto";
         },
         getAjaxData() {
             this.loading = true;
@@ -613,6 +607,7 @@ const OpenCase = {
                 this.loading = false;
                 this.$refs.advanceFilter.loading = false;
                 console.log(error);
+                bus.$emit("some-error", [this, error]);
             }
             );
         },
@@ -633,6 +628,7 @@ const OpenCase = {
                     }
                 }).catch(error => {
                     console.log(error);
+                    bus.$emit("some-error", [this, error]);
                 });
         },
         isAdvanceFilteringVisible() {
@@ -656,96 +652,105 @@ const OpenCase = {
         }, getVariantDetails(item) {
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
-            axios.get(webAppRoot + "/getVariantDetails", { params: { variantId: item.oid } }).then(response => {
-                if (response.data.isAllowed) {
-                    this.currentVariant = response.data.variantDetails;
-                    this.variantDataTables = [];
-                    var infoTable = {
-                        name: "infoTable",
-                        items: [{
-                            label: "Chromosome Position", value: this.currentVariant.chrom + ":"
-                                + this.currentVariant.pos
-                        },
-                        {
-                            label: "Gene", value: this.currentVariant.geneName
-                        },
-                        {
-                            label: "Notation", value:
-                                this.currentVariant.notation
-                        },
-                        {
-                            label: "Alt", value: this.currentVariant.alt
-                        },
-                        {
-                            label: "Type", value: this.currentVariant.type
-                        }]
-                    };
-                    this.variantDataTables.push(infoTable);
-
-                    this.linkTable = [{
-                        name: "linkTable", items: [
+            axios.get(
+                webAppRoot + "/getVariantDetails",
+                {
+                    params: {
+                        variantId: item.oid
+                    }
+                }).then(response => {
+                    if (response.data.isAllowed) {
+                        this.currentVariant = response.data.variantDetails;
+                        this.variantDataTables = [];
+                        var infoTable = {
+                            name: "infoTable",
+                            items: [{
+                                label: "Chromosome Position", value: this.currentVariant.chrom + ":"
+                                    + this.currentVariant.pos
+                            },
                             {
-                                label: "IDs", ids:
-                                    this.currentVariant.ids, cosmicPatients: this.currentVariant.cosmicPatients, links: true
-                            }
-                        ]
-                    }];
+                                label: "Gene", value: this.currentVariant.geneName
+                            },
+                            {
+                                label: "Notation", value:
+                                    this.currentVariant.notation
+                            },
+                            {
+                                label: "Alt", value: this.currentVariant.alt
+                            },
+                            {
+                                label: "Type", value: this.currentVariant.type
+                            }]
+                        };
+                        this.variantDataTables.push(infoTable);
 
-                    var depthTable =
-                        {
-                            name: "depthTable",
-                            items: [
+                        this.linkTable = [{
+                            name: "linkTable", items: [
                                 {
-                                    label: "Tumor Total Depth",
-                                    value: this.currentVariant.tumorTotalDepth
-                                },
-                                {
-                                    label:
-                                        "Tumor Alt Percent",
-                                    value: this.formatPercent(this.currentVariant.tumorAltFrequency)
-                                },
-                                {
-                                    label: "Normal Total Depth",
-                                    value: this.currentVariant.normalTotalDepth
-                                },
-                                {
-                                    label: "Normal Alt Percent",
-                                    value: this.formatPercent(this.currentVariant.normalAltFrequency)
-                                }, {
-                                    label: "RNA Total Depth",
-                                    value: this.currentVariant.rnaTotalDepth
-                                },
-                                {
-                                    label: "RNA Alt Percent",
-                                    value: this.formatPercent(this.currentVariant.rnaAltFrequency)
+                                    label: "IDs", ids:
+                                        this.currentVariant.ids, cosmicPatients: this.currentVariant.cosmicPatients, links: true
                                 }
                             ]
-                        };
-                    this.variantDataTables.push(depthTable);
-                    var dataTable = {
-                        name: "dataTable", items: [{
-                            label: "Callers",
-                            value: this.currentVariant.callSet.join(", ")
-                        }, {
-                            label: "Filters",
-                            value: this.currentVariant.filters.join(", ")
-                        }]
-                    };
-                    this.variantDataTables.push(dataTable);
-                    this.$refs.canonicalVariantAnnotation.manualDataFiltered(response.data.canonicalSummary);
-                    this.$refs.otherVariantAnnotations.manualDataFiltered(response.data.otherSummary);
-                    this.userAnnotations = this.currentVariant.referenceVariant.utswAnnotations.filter(a => a.userId == this.userId);
-                    this.utswAnnotations = this.currentVariant.referenceVariant.utswAnnotations;
-                    this.mdaAnnotations = this.currentVariant.mdaAnnotation ? this.currentVariant.mdaAnnotation : "";
-                    this.variantDetailsVisible = true;
+                        }];
 
-                } else {
-                    this.handleDialogs(response.data, this.getVariantDetails.bind(null,
-                        item));
-                }
-            }).catch(error => {
-                console.log(error);
-            });
+                        var depthTable =
+                            {
+                                name: "depthTable",
+                                items: [
+                                    {
+                                        label: "Tumor Total Depth",
+                                        value: this.currentVariant.tumorTotalDepth
+                                    },
+                                    {
+                                        label:
+                                            "Tumor Alt Percent",
+                                        value: this.formatPercent(this.currentVariant.tumorAltFrequency)
+                                    },
+                                    {
+                                        label: "Normal Total Depth",
+                                        value: this.currentVariant.normalTotalDepth
+                                    },
+                                    {
+                                        label: "Normal Alt Percent",
+                                        value: this.formatPercent(this.currentVariant.normalAltFrequency)
+                                    }, {
+                                        label: "RNA Total Depth",
+                                        value: this.currentVariant.rnaTotalDepth
+                                    },
+                                    {
+                                        label: "RNA Alt Percent",
+                                        value: this.formatPercent(this.currentVariant.rnaAltFrequency)
+                                    }
+                                ]
+                            };
+                        this.variantDataTables.push(depthTable);
+                        var dataTable = {
+                            name: "dataTable", items: [{
+                                label: "Callers",
+                                value: this.currentVariant.callSet.join(", ")
+                            }, {
+                                label: "Filters",
+                                value: this.currentVariant.filters.join(", ")
+                            }]
+                        };
+                        this.variantDataTables.push(dataTable);
+                        this.$refs.canonicalVariantAnnotation.manualDataFiltered(response.data.canonicalSummary);
+                        this.$refs.otherVariantAnnotations.manualDataFiltered(response.data.otherSummary);
+                        this.userAnnotations = this.currentVariant.referenceVariant.utswAnnotations.filter(a => a.userId == this.userId);
+                        this.$refs.annotationDialog.userAnnotations = this.userAnnotations;
+                        this.utswAnnotations = this.currentVariant.referenceVariant.utswAnnotations;
+                        this.mdaAnnotations = this.currentVariant.mdaAnnotation ? this.currentVariant.mdaAnnotation : "";
+                        this.formatAnnotations();
+                        this.toggleHTMLOverlay(true);
+                        this.variantDetailsVisible = true;
+                    } else {
+                        this.handleDialogs(response.data, this.getVariantDetails.bind(null,
+                            item));
+                    }
+                }).catch(error => {
+                    console.log(error);
+                    bus.$emit("some-error", [this, error]);
+                });
         },
         updateVariantVcfAnnotationTable() {
             var items = this.currentVariant.vcfAnnotations;
@@ -767,12 +772,22 @@ const OpenCase = {
             var link = "";
             if (id.indexOf('rs') == 0) {
                 link = "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=" + id;
-            } else if (id.indexOf('COSM') == 0) {
+            }
+            else if (id.indexOf('COSM') == 0) {
                 link = "http://www.google.com?search?q=" + id;
             }
             else {
                 link = "https://www.bing.com/search?q=" + id;
-            } window.open(link, "_blank");
+            }
+            window.open(link, "_blank");
+        },
+        handlePubMedIdLink(id) {
+            var link = "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id;
+            window.open(link, "_blank");
+        },
+        handleNCTIdLink(id) {
+            var link = "https://clinicaltrials.gov/ct2/show/" + id;
+            window.open(link, "_blank");
         },
         formatIdLinkLabel(id, item) {
             var cosmicIds = item.ids.filter(id => id.indexOf('COSM') == 0);
@@ -789,96 +804,86 @@ const OpenCase = {
         },
         formatPercent(value) {
             if (value !== null && !isNaN(value)) {
-                return (Math.round(parseFloat(value)
-                    * 100000) / 1000) + "%";
+                return (Math.round(parseFloat(value) * 100000) / 1000) + "%";
             } return "";
         },
         formatLocalAnnotations(annotations, showUser) {
             var formatted = [];
-            for
-            (var i = 0; i
-                < annotations.length; i++) {
-                var annotation = "";
+            for (var i = 0; i < annotations.length; i++) {
+                var annotation = {
+                    fullName: "",
+                    text: "",
+                    scopes: [],
+                    scopeLevels: [],
+                    scopeTooltip: "",
+                    tumorSpecific: "",
+                    category: "",
+                    createdDate: "",
+                    modifiedDate: "",
+                    pmids: [],
+                    nctids: [],
+                };
                 if (showUser) {
-                    annotation = "<b>" + annotations[i].user.first + " " + annotations[i].user.last
-                        + "</b>: ";
-                } annotation += annotations[i].text.replace(/\n/g, "<br/>") + "<br/>";
+                    annotation.fullName = annotations[i].fullName;
+                }
+                annotation.text = annotations[i].text.replace(/\n/g, "<br/>");
+                annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isGeneSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
+                annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
+                "Gene " + (annotations[i].isGeneSpecific ? annotations[i].geneId : ''),
+                "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.notation : ''),
+                    "Tumor"];
+                annotation.category = annotations[i].category;
+                annotation.createdDate = annotations[i].createdDate;
+                annotation.modifiedDate = annotations[i].modifiedDate;
+                annotation.pmids = annotations[i].pmids;
+                annotation.nctids = annotations[i].nctids;
+                annotation.scopeTooltip = this.$refs.annotationDialog.createLevelInformation(annotations[i]);
                 formatted.push(annotation);
             }
             return formatted;
         },
         startUserAnnotations() {
-            //first make a copy of annotations for editing 
-            //this will allow to cancel without modifying the existing annotations 
-            this.userEditingAnnotations = [];
-            for (var i = 0; i < this.userAnnotations.length; i++) {
-                this.userEditingAnnotations.push(JSON.parse(JSON.stringify(this.userAnnotations[i])));
-            }
-            this.annotationDialogVisible = true;
+            this.$refs.annotationDialog.startUserAnnotations();
         },
         formatAnnotations() {
             this.utswAnnotationsFormatted = this.formatLocalAnnotations(this.utswAnnotations, true);
             // this.userAnnotationsFormatted = this.formatLocalAnnotations(this.userAnnotations, false);
         },
-        addCustomAnnotation() {
-            //TODO 
-            this.userEditingAnnotations.push({
-                text: "", markedForDeletion: false, isVisible: true
-            });
-            this.$nextTick(function () {
-                this.$refs.editAnnotation[this.$refs.editAnnotation.length - 1].focus(); this.$vuetify.goTo(
-                    "textarea:last-child");
-            });
-        }, saveAnnotations() {
-            this.annotationDialogVisible = false;
-            //copy edits to original annotations 
-            setTimeout(function () { // 
-                this.userAnnotations = this.userEditingAnnotations; // 
-            }, 2000);
-            var editedAnnotations = this.$refs.editAnnotation;
-            for (var i = 0; i < editedAnnotations.length; i++) {
-                if (!this.userAnnotations[i]) {
-                    this.userAnnotations.push({
-                        annotationId:
-                            -1
-                    });
-                } this.userAnnotations[i].text = editedAnnotations[i].inputValue;
-                this.userAnnotations[i].isVisible = this.userEditingAnnotations[i].isVisible;
-                this.userAnnotations[i].markedForDeletion = this.userEditingAnnotations[i].markedForDeletion;
-            } this.commitAnnotations();
-        },
-        commitAnnotations() {
-            axios.get("./commitAnnotations", {
-                params: { caseId: this.$route.params.id }, data: {
-                    annotations:
-                        this.userAnnotations,
-                }
-            }).then(response => {
-                if (response.data.isAllowed && response.data.success) {
-                    this.getVariantDetails(this.currentRow);
-                    this.snackBarMessage = "Annotation(s) Saved";
-                    this.snackBarVisible = true;
-                } else {
-                    this.handleDialogs(response.data, this.commitAnnotations);
+        commitAnnotations(userAnnotations) {
+            this.userAnnotations = userAnnotations;
+            axios({
+                method: 'post',
+                url: webAppRoot + "/commitAnnotations",
+                params: {
+                    caseId: this.$route.params.id,
+                    geneId: this.currentVariant.geneName,
+                    variantId: this.currentVariant._id.$oid
+                },
+                data: {
+                    annotations: this.userAnnotations,
                 }
             })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        this.getVariantDetails(this.currentRow);
+                        this.snackBarMessage = "Annotation(s) Saved";
+                        this.snackBarVisible = true;
+                    } else {
+                        this.handleDialogs(response.data, this.commitAnnotations);
+                    }
+                })
                 .catch(error => {
-                    alert(error);
+                    console.log(error);
+                    bus.$emit("some-error", [this, error]);
                 });
-        },
-        cancelAnnotations() {
-            this.annotationDialogVisible = false; this.$nextTick(function
-                () { //wait until dialog is closed 
-                this.userEditingAnnotations = [];
-            });
         },
         selectVariantForReport() {
             this.$refs.geneVariantDetails.addToSelection(this.currentRow);
-            this.variantDetailsVisible = false;
+            this.closeVariantDetails();
         },
         removeVariantFromReport() {
             this.$refs.geneVariantDetails.removeFromSelection(this.currentRow);
-            this.variantDetailsVisible = false;
+            this.closeVariantDetails();
         },
         updateSelectedVariantTable() {
             var selectedVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected);
@@ -890,7 +895,7 @@ const OpenCase = {
         openSaveDialog() {
             this.updateSelectedVariantTable(); this.saveDialogVisible = true;
         },
-        saveSelection() { //TODO 
+        saveSelection() {
             var selectedVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
             axios({
                 method:
@@ -916,6 +921,7 @@ const OpenCase = {
             }).catch(error => {
                 this.loading = false;
                 console.log(error);
+                bus.$emit("some-error", [this, error]);
             });
         },
         mdaAnnotationsExists() {
@@ -952,6 +958,7 @@ const OpenCase = {
             ).catch(error => {
                 this.$refs.advanceFilter.loading = false;
                 console.log(error);
+                bus.$emit("some-error", [this, error]);
             }
             );
         },
@@ -975,6 +982,7 @@ const OpenCase = {
             }
             ).catch(error => {
                 console.log(error);
+                bus.$emit("some-error", [this, error]);
             }
             );
         },
@@ -996,45 +1004,120 @@ const OpenCase = {
                     }
                 }).catch(error => {
                     console.log(error);
+                    bus.$emit("some-error", [this, error]);
                 });
         },
-        toggleBamViewer() {
-            if (this.bamViewerVisible) {
-                this.bamViewerVisible = false;
-                this.$refs.bamViewer.closeIGV();
-                return;
-            }
-            this.bamViewerVisible = true;
-            //get position for IGV
-            this.$nextTick(() => {
-                var igvRange = this.currentVariant.chrom + ":";
-                igvRange += this.currentVariant.pos - 500;
-                igvRange += "-";
-                igvRange += this.currentVariant.pos + 499;
-                // var bam = "http://localhost:8080/Answer/resources/bams/HD728.nanocourse.bam";
-                // var bai = "http://localhost:8080/Answer/resources/bams/HD728.nanocourse.bam.bai";
-                var bam = "http://localhost:8080/Answer/resources/bams/SHI710-27-6271_T_DNA_panel1385v2-1.final.bam";
-                var bai = "http://localhost:8080/Answer/resources/bams/SHI710-27-6271_T_DNA_panel1385v2-1.final.bai";
-                var label = "test";
-                this.$refs.bamViewer.openIGV(igvRange, bam, bai, label);
-            })
+        openBamViewerLink() {
+            this.$refs.bamViewerLink.$el.click();
+        },
+        createBamViewerLink() {
+            var igvRange = this.currentVariant.chrom + ":";
+            igvRange += this.currentVariant.pos - 100;
+            igvRange += "-";
+            igvRange += this.currentVariant.pos + 99;
+            var bam = "SHI710-27-6271_T_DNA_panel1385v2-1.final.bam";
+            var bai = "SHI710-27-6271_T_DNA_panel1385v2-1.final.bai";
+            var label = "test";
+            link = "../bamViewer?";
+            link += "locus=" + igvRange;
+            link += "&bam=" + bam;
+            link += "&bai=" + bai;
+            link += "&label=" + label;
+            return link;
         },
         closeVariantDetails() {
             this.variantDetailsVisible = false;
-            this.bamViewerVisible = false;
-            this.$refs.bamViewer.closeIGV();
+            this.toggleHTMLOverlay(false);
+        },
+        toggleHTMLOverlay(hideScrollBar) {
+            var html = document.querySelector("html");
+            if (hideScrollBar) {
+                html.style.overflow = "hidden";
+            }
+            else {
+                html.style.overflow = "";
+            }
+        },
+        annotationAllHidden() {
+            return !this.annotationVariantDetailsVisible
+                && !this.annotationVariantCanonicalVisible
+                && !(this.mdaAnnotationsVisible && this.mdaAnnotationsExists())
+                && !this.annotationVariantOtherVisible
+                && !(this.utswAnnotationsVisible && this.utswAnnotationsExists());
+        },
+        exportSelectedVariants() {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/exportSelection",
+                params: {
+                    caseId: this.$route.params.id
+                },
+                data: {
+                    filters: []
+                }
+            }).then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    console.log(response.data);
+                    this.createCSVFile(response.data.message);
+                }
+                else {
+                    this.handleDialogs(response.data, this.exportSelectedVariants);
+                }
+            }
+            ).catch(error => {
+                console.log(error);
+                bus.$emit("some-error", [this, error]);
+            }
+            );
+        },
+        parseDate(dateWithTimeZone) {
+            if (dateWithTimeZone) {
+                return dateWithTimeZone.split("T")[0];
+            }
+        },
+        createCSVFile(content) {
+            var hiddenElement = document.createElement('a');
+            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(content);
+            //hiddenElement.target = '_blank';
+            hiddenElement.download = this.$route.params.id + '_data.csv';
+            document.body.appendChild(hiddenElement);
+            hiddenElement.click();
+            document.body.removeChild(hiddenElement);
+
+        },
+        updateVariantDetailsBreadCrumbs(visible) {
+            visible ? this.breadcrumbs.push(this.breadcrumbItemVariantDetails) : this.breadcrumbs.pop();
+        },
+        updateSaveDialogBreadCrumbs(visible) {
+            visible ? this.breadcrumbs.push(this.breadcrumbItemReview) : this.breadcrumbs.pop();
+        },
+        updateEditAnnotationBreadcrumbs(visible) {
+            visible ? this.breadcrumbs.push(this.breadcrumbItemEditAnnotation) : this.breadcrumbs.pop();
         }
     },
     mounted: function () {
         this.getAjaxData();
         this.loadUserFilterSets();
         bus.$emit("clear-item-selected", [this]); this.getVariantFilters();
+        bus.$on('bam-viewer-closed', () => {
+            this.externalWindowOpen = false;
+        });
+        bus.$on('saving-annotations', (annotations) => {
+            this.commitAnnotations(annotations);
+        });
+
     },
     destroyed: function () {
-
+        bus.$off('bam-viewer-closed');
+        bus.$off('saving-annotations');
     },
     watch: {
         '$route': 'getAjaxData',
+        variantDetailsVisible: "updateVariantDetailsBreadCrumbs",
+        saveDialogVisible: "updateSaveDialogBreadCrumbs",
+        breadcrumbs: function() {
+            this.$refs.annotationDialog.breadcrumbs = this.breadcrumbs;
+        }
     }
 
 };

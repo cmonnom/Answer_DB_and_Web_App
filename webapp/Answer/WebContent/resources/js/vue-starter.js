@@ -50,7 +50,6 @@ router.beforeEach((to, from, next) => {
 });
 
 
-//TODO test this
 new Vue({
 	router,
 	el: '#app',

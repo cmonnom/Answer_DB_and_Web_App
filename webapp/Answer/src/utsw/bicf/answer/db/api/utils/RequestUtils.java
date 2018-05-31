@@ -29,46 +29,46 @@ import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilterList;
+import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Variant;
 
 /**
- * All API requests to the annotation DB should
- * be here.
+ * All API requests to the annotation DB should be here.
+ * 
  * @author Guillaume
  *
  */
 public class RequestUtils {
-	
+
 	ModelDAO modelDAO;
 	AnswerDBCredentials dbProps;
-	
+
 	public RequestUtils(ModelDAO modelDAO) {
 		super();
 		this.modelDAO = modelDAO;
 		this.dbProps = modelDAO.getAnswerDBCredentials();
 	}
 
-	
 	public final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 	private HttpGet requestGet = null;
 	private HttpPost requestPost = null;
 	private HttpPut requestPut = null;
 	private HttpClient client = HttpClientBuilder.create().build();
 	private ObjectMapper mapper = new ObjectMapper();
-	
+
 	private void addAuthenticationHeader(HttpGet requestMethod) {
 		requestMethod.setHeader(HttpHeaders.AUTHORIZATION, createAuthHeader());
 	}
-	
+
 	private void addAuthenticationHeader(HttpPost requestMethod) {
 		requestMethod.setHeader(HttpHeaders.AUTHORIZATION, createAuthHeader());
 	}
-	
+
 	private void addAuthenticationHeader(HttpPut requestMethod) {
 		requestMethod.setHeader(HttpHeaders.AUTHORIZATION, createAuthHeader());
 	}
-	
+
 	private String createAuthHeader() {
 		String auth = dbProps.getUsername() + ":" + dbProps.getPassword();
 		byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("UTF-8")));
@@ -81,7 +81,7 @@ public class RequestUtils {
 		sbUrl.append("cases");
 		URI uri = new URI(sbUrl.toString());
 		requestGet = new HttpGet(uri);
-		
+
 		addAuthenticationHeader(requestGet);
 
 		HttpResponse response = client.execute(requestGet);
@@ -94,15 +94,15 @@ public class RequestUtils {
 		return null;
 	}
 
-	public AjaxResponse assignCaseToUser(List<User> users, String caseId) throws ClientProtocolException, IOException, URISyntaxException {
+	public AjaxResponse assignCaseToUser(List<User> users, String caseId)
+			throws ClientProtocolException, IOException, URISyntaxException {
 		String userIds = users.stream().map(user -> user.getUserId().toString()).collect(Collectors.joining(","));
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("case/").append(caseId).append("/assignusers")
-		.append("?userIds=").append(userIds);
+		sbUrl.append("case/").append(caseId).append("/assignusers").append("?userIds=").append(userIds);
 		URI uri = new URI(sbUrl.toString());
-		
+
 		requestPut = new HttpPut(uri);
-		
+
 		addAuthenticationHeader(requestPut);
 
 		HttpResponse response = client.execute(requestPut);
@@ -111,26 +111,26 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			ajaxResponse.setSuccess(true);
-		}
-		else {
+		} else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
 		return ajaxResponse;
 	}
 
-	public OrderCase getCaseDetails(String caseId, String filters) throws ClientProtocolException, IOException, URISyntaxException {
+	public OrderCase getCaseDetails(String caseId, String filters)
+			throws ClientProtocolException, IOException, URISyntaxException {
 		VariantFilterList filterList = Utils.parseFilters(filters);
 		String filterParam = filterList.createJSON();
-		
+
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/filter");
 		URI uri = new URI(sbUrl.toString());
-		
-//		requestGet = new HttpGet(uri);
-//		addAuthenticationHeader(requestGet);
-		
-		//TODO Ben needs to build the API for filtering
+
+		// requestGet = new HttpGet(uri);
+		// addAuthenticationHeader(requestGet);
+
+		// TODO Ben needs to build the API for filtering
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
 		requestPost.setEntity(new StringEntity(filterParam, ContentType.APPLICATION_JSON));
@@ -144,11 +144,10 @@ public class RequestUtils {
 		}
 		return null;
 	}
-	
-
 
 	/**
 	 * Get all information about a variant, including annotations
+	 * 
 	 * @param caseId
 	 * @return
 	 * @throws ClientProtocolException
@@ -160,7 +159,7 @@ public class RequestUtils {
 		sbUrl.append("variant/").append(variantId);
 		URI uri = new URI(sbUrl.toString());
 		requestGet = new HttpGet(uri);
-		
+
 		addAuthenticationHeader(requestGet);
 
 		HttpResponse response = client.execute(requestGet);
@@ -173,11 +172,12 @@ public class RequestUtils {
 		return null;
 	}
 
-	public void saveVariantSelection(AjaxResponse ajaxResponse, String caseId, String selectedVariantIds) throws ClientProtocolException, IOException, URISyntaxException {
+	public void saveVariantSelection(AjaxResponse ajaxResponse, String caseId, String selectedVariantIds)
+			throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/selectvariants");
 		URI uri = new URI(sbUrl.toString());
-		
+
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
 		requestPost.setEntity(new StringEntity(selectedVariantIds, ContentType.APPLICATION_JSON));
@@ -187,34 +187,33 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			ajaxResponse.setSuccess(true);
-		}
-		else {
+		} else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
 	}
 
-	public void commitAnnotation(AjaxResponse ajaxResponse, String caseId, String annotations) throws URISyntaxException, ClientProtocolException, IOException {
+	public void commitAnnotation(AjaxResponse ajaxResponse, String caseId, String variantId,
+			List<Annotation> annotations) throws URISyntaxException, ClientProtocolException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("case/").append(caseId).append("/saveAnnotation");
+		sbUrl.append("annotations/");
 		URI uri = new URI(sbUrl.toString());
-		
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
-		requestPost.setEntity(new StringEntity(annotations, ContentType.APPLICATION_JSON));
-
+		System.out.println(mapper.writeValueAsString(annotations));
+		requestPost.setEntity(new StringEntity(mapper.writeValueAsString(annotations), ContentType.APPLICATION_JSON));
 		HttpResponse response = client.execute(requestPost);
 
 		int statusCode = response.getStatusLine().getStatusCode();
-		if (statusCode == HttpStatus.SC_OK) {
-			ajaxResponse.setSuccess(true);
-		}
-		else {
+		if (statusCode != HttpStatus.SC_OK) {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
-		
+		else {
+			ajaxResponse.setSuccess(true);
+		}
+
 	}
 
-	
 }

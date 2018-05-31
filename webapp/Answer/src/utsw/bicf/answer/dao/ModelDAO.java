@@ -13,12 +13,10 @@ import org.springframework.stereotype.Repository;
 import utsw.bicf.answer.model.Annotation;
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.Gene;
-import utsw.bicf.answer.model.OrderCase;
 import utsw.bicf.answer.model.Permission;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilterList;
-import utsw.bicf.answer.model.hybrid.UserTableRow;
 
 @Repository
 public class ModelDAO {

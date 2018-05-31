@@ -1,18 +1,13 @@
 package utsw.bicf.answer.model.extmapping;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import utsw.bicf.answer.clarity.api.utils.TypeUtils;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Annotation {
 	
-	public Annotation() {
-		
-	}
 
 	@JsonProperty("_id")
 	MangoDBId mangoDBId;
@@ -20,13 +15,29 @@ public class Annotation {
 	//Name of the organization this annotation is from (eg. UTSW)
 	String origin;
 	String text;
-	String userId;
+	String caseId;
+	String geneId;
+	String variantId;
+	Integer userId;
 	String createdDate;
 	String modifiedDate;
-	Boolean deleted;
 	Boolean isVisible = true;
 	Boolean markedForDeletion = false;
-
+	List<String> pmids;
+	Boolean isTumorSpecific;
+	Boolean isCaseSpecific;
+	Boolean isVariantSpecific;
+	Boolean isGeneSpecific;
+	String category;
+	String fullName;
+	String classification;
+	String tier;
+	List<String> nctids;
+	
+	public Annotation() {
+		
+	}
+	
 	public String getOrigin() {
 		return origin;
 	}
@@ -52,14 +63,6 @@ public class Annotation {
 		return markedForDeletion;
 	}
 
-	public Boolean getDeleted() {
-		return deleted;
-	}
-
-	public void setDeleted(Boolean deleted) {
-		this.deleted = deleted;
-	}
-
 	public MangoDBId getMangoDBId() {
 		return mangoDBId;
 	}
@@ -68,11 +71,11 @@ public class Annotation {
 		this.mangoDBId = mangoDBId;
 	}
 
-	public String getUserId() {
+	public Integer getUserId() {
 		return userId;
 	}
 
-	public void setUserId(String userId) {
+	public void setUserId(Integer userId) {
 		this.userId = userId;
 	}
 
@@ -99,6 +102,111 @@ public class Annotation {
 	public void setModifiedDate(String modifiedDate) {
 		this.modifiedDate = modifiedDate;
 	}
-	
+
+	public String getCaseId() {
+		return caseId;
+	}
+
+	public void setCaseId(String caseId) {
+		this.caseId = caseId;
+	}
+
+	public String getGeneId() {
+		return geneId;
+	}
+
+	public void setGeneId(String geneId) {
+		this.geneId = geneId;
+	}
+
+	public String getVariantId() {
+		return variantId;
+	}
+
+	public void setVariantId(String variantId) {
+		this.variantId = variantId;
+	}
+
+	public List<String> getPmids() {
+		return pmids;
+	}
+
+	public void setPmids(List<String> pmids) {
+		this.pmids = pmids;
+	}
+
+	public Boolean getIsTumorSpecific() {
+		return isTumorSpecific;
+	}
+
+	public void setIsTumorSpecific(Boolean isTumorSpecific) {
+		this.isTumorSpecific = isTumorSpecific;
+	}
+
+	public Boolean getIsCaseSpecific() {
+		return isCaseSpecific;
+	}
+
+	public void setIsCaseSpecific(Boolean isCaseSpecific) {
+		this.isCaseSpecific = isCaseSpecific;
+	}
+
+	public Boolean getIsVariantSpecific() {
+		return isVariantSpecific;
+	}
+
+	public void setIsVariantSpecific(Boolean isVariantSpecific) {
+		this.isVariantSpecific = isVariantSpecific;
+	}
+
+	public Boolean getIsGeneSpecific() {
+		return isGeneSpecific;
+	}
+
+	public void setIsGeneSpecific(Boolean isGeneSpecific) {
+		this.isGeneSpecific = isGeneSpecific;
+	}
+
+	public String getCategory() {
+		return category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
+	}
+
+	public String getFullName() {
+		return fullName;
+	}
+
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
+	}
+
+	public String getClassification() {
+		return classification;
+	}
+
+	public void setClassification(String classification) {
+		this.classification = classification;
+	}
+
+	public String getTier() {
+		return tier;
+	}
+
+	public void setTier(String tier) {
+		this.tier = tier;
+	}
+
+	public List<String> getNctids() {
+		return nctids;
+	}
+
+	public void setNtcids(List<String> nctids) {
+		this.nctids = nctids;
+	}
+
+
 	
 }

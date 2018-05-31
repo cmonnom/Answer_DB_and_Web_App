@@ -15,6 +15,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -35,6 +36,8 @@ public class VariantFilter {
 	joinColumns=@JoinColumn(name="filter_string_value_id"),
 	inverseJoinColumns=@JoinColumn(name="variant_filter_id"))
 	List<FilterStringValue> stringValues;
+	@Transient
+	List<String> simpleStringValues;
 	
 	public VariantFilter() {
 	}
@@ -133,6 +136,14 @@ public class VariantFilter {
 
 	public void setValueFalse(Boolean valueFalse) {
 		this.valueFalse = valueFalse;
+	}
+
+	public List<String> getSimpleStringValues() {
+		return simpleStringValues;
+	}
+
+	public void setSimpleStringValues(List<String> simpleStringValues) {
+		this.simpleStringValues = simpleStringValues;
 	}
 
 

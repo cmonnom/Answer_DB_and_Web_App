@@ -47,7 +47,7 @@ Vue.component('data-table', {
                 <v-icon>search</v-icon>
               </v-list-tile-avatar>
               <v-list-tile-content>
-                <v-list-tile-title>Filter Results</v-list-tile-title>
+                <v-list-tile-title>Quick Filter</v-list-tile-title>
               </v-list-tile-content>
           </v-list-tile>
 
@@ -120,7 +120,7 @@ Vue.component('data-table', {
       <v-btn flat icon @click="toggleSearchBar" slot="activator" :color="showSearchBar ? 'amber accent-2' : 'white'">
         <v-icon>search</v-icon>
       </v-btn>
-      <span>Filter Results</span>
+      <span>Quick Filter</span>
     </v-tooltip>
 
     <v-tooltip bottom v-if="advanceFiltering">
@@ -161,7 +161,7 @@ Vue.component('data-table', {
         <v-btn icon @click="toggleSearchBar" slot="activator">
           <v-icon>keyboard_arrow_up</v-icon>
         </v-btn>
-        Filter Results
+        Quick Filter
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-text-field clearable ref="search" append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>

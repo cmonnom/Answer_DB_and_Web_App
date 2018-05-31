@@ -11,8 +11,8 @@ public class AnnotationRow {
 	public static final String HEADER_REPORT_NB = "Report#";
 	public static final String HEADER_GENE = "Gene";
 	public static final String HEADER_ALTERATION = "Alteration";
-	public static final String HEADER_ALLELIC_FREQUENCY = "Allelic frequency";
-	public static final String HEADER_CNV = "Copy Number Variation (log2)";
+	public static final String HEADER_ALLELIC_FREQUENCY = "Allelic frequency / cfDNA (%)";
+	public static final String HEADER_CNV = "Copy Number / Level";
 	public static final String HEADER_FUNCTIONAL_SIGNIFICANCE = "Functional Significance";
 	public static final String HEADER_ANNOTATION = "Annotation";
 	public static final String HEADER_ACTIONABLE_GENE = "Actionable Gene";

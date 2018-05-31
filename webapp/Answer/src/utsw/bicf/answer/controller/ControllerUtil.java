@@ -2,9 +2,9 @@ package utsw.bicf.answer.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import utsw.bicf.answer.model.User;
 
@@ -32,6 +31,14 @@ public class ControllerUtil {
 		}
 		model.addAttribute("timestamp", timestamp);
 		return "main-template";
+	}
+	
+	public static String initializeExternalModel(Model model, ServletContext servletContext, User user, String template) throws IOException {
+		if (user != null) {
+			model.addAttribute("isAdmin", user.getPermission().getAdmin());
+		}
+		model.addAttribute("timestamp", timestamp);
+		return template;
 	}
 	
 	public static String initializeModelLogin(Model model, ServletContext servletContext, Method method) throws IOException {
@@ -62,11 +69,20 @@ public class ControllerUtil {
 	}
 	
 	private static List<String> buildFileNameList(File root) throws IOException {
-		return Files.list(root.toPath())
-				.map(path -> path.toFile())
-				.filter(file -> !file.isDirectory() && !file.getName().equals("vue-starter.js"))
-				.map(file -> file.getName())
-				.collect(Collectors.toList());
+		List<String> files = new ArrayList<String>();
+//		List<String> files = Files.list(root.toPath())
+//				.map(path -> path.toFile())
+//				.filter(file -> !file.isDirectory() && !file.getName().equals("vue-starter.js")
+//						&& !file.getName().equals("bam-viewer.js"))
+//				.map(file -> file.getName())
+//				.collect(Collectors.toList());
+		for (File file : root.listFiles()) {
+			if (!file.isDirectory() && !file.getName().equals("vue-starter.js")
+						&& !file.getName().equals("bam-viewer.js")) {
+				files.add(file.getName());
+			}
+		}
+		return files;
 	}
 	
 	

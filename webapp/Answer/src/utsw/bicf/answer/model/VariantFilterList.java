@@ -1,6 +1,8 @@
 package utsw.bicf.answer.model;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -40,6 +42,13 @@ public class VariantFilterList {
 
 
 	public String createJSON() throws JsonProcessingException {
+		for (VariantFilter filter : filters) {
+			List<String> simpleStringValues = new ArrayList<String>();
+			for (FilterStringValue v : filter.getStringValues()) {
+				simpleStringValues.add(v.getFilterString());
+			}
+			filter.setSimpleStringValues(simpleStringValues);
+		}
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(this);
 	}

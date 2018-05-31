@@ -152,9 +152,9 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
     margin: unset;
 }
 
-.input-group--text-field.input-group--textarea:not(.input-group--full-width) .input-group__input {
+/* .input-group--text-field.input-group--textarea:not(.input-group--full-width) .input-group__input {
     padding: 10px 5px 10px 5px;
-}
+} */
 
 .row-highlight {
     font-weight: bold !important;
@@ -168,6 +168,16 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 /* remove padding underneath checkboxes */
 .no-height > .input-group__details {
     min-height: auto !important;
+}
+
+/* remove padding above select drop downs*/
+.no-height-select {
+    padding-top: 0px !important;
+}
+
+/* align select label with when using css above*/
+.no-height-select > label {
+    top: 0px;
 }
 
 .table-btn {
@@ -198,4 +208,16 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 
 .card__text {
     padding: 4px;
+    width: 100%;
+}
+
+.card__text_default {
+    padding: 16px;
+    width: 100%;
+}
+
+.breadcrumbs {
+    right: 5px;
+    position: fixed;
+    padding: 0px;
 }

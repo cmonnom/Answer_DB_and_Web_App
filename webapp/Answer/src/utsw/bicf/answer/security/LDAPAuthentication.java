@@ -60,7 +60,8 @@ public class LDAPAuthentication {
 			return false; //ldap authentication failed. Wrong password or other server issue
 		} finally {
 			try {
-				ctx.close();
+				if (ctx != null)
+					ctx.close();
 			} catch (NamingException e) {
 //				e.printStackTrace();
 				return false; //could not close the context for some reason. Don't let user log in just in case.

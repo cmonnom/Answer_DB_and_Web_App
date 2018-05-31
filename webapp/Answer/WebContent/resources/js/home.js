@@ -138,7 +138,7 @@ const Home = {
                         this.$refs.casesAssignedTable.manualDataFiltered(response.data.casesAssigned);
                     }
                     else {
-                        this.handleDialogs(response.data, this.getAllActiveCases);
+                        this.handleDialogs(response.data, this.getWorklists);
                     }
                 })
                 .catch(error => {

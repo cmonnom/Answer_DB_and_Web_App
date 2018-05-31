@@ -32,7 +32,7 @@ public class UserTableSummary extends Summary<UserTableRow>{
 		headers.add(new Header("Edit", "editValue", new ToolTip("Can edit a case?"), true));
 		headers.add(new Header("Finalize", "finalizeValue", new ToolTip("Can finalize a case?"), true));
 		headers.add(new Header("Admin", "adminValue", new ToolTip("Is user an admin?"), true));
-		Header actions = new Header("Assign User", "actions");
+		Header actions = new Header("Edit User", "actions");
 		actions.setButtons(true);
 		headers.add(actions);
 		

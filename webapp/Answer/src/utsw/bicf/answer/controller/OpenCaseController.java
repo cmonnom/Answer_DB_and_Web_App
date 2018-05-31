@@ -3,6 +3,7 @@ package utsw.bicf.answer.controller;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
@@ -16,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.DataTableFilter;
@@ -34,9 +38,11 @@ import utsw.bicf.answer.model.FilterStringValue;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
+import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
 import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
@@ -53,7 +59,8 @@ public class OpenCaseController {
 		PermissionUtils.permissionPerUrl.put("saveCurrentFilters", new PermissionUtils(true, false, false));
 		PermissionUtils.permissionPerUrl.put("loadUserFilterSets", new PermissionUtils(true, false, false));
 		PermissionUtils.permissionPerUrl.put("deleteFilterSet", new PermissionUtils(true, false, false));
-
+		PermissionUtils.permissionPerUrl.put("exportSelection", new PermissionUtils(true, false, false));
+		
 	}
 
 	@Autowired
@@ -82,7 +89,7 @@ public class OpenCaseController {
 			for (OrderCase c : cases) {
 				if (c.getCaseId().equals(caseId)) {
 					detailedCase = utils.getCaseDetails(caseId, filters);
-					if (!detailedCase.getAssignedTo().contains(user.getUserId().toString())) {
+					if (detailedCase == null || !detailedCase.getAssignedTo().contains(user.getUserId().toString())) {
 						// user is not assigned to this case
 						AjaxResponse response = new AjaxResponse();
 						response.setIsAllowed(false);
@@ -189,6 +196,15 @@ public class OpenCaseController {
 		VariantVcfAnnotationSummary summaryOthers = null;
 		VariantDetailsSummary summary = null;
 		if (variantDetails != null) {
+			//populate user info to be used by the UI
+			if (variantDetails.getReferenceVariant() != null && variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
+				for (Annotation a : variantDetails.getReferenceVariant().getUtswAnnotations()) {
+					User annotationUser = modelDAO.getUserByUserId(a.getUserId());
+					if (annotationUser != null) {
+						a.setFullName(annotationUser.getFullName());
+					}
+				}
+			}
 			List<VCFAnnotation> vcfAnnotations = variantDetails.getVcfAnnotations();
 			if (!vcfAnnotations.isEmpty()) {
 				List<VCFAnnotation> canonicalAnnotation = new ArrayList<VCFAnnotation>();
@@ -221,11 +237,30 @@ public class OpenCaseController {
 	@RequestMapping(value = "/commitAnnotations")
 	@ResponseBody
 	public String commitAnnotations(Model model, HttpSession session, @RequestBody String annotations,
-			@RequestParam String caseId) throws Exception {
+			@RequestParam String caseId, @RequestParam String geneId, @RequestParam String variantId) throws Exception {
+		User user = (User) session.getAttribute("user"); 
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
-		utils.commitAnnotation(response, caseId, annotations);
+		
+		List<Annotation> userAnnotations = new ArrayList<Annotation>();
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode annotationNodes = mapper.readTree(annotations);
+		for (JsonNode annotationNode : annotationNodes.get("annotations")) {
+			Annotation userAnnotation = mapper.readValue(annotationNode.toString(), Annotation.class);
+			userAnnotation.setUserId(user.getUserId());
+			if (userAnnotation.getIsCaseSpecific()) {
+				userAnnotation.setCaseId(caseId);
+			}
+			if (userAnnotation.getIsGeneSpecific()) {
+				userAnnotation.setGeneId(geneId);
+			}
+			if (userAnnotation.getIsVariantSpecific()) {
+				userAnnotation.setVariantId(variantId);
+			}
+			userAnnotations.add(userAnnotation);
+		}
+		utils.commitAnnotation(response, caseId, variantId, userAnnotations);
 		return response.createObjectJSON();
 
 	}
@@ -324,4 +359,28 @@ public class OpenCaseController {
 
 	}
 
+	
+	@RequestMapping(value = "/exportSelection")
+	@ResponseBody
+	public String exportSelection(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestBody String filters) throws Exception {
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase detailedCase = utils.getCaseDetails(caseId, filters);
+		List<Variant> selectedVariants = detailedCase.getVariants().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
+		List<Variant> selectedVariantDetails = new ArrayList<Variant>();
+		for (Variant v : selectedVariants) {
+			Variant variantDetails = utils.getVariantDetails(v.getMangoDBId().getOid());
+			selectedVariantDetails.add(variantDetails);
+		}
+		ExportSelectedVariants export = new ExportSelectedVariants(detailedCase, selectedVariantDetails);
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		response.setMessage(export.createCSV());
+		
+		return response.createObjectJSON();
+
+	}
 }

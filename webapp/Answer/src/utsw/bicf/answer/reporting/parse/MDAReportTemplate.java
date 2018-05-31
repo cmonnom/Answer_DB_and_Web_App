@@ -42,20 +42,20 @@ public class MDAReportTemplate {
 	}
 	
 	private void parseEmail(Document htmlDoc) {
-		this.mrn = htmlDoc.select("b:contains(MRN:)").first().nextElementSibling().nextSibling().outerHtml();
-		this.patient = htmlDoc.select("b:contains(Patient:)").first().nextElementSibling().nextSibling().outerHtml();
+		this.mrn = htmlDoc.select("b:contains(MRN:)").first().nextSibling().outerHtml().trim();
+		this.patient = htmlDoc.select("b:contains(Patient:)").first().nextSibling().outerHtml().trim();
 
 		Elements tables = htmlDoc.select("table");
 		for (Element table : tables) {
-			if (table.select("td:contains(Tested Panel)").first() != null) {
+			if (table.select("th:contains(Tested Panel)").first() != null) {
 				// annotation table
 				annotationRows = parseAnnotationTable(table);
-			} else if (table.select("td:contains(CMS50)").first() != null) {
+			} else if (table.select("th:contains(CMS50)").first() != null) {
 				// frequency table
 				frequencyRows = parseFrequencyTable(table);
-			} else if (table.select("td:contains(Biomarker-Selected Trials)").first() != null) {
+			} else if (table.select("caption:contains(Biomarker-Selected Trials)").first() != null) {
 				selectedBiomarkers = parseBiomarkerTable(table, "selected");
-			} else if (table.select("td:contains(Biomarker-Relevant Trials)").first() != null) {
+			} else if (table.select("caption:contains(Biomarker-Relevant Trials)").first() != null) {
 				relevantBiomarkers = parseBiomarkerTable(table, "relevant");
 			}
 		}
@@ -72,7 +72,7 @@ public class MDAReportTemplate {
 	private Map<String, AnnotationRow> parseAnnotationTable(Element table) {
 		Elements rows = table.select("tr");
 		Element headerRow = rows.first();
-		List<String> headers = headerRow.select("b").eachText();
+		List<String> headers = headerRow.select("th").eachText();
 		Map<String, Integer> headerMap = buildHeaderMap(headers);
 		Map<String, AnnotationRow> parsedRows = new LinkedHashMap<String, AnnotationRow>();
 		String lastGeneVariant = null;
@@ -116,8 +116,8 @@ public class MDAReportTemplate {
 
 	private Map<String, FrequencyRow> parseFrequencyTable(Element table) {
 		Elements rows = table.select("tr");
-		Element headerRow = rows.get(1); // "Frequency in all tumor types" is a row for some reason. Need to skip it
-		List<String> headers = headerRow.select("b").eachText();
+		Element headerRow = rows.first();
+		List<String> headers = headerRow.select("th").eachText();
 		Map<String, Integer> headerMap = buildHeaderMap(headers);
 		Map<String, FrequencyRow> parsedRows = new LinkedHashMap<String, FrequencyRow>();
 		for (int i = 1; i < rows.size(); i++) {
@@ -147,8 +147,8 @@ public class MDAReportTemplate {
 	 */
 	private List<BiomarkerTrialsRow> parseBiomarkerTable(Element table, String selectedOrRelevant) {
 		Elements rows = table.select("tr");
-		Element headerRow = rows.get(1); // "Frequency in all tumor types" is a row for some reason. Need to skip it
-		List<String> headers = headerRow.select("b").eachText();
+		Element headerRow = rows.first();
+		List<String> headers = headerRow.select("th").eachText();
 		Map<String, Integer> headerMap = buildHeaderMap(headers);
 		List<BiomarkerTrialsRow> parsedRows = new ArrayList<BiomarkerTrialsRow>();
 		for (int i = 1; i < rows.size(); i++) {
