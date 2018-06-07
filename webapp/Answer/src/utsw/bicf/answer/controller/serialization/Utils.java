@@ -25,9 +25,9 @@ public class Utils {
 	 * @throws JsonMappingException
 	 * @throws IOException
 	 */
-	public static VariantFilterList parseFilters(String filters) throws JsonParseException, JsonMappingException, IOException {
+	public static VariantFilterList parseFilters(String data) throws JsonParseException, JsonMappingException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
-		DataFilterList filterList = mapper.readValue(filters, DataFilterList.class);
+		DataFilterList filterList = mapper.readValue(data, DataFilterList.class);
 //		}
 		List<VariantFilter> activeFilters = new ArrayList<VariantFilter>();
 		for (DataTableFilter filter : filterList.getFilters()) {
@@ -97,10 +97,17 @@ public class Utils {
 			else if (filter.isSelect() != null && filter.isSelect() && filter.getValue() != null) {
 				VariantFilter vf = new VariantFilter(filter.getFieldName());
 				vf.setValue(filter.getValue());
+				vf.getStringValues().add(new FilterStringValue(filter.getValue()));
 				activeFilters.add(vf);
 			}
 			else if (filter.isString() != null && filter.isString()) {
 				VariantFilter vf = new VariantFilter(filter.getFieldName());
+				if (filter.getValue() != null) {
+					String[] items = filter.getValue().split(",");
+					for (String item : items) {
+						vf.getStringValues().add(new FilterStringValue(item.trim()));
+					}
+				}
 				vf.setValue(filter.getValue());
 				activeFilters.add(vf);
 			}

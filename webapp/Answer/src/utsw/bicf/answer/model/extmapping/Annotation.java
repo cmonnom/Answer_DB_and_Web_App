@@ -203,7 +203,7 @@ public class Annotation {
 		return nctids;
 	}
 
-	public void setNtcids(List<String> nctids) {
+	public void setNctids(List<String> nctids) {
 		this.nctids = nctids;
 	}
 

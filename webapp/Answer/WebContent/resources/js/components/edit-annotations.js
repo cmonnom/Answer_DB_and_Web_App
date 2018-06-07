@@ -16,7 +16,7 @@ Vue.component('edit-annotations', {
                     <span>Close Annotations</span>
                 </v-tooltip>
             </v-toolbar>
-            <v-card-text :style="getDialogMaxHeight()">
+            <v-card-text :style="getDialogMaxHeight(130)">
                 <v-card v-if="userEditingAnnotations.length == 0">
                     <v-card-text>
                         Click on
@@ -80,10 +80,8 @@ Vue.component('edit-annotations', {
                                                             </v-flex>
                                                             <v-flex xs7>
                                                                 <v-select clearable 
-                                                                item-value="text"
-                                                                item-text="text" 
-                                                                :value="annotation.selectedCategory" 
-                                                                :disabled="annotation.markedForDeletion" :items="annotationCategories" v-model="annotation.selectedCategory" label="Select a Category"
+                                                                :value="annotation.category" 
+                                                                :disabled="annotation.markedForDeletion" :items="annotationCategories" v-model="annotation.category" label="Select a Category"
                                                                     single-line class="no-height no-height-select"></v-select>
                                                             </v-flex>
                                                         </v-layout>
@@ -93,10 +91,8 @@ Vue.component('edit-annotations', {
                                                             </v-flex>
                                                             <v-flex xs7>
                                                                 <v-select clearable 
-                                                                item-value="text"
-                                                                item-text="text" 
-                                                                :value="annotation.selectedClassification" 
-                                                                :disabled="annotation.markedForDeletion" :items="annotationClassifications" v-model="annotation.selectedClassification" label="Select a Classification"
+                                                                :value="annotation.cClassification" 
+                                                                :disabled="annotation.markedForDeletion" :items="annotationClassifications" v-model="annotation.classification" label="Select a Classification"
                                                                     single-line class="no-height no-height-select"></v-select>
                                                             </v-flex>
                                                         </v-layout>
@@ -106,10 +102,8 @@ Vue.component('edit-annotations', {
                                                             </v-flex>
                                                             <v-flex xs7>
                                                                 <v-select clearable 
-                                                                item-value="text"
-                                                                item-text="text" 
-                                                                :value="annotation.selectedTier" 
-                                                                :disabled="annotation.markedForDeletion" :items="annotationTiers" v-model="annotation.selectedTier" label="Select a Tier"
+                                                                :value="annotation.tier" 
+                                                                :disabled="annotation.markedForDeletion" :items="annotationTiers" v-model="annotation.tier" label="Select a Tier"
                                                                     single-line class="no-height no-height-select"></v-select>
                                                             </v-flex>
                                                         </v-layout>
@@ -168,16 +162,8 @@ Vue.component('edit-annotations', {
                 <v-btn color="error" @click="cancelAnnotations()">Cancel
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
-                <v-breadcrumbs>
-                <v-icon slot="divider">chevron_right</v-icon>
-                <v-breadcrumbs-item
-                  v-for="item in breadcrumbs"
-                  :key="item.text"
-                  :disabled="item.disabled"
-                >
-                  {{ item.text }}
-                </v-breadcrumbs-item>
-              </v-breadcrumbs>
+                <breadcrumbs>
+                </breadcrumbs>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -185,33 +171,36 @@ Vue.component('edit-annotations', {
 </div>`
     , data() {
         return {
-            breadcrumbs: [],
+            // breadcrumbs: [],
             annotationDialogVisible: false,
             userAnnotations: [],
             userEditingAnnotations: [],
             numberRules: [(v) => { return this.isNumberList(v) || 'Only numbers, separated by comma' }],
             nctRules: [(v) => { return this.isNCTNumberList(v) || 'Must start with NCT + number. If more than one, use a comma' }],
             annotationCategories: [
-                { text: 'Gene Function' },
-                { text: 'Variant Function' },
-                { text: 'Therapy' }],
+                'Gene Function' ,
+                'Variant Function',
+                'Therapy' ],
             annotationClassifications: [
-                { text: 'VUS' },
-                { text: 'Benign' },
-                { text: 'Likely benign' },
-                { text: 'Likely pathogenic' },
-                { text: 'Pathogenic' }],
+                'VUS' ,
+                'Benign',
+                'Likely benign' ,
+                'Likely pathogenic' ,
+                'Pathogenic' ],
             annotationTiers: [
-                { text: '1A' },
-                { text: '2A' },
-                { text: '2B' },
-                { text: '3' },
-                { text: '4' },
-                { text: '5' }],
+                '1A' ,
+                '2A' ,
+                '2B' ,
+                '3' ,
+                '4' ,
+                '5' ],
         }
 
     },
     methods: {
+        getDialogMaxHeight(offset) {
+            getDialogMaxHeight(offset);
+        },
         startUserAnnotations() {
             //first make a copy of annotations for editing 
             //this will allow to cancel without modifying the existing annotations 
@@ -222,9 +211,9 @@ Vue.component('edit-annotations', {
                 //need to convert pmid arrays into strings
                 tempAnnotation.pmids = tempAnnotation.pmids ? tempAnnotation.pmids.join(",") : null;
                 tempAnnotation.nctids = tempAnnotation.nctids ? tempAnnotation.nctids.join(",") : null;
-                tempAnnotation.selectedCategory = { "text": tempAnnotation.category };
-                tempAnnotation.selectedClassification = { "text": tempAnnotation.classification };
-                tempAnnotation.selectedTier = { "text": tempAnnotation.tier };
+                // tempAnnotation.selectedCategory = tempAnnotation.category;
+                // tempAnnotation.selectedClassification = tempAnnotation.classification;
+                // tempAnnotation.selectedTier = tempAnnotation.tier;
                 tempAnnotation.isVisible = true;
                 this.userEditingAnnotations.push(tempAnnotation);
             }
@@ -253,14 +242,14 @@ Vue.component('edit-annotations', {
                 isVariantSpecific: false,
                 isCaseSpecific: false,
                 category: null,
-                selectedCategory: null,
+                // selectedCategory: null,
                 createdDate: null,
                 modifiedDate: null,
                 _id: null,
                 classification: null,
                 tier: null,
-                selectedTier: null,
-                selectedClassification: null,
+                // selectedTier: null,
+                // selectedClassification: null,
                 nctids: ""
             });
             // this.$nextTick(function () {
@@ -275,9 +264,9 @@ Vue.component('edit-annotations', {
                 var annotation = JSON.parse(JSON.stringify(this.userEditingAnnotations[i]));
                 annotation.pmids = annotation.pmids ? annotation.pmids.split(",") : null;
                 annotation.nctids = annotation.nctids ? annotation.nctids.split(",") : null;
-                annotation.category = annotation.selectedCategory ? annotation.selectedCategory.text : null;
-                annotation.classification = annotation.selectedClassification ? annotation.selectedClassification.text : null;
-                annotation.tier = annotation.selectedTier ? annotation.selectedTier.text : null;
+                // annotation.category = annotation.selectedCategory ? annotation.selectedCategory : null;
+                // annotation.classification = annotation.selectedClassification ? annotation.selectedClassification : null;
+                // annotation.tier = annotation.selectedTier ? annotation.selectedTier : null;
                 this.userAnnotations.push(annotation);
             }
             this.$emit("saving-annotations", this.userAnnotations);
@@ -288,10 +277,6 @@ Vue.component('edit-annotations', {
                 this.userEditingAnnotations = [];
                 this.$emit("cancel-annotations", null);
             });
-        },
-        getDialogMaxHeight() {
-            var height = window.innerHeight - 130;
-            return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: auto";
         },
         isNumberList(v) {
             var valid = !isNaN(v);
@@ -359,7 +344,7 @@ Vue.component('edit-annotations', {
         },
         selectCategory(annotation, category) {
             if (category && !annotation.selectedCategory) {
-                annotation.selectedCategory = this.annotationCategories.filter(item => item.text == category)[0];
+                annotation.selectedCategory = this.annotationCategories.filter(item => item == category)[0];
             }
         },
         deleteAnnotation(annotation, index) {
@@ -379,12 +364,12 @@ Vue.component('edit-annotations', {
         truncateAnnotation(annotation) {
             if (!annotation.text) {
                 if (annotation.modifiedDate) {
-                    return "Saved on " + annotation.modifiedDate;
+                    return "Saved on " + this.parseDate(annotation.modifiedDate);
                 }
                 return "New Annotation";
             }
-            if (annotation.text.length > 20) {
-                return annotation.text.substring(0,20) + "...";
+            if (annotation.text.length > 30) {
+                return annotation.text.substring(0,30) + "...";
             }
             return annotation.text;
         }

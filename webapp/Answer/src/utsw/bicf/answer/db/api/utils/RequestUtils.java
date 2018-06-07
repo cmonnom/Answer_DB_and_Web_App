@@ -118,9 +118,9 @@ public class RequestUtils {
 		return ajaxResponse;
 	}
 
-	public OrderCase getCaseDetails(String caseId, String filters)
+	public OrderCase getCaseDetails(String caseId, String data)
 			throws ClientProtocolException, IOException, URISyntaxException {
-		VariantFilterList filterList = Utils.parseFilters(filters);
+		VariantFilterList filterList = Utils.parseFilters(data);
 		String filterParam = filterList.createJSON();
 
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
@@ -214,6 +214,34 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(true);
 		}
 
+	}
+
+	/**
+	 * Get a summary of the case with basic information
+	 * and no variant info
+	 * @param caseId
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
+	public OrderCase getCaseSummary(String caseId) throws ClientProtocolException, IOException, URISyntaxException {
+
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/summary");
+		URI uri = new URI(sbUrl.toString());
+
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			OrderCase orderCase = mapper.readValue(response.getEntity().getContent(), OrderCase.class);
+			return orderCase;
+		}
+		return null;
 	}
 
 }

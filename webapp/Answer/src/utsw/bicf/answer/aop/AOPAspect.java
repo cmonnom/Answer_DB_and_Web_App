@@ -110,7 +110,7 @@ public class AOPAspect {
 	}
 
 	@Around("controllerPackage() && !loginOrErrorController() && !apiController()")
-	public String handleUserPermission(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+	public Object handleUserPermission(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
 		Object[] args = proceedingJoinPoint.getArgs();
 		HttpSession httpSession = null;
 		Model model = null;
@@ -152,8 +152,7 @@ public class AOPAspect {
 					return ControllerUtil.initializeModelLogin(model, servletContext, method);
 				}
 			} else if (canProceed) {
-				result = (String) proceedingJoinPoint.proceed();
-				return result;
+				return proceedingJoinPoint.proceed();
 			} else { //cannot proceed
 				return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 			}

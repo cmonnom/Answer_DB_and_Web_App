@@ -1,3 +1,34 @@
+var tracks = [{
+    url: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz',
+    indexURL: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz.tbi',
+    name: 'Gencode v24',
+    format: 'gtf',
+    type: "annotation",
+    visibilityWindow: 10000000
+}];
+
+if (normalBam) {
+    tracks.push( {
+        url: urlRoot + normalBam,
+        indexURL: urlRoot + normalBai,
+        label: normalLabel
+    });
+}
+if (tumorBam) {
+    tracks.push({
+        url: urlRoot + tumorBam,
+        indexURL: urlRoot + tumorBai,
+        label: tumorLabel
+    });
+}
+if (rnaBam) {
+    tracks.push({
+        url: urlRoot + rnaBam,
+        indexURL: urlRoot + rnaBai,
+        label: rnaLabel
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     var igvDiv,
         options;
@@ -11,26 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 cytobandURL: "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg38/cytoBandIdeo.txt"
             },
             locus: locus,
-            tracks:
-                [
-                    {
-                        url: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz',
-                        indexURL: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz.tbi',
-                        name: 'Gencode v24',
-                        format: 'gtf',
-                        type: "annotation",
-                        visibilityWindow: 10000000
-                    },
-                    {
-                        url: urlRoot + bam,
-                        indexURL: urlRoot + bai,
-                        label: label
-                    },
-                    {
-                        url: urlRoot + "ORD534-27-3002_T_DNA_panel1385.seg",
-                        label: "seg"
-                    }
-                ]
+            tracks: tracks
         };
     igvDiv = document.getElementById("igv-div");
     igv.createBrowser(igvDiv, options);
@@ -39,3 +51,5 @@ document.addEventListener("DOMContentLoaded", function () {
 $( window ).unload(function() {
     window.opener.bus.$emit("bam-viewer-closed", null);
 });
+
+

@@ -31,9 +31,10 @@
 
 	<!-- Add support for conversion, formatting and clear support -->
 	<mvc:annotation-driven />
-
+	
 	<!-- Add support for reading web resources: css, images, js, etc... -->
 	<mvc:resources location="/resources/" mapping="/resources/**" />
+	<mvc:resources location="file:/opt/answer/links/bams/" mapping="/bams/**" />
 
 	<!-- Define Spring MVC view resolver -->
 	<bean	id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
@@ -90,8 +91,11 @@
 		<property name="maxUploadSize" value="1000000" />
 	</bean>
 	
-	<bean id="mdaFileProps" class="utsw.bicf.answer.security.MDAFileProperties">
+	<bean id="fileProps" class="utsw.bicf.answer.security.FileProperties">
 		<property name="mdaFilesPath" value="${mda.file.location}" />
+		<property name="excelFilesPath" value="${excel.file.location}" />
+		<property name="bamLinksPath" value="${bam.link.location}" />
+		<property name="bamFilesPath" value="${bam.file.location}" />
 	</bean>
 	
 	<!-- Setup Hibernate transaction manager -->

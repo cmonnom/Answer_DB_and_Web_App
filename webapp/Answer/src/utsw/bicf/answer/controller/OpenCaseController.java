@@ -1,5 +1,7 @@
 package utsw.bicf.answer.controller;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +11,12 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
+import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +29,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.controller.serialization.DataFilterList;
 import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
@@ -43,6 +51,7 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
+import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
@@ -67,6 +76,8 @@ public class OpenCaseController {
 	ServletContext servletContext;
 	@Autowired
 	ModelDAO modelDAO;
+	@Autowired
+	FileProperties fileProperties;
 
 	@RequestMapping("/openCase/{caseId}")
 	public String openCase(Model model, HttpSession session, @PathVariable String caseId) throws IOException {
@@ -122,7 +133,7 @@ public class OpenCaseController {
 		filters.add(chrFilter);
 		chrFilter.setSelectItems(selectItems);
 
-		DataTableFilter geneFilter = new DataTableFilter("Gene Name", Variant.FIELD_GENE_NAME);
+		DataTableFilter geneFilter = new DataTableFilter("Gene Name(s)", Variant.FIELD_GENE_NAME);
 		geneFilter.setString(true);
 		filters.add(geneFilter);
 
@@ -362,25 +373,40 @@ public class OpenCaseController {
 	
 	@RequestMapping(value = "/exportSelection")
 	@ResponseBody
-	public String exportSelection(Model model, HttpSession session, @RequestParam String caseId,
-			@RequestBody String filters) throws Exception {
-		AjaxResponse response = new AjaxResponse();
-		response.setIsAllowed(false);
-		response.setSuccess(false);
+	public ResponseEntity<byte[]> exportSelection(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestBody String data) throws Exception {
+//		AjaxResponse response = new AjaxResponse();
+//		response.setIsAllowed(false);
+//		response.setSuccess(false);
+		ObjectMapper mapper = new ObjectMapper();
+		List<String> selectedVariantIds = mapper.readValue(data, DataFilterList.class).getSelectedVariantIds();
 		RequestUtils utils = new RequestUtils(modelDAO);
-		OrderCase detailedCase = utils.getCaseDetails(caseId, filters);
-		List<Variant> selectedVariants = detailedCase.getVariants().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
+		OrderCase detailedCase = utils.getCaseDetails(caseId, data);
+		List<Variant> selectedVariants = detailedCase.getVariants().stream()
+				.filter(v -> selectedVariantIds.contains(v.getMangoDBId().getOid()))
+				.collect(Collectors.toList());
 		List<Variant> selectedVariantDetails = new ArrayList<Variant>();
 		for (Variant v : selectedVariants) {
 			Variant variantDetails = utils.getVariantDetails(v.getMangoDBId().getOid());
 			selectedVariantDetails.add(variantDetails);
 		}
-		ExportSelectedVariants export = new ExportSelectedVariants(detailedCase, selectedVariantDetails);
-		response.setIsAllowed(true);
-		response.setSuccess(true);
-		response.setMessage(export.createCSV());
+		ExportSelectedVariants export = new ExportSelectedVariants(detailedCase, selectedVariantDetails, fileProperties);
+//		response.setIsAllowed(true);
+//		response.setSuccess(true);
+		File excelFile = export.createExcel();
+		FileInputStream fis = new FileInputStream(excelFile);
+		byte[] excelContent = IOUtils.toByteArray(fis);
 		
-		return response.createObjectJSON();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+		String outputFileName = caseId + "_variants.xlsx";
+		headers.setContentDispositionFormData(outputFileName, outputFileName);
+		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+		ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(excelContent,  headers, HttpStatus.OK);
+		fis.close();
+		excelFile.delete();
+		
+		return response;
 
 	}
 }

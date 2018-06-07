@@ -30,6 +30,9 @@ public class OrderCase {
 	String receivedDate;
 	List<Variant> variants;
 	String institution;
+	String normalBam;
+	String tumorBam;
+	String rnaBam;
 	
 	
 	
@@ -266,6 +269,36 @@ public class OrderCase {
 
 	public void setInstitution(String institution) {
 		this.institution = institution;
+	}
+
+
+	public String getNormalBam() {
+		return normalBam;
+	}
+
+
+	public void setNormalBam(String normalBam) {
+		this.normalBam = normalBam;
+	}
+
+
+	public String getTumorBam() {
+		return tumorBam;
+	}
+
+
+	public void setTumorBam(String tumorBam) {
+		this.tumorBam = tumorBam;
+	}
+
+
+	public String getRnaBam() {
+		return rnaBam;
+	}
+
+
+	public void setRnaBam(String rnaBam) {
+		this.rnaBam = rnaBam;
 	}
 
 

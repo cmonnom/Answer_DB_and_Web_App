@@ -27,11 +27,18 @@ response.setDateHeader ("Expires", 0);
 
 					<body>
 						<script>
-							var urlRoot = "${pageContext.request.contextPath}" + "/resources/bams/";
+							var urlRoot = "${pageContext.request.contextPath}" + "/bams/";
 							var locus = "${locus}";
-							var bam = "${bam}";
-							var bai = "${bai}";
-							var label = "${label}";
+							var caseId = "${caseId}";
+							var normalBam = "${normalBam}";
+							var normalBai = "${normalBai}";
+							var normalLabel = "${normalLabel}";
+							var tumorBam = "${tumorBam}";
+							var tumorBai = "${tumorBai}";
+							var tumorLabel = "${tumorLabel}";
+							var rnaBam = "${rnaBam}";
+							var rnaBai = "${rnaBai}";
+							var rnaLabel = "${rnaLabel}";
 						</script>
 						<div id="igv-div">
 

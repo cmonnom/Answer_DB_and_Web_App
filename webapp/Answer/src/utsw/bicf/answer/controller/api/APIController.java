@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
-import utsw.bicf.answer.security.MDAFileProperties;
+import utsw.bicf.answer.security.FileProperties;
 
 @Controller
 @RequestMapping("/")
@@ -22,7 +22,7 @@ public class APIController {
 	@Autowired
 	private ModelDAO modelDAO;
 	@Autowired
-	private MDAFileProperties mdaFileProps;
+	private FileProperties fileProps;
 	
 	
 
@@ -41,7 +41,7 @@ public class APIController {
 		if (!emailPath.equals(sanitized)) {
 			return "{error: 'Invalid Path.'}";
 		}
-		String fullPath = mdaFileProps.getMdaFilesDir().getAbsolutePath() + "/" + sanitized;
+		String fullPath = fileProps.getMdaFilesDir().getAbsolutePath() + "/" + sanitized;
 		
 		File emailFile = new File(fullPath);
 		MDAReportTemplate mdaEmail;

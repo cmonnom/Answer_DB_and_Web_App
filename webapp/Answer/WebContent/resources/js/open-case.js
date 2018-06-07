@@ -13,19 +13,19 @@ const OpenCase = {
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
-                    <v-btn icon @click="exportSelectedVariants" slot="activator">
+                    <v-btn icon @click="exportSelectedVariants" slot="activator" :loading="exportLoading">
                         <v-icon>file_download</v-icon>
                     </v-btn>
-                    <span>Export to CSV</span>
+                    <span>Export to Excel</span>
                 </v-tooltip>
                 <v-tooltip bottom>
-                    <v-btn icon @click="saveDialogVisible = false" slot="activator">
+                    <v-btn icon @click="closeSaveDialog" slot="activator">
                         <v-icon>close</v-icon>
                     </v-btn>
                     <span>Close</span>
                 </v-tooltip>
             </v-toolbar>
-            <v-card-text :style="getDialogMaxHeight()">
+            <v-card-text :style="getDialogMaxHeight(120)">
                 <data-table ref="variantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected Variants" initial-sort="chromPos"
                     no-data-text="No Data" :show-row-count="true">
                 </data-table>
@@ -37,25 +37,18 @@ const OpenCase = {
                     </v-btn>
                     <span>Save Variant</span>
                 </v-tooltip>
-                <v-btn color="error" @click="saveDialogVisible = false" slot="activator">Cancel
+                <v-btn color="error" @click="closeSaveDialog" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
-                <v-breadcrumbs>
-                    <v-icon slot="divider">chevron_right</v-icon>
-                    <v-breadcrumbs-item
-                      v-for="item in breadcrumbs"
-                      :key="item.text"
-                      :disabled="item.disabled"
-                    >
-                      {{ item.text }}
-                    </v-breadcrumbs-item>
-                  </v-breadcrumbs>
+                <breadcrumbs>
+                </breadcrumbs>
             </v-card-actions>
         </v-card>
     </v-dialog>
 
     <!-- annotation dialog -->
-    <edit-annotations @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation"></edit-annotations>
+    <edit-annotations @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" ref="annotationDialog"
+        :title="currentVariant.geneName + ' ' + currentVariant.notation"></edit-annotations>
 
     <!-- variant details dialog -->
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
@@ -141,7 +134,7 @@ const OpenCase = {
                 <v-toolbar-title class="ml-0">Annotations for variant: {{ currentVariant.geneName }} {{ currentVariant.notation }}
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-tooltip bottom>
+                <v-tooltip bottom >
                     <v-btn icon flat :color="annotationVariantDetailsVisible ? 'amber accent-2' : ''" @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible"
                         slot="activator">
                         <v-icon>zoom_in</v-icon>
@@ -193,183 +186,193 @@ const OpenCase = {
                     <span>Close Variant</span>
                 </v-tooltip>
 
-
             </v-toolbar>
-            <v-card-text :style="getDialogMaxHeight()">
+            <v-card-text :style="getDialogMaxHeight(120)">
                 <v-container grid-list-md fluid>
                     <v-layout row wrap>
-                        <v-flex xs12 v-show="annotationAllHidden()">
-                            <p class="text-xs-right subheading">
-                                <v-icon style="transform: rotate(90deg) translateX(-5px);">keyboard_return</v-icon>
-                                <span>Click on a icon to show variant details.</span>
-                            </p>
-                        </v-flex>
+                        <v-slide-y-transition>
+                            <v-flex xs12 v-show="annotationAllHidden()">
+                                <p class="text-xs-right subheading">
+                                    <v-icon style="transform: rotate(90deg) translateX(-5px);">keyboard_return</v-icon>
+                                    <span>Click on a icon to show variant details.</span>
+                                </p>
+                            </v-flex>
+                        </v-slide-y-transition>
                         <!-- card showing the same data as the summary row -->
-                        <v-flex xs12 md12 lg9 xl7 v-show="annotationVariantDetailsVisible">
-                            <v-card>
-                                <v-toolbar dark color="primary">
-                                    <v-toolbar-title>
-                                        <v-icon color="amber accent-2">zoom_in</v-icon>
-                                        Variant Details
-                                    </v-toolbar-title>
+                        <v-slide-y-transition>
+                            <v-flex xs12 md12 lg9 xl7 v-show="annotationVariantDetailsVisible">
+                                <v-card>
+                                    <v-toolbar dark color="primary">
+                                        <v-toolbar-title>
+                                            <v-icon color="amber accent-2">zoom_in</v-icon>
+                                            Variant Details
+                                        </v-toolbar-title>
 
-                                    <v-spacer></v-spacer>
-                                    <v-tooltip bottom>
-                                        <v-btn icon @click="annotationVariantDetailsVisible = false" slot="activator">
-                                            <v-icon>close</v-icon>
-                                        </v-btn>
-                                        <span>Close Details</span>
-                                    </v-tooltip>
+                                        <v-spacer></v-spacer>
+                                        <v-tooltip bottom>
+                                            <v-btn icon @click="annotationVariantDetailsVisible = false" slot="activator">
+                                                <v-icon>close</v-icon>
+                                            </v-btn>
+                                            <span>Close Details</span>
+                                        </v-tooltip>
 
-                                </v-toolbar>
-                                <v-container grid-list-md fluid>
-                                    <v-layout row wrap>
-                                        <v-flex xs4 v-for="table in variantDataTables" :key="table.name">
-                                            <v-card flat>
-                                                <v-card-text>
-                                                    <v-list class="dense-tiles">
-                                                        <v-list-tile v-for="item in table.items" :key="item.label">
-                                                            <v-list-tile-content class="pb-2">
-                                                                <v-layout class="full-width">
-                                                                    <v-flex xs12 class="text-xs-left grow">
-                                                                        <span class="selectable">{{ item.label }}:</span>
-                                                                        <span v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
-                                                                    </v-flex>
-                                                                </v-layout>
-                                                            </v-list-tile-content>
-                                                        </v-list-tile>
-                                                    </v-list>
-                                                </v-card-text>
-                                            </v-card>
-                                        </v-flex>
-                                    </v-layout>
-                                    <v-layout row wrap>
-                                        <v-flex xs12 v-for="table in linkTable" :key="table.name">
-                                            <v-card flat>
-                                                <v-card-text>
-                                                    <v-list class="dense-tiles">
-                                                        <v-list-tile v-for="item in table.items" :key="item.label">
-                                                            <v-list-tile-content class="pb-2">
-                                                                <v-layout class="full-width">
-                                                                    <v-flex xs12 class="text-xs-left grow">
-                                                                        <span class="selectable">{{ item.label }}:</span>
-                                                                        <v-tooltip v-if="item.links && id !== null" bottom v-for="id in item.ids" :key="id">
-                                                                            <v-btn @click="handleIdLink(id)" slot="activator" v-html="formatIdLinkLabel(id, item)">
-                                                                            </v-btn>
-                                                                            <span>Open in new tab</span>
-                                                                        </v-tooltip>
-                                                                    </v-flex>
-                                                                </v-layout>
-                                                            </v-list-tile-content>
-                                                        </v-list-tile>
-                                                    </v-list>
-                                                </v-card-text>
-                                            </v-card>
-                                        </v-flex>
-                                    </v-layout>
-                                </v-container>
-                            </v-card>
-                        </v-flex>
+                                    </v-toolbar>
+                                    <v-container grid-list-md fluid>
+                                        <v-layout row wrap>
+                                            <v-flex xs4 v-for="table in variantDataTables" :key="table.name">
+                                                <v-card flat>
+                                                    <v-card-text>
+                                                        <v-list class="dense-tiles">
+                                                            <v-list-tile v-for="item in table.items" :key="item.label">
+                                                                <v-list-tile-content class="pb-2">
+                                                                    <v-layout class="full-width">
+                                                                        <v-flex xs12 class="text-xs-left grow">
+                                                                            <span class="selectable">{{ item.label }}:</span>
+                                                                            <span v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
+                                                                        </v-flex>
+                                                                    </v-layout>
+                                                                </v-list-tile-content>
+                                                            </v-list-tile>
+                                                        </v-list>
+                                                    </v-card-text>
+                                                </v-card>
+                                            </v-flex>
+                                        </v-layout>
+                                        <v-layout row wrap>
+                                            <v-flex xs12 v-for="table in linkTable" :key="table.name">
+                                                <v-card flat>
+                                                    <v-card-text>
+                                                        <v-list class="dense-tiles">
+                                                            <v-list-tile v-for="item in table.items" :key="item.label">
+                                                                <v-list-tile-content class="pb-2">
+                                                                    <v-layout class="full-width">
+                                                                        <v-flex xs12 class="text-xs-left grow">
+                                                                            <span class="selectable">{{ item.label }}:</span>
+                                                                            <v-tooltip v-if="item.links && id !== null" bottom v-for="id in item.ids" :key="id">
+                                                                                <v-btn @click="handleIdLink(id)" slot="activator" v-html="formatIdLinkLabel(id, item)">
+                                                                                </v-btn>
+                                                                                <span>Open in new tab</span>
+                                                                            </v-tooltip>
+                                                                        </v-flex>
+                                                                    </v-layout>
+                                                                </v-list-tile-content>
+                                                            </v-list-tile>
+                                                        </v-list>
+                                                    </v-card-text>
+                                                </v-card>
+                                            </v-flex>
+                                        </v-layout>
+                                    </v-container>
+                                </v-card>
+                            </v-flex>
+                        </v-slide-y-transition>
                         <v-flex xs12>
-                            <div class="pb-4 pt-2" v-show="annotationVariantCanonicalVisible">
-                                <data-table ref="canonicalVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Canonical VCF Annotations"
-                                    initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="table_chart">
+                            <v-slide-y-transition>
+                                <div class="pb-4 pt-2" v-show="annotationVariantCanonicalVisible">
+                                    <data-table ref="canonicalVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Canonical VCF Annotations"
+                                        initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="table_chart">
+                                    </data-table>
+                                </div>
+                            </v-slide-y-transition>
+                            <v-slide-y-transition>
+                                <data-table v-show="annotationVariantOtherVisible" ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false"
+                                    table-title="Other VCF Annotations" initial-sort="geneId" no-data-text="No Data" :show-row-count="true"
+                                    title-icon="table_chart">
                                 </data-table>
-                            </div>
-                            <data-table v-show="annotationVariantOtherVisible" ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false"
-                                table-title="Other VCF Annotations" initial-sort="geneId" no-data-text="No Data" :show-row-count="true"
-                                title-icon="table_chart">
-                            </data-table>
+                            </v-slide-y-transition>
                         </v-flex>
                         <!-- MDA Annotation card -->
-                        <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
-                            <v-card>
-                                <v-toolbar dark color="primary">
-                                    <v-toolbar-title>
-                                        <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
-                                        MD Anderson Annotations
-                                    </v-toolbar-title>
-                                    <v-spacer></v-spacer>
-                                    <v-tooltip bottom>
-                                        <v-btn icon @click="mdaAnnotationsVisible = false" slot="activator">
-                                            <v-icon>close</v-icon>
-                                        </v-btn>
-                                        <span>Close</span>
-                                    </v-tooltip>
-                                </v-toolbar>
-                                <v-card-text v-for="(annotationCategory, index) in mdaAnnotations.annotationCategories" :key="index">
-                                    <v-card flat v-if="annotationCategory">
-                                        <v-card-title class="subheading">{{ annotationCategory.title }}:</v-card-title>
-                                        <v-card-text class="pl-2 pr-2">{{ annotationCategory.text }} </v-card-text>
-                                    </v-card>
-                                </v-card-text>
-                            </v-card>
-
-                        </v-flex>
-                        <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
-                            <v-card class="soft-grey-background">
-                                <v-toolbar dark color="primary">
-                                    <v-toolbar-title>
-                                        <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
-                                        UTSW Annotations
-                                    </v-toolbar-title>
-                                    <v-spacer></v-spacer>
-                                    <v-tooltip bottom>
-                                        <v-btn icon @click="utswAnnotationsVisible = false" slot="activator">
-                                            <v-icon>close</v-icon>
-                                        </v-btn>
-                                        <span>Close</span>
-                                    </v-tooltip>
-                                </v-toolbar>
-                                <v-card-text>
-                                    <v-card class="mb-2" v-for="(annotation, index) in utswAnnotationsFormatted" :key="index">
-                                        <v-card-text class="subheading">
-                                            <v-container grid-list-md fluid>
-                                                <v-layout row wrap>
-                                                    <v-flex xs12>
-                                                        From {{ annotation.fullName }} on
-                                                        <span v-text="parseDate(annotation.modifiedDate)"></span>
-                                                    </v-flex>
-                                                    <v-flex xs12>
-                                                        Scope:
-                                                        <v-tooltip bottom v-for="(scope, index) in annotation.scopes" :key="index">
-                                                            <v-chip disabled outline slot="activator">
-                                                                <span :class="scope ? 'green--text' : 'red--text'">{{ annotation.scopeLevels[index] }}</span>
-                                                                <v-icon right v-if="scope" color="green">check</v-icon>
-                                                                <v-icon right v-if="!scope" color="red">close</v-icon>
-                                                            </v-chip>
-                                                            <span v-html="annotation.scopeTooltip"> </span>
-                                                        </v-tooltip>
-                                                    </v-flex>
-                                                    <v-flex xs12>
-                                                        <span v-if="annotation.category" class="pr-1">
-                                                            <b>{{ annotation.category }}:</b>
-                                                        </span>
-                                                        <span v-html="annotation.text"></span>
-                                                    </v-flex>
-                                                    <v-flex xs12>
-                                                        <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>
-                                                        <v-tooltip v-if="id" bottom v-for="id in annotation.pmids" :key="id">
-                                                            <v-btn @click="handlePubMedIdLink(id)" slot="activator">
-                                                                {{ id }}
-                                                            </v-btn>
-                                                            <span>Open in new tab</span>
-                                                        </v-tooltip>
-                                                        <span v-if="annotation.nctids" class="selectable pl-2">Clinical Trials:</span>
-                                                        <v-tooltip v-if="id" bottom v-for="id in annotation.nctids" :key="id">
-                                                            <v-btn @click="handleNCTIdLink(id)" slot="activator">
-                                                                {{ id }}
-                                                            </v-btn>
-                                                            <span>Open in new tab</span>
-                                                        </v-tooltip>
-                                                    </v-flex>
-                                                </v-layout>
-                                            </v-container>
-                                        </v-card-text>
-                                    </v-card>
-                                </v-card-text>
-                            </v-card>
-                        </v-flex>
+                        <v-slide-y-transition>
+                            <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
+                                <v-card>
+                                    <v-toolbar dark color="primary">
+                                        <v-toolbar-title>
+                                            <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
+                                            MD Anderson Annotations
+                                        </v-toolbar-title>
+                                        <v-spacer></v-spacer>
+                                        <v-tooltip bottom>
+                                            <v-btn icon @click="mdaAnnotationsVisible = false" slot="activator">
+                                                <v-icon>close</v-icon>
+                                            </v-btn>
+                                            <span>Close</span>
+                                        </v-tooltip>
+                                    </v-toolbar>
+                                    <v-card-text v-for="(annotationCategory, index) in mdaAnnotations.annotationCategories" :key="index">
+                                        <v-card flat v-if="annotationCategory">
+                                            <v-card-title class="subheading">{{ annotationCategory.title }}:</v-card-title>
+                                            <v-card-text class="pl-2 pr-2">{{ annotationCategory.text }} </v-card-text>
+                                        </v-card>
+                                    </v-card-text>
+                                </v-card>
+                            </v-flex>
+                        </v-slide-y-transition>
+                        <v-slide-y-transition>
+                            <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
+                                <v-card class="soft-grey-background">
+                                    <v-toolbar dark color="primary">
+                                        <v-toolbar-title>
+                                            <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
+                                            UTSW Annotations
+                                        </v-toolbar-title>
+                                        <v-spacer></v-spacer>
+                                        <v-tooltip bottom>
+                                            <v-btn icon @click="utswAnnotationsVisible = false" slot="activator">
+                                                <v-icon>close</v-icon>
+                                            </v-btn>
+                                            <span>Close</span>
+                                        </v-tooltip>
+                                    </v-toolbar>
+                                    <v-card-text>
+                                        <v-card class="mb-2" v-for="(annotation, index) in utswAnnotationsFormatted" :key="index">
+                                            <v-card-text class="subheading">
+                                                <v-container grid-list-md fluid>
+                                                    <v-layout row wrap>
+                                                        <v-flex xs12>
+                                                            From {{ annotation.fullName }} on
+                                                            <span v-text="parseDate(annotation.modifiedDate)"></span>
+                                                        </v-flex>
+                                                        <v-flex xs12>
+                                                            Scope:
+                                                            <v-tooltip bottom v-for="(scope, index) in annotation.scopes" :key="index">
+                                                                <v-chip disabled outline slot="activator">
+                                                                    <span :class="scope ? 'green--text' : 'red--text'">{{ annotation.scopeLevels[index] }}</span>
+                                                                    <v-icon right v-if="scope" color="green">check</v-icon>
+                                                                    <v-icon right v-if="!scope" color="red">close</v-icon>
+                                                                </v-chip>
+                                                                <span v-html="annotation.scopeTooltip"> </span>
+                                                            </v-tooltip>
+                                                        </v-flex>
+                                                        <v-flex xs12>
+                                                            <span v-if="annotation.category" class="pr-1">
+                                                                <b>{{ annotation.category }}:</b>
+                                                            </span>
+                                                            <span v-html="annotation.text"></span>
+                                                        </v-flex>
+                                                        <v-flex xs12>
+                                                            <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>
+                                                            <v-tooltip v-if="id" bottom v-for="id in annotation.pmids" :key="id">
+                                                                <v-btn @click="handlePubMedIdLink(id)" slot="activator">
+                                                                    {{ id }}
+                                                                </v-btn>
+                                                                <span>Open in new tab</span>
+                                                            </v-tooltip>
+                                                            <span v-if="annotation.nctids" class="selectable pl-2">Clinical Trials:</span>
+                                                            <v-tooltip v-if="id" bottom v-for="id in annotation.nctids" :key="id">
+                                                                <v-btn @click="handleNCTIdLink(id)" slot="activator">
+                                                                    {{ id }}
+                                                                </v-btn>
+                                                                <span>Open in new tab</span>
+                                                            </v-tooltip>
+                                                        </v-flex>
+                                                    </v-layout>
+                                                </v-container>
+                                            </v-card-text>
+                                        </v-card>
+                                    </v-card-text>
+                                </v-card>
+                            </v-flex>
+                        </v-slide-y-transition>
                     </v-layout>
                 </v-container>
             </v-card-text>
@@ -389,16 +392,8 @@ const OpenCase = {
                 <v-btn color="error" @click="closeVariantDetails()" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
-                <v-breadcrumbs>
-                    <v-icon slot="divider">chevron_right</v-icon>
-                    <v-breadcrumbs-item
-                      v-for="item in breadcrumbs"
-                      :key="item.text"
-                      :disabled="item.disabled"
-                    >
-                      {{ item.text }}
-                    </v-breadcrumbs-item>
-                  </v-breadcrumbs>
+                <breadcrumbs>
+                </breadcrumbs>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -452,52 +447,54 @@ const OpenCase = {
             <span>Review Variants Selected</span>
         </v-tooltip>
     </v-toolbar>
-    <v-progress-linear v-if="!caseName" :indeterminate="true"></v-progress-linear>
+    <v-progress-linear v-if="!caseName || loadingVariantDetails" :indeterminate="true"></v-progress-linear>
 
-    <v-layout v-if="patientDetailsVisible">
-        <v-flex xs12 md12 lg10 xl9>
-            <div class="text-xs-center pb-3">
-                <v-toolbar dark color="primary">
-                    <!-- <v-icon>perm_identity</v-icon> -->
-                    <v-icon :color="patientDetailsVisible ? 'amber accent-2' : ''">assignment_ind</v-icon>
-                    <v-toolbar-title>Patient Details</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <v-tooltip bottom>
-                        <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
-                            <v-icon>close</v-icon>
-                        </v-btn>
-                        <span>Close Details</span>
-                    </v-tooltip>
-                </v-toolbar>
-                <v-card>
-                    <v-container grid-list-md fluid>
-                        <v-layout row wrap>
-                            <v-flex xs4 v-for="table in patientTables" :key="table.name">
-                                <v-card flat>
-                                    <v-card-text>
-                                        <v-list class="dense-tiles">
-                                            <v-list-tile v-for="item in table.items" :key="item.label">
-                                                <v-list-tile-content class="pb-2">
-                                                    <v-layout class="full-width">
-                                                        <v-flex xs6 class="text-xs-left grow">
-                                                            <span class="selectable">{{ item.label }}:</span>
-                                                        </v-flex>
-                                                        <v-flex xs6 class="text-xs-right grow blue-grey--text text--lighten-1">
-                                                            <span class="selectable">{{ item.value }}</span>
-                                                        </v-flex>
-                                                    </v-layout>
-                                                </v-list-tile-content>
-                                            </v-list-tile>
-                                        </v-list>
-                                    </v-card-text>
-                                </v-card>
-                            </v-flex>
-                        </v-layout>
-                    </v-container>
-                </v-card>
-            </div>
-        </v-flex>
-    </v-layout>
+    <v-slide-y-transition>
+        <v-layout v-if="patientDetailsVisible">
+            <v-flex xs12 md12 lg10 xl9>
+                <div class="text-xs-center pb-3">
+                    <v-toolbar dark color="primary">
+                        <!-- <v-icon>perm_identity</v-icon> -->
+                        <v-icon :color="patientDetailsVisible ? 'amber accent-2' : ''">assignment_ind</v-icon>
+                        <v-toolbar-title>Patient Details</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                        <v-tooltip bottom>
+                            <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
+                                <v-icon>close</v-icon>
+                            </v-btn>
+                            <span>Close Details</span>
+                        </v-tooltip>
+                    </v-toolbar>
+                    <v-card>
+                        <v-container grid-list-md fluid>
+                            <v-layout row wrap>
+                                <v-flex xs4 v-for="table in patientTables" :key="table.name">
+                                    <v-card flat>
+                                        <v-card-text>
+                                            <v-list class="dense-tiles">
+                                                <v-list-tile v-for="item in table.items" :key="item.label">
+                                                    <v-list-tile-content class="pb-2">
+                                                        <v-layout class="full-width">
+                                                            <v-flex xs6 class="text-xs-left grow">
+                                                                <span class="selectable">{{ item.label }}:</span>
+                                                            </v-flex>
+                                                            <v-flex xs6 class="text-xs-right grow blue-grey--text text--lighten-1">
+                                                                <span class="selectable">{{ item.value }}</span>
+                                                            </v-flex>
+                                                        </v-layout>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+                                            </v-list>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-flex>
+                            </v-layout>
+                        </v-container>
+                    </v-card>
+                </div>
+            </v-flex>
+        </v-layout>
+    </v-slide-y-transition>
 
     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="Variants" initial-sort="chromPos"
         no-data-text="No Data" :enable-selection="true" :show-row-count="true">
@@ -522,7 +519,8 @@ const OpenCase = {
 </div>` , data() {
         return {
             loading: true,
-            breadcrumbs: [{text: "You are here: Case Overview", disabled: true}],
+            loadingVariantDetails: false,
+            // breadcrumbs: [{text: "You are here:  Case", disabled: true}],
             breadcrumbItemVariantDetails: {text:"Variant Details", disabled: true},
             breadcrumbItemReview:  {text:"Review Selected Variants", disabled: true},
             breadcrumbItemEditAnnotation: {text:"Add / Edit Annotation", disabled: true},
@@ -554,7 +552,8 @@ const OpenCase = {
             utswAnnotationsVisible: true,
             bamViewerVisible: false,
             externalWindow: null,
-            externalWindowOpen: false
+            externalWindowOpen: false,
+            exportLoading: false
         }
     }, methods: {
         handleDialogs(response, callback) {
@@ -568,10 +567,6 @@ const OpenCase = {
             else if (response.success === false) {
                 bus.$emit("some-error", [this, response.message]);
             }
-        },
-        getDialogMaxHeight() {
-            var height = window.innerHeight - 120;
-            return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: auto";
         },
         getAjaxData() {
             this.loading = true;
@@ -649,9 +644,14 @@ const OpenCase = {
                     break;
                 }
             }
-        }, getVariantDetails(item) {
+        }, 
+        getDialogMaxHeight(offset) {
+            getDialogMaxHeight(offset);
+        },
+        getVariantDetails(item) {
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
+            this.loadingVariantDetails = true;
             axios.get(
                 webAppRoot + "/getVariantDetails",
                 {
@@ -741,13 +741,16 @@ const OpenCase = {
                         this.utswAnnotations = this.currentVariant.referenceVariant.utswAnnotations;
                         this.mdaAnnotations = this.currentVariant.mdaAnnotation ? this.currentVariant.mdaAnnotation : "";
                         this.formatAnnotations();
+                        this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                     } else {
+                        this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getVariantDetails.bind(null,
                             item));
                     }
                 }).catch(error => {
+                    this.loadingVariantDetails = false;
                     console.log(error);
                     bus.$emit("some-error", [this, error]);
                 });
@@ -774,10 +777,10 @@ const OpenCase = {
                 link = "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=" + id;
             }
             else if (id.indexOf('COSM') == 0) {
-                link = "http://www.google.com?search?q=" + id;
+                link = "https://cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + id.replace("COSM", "");
             }
-            else {
-                link = "https://www.bing.com/search?q=" + id;
+            else { //Clinvar
+                link = "https://www.ncbi.nlm.nih.gov/clinvar/variation/" + id;
             }
             window.open(link, "_blank");
         },
@@ -893,7 +896,13 @@ const OpenCase = {
                 { items: selectedVariants, headers: headers, uniqueFieldId: "chromPos", headerOrder: headerOrder });
         },
         openSaveDialog() {
-            this.updateSelectedVariantTable(); this.saveDialogVisible = true;
+            this.updateSelectedVariantTable();
+            this.toggleHTMLOverlay(true); 
+            this.saveDialogVisible = true;
+        },
+        closeSaveDialog() {
+            this.saveDialogVisible = false;
+            this.toggleHTMLOverlay(false); 
         },
         saveSelection() {
             var selectedVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
@@ -913,6 +922,7 @@ const OpenCase = {
                     this.snackBarMessage = "Variant Selection Saved";
                     this.snackBarVisible = true;
                     this.getAjaxData();
+                    this.closeSaveDialog();
                 }
                 else {
                     this.handleDialogs(response.data, this.saveSelection);
@@ -931,7 +941,7 @@ const OpenCase = {
             return this.utswAnnotationsFormatted.length > 0;
         },
         saveCurrentFilters() {
-            $refs.advanceFilter.loading = true;
+            this.$refs.advanceFilter.loading = true;
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveCurrentFilters",
@@ -1015,14 +1025,9 @@ const OpenCase = {
             igvRange += this.currentVariant.pos - 100;
             igvRange += "-";
             igvRange += this.currentVariant.pos + 99;
-            var bam = "SHI710-27-6271_T_DNA_panel1385v2-1.final.bam";
-            var bai = "SHI710-27-6271_T_DNA_panel1385v2-1.final.bai";
-            var label = "test";
             link = "../bamViewer?";
             link += "locus=" + igvRange;
-            link += "&bam=" + bam;
-            link += "&bai=" + bai;
-            link += "&label=" + label;
+            link += "&caseId=" + this.$route.params.id;
             return link;
         },
         closeVariantDetails() {
@@ -1046,27 +1051,36 @@ const OpenCase = {
                 && !(this.utswAnnotationsVisible && this.utswAnnotationsExists());
         },
         exportSelectedVariants() {
+            this.exportLoading = true;
+            var selectedVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
             axios({
                 method: 'post',
+                responseType: 'blob',
                 url: webAppRoot + "/exportSelection",
                 params: {
                     caseId: this.$route.params.id
                 },
                 data: {
-                    filters: []
+                    filters: [],
+                    selectedVariantIds: selectedVariantIds
                 }
             }).then(response => {
-                if (response.data.isAllowed && response.data.success) {
-                    console.log(response.data);
-                    this.createCSVFile(response.data.message);
-                }
-                else {
-                    this.handleDialogs(response.data, this.exportSelectedVariants);
-                }
+                // if (response.data.isAllowed && response.data.success) {
+                    // window.location = response;
+                    test = response;
+                    this.createExcelFile(response.data);
+                    this.exportLoading = false;
+                    // console.log(response.data);
+                    // this.createCSVFile(response.data.message);
+                // }
+                // else {
+                //     this.handleDialogs(response.data, this.exportSelectedVariants);
+                // }
             }
             ).catch(error => {
                 console.log(error);
                 bus.$emit("some-error", [this, error]);
+                this.exportLoading = false;
             }
             );
         },
@@ -1074,6 +1088,15 @@ const OpenCase = {
             if (dateWithTimeZone) {
                 return dateWithTimeZone.split("T")[0];
             }
+        },
+        createExcelFile(content) {
+            var url = window.URL.createObjectURL(new Blob([content]));
+            var hiddenElement = document.createElement('a');
+            hiddenElement.download = this.$route.params.id + '_variants.xlsx';
+            hiddenElement.href = url;
+            document.body.appendChild(hiddenElement);
+            hiddenElement.click();
+            document.body.removeChild(hiddenElement);
         },
         createCSVFile(content) {
             var hiddenElement = document.createElement('a');
@@ -1086,19 +1109,41 @@ const OpenCase = {
 
         },
         updateVariantDetailsBreadCrumbs(visible) {
-            visible ? this.breadcrumbs.push(this.breadcrumbItemVariantDetails) : this.breadcrumbs.pop();
+            if (visible) {
+                bus.$emit("add-breadcrumb-level", this.breadcrumbItemVariantDetails);
+            }
+            else {
+                bus.$emit("remove-breadcrumb-level", this);
+            }
+            // visible ? this.$refs.breadcrumbs.levels.push(this.breadcrumbItemVariantDetails) : this.$refs.breadcrumbs.levels.pop();
+            // visible ? this.$refs.breadcrumbs.push(this.breadcrumbItemVariantDetails) : this.breadcrumbs.pop();
         },
         updateSaveDialogBreadCrumbs(visible) {
-            visible ? this.breadcrumbs.push(this.breadcrumbItemReview) : this.breadcrumbs.pop();
+            if (visible) {
+                bus.$emit("add-breadcrumb-level", this.breadcrumbItemReview);
+            }
+            else {
+                bus.$emit("remove-breadcrumb-level", this);
+            }
+            // visible ? this.$refs.breadcrumbs.levels.push(this.breadcrumbItemReview) : this.$refs.breadcrumbs.levels.pop();
+            // visible ? this.breadcrumbs.push(this.breadcrumbItemReview) : this.breadcrumbs.pop();
         },
         updateEditAnnotationBreadcrumbs(visible) {
-            visible ? this.breadcrumbs.push(this.breadcrumbItemEditAnnotation) : this.breadcrumbs.pop();
+            if (visible) {
+                bus.$emit("add-breadcrumb-level", this.breadcrumbItemEditAnnotation);
+            }
+            else {
+                bus.$emit("remove-breadcrumb-level", this);
+            }
+            // visible ? this.$refs.breadcrumbs.levels.push(this.breadcrumbItemEditAnnotation) : this.$refs.breadcrumbs.levels.pop();
+            // visible ? this.breadcrumbs.push(this.breadcrumbItemEditAnnotation) : this.breadcrumbs.pop();
         }
     },
     mounted: function () {
         this.getAjaxData();
         this.loadUserFilterSets();
-        bus.$emit("clear-item-selected", [this]); this.getVariantFilters();
+        bus.$emit("clear-item-selected", [this]); 
+        this.getVariantFilters();
         bus.$on('bam-viewer-closed', () => {
             this.externalWindowOpen = false;
         });
@@ -1115,9 +1160,9 @@ const OpenCase = {
         '$route': 'getAjaxData',
         variantDetailsVisible: "updateVariantDetailsBreadCrumbs",
         saveDialogVisible: "updateSaveDialogBreadCrumbs",
-        breadcrumbs: function() {
-            this.$refs.annotationDialog.breadcrumbs = this.breadcrumbs;
-        }
+        // breadcrumbs: function() {
+        //     this.$refs.annotationDialog.breadcrumbs = this.breadcrumbs;
+        // }
     }
 
 };
