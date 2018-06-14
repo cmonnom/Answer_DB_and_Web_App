@@ -27,8 +27,8 @@ import utsw.bicf.answer.security.PermissionUtils;
 public class BamViewerController {
 
 	static {
-		PermissionUtils.permissionPerUrl.put("bamViewer", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("getBams", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(BamViewerController.class.getCanonicalName() + ".bamViewer", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(BamViewerController.class.getCanonicalName() + ".getBams", new PermissionUtils(true, false, false));
 	}
 
 	@Autowired

@@ -9,40 +9,42 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import utsw.bicf.answer.controller.serialization.Units;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.FinalReport;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Variant;
-import utsw.bicf.answer.model.hybrid.OpenCaseRow;
+import utsw.bicf.answer.model.hybrid.SNPIndelVariantRow;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 
-public class OpenCaseSummary extends Summary<OpenCaseRow> {
+public class OpenCaseSummary {
 	
 	PatientInfo patientInfo;
 	String caseId;
 	String caseName;
 	List<String> effects; //unique list of effects. Used for filtering by checking which effects should be included
 	Integer userId;
+	SNPIndelVariantSummary snpIndelVariantSummary;
+	CNVSummary cnvSummary;
+	FusionSummary fusionSummary;
+	Boolean isAllowed;
 
 	public OpenCaseSummary(ModelDAO modelDAO, OrderCase aCase, FinalReport finalReport, String uniqueIdField, User user) {
-		super(createRows(modelDAO, aCase), uniqueIdField);
+		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField);
+		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField);
+		this.fusionSummary = new FusionSummary(modelDAO, aCase, uniqueIdField);
 		this.patientInfo = new PatientInfo(aCase, finalReport);
 		this.caseId = aCase.getCaseId();
 		this.caseName = aCase.getCaseName();
 		this.userId = user.getUserId();
 		effects = getUniqueEffects(aCase);
+		this.isAllowed = true;
 	}
 
-	private static List<OpenCaseRow> createRows(ModelDAO modelDAO, OrderCase aCase) {
-		List<OpenCaseRow> rows = new ArrayList<OpenCaseRow>();
-		for (Variant variant : aCase.getVariants()) {
-			rows.add(new OpenCaseRow(variant));
-			
-		}
-		return rows;
-	}
 	
 	/**
 	 * Create a unique list of effects in the current case.
@@ -64,45 +66,10 @@ public class OpenCaseSummary extends Summary<OpenCaseRow> {
 		return effectsFormatted.stream().sorted().collect(Collectors.toList());
 	}
 
-	@Override
-	public void initializeHeaders() {
-		Header chromPos = new Header("CHR", "chromPos");
-		chromPos.setWidth("200px");
-		headers.add(chromPos);
-		Header geneVariant = new Header("Gene Variant", "geneVariant");
-		geneVariant.setWidth("225px");
-		headers.add(geneVariant);
-		Header iconFlags = new Header("Flags", "iconFlags");
-		iconFlags.setWidth("150px");
-		iconFlags.setIsFlag(true);
-		headers.add(iconFlags);
-		Header effects = new Header("Effects", "effects");
-		headers.add(effects);
-		Header tumorTotalDepth = new Header(new String[] {"Tumor"," Total Depth"}, "tumorTotalDepth", Units.NB);
-		headers.add(tumorTotalDepth);
-		Header taf = new Header(new String[] {"Tumor Alt", "Percent"}, "tumorAltFrequency", Units.PCT);
-		taf.setWidth("100px");
-		headers.add(taf);
-//		Header tumorAltDepth = new Header(new String[] {"Tumor","Depth"}, "tumorAltDepth", Units.NB);
-//		headers.add(tumorAltDepth);
-		Header normalTotalDepth = new Header(new String[] {"Normal"," Total Depth"}, "normalTotalDepth", Units.NB);
-		headers.add(normalTotalDepth);
-		Header naf = new Header(new String[] {"Normal Alt", "Percent"}, "normalAltFrequency", Units.PCT);
-		naf.setWidth("100px");
-		headers.add(naf);
-//		Header normalAltDepth = new Header(new String[] {"Normal","Depth"}, "normalAltDepth", Units.NB);
-//		headers.add(normalAltDepth);
-		Header rnaTotalDepth = new Header(new String[] {"RNA"," Total Depth"}, "rnaTotalDepth", Units.NB);
-		headers.add(rnaTotalDepth);
-		Header raf = new Header(new String[] {"RNA Alt", "Percent"}, "rnaAltFrequency", Units.PCT);
-		raf.setWidth("100px");
-		headers.add(raf);
-//		Header rnaAltDepth = new Header(new String[] {"RNA","Depth"}, "rnaAltDepth", Units.NB);
-//		headers.add(rnaAltDepth);
-		//keep in the same order
-		headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());
-		
-		
+	
+	public String createVuetifyObjectJSON() throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writeValueAsString(this);
 	}
 
 	public PatientInfo getPatientInfo() {
@@ -143,6 +110,46 @@ public class OpenCaseSummary extends Summary<OpenCaseRow> {
 
 	public void setUserId(Integer userId) {
 		this.userId = userId;
+	}
+
+
+	public SNPIndelVariantSummary getSnpIndelVariantSummary() {
+		return snpIndelVariantSummary;
+	}
+
+
+	public void setSnpIndelVariantSummary(SNPIndelVariantSummary snpIndelVariantSummary) {
+		this.snpIndelVariantSummary = snpIndelVariantSummary;
+	}
+
+
+	public Boolean getIsAllowed() {
+		return isAllowed;
+	}
+
+
+	public void setIsAllowed(Boolean isAllowed) {
+		this.isAllowed = isAllowed;
+	}
+
+
+	public CNVSummary getCnvSummary() {
+		return cnvSummary;
+	}
+
+
+	public void setCnvSummary(CNVSummary cnvSummary) {
+		this.cnvSummary = cnvSummary;
+	}
+
+
+	public FusionSummary getFusionSummary() {
+		return fusionSummary;
+	}
+
+
+	public void setFusionSummary(FusionSummary fusionSummary) {
+		this.fusionSummary = fusionSummary;
 	}
 
 }

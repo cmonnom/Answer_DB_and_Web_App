@@ -22,13 +22,13 @@ Vue.component('main-menu', {
 				</v-list-tile-title>
 			</v-list-tile-content>
 		</v-list-tile>
-		<v-list-tile v-for="menuItem in menuItems" :disabled="isMinied" :key="menuItem.title" :to="menuItem.skipRoute ? '' : { name: menuItem.name, params: {id: menuItem.id}}">
+		<v-list-tile v-if="displayMenuItem(menuItem)" v-for="menuItem in menuItems" :disabled="isMinied" :key="menuItem.title" :to="menuItem.skipRoute ? '' : { name: menuItem.name, params: {id: menuItem.id}}">
 			<v-list-tile-action v-if="menuItem.iconBefore">
 				<v-icon>{{ menuItem.iconBefore }}</v-icon>
 			</v-list-tile-action>
 
 			<!-- Main menu item -->
-			<v-list-tile-content v-if="displayMenuItem(menuItem)">
+			<v-list-tile-content>
 				<v-list-tile-title class="subheading">
 					{{ menuItem.title }}
 				</v-list-tile-title>

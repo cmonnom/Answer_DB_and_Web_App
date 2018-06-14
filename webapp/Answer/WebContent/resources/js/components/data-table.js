@@ -78,7 +78,7 @@ Vue.component('data-table', {
             </v-list-tile-content>
           </v-list-tile>
 
-          <v-list-tile avatar @click="getAjaxData()">
+          <v-list-tile avatar @click="handleRefresh()">
             <v-list-tile-avatar>
               <v-icon>refresh</v-icon>
             </v-list-tile-avatar>
@@ -146,7 +146,7 @@ Vue.component('data-table', {
     </v-tooltip>
 
     <v-tooltip bottom>
-      <v-btn flat icon @click="getAjaxData()" slot="activator">
+      <v-btn flat icon @click="handleRefresh()" slot="activator">
         <v-icon>refresh</v-icon>
       </v-btn>
       <span>Refresh</span>
@@ -507,6 +507,10 @@ Vue.component('data-table', {
                     this.stopLoading();
                     alert(error);
                 });
+        },
+        handleRefresh() {
+            this.$emit("refresh-requested");
+            this.getAjaxData();
         },
         createFilters(previousFilters) {
             this.filters = [];

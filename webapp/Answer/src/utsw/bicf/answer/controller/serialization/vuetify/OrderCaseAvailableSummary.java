@@ -3,12 +3,24 @@ package utsw.bicf.answer.controller.serialization.vuetify;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.hybrid.OrderCaseAvailable;
 
 public class OrderCaseAvailableSummary extends Summary<OrderCaseAvailable>{
 //	
-	public OrderCaseAvailableSummary(List<OrderCaseAvailable> orderCases) {
+	public OrderCaseAvailableSummary(List<OrderCaseAvailable> orderCases, User user) {
 		super(orderCases, "epicOrderNumber");
+		
+		//only allow to assign if user can edit
+		if (user.getPermission().getAdmin() || (user.getPermission().getView() && user.getPermission().getEdit())) {
+		Header actions = new Header(new String[] {"Assign", "To"}, "actions");
+		actions.setButtons(true);
+		headers.add(actions);
+		}
+		
+		//keep in the same order
+		headerOrder = headers.stream().map(header -> header.getValue()).collect(Collectors.toList());
+		
 	}
 	
 	
@@ -21,12 +33,7 @@ public class OrderCaseAvailableSummary extends Summary<OrderCaseAvailable>{
 		icd10.setWidth("200px");
 		headers.add(icd10);
 		headers.add(new Header(new String[] {"Date", "Received"}, "dateReceived"));
-		Header actions = new Header(new String[] {"Assign", "To"}, "actions");
-		actions.setButtons(true);
-		headers.add(actions);
 		
-		//keep in the same order
-		headerOrder = headers.stream().map(header -> header.getValue()).collect(Collectors.toList());
 		
 	}
 }

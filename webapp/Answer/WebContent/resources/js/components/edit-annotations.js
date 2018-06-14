@@ -48,120 +48,138 @@ Vue.component('edit-annotations', {
                         </span>
                     </v-toolbar>
                     <v-slide-y-transition>
-                    <v-card-text v-show="annotation.isVisible">
-                        <v-layout color="primary" row wrap>
-                            <v-flex xs12 >
-                                <v-form>
-                                    <v-container grid-list-md fluid>
-                                        <v-layout row wrap>
-                                            <v-flex xs12 sm6 md4>
-                                                <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                    <v-card-text class="card__text_default">
-                                                        <div class="subheading pb-2">
-                                                            The
-                                                            <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other cases/genes/variants:
-                                                        </div>
-                                                        <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Case Specific" v-model="annotation.isCaseSpecific"
-                                                            @change="selectCategory(annotation)"></v-switch>
-                                                        <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Gene Specific" v-model="annotation.isGeneSpecific"
-                                                            @change="selectCategory(annotation, 'Gene Function')"></v-switch>
-                                                        <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Variant Specific" v-model="annotation.isVariantSpecific"
-                                                            @change="selectCategory(annotation, 'Variant Function')"></v-switch>
-                                                        <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
-                                                    </v-card-text>
-                                                </v-card>
-                                            </v-flex>
-                                            <v-flex xs12 sm6 md4>
-                                                <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                    <v-card-text class="card__text_default subheading">
-                                                        <v-layout row wrap>
-                                                            <v-flex xs5 class="mt-1">
-                                                                Annotation Category:
-                                                            </v-flex>
-                                                            <v-flex xs7>
-                                                                <v-select clearable 
-                                                                :value="annotation.category" 
-                                                                :disabled="annotation.markedForDeletion" :items="annotationCategories" v-model="annotation.category" label="Select a Category"
-                                                                    single-line class="no-height no-height-select"></v-select>
-                                                            </v-flex>
-                                                        </v-layout>
-                                                        <v-layout row wrap>
-                                                            <v-flex xs5 class="mt-1">
-                                                                Classification:
-                                                            </v-flex>
-                                                            <v-flex xs7>
-                                                                <v-select clearable 
-                                                                :value="annotation.cClassification" 
-                                                                :disabled="annotation.markedForDeletion" :items="annotationClassifications" v-model="annotation.classification" label="Select a Classification"
-                                                                    single-line class="no-height no-height-select"></v-select>
-                                                            </v-flex>
-                                                        </v-layout>
-                                                        <v-layout row wrap>
-                                                            <v-flex xs5 class="mt-1">
-                                                                Tier:
-                                                            </v-flex>
-                                                            <v-flex xs7>
-                                                                <v-select clearable 
-                                                                :value="annotation.tier" 
-                                                                :disabled="annotation.markedForDeletion" :items="annotationTiers" v-model="annotation.tier" label="Select a Tier"
-                                                                    single-line class="no-height no-height-select"></v-select>
-                                                            </v-flex>
-                                                        </v-layout>
-                                                    </v-card-text>
-                                                </v-card>
-                                            </v-flex>
-                                            <v-flex xs12 sm6 md4>
-                                                <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                    <v-card-text class="card__text_default subheading">
-                                                        <div v-show="noLevelSelected(annotation)" class="warning--text">You need to select an annotation's scope.</div>
-                                                        <div v-if="annotation.createdDate">
-                                                            <b>Created on: </b><span v-text="parseDate(annotation.createdDate)"></span></div>
-                                                        <div v-if="annotation.modifiedDate">
-                                                            <b>Modified on: </b><span v-text="parseDate(annotation.modifiedDate)"></span></div>
-                                                        <div v-show="!noLevelSelected(annotation)" v-text="createLevelInformation(annotation)"></div>
-                                                        <div v-show="annotation.isTumorSpecific">This annotation is tumor specific.</div>
-                                                        <div v-show="!annotation.isTumorSpecific">This annotation is tumor agnostic.</div>
-                                                    </v-card-text>
-                                                </v-card>
-                                            </v-flex>
-                                            <v-flex xs12 class="pt-2">
-                                                <v-text-field v-show="annotation.isVisible" ref="editAnnotation" :textarea="true" v-model="annotation.text" class="mr-2 no-height"
-                                                    :disabled="annotation.markedForDeletion" label="Write your comments here">
-                                                </v-text-field>
-                                            </v-flex>
-                                            <v-flex xs12>
-                                                <v-layout>
-                                                    <v-flex class="mt-4 subheading">PubMed Ids:</v-flex>
-                                                    <v-flex xs4>
-                                                        <v-text-field :disabled="annotation.markedForDeletion"  label="(comma separated)"
-                                                            v-model="annotation.pmids" :rules="numberRules"></v-text-field>
-                                                    </v-flex>
-                                                    <v-flex class="mt-4 subheading">NCT Ids:</v-flex>
-                                                    <v-flex xs4>
-                                                        <v-text-field :disabled="annotation.markedForDeletion"  label="Clinical Trials (eg. NCT123456, comma separated)"
-                                                            v-model="annotation.nctids" :rules="nctRules"></v-text-field>
-                                                    </v-flex>
-                                                </v-layout>
-                                            </v-flex>
-                                        </v-layout>
-                                    </v-container>
-                                </v-form>
-                            </v-flex>
-                        </v-layout>
-                    </v-card-text>
-                </v-slide-y-transition>
+                        <v-card-text v-show="annotation.isVisible">
+                            <v-layout color="primary" row wrap>
+                                <v-flex xs12>
+                                    <v-form>
+                                        <v-container grid-list-md fluid>
+                                            <v-layout row wrap>
+                                                <v-flex xs12 sm6 md4>
+                                                    <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
+                                                        <v-card-text class="card__text_default">
+                                                            <div class="subheading pb-2">
+                                                                The
+                                                                <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
+                                                                cases/genes/variants:
+                                                            </div>
+                                                            <v-tooltip bottom>
+                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific" v-model="annotation.isCaseSpecific"
+                                                                    @change="selectCategory(annotation)"></v-switch>
+                                                                <span>Select if this annotation only applies to this case<br/>(need
+                                                                    to select Gene or Variant Specific first)</span>
+                                                            </v-tooltip>
+                                                            <v-tooltip bottom>
+                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Gene Specific" v-model="annotation.isGeneSpecific"
+                                                                    @change="selectCategory(annotation, 'Gene Function')"></v-switch>
+                                                                <span>Select either Gene or Variant Specific or both</span>
+                                                            </v-tooltip>
+                                                            <v-tooltip bottom>
+                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Variant Specific" v-model="annotation.isVariantSpecific"
+                                                                    @change="selectCategory(annotation, 'Variant Function')"></v-switch>
+                                                                <span>Select either Gene or Variant Specific or both</span>
+                                                            </v-tooltip>
+                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-flex>
+                                                <v-flex xs12 sm6 md4>
+                                                    <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
+                                                        <v-card-text class="card__text_default subheading">
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5 class="mt-1">
+                                                                    Annotation Category:
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <v-select clearable :value="annotation.category" :disabled="annotation.markedForDeletion" :items="annotationCategories" v-model="annotation.category"
+                                                                        label="Select a Category" single-line class="no-height no-height-select"></v-select>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5 class="mt-1">
+                                                                    Classification:
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <v-select clearable :value="annotation.cClassification" :disabled="annotation.markedForDeletion" :items="annotationClassifications"
+                                                                        v-model="annotation.classification" label="Select a Classification"
+                                                                        single-line class="no-height no-height-select"></v-select>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5 class="mt-1">
+                                                                    Tier:
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <v-select clearable :value="annotation.tier" :disabled="annotation.markedForDeletion" :items="annotationTiers" v-model="annotation.tier"
+                                                                        label="Select a Tier" single-line class="no-height no-height-select"></v-select>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-flex>
+                                                <v-flex xs12 sm6 md4>
+                                                    <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
+                                                        <v-card-text class="card__text_default subheading">
+                                                            <div v-show="noLevelSelected(annotation)" class="warning--text">You need to select an annotation's scope (Gene or Variant Specific or both).</div>
+                                                            <div v-if="annotation.createdDate">
+                                                                <b>Created on: </b>
+                                                                <span v-text="parseDate(annotation.createdDate)"></span>
+                                                            </div>
+                                                            <div v-if="annotation.modifiedDate">
+                                                                <b>Modified on: </b>
+                                                                <span v-text="parseDate(annotation.modifiedDate)"></span>
+                                                            </div>
+                                                            <div v-show="!noLevelSelected(annotation)" v-text="createLevelInformation(annotation)"></div>
+                                                            <div v-show="annotation.isTumorSpecific">This annotation is tumor specific.</div>
+                                                            <div v-show="!annotation.isTumorSpecific">This annotation is tumor agnostic.</div>
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-flex>
+                                                <v-flex xs12 class="pt-2">
+                                                    <v-text-field v-show="annotation.isVisible" ref="editAnnotation" :textarea="true" v-model="annotation.text" class="mr-2 no-height"
+                                                        :disabled="annotation.markedForDeletion" label="Write your comments here">
+                                                    </v-text-field>
+                                                </v-flex>
+                                                <v-flex xs12>
+                                                    <v-layout>
+                                                        <v-flex class="mt-4 subheading">PubMed Ids:</v-flex>
+                                                        <v-flex xs4>
+                                                            <v-text-field :disabled="annotation.markedForDeletion" label="(comma separated)" v-model="annotation.pmids" :rules="numberRules"></v-text-field>
+                                                        </v-flex>
+                                                        <v-flex class="mt-4 subheading">NCT Ids:</v-flex>
+                                                        <v-flex xs4>
+                                                            <v-text-field :disabled="annotation.markedForDeletion" label="Clinical Trials (eg. NCT123456, comma separated)" v-model="annotation.nctids"
+                                                                :rules="nctRules"></v-text-field>
+                                                        </v-flex>
+                                                    </v-layout>
+                                                </v-flex>
+                                            </v-layout>
+                                        </v-container>
+                                    </v-form>
+                                </v-flex>
+                            </v-layout>
+                        </v-card-text>
+                    </v-slide-y-transition>
                 </v-card>
             </v-card-text>
             <v-card-actions>
-                <v-btn color="primary" @click="addCustomAnnotation()">Add
-                    <v-icon right dark>playlist_add</v-icon>
-                </v-btn>
-                <v-btn color="success" @click="saveAnnotations()" :disabled="saveIsDisabled()">Save
-                    <v-icon right dark>save</v-icon>
-                </v-btn>
-                <v-btn color="error" @click="cancelAnnotations()">Cancel
-                    <v-icon right dark>cancel</v-icon>
-                </v-btn>
+                <v-tooltip top>
+                    <v-btn slot="activator" color="primary" @click="addCustomAnnotation()">Add
+                        <v-icon right dark>playlist_add</v-icon>
+                    </v-btn>
+                    <span>Create a new annotation</span>
+                </v-tooltip>
+                <v-tooltip top>
+                    <v-btn slot="activator" color="success" @click="saveAnnotations()" :disabled="saveIsDisabled()">Save/Update
+                        <v-icon right dark>save</v-icon>
+                    </v-btn>
+                    <span>Save/Update Annotations</span>
+                </v-tooltip>
+                <v-tooltip top>
+                    <v-btn slot="activator" color="error" @click="cancelAnnotations()">Cancel
+                        <v-icon right dark>cancel</v-icon>
+                    </v-btn>
+                    <span>Discard changes</span>
+                </v-tooltip>
                 <breadcrumbs>
                 </breadcrumbs>
             </v-card-actions>
@@ -178,22 +196,22 @@ Vue.component('edit-annotations', {
             numberRules: [(v) => { return this.isNumberList(v) || 'Only numbers, separated by comma' }],
             nctRules: [(v) => { return this.isNCTNumberList(v) || 'Must start with NCT + number. If more than one, use a comma' }],
             annotationCategories: [
-                'Gene Function' ,
+                'Gene Function',
                 'Variant Function',
-                'Therapy' ],
+                'Therapy'],
             annotationClassifications: [
-                'VUS' ,
+                'VUS',
                 'Benign',
-                'Likely benign' ,
-                'Likely pathogenic' ,
-                'Pathogenic' ],
+                'Likely benign',
+                'Likely pathogenic',
+                'Pathogenic'],
             annotationTiers: [
-                '1A' ,
-                '2A' ,
-                '2B' ,
-                '3' ,
-                '4' ,
-                '5' ],
+                '1A',
+                '2A',
+                '2B',
+                '3',
+                '4',
+                '5'],
         }
 
     },
@@ -221,10 +239,10 @@ Vue.component('edit-annotations', {
         },
         addCustomAnnotation() {
             //TODO 
-            for(var i = 0; i < this.userEditingAnnotations.length; i++) {
+            for (var i = 0; i < this.userEditingAnnotations.length; i++) {
                 this.userEditingAnnotations[i].isVisible = false;
             }
-            for(var i = 0; i < this.userAnnotations.length; i++) {
+            for (var i = 0; i < this.userAnnotations.length; i++) {
                 this.userAnnotations[i].isVisible = false;
             }
             this.userEditingAnnotations.push({
@@ -314,9 +332,10 @@ Vue.component('edit-annotations', {
             }
             return !scopeSelected || this.userEditingAnnotations.length == 0;
         },
+        //at least one level needs to be selected
+        //can't only be case specific: needs either gene or variant
         noLevelSelected(annotation) {
-            return !annotation.isCaseSpecific
-                && !annotation.isGeneSpecific
+            return !annotation.isGeneSpecific
                 && !annotation.isVariantSpecific;
         },
         createLevelInformation(annotation) {
@@ -353,7 +372,7 @@ Vue.component('edit-annotations', {
             }
             else { //remove the new, unsaved annotation
                 this.userEditingAnnotations.splice(index, 1);
-               
+
             }
         },
         parseDate(dateWithTimeZone) {
@@ -369,7 +388,7 @@ Vue.component('edit-annotations', {
                 return "New Annotation";
             }
             if (annotation.text.length > 30) {
-                return annotation.text.substring(0,30) + "...";
+                return annotation.text.substring(0, 30) + "...";
             }
             return annotation.text;
         }
@@ -382,7 +401,7 @@ Vue.component('edit-annotations', {
     computed: {
     },
     watch: {
-        annotationDialogVisible: function() {
+        annotationDialogVisible: function () {
             this.$emit("annotation-dialog-changed", this.annotationDialogVisible);
         }
     }

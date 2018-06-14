@@ -7,6 +7,9 @@ import java.util.Map;
 
 import javax.servlet.http.HttpSession;
 
+import org.springframework.dao.DuplicateKeyException;
+
+import utsw.bicf.answer.controller.HomeController;
 import utsw.bicf.answer.model.Permission;
 import utsw.bicf.answer.model.User;
 
@@ -24,7 +27,7 @@ public class PermissionUtils {
 	
 	//Manage permission of every url by adding the name of the method
 	//and the permissions to permissionPerUrl (see HomeController)
-	public static final Map<String, PermissionUtils> permissionPerUrl = new HashMap<String, PermissionUtils>();
+	private static final Map<String, PermissionUtils> permissionPerUrl = new HashMap<String, PermissionUtils>();
 
 	
 	public PermissionUtils(boolean canView, boolean canEdit, boolean canFinalize) {
@@ -33,9 +36,16 @@ public class PermissionUtils {
 		this.canEdit = canEdit;
 		this.canFinalize = canFinalize;
 	}
+	
+	public static void addPermission(String method, PermissionUtils permission) throws DuplicateKeyException {
+		if (permissionPerUrl.containsKey(method)) {
+			throw new DuplicateKeyException("This method has already been added");
+		}
+		permissionPerUrl.put(method, permission);
+	}
 
 	public static boolean canProceed(User user, Method method) throws IOException {
-		PermissionUtils controllerPermission = permissionPerUrl.get(method.getName());
+		PermissionUtils controllerPermission = permissionPerUrl.get(method.getDeclaringClass().getCanonicalName() + "." + method.getName());
 		if (user != null && user.getPermission().getAdmin()) {
 			return true;
 		}

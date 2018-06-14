@@ -1,6 +1,18 @@
 const OpenCase = {
     template: `<div>
+    <v-dialog v-model="confirmationDialogVisible" max-width="300px">
+        <v-card>
+            <v-card-text v-html="confirmationMessage" class="pl-2 pr-2 subheading">
 
+            </v-card-text>
+            <v-card-actions>
+                <v-btn color="primary" @click="proceedWithConfirmation" slot="activator">{{ confirmationProceedButton }}
+                </v-btn>
+                <v-btn color="error" @click="cancelConfirmation" slot="activator">{{ confirmationCancelButton }}
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
     <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
@@ -134,7 +146,7 @@ const OpenCase = {
                 <v-toolbar-title class="ml-0">Annotations for variant: {{ currentVariant.geneName }} {{ currentVariant.notation }}
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-tooltip bottom >
+                <v-tooltip bottom>
                     <v-btn icon flat :color="annotationVariantDetailsVisible ? 'amber accent-2' : ''" @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible"
                         slot="activator">
                         <v-icon>zoom_in</v-icon>
@@ -386,10 +398,10 @@ const OpenCase = {
                 <v-btn v-if="!currentRow.isSelected" :disabled="saveDialogVisible" color="success" @click="selectVariantForReport()" slot="activator">Select Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible" color="warning" @click="removeVariantFromReport()" slot="activator">Unselect Variant
+                <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible" color="warning" @click="removeVariantFromReport()" slot="activator">Deselect Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn color="error" @click="closeVariantDetails()" slot="activator">Cancel
+                <v-btn color="error" @click="closeVariantDetails()" slot="activator">Close
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
                 <breadcrumbs>
@@ -496,23 +508,64 @@ const OpenCase = {
         </v-layout>
     </v-slide-y-transition>
 
-    <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="Variants" initial-sort="chromPos"
-        no-data-text="No Data" :enable-selection="true" :show-row-count="true">
-        <v-tooltip bottom slot="action1">
-            <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvanceFilteringVisible() ? 'amber accent-2' : 'white'">
-                <v-icon>filter_list</v-icon>
-            </v-btn>
-            <span>Advanced Filtering</span>
-        </v-tooltip>
-        <v-list-tile avatar @click="toggleFilters" slot="action1MenuItem">
-            <v-list-tile-avatar>
-                <v-icon>filter_list</v-icon>
-            </v-list-tile-avatar>
-            <v-list-tile-content>
-                <v-list-tile-title>Advanced Filtering</v-list-tile-title>
-            </v-list-tile-content>
-        </v-list-tile>
-    </data-table>
+    <v-tabs dark slider-color="warning" color="primary" fixed-tabs>
+        <v-tab>
+            SNP / Indel
+        </v-tab>
+        <v-tab>
+            CNV
+        </v-tab>
+        <v-tab>
+            Fusion / Translocation
+        </v-tab>
+        <!-- SNP / Indel table -->
+        <v-tab-item>
+            <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
+                no-data-text="No Data" :enable-selection="true" :show-row-count="true"
+                @refresh-requested="handleRefresh()">
+                <v-tooltip bottom slot="action1">
+                    <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvanceFilteringVisible() ? 'amber accent-2' : 'white'">
+                        <v-icon>filter_list</v-icon>
+                    </v-btn>
+                    <span>Advanced Filtering</span>
+                </v-tooltip>
+                <v-list-tile avatar @click="toggleFilters" slot="action1MenuItem">
+                    <v-list-tile-avatar>
+                        <v-icon>filter_list</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Advanced Filtering</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
+            </data-table>
+        </v-tab-item>
+        <!-- CNV table -->
+        <v-tab-item>
+            <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="gene"
+            no-data-text="No Data" :enable-selection="true" :show-row-count="true">
+            <!-- <v-tooltip bottom slot="action1">
+                <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvanceFilteringVisible() ? 'amber accent-2' : 'white'">
+                    <v-icon>filter_list</v-icon>
+                </v-btn>
+                <span>Advanced Filtering</span>
+            </v-tooltip>
+            <v-list-tile avatar @click="toggleFilters" slot="action1MenuItem">
+                <v-list-tile-avatar>
+                    <v-icon>filter_list</v-icon>
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                    <v-list-tile-title>Advanced Filtering</v-list-tile-title>
+                </v-list-tile-content>
+            </v-list-tile> -->
+        </data-table>
+        </v-tab-item>
+        <!--  Fusion / Translocation table -->
+        <v-tab-item>
+            <data-table ref="fusionDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="gene"
+            no-data-text="No Data" :enable-selection="true" :show-row-count="true">
+            </data-table>
+        </v-tab-item>
+    </v-tabs>
 
 
 
@@ -521,9 +574,9 @@ const OpenCase = {
             loading: true,
             loadingVariantDetails: false,
             // breadcrumbs: [{text: "You are here:  Case", disabled: true}],
-            breadcrumbItemVariantDetails: {text:"Variant Details", disabled: true},
-            breadcrumbItemReview:  {text:"Review Selected Variants", disabled: true},
-            breadcrumbItemEditAnnotation: {text:"Add / Edit Annotation", disabled: true},
+            breadcrumbItemVariantDetails: { text: "Variant Details", disabled: true },
+            breadcrumbItemReview: { text: "Review Selected Variants", disabled: true },
+            breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: true },
             patientTables: [],
             patientDetailsVisible: true,
             caseName: "",
@@ -553,9 +606,22 @@ const OpenCase = {
             bamViewerVisible: false,
             externalWindow: null,
             externalWindowOpen: false,
-            exportLoading: false
+            exportLoading: false,
+
+            //confrimation dialog
+            confirmationDialogVisible: false,
+            confirmationMessage: "Unsaved selected variants will be discarded.<br/>Are you sure?",
+            confirmationProceedButton: "Proceed",
+            confirmationCancelButton: "Cancel"
         }
     }, methods: {
+        proceedWithConfirmation() {
+            this.confirmationDialogVisible = false;
+            this.getAjaxData();
+        },
+        cancelConfirmation() {
+            this.confirmationDialogVisible = false;
+        },
         handleDialogs(response, callback) {
             if (response.isXss) {
                 bus.$emit("xss-error",
@@ -569,7 +635,7 @@ const OpenCase = {
             }
         },
         getAjaxData() {
-            this.loading = true;
+            this.loadingVariantDetails = true;
             this.$refs.advanceFilter.loading = true;
             axios({
                 method: 'post',
@@ -585,26 +651,34 @@ const OpenCase = {
                     this.patientTables = response.data.patientInfo.patientTables;
                     this.caseName = response.data.caseName;
                     this.caseId = response.data.caseId;
-                    this.$refs.geneVariantDetails.manualDataFiltered(response.data);
+                    this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary);
+                    this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
+                    this.$refs.fusionDetails.manualDataFiltered(response.data.fusionSummary);
                     this.$refs.advanceFilter.effects = response.data.effects;
                     this.userId = response.data.userId;
                     this.$refs.advanceFilter.populateCheckBoxes();
                     this.$refs.advanceFilter.filterNeedsReload = false;
-                    this.addHeaderAction(response);
+                    this.addSNPIndelHeaderAction(response.data.snpIndelVariantSummary.headers);
+                    this.addCNVHeaderAction(response.data.cnvSummary.headers);
+                    this.addFusionHeaderAction(response.data.fusionSummary.headers);
                 }
                 else {
                     this.handleDialogs(response.data, this.getAjaxData);
                 }
-                this.loading = false;
+                this.loadingVariantDetails = false;
                 this.$refs.advanceFilter.loading = false;
             }
             ).catch(error => {
-                this.loading = false;
+                this.loadingVariantDetails = false;
                 this.$refs.advanceFilter.loading = false;
                 console.log(error);
                 bus.$emit("some-error", [this, error]);
             }
             );
+        },
+        handleRefresh() {
+            //issue a warning about unsaved selection
+            this.confirmationDialogVisible = true;
         },
         getVariantFilters() {
             axios.get(
@@ -635,16 +709,36 @@ const OpenCase = {
         toggleFilters() {
             this.$refs.advanceFilter.toggleFilters();
         },
-        addHeaderAction(response) {
-            for (var i = 0; i < response.data.headers.length; i++) {
-                if (response.data.headers[i].value == "chromPos") {
-                    response.data.headers[i].itemAction = this.openVariant;
-                    response.data.headers[i].actionIcon = "zoom_in";
-                    response.data.headers[i].actionTooltip = "Variant Details";
+        addSNPIndelHeaderAction(headers) {
+            for (var i = 0; i < headers.length; i++) {
+                if (headers[i].value == "chromPos") {
+                    headers[i].itemAction = this.openVariant;
+                    headers[i].actionIcon = "zoom_in";
+                    headers[i].actionTooltip = "Variant Details";
                     break;
                 }
             }
-        }, 
+        },
+        addCNVHeaderAction(headers) {
+            for (var i = 0; i < headers.length; i++) {
+                if (headers[i].value == "chromPos") {
+                    headers[i].itemAction = this.openCNV;
+                    headers[i].actionIcon = "zoom_in";
+                    headers[i].actionTooltip = "Variant Details";
+                    break;
+                }
+            }
+        },
+        addFusionHeaderAction(headers) {
+            for (var i = 0; i < headers.length; i++) {
+                if (headers[i].value == "chromPos") {
+                    headers[i].itemAction = this.openFusion;
+                    headers[i].actionIcon = "zoom_in";
+                    headers[i].actionTooltip = "Variant Details";
+                    break;
+                }
+            }
+        },
         getDialogMaxHeight(offset) {
             getDialogMaxHeight(offset);
         },
@@ -694,35 +788,35 @@ const OpenCase = {
                         }];
 
                         var depthTable =
-                            {
-                                name: "depthTable",
-                                items: [
-                                    {
-                                        label: "Tumor Total Depth",
-                                        value: this.currentVariant.tumorTotalDepth
-                                    },
-                                    {
-                                        label:
-                                            "Tumor Alt Percent",
-                                        value: this.formatPercent(this.currentVariant.tumorAltFrequency)
-                                    },
-                                    {
-                                        label: "Normal Total Depth",
-                                        value: this.currentVariant.normalTotalDepth
-                                    },
-                                    {
-                                        label: "Normal Alt Percent",
-                                        value: this.formatPercent(this.currentVariant.normalAltFrequency)
-                                    }, {
-                                        label: "RNA Total Depth",
-                                        value: this.currentVariant.rnaTotalDepth
-                                    },
-                                    {
-                                        label: "RNA Alt Percent",
-                                        value: this.formatPercent(this.currentVariant.rnaAltFrequency)
-                                    }
-                                ]
-                            };
+                        {
+                            name: "depthTable",
+                            items: [
+                                {
+                                    label: "Tumor Total Depth",
+                                    value: this.currentVariant.tumorTotalDepth
+                                },
+                                {
+                                    label:
+                                        "Tumor Alt Percent",
+                                    value: this.formatPercent(this.currentVariant.tumorAltFrequency)
+                                },
+                                {
+                                    label: "Normal Total Depth",
+                                    value: this.currentVariant.normalTotalDepth
+                                },
+                                {
+                                    label: "Normal Alt Percent",
+                                    value: this.formatPercent(this.currentVariant.normalAltFrequency)
+                                }, {
+                                    label: "RNA Total Depth",
+                                    value: this.currentVariant.rnaTotalDepth
+                                },
+                                {
+                                    label: "RNA Alt Percent",
+                                    value: this.formatPercent(this.currentVariant.rnaAltFrequency)
+                                }
+                            ]
+                        };
                         this.variantDataTables.push(depthTable);
                         var dataTable = {
                             name: "dataTable", items: [{
@@ -897,12 +991,12 @@ const OpenCase = {
         },
         openSaveDialog() {
             this.updateSelectedVariantTable();
-            this.toggleHTMLOverlay(true); 
+            this.toggleHTMLOverlay(true);
             this.saveDialogVisible = true;
         },
         closeSaveDialog() {
             this.saveDialogVisible = false;
-            this.toggleHTMLOverlay(false); 
+            this.toggleHTMLOverlay(false);
         },
         saveSelection() {
             var selectedVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
@@ -927,9 +1021,9 @@ const OpenCase = {
                 else {
                     this.handleDialogs(response.data, this.saveSelection);
                 }
-                this.loading = false;
+                this.loadingVariantDetails = false;
             }).catch(error => {
-                this.loading = false;
+                this.loadingVariantDetails = false;
                 console.log(error);
                 bus.$emit("some-error", [this, error]);
             });
@@ -1066,12 +1160,12 @@ const OpenCase = {
                 }
             }).then(response => {
                 // if (response.data.isAllowed && response.data.success) {
-                    // window.location = response;
-                    test = response;
-                    this.createExcelFile(response.data);
-                    this.exportLoading = false;
-                    // console.log(response.data);
-                    // this.createCSVFile(response.data.message);
+                // window.location = response;
+                test = response;
+                this.createExcelFile(response.data);
+                this.exportLoading = false;
+                // console.log(response.data);
+                // this.createCSVFile(response.data.message);
                 // }
                 // else {
                 //     this.handleDialogs(response.data, this.exportSelectedVariants);
@@ -1142,7 +1236,7 @@ const OpenCase = {
     mounted: function () {
         this.getAjaxData();
         this.loadUserFilterSets();
-        bus.$emit("clear-item-selected", [this]); 
+        bus.$emit("clear-item-selected", [this]);
         this.getVariantFilters();
         bus.$on('bam-viewer-closed', () => {
             this.externalWindowOpen = false;

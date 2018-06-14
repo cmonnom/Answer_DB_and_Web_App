@@ -11,7 +11,7 @@ import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
 import utsw.bicf.answer.model.extmapping.Variant;
 
-public class OpenCaseRow {
+public class SNPIndelVariantRow {
 	
 	String oid; //variant id in MangoDB
 	String chrom;
@@ -44,7 +44,7 @@ public class OpenCaseRow {
 	
 	List<Button> buttons = new ArrayList<Button>();
 	
-	public OpenCaseRow(Variant variant) {
+	public SNPIndelVariantRow(Variant variant) {
 		this.oid = variant.getMangoDBId().getOid();
 		this.chrom = variant.getChrom();
 		this.pos = variant.getPos();

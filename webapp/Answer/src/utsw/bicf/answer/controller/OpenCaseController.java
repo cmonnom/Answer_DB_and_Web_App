@@ -59,16 +59,16 @@ import utsw.bicf.answer.security.PermissionUtils;
 public class OpenCaseController {
 
 	static {
-		PermissionUtils.permissionPerUrl.put("openCase", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("getCaseDetails", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("getVariantFilters", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("getVariantDetails", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("saveVariantSelection", new PermissionUtils(true, true, false));
-		PermissionUtils.permissionPerUrl.put("commitAnnotations", new PermissionUtils(true, true, false));
-		PermissionUtils.permissionPerUrl.put("saveCurrentFilters", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("loadUserFilterSets", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("deleteFilterSet", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("exportSelection", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".openCase", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCaseDetails", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVariantFilters", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVariantDetails", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveVariantSelection", new PermissionUtils(true, true, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".commitAnnotations", new PermissionUtils(true, true, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCurrentFilters", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadUserFilterSets", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".deleteFilterSet", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".exportSelection", new PermissionUtils(true, false, false));
 		
 	}
 

@@ -36,10 +36,9 @@ import utsw.bicf.answer.security.PermissionUtils;
 public class HomeController {
 	
 	static {
-		PermissionUtils.permissionPerUrl.put("home", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("getWorklists", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("getAllUsers", new PermissionUtils(true, false, false));
-		PermissionUtils.permissionPerUrl.put("assignToUser", new PermissionUtils(true, true, false));
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".home", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getWorklists", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".assignToUser", new PermissionUtils(true, true, false));
 	}
 
 	@Autowired
@@ -87,9 +86,9 @@ public class HomeController {
 					.map(c -> new OrderCaseAssigned(c, modelDAO.getAllUsers()))
 					.collect(Collectors.toList());
 			
-			OrderCaseAvailableSummary availSummary = new OrderCaseAvailableSummary(casesAvailable);
+			OrderCaseAvailableSummary availSummary = new OrderCaseAvailableSummary(casesAvailable, user);
 			OrderCaseForUserSummary forUserSummary = new OrderCaseForUserSummary(casesForUser);
-			OrderCaseAssignedSummary assignedSummary = new OrderCaseAssignedSummary(casesAssigned);
+			OrderCaseAssignedSummary assignedSummary = new OrderCaseAssignedSummary(casesAssigned, user);
 			
 			AllOrderCasesSummary summary = new AllOrderCasesSummary(availSummary, forUserSummary, assignedSummary);
 			summary.setSuccess(true);
