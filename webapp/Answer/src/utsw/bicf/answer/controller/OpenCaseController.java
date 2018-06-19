@@ -47,6 +47,7 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
+import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
@@ -59,17 +60,33 @@ import utsw.bicf.answer.security.PermissionUtils;
 public class OpenCaseController {
 
 	static {
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".openCase", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCaseDetails", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVariantFilters", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVariantDetails", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveVariantSelection", new PermissionUtils(true, true, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".commitAnnotations", new PermissionUtils(true, true, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCurrentFilters", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadUserFilterSets", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".deleteFilterSet", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".exportSelection", new PermissionUtils(true, false, false));
-		
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".openCase",
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCaseDetails",
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVariantFilters",
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVariantDetails",
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveVariantSelection",
+				new PermissionUtils(true, true, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".commitAnnotations",
+				new PermissionUtils(true, true, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCurrentFilters",
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadUserFilterSets",
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".deleteFilterSet",
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".exportSelection",
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCaseAnnotation",
+				new PermissionUtils(true, true, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadCaseAnnotation",
+				new PermissionUtils(true, true, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCNVDetails",
+				new PermissionUtils(true, true, false));
+
 	}
 
 	@Autowired
@@ -112,8 +129,78 @@ public class OpenCaseController {
 				}
 			}
 		}
-		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "chromPos", user);
+		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "oid", user);
 		return summary.createVuetifyObjectJSON();
+
+	}
+
+	@RequestMapping(value = "/loadCaseAnnotations")
+	@ResponseBody
+	public String loadCaseAnnotations(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
+
+		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		CaseAnnotation annotation = utils.getCaseAnnotation(caseId);
+		if (annotation != null && annotation.getCaseId() != null) {
+			if (!annotation.getAssignedTo().contains(user.getUserId().toString())) {
+				AjaxResponse response = new AjaxResponse();
+				response.setIsAllowed(false);
+				response.setSuccess(false);
+				response.setMessage(user.getFullName() + " is not assigned to this case");
+				return response.createObjectJSON();
+			}
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.writeValueAsString(annotation);
+		}
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		response.setMessage("No annotation for case: " + caseId);
+		return response.createObjectJSON();
+
+	}
+
+	@RequestMapping(value = "/saveCaseAnnotations")
+	@ResponseBody
+	public String saveCaseAnnotations(Model model, HttpSession session, @RequestBody String caseAnnotation,
+			@RequestParam String caseId) throws Exception {
+
+		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode annotationNodes = mapper.readTree(caseAnnotation);
+		for (JsonNode annotationNode : annotationNodes.get("annotation")) {
+			CaseAnnotation annotationToSave = mapper.readValue(annotationNode.toString(), CaseAnnotation.class);
+			if (annotationToSave != null) {
+				CaseAnnotation annotation = utils.getCaseAnnotation(caseId);
+				if (annotation != null) { // annotation should never be null. Make sure there is no funny business with user
+											// id or oid
+					if (!annotation.getAssignedTo().contains(user.getUserId().toString())) {
+						response.setMessage(user.getFullName() + " is not assigned to this case");
+						return response.createObjectJSON();
+					}
+					if (annotationToSave.getMangoDBId() != null && annotation.getMangoDBId().getOid() != annotationToSave.getMangoDBId().getOid()) {
+						response.setMessage("Invalid annotation");
+						return response.createObjectJSON();
+					}
+					annotation.setCaseAnnotation(annotationToSave.getCaseAnnotation());
+					utils.saveCaseAnnotation(response, annotation);
+					return response.createObjectJSON();
+					
+				}
+				else { 
+					response.setMessage("Could not retrieve annotation");
+					return response.createObjectJSON();
+
+				}
+			}
+		}
+		response.setMessage("Nothing to save");
+		return response.createObjectJSON();
 
 	}
 
@@ -207,8 +294,9 @@ public class OpenCaseController {
 		VariantVcfAnnotationSummary summaryOthers = null;
 		VariantDetailsSummary summary = null;
 		if (variantDetails != null) {
-			//populate user info to be used by the UI
-			if (variantDetails.getReferenceVariant() != null && variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
+			// populate user info to be used by the UI
+			if (variantDetails.getReferenceVariant() != null
+					&& variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
 				for (Annotation a : variantDetails.getReferenceVariant().getUtswAnnotations()) {
 					User annotationUser = modelDAO.getUserByUserId(a.getUserId());
 					if (annotationUser != null) {
@@ -233,14 +321,41 @@ public class OpenCaseController {
 
 	}
 
+	@RequestMapping(value = "/getCNVDetails")
+	@ResponseBody
+	public String getCNVDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		Variant variantDetails = utils.getVariantDetails(variantId);
+		VariantDetailsSummary summary = null;
+		if (variantDetails != null) {
+			// populate user info to be used by the UI
+			if (variantDetails.getReferenceVariant() != null
+					&& variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
+				for (Annotation a : variantDetails.getReferenceVariant().getUtswAnnotations()) {
+					User annotationUser = modelDAO.getUserByUserId(a.getUserId());
+					if (annotationUser != null) {
+						a.setFullName(annotationUser.getFullName());
+					}
+				}
+			}
+			summary = new VariantDetailsSummary(variantDetails, null, null);
+			return summary.createVuetifyObjectJSON();
+		}
+		return null;
+
+	}
+
 	@RequestMapping(value = "/saveVariantSelection")
 	@ResponseBody
-	public String saveVariantSelection(Model model, HttpSession session, @RequestBody String selectedVariantIds,
+	public String saveVariantSelection(Model model, HttpSession session, @RequestBody String selectedSNPVariantIds,
+			@RequestBody String selectedCNVIds, @RequestBody String selectedTranslocationIds,
 			@RequestParam String caseId) throws Exception {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
-		utils.saveVariantSelection(response, caseId, selectedVariantIds);
+		utils.saveVariantSelection(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds);
 		return response.createObjectJSON();
 
 	}
@@ -249,11 +364,11 @@ public class OpenCaseController {
 	@ResponseBody
 	public String commitAnnotations(Model model, HttpSession session, @RequestBody String annotations,
 			@RequestParam String caseId, @RequestParam String geneId, @RequestParam String variantId) throws Exception {
-		User user = (User) session.getAttribute("user"); 
+		User user = (User) session.getAttribute("user");
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
-		
+
 		List<Annotation> userAnnotations = new ArrayList<Annotation>();
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode annotationNodes = mapper.readTree(annotations);
@@ -370,42 +485,42 @@ public class OpenCaseController {
 
 	}
 
-	
 	@RequestMapping(value = "/exportSelection")
 	@ResponseBody
 	public ResponseEntity<byte[]> exportSelection(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String data) throws Exception {
-//		AjaxResponse response = new AjaxResponse();
-//		response.setIsAllowed(false);
-//		response.setSuccess(false);
+		// AjaxResponse response = new AjaxResponse();
+		// response.setIsAllowed(false);
+		// response.setSuccess(false);
 		ObjectMapper mapper = new ObjectMapper();
 		List<String> selectedVariantIds = mapper.readValue(data, DataFilterList.class).getSelectedVariantIds();
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase detailedCase = utils.getCaseDetails(caseId, data);
 		List<Variant> selectedVariants = detailedCase.getVariants().stream()
-				.filter(v -> selectedVariantIds.contains(v.getMangoDBId().getOid()))
-				.collect(Collectors.toList());
+				.filter(v -> selectedVariantIds.contains(v.getMangoDBId().getOid())).collect(Collectors.toList());
 		List<Variant> selectedVariantDetails = new ArrayList<Variant>();
 		for (Variant v : selectedVariants) {
 			Variant variantDetails = utils.getVariantDetails(v.getMangoDBId().getOid());
 			selectedVariantDetails.add(variantDetails);
 		}
-		ExportSelectedVariants export = new ExportSelectedVariants(detailedCase, selectedVariantDetails, fileProperties);
-//		response.setIsAllowed(true);
-//		response.setSuccess(true);
+		ExportSelectedVariants export = new ExportSelectedVariants(detailedCase, selectedVariantDetails,
+				fileProperties);
+		// response.setIsAllowed(true);
+		// response.setSuccess(true);
 		File excelFile = export.createExcel();
 		FileInputStream fis = new FileInputStream(excelFile);
 		byte[] excelContent = IOUtils.toByteArray(fis);
-		
+
 		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+		headers.setContentType(
+				MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
 		String outputFileName = caseId + "_variants.xlsx";
 		headers.setContentDispositionFormData(outputFileName, outputFileName);
 		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-		ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(excelContent,  headers, HttpStatus.OK);
+		ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(excelContent, headers, HttpStatus.OK);
 		fis.close();
 		excelFile.delete();
-		
+
 		return response;
 
 	}

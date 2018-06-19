@@ -25,6 +25,7 @@ public class Header {
 	String width;
 	Boolean buttons; //to allow buttons instead of text in a cell
 	Boolean isHidden;
+	String align;
 	
 	public Header(String text, String value, Units unit, ToolTip toolTip, Boolean isPassable) {
 		this.text = text;
@@ -197,6 +198,14 @@ public class Header {
 
 	public void setIsFlag(Boolean isFlag) {
 		this.isFlag = isFlag;
+	}
+
+	public String getAlign() {
+		return align;
+	}
+
+	public void setAlign(String align) {
+		this.align = align;
 	}
 
 }

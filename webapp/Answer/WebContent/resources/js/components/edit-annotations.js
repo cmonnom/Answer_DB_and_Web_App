@@ -1,6 +1,7 @@
 Vue.component('edit-annotations', {
     props: {
         title: { default: "", type: String },
+        type: { default: "snp", type: String}
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -56,7 +57,7 @@ Vue.component('edit-annotations', {
                                             <v-layout row wrap>
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                        <v-card-text class="card__text_default">
+                                                        <v-card-text class="card__text_default" v-if="isSNP()">
                                                             <div class="subheading pb-2">
                                                                 The
                                                                 <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
@@ -84,7 +85,7 @@ Vue.component('edit-annotations', {
                                                 </v-flex>
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                        <v-card-text class="card__text_default subheading">
+                                                        <v-card-text v-if="isSNP()" class="card__text_default subheading">
                                                             <v-layout row wrap>
                                                                 <v-flex xs5 class="mt-1">
                                                                     Annotation Category:
@@ -118,7 +119,7 @@ Vue.component('edit-annotations', {
                                                 </v-flex>
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                        <v-card-text class="card__text_default subheading">
+                                                        <v-card-text v-if="isSNP()" class="card__text_default subheading">
                                                             <div v-show="noLevelSelected(annotation)" class="warning--text">You need to select an annotation's scope (Gene or Variant Specific or both).</div>
                                                             <div v-if="annotation.createdDate">
                                                                 <b>Created on: </b>
@@ -139,7 +140,7 @@ Vue.component('edit-annotations', {
                                                         :disabled="annotation.markedForDeletion" label="Write your comments here">
                                                     </v-text-field>
                                                 </v-flex>
-                                                <v-flex xs12>
+                                                <v-flex xs12 v-if="isSNP()"> 
                                                     <v-layout>
                                                         <v-flex class="mt-4 subheading">PubMed Ids:</v-flex>
                                                         <v-flex xs4>
@@ -391,6 +392,9 @@ Vue.component('edit-annotations', {
                 return annotation.text.substring(0, 30) + "...";
             }
             return annotation.text;
+        },
+        isSNP() {
+            return this.type == "snp";
         }
 
     },

@@ -30,13 +30,13 @@ public class OpenCaseSummary {
 	Integer userId;
 	SNPIndelVariantSummary snpIndelVariantSummary;
 	CNVSummary cnvSummary;
-	FusionSummary fusionSummary;
+	TranslocationSummary translocationSummary;
 	Boolean isAllowed;
 
 	public OpenCaseSummary(ModelDAO modelDAO, OrderCase aCase, FinalReport finalReport, String uniqueIdField, User user) {
 		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField);
 		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField);
-		this.fusionSummary = new FusionSummary(modelDAO, aCase, uniqueIdField);
+		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField);
 		this.patientInfo = new PatientInfo(aCase, finalReport);
 		this.caseId = aCase.getCaseId();
 		this.caseName = aCase.getCaseName();
@@ -143,13 +143,14 @@ public class OpenCaseSummary {
 	}
 
 
-	public FusionSummary getFusionSummary() {
-		return fusionSummary;
+	public TranslocationSummary getTranslocationSummary() {
+		return translocationSummary;
 	}
 
 
-	public void setFusionSummary(FusionSummary fusionSummary) {
-		this.fusionSummary = fusionSummary;
+	public void setTranslocationSummary(TranslocationSummary translocationSummary) {
+		this.translocationSummary = translocationSummary;
 	}
+
 
 }

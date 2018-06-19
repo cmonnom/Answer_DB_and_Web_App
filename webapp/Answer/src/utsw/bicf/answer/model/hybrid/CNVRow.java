@@ -4,89 +4,37 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
-import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.extmapping.CNV;
 
 public class CNVRow {
 	
 	String oid; //variant id in MangoDB
+	String genes;
 	String chrom;
-	Integer pos;
-	String chromPos;
-	String geneName;
-	String geneVariant;
-	String effects;
-	String notation;
-	String tumorAltFrequency;
-	Integer tumorAltDepth;
-	Integer tumorTotalDepth;
-	String normalAltFrequency;
-	Integer normalAltDepth;
-	Integer normalTotalDepth;
-	String rnaAltFrequency;
-	Integer rnaAltDepth;
-	Integer rnaTotalDepth;
-	List<String> callSet;
-	String type;
-	List<Integer> cosmicPatients;
-	List<String> externalIds; //list of external database ids (dbsnp, cosmic, etc)
-	String alt;
-	List<String> filters; //list of filers
+	Integer start;
+	Integer end;
+	String aberrationType;
+	Integer copyNumber;
+	Float score;
+	Boolean utswAnnotated;
 	FlagValue iconFlags;
 	Boolean isSelected;
-	Boolean mdaAnnotated;
-	Boolean utswAnnotated;
 	
-	
-	List<Button> buttons = new ArrayList<Button>();
-	
-	public CNVRow(Variant variant) {
-		this.oid = variant.getMangoDBId().getOid();
-		this.chrom = variant.getChrom();
-		this.pos = variant.getPos();
-		this.chromPos = variant.getChrom().toUpperCase() + ":" + variant.getPos();
-		this.geneName = variant.getGeneName();
-		this.geneVariant = variant.getGeneName() + " " + variant.getNotation();
-		this.effects = variant.getEffects() != null ? variant.getEffects().stream().collect(Collectors.joining("<br/>")) : null;
-		this.notation = variant.getNotation();
-		this.tumorAltFrequency = variant.getTumorAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getTumorAltFrequency()) * 100) : null;
-		this.tumorAltDepth = variant.getTumorAltDepth();
-		this.tumorTotalDepth = variant.getTumorTotalDepth();
-		this.normalAltFrequency = variant.getNormalAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getNormalAltFrequency()) * 100) : null;
-		this.normalAltDepth = variant.getNormalAltDepth();
-		this.normalTotalDepth = variant.getNormalTotalDepth();
-		this.rnaAltFrequency = variant.getRnaAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getRnaAltFrequency()) * 100) : null;
-		this.rnaAltDepth = variant.getRnaAltDepth();
-		this.rnaTotalDepth = variant.getRnaTotalDepth();
-		this.callSet = variant.getCallSet();
-		this.type = variant.getType();
-		this.cosmicPatients = variant.getCosmicPatients();
-		this.externalIds = variant.getIds();
-		this.alt = variant.getAlt();
-		this.filters = variant.getFilters();
-		this.isSelected = variant.getSelected();
-		this.mdaAnnotated = variant.getMdaAnnotated();
-		this.utswAnnotated = variant.getUtswAnnotated();
-		
+	public CNVRow(CNV cnv) {
+		this.oid = cnv.getMangoDBId().getOid();
+		this.genes = formatHTMLGenes(cnv.getGenes().stream().sorted().collect(Collectors.toList()));
+		this.chrom = cnv.getChrom();
+		this.start = cnv.getStart();
+		this.end = cnv.getEnd();
+		this.aberrationType = cnv.getAberrationType();
+		this.copyNumber = cnv.getCopyNumber();
+		this.score = cnv.getScore();
+		this.utswAnnotated = cnv.getUtswAnnotated();
+		this.isSelected = cnv.getSelected();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
-		boolean failed = filters.contains(Variant.VALUE_FAIL);
-		if (failed) {
-			icons.add(new VuetifyIcon("cancel", "red", "Failed QC"));
-		}
-		else {
-			icons.add(new VuetifyIcon("check_circle", "green", "Passed QC"));
-		}
-		if (mdaAnnotated) {
-			icons.add(new VuetifyIcon("mdi-message-bulleted", "green", "MDA Annotations"));
-		}
-		else {
-			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No MDA Annotations"));
-		}
 		if (utswAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 		}
@@ -94,43 +42,30 @@ public class CNVRow {
 			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
 		}
 		iconFlags = new FlagValue(icons);
-		
+	}
+
+	private String formatHTMLGenes(List<String> genes) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < genes.size(); i++) {
+			String gene = genes.get(i);
+			sb.append(gene);
+			if (i % 6 == 0 && i > 0) {
+				sb.append("<br>");
+			}
+			else {
+				sb.append(" ");
+			}
+		}
+		return sb.toString();
+	}
+	
+	public String getOid() {
+		return oid;
 	}
 
 
-	public List<Button> getButtons() {
-		return buttons;
-	}
-
-
-
-
-	public String getEffects() {
-		return effects;
-	}
-
-
-	public String getNotation() {
-		return notation;
-	}
-
-
-	public String getTumorAltFrequency() {
-		return tumorAltFrequency;
-	}
-
-
-	public String getChromPos() {
-		return chromPos;
-	}
-
-	public Integer getTumorAltDepth() {
-		return tumorAltDepth;
-	}
-
-
-	public String getGeneVariant() {
-		return geneVariant;
+	public String getGenes() {
+		return genes;
 	}
 
 
@@ -139,94 +74,45 @@ public class CNVRow {
 	}
 
 
-	public Integer getPos() {
-		return pos;
+	public Integer getStart() {
+		return start;
 	}
 
 
-	public List<String> getCallSet() {
-		return callSet;
+	public Integer getEnd() {
+		return end;
 	}
 
 
-	public String getType() {
-		return type;
+	public String getAberrationType() {
+		return aberrationType;
 	}
 
 
-	public List<Integer> getCosmicPatients() {
-		return cosmicPatients;
+	public Integer getCopyNumber() {
+		return copyNumber;
 	}
 
 
-	public List<String> getExternalIds() {
-		return externalIds;
+	public Float getScore() {
+		return score;
 	}
 
-
-	public String getAlt() {
-		return alt;
+	public Boolean getUtswAnnotated() {
+		return utswAnnotated;
 	}
-
-
-	public List<String> getFilters() {
-		return filters;
-	}
-
 
 	public FlagValue getIconFlags() {
 		return iconFlags;
 	}
 
-
-	public Integer getTumorTotalDepth() {
-		return tumorTotalDepth;
-	}
-
-
-	public String getNormalAltFrequency() {
-		return normalAltFrequency;
-	}
-
-
-	public Integer getNormalAltDepth() {
-		return normalAltDepth;
-	}
-
-
-	public Integer getNormalTotalDepth() {
-		return normalTotalDepth;
-	}
-
-
-	public String getRnaAltFrequency() {
-		return rnaAltFrequency;
-	}
-
-
-	public Integer getRnaAltDepth() {
-		return rnaAltDepth;
-	}
-
-
-	public Integer getRnaTotalDepth() {
-		return rnaTotalDepth;
-	}
-
-
-	public String getGeneName() {
-		return geneName;
-	}
-
-
-	public String getOid() {
-		return oid;
-	}
-
-
 	public Boolean getIsSelected() {
 		return isSelected;
 	}
+
+
+
+
 
 
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,8 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
@@ -30,7 +33,9 @@ import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
+import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
 import utsw.bicf.answer.model.extmapping.Variant;
 
 /**
@@ -172,7 +177,8 @@ public class RequestUtils {
 		return null;
 	}
 
-	public void saveVariantSelection(AjaxResponse ajaxResponse, String caseId, String selectedVariantIds)
+	public void saveVariantSelection(AjaxResponse ajaxResponse, String caseId, String selectedSNPVariantIds, 
+			String selectedCNVIds, String selectedTranslocationIds)
 			throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/selectvariants");
@@ -180,7 +186,11 @@ public class RequestUtils {
 
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
-		requestPost.setEntity(new StringEntity(selectedVariantIds, ContentType.APPLICATION_JSON));
+		SelectedVariantIds variantIds = new SelectedVariantIds();
+		variantIds.setSelectedSNPVariantIds(selectedSNPVariantIds);
+		variantIds.setSelectedCNVIds(selectedCNVIds);
+		variantIds.setSelectedTranslocationIds(selectedTranslocationIds);
+		requestPost.setEntity(new StringEntity(variantIds.createObjectJSON(), ContentType.APPLICATION_JSON));
 
 		HttpResponse response = client.execute(requestPost);
 
@@ -242,6 +252,47 @@ public class RequestUtils {
 			return orderCase;
 		}
 		return null;
+	}
+
+	public CaseAnnotation getCaseAnnotation(String caseId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/annotation");
+		URI uri = new URI(sbUrl.toString());
+
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			CaseAnnotation caseAnnotation = mapper.readValue(response.getEntity().getContent(), CaseAnnotation.class);
+			return caseAnnotation;
+		}
+		return null;
+	}
+
+	public void saveCaseAnnotation(AjaxResponse ajaxResponse, CaseAnnotation annotationToSave) throws URISyntaxException, UnsupportedCharsetException, ClientProtocolException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(annotationToSave.getCaseId()).append("/annotation");
+		URI uri = new URI(sbUrl.toString());
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		System.out.println(mapper.writeValueAsString(annotationToSave));
+		requestPost.setEntity(new StringEntity(mapper.writeValueAsString(annotationToSave), ContentType.APPLICATION_JSON));
+		HttpResponse response = client.execute(requestPost);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode != HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		else {
+			ajaxResponse.setSuccess(true);
+		}
+
+		
 	}
 
 }

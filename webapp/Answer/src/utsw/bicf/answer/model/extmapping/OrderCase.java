@@ -33,6 +33,8 @@ public class OrderCase {
 	String normalBam;
 	String tumorBam;
 	String rnaBam;
+	List<CNV> cnvs;
+	List<Translocation> translocations;
 	
 	
 	
@@ -299,6 +301,26 @@ public class OrderCase {
 
 	public void setRnaBam(String rnaBam) {
 		this.rnaBam = rnaBam;
+	}
+
+
+	public List<CNV> getCnvs() {
+		return cnvs;
+	}
+
+
+	public void setCnvs(List<CNV> cnvs) {
+		this.cnvs = cnvs;
+	}
+
+
+	public List<Translocation> getTranslocations() {
+		return translocations;
+	}
+
+
+	public void setTranslocations(List<Translocation> translocations) {
+		this.translocations = translocations;
 	}
 
 

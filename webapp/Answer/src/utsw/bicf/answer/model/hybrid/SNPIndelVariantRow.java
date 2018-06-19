@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
 import utsw.bicf.answer.model.extmapping.Variant;
@@ -41,8 +38,6 @@ public class SNPIndelVariantRow {
 	Boolean mdaAnnotated;
 	Boolean utswAnnotated;
 	
-	
-	List<Button> buttons = new ArrayList<Button>();
 	
 	public SNPIndelVariantRow(Variant variant) {
 		this.oid = variant.getMangoDBId().getOid();
@@ -98,9 +93,6 @@ public class SNPIndelVariantRow {
 	}
 
 
-	public List<Button> getButtons() {
-		return buttons;
-	}
 
 
 

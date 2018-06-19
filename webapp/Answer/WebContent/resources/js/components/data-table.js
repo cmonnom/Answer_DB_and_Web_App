@@ -20,7 +20,7 @@ Vue.component('data-table', {
         "show-pagination": { default: true, type: Boolean },
         "show-row-count": { default: false, type: Boolean },
         "title-icon": { default: null, type: String },
-        "show-left-menu": {default: true, type: Boolean}
+        "show-left-menu": { default: true, type: Boolean }
 
     },
     template: `<div>
@@ -37,18 +37,18 @@ Vue.component('data-table', {
           <v-icon v-if="titleIcon" color="amber accent-2">{{ titleIcon }}</v-icon>
         </v-btn>
         <v-list>
-          
-            <slot name="action1MenuItem"></slot>
-            <slot name="action2MenuItem"></slot>
-            <slot name="action3MenuItem"></slot>
-          
+
+          <slot name="action1MenuItem"></slot>
+          <slot name="action2MenuItem"></slot>
+          <slot name="action3MenuItem"></slot>
+
           <v-list-tile avatar @click="toggleSearchBar">
-              <v-list-tile-avatar>
-                <v-icon>search</v-icon>
-              </v-list-tile-avatar>
-              <v-list-tile-content>
-                <v-list-tile-title>Quick Filter</v-list-tile-title>
-              </v-list-tile-content>
+            <v-list-tile-avatar>
+              <v-icon>search</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-title>Quick Filter</v-list-tile-title>
+            </v-list-tile-content>
           </v-list-tile>
 
           <v-list-tile avatar v-if="advanceFiltering" @click="toggleFilters">
@@ -181,21 +181,30 @@ Vue.component('data-table', {
 
       </v-toolbar>
       <v-card>
-        <draggable :list="headerOrder" @start="draggingStarted" @end="itemDragging=''" class="draggable">
-          <v-chip label v-for="header in headerOrder" :key="header" color="primary" text-color="white" :class="[{'is-dragging':isDragging(header)}, 'elevation-1', 'draggable']"
-            :id="header">
-            <!-- <v-avatar>
-              <v-icon>swap_horiz</v-icon>
-            </v-avatar> -->
-            <span class="draggable">{{ getHeaderByValue(header) }}</span>
+        <v-layout>
+          <v-flex>
             <v-tooltip bottom>
-              <v-btn slot="activator" :color="getHeaderButtonColor(header)" icon flat small @click="toggleHeaderHidden(header)">
+              <v-btn slot="activator" icon flat color="primary" small @click="toggleHeaderHidden()">
                 <v-icon>visibility</v-icon>
               </v-btn>
-              <span>Show/Hide Header</span>
+              <span>Show/Hide all</span>
             </v-tooltip>
-          </v-chip>
-        </draggable>
+          </v-flex>
+          <v-flex>
+            <draggable :list="headerOrder" @start="draggingStarted" @end="itemDragging=''" class="draggable">
+              <v-chip label v-for="header in headerOrder" :key="header" color="primary" text-color="white" :class="[{'is-dragging':isDragging(header)}, 'elevation-1', 'draggable']"
+                :id="header">
+                <!-- <v-avatar>
+              <v-icon>swap_horiz</v-icon>
+            </v-avatar> -->
+                <span class="draggable">{{ getHeaderByValue(header) }}</span>
+                <v-btn :color="getHeaderButtonColor(header)" icon flat small @click="toggleHeaderHidden(header)">
+                  <v-icon>visibility</v-icon>
+                </v-btn>
+              </v-chip>
+            </draggable>
+          </v-flex>
+        </v-layout>
       </v-card>
     </div>
   </v-slide-y-transition>
@@ -410,7 +419,14 @@ Vue.component('data-table', {
   </div>
 
 
-</div>`, data() { return { selected: [], toUnselect: [], search: '', headers: [], headerOrder: [],
+</div>`,
+    data() {
+        return {
+            selected: [],
+            toUnselect: [],
+            search: '',
+            headers: [],
+            headerOrder: [],
             uniqueIdField: "",
             isLoadingColor: "warning",
             loading: this.isLoadingColor,
@@ -641,7 +657,7 @@ Vue.component('data-table', {
         },
         getHeaderObjectByValue(header) {
             for (var i = 0; i < this.headers.length; i++) {
-                if(this.headers[i].value === header) {
+                if (this.headers[i].value === header) {
                     return this.headers[i];
                 }
             }
@@ -661,6 +677,13 @@ Vue.component('data-table', {
             return '';
         },
         toggleHeaderHidden(header, isObjectHeader) {
+            if (!header) { //toggle all
+                //check first one
+                var alreadyHidden = this.headers[0].isHidden;
+                for (var i = 0; i < this.headers.length; i++) {
+                    this.headers[i].isHidden = !alreadyHidden;
+                }
+            }
             var headerObject = null;
             if (!isObjectHeader) {
                 headerObject = this.getHeaderObjectByValue(header);
@@ -778,6 +801,18 @@ Vue.component('data-table', {
             ))
         },
         alignHeader(header) {
+            //go with the align property first
+            if (header.align != null) {
+                if (header.align == "left") {
+                    return  "text-xs-left";
+                }
+                if (header.align == "center") {
+                    return  "text-xs-center";
+                }
+                if (header.align == "right") {
+                    return  "text-xs-right";
+                }
+            }
             if (header.unit != null) {
                 if (header.unit.value == 'Date') {
                     return "text-xs-center";
@@ -902,11 +937,11 @@ Vue.component('data-table', {
         },
         addToSelection(item) {
             // item.isSelected = true;
-            this.handleSelectionChange({item: item});
+            this.handleSelectionChange({ item: item });
         },
         removeFromSelection(item) {
             // item.isSelected = false;
-            this.handleSelectionChange({item: item});
+            this.handleSelectionChange({ item: item });
         },
         showPassFlag(header, item) {
             return header.isPassable === true
