@@ -43,6 +43,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSum
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.FilterStringValue;
+import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
@@ -51,6 +52,7 @@ import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.PermissionUtils;
@@ -129,7 +131,9 @@ public class OpenCaseController {
 				}
 			}
 		}
-		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "oid", user);
+		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
+		List<ReportGroupForDisplay> reportGroupsForDisplay = reportGroups.stream().map(r -> new ReportGroupForDisplay(r)).collect(Collectors.toList());
+		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "oid", user, reportGroupsForDisplay);
 		return summary.createVuetifyObjectJSON();
 
 	}

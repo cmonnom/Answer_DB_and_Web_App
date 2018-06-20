@@ -33,6 +33,7 @@ public class Annotation {
 	String classification;
 	String tier;
 	List<String> nctids;
+	String type;
 	
 	public Annotation() {
 		
@@ -205,6 +206,14 @@ public class Annotation {
 
 	public void setNctids(List<String> nctids) {
 		this.nctids = nctids;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 
 

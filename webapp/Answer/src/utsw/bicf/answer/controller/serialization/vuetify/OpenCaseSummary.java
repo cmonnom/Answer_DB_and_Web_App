@@ -1,7 +1,6 @@
 package utsw.bicf.answer.controller.serialization.vuetify;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,14 +11,13 @@ import org.apache.commons.lang3.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.controller.serialization.Units;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.FinalReport;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Variant;
-import utsw.bicf.answer.model.hybrid.SNPIndelVariantRow;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 
 public class OpenCaseSummary {
 	
@@ -32,9 +30,10 @@ public class OpenCaseSummary {
 	CNVSummary cnvSummary;
 	TranslocationSummary translocationSummary;
 	Boolean isAllowed;
+	List<ReportGroupForDisplay> reportGroups;
 
-	public OpenCaseSummary(ModelDAO modelDAO, OrderCase aCase, FinalReport finalReport, String uniqueIdField, User user) {
-		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField);
+	public OpenCaseSummary(ModelDAO modelDAO, OrderCase aCase, FinalReport finalReport, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) {
+		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups);
 		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField);
 		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField);
 		this.patientInfo = new PatientInfo(aCase, finalReport);
@@ -43,6 +42,7 @@ public class OpenCaseSummary {
 		this.userId = user.getUserId();
 		effects = getUniqueEffects(aCase);
 		this.isAllowed = true;
+		this.reportGroups = reportGroups;
 	}
 
 	
@@ -150,6 +150,16 @@ public class OpenCaseSummary {
 
 	public void setTranslocationSummary(TranslocationSummary translocationSummary) {
 		this.translocationSummary = translocationSummary;
+	}
+
+
+	public List<ReportGroupForDisplay> getReportGroups() {
+		return reportGroups;
+	}
+
+
+	public void setReportGroups(List<ReportGroupForDisplay> reportGroups) {
+		this.reportGroups = reportGroups;
 	}
 
 

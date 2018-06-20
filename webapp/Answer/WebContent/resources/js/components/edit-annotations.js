@@ -269,7 +269,8 @@ Vue.component('edit-annotations', {
                 tier: null,
                 // selectedTier: null,
                 // selectedClassification: null,
-                nctids: ""
+                nctids: "",
+                type: this.type
             });
             // this.$nextTick(function () {
             //     this.$refs.editAnnotation[this.$refs.editAnnotation.length - 1].focus(); this.$vuetify.goTo(

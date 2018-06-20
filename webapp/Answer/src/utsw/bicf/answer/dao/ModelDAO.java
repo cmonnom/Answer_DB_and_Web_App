@@ -6,14 +6,12 @@ import javax.transaction.Transactional;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import utsw.bicf.answer.model.Annotation;
 import utsw.bicf.answer.model.AnswerDBCredentials;
-import utsw.bicf.answer.model.Gene;
 import utsw.bicf.answer.model.Permission;
+import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilterList;
@@ -37,35 +35,35 @@ public class ModelDAO {
 	// return null;
 	// }
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Transactional
-	public List<Annotation> getAnnotationsForOrganisationAndUser(String origin, User user, Gene gene) {
-		Session session = sessionFactory.getCurrentSession();
-		StringBuilder sql = new StringBuilder("select * from annotation where origin = :origin ")
-				.append(" and gene_id = :geneId ").append(" and !deleted ");
-		if (user != null) {
-			sql.append(" and answer_user_id = :user ");
-		}
-		Query query = session.createNativeQuery(sql.toString(), Annotation.class)
-				.setParameter("geneId", gene.getGeneId()).setParameter("origin", origin);
-		if (user != null) {
-			query.setParameter("user", user);
-		}
-		return query.list();
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Transactional
-	public Gene getGeneBySymbol(String symbol) {
-		Session session = sessionFactory.getCurrentSession();
-		StringBuilder sql = new StringBuilder("select * from gene where symbol = :symbol ");
-		Query query = session.createNativeQuery(sql.toString(), Gene.class).setParameter("symbol", symbol);
-		List<Gene> genes = query.list();
-		if (genes != null && genes.size() == 1) {
-			return genes.get(0);
-		}
-		return null;
-	}
+//	@SuppressWarnings({ "unchecked", "rawtypes" })
+//	@Transactional
+//	public List<Annotation> getAnnotationsForOrganisationAndUser(String origin, User user, Gene gene) {
+//		Session session = sessionFactory.getCurrentSession();
+//		StringBuilder sql = new StringBuilder("select * from annotation where origin = :origin ")
+//				.append(" and gene_id = :geneId ").append(" and !deleted ");
+//		if (user != null) {
+//			sql.append(" and answer_user_id = :user ");
+//		}
+//		Query query = session.createNativeQuery(sql.toString(), Annotation.class)
+//				.setParameter("geneId", gene.getGeneId()).setParameter("origin", origin);
+//		if (user != null) {
+//			query.setParameter("user", user);
+//		}
+//		return query.list();
+//	}
+//
+//	@SuppressWarnings({ "unchecked", "rawtypes" })
+//	@Transactional
+//	public Gene getGeneBySymbol(String symbol) {
+//		Session session = sessionFactory.getCurrentSession();
+//		StringBuilder sql = new StringBuilder("select * from gene where symbol = :symbol ");
+//		Query query = session.createNativeQuery(sql.toString(), Gene.class).setParameter("symbol", symbol);
+//		List<Gene> genes = query.list();
+//		if (genes != null && genes.size() == 1) {
+//			return genes.get(0);
+//		}
+//		return null;
+//	}
 
 	@Transactional
 	public void saveObject(Object object) {
@@ -195,6 +193,13 @@ public class ModelDAO {
 		String hql = "from VariantFilterList where user = :user";
 		return session.createQuery(hql, VariantFilterList.class)
 				.setParameter("user", user).list();
+	}
+
+	@Transactional
+	public List<ReportGroup> getAllReportGroups() {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from ReportGroup";
+		return session.createQuery(hql, ReportGroup.class).list();
 	}
 
 //	@Transactional

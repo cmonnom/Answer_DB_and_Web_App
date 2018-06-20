@@ -39,7 +39,7 @@ public class SNPIndelVariantRow {
 	Boolean utswAnnotated;
 	
 	
-	public SNPIndelVariantRow(Variant variant) {
+	public SNPIndelVariantRow(Variant variant, List<ReportGroupForDisplay> reportGroups) {
 		this.oid = variant.getMangoDBId().getOid();
 		this.chrom = variant.getChrom();
 		this.pos = variant.getPos();
@@ -88,9 +88,34 @@ public class SNPIndelVariantRow {
 		else {
 			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
 		}
+//		if (neededInReport(geneName, reportGroups)) {
+//			icons.add(new VuetifyIcon("priority_high", "red", "This gene should be reported"));
+//		}
 		iconFlags = new FlagValue(icons);
 		
 	}
+
+
+
+
+
+///**
+// * Determine if the given geneName is in any existing group of genes
+// * that should be reported
+// * @param geneName
+// * @param reportGroups
+// * @return
+// */
+//	private boolean neededInReport(String geneName, List<ReportGroupForDisplay> reportGroups) {
+//		for (ReportGroupForDisplay group : reportGroups) {
+//			for (String gene : group.getGenesToReport()) {
+//				if (gene.equals(geneName)) {
+//					return true;
+//				}
+//			}
+//		}
+//		return false;
+//	}
 
 
 

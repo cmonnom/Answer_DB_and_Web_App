@@ -900,13 +900,11 @@ Vue.component('data-table', {
                 });
         },
         handleSelectionChange(props) {
-            console.log(props.item.isSelected, props.selected);
             //if previous rows had been selected, the props.selected is out of sync
             //with props.item.isSelected.
             //Make sure to record which rows are unselected
             if ((props.item.isSelected === true && props.selected === undefined)
                 || props.selected === true) {
-                console.log("remove from variant selected");
                 //check if already exist
                 var found = false;
                 for (var i = 0; i < this.toUnselect.length; i++) {

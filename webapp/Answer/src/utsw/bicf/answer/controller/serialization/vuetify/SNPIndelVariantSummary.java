@@ -8,18 +8,19 @@ import utsw.bicf.answer.controller.serialization.Units;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.model.hybrid.SNPIndelVariantRow;
 
 public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 	
-	public SNPIndelVariantSummary(ModelDAO modelDAO, OrderCase aCase, String uniqueIdField) {
-		super(createRows(modelDAO, aCase), uniqueIdField);
+	public SNPIndelVariantSummary(ModelDAO modelDAO, OrderCase aCase, String uniqueIdField, List<ReportGroupForDisplay> reportGroups) {
+		super(createRows(modelDAO, aCase, reportGroups), uniqueIdField);
 	}
 
-	private static List<SNPIndelVariantRow> createRows(ModelDAO modelDAO, OrderCase aCase) {
+	private static List<SNPIndelVariantRow> createRows(ModelDAO modelDAO, OrderCase aCase, List<ReportGroupForDisplay> reportGroups) {
 		List<SNPIndelVariantRow> rows = new ArrayList<SNPIndelVariantRow>();
 		for (Variant variant : aCase.getVariants()) {
-			rows.add(new SNPIndelVariantRow(variant));
+			rows.add(new SNPIndelVariantRow(variant, reportGroups));
 			
 		}
 		return rows;

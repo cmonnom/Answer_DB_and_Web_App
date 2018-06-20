@@ -1,7 +1,7 @@
 Vue.component('advanced-filter', {
-  props: {
-  },
-  template: `<div>
+    props: {
+    },
+    template: `<div>
   <!-- save filter set dialog -->
     <v-dialog v-model="saveFilterSetDialogVisible" max-width="500px">
         <v-card class="soft-grey-background">
@@ -123,6 +123,29 @@ Vue.component('advanced-filter', {
                                                       <span>Delete Filter Set</span>
                                                   </v-tooltip>
                                               </v-list-tile-action>
+                                          </v-list-tile>
+                                      </v-list>
+                                  </v-menu>
+                              </v-list-tile-action>
+                          </v-list-tile>
+
+                          <v-list-tile avatar :disabled="filterSets.length == 0">
+                              <v-list-tile-avatar>
+                                  <v-icon>mdi-filter-outline</v-icon>
+                              </v-list-tile-avatar>
+                              <v-list-tile-content>
+                                  Load Gene Set
+                              </v-list-tile-content>
+                              <v-list-tile-action>
+                                  <v-menu open-on-hover offset-x :close-on-content-click="true">
+                                      <v-btn flat icon slot="activator">
+                                          <v-icon>keyboard_arrow_right</v-icon>
+                                      </v-btn>
+                                      <v-list>
+                                          <v-list-tile v-for="(reportGroup, index) in reportGroups" :key="index" @click="loadReportGroup(reportGroup)">
+                                              <v-list-tile-content class="pr-4">
+                                                  {{ reportGroup.groupName }}
+                                              </v-list-tile-content>
                                           </v-list-tile>
                                       </v-list>
                                   </v-menu>
@@ -291,7 +314,7 @@ Vue.component('advanced-filter', {
                           <v-layout>
                               <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                               <v-flex xs7>
-                                  <v-text-field class="no-height" :name="filter.fieldName" :label="filter.headerText" v-model="filter.value" @input="updateFilterNeedsReload(true)"></v-text-field>
+                                  <v-text-field autocomplete="off" :ref="'filter' + filter.fieldName" class="no-height" :name="filter.fieldName" :label="filter.headerText" v-model="filter.value" @input="updateFilterNeedsReload(true)"></v-text-field>
                               </v-flex>
                           </v-layout>
                       </v-flex>
@@ -339,203 +362,255 @@ Vue.component('advanced-filter', {
       </v-navigation-drawer>
   </div>
   </div>`,
-  data() {
-    return {
-      filters: [],
-      effects: [],
-      filtersValid: true,
-      numberRules: [v => !isNaN(v) || 'Only numbers'],
-      filterNeedsReload: true,
-      currentFilterSet: "",
-      filterSets: [],
-      filterSetItems: [],
-      saveFilterSetName: "",
-      saveFilterSetId: -1,
-      saveFilterSetDialogVisible: false,
-      advanceFilteringVisible: false,
-      loading: false
-    }
+    data() {
+        return {
+            filters: [],
+            effects: [],
+            filtersValid: true,
+            numberRules: [v => !isNaN(v) || 'Only numbers'],
+            filterNeedsReload: true,
+            currentFilterSet: "",
+            filterSets: [],
+            filterSetItems: [],
+            saveFilterSetName: "",
+            saveFilterSetId: -1,
+            saveFilterSetDialogVisible: false,
+            advanceFilteringVisible: false,
+            loading: false,
+            reportGroups: []
+        }
 
-  },
-  methods: {
-    createFilters(filters) {
-      this.filters = filters;
-      this.populateCheckBoxes();
     },
-    populateCheckBoxes() {
-      for (var i = 0; i
-        < this.filters.length; i++) {
-        var filter = this.filters[i]; if (filter.isCheckBox) {
-          if (filter.fieldName == 'effects') {
-            if
-            (filter.checkBoxes.length > 0) { return; } filter.checkBoxes = []; for (var j = 0; j
-              < this.effects.length; j++) { filter.checkBoxes.push({ name: this.effects[j], value: false }); }
-          }
-        }
-      }
-    },
-    filterData() {
-      this.$emit("refresh-data", null);
-    },
-    clearFilters() {
-      for (var i = 0; i < this.filters.length; i++) {
-        var filter = this.filters[i]; 
-        this.clearFilter(filter);
-      }
-      this.currentFilterSet = "";
-      this.filterData();
-    },
-    clearFilter(filter, doRefresh) {
-      filter.value = null;
-      filter.minValue = null;
-      filter.maxValue = null;
-      filter.minDateValue = null;
-      filter.maxDateValue = null;
-      filter.valueTrue = false;
-      filter.valueFalse = false;
-      if (filter.isCheckBox) {
-        for (var i = 0; i < filter.checkBoxes.length; i++) {
-          filter.checkBoxes[i].value = false;
-        }
-      }
-      if (doRefresh) { //refresh only if closing a chip
-        this.currentFilterSet = "";
-        this.filterData();
-      }
-    },
-    clearCheckBoxFilter(checkBox) {
-      checkBox.value = false;
-      this.currentFilterSet = "";
-      this.filterData();
-    },
-    getFilterChip(filter) { //TODO 
-      if (filter.isSelect) {
-        return filter.headerText + ": <b>" + filter.value + "</b>";
-      }
-      if (filter.isBoolean) {
-        return "Include " + filter.headerTextTrue
-          + ": <b>" + (filter.valueTrue ? 'YES ' : 'NO ')
-          + "</b><br/>" + "Include "
-          + filter.headerTextFalse + ": <b>"
-          + (filter.valueFalse ? 'YES' : 'NO') + "</b>";
-      } if (filter.isString) {
-        return filter.headerText + " contains <b>" + filter.value + "</b>";
-      } if (filter.isNumber) { // 
-        return filter.headerText + ": <b>[ "
-          + (filter.minValue != null ? filter.minValue : '') + ":"
-          + (filter.maxValue != null ? filter.maxValue : '') + " ]</b>";
-      } //TODO dates and numbers
-      return filter.headerText;
-    },
-    getFilterCheckBoxChip(filter, checkBox) {
-      return filter.headerText + ": <b>" + checkBox.name
-        + "</b>";
-    },
-    toggleFilters() {
-      this.advanceFilteringVisible = !this.advanceFilteringVisible;
-      if (!this.advanceFilteringVisible) {
-        bus.$emit("need-layout-resize", this);
-      }
-    },
-    isFilterUsed(filter) {
-      if (filter.isCheckBox) {
-        return false; //handled in a separate chip
-      }
-      if (filter.isNumber) {
-        return (filter.minValue != null && filter.minValue !== "")
-          || (filter.maxValue != null && filter.maxValue !== "")
-      }
-      if (filter.isDate) {
-        return filter.minDateValue != null || filter.maxDateValue != null;
-      }
-      if (filter.isBoolean) {
-        return filter.valueTrue == true || filter.valueFalse == true;
-      }
-      return filter.value != null && filter.value !== "";
-    },
-    isCheckBoxFilterUsed(checkBox) { return checkBox.value == true; }, isInputNumberValid(filter) {
-      if (filter.isNumber) {
-        var isValid = (filter.minValue === "" || !isNaN(filter.minValue)) && (filter.maxValue === "" || !isNaN(filter.maxValue));
-        if (isValid) {
-          if (filter.minValue !== "" && filter.minValue != null) {
-            filter.minValue = parseFloat(filter.minValue);
-          }
-          if (filter.maxValue !== "" && filter.maxValue != null) {
-            filter.maxValue = parseFloat(filter.maxValue);
-          }
-        } return isValid;
-      } return true;
-    },
-    openSaveFiltersDialog() {
-      if (this.currentFilterSet) {
-        this.saveFilterSetId = this.currentFilterSet.variantFilterListId;
-        this.saveFilterSetName = this.currentFilterSet.listName;
-      }
-      else { //this is a new filter set
-        this.saveFilterSetId = -1;
-        this.saveFilterSetName = "";
-      }
-      this.saveFilterSetDialogVisible = true;
-    },
-    saveCurrentFilters() {
-      this.$emit("save-filters", null);
-    },
-    deleteFilterSet(filterSetId) {
-      if (this.currentFilterSet && filterSetId == this.currentFilterSet.variantFilterListId) {
-        this.currentFilterSet = "";
-      }
-      this.$emit("delete-filter", filterSetId);
-    },
-    // find the filterset loaded by the user and populates all the relevant form fields
-    loadSelectedFilterSet(filterSet) {
-      this.clearFilters();
-      this.currentFilterSet = this.filterSets.filter(f => f.variantFilterListId == filterSet.value)[0];
-      for (var i = 0; i < this.currentFilterSet.filters.length; i++) {
-        var filter = this.currentFilterSet.filters[i];
-        var filterToPopulate = this.filters.filter(f => f.fieldName == filter.field)[0];
-        this.populateFilter(filterToPopulate, filter);
-      }
-      this.$emit("refresh-data", null);
-    },
-    populateFilter(filterToPopulate, loadedFilter) {
-      var multiplier = 1;
-      if (filterToPopulate.fieldName.includes("Frequency")) {
-        multiplier = 100;
-      }
-      filterToPopulate.value = loadedFilter.value;
-      filterToPopulate.minValue = loadedFilter.minValue * multiplier;
-      filterToPopulate.maxValue = loadedFilter.maxValue * multiplier;
-      filterToPopulate.minDateValue = null;
-      filterToPopulate.maxDateValue = null;
-      filterToPopulate.valueTrue = loadedFilter.valueTrue;
-      filterToPopulate.valueFalse = loadedFilter.valueFalse;
-      if (filterToPopulate.isCheckBox) {
-        for (var i = 0; i < filterToPopulate.checkBoxes.length; i++) {
-          var field = filterToPopulate.checkBoxes[i].name.replace(/ /g, "_").toLowerCase();
-          var checkboxHasValue = false;
-          for (var j = 0; j < loadedFilter.stringValues.length; j++) {
-            var currentCheckBoxValue = loadedFilter.stringValues[j].filterString;
-            if (currentCheckBoxValue == field) {
-              checkboxHasValue = true;
+    methods: {
+        createFilters(filters) {
+            this.filters = filters;
+            this.populateCheckBoxes();
+        },
+        populateCheckBoxes() {
+            for (var i = 0; i
+                < this.filters.length; i++) {
+                var filter = this.filters[i]; if (filter.isCheckBox) {
+                    if (filter.fieldName == 'effects') {
+                        if
+                        (filter.checkBoxes.length > 0) { return; } filter.checkBoxes = []; for (var j = 0; j
+                            < this.effects.length; j++) { filter.checkBoxes.push({ name: this.effects[j], value: false }); }
+                    }
+                }
             }
-          }
-          filterToPopulate.checkBoxes[i].value = checkboxHasValue;
+        },
+        filterData() {
+            this.$emit("refresh-data", null);
+        },
+        clearFilters() {
+            for (var i = 0; i < this.filters.length; i++) {
+                var filter = this.filters[i];
+                this.clearFilter(filter);
+            }
+            this.currentFilterSet = "";
+            this.filterData();
+        },
+        clearFilter(filter, doRefresh) {
+            filter.value = null;
+            filter.minValue = null;
+            filter.maxValue = null;
+            filter.minDateValue = null;
+            filter.maxDateValue = null;
+            filter.valueTrue = false;
+            filter.valueFalse = false;
+            if (filter.isCheckBox) {
+                for (var i = 0; i < filter.checkBoxes.length; i++) {
+                    filter.checkBoxes[i].value = false;
+                }
+            }
+            if (doRefresh) { //refresh only if closing a chip
+                this.currentFilterSet = "";
+                this.filterData();
+            }
+        },
+        clearCheckBoxFilter(checkBox) {
+            checkBox.value = false;
+            this.currentFilterSet = "";
+            this.filterData();
+        },
+        getFilterChip(filter) { //TODO 
+            if (filter.isSelect) {
+                return filter.headerText + ": <b>" + filter.value + "</b>";
+            }
+            if (filter.isBoolean) {
+                return "Include " + filter.headerTextTrue
+                    + ": <b>" + (filter.valueTrue ? 'YES ' : 'NO ')
+                    + "</b><br/>" + "Include "
+                    + filter.headerTextFalse + ": <b>"
+                    + (filter.valueFalse ? 'YES' : 'NO') + "</b>";
+            } if (filter.isString) {
+                var finalItems = [];
+                var geneItems = filter.value.split(",");
+                var geneItemsUnique = new Set();
+                for (var i = 0; i < geneItems.length; i++) {
+                    geneItemsUnique.add(geneItems[i].trim());
+                }
+                for (var i = 0; i < this.reportGroups.length; i++) {
+                    var foundReportGroup = true;
+                    var genesToReport = this.reportGroups[i].genesToReport;
+                    if (geneItemsUnique.size >= genesToReport.length) {
+                        //could be a reportGroup. Need to compare genes
+                        for (var j = 0; j < genesToReport.length; j++) {
+                            if (!geneItemsUnique.has(genesToReport[j])) {
+                                //not a full report group
+                                foundReportGroup = false;
+                                break;
+                            }
+                        }
+                        if (foundReportGroup) {
+                            //delete all genes from reportGroup
+                            for (var j = 0; j < genesToReport.length; j++) {
+                                geneItemsUnique.delete(genesToReport[j]);
+                            }
+                            finalItems.push(this.reportGroups[i].groupName);
+                        }
+                    }
+                }
+                var iterator = geneItemsUnique.values();
+                for (var i = 0; i < geneItemsUnique.size; i++) { //in case some genes are left
+                    finalItems.push(iterator.next().value);
+                }
+                var displayValue = finalItems.join(", ");
+                if (displayValue.length > 30) {
+                    return filter.headerText + " contains <b>" + displayValue.substring(0, Math.min(30, displayValue.length)) + "...</b>";
+                }
+                else {
+                    return filter.headerText + " contains <b>" + displayValue + "</b>";
+                }
+            } if (filter.isNumber) { // 
+                return filter.headerText + ": <b>[ "
+                    + (filter.minValue != null ? filter.minValue : '') + ":"
+                    + (filter.maxValue != null ? filter.maxValue : '') + " ]</b>";
+            } //TODO dates and numbers
+            return filter.headerText;
+        },
+        getFilterCheckBoxChip(filter, checkBox) {
+            return filter.headerText + ": <b>" + checkBox.name
+                + "</b>";
+        },
+        toggleFilters() {
+            this.advanceFilteringVisible = !this.advanceFilteringVisible;
+            if (!this.advanceFilteringVisible) {
+                bus.$emit("need-layout-resize", this);
+            }
+        },
+        isFilterUsed(filter) {
+            if (filter.isCheckBox) {
+                return false; //handled in a separate chip
+            }
+            if (filter.isNumber) {
+                return (filter.minValue != null && filter.minValue !== "")
+                    || (filter.maxValue != null && filter.maxValue !== "")
+            }
+            if (filter.isDate) {
+                return filter.minDateValue != null || filter.maxDateValue != null;
+            }
+            if (filter.isBoolean) {
+                return filter.valueTrue == true || filter.valueFalse == true;
+            }
+            return filter.value != null && filter.value !== "";
+        },
+        isCheckBoxFilterUsed(checkBox) { return checkBox.value == true; }, isInputNumberValid(filter) {
+            if (filter.isNumber) {
+                var isValid = (filter.minValue === "" || !isNaN(filter.minValue)) && (filter.maxValue === "" || !isNaN(filter.maxValue));
+                if (isValid) {
+                    if (filter.minValue !== "" && filter.minValue != null) {
+                        filter.minValue = parseFloat(filter.minValue);
+                    }
+                    if (filter.maxValue !== "" && filter.maxValue != null) {
+                        filter.maxValue = parseFloat(filter.maxValue);
+                    }
+                } return isValid;
+            } return true;
+        },
+        openSaveFiltersDialog() {
+            if (this.currentFilterSet) {
+                this.saveFilterSetId = this.currentFilterSet.variantFilterListId;
+                this.saveFilterSetName = this.currentFilterSet.listName;
+            }
+            else { //this is a new filter set
+                this.saveFilterSetId = -1;
+                this.saveFilterSetName = "";
+            }
+            this.saveFilterSetDialogVisible = true;
+        },
+        saveCurrentFilters() {
+            this.$emit("save-filters", null);
+        },
+        deleteFilterSet(filterSetId) {
+            if (this.currentFilterSet && filterSetId == this.currentFilterSet.variantFilterListId) {
+                this.currentFilterSet = "";
+            }
+            this.$emit("delete-filter", filterSetId);
+        },
+        // find the filterset loaded by the user and populates all the relevant form fields
+        loadSelectedFilterSet(filterSet) {
+            this.clearFilters();
+            this.currentFilterSet = this.filterSets.filter(f => f.variantFilterListId == filterSet.value)[0];
+            for (var i = 0; i < this.currentFilterSet.filters.length; i++) {
+                var filter = this.currentFilterSet.filters[i];
+                var filterToPopulate = this.filters.filter(f => f.fieldName == filter.field)[0];
+                this.populateFilter(filterToPopulate, filter);
+            }
+            this.$emit("refresh-data", null);
+        },
+        populateFilter(filterToPopulate, loadedFilter) {
+            var multiplier = 1;
+            if (filterToPopulate.fieldName.includes("Frequency")) {
+                multiplier = 100;
+            }
+            filterToPopulate.value = loadedFilter.value;
+            filterToPopulate.minValue = loadedFilter.minValue * multiplier;
+            filterToPopulate.maxValue = loadedFilter.maxValue * multiplier;
+            filterToPopulate.minDateValue = null;
+            filterToPopulate.maxDateValue = null;
+            filterToPopulate.valueTrue = loadedFilter.valueTrue;
+            filterToPopulate.valueFalse = loadedFilter.valueFalse;
+            if (filterToPopulate.isCheckBox) {
+                for (var i = 0; i < filterToPopulate.checkBoxes.length; i++) {
+                    var field = filterToPopulate.checkBoxes[i].name.replace(/ /g, "_").toLowerCase();
+                    var checkboxHasValue = false;
+                    for (var j = 0; j < loadedFilter.stringValues.length; j++) {
+                        var currentCheckBoxValue = loadedFilter.stringValues[j].filterString;
+                        if (currentCheckBoxValue == field) {
+                            checkboxHasValue = true;
+                        }
+                    }
+                    filterToPopulate.checkBoxes[i].value = checkboxHasValue;
+                }
+            }
+        },
+        updateFilterNeedsReload(needsReload) {
+            this.filterNeedsReload = needsReload;
+            if (needsReload) {
+                this.currentFilterSet = "";
+            }
+        },
+        //add the list of genes from the given reportGroup
+        //to the gene name filter
+        loadReportGroup(reportGroup) {
+            for (var i = 0; i < this.filters.length; i++) {
+                var filter = this.filters[i];
+                if (filter.fieldName == "geneName") {
+                    var geneNames = reportGroup.genesToReport.join(", ");
+                    filter.value = geneNames;
+                    this.filterNeedsReload = true;
+                    break;
+
+                }
+            }
         }
-      }
     },
-    updateFilterNeedsReload(needsReload) {
-      this.filterNeedsReload = needsReload;
-      if (needsReload) {
-        this.currentFilterSet = "";
-      }
+    created: function () {
     },
-  },
-  created: function () {
-  },
-  destroyed: function () {
-  },
-  watch: {
-  }
+    destroyed: function () {
+    },
+    watch: {
+    }
 
 
 });

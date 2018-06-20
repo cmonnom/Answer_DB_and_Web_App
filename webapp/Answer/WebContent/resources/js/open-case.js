@@ -38,6 +38,38 @@ const OpenCase = {
                 </v-tooltip>
             </v-toolbar>
             <v-card-text :style="getDialogMaxHeight(120)">
+                <v-card v-show="!areReportableGeneSelected()">
+                    <v-card-text>
+                        The following genes should be included in the report if pathogenic or likely pathogenic :
+                        <v-tooltip bottom v-for="(reportGroup, index1) in reportGroups" :key="index1">
+                            <v-menu slot="activator" max-width="500px" offset-x>
+                                <v-btn slot="activator" >
+                                    {{ reportGroup.groupName}}
+                                </v-btn>
+                                <v-card>
+                                    <v-card-title>
+                                        <div class="subheading">
+                                                {{ reportGroup.description }}
+                                                <v-tooltip bottom>
+                                                <v-btn slot="activator" flat icon @click="openLink(reportGroup.link)" color="primary">
+                                                   <v-icon>open_in_new</v-icon>
+                                                </v-btn>
+                                                <span>Open Link in New Tab</span>
+                                                </v-tooltip>
+                                        </div>
+                                    </v-card-title>
+                                    <v-card-text>
+                                        <v-chip :color="isReportableGeneSelected(gene) ? 'primary' : ''" disabled v-for="(gene, index2) in reportGroup.genesToReport" :key="index2">
+                                            {{ gene }}
+                                        </v-chip>
+                                    </v-card-text>
+                                </v-card>
+                            </v-menu>
+                            <span>{{ reportGroup.description }}</span>
+                        </v-tooltip>
+
+                    </v-card-text>
+                </v-card>
                 <data-table ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected SNP/Indel Variants"
                     initial-sort="chromPos" no-data-text="No Data" :show-row-count="true">
                 </data-table>
@@ -658,7 +690,9 @@ const OpenCase = {
             confirmationDialogVisible: false,
             confirmationMessage: "Unsaved selected variants will be discarded.<br/>Are you sure?",
             confirmationProceedButton: "Proceed",
-            confirmationCancelButton: "Cancel"
+            confirmationCancelButton: "Cancel",
+
+            reportGroups: []
         }
     }, methods: {
         proceedWithConfirmation() {
@@ -707,6 +741,8 @@ const OpenCase = {
                     this.addSNPIndelHeaderAction(response.data.snpIndelVariantSummary.headers);
                     this.addCNVHeaderAction(response.data.cnvSummary.headers);
                     this.addFusionHeaderAction(response.data.translocationSummary.headers);
+                    this.reportGroups = response.data.reportGroups;
+                    this.$refs.advanceFilter.reportGroups = this.reportGroups;
                 }
                 else {
                     this.handleDialogs(response.data, this.getAjaxData);
@@ -778,7 +814,7 @@ const OpenCase = {
         addFusionHeaderAction(headers) {
             for (var i = 0; i < headers.length; i++) {
                 if (headers[i].value == "fusionName") {
-                    headers[i].itemAction = this.openFusion;
+                    headers[i].itemAction = this.openTranslocation;
                     headers[i].actionIcon = "zoom_in";
                     headers[i].actionTooltip = "Translocation Details";
                     break;
@@ -973,7 +1009,7 @@ const OpenCase = {
             this.getCNVDetails(item);
         },
         openTranslocation(item) {
-            this.getTranslocationDetails(item);
+            // this.getTranslocationDetails(item);
         },
         handleIdLink(id) {
             var link = "";
@@ -997,6 +1033,9 @@ const OpenCase = {
         },
         handleNCTIdLink(id) {
             var link = "https://clinicaltrials.gov/ct2/show/" + id;
+            window.open(link, "_blank");
+        },
+        openLink(link) {
             window.open(link, "_blank");
         },
         formatIdLinkLabel(id, item) {
@@ -1100,6 +1139,28 @@ const OpenCase = {
                         this.getVariantDetails(this.currentRow);
                         this.snackBarMessage = "Annotation(s) Saved";
                         this.snackBarVisible = true;
+                        //update the row to show that an UTSW annotation exists
+                        //without refreshing the whole table to avoid losing
+                        //unsaved selected data
+                        var variantAnnotated = this.$refs.geneVariantDetails.items.filter(item => item.oid == this.currentVariant._id.$oid);
+                        if (variantAnnotated.length == 0) {
+                            variantAnnotated = this.$refs.cnvDetails.items.filter(item => item.oid == this.currentVariant._id.$oid);
+                        }
+                        if (variantAnnotated.length == 0) {
+                            variantAnnotated = this.$refs.translocationDetails.items.filter(item => item.oid == this.currentVariant._id.$oid);
+                        }
+                        //CAREFUL IF UTSW icon is not in 2nd position!!!!
+                        //update the correct row
+                        for (var i = 0; i < variantAnnotated.length; i++) {
+                            variantAnnotated[i].utswAnnotated = true;
+                            variantAnnotated[i].iconFlags.iconFlags[2] = {
+                                color: "indigo darken-4",
+                                iconName: "mdi-message-bulleted",
+                                tooltip: "UTSW Annotations"
+                            }
+
+                        }
+                        this.updateSelectedVariantTable();
                     } else {
                         this.handleDialogs(response.data, this.commitAnnotations);
                     }
@@ -1121,7 +1182,7 @@ const OpenCase = {
             var selectedSNPVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected);
             var selectedCNVs = this.$refs.cnvDetails.items.filter(item => item.isSelected);
             var selectedTranslocations = this.$refs.translocationDetails.items.filter(item => item.isSelected);
-            this.saveVariantDisabled = selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length;
+            this.saveVariantDisabled = selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0;
 
             var snpHeaders = this.$refs.geneVariantDetails.headers;
             var snpHeaderOrder = this.$refs.geneVariantDetails.headerOrder;
@@ -1429,6 +1490,41 @@ const OpenCase = {
         },
         isSNP() {
             this.currentVariantType = "snp";
+        },
+        //to show hide the warning in the review dialog
+        areReportableGeneSelected() {
+            if (!this.$refs.snpVariantsSelected || !this.reportGroups) {
+                return false;
+            }
+            var selectedGenes = [];
+            for (var i = 0; i < this.$refs.snpVariantsSelected.items.length; i++) {
+                var item = this.$refs.snpVariantsSelected.items[i];
+                selectedGenes.push(item.geneName);
+            }
+            var geneNamesToReport = [];
+            for (var i = 0; i < this.reportGroups.length; i++) {
+                var genesToReport = this.reportGroups[i].genesToReport;
+                for (var j = 0; j < genesToReport.length; j++) {
+                    geneNamesToReport.push(genesToReport[j]);
+                }
+            }
+            for (var i = 0; i < geneNamesToReport.length; i++) {
+                var geneNameToReport = geneNamesToReport[i];
+                if (!selectedGenes.includes(geneNameToReport)) {
+                    return false;
+                }
+            }
+            return true;
+        },
+        //to color the reportGroup gene if already selected
+        isReportableGeneSelected(gene) {
+            for (var i = 0; i < this.$refs.snpVariantsSelected.items.length; i++) {
+                var item = this.$refs.snpVariantsSelected.items[i].geneName;
+                if (item == gene) {
+                    return true;
+                }
+            }
+            return false; pat
         }
     },
     mounted: function () {

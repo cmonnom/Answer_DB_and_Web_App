@@ -27,8 +27,13 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 	@Override
 	public void initializeHeaders() {
 		Header fusionName = new Header(new String[] {"Fusion", "Name"}, "fusionName");
-		fusionName.setWidth("100px");
+		fusionName.setWidth("150px");
 		headers.add(fusionName);
+		
+		Header iconFlags = new Header("Flags", "iconFlags");
+		iconFlags.setWidth("100px");
+		iconFlags.setIsFlag(true);
+		headers.add(iconFlags);
 		
 		Header leftGene = new Header(new String[] {"Left", "Gene"}, "leftGene");
 		leftGene.setWidth("100px");
