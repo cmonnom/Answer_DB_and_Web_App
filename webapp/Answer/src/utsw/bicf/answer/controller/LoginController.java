@@ -19,7 +19,6 @@ import utsw.bicf.answer.controller.serialization.TargetPage;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.security.LDAPAuthentication;
-import utsw.bicf.answer.controller.ControllerUtil;
 
 @Controller
 @RequestMapping("/")
@@ -42,14 +41,16 @@ public class LoginController {
 	@RequestMapping(value = "/validateUser", method = {RequestMethod.POST})
 	@ResponseBody
 	public String validateUser(Model model, HttpSession session, 
-			@RequestParam("username") String username, 
+			@RequestParam("username") String usernameOrEmail, 
 			@RequestParam("password") String password) throws JsonProcessingException {
-		boolean proceed = ldapUtils.isUserValid(username, password);
-		
-		User user = loginDAO.getUserByUsername(username);
-		if (user == null) {
-			proceed = false;
+		//check if email or username
+		User user = loginDAO.getUserByUsernameOrEmail(usernameOrEmail);
+				
+		boolean proceed = false;
+		if (user != null) {
+			proceed = ldapUtils.isUserValid(user.getUsername(), password);
 		}
+		
 		if (proceed) {
 			session.setAttribute("user", user);
 			return new TargetPage(true, "login successful", (String) model.asMap().get("urlRedirect"), true).toJSONString();

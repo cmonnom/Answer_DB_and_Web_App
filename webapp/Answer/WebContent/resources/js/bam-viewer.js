@@ -1,33 +1,37 @@
-var tracks = [{
-    url: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz',
-    indexURL: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz.tbi',
-    name: 'Gencode v24',
-    format: 'gtf',
-    type: "annotation",
-    visibilityWindow: 10000000
-}];
+var tracks = [];
 
 if (normalBam) {
     tracks.push( {
         url: urlRoot + normalBam,
         indexURL: urlRoot + normalBai,
-        label: normalLabel
+        label: normalLabel,
     });
 }
 if (tumorBam) {
     tracks.push({
         url: urlRoot + tumorBam,
         indexURL: urlRoot + tumorBai,
-        label: tumorLabel
+        label: tumorLabel,
     });
 }
 if (rnaBam) {
     tracks.push({
         url: urlRoot + rnaBam,
         indexURL: urlRoot + rnaBai,
-        label: rnaLabel
+        label: rnaLabel,
     });
 }
+tracks.push({
+    url: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz',
+    indexURL: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz.tbi',
+    name: 'Gencode v24',
+    format: 'gtf',
+    type: "annotation",
+    height: 100,
+    displayMode: "EXPANDED",
+    colorBy: "strand",
+    visibilityWindow: 10000000
+});
 
 document.addEventListener("DOMContentLoaded", function () {
     var igvDiv,
@@ -48,8 +52,8 @@ document.addEventListener("DOMContentLoaded", function () {
     igv.createBrowser(igvDiv, options);
 });
 
-$( window ).unload(function() {
-    window.opener.bus.$emit("bam-viewer-closed", null);
-});
+// $( window ).unload(function() {
+//     window.opener.bus.$emit("bam-viewer-closed", null);
+// });
 
 

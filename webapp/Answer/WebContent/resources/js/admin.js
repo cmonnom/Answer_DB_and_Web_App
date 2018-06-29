@@ -2,46 +2,57 @@ const Admin = {
     template:
         `<div>
 
-    <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
-        {{ snackBarMessage }}
-        <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
-    </v-snackbar>
+  <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
+    {{ snackBarMessage }}
+    <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
+  </v-snackbar>
 
   <!-- edit user dialog -->
   <v-dialog v-model="editUserDialogVisible" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
-  <v-card>
+    <v-card class="soft-grey-background">
       <v-toolbar dark color="primary">
-          <v-toolbar-title class="white--text">
-              {{ editAdd }} User: {{ currentEditUserFullName }}
-          </v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-tooltip bottom>
+        <v-toolbar-title class="white--text">
+          {{ editAdd }} User: {{ currentEditUserFullName }}
+        </v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-tooltip bottom>
           <v-btn icon @click="cancelEdits()" slot="activator">
-              <v-icon>close</v-icon>
+            <v-icon>close</v-icon>
           </v-btn>
           <span>Cancel</span>
-      </v-tooltip>
-        </v-toolbar>
+        </v-tooltip>
+      </v-toolbar>
       <v-card-text :style="getDialogMaxHeight()">
         <v-container grid-list-md fluid class="pt-2">
-        <v-layout row wrap>
-          <v-flex xs3>
-            <div class="title">Name:</div>
-            <v-text-field ref="editUsername" label="User ID"></v-text-field>
-            <v-text-field ref="editFirstName" label="First Name"></v-text-field>
-            <v-text-field ref="editLastName" label="Last Name"></v-text-field>
-          </v-flex>
-        </v-layout>
-        <v-layout row wrap>
-          <v-flex xs4>
-            <div class="title pb-4">Permissions:</div>
-            <v-switch :label="'Can View: ' + (editView ? 'Yes' : 'No')" v-model="editView"></v-switch>
-            <v-switch :label="'Can Edit: ' + (editEdit ? 'Yes' : 'No')" v-model="editEdit"></v-switch>
-            <v-switch :label="'Can Finalize: ' + (editFinalize ? 'Yes' : 'No')" v-model="editFinalize"></v-switch>
-            <v-switch :label="'Is Admin: ' + (editAdmin ? 'Yes' : 'No')" v-model="editAdmin"></v-switch>
-          </v-flex>
-        </v-layout>
-      </v-container>
+          <v-layout row wrap>
+            <v-flex xs3>
+              <v-card class="pl-2 pr-2">
+                <v-card-title>
+                  <div class="title">Name:</div>
+                </v-card-title>
+                <v-card-text>
+                  <v-text-field ref="editUsername" label="User ID"></v-text-field>
+                  <v-text-field ref="editFirstName" label="First Name"></v-text-field>
+                  <v-text-field ref="editLastName" label="Last Name"></v-text-field>
+                  <v-text-field ref="editEmail" label="Email"></v-text-field>
+                </v-card-text>
+              </v-card>
+            </v-flex>
+            <v-flex xs4>
+              <v-card class="pl-2 pr-2">
+                <v-card-title>
+                  <div class="title">Permissions:</div>
+                </v-card-title>
+                <v-card-text>
+                  <v-switch :label="'Can View: ' + (editView ? 'Yes' : 'No')" v-model="editView"></v-switch>
+                  <v-switch :label="'Can Edit: ' + (editEdit ? 'Yes' : 'No')" v-model="editEdit"></v-switch>
+                  <v-switch :label="'Can Finalize: ' + (editFinalize ? 'Yes' : 'No')" v-model="editFinalize"></v-switch>
+                  <v-switch :label="'Is Admin: ' + (editAdmin ? 'Yes' : 'No')" v-model="editAdmin"></v-switch>
+                </v-card-text>
+              </v-card>
+            </v-flex>
+          </v-layout>
+        </v-container>
       </v-card-text>
       <v-card-actions>
         <v-btn color="success" @click="saveEdits()">Save
@@ -62,15 +73,23 @@ const Admin = {
   </v-toolbar>
 
   <data-table ref="userTable" :fixed="false" :fetch-on-created="true" table-title="Users" :initial-sort="'fullName'" no-data-text="No Data"
-    data-url="./getAllUsers">
-    <div slot="action1">
-      <v-tooltip bottom>
+    data-url="./getAllUsers" @showing-buttons="toggleUserTableButtons">
+    <v-fade-transition slot="action1">
+      <v-tooltip bottom v-show="userTableHovering">
         <v-btn flat icon @click="addUser" slot="activator">
           <v-icon dark>supervisor_account</v-icon>
         </v-btn>
         <span>Add New User</span>
       </v-tooltip>
-    </div>
+    </v-fade-transition>
+    <v-list-tile avatar @click="addUser" slot="action1MenuItem">
+      <v-list-tile-avatar>
+        <v-icon>supervisor_account</v-icon>
+      </v-list-tile-avatar>
+      <v-list-tile-content>
+        <v-list-tile-title>Add New User</v-list-tile-title>
+      </v-list-tile-content>
+    </v-list-tile>
   </data-table>
 
 </div>`,
@@ -85,11 +104,14 @@ const Admin = {
             editAdmin: false,
             editAdd: "Add",
             snackBarVisible: false,
-            snackBarMessage: ""
-
+            snackBarMessage: "",
+            userTableHovering: false
         }
     },
     methods: {
+        toggleUserTableButtons(doShow) {
+            this.userTableHovering = doShow;
+        },
         editUser(userId) {
             this.editAdd = "Edit";
             var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
@@ -97,16 +119,17 @@ const Admin = {
             this.$refs.editFirstName.inputValue = user.firstName;
             this.$refs.editLastName.inputValue = user.lastName;
             this.$refs.editUsername.inputValue = user.userName;
+            this.$refs.editEmail.inputValue = user.email;
             this.currentEditUserFullName = user.fullName;
             this.editView = user.viewValue.pass;
             this.editEdit = user.editValue.pass;
             this.editFinalize = user.finalizeValue.pass;
             this.editAdmin = user.adminValue.pass;
             this.editUserDialogVisible = true;
-            
+
         },
         blockUser(userId) {
-            console.log("blocking user " + userId );
+            console.log("blocking user " + userId);
             this.editView = false;
             this.editEdit = false;
             this.editFinalize = false;
@@ -116,6 +139,7 @@ const Admin = {
             this.$refs.editFirstName.inputValue = user.firstName;
             this.$refs.editLastName.inputValue = user.lastName;
             this.$refs.editUsername.inputValue = user.userName;
+            this.$refs.editEmail.inputValue = user.email;
             this.saveEdits();
         },
         saveEdits() {
@@ -129,6 +153,7 @@ const Admin = {
                     username: this.$refs.editUsername.inputValue,
                     first: this.$refs.editFirstName.inputValue,
                     last: this.$refs.editLastName.inputValue,
+                    email: this.$refs.editEmail.inputValue,
                     view: this.editView,
                     edit: this.editEdit,
                     finalize: this.editFinalize,
@@ -137,8 +162,8 @@ const Admin = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                       this.$refs.userTable.getAjaxData();
-                       this.snackBarVisible = true;
+                        this.$refs.userTable.getAjaxData();
+                        this.snackBarVisible = true;
                     }
                     else {
                         this.handleDialogs(response.data, this.saveEdits);
@@ -157,13 +182,14 @@ const Admin = {
             this.$refs.editFirstName.inputValue = "";
             this.$refs.editLastName.inputValue = "";
             this.$refs.editUsername.inputValue = "";
+            this.$refs.editEmail.inputValue = "";
             this.currentEditUserFullName = "";
             this.editView = false;
             this.editEdit = false;
             this.editFinalize = false;
             this.editAdmin = false;
             this.editUserDialogVisible = true;
-            
+
         },
         getDialogMaxHeight() {
             var height = window.innerHeight - 120;

@@ -1,5 +1,7 @@
 package utsw.bicf.answer.model.hybrid;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,8 +15,8 @@ public class CNVRow {
 	String oid; //variant id in MangoDB
 	String genes;
 	String chrom;
-	Integer start;
-	Integer end;
+	String start;
+	String end;
 	String aberrationType;
 	Integer copyNumber;
 	Float score;
@@ -26,8 +28,8 @@ public class CNVRow {
 		this.oid = cnv.getMangoDBId().getOid();
 		this.genes = formatHTMLGenes(cnv.getGenes().stream().sorted().collect(Collectors.toList()));
 		this.chrom = cnv.getChrom();
-		this.start = cnv.getStart();
-		this.end = cnv.getEnd();
+		this.start = NumberFormat.getInstance().format(cnv.getStart());
+		this.end = NumberFormat.getInstance().format(cnv.getEnd());
 		this.aberrationType = cnv.getAberrationType();
 		this.copyNumber = cnv.getCopyNumber();
 		this.score = cnv.getScore();
@@ -74,12 +76,12 @@ public class CNVRow {
 	}
 
 
-	public Integer getStart() {
+	public String getStart() {
 		return start;
 	}
 
 
-	public Integer getEnd() {
+	public String getEnd() {
 		return end;
 	}
 

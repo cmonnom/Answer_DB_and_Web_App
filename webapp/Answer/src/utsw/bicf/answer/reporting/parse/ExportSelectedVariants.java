@@ -175,7 +175,8 @@ public class ExportSelectedVariants {
 					List<String> items = createVariantItemsBeforeAnnotation(v); // duplicate lines for each comment
 					items.add(a.getClassification());
 					items.add(a.getTier());
-					items.add(a.getCategory() + ": " + a.getText());
+					String category = a.getCategory() != null ? a.getCategory() : "";
+					items.add(category + ": " + a.getText());
 					items.add(
 							a.getPmids() != null
 									? a.getPmids().stream().map(id -> "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id)
@@ -221,9 +222,9 @@ public class ExportSelectedVariants {
 		items.add(v.getEffects().stream().collect(Collectors.joining(";")));
 		items.add(v.getReferenceVariant().getReference());
 		items.add(v.getReferenceVariant().getAlt());
-		items.add(v.getTumorAltFrequency() != null ? v.getTumorAltFrequency() : "");
+		items.add(v.getTumorAltFrequency() != null ? v.getTumorAltFrequency().toString() : "");
 		items.add(v.getTumorTotalDepth() != null ? v.getTumorTotalDepth() + "" : "");
-		items.add(v.getNormalAltFrequency() != null ? v.getNormalAltFrequency() : "");
+		items.add(v.getNormalAltFrequency() != null ? v.getNormalAltFrequency().toString() : "");
 		items.add(v.getNormalTotalDepth() != null ? v.getNormalTotalDepth() + "" : "");
 		items.add(v.getRnaAltFrequency() != null ? v.getRnaAltFrequency() + "" : "");
 		items.add(v.getRnaTotalDepth() != null ? v.getRnaTotalDepth() + "" : "");
@@ -232,8 +233,8 @@ public class ExportSelectedVariants {
 
 	private List<String> createVariantItemsAfterAnnotation(Variant v) {
 		List<String> items = new ArrayList<String>();
-		items.add(""); // gnomAD
-		items.add(""); // ExAC
+		items.add(v.getGnomadPopmaxAlleleFrequency() != null ? v.getGnomadPopmaxAlleleFrequency() + "" : ""); // gnomAD
+		items.add(v.getExacAlleleFrequency() != null ? v.getExacAlleleFrequency() + "" : ""); // ExAC
 		items.add(""); // ClinVar
 		items.add(""); // OncoKB
 		items.add(""); // CIVIC

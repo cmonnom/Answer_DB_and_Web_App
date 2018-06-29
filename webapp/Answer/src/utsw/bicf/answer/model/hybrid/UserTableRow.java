@@ -15,6 +15,7 @@ public class UserTableRow {
 	String firstName;
 	String lastName;
 	String userName;
+	String email;
 	PassableValue viewValue;
 	PassableValue editValue;
 	PassableValue finalizeValue;
@@ -28,6 +29,7 @@ public class UserTableRow {
 		this.lastName = user.getLast();
 		this.fullName = user.getFirst() + " " + user.getLast();
 		this.userName = user.getUsername();
+		this.email = user.getEmail();
 		Permission p = user.getPermission();
 		
 		viewValue = new PassableValue("viewValue", "", p.getView());
@@ -79,6 +81,10 @@ public class UserTableRow {
 
 	public String getLastName() {
 		return lastName;
+	}
+
+	public String getEmail() {
+		return email;
 	}
 
 

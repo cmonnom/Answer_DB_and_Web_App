@@ -23,6 +23,9 @@ public class Variant {
 	public static final String FIELD_EFFECTS = "effects";
 	public static final String FIELD_ANNOTATIONS = "annotations"; //TODO
 	public static final String FIELD_FILTERS = "filters";
+	public static final String FIELD_EXAC_ALLELE_FREQUENCY = "exacAlleleFrequency";
+	public static final String FIELD_GNOMAD_ALLELE_FREQUENCY = "gnomadPopmaxAlleleFrequency";
+	public static final String FIELD_NUM_CASES_SEEN = "numCasesSeen";
 	
 	//Some values like filter pass/fail need to be translated into boolean
 	//keep the values expected in the JSON string here
@@ -37,13 +40,13 @@ public class Variant {
 	String geneName;
 	List<String> effects;
 	String notation;
-	String tumorAltFrequency;
+	Float tumorAltFrequency;
 	Integer tumorAltDepth;
 	Integer tumorTotalDepth;
-	String normalAltFrequency;
+	Float normalAltFrequency;
 	Integer normalAltDepth;
 	Integer normalTotalDepth;
-	String rnaAltFrequency;
+	Float rnaAltFrequency;
 	Integer rnaAltDepth;
 	Integer rnaTotalDepth;
 	Integer pos;
@@ -54,6 +57,12 @@ public class Variant {
 	String alt;
 	List<String> filters; //list of filers
 	Boolean selected;
+	Integer numCasesSeen;
+	Float exacAlleleFrequency;
+	String somaticStatus;
+	Float gnomadPopmaxAlleleFrequency;
+	Boolean repeat;
+	Boolean inconsistent;
 	
 	List<VCFAnnotation> vcfAnnotations;
 	AnnotationRow mdaAnnotation;
@@ -107,12 +116,12 @@ public class Variant {
 	}
 
 
-	public String getTumorAltFrequency() {
+	public Float getTumorAltFrequency() {
 		return tumorAltFrequency;
 	}
 
 
-	public void setTumorAltFrequency(String tumorAltFrequency) {
+	public void setTumorAltFrequency(Float tumorAltFrequency) {
 		this.tumorAltFrequency = tumorAltFrequency;
 	}
 
@@ -202,7 +211,7 @@ public class Variant {
 	}
 
 
-	public String getNormalAltFrequency() {
+	public Float getNormalAltFrequency() {
 		return normalAltFrequency;
 	}
 
@@ -217,7 +226,7 @@ public class Variant {
 	}
 
 
-	public String getRnaAltFrequency() {
+	public Float getRnaAltFrequency() {
 		return rnaAltFrequency;
 	}
 
@@ -274,6 +283,101 @@ public class Variant {
 
 	public Boolean getUtswAnnotated() {
 		return utswAnnotated;
+	}
+
+
+	public static String getFieldChrom() {
+		return FIELD_CHROM;
+	}
+
+
+	public static String getFieldGeneName() {
+		return FIELD_GENE_NAME;
+	}
+
+
+	public static String getFieldTumorAltFrequency() {
+		return FIELD_TUMOR_ALT_FREQUENCY;
+	}
+
+
+	public static String getFieldTumorTotalDepth() {
+		return FIELD_TUMOR_TOTAL_DEPTH;
+	}
+
+
+	public static String getFieldNormalAltFrequency() {
+		return FIELD_NORMAL_ALT_FREQUENCY;
+	}
+
+
+	public static String getFieldNormalTotalDepth() {
+		return FIELD_NORMAL_TOTAL_DEPTH;
+	}
+
+
+	public static String getFieldRnaAltFrequency() {
+		return FIELD_RNA_ALT_FREQUENCY;
+	}
+
+
+	public static String getFieldRnaTotalDepth() {
+		return FIELD_RNA_TOTAL_DEPTH;
+	}
+
+
+	public static String getFieldEffects() {
+		return FIELD_EFFECTS;
+	}
+
+
+	public static String getFieldAnnotations() {
+		return FIELD_ANNOTATIONS;
+	}
+
+
+	public static String getFieldFilters() {
+		return FIELD_FILTERS;
+	}
+
+
+	public static String getValuePass() {
+		return VALUE_PASS;
+	}
+
+
+	public static String getValueFail() {
+		return VALUE_FAIL;
+	}
+
+
+	public Integer getNumCasesSeen() {
+		return numCasesSeen;
+	}
+
+
+	public Float getExacAlleleFrequency() {
+		return exacAlleleFrequency;
+	}
+
+
+	public String getSomaticStatus() {
+		return somaticStatus;
+	}
+
+
+	public Float getGnomadPopmaxAlleleFrequency() {
+		return gnomadPopmaxAlleleFrequency;
+	}
+
+
+	public Boolean getRepeat() {
+		return repeat;
+	}
+
+
+	public Boolean getInconsistent() {
+		return inconsistent;
 	}
 
 

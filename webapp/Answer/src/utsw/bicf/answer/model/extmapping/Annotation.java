@@ -34,6 +34,7 @@ public class Annotation {
 	String tier;
 	List<String> nctids;
 	String type;
+	List<String> cnvGenes;
 	
 	public Annotation() {
 		
@@ -214,6 +215,14 @@ public class Annotation {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public List<String> getCnvGenes() {
+		return cnvGenes;
+	}
+
+	public void setCnvGenes(List<String> cnvGenes) {
+		this.cnvGenes = cnvGenes;
 	}
 
 

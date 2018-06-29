@@ -10,8 +10,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css">
-<link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.materialdesignicons.com/2.4.85/css/materialdesignicons.min.css">
+<link href="https://unpkg.com/vuetify@1.0.19/dist/vuetify.min.css" rel="stylesheet">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/main.css?timestamp=${timestamp}">
 
@@ -25,10 +25,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.14.1/vuedraggable.min.js"></script>
 <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
 
-<script src="https://unpkg.com/vuetify/dist/vuetify.min.js"></script>
+<script src="https://unpkg.com/vuetify@1.0.19/dist/vuetify.min.js"></script>
 
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<script src="https://unpkg.com/vue-upload-component"></script>
+<!-- <script src="https://unpkg.com/vue-upload-component"></script> -->
 
  <script
   src="https://code.jquery.com/jquery-3.2.1.min.js"

@@ -23,6 +23,8 @@ public class Translocation {
 	Boolean selected;
 	Boolean utswAnnotated;
 	
+	AbstractReference referenceTranslocation;
+	
 	public Translocation() {
 		
 	}
@@ -138,6 +140,15 @@ public class Translocation {
 	public void setUtswAnnotated(Boolean utswAnnotated) {
 		this.utswAnnotated = utswAnnotated;
 	}
+
+	public AbstractReference getReferenceTranslocation() {
+		return referenceTranslocation;
+	}
+
+	public void setReferenceTranslocation(AbstractReference referenceTranslocation) {
+		this.referenceTranslocation = referenceTranslocation;
+	}
+
 
 
 

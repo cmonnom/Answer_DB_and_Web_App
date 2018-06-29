@@ -1,1 +1,1 @@
-Vue.component('file-upload', VueUploadComponent);
+// Vue.component('file-upload', VueUploadComponent);

@@ -33,9 +33,11 @@ import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
+import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
+import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Variant;
 
 /**
@@ -152,6 +154,7 @@ public class RequestUtils {
 
 	/**
 	 * Get all information about a variant, including annotations
+	 * @param variantType 
 	 * 
 	 * @param caseId
 	 * @return
@@ -161,7 +164,8 @@ public class RequestUtils {
 	 */
 	public Variant getVariantDetails(String variantId) throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("variant/").append(variantId);
+		sbUrl.append("variant/"); 
+		sbUrl.append(variantId);
 		URI uri = new URI(sbUrl.toString());
 		requestGet = new HttpGet(uri);
 
@@ -171,14 +175,63 @@ public class RequestUtils {
 
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
+			
 			Variant variant = mapper.readValue(response.getEntity().getContent(), Variant.class);
 			return variant;
 		}
 		return null;
 	}
+	
+	/**
+	 * Get all information about a variant, including annotations
+	 * @param variantType 
+	 * 
+	 * @param caseId
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
+	public CNV getCNVDetails(String variantId) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("cnv/"); 
+		sbUrl.append(variantId);
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
 
-	public void saveVariantSelection(AjaxResponse ajaxResponse, String caseId, String selectedSNPVariantIds, 
-			String selectedCNVIds, String selectedTranslocationIds)
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			CNV cnv = mapper.readValue(response.getEntity().getContent(), CNV.class);
+			return cnv;
+		}
+		return null;
+	}
+	
+	public Translocation getTranslocationDetails(String variantId) throws URISyntaxException, ClientProtocolException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("translocation/"); 
+		sbUrl.append(variantId);
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			Translocation translocation = mapper.readValue(response.getEntity().getContent(), Translocation.class);
+			return translocation;
+		}
+		return null;
+	}
+
+	public void saveVariantSelection(AjaxResponse ajaxResponse, String caseId, List<String> selectedSNPVariantIds, 
+			List<String> selectedCNVIds, List<String> selectedTranslocationIds)
 			throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/selectvariants");
@@ -290,9 +343,12 @@ public class RequestUtils {
 		}
 		else {
 			ajaxResponse.setSuccess(true);
+			ajaxResponse.setIsAllowed(true);
 		}
 
 		
 	}
+
+
 
 }

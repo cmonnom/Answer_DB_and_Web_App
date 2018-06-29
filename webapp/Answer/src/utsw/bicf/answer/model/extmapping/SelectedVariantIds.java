@@ -12,35 +12,35 @@ public class SelectedVariantIds {
 	
 
 	//Name of the organization this annotation is from (eg. UTSW)
-	String selectedSNPVariantIds;
-	String selectedCNVIds;
-	String selectedTranslocationIds;
+	List<String> selectedSNPVariantIds;
+	List<String> selectedCNVIds;
+	List<String> selectedTranslocationIds;
 	
 	public SelectedVariantIds() {
 		
 	}
 
-	public String getSelectedSNPVariantIds() {
+	public List<String> getSelectedSNPVariantIds() {
 		return selectedSNPVariantIds;
 	}
 
-	public void setSelectedSNPVariantIds(String selectedSNPVariantIds) {
+	public void setSelectedSNPVariantIds(List<String> selectedSNPVariantIds) {
 		this.selectedSNPVariantIds = selectedSNPVariantIds;
 	}
 
-	public String getSelectedCNVIds() {
+	public List<String> getSelectedCNVIds() {
 		return selectedCNVIds;
 	}
 
-	public void setSelectedCNVIds(String selectedCNVIds) {
+	public void setSelectedCNVIds(List<String> selectedCNVIds) {
 		this.selectedCNVIds = selectedCNVIds;
 	}
 
-	public String getSelectedTranslocationIds() {
+	public List<String> getSelectedTranslocationIds() {
 		return selectedTranslocationIds;
 	}
 
-	public void setSelectedTranslocationIds(String selectedTranslocationIds) {
+	public void setSelectedTranslocationIds(List<String> selectedTranslocationIds) {
 		this.selectedTranslocationIds = selectedTranslocationIds;
 	}
 	

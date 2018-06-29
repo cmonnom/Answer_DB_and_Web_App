@@ -1,5 +1,6 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.text.NumberFormat;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -16,12 +17,16 @@ public class CNV {
 	String chrom;
 	Integer start;
 	Integer end;
+	String startFormatted;
+	String endFormatted;
 	String aberrationType;
 	Integer copyNumber;
 	Float score;
 	String caseId;
 	Boolean utswAnnotated;
 	Boolean selected;
+	
+	AbstractReference referenceCnv;
 	
 	public CNV() {
 		
@@ -146,6 +151,43 @@ public class CNV {
 	public void setSelected(Boolean selected) {
 		this.selected = selected;
 	}
+
+
+	public String getStartFormatted() {
+		if (startFormatted == null) {
+			startFormatted = NumberFormat.getInstance().format(start);
+		}
+		return startFormatted;
+	}
+
+
+	public void setStartFormatted(String startFormatted) {
+		this.startFormatted = startFormatted;
+	}
+
+
+	public String getEndFormatted() {
+		if (endFormatted == null) {
+			endFormatted = NumberFormat.getInstance().format(end);
+		}
+		return endFormatted;
+	}
+
+
+	public void setEndFormatted(String endFormatted) {
+		this.endFormatted = endFormatted;
+	}
+
+
+	public AbstractReference getReferenceCnv() {
+		return referenceCnv;
+	}
+
+
+	public void AbstractReference(AbstractReference referenceCnv) {
+		this.referenceCnv = referenceCnv;
+	}
+
 
 
 

@@ -221,3 +221,12 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
     position: fixed;
     padding: 0px;
 }
+
+.margin-auto {
+    margin: auto;
+}
+
+/* When using a menu as a list item (submenu) */
+.list-menu:hover {
+    background: rgba(0,0,0,.12);
+}

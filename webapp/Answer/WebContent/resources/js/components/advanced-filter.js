@@ -279,7 +279,7 @@ Vue.component('advanced-filter', {
                           <v-layout>
                               <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                               <v-flex xs7>
-                                  <v-select class="no-height" v-bind:items="filter.selectItems" v-model="filter.value" item-text="name" item-value="value"
+                                  <v-select hide-details v-bind:items="filter.selectItems" v-model="filter.value" item-text="name" item-value="value"
                                       :label="filter.headerText" @input="updateFilterNeedsReload(true)" auto autocomplete clearable></v-select>
                               </v-flex>
                           </v-layout>
@@ -288,10 +288,28 @@ Vue.component('advanced-filter', {
                       <v-flex xs12 v-if="filter.isBoolean">
                           <v-layout row class="pt-3">
                               <v-flex xs6>
-                                  <v-switch class="no-height" color="primary" :label="filter.headerTextTrue" v-model="filter.valueTrue" @change="updateFilterNeedsReload(true)"></v-switch>
+                                  <v-switch hide-details color="primary" :label="filter.headerTextTrue" v-model="filter.valueTrue" @change="updateFilterNeedsReload(true)"></v-switch>
                               </v-flex>
-                              <v-flex xs6>
-                                  <v-switch class="no-height" color="primary" :label="filter.headerTextFalse" v-model="filter.valueFalse" @change="updateFilterNeedsReload(true)"></v-switch>
+                              <v-flex xs5>
+                                  <v-switch hide-details color="primary" :label="filter.headerTextFalse" v-model="filter.valueFalse" @change="updateFilterNeedsReload(true)"></v-switch>
+                              </v-flex>
+                              <v-flex>
+                                  <v-tooltip right>
+                                      <v-icon color="primary" slot="activator">help</v-icon>
+                                      <div>
+                                          <span v-show="isBooleanFilterAllOrNone(filter)">
+                                              Current Filtering Criteria: <br/>
+                                              Include both <b>{{ filter.headerTextTrue }}</b> and <b> {{ filter.headerTextFalse }}</b>
+                                          </span>
+                                          <span v-show="!isBooleanFilterAllOrNone(filter)">
+                                            Current Filtering Criteria: <br/>
+                                            Include only <span v-show="filter.valueTrue"><b>{{ filter.headerTextTrue }} </b> </span>
+                                            <span v-show="filter.valueFalse"><b> {{ filter.headerTextFalse }} </b> </span>
+                                            (<span v-show="!filter.valueFalse"><b>{{ filter.headerTextFalse }}</b> </span>
+                                            <span v-show="!filter.valueTrue"><b>{{ filter.headerTextTrue }}</b> </span> would be filtered out)
+                                        </span>
+                                      </div>
+                                  </v-tooltip>
                               </v-flex>
                           </v-layout>
                       </v-flex>
@@ -302,7 +320,7 @@ Vue.component('advanced-filter', {
                               <v-layout row wrap>
                                   <v-flex xs12 lg6 v-for="(checkBox, index) in filter.checkBoxes" :key="index">
                                       <v-tooltip bottom>
-                                          <v-checkbox color="primary" slot="activator" class="no-height" :label="checkBox.name" v-model="checkBox.value" @change="updateFilterNeedsReload(true)"></v-checkbox>
+                                          <v-checkbox color="primary" slot="activator" hide-details :label="checkBox.name" v-model="checkBox.value" @change="updateFilterNeedsReload(true)"></v-checkbox>
                                           <span>{{ checkBox.name }}</span>
                                       </v-tooltip>
                                   </v-flex>
@@ -314,7 +332,7 @@ Vue.component('advanced-filter', {
                           <v-layout>
                               <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                               <v-flex xs7>
-                                  <v-text-field autocomplete="off" :ref="'filter' + filter.fieldName" class="no-height" :name="filter.fieldName" :label="filter.headerText" v-model="filter.value" @input="updateFilterNeedsReload(true)"></v-text-field>
+                                  <v-text-field autocomplete="off" :ref="'filter' + filter.fieldName" hide-details :name="filter.fieldName" :label="filter.headerText" v-model="filter.value" @input="updateFilterNeedsReload(true)"></v-text-field>
                               </v-flex>
                           </v-layout>
                       </v-flex>
@@ -323,11 +341,11 @@ Vue.component('advanced-filter', {
                           <v-layout row>
                               <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                               <v-flex xs4>
-                                  <v-text-field class="no-height" :name="filter.fieldName + '-min'" label="Min" v-model="filter.minValue" :rules="numberRules"
+                                  <v-text-field hide-details :name="filter.fieldName + '-min'" label="Min" v-model="filter.minValue" :rules="numberRules"
                                       @input="updateFilterNeedsReload(true)"></v-text-field>
                               </v-flex>
                               <v-flex xs4>
-                                  <v-text-field class="no-height" :name="filter.fieldName + '-max'" label="Max" v-model="filter.maxValue" :rules="numberRules"
+                                  <v-text-field hide-details :name="filter.fieldName + '-max'" label="Max" v-model="filter.maxValue" :rules="numberRules"
                                       @input="updateFilterNeedsReload(true)"></v-text-field>
                               </v-flex>
                           </v-layout>
@@ -339,7 +357,7 @@ Vue.component('advanced-filter', {
                               <v-flex xs4>
                                   <v-menu lazy :v-model="false" transition="scale-transition" offset-y full-width :nudge-right="40" max-width="290px" min-width="290px"
                                       :close-on-content-click="true">
-                                      <v-text-field class="no-height" slot="activator" label="From" v-model="filter.minValue" prepend-icon="event" readonly @input="updateFilterNeedsReload(true)"></v-text-field>
+                                      <v-text-field hide-details slot="activator" label="From" v-model="filter.minValue" prepend-icon="event" readonly @input="updateFilterNeedsReload(true)"></v-text-field>
                                       <v-date-picker v-model="filter.minValue" no-title scrollable>
                                           <v-spacer></v-spacer>
                                       </v-date-picker>
@@ -348,7 +366,7 @@ Vue.component('advanced-filter', {
                               <v-flex xs4>
                                   <v-menu lazy :v-model="false" transition="scale-transition" offset-y full-width :nudge-right="40" max-width="290px" min-width="290px"
                                       :close-on-content-click="true">
-                                      <v-text-field class="no-height" slot="activator" label="To" v-model="filter.maxValue" prepend-icon="event" readonly @input="updateFilterNeedsReload(true)"></v-text-field>
+                                      <v-text-field hide-details slot="activator" label="To" v-model="filter.maxValue" prepend-icon="event" readonly @input="updateFilterNeedsReload(true)"></v-text-field>
                                       <v-date-picker v-model="filter.maxValue" no-title scrollable>
                                           <v-spacer></v-spacer>
                                       </v-date-picker>
@@ -546,6 +564,20 @@ Vue.component('advanced-filter', {
                 this.currentFilterSet = "";
             }
             this.$emit("delete-filter", filterSetId);
+        },
+        // used in the filter tooltip to inform user of the implication
+        //of the selected criteria
+        isBooleanFilterAllOrNone(filter) {
+            if (filter.valueTrue == null && filter.valueFalse == null) {
+                return true;
+            }
+            if (filter.valueTrue == null && filter.valueFalse == false) {
+                return true;
+            }
+            if (filter.valueFalse == null && filter.valueTrue == false) {
+                return true;
+            }
+            return filter.valueTrue == filter.valueFalse;
         },
         // find the filterset loaded by the user and populates all the relevant form fields
         loadSelectedFilterSet(filterSet) {

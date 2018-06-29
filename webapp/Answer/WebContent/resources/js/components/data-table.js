@@ -23,7 +23,7 @@ Vue.component('data-table', {
         "show-left-menu": { default: true, type: Boolean }
 
     },
-    template: `<div>
+    template: `<div @mouseover="toggleShowButtons(true)" @mouseleave="toggleShowButtons(false)">
 
   <!-- Top tool bar with menu options -->
   <v-toolbar dark color="primary" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
@@ -96,62 +96,73 @@ Vue.component('data-table', {
       <span v-if="showRowCount" v-html="getRowCount()"></span>
     </v-toolbar-title>
     <v-spacer></v-spacer>
-    <v-layout justify-end>
-      <v-flex class="text-xs-right">
-        <v-container>
-          <slot name="title"></slot>
-        </v-container>
-      </v-flex>
-      <v-flex xs7 class="text-xs-right" v-show="showPagination">
-        <div class="title white--text pr-1 pt-4 mt-1">Rows:</div>
-      </v-flex>
-      <v-flex xs3 v-show="showPagination">
-        <v-container>
-          <v-text-field solo single-line hide-details light v-model="pagination.rowsPerPage"></v-text-field>
-        </v-container>
-      </v-flex>
-    </v-layout>
+    <v-fade-transition>
+      <v-layout justify-end v-show="showButtons">
+        <v-flex class="text-xs-right">
+          <v-container>
+            <slot name="title"></slot>
+          </v-container>
+        </v-flex>
+        <v-flex xs7 class="text-xs-right" v-show="showPagination">
+          <div class="title white--text pr-1 pt-4 mt-1">Rows:</div>
+        </v-flex>
+        <v-flex xs3 v-show="showPagination">
+          <v-container>
+            <v-text-field solo single-line hide-details light v-model="pagination.rowsPerPage"></v-text-field>
+          </v-container>
+        </v-flex>
+      </v-layout>
+    </v-fade-transition>
 
-    <slot name="action1"></slot>
-    <slot name="action2"></slot>
-    <slot name="action3"></slot>
+      <slot name="action1"></slot>
+      <slot name="action2"></slot>
+      <slot name="action3"></slot>
 
-    <v-tooltip bottom>
-      <v-btn flat icon @click="toggleSearchBar" slot="activator" :color="showSearchBar ? 'amber accent-2' : 'white'">
-        <v-icon>search</v-icon>
-      </v-btn>
-      <span>Quick Filter</span>
-    </v-tooltip>
+    <v-fade-transition>
+      <v-tooltip bottom v-show="showButtons">
+        <v-btn flat icon @click="toggleSearchBar" slot="activator" :color="showSearchBar ? 'amber accent-2' : 'white'">
+          <v-icon>search</v-icon>
+        </v-btn>
+        <span>Quick Filter</span>
+      </v-tooltip>
+    </v-fade-transition>
 
-    <v-tooltip bottom v-if="advanceFiltering">
-      <v-btn flat icon @click="toggleFilters" slot="activator" :color="showDrawer ? 'amber accent-2' : 'white'">
-        <v-icon>filter_list</v-icon>
-      </v-btn>
-      <span>Filter Menu</span>
-    </v-tooltip>
+    <v-fade-transition>
+      <v-tooltip bottom v-if="advanceFiltering" v-show="showButtons">
+        <v-btn flat icon @click="toggleFilters" slot="activator" :color="showDrawer ? 'amber accent-2' : 'white'">
+          <v-icon>filter_list</v-icon>
+        </v-btn>
+        <span>Filter Menu</span>
+      </v-tooltip>
+    </v-fade-transition>
 
-    <v-tooltip bottom v-if="exportEnabled">
-      <v-btn flat icon @click="exportToCSV" slot="activator">
-        <v-icon>file_download</v-icon>
-      </v-btn>
-      <span>Export to CSV
-        <br/>(works with Filter Menu)</span>
-    </v-tooltip>
+    <v-fade-transition>
+      <v-tooltip bottom v-if="exportEnabled" v-show="showButtons">
+        <v-btn flat icon @click="exportToCSV" slot="activator">
+          <v-icon>file_download</v-icon>
+        </v-btn>
+        <span>Export to CSV
+          <br/>(works with Filter Menu)</span>
+      </v-tooltip>
+    </v-fade-transition>
 
-    <v-tooltip bottom>
-      <v-btn flat icon @click="showDraggableHeader=!showDraggableHeader" slot="activator" :color="showDraggableHeader ? 'amber accent-2' : 'white'">
-        <v-icon>swap_horiz</v-icon>
-      </v-btn>
-      <span>Move Columns</span>
-    </v-tooltip>
+    <v-fade-transition>
+      <v-tooltip bottom v-show="showButtons">
+        <v-btn flat icon @click="showDraggableHeader=!showDraggableHeader" slot="activator" :color="showDraggableHeader ? 'amber accent-2' : 'white'">
+          <v-icon>swap_horiz</v-icon>
+        </v-btn>
+        <span>Move Columns</span>
+      </v-tooltip>
+    </v-fade-transition>
 
-    <v-tooltip bottom>
-      <v-btn flat icon @click="handleRefresh()" slot="activator">
-        <v-icon>refresh</v-icon>
-      </v-btn>
-      <span>Refresh</span>
-    </v-tooltip>
-
+    <v-fade-transition>
+      <v-tooltip bottom v-show="showButtons">
+        <v-btn flat icon @click="handleRefresh()" slot="activator">
+          <v-icon>refresh</v-icon>
+        </v-btn>
+        <span>Refresh</span>
+      </v-tooltip>
+    </v-fade-transition>
   </v-toolbar>
 
   <!-- Search Bar -->
@@ -347,7 +358,11 @@ Vue.component('data-table', {
 
           <span v-if="props.item[header.value]">
             <v-tooltip bottom v-for="(icon, index) in props.item[header.value].iconFlags" :key="index" v-if="header.isFlag">
-              <v-icon slot="activator" :color="icon.color">
+                <v-chip v-if="icon.chip" slot="activator" :color="icon.color"
+                text-color="white" label small disabled>
+                {{ icon.iconName }}
+                </v-chip>
+                <v-icon v-if="!icon.chip" slot="activator" :color="icon.color">
                 {{ icon.iconName }}
               </v-icon>
               <span> {{ icon.tooltip }}</span>
@@ -448,10 +463,15 @@ Vue.component('data-table', {
             highlight: null, //use this to change the style of a row should have the value of item.[uniqueIdField]
             doExport: false, //if true, the table will be exported as a CSV
             csvContent: "",
-            headerOptionsVisible: false //work in progress
+            headerOptionsVisible: false, //work in progress
+            showButtons: false
         }
     },
     methods: {
+        toggleShowButtons(doShow) {
+            this.showButtons = doShow;
+            this.$emit("showing-buttons", doShow);
+        },
         toggleAll() {
             if (this.selected.length) this.selected = []
             else this.selected = this.items.slice()

@@ -48,8 +48,10 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
+import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
@@ -87,7 +89,9 @@ public class OpenCaseController {
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadCaseAnnotation",
 				new PermissionUtils(true, true, false));
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCNVDetails",
-				new PermissionUtils(true, true, false));
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getTranslocationDetails",
+				new PermissionUtils(true, false, false));
 
 	}
 
@@ -130,6 +134,13 @@ public class OpenCaseController {
 					break; // found that the case exists
 				}
 			}
+		}
+		if (detailedCase == null) { //the case does not exist
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+			response.setMessage(caseId + " does not exist.");
+			return response.createObjectJSON();
 		}
 		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
 		List<ReportGroupForDisplay> reportGroupsForDisplay = reportGroups.stream().map(r -> new ReportGroupForDisplay(r)).collect(Collectors.toList());
@@ -227,6 +238,16 @@ public class OpenCaseController {
 		DataTableFilter geneFilter = new DataTableFilter("Gene Name(s)", Variant.FIELD_GENE_NAME);
 		geneFilter.setString(true);
 		filters.add(geneFilter);
+		
+		DataTableFilter somaticFilter = new DataTableFilter("Somatic Status", "somaticStatus");
+		somaticFilter.setSelect(true);
+		List<SearchItem> somaticSelectItems = new ArrayList<SearchItem>();
+		somaticSelectItems.add(new SearchItemString("Somatic", "Somatic"));
+		somaticSelectItems.add(new SearchItemString("Germline", "Germline"));
+		somaticSelectItems.add(new SearchItemString("LOH", "LOH"));
+		somaticSelectItems.add(new SearchItemString("Unknown", "Unknown"));
+		filters.add(somaticFilter);
+		somaticFilter.setSelectItems(somaticSelectItems);
 
 		DataTableFilter passQCFilter = new DataTableFilter("Pass QC", "Fail QC", Variant.FIELD_FILTERS);
 		passQCFilter.setBoolean(true);
@@ -235,7 +256,7 @@ public class OpenCaseController {
 		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Unknown", Variant.FIELD_ANNOTATIONS);
 		annotatedFilter.setBoolean(true);
 		filters.add(annotatedFilter);
-
+		
 		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", Variant.FIELD_TUMOR_ALT_FREQUENCY);
 		tafFilter.setNumber(true);
 		filters.add(tafFilter);
@@ -277,6 +298,18 @@ public class OpenCaseController {
 		rnaTotalDepthFilter.setNumber(true);
 		filters.add(rnaTotalDepthFilter);
 
+		DataTableFilter exacFilter = new DataTableFilter("ExAC Allele %", Variant.FIELD_EXAC_ALLELE_FREQUENCY);
+		exacFilter.setNumber(true);
+		filters.add(exacFilter);
+		
+		DataTableFilter gnomadFilter = new DataTableFilter("gnomAD Pop. Max. Allele %", Variant.FIELD_GNOMAD_ALLELE_FREQUENCY);
+		gnomadFilter.setNumber(true);
+		filters.add(gnomadFilter);
+		
+		DataTableFilter numCasesSeenFilter = new DataTableFilter("Nb. Cases Seen", Variant.FIELD_NUM_CASES_SEEN);
+		numCasesSeenFilter.setNumber(true);
+		filters.add(numCasesSeenFilter);
+		
 		DataTableFilter effectFilter = new DataTableFilter("Effects", Variant.FIELD_EFFECTS);
 		effectFilter.setCheckBox(true);
 		filters.add(effectFilter);
@@ -324,28 +357,32 @@ public class OpenCaseController {
 		return null;
 
 	}
-
+	
 	@RequestMapping(value = "/getCNVDetails")
 	@ResponseBody
 	public String getCNVDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		Variant variantDetails = utils.getVariantDetails(variantId);
-		VariantDetailsSummary summary = null;
+		CNV variantDetails = utils.getCNVDetails(variantId);
 		if (variantDetails != null) {
-			// populate user info to be used by the UI
-			if (variantDetails.getReferenceVariant() != null
-					&& variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
-				for (Annotation a : variantDetails.getReferenceVariant().getUtswAnnotations()) {
-					User annotationUser = modelDAO.getUserByUserId(a.getUserId());
-					if (annotationUser != null) {
-						a.setFullName(annotationUser.getFullName());
-					}
-				}
-			}
-			summary = new VariantDetailsSummary(variantDetails, null, null);
-			return summary.createVuetifyObjectJSON();
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.writeValueAsString(variantDetails);
+		}
+		return null;
+
+	}
+	
+	@RequestMapping(value = "/getTranslocationDetails")
+	@ResponseBody
+	public String getTranslocationDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		Translocation variantDetails = utils.getTranslocationDetails(variantId);
+		if (variantDetails != null) {
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.writeValueAsString(variantDetails);
 		}
 		return null;
 
@@ -353,12 +390,16 @@ public class OpenCaseController {
 
 	@RequestMapping(value = "/saveVariantSelection")
 	@ResponseBody
-	public String saveVariantSelection(Model model, HttpSession session, @RequestBody String selectedSNPVariantIds,
-			@RequestBody String selectedCNVIds, @RequestBody String selectedTranslocationIds,
+	public String saveVariantSelection(Model model, HttpSession session, @RequestBody String data,
 			@RequestParam String caseId) throws Exception {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
+		ObjectMapper mapper = new ObjectMapper();
+		DataFilterList dataPOJO = mapper.readValue(data, DataFilterList.class);
+		List<String> selectedSNPVariantIds = dataPOJO.getSelectedSNPVariantIds();
+		List<String> selectedCNVIds = dataPOJO.getSelectedCNVIds();
+		List<String> selectedTranslocationIds = dataPOJO.getSelectedTranslocationIds();
 		utils.saveVariantSelection(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds);
 		return response.createObjectJSON();
 
@@ -491,13 +532,13 @@ public class OpenCaseController {
 
 	@RequestMapping(value = "/exportSelection")
 	@ResponseBody
-	public ResponseEntity<byte[]> exportSelection(Model model, HttpSession session, @RequestParam String caseId,
+	public ResponseEntity<?> exportSelection(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String data) throws Exception {
 		// AjaxResponse response = new AjaxResponse();
 		// response.setIsAllowed(false);
 		// response.setSuccess(false);
 		ObjectMapper mapper = new ObjectMapper();
-		List<String> selectedVariantIds = mapper.readValue(data, DataFilterList.class).getSelectedVariantIds();
+		List<String> selectedVariantIds = mapper.readValue(data, DataFilterList.class).getSelectedSNPVariantIds();
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase detailedCase = utils.getCaseDetails(caseId, data);
 		List<Variant> selectedVariants = detailedCase.getVariants().stream()

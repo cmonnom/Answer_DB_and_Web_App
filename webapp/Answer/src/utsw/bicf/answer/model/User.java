@@ -36,6 +36,9 @@ public class User {
 	@Column(name="username")
 	String username;
 	
+	@Column(name="email")
+	String email;
+	
 	@JsonIgnore
 	@ManyToOne(cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
 	@JoinColumn(name="permission_id")
@@ -83,6 +86,14 @@ public class User {
 	
 	public String getFullName() {
 		return this.first + " " + this.last;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 	
 }

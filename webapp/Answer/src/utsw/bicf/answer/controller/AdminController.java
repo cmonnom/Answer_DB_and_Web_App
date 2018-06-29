@@ -55,7 +55,8 @@ public class AdminController {
 	@ResponseBody
 	public String saveUser(Model model, HttpSession session,
 			@RequestParam(defaultValue = "") Integer userId, @RequestParam String username,
-			@RequestParam String first, @RequestParam String last, @RequestParam Boolean view,
+			@RequestParam String first, @RequestParam String last, @RequestParam String email,
+			@RequestParam Boolean view,
 			@RequestParam Boolean edit, @RequestParam Boolean finalize, @RequestParam Boolean admin)
 			throws Exception {
 		User user = null;
@@ -75,6 +76,7 @@ public class AdminController {
 		user.setFirst(first);
 		user.setLast(last);
 		user.setUsername(username);
+		user.setEmail(email);
 		
 		Permission permission = modelDAO.getPermission(view, edit, finalize, admin);
 		if (permission != null) {

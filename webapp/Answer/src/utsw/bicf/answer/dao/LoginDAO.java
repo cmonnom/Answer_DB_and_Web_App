@@ -37,4 +37,17 @@ public class LoginDAO {
 		}
 		return user;
 	}
+
+	@Transactional
+	public User getUserByUsernameOrEmail(String usernameOrEmail) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from User where username = :usernameOrEmail or email = :usernameOrEmail";
+		Query<User> query = session.createQuery(hql.toString(), User.class).setParameter("usernameOrEmail", usernameOrEmail);
+		User user = null;
+		List<User> results = query.list();
+		if (results != null && !results.isEmpty()) {
+			user = results.get(0);
+		}
+		return user;
+	}
 }

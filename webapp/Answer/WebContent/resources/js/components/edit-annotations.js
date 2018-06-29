@@ -1,20 +1,68 @@
 Vue.component('edit-annotations', {
     props: {
         title: { default: "", type: String },
-        type: { default: "snp", type: String}
+        type: { default: "snp", type: String }
     },
     template: `<div>
     <!-- annotation dialog -->
     <v-dialog v-model="annotationDialogVisible" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
         <v-card ref="annotationDialog" class="soft-grey-background">
             <v-toolbar dark color="primary" class="mb-2">
+                <v-tooltip class="ml-0" bottom>
+                    <v-menu offset-y offset-x slot="activator" class="ml-0">
+                        <v-btn slot="activator" flat icon dark>
+                            <v-icon>more_vert</v-icon>
+                        </v-btn>
+                        <v-list>
+                            <v-list-tile avatar @click="addCustomAnnotation()">
+                                <v-list-tile-avatar>
+                                    <v-icon>playlist_add</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Create a New Annotation</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+
+                            <v-list-tile avatar @click="saveAnnotations()" :disabled="saveIsDisabled()">
+                                <v-list-tile-avatar>
+                                    <v-icon>save</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Save/Update Annotations</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+
+                            <v-list-tile avatar @click="cancelAnnotations()">
+                                <v-list-tile-avatar>
+                                    <v-icon>cancel</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Discard Changes</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                        </v-list>
+                    </v-menu>
+                    <span>Annotation Menu</span>
+                </v-tooltip>
                 <v-toolbar-title>Your Annotations for variant: {{ title }}</v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                    <v-btn icon @click="annotationDialogVisible = false" slot="activator">
+                <v-tooltip bottom >
+                    <v-btn icon slot="activator" @click="addCustomAnnotation()">
+                        <v-icon>playlist_add</v-icon>
+                    </v-btn>
+                    <span>Create a new annotation</span>
+                </v-tooltip>
+                <v-tooltip bottom >
+                    <v-btn icon slot="activator" @click="saveAnnotations()" :disabled="saveIsDisabled()">
+                        <v-icon>save</v-icon>
+                    </v-btn>
+                    <span>Save/Update Annotations</span>
+                </v-tooltip>
+                <v-tooltip bottom >
+                    <v-btn icon @click="cancelAnnotations()" slot="activator">
                         <v-icon>close</v-icon>
                     </v-btn>
-                    <span>Close Annotations</span>
+                    <span>Close and Discard Changes</span>
                 </v-tooltip>
             </v-toolbar>
             <v-card-text :style="getDialogMaxHeight(130)">
@@ -57,6 +105,7 @@ Vue.component('edit-annotations', {
                                             <v-layout row wrap>
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
+                                                        <!-- SNP -->
                                                         <v-card-text class="card__text_default" v-if="isSNP()">
                                                             <div class="subheading pb-2">
                                                                 The
@@ -64,10 +113,10 @@ Vue.component('edit-annotations', {
                                                                 cases/genes/variants:
                                                             </div>
                                                             <v-tooltip bottom>
-                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific" v-model="annotation.isCaseSpecific"
-                                                                    @change="selectCategory(annotation)"></v-switch>
-                                                                <span>Select if this annotation only applies to this case<br/>(need
-                                                                    to select Gene or Variant Specific first)</span>
+                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
+                                                                    v-model="annotation.isCaseSpecific" @change="selectCategory(annotation)"></v-switch>
+                                                                <span>Select if this annotation only applies to this case
+                                                                    <br/>(need to select Gene or Variant Specific first)</span>
                                                             </v-tooltip>
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Gene Specific" v-model="annotation.isGeneSpecific"
@@ -81,10 +130,25 @@ Vue.component('edit-annotations', {
                                                             </v-tooltip>
                                                             <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
                                                         </v-card-text>
+                                                        <!-- CNV and Translocation -->
+                                                        <v-card-text class="card__text_default" v-if="isCNV() || isTranslocation()">
+                                                            <div class="subheading pb-2">
+                                                                The
+                                                                <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
+                                                                cases:
+                                                            </div>
+                                                            <v-tooltip bottom>
+                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
+                                                                    v-model="annotation.isCaseSpecific" @change="selectCategory(annotation)"></v-switch>
+                                                                <span>Select if this annotation only applies to this case only</span>
+                                                            </v-tooltip>
+                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                        </v-card-text>
                                                     </v-card>
                                                 </v-flex>
-                                                <v-flex xs12 sm6 md4>
+                                                <v-flex xs12 sm6 md4 v-if="!isTranslocation()">
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
+                                                        <!-- SNP -->
                                                         <v-card-text v-if="isSNP()" class="card__text_default subheading">
                                                             <v-layout row wrap>
                                                                 <v-flex xs5 class="mt-1">
@@ -100,7 +164,7 @@ Vue.component('edit-annotations', {
                                                                     Classification:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.cClassification" :disabled="annotation.markedForDeletion" :items="annotationClassifications"
+                                                                    <v-select clearable :value="annotation.classification" :disabled="annotation.markedForDeletion" :items="annotationClassifications"
                                                                         v-model="annotation.classification" label="Select a Classification"
                                                                         single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
@@ -115,12 +179,36 @@ Vue.component('edit-annotations', {
                                                                 </v-flex>
                                                             </v-layout>
                                                         </v-card-text>
+                                                        <!-- CNV -->
+                                                        <v-card-text v-if="isCNV()" class="card__text_default subheading">
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5 class="mt-1">
+                                                                    Annotation Category:
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <v-select clearable :value="annotation.category" :disabled="annotation.markedForDeletion" :items="annotationCategoriesCNV"
+                                                                        v-model="annotation.category" label="Select a Category"
+                                                                        single-line class="no-height no-height-select"></v-select>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                            <v-layout row wrap v-show="isCNV() && annotation.category == 'Focal'">
+                                                                <v-flex xs5 class="mt-1">
+                                                                    Genes:
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <v-select clearable :value="annotation.cnvGenes" :disabled="annotation.markedForDeletion" :items="cnvGeneItems" v-model="annotation.cnvGenes"
+                                                                        label="Select Gene(s)" chips deletable-chips multiple
+                                                                        single-line class="no-height no-height-select"></v-select>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                        </v-card-text>
                                                     </v-card>
                                                 </v-flex>
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                        <v-card-text v-if="isSNP()" class="card__text_default subheading">
-                                                            <div v-show="noLevelSelected(annotation)" class="warning--text">You need to select an annotation's scope (Gene or Variant Specific or both).</div>
+                                                        <v-card-text class="card__text_default subheading">
+                                                            <div v-show="noLevelSelected(annotation)" class="warning--text">You need to select an annotation's scope (Gene or Variant Specific
+                                                                or both).</div>
                                                             <div v-if="annotation.createdDate">
                                                                 <b>Created on: </b>
                                                                 <span v-text="parseDate(annotation.createdDate)"></span>
@@ -140,7 +228,7 @@ Vue.component('edit-annotations', {
                                                         :disabled="annotation.markedForDeletion" label="Write your comments here">
                                                     </v-text-field>
                                                 </v-flex>
-                                                <v-flex xs12 v-if="isSNP()"> 
+                                                <v-flex xs12 v-if="isSNP()">
                                                     <v-layout>
                                                         <v-flex class="mt-4 subheading">PubMed Ids:</v-flex>
                                                         <v-flex xs4>
@@ -170,7 +258,7 @@ Vue.component('edit-annotations', {
                     <span>Create a new annotation</span>
                 </v-tooltip>
                 <v-tooltip top>
-                    <v-btn slot="activator" color="success" @click="saveAnnotations()" :disabled="saveIsDisabled()">Save/Update
+                    <v-btn slot="activator" color="success" @click="saveAnnotations()" :disabled="saveIsDisabled()">Save / Update
                         <v-icon right dark>save</v-icon>
                     </v-btn>
                     <span>Save/Update Annotations</span>
@@ -200,6 +288,9 @@ Vue.component('edit-annotations', {
                 'Gene Function',
                 'Variant Function',
                 'Therapy'],
+            annotationCategoriesCNV: [
+                'Chromosomal',
+                'Focal'],
             annotationClassifications: [
                 'VUS',
                 'Benign',
@@ -208,11 +299,13 @@ Vue.component('edit-annotations', {
                 'Pathogenic'],
             annotationTiers: [
                 '1A',
+                '1B',
                 '2A',
                 '2B',
                 '3',
                 '4',
                 '5'],
+            cnvGeneItems: []    
         }
 
     },
@@ -258,7 +351,7 @@ Vue.component('edit-annotations', {
                 userId: null,
                 variantId: null,
                 isGeneSpecific: false,
-                isVariantSpecific: false,
+                isVariantSpecific: this.isCNV() || this.isTranslocation() ? true : false,
                 isCaseSpecific: false,
                 category: null,
                 // selectedCategory: null,
@@ -270,7 +363,8 @@ Vue.component('edit-annotations', {
                 // selectedTier: null,
                 // selectedClassification: null,
                 nctids: "",
-                type: this.type
+                type: this.type,
+                cnvGenes: []
             });
             // this.$nextTick(function () {
             //     this.$refs.editAnnotation[this.$refs.editAnnotation.length - 1].focus(); this.$vuetify.goTo(
@@ -278,6 +372,11 @@ Vue.component('edit-annotations', {
             // });
         },
         saveAnnotations() {
+             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
+            // Use a flag to disable the action in the meantime
+            if (this.saveIsDisabled()) {
+                return;
+            }
             this.annotationDialogVisible = false;
             this.userAnnotations = [];
             for (var i = 0; i < this.userEditingAnnotations.length; i++) {
@@ -396,7 +495,13 @@ Vue.component('edit-annotations', {
         },
         isSNP() {
             return this.type == "snp";
-        }
+        },
+        isCNV() {
+            return this.type == "cnv";
+        },
+        isTranslocation() {
+            return this.type == "translocation";
+        },
 
     },
     created: function () {

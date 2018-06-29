@@ -37,6 +37,14 @@ public class SNPIndelVariantRow {
 	Boolean isSelected;
 	Boolean mdaAnnotated;
 	Boolean utswAnnotated;
+	Integer numCasesSeen;
+	String exacAlleleFrequency;
+	String somaticStatus;
+	String gnomadPopmaxAlleleFrequency;
+	Boolean repeat;
+	Boolean common;
+	Boolean inconsistent;
+	
 	
 	
 	public SNPIndelVariantRow(Variant variant, List<ReportGroupForDisplay> reportGroups) {
@@ -48,13 +56,13 @@ public class SNPIndelVariantRow {
 		this.geneVariant = variant.getGeneName() + " " + variant.getNotation();
 		this.effects = variant.getEffects() != null ? variant.getEffects().stream().collect(Collectors.joining("<br/>")) : null;
 		this.notation = variant.getNotation();
-		this.tumorAltFrequency = variant.getTumorAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getTumorAltFrequency()) * 100) : null;
+		this.tumorAltFrequency = variant.getTumorAltFrequency() != null ? String.format("%.2f", variant.getTumorAltFrequency() * 100) : null;
 		this.tumorAltDepth = variant.getTumorAltDepth();
 		this.tumorTotalDepth = variant.getTumorTotalDepth();
-		this.normalAltFrequency = variant.getNormalAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getNormalAltFrequency()) * 100) : null;
+		this.normalAltFrequency = variant.getNormalAltFrequency() != null ? String.format("%.2f", variant.getNormalAltFrequency() * 100) : null;
 		this.normalAltDepth = variant.getNormalAltDepth();
 		this.normalTotalDepth = variant.getNormalTotalDepth();
-		this.rnaAltFrequency = variant.getRnaAltFrequency() != null ? String.format("%.2f", Float.parseFloat(variant.getRnaAltFrequency()) * 100) : null;
+		this.rnaAltFrequency = variant.getRnaAltFrequency() != null ? String.format("%.2f", variant.getRnaAltFrequency() * 100) : null;
 		this.rnaAltDepth = variant.getRnaAltDepth();
 		this.rnaTotalDepth = variant.getRnaTotalDepth();
 		this.callSet = variant.getCallSet();
@@ -66,7 +74,13 @@ public class SNPIndelVariantRow {
 		this.isSelected = variant.getSelected();
 		this.mdaAnnotated = variant.getMdaAnnotated();
 		this.utswAnnotated = variant.getUtswAnnotated();
-		
+		this.numCasesSeen = variant.getNumCasesSeen();
+		this.exacAlleleFrequency = variant.getExacAlleleFrequency() != null ? String.format("%.2f", variant.getExacAlleleFrequency() * 100) : null;
+		this.somaticStatus = variant.getSomaticStatus();
+		this.gnomadPopmaxAlleleFrequency = variant.getGnomadPopmaxAlleleFrequency() != null ? String.format("%.2f", variant.getGnomadPopmaxAlleleFrequency() * 100) : null;
+		common = gnomadPopmaxAlleleFrequency != null && variant.getGnomadPopmaxAlleleFrequency() > 0.01;
+		repeat = variant.getRepeat();
+		inconsistent = variant.getInconsistent();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		boolean failed = filters.contains(Variant.VALUE_FAIL);
@@ -88,9 +102,6 @@ public class SNPIndelVariantRow {
 		else {
 			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
 		}
-//		if (neededInReport(geneName, reportGroups)) {
-//			icons.add(new VuetifyIcon("priority_high", "red", "This gene should be reported"));
-//		}
 		iconFlags = new FlagValue(icons);
 		
 	}
@@ -243,6 +254,78 @@ public class SNPIndelVariantRow {
 
 	public Boolean getIsSelected() {
 		return isSelected;
+	}
+
+
+
+
+
+	public Boolean getMdaAnnotated() {
+		return mdaAnnotated;
+	}
+
+
+
+
+
+	public Boolean getUtswAnnotated() {
+		return utswAnnotated;
+	}
+
+
+
+
+
+	public Integer getNumCasesSeen() {
+		return numCasesSeen;
+	}
+
+
+
+
+
+	public String getExacAlleleFrequency() {
+		return exacAlleleFrequency;
+	}
+
+
+
+
+
+	public String getSomaticStatus() {
+		return somaticStatus;
+	}
+
+
+
+
+
+	public String getGnomadPopmaxAlleleFrequency() {
+		return gnomadPopmaxAlleleFrequency;
+	}
+
+
+
+
+
+	public Boolean getRepeat() {
+		return repeat;
+	}
+
+
+
+
+
+	public Boolean getCommon() {
+		return common;
+	}
+
+
+
+
+
+	public Boolean getInconsistent() {
+		return inconsistent;
 	}
 
 

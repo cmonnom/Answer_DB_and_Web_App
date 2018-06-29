@@ -59,6 +59,23 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		Header raf = new Header(new String[] {"RNA Alt", "Percent"}, "rnaAltFrequency", Units.PCT);
 		raf.setWidth("100px");
 		headers.add(raf);
+		
+		Header numCasesSeen = new Header(new String[] {"Nb Cases", "Seen"}, "numCasesSeen", Units.NB);
+		numCasesSeen.setWidth("50px");
+		headers.add(numCasesSeen);
+		
+		Header exacAlleleFrequency = new Header(new String[] {"ExAC Allele", "Percent"}, "exacAlleleFrequency", Units.PCT);
+		exacAlleleFrequency.setWidth("100px");
+		headers.add(exacAlleleFrequency);
+		
+		Header somaticStatus = new Header(new String[] {"Somatic", "Status"}, "somaticStatus");
+		somaticStatus.setWidth("100px");
+		headers.add(somaticStatus);
+		
+		Header gnomadPopmaxAlleleFrequency = new Header(new String[] {"gnomAD Pop. Max.", "Allele Frequency"}, "gnomadPopmaxAlleleFrequency", Units.PCT);
+		gnomadPopmaxAlleleFrequency.setWidth("100px");
+		headers.add(gnomadPopmaxAlleleFrequency);
+		
 //		Header rnaAltDepth = new Header(new String[] {"RNA","Depth"}, "rnaAltDepth", Units.NB);
 //		headers.add(rnaAltDepth);
 		//keep in the same order
