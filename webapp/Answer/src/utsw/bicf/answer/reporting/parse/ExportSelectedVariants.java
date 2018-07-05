@@ -29,7 +29,7 @@ import utsw.bicf.answer.security.FileProperties;
 public class ExportSelectedVariants {
 
 	private static final List<String> HEADERS = new ArrayList<String>();
-	private static final List<Integer> COLUMN_LINKS = new ArrayList<Integer>();
+	private static final List<String> COLUMN_LINKS = new ArrayList<String>();
 	static {
 		HEADERS.add("Case ID");
 		HEADERS.add("LociGRCh38");
@@ -59,8 +59,8 @@ public class ExportSelectedVariants {
 		HEADERS.add("CIVIC");
 		HEADERS.add("JAX CKB");
 
-		COLUMN_LINKS.add(18); //Clinical trials
-		COLUMN_LINKS.add(19); //PMIds
+		COLUMN_LINKS.add("Clinical trials"); //Clinical trials
+		COLUMN_LINKS.add("PMID"); //PMIds
 	}
 
 	List<Variant> selectedVariants;
@@ -80,7 +80,7 @@ public class ExportSelectedVariants {
 		CreationHelper createHelper = workbook.getCreationHelper();
 		//styles
 		CellStyle cs = workbook.createCellStyle();
-		cs.setWrapText(true);
+//		cs.setWrapText(true);
 		CellStyle linkStyle = workbook.createCellStyle();
 		Font linkFont = workbook.createFont();
 		linkFont.setUnderline(Font.U_SINGLE);
@@ -117,7 +117,7 @@ public class ExportSelectedVariants {
 					//write the row
 					for (int i = 0; i < items.size(); i++) {
 						Cell cell  = row.createCell(i);
-						if (COLUMN_LINKS.contains(i)) {
+						if (COLUMN_LINKS.contains(HEADERS.get(i))) {
 							cell.setCellStyle(linkStyle);
 							Hyperlink link = createHelper.createHyperlink(HyperlinkType.URL);
 							link.setAddress(items.get(i));
@@ -149,6 +149,10 @@ public class ExportSelectedVariants {
 				}
 			}
 			
+		}
+		
+		for (int i = 0; i < HEADERS.size(); i++) {
+			sheet.autoSizeColumn(i);
 		}
 		
 		File outputFile = new File(fileProperties.getExcelFilesDir(), LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) + "variants.xlsx");

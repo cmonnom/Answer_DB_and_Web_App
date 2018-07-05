@@ -237,6 +237,7 @@ public class OpenCaseController {
 
 		DataTableFilter geneFilter = new DataTableFilter("Gene Name(s)", Variant.FIELD_GENE_NAME);
 		geneFilter.setString(true);
+		geneFilter.setTooltip("comma separated");
 		filters.add(geneFilter);
 		
 		DataTableFilter somaticFilter = new DataTableFilter("Somatic Status", "somaticStatus");
@@ -256,6 +257,10 @@ public class OpenCaseController {
 		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Unknown", Variant.FIELD_ANNOTATIONS);
 		annotatedFilter.setBoolean(true);
 		filters.add(annotatedFilter);
+		
+		DataTableFilter cosmicFilter = new DataTableFilter("In COSMIC", "Not In COSMIC", Variant.FIELD_IN_COSMIC);
+		cosmicFilter.setBoolean(true);
+		filters.add(cosmicFilter);
 		
 		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", Variant.FIELD_TUMOR_ALT_FREQUENCY);
 		tafFilter.setNumber(true);

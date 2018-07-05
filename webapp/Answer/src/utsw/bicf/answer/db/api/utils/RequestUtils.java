@@ -129,6 +129,7 @@ public class RequestUtils {
 			throws ClientProtocolException, IOException, URISyntaxException {
 		VariantFilterList filterList = Utils.parseFilters(data);
 		String filterParam = filterList.createJSON();
+		System.out.println(filterParam);
 
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/filter");

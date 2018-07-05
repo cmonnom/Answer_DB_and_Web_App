@@ -177,7 +177,7 @@ public class ModelDAO {
 			name = "view_edit";
 		}
 		else if (view) {
-			name = "view";
+			name = "view_only";
 		}
 		else {
 			name = "disabled";

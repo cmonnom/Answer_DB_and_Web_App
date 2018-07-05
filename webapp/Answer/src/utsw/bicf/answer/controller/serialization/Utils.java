@@ -2,7 +2,9 @@ package utsw.bicf.answer.controller.serialization;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -25,6 +27,7 @@ public class Utils {
 	 * @throws JsonMappingException
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	public static VariantFilterList parseFilters(String data) throws JsonParseException, JsonMappingException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		DataFilterList filterList = mapper.readValue(data, DataFilterList.class);
@@ -37,18 +40,24 @@ public class Utils {
 					if (filter.getValueTrue() != null && filter.getValueTrue()) {
 						if (filter.getFieldName().equals(Variant.FIELD_FILTERS)) {
 							vf.getStringValues().add(new FilterStringValue(Variant.VALUE_PASS));
-							vf.setValueTrue(true);
+//							vf.setValueTrue(true);
 						}
 						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)) {
+							vf.setValueTrue(true);
+						}
+						if (filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)) {
 							vf.setValueTrue(true);
 						}
 					}
 					if (filter.getValueFalse() != null && filter.getValueFalse()) {
 						if (filter.getFieldName().equals(Variant.FIELD_FILTERS)) {
 							vf.getStringValues().add(new FilterStringValue(Variant.VALUE_FAIL));
-							vf.setValueFalse(true);
+//							vf.setValueFalse(true);
 						}
 						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)) {
+							vf.setValueFalse(true);
+						}
+						if (filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)) {
 							vf.setValueFalse(true);
 						}
 					}
@@ -96,20 +105,38 @@ public class Utils {
 			}
 			else if (filter.isSelect() != null && filter.isSelect() && filter.getValue() != null) {
 				VariantFilter vf = new VariantFilter(filter.getFieldName());
-				vf.setValue(filter.getValue());
-				vf.getStringValues().add(new FilterStringValue(filter.getValue()));
+				String stringValue = null;
+				if (filter.getValue() instanceof String) {
+					stringValue = (String) filter.getValue();
+				}
+				else { //it's a list
+					stringValue = ((List<String>) filter.getValue()).stream().collect(Collectors.joining(","));
+					for (String item : (List<String>) filter.getValue()) {
+						vf.getStringValues().add(new FilterStringValue(item.trim()));
+					}
+				}
+				vf.setValue(stringValue);
 				activeFilters.add(vf);
 			}
 			else if (filter.isString() != null && filter.isString()) {
 				VariantFilter vf = new VariantFilter(filter.getFieldName());
 				if (filter.getValue() != null) {
-					String[] items = filter.getValue().split(",");
+					List<String> items = new ArrayList<String>();
+					if (filter.getValue() instanceof String) {
+						String[] itemArray = ((String) filter.getValue()).split(",");
+						for (int i = 0; i < itemArray.length; i++) {
+							items.add(itemArray[i]);
+						}
+					}
+					else {
+						items = (List<String>) filter.getValue();
+					}
 					for (String item : items) {
 						vf.getStringValues().add(new FilterStringValue(item.trim()));
 					}
+					vf.setValue(items.stream().collect(Collectors.joining(",")));
+					activeFilters.add(vf);
 				}
-				vf.setValue(filter.getValue());
-				activeFilters.add(vf);
 			}
 				
 		}

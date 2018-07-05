@@ -230,3 +230,14 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 .list-menu:hover {
     background: rgba(0,0,0,.12);
 }
+
+.mini-badge > .badge__badge {
+    right: 12px;
+    bottom: 10px !important;
+    width: 20%;
+    height: 20%;
+}
+
+.expansion-panel__header:hover {
+    background: rgba(0,0,0,.12);
+}

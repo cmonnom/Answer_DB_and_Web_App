@@ -994,6 +994,9 @@ Vue.component('data-table', {
                 return "(" + rowCount + " row" + (rowCount > 1 ? "s" : "") + ")";
             }
             return null;
+        },
+        selectionChanged() {
+            this.$emit('datatable-selection-changed', this.selected.length);
         }
     },
     computed: {
@@ -1024,6 +1027,7 @@ Vue.component('data-table', {
             this.previousPageNb = pageNb;
             return pageNb;
         }
+       
 
 
 
@@ -1053,6 +1057,9 @@ Vue.component('data-table', {
         } else {
             this.loading = false;
         }
+    },
+    watch: {
+        "selected": 'selectionChanged'
     }
 
 

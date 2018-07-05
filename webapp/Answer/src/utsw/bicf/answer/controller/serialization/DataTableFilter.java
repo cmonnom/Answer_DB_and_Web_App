@@ -18,7 +18,7 @@ public class DataTableFilter {
 	String headerTextTrue; //for booleans
 	String headerTextFalse; //for booleans
 	String fieldName;
-	String value;
+	Object value;
 	Boolean valueTrue; //for booleans
 	Boolean valueFalse; //for booleans
 	Double minValue;
@@ -39,6 +39,7 @@ public class DataTableFilter {
 	Boolean isCheckBox;
 	List<SearchItem> selectItems;
 	List<SearchItem> checkBoxes = new ArrayList<SearchItem>();
+	String tooltip;
 	
 	//Booleans need to be handled a bit differently because they can have 4 states: include/not include if true, include/not include if false, 
 	//For instance Pass QC:
@@ -58,7 +59,7 @@ public class DataTableFilter {
 		this.fieldName = fieldName;
 	}
 
-	public String getValue() {
+	public Object getValue() {
 		return value;
 	}
 
@@ -78,7 +79,7 @@ public class DataTableFilter {
 		this.maxValue = maxValue;
 	}
 
-	public void setValue(String value) {
+	public void setValue(Object value) {
 		this.value = value;
 	}
 
@@ -208,6 +209,14 @@ public class DataTableFilter {
 
 	public void setCheckBoxes(List<SearchItem> checkBoxes) {
 		this.checkBoxes = checkBoxes;
+	}
+
+	public String getTooltip() {
+		return tooltip;
+	}
+
+	public void setTooltip(String tooltip) {
+		this.tooltip = tooltip;
 	}
 	
 }

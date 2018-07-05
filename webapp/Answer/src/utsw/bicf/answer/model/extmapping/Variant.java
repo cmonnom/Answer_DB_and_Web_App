@@ -26,6 +26,7 @@ public class Variant {
 	public static final String FIELD_EXAC_ALLELE_FREQUENCY = "exacAlleleFrequency";
 	public static final String FIELD_GNOMAD_ALLELE_FREQUENCY = "gnomadPopmaxAlleleFrequency";
 	public static final String FIELD_NUM_CASES_SEEN = "numCasesSeen";
+	public static final String FIELD_IN_COSMIC = "inCosmic";
 	
 	//Some values like filter pass/fail need to be translated into boolean
 	//keep the values expected in the JSON string here

@@ -198,7 +198,7 @@ Vue.component('edit-annotations', {
                                                                 <v-flex xs7>
                                                                     <v-select clearable :value="annotation.cnvGenes" :disabled="annotation.markedForDeletion" :items="cnvGeneItems" v-model="annotation.cnvGenes"
                                                                         label="Select Gene(s)" chips deletable-chips multiple
-                                                                        single-line class="no-height no-height-select"></v-select>
+                                                                        single-line hide-details></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                         </v-card-text>

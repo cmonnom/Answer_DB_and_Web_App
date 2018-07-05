@@ -34,7 +34,7 @@ const Admin = {
                   <v-text-field ref="editUsername" label="User ID"></v-text-field>
                   <v-text-field ref="editFirstName" label="First Name"></v-text-field>
                   <v-text-field ref="editLastName" label="Last Name"></v-text-field>
-                  <v-text-field ref="editEmail" label="Email"></v-text-field>
+                  <div class="grey--text lighten-1">Email:</div><div class="pb-4">{{ userEmail }}</div>
                 </v-card-text>
               </v-card>
             </v-flex>
@@ -105,7 +105,8 @@ const Admin = {
             editAdd: "Add",
             snackBarVisible: false,
             snackBarMessage: "",
-            userTableHovering: false
+            userTableHovering: false,
+            userEmail: ""
         }
     },
     methods: {
@@ -119,7 +120,7 @@ const Admin = {
             this.$refs.editFirstName.inputValue = user.firstName;
             this.$refs.editLastName.inputValue = user.lastName;
             this.$refs.editUsername.inputValue = user.userName;
-            this.$refs.editEmail.inputValue = user.email;
+            this.userEmail = user.email;
             this.currentEditUserFullName = user.fullName;
             this.editView = user.viewValue.pass;
             this.editEdit = user.editValue.pass;
@@ -139,7 +140,7 @@ const Admin = {
             this.$refs.editFirstName.inputValue = user.firstName;
             this.$refs.editLastName.inputValue = user.lastName;
             this.$refs.editUsername.inputValue = user.userName;
-            this.$refs.editEmail.inputValue = user.email;
+            this.userEmail = user.email;
             this.saveEdits();
         },
         saveEdits() {
@@ -153,7 +154,6 @@ const Admin = {
                     username: this.$refs.editUsername.inputValue,
                     first: this.$refs.editFirstName.inputValue,
                     last: this.$refs.editLastName.inputValue,
-                    email: this.$refs.editEmail.inputValue,
                     view: this.editView,
                     edit: this.editEdit,
                     finalize: this.editFinalize,

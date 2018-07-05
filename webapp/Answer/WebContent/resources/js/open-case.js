@@ -17,7 +17,7 @@ const OpenCase = {
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
-    <advanced-filter ref="advanceFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"></advanced-filter>
+    <advanced-filter ref="advancedFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"></advanced-filter>
     <v-dialog v-model="saveDialogVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
             <v-toolbar dark color="primary">
@@ -27,7 +27,7 @@ const OpenCase = {
                     </v-btn>
                     <v-list>
 
-                        <v-list-tile avatar @click="exportSelectedVariants()" :disabled="saveVariantDisabled">
+                        <v-list-tile avatar @click="exportSelectedVariants()" :disabled="saveVariantDisabled || exportLoading">
                             <v-list-tile-avatar>
                                 <v-icon>file_download</v-icon>
                             </v-list-tile-avatar>
@@ -36,7 +36,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="saveSelection()" :disabled="saveVariantDisabled">
+                        <v-list-tile avatar @click="saveSelection()" :disabled="saveVariantDisabled || saveLoading">
                             <v-list-tile-avatar>
                                 <v-icon>save</v-icon>
                             </v-list-tile-avatar>
@@ -59,7 +59,7 @@ const OpenCase = {
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
-                    <v-btn icon :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator">
+                    <v-btn icon :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator" :loading="saveLoading">
                         <v-icon>save</v-icon>
                     </v-btn>
                     <span>Save Selected Variants</span>
@@ -123,13 +123,13 @@ const OpenCase = {
             </v-card-text>
             <v-card-actions>
                 <v-tooltip top>
-                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator">Save
+                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator" :loading="saveLoading">Save
                         <v-icon right dark>save</v-icon>
                     </v-btn>
                     <span>Save Selected Variants</span>
                 </v-tooltip>
                 <v-tooltip top>
-                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="exportSelectedVariants()" slot="activator">Excel
+                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="exportSelectedVariants()" slot="activator" :loading="exportLoading">Excel
                         <v-icon right dark>file_download</v-icon>
                     </v-btn>
                     <span>Export to Excel</span>
@@ -163,9 +163,10 @@ const OpenCase = {
                     <v-list>
                         <v-list-tile class="list-menu">
                             <v-list-tile-content>
-                                <v-list-tile-title >
-                                    <v-menu offset-y offset-x open-on-hover >
-                                        <span slot="activator"><v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide </span>
+                                <v-list-tile-title>
+                                    <v-menu offset-y offset-x open-on-hover>
+                                        <span slot="activator">
+                                            <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide </span>
                                         <v-list>
                                             <v-list-tile avatar @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible">
                                                 <v-list-tile-avatar>
@@ -572,12 +573,15 @@ const OpenCase = {
             </v-btn>
             <span>Show/Hide Case Annotations</span>
         </v-tooltip>
-        <v-tooltip bottom>
-            <v-btn flat icon @click="openSaveDialog()" slot="activator" :color="saveDialogVisible ? 'amber accent-2' : ''">
-                <v-icon>mdi-clipboard-check</v-icon>
-            </v-btn>
-            <span>Review Variants Selected</span>
-        </v-tooltip>
+        <v-badge color="red" right bottom overlap v-model="variantUnSaved" class="mini-badge">
+            <v-icon slot="badge" ></v-icon>
+            <v-tooltip bottom>
+                <v-btn flat icon @click="openSaveDialog()" slot="activator" :color="saveDialogVisible ? 'amber accent-2' : ''">
+                    <v-icon>mdi-clipboard-check</v-icon>
+                </v-btn>
+                <span>Review Variants Selected</span>
+            </v-tooltip>
+        </v-badge>
     </v-toolbar>
     <v-progress-linear v-if="!caseName || loadingVariantDetails" :indeterminate="true"></v-progress-linear>
 
@@ -670,7 +674,9 @@ const OpenCase = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-tabs dark slider-color="warning" color="primary" fixed-tabs v-show="variantTabsVisible">
+        <v-tabs dark slider-color="warning" color="primary" 
+        fixed-tabs v-show="variantTabsVisible"
+        v-model="variantTabActive">
             <v-tab>
                 SNP / Indel
             </v-tab>
@@ -684,10 +690,11 @@ const OpenCase = {
             <v-tab-item>
                 <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
                     no-data-text="No Data" :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()"
-                    :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons">
+                    :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons"
+                   @datatable-selection-changed="handleSelectionChanged">
                     <v-fade-transition slot="action1">
                         <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
-                            <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvanceFilteringVisible() ? 'amber accent-2' : 'white'">
+                            <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
                                 <v-icon>filter_list</v-icon>
                             </v-btn>
                             <span>Advanced Filtering</span>
@@ -744,7 +751,8 @@ const OpenCase = {
             annotationVariantDetailsVisible: true,
             annotationVariantCanonicalVisible: true,
             annotationVariantOtherVisible: false,
-            saveVariantDisabled: true,
+            saveVariantDisabled: false,
+            variantUnSaved: false,
             // annotationDialogVisible: false,
             userAnnotations: [],
             snackBarMessage: "",
@@ -759,6 +767,7 @@ const OpenCase = {
             externalWindow: null,
             externalWindowOpen: false,
             exportLoading: false,
+            saveLoading: false,
             caseAnnotation: { caseAnnotation: "" },
             caseAnnotationOriginalText: "", //to verify if there has been a modification
             currentVariantType: "snp",
@@ -767,9 +776,10 @@ const OpenCase = {
             confirmationMessage: "Unsaved selected variants will be discarded.<br/>Are you sure?",
             confirmationProceedButton: "Proceed",
             confirmationCancelButton: "Cancel",
-
             reportGroups: [],
-            geneVariantDetailsTableHovering: false
+            geneVariantDetailsTableHovering: false,
+            variantTabActive: null,
+            wasAdvancedFilteringVisibleBeforeTabChange: false
         }
     }, methods: {
         toggleGeneVariantDetailsButtons(doShow) {
@@ -796,7 +806,7 @@ const OpenCase = {
         },
         getAjaxData() {
             this.loadingVariantDetails = true;
-            this.$refs.advanceFilter.loading = true;
+            this.$refs.advancedFilter.loading = true;
             axios({
                 method: 'post',
                 url: webAppRoot + "/getCaseDetails",
@@ -804,7 +814,7 @@ const OpenCase = {
                     caseId: this.$route.params.id
                 },
                 data: {
-                    filters: this.$refs.advanceFilter.filters
+                    filters: this.$refs.advancedFilter.filters
                 }
             }).then(response => {
                 if (response.data.isAllowed) {
@@ -815,15 +825,15 @@ const OpenCase = {
                     this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary);
                     this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
                     this.$refs.translocationDetails.manualDataFiltered(response.data.translocationSummary);
-                    this.$refs.advanceFilter.effects = response.data.effects;
+                    this.$refs.advancedFilter.effects = response.data.effects;
                     this.userId = response.data.userId;
-                    this.$refs.advanceFilter.populateCheckBoxes();
-                    this.$refs.advanceFilter.filterNeedsReload = false;
+                    this.$refs.advancedFilter.populateCheckBoxes();
+                    this.$refs.advancedFilter.filterNeedsReload = false;
                     this.addSNPIndelHeaderAction(response.data.snpIndelVariantSummary.headers);
                     this.addCNVHeaderAction(response.data.cnvSummary.headers);
                     this.addFusionHeaderAction(response.data.translocationSummary.headers);
                     this.reportGroups = response.data.reportGroups;
-                    this.$refs.advanceFilter.reportGroups = this.reportGroups;
+                    this.$refs.advancedFilter.reportGroups = this.reportGroups;
                     //only show hidden elements if it's the 1st time the page
                     //loads
                     //otherwise keep user's preference
@@ -842,11 +852,11 @@ const OpenCase = {
                     this.handleDialogs(response.data, this.getAjaxData);
                 }
                 this.loadingVariantDetails = false;
-                this.$refs.advanceFilter.loading = false;
+                this.$refs.advancedFilter.loading = false;
             }
             ).catch(error => {
                 this.loadingVariantDetails = false;
-                this.$refs.advanceFilter.loading = false;
+                this.$refs.advancedFilter.loading = false;
                 console.log(error);
                 bus.$emit("some-error", [this, error]);
             }
@@ -895,7 +905,7 @@ const OpenCase = {
                 })
                 .then(response => {
                     if (response.data.isAllowed) {
-                        this.$refs.advanceFilter.createFilters(response.data.filters);
+                        this.$refs.advancedFilter.createFilters(response.data.filters);
                     }
                     else {
                         this.handleDialogs(response, this.getVariantFilters);
@@ -905,14 +915,31 @@ const OpenCase = {
                     bus.$emit("some-error", [this, error]);
                 });
         },
-        isAdvanceFilteringVisible() {
-            return this.$refs.advanceFilter && this.$refs.advanceFilter.advanceFilteringVisible;
+        isAdvancedFilteringVisible() {
+            return this.$refs.advancedFilter && this.$refs.advancedFilter.advancedFilteringVisible;
+        },
+        handleTabChanged(newValue, oldValue) {
+             //SNP/Indel tab need to be active to allow filtering
+            if (!this.$refs.advancedFilter) {
+                return;
+            }
+            if (this.variantTabActive != "0") { //remember if filter was visible or not before the change
+                // this.wasAdvancedFilteringVisibleBeforeTabChange = this.$refs.advancedFilter.advancedFilteringVisible;
+                // if (this.wasAdvancedFilteringVisibleBeforeTabChange) {
+                //     this.$refs.advancedFilter.toggleFilters(); //hide filtering because of tab change
+                // }
+                this.$refs.advancedFilter.disableFiltering = true;
+            }
+            if (this.$refs.advancedFilter && this.variantTabActive == "0") { //restore the previous visibility of the filter
+                // this.$refs.advancedFilter.toggleFilters(); //show filtering because it was previsously visible
+                this.$refs.advancedFilter.disableFiltering = false;
+            }
         },
         filterData() {
             this.getAjaxData();
         },
         toggleFilters() {
-            this.$refs.advanceFilter.toggleFilters();
+            this.$refs.advancedFilter.toggleFilters();
         },
         addSNPIndelHeaderAction(headers) {
             for (var i = 0; i < headers.length; i++) {
@@ -1487,6 +1514,7 @@ const OpenCase = {
             if (this.saveVariantDisabled) {
                 return;
             }
+            this.saveLoading = true;
             var selectedSNPVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
             var selectedCNVIds = this.$refs.cnvDetails.items.filter(item => item.isSelected).map(item => item.oid);
             var selectedTranslocationIds = this.$refs.translocationDetails.items.filter(item => item.isSelected).map(item => item.oid);
@@ -1507,14 +1535,16 @@ const OpenCase = {
                     this.snackBarMessage = "Variant Selection Saved";
                     this.snackBarVisible = true;
                     this.getAjaxData();
+                    this.variantUnSaved = false;
+                    this.saveLoading = false;
                     this.closeSaveDialog();
                 }
                 else {
+                    this.saveLoading = false;
                     this.handleDialogs(response.data, this.saveSelection);
                 }
-                this.loadingVariantDetails = false;
             }).catch(error => {
-                this.loadingVariantDetails = false;
+                this.saveLoading = false;
                 console.log(error);
                 bus.$emit("some-error", [this, error]);
             });
@@ -1526,32 +1556,32 @@ const OpenCase = {
             return this.utswAnnotationsFormatted.length > 0;
         },
         saveCurrentFilters() {
-            this.$refs.advanceFilter.loading = true;
+            this.$refs.advancedFilter.loading = true;
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveCurrentFilters",
                 params: {
-                    filterListId: this.$refs.advanceFilter.saveFilterSetId,
-                    filterListName: this.$refs.advanceFilter.saveFilterSetName
+                    filterListId: this.$refs.advancedFilter.saveFilterSetId,
+                    filterListName: this.$refs.advancedFilter.saveFilterSetName
                 },
                 data: {
-                    filters: this.$refs.advanceFilter.filters
+                    filters: this.$refs.advancedFilter.filters
                 }
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
                     this.loadUserFilterSets();
-                    this.$refs.advanceFilter.currentFilterSet = response.data.savedFilterSet;
-                    this.$refs.advanceFilter.saveFilterSetDialogVisible = false;
+                    this.$refs.advancedFilter.currentFilterSet = response.data.savedFilterSet;
+                    this.$refs.advancedFilter.saveFilterSetDialogVisible = false;
                     this.snackBarMessage = "Filter Set Saved";
                     this.snackBarVisible = true;
                 }
                 else {
                     this.handleDialogs(response.data, this.saveCurrentFilters);
                 }
-                this.$refs.advanceFilter.loading = false;
+                this.$refs.advancedFilter.loading = false;
             }
             ).catch(error => {
-                this.$refs.advanceFilter.loading = false;
+                this.$refs.advancedFilter.loading = false;
                 console.log(error);
                 bus.$emit("some-error", [this, error]);
             }
@@ -1567,7 +1597,7 @@ const OpenCase = {
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
                     this.loadUserFilterSets();
-                    this.$refs.advanceFilter.saveFilterSetDialogVisible = false;
+                    this.$refs.advancedFilter.saveFilterSetDialogVisible = false;
                     this.snackBarMessage = "Filter Set Deleted";
                     this.snackBarVisible = true;
                 }
@@ -1590,8 +1620,12 @@ const OpenCase = {
                 })
                 .then(response => {
                     if (response.data.isAllowed) {
-                        this.$refs.advanceFilter.filterSets = response.data.filters;
-                        this.$refs.advanceFilter.filterSetItems = response.data.items;
+                        // for (var i = 0; i < response.data.filters; i++) {
+                        //     var filterSet =  response.data.filters[i];
+                        //     filterSet.value = filterSet.value ? 
+                        // }
+                        this.$refs.advancedFilter.filterSets = response.data.filters;
+                        this.$refs.advancedFilter.filterSetItems = response.data.items;
 
                     }
                     else {
@@ -1768,6 +1802,9 @@ const OpenCase = {
                     bus.$emit("some-error", [this, error]);
                 });
         },
+        handleSelectionChanged(selectedSize) {
+            this.variantUnSaved = true;
+        },
         isCaseAnnotationUnchanged() {
             return this.caseAnnotation.caseAnnotation == this.caseAnnotationOriginalText;
         },
@@ -1838,6 +1875,7 @@ const OpenCase = {
         '$route': 'getAjaxData',
         variantDetailsVisible: "updateVariantDetailsBreadCrumbs",
         saveDialogVisible: "updateSaveDialogBreadCrumbs",
+        variantTabActive: "handleTabChanged"
         // breadcrumbs: function() {
         //     this.$refs.annotationDialog.breadcrumbs = this.breadcrumbs;
         // }
