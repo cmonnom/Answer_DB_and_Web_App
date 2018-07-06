@@ -18,6 +18,7 @@ public class TypeUtils {
 	public static final DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	public static final DateTimeFormatter shortMonthYearFormatter = DateTimeFormatter.ofPattern("MMM yyyy");
 	public static final DateTimeFormatter shortDayMonthYearFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
+	
 	static final NumberFormat pctFormatter = NumberFormat.getPercentInstance();
 	static final DateFormat sqlDateFormatter = DateFormat.getDateTimeInstance();
 	

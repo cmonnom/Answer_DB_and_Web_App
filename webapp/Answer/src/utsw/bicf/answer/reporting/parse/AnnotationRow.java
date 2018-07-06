@@ -52,12 +52,10 @@ public class AnnotationRow {
 			if (textItems.length > 1) {
 				text = textItems[1];
 			}
-			if (c.startsWith(AnnotationCategory.GENE_FUNCTION_TITLE)) geneFunction = new AnnotationCategory(AnnotationCategory.GENE_FUNCTION_TITLE, text == null ? c.replaceFirst(AnnotationCategory.GENE_FUNCTION_TITLE, "") : text);
-			else if(c.startsWith(AnnotationCategory.ALTERATION_FUNCTION_TITLE)) alterationFunction = new AnnotationCategory(AnnotationCategory.ALTERATION_FUNCTION_TITLE, text == null ? c.replaceFirst(AnnotationCategory.ALTERATION_FUNCTION_TITLE, "") : text);
-			else if(c.startsWith(AnnotationCategory.ALTERATIONS_FUNCTION_TITLE)) alterationFunction = new AnnotationCategory(AnnotationCategory.ALTERATIONS_FUNCTION_TITLE, text == null ? c.replaceFirst(AnnotationCategory.ALTERATIONS_FUNCTION_TITLE, "") : text);
-			else if(c.startsWith(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATION_TITLE)) implication = new AnnotationCategory(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATION_TITLE,text == null ? c.replaceFirst(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATION_TITLE, "") : text);
-			else if(c.startsWith(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE)) implication = new AnnotationCategory(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE,text == null ? c.replaceFirst(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE, "") : text);
-			else if(c.startsWith(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE)) tumorInfo = new AnnotationCategory(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE, text == null ? c.replaceFirst(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE, "") : text);
+			if (c.startsWith(AnnotationCategory.BIOMARKER_SUMMARY_TITLE)) geneFunction = new AnnotationCategory(AnnotationCategory.BIOMARKER_SUMMARY_TITLE, text == null ? c.replaceFirst(AnnotationCategory.BIOMARKER_SUMMARY_TITLE + ": ", "") : text);
+			else if(c.startsWith(AnnotationCategory.FUNCTIONAL_ANNOTATION_TITLE)) alterationFunction = new AnnotationCategory(AnnotationCategory.FUNCTIONAL_ANNOTATION_TITLE, text == null ? c.replaceFirst(AnnotationCategory.FUNCTIONAL_ANNOTATION_TITLE + ": ", "") : text);
+			else if(c.startsWith(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE)) implication = new AnnotationCategory(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE,text == null ? c.replaceFirst(AnnotationCategory.POTENTIAL_THERAPEUTIC_IMPLICATIONS_TITLE + ": ", "") : text);
+			else if(c.startsWith(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE)) tumorInfo = new AnnotationCategory(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE, text == null ? c.replaceFirst(AnnotationCategory.TUMOR_SPECIFIC_INFO_TITLE + ": ", "") : text);
 		}
 		
 	}

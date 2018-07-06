@@ -3,6 +3,8 @@ package utsw.bicf.answer.controller.api;
 import java.io.File;
 import java.io.IOException;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,7 +31,7 @@ public class APIController {
 	@RequestMapping("/parseMDAEmail")
 	@ResponseBody
 	public String parseMDAEmail(Model model, @RequestParam String token,
-			@RequestParam String emailPath) {
+			@RequestParam String emailPath, HttpSession httpSession) {
 		// check that token is valid
 		Token theToken = modelDAO.getParseMDAToken(token);
 		if (theToken == null) {

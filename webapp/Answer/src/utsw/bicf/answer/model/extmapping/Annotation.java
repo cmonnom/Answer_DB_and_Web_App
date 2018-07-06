@@ -1,9 +1,20 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.User;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Annotation {
@@ -21,6 +32,12 @@ public class Annotation {
 	Integer userId;
 	String createdDate;
 	String modifiedDate;
+	@JsonIgnore
+	LocalDateTime createdLocalDateTime;
+	@JsonIgnore
+	LocalDateTime modifiedLocalDateTime;
+	String createdSince;
+	String modifiedSince;
 	Boolean isVisible = true;
 	Boolean markedForDeletion = false;
 	List<String> pmids;
@@ -224,6 +241,96 @@ public class Annotation {
 	public void setCnvGenes(List<String> cnvGenes) {
 		this.cnvGenes = cnvGenes;
 	}
+
+	public LocalDateTime getCreatedLocalDateTime() {
+		return createdLocalDateTime;
+	}
+
+	public void setCreatedLocalDateTime(LocalDateTime createdLocalDateTime) {
+		this.createdLocalDateTime = createdLocalDateTime;
+	}
+
+	public LocalDateTime getModifiedLocalDateTime() {
+		return modifiedLocalDateTime;
+	}
+
+	public void setModifiedLocalDateTime(LocalDateTime modifiedLocalDateTime) {
+		this.modifiedLocalDateTime = modifiedLocalDateTime;
+	}
+
+	public String getCreatedSince() {
+		return createdSince;
+	}
+
+	public void setCreatedSince(String createdSince) {
+		this.createdSince = createdSince;
+	}
+
+	public String getModifiedSince() {
+		return modifiedSince;
+	}
+
+	public void setModifiedSince(String modifiedSince) {
+		this.modifiedSince = modifiedSince;
+	}
+
+	/**
+	 * After the object has been retrieved, use this method to
+	 * populate the LocalDateTime objects, user info, etc.
+	 * @param a
+	 * @param modelDAO
+	 */
+	public static void init(Annotation a, ModelDAO modelDAO) {
+		User annotationUser = modelDAO.getUserByUserId(a.getUserId());
+		if (annotationUser != null) {
+			a.setFullName(annotationUser.getFullName());
+		}
+		OffsetDateTime createdUTCDatetime = OffsetDateTime.parse(a.getCreatedDate(), DateTimeFormatter.ISO_DATE_TIME);
+//		LocalDateTime createdLocalDateTime = createdUTCDatetime.toLocalDateTime().atZone(ZoneId.systemDefault()).
+		a.setCreatedLocalDateTime(createdUTCDatetime.toLocalDateTime());
+		OffsetDateTime modifiedUTCDatetime = OffsetDateTime.parse(a.getModifiedDate(), DateTimeFormatter.ISO_DATE_TIME);
+//		LocalDateTime modifiedLocalDateTime = modifiedUTCDatetime.toLocalDateTime().atZone(ZoneId.systemDefault()).toLocalDateTime();
+		a.setModifiedLocalDateTime(modifiedUTCDatetime.toLocalDateTime());
+		OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+		
+		
+		Duration createdSince = Duration.between(createdUTCDatetime, now);
+		if (createdSince.toDays() >= 1) {
+			a.setCreatedSince(createdSince.toDays() + " days ago");
+		}
+		else if (createdSince.toHours() >= 1) {
+			a.setCreatedSince(createdSince.toHours() + " hours ago");
+		}
+		else if (createdSince.toMinutes() >= 1) {
+			a.setCreatedSince(createdSince.toMinutes() + " minutes ago");
+		}
+		else if (createdSince.toMillis() >= 1000) {
+			a.setCreatedSince(createdSince.toMillis() / 1000 + " seconds ago");
+		}
+		else {
+			a.setCreatedSince("just now");
+		}
+		
+		Duration modifiedSince = Duration.between(modifiedUTCDatetime, now);
+		if (modifiedSince.toDays() >= 1) {
+			a.setModifiedSince(modifiedSince.toDays() + " days ago");
+		}
+		else if (modifiedSince.toHours() >= 1) {
+			a.setModifiedSince(modifiedSince.toHours() + " hours ago");
+		}
+		else if (modifiedSince.toMinutes() >= 1) {
+			a.setModifiedSince(modifiedSince.toMinutes() + " minutes ago");
+		}
+		else if (modifiedSince.toMillis() >= 1000) {
+			a.setModifiedSince(modifiedSince.toMillis() / 1000 + " seconds ago");
+		}
+		else {
+			a.setModifiedSince("just now");
+		}
+		
+	}
+
+
 
 
 	

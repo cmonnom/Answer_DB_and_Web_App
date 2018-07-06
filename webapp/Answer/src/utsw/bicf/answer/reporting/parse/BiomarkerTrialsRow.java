@@ -11,6 +11,7 @@ public class BiomarkerTrialsRow {
 	public static final String HEADER_PHASE = "Phase";
 	public static final String HEADER_PI = "PI";
 	public static final String HEADER_DEPT = "Dept";
+	public static final String HEADER_ADD_REQUIRED_BIOMARKERS = "Additional Required Biomarker(s)";
 	
 	String selectedBiomarker;
 	String relevantBiomarker;
@@ -21,6 +22,7 @@ public class BiomarkerTrialsRow {
 	String phase;
 	String pi;
 	String dept;
+	String additionalRequiredBiomarkers;
 	
 	public String getSelectedBiomarker() {
 		return selectedBiomarker;
@@ -81,6 +83,12 @@ public class BiomarkerTrialsRow {
 		String biomarker = selectedBiomarker != null ? selectedBiomarker : relevantBiomarker;
 		System.out.println("biomarkers: " + biomarker + " NCTID: " + nctid + " PI: " + pi + " Drugs: " + drugs );
 		
+	}
+	public String getAdditionalRequiredBiomarkers() {
+		return additionalRequiredBiomarkers;
+	}
+	public void setAdditionalRequiredBiomarkers(String additionalRequiredBiomarkers) {
+		this.additionalRequiredBiomarkers = additionalRequiredBiomarkers;
 	}
 
 }

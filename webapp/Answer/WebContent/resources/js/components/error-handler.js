@@ -69,6 +69,9 @@ Vue.component('error-handler', {
         bus.$on('login-success', () => {
             this.doCallBacks();
         });
+        bus.$on('not-allowed', () => {
+            this.handleError([null,"You are not allowed to perform this action"]);
+        });
     }
 
 

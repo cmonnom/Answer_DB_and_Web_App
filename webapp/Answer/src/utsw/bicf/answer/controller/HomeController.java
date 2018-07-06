@@ -39,6 +39,7 @@ public class HomeController {
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".home", new PermissionUtils(true, false, false));
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getWorklists", new PermissionUtils(true, false, false));
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".assignToUser", new PermissionUtils(true, true, false));
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getAllUsersToAssign", new PermissionUtils(true, false, false));
 	}
 
 	@Autowired

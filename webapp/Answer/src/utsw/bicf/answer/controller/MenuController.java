@@ -21,10 +21,15 @@ import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseItems;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
 @RequestMapping("/")
 public class MenuController {
+	
+	static {
+		PermissionUtils.addPermission(MenuController.class.getCanonicalName() + ".getCaseItems", new PermissionUtils(true, false, false));
+	}
 
 	@Autowired 
 	ServletContext servletContext;

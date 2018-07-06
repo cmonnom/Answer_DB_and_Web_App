@@ -21,7 +21,7 @@ Vue.component('advanced-filter', {
                     <v-flex xs4 v-if="saveFilterSetId == -1" class="subheading mt-4">Filter Set Name:</v-flex>
                     <v-flex xs4 v-if="saveFilterSetId != -1" class="subheading mt-4">Modify Name:</v-flex>
                     <v-flex xs8>
-                        <v-text-field v-model="saveFilterSetName" label="Filter Set Name">
+                        <v-text-field v-model="saveFilterSetName" label="Filter Set Name" :rules="filterNameRules">
                         </v-text-field>
                     </v-flex>
                     <!-- show active filters -->
@@ -57,7 +57,7 @@ Vue.component('advanced-filter', {
             </v-card-text>
             <v-card-actions>
                 <v-tooltip top>
-                    <v-btn color="primary" :disabled="!saveFilterSetName" @click="saveCurrentFilters()" slot="activator">
+                    <v-btn color="primary" :disabled="!isNameValid()" @click="saveCurrentFilters()" slot="activator">
                         <span v-if="saveFilterSetId == -1">Create</span>
                         <span v-if="saveFilterSetId != -1">Update</span>
                         <v-icon right dark>save</v-icon>
@@ -423,7 +423,8 @@ Vue.component('advanced-filter', {
             advancedFilteringVisible: false,
             loading: false,
             reportGroups: [],
-            disableFiltering: false
+            disableFiltering: false,
+            filterNameRules: [v => { return /^[a-zA-Z0-9_. -]*$/.test(v) || "Only Letters and Numbers" }]
         }
 
     },
@@ -437,7 +438,7 @@ Vue.component('advanced-filter', {
         populateCheckBoxes() {
             this.checkboxFilters = [];
             for (var i = 0; i < this.filters.length; i++) {
-                var filter = this.filters[i]; 
+                var filter = this.filters[i];
                 if (filter.isCheckBox) {
                     this.checkboxFilters.push(filter);
                     if (filter.fieldName == 'effects') {
@@ -455,7 +456,7 @@ Vue.component('advanced-filter', {
         populateFlagFilter() {
             this.flagFilters = [];
             for (var i = 0; i < this.filters.length; i++) {
-                var filter = this.filters[i]; 
+                var filter = this.filters[i];
                 if (filter.isBoolean) {
                     this.flagFilters.push(filter);
                 }
@@ -464,7 +465,7 @@ Vue.component('advanced-filter', {
         populateNumberFilter() {
             this.numberFilters = [];
             for (var i = 0; i < this.filters.length; i++) {
-                var filter = this.filters[i]; 
+                var filter = this.filters[i];
                 if (filter.isNumber) {
                     this.numberFilters.push(filter);
                 }
@@ -609,6 +610,9 @@ Vue.component('advanced-filter', {
                 this.saveFilterSetName = "";
             }
             this.saveFilterSetDialogVisible = true;
+        },
+        isNameValid() {
+            return this.saveFilterSetName && this.filterNameRules[0](this.saveFilterSetName) === true;
         },
         saveCurrentFilters() {
             this.$emit("save-filters", null);

@@ -18,11 +18,12 @@ Vue.component('login', {
                         v-model="username"
                         required
                         autofocus
-                        dark></v-text-field>
+                        dark color="white"></v-text-field>
                         <v-text-field label="Password"
                         v-model="password" 
                         required
                         dark
+                        color="white"
                         :append-icon="showPasswordIcon ? 'visibility' : 'visibility_off'" 
                         :append-icon-cb="() => (showPasswordIcon = !showPasswordIcon)"
                         :type="showPasswordIcon ? 'password' : 'text'"

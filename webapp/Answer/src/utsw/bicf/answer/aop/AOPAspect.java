@@ -287,6 +287,7 @@ public class AOPAspect {
 			} else if (canProceed) {
 				return proceedingJoinPoint.proceed();
 			} else { // cannot proceed
+				model.addAttribute("isAjax", false);
 				return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 			}
 

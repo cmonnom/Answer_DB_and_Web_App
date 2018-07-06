@@ -438,13 +438,16 @@ const OpenCase = {
                                         </v-tooltip>
                                     </v-toolbar>
                                     <v-card-text>
-                                        <v-card class="mb-2" v-for="(annotation, index) in utswAnnotationsFormatted" :key="index">
+                                    <v-container grid-list-md fluid>
+                                        <v-layout row wrap>
+                                        <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in utswAnnotationsFormatted" :key="index">
+                                        <v-card >
                                             <v-card-text class="subheading">
                                                 <v-container grid-list-md fluid>
                                                     <v-layout row wrap>
                                                         <v-flex xs12>
-                                                            From {{ annotation.fullName }} on
-                                                            <span v-text="parseDate(annotation.modifiedDate)"></span>
+                                                            From {{ annotation.fullName }}
+                                                            <span v-text="parseDate(annotation)"></span>
                                                         </v-flex>
                                                         <v-flex xs12>
                                                             Scope:
@@ -463,6 +466,18 @@ const OpenCase = {
                                                             </span>
                                                             <span v-html="annotation.text"></span>
                                                         </v-flex>
+                                                        <v-flex xs12>
+                                                            <span v-if="annotation.tier" class="pr-1">
+                                                                <b>Tier:</b>
+                                                            </span>
+                                                            <span v-html="annotation.tier"></span>
+                                                        </v-flex>
+                                                        <v-flex xs12>
+                                                        <span v-if="annotation.classification" class="pr-1">
+                                                            <b>Classification:</b>
+                                                        </span>
+                                                        <span v-html="annotation.classification"></span>
+                                                    </v-flex>
                                                         <v-flex xs12 v-if="isCNV() && annotation.cnvGenes" class="pr-1">
                                                             Apply to genes: {{ annotation.cnvGenes }}
                                                         </v-flex>
@@ -486,6 +501,9 @@ const OpenCase = {
                                                 </v-container>
                                             </v-card-text>
                                         </v-card>
+                                        </v-flex>
+                                        </v-layout>
+                                        </v-container>
                                     </v-card-text>
                                 </v-card>
                             </v-flex>
@@ -517,7 +535,7 @@ const OpenCase = {
 
 
 
-    <v-toolbar dark color="primary" fixed app>
+    <v-toolbar dark color="primary" fixed app :extended="loadingVariantDetails">
         <v-tooltip class="ml-0" bottom>
             <v-menu offset-y offset-x slot="activator" class="ml-0">
                 <v-btn slot="activator" flat icon dark>
@@ -582,8 +600,8 @@ const OpenCase = {
                 <span>Review Variants Selected</span>
             </v-tooltip>
         </v-badge>
+        <v-progress-linear class="ml-4 mr-4" :slot="loadingVariantDetails ? 'extension' : ''" v-show="!caseName || loadingVariantDetails" :indeterminate="true" color="white"></v-progress-linear>
     </v-toolbar>
-    <v-progress-linear v-if="!caseName || loadingVariantDetails" :indeterminate="true"></v-progress-linear>
 
     <v-slide-y-transition>
         <v-layout v-if="patientDetailsVisible">
@@ -793,6 +811,9 @@ const OpenCase = {
             this.confirmationDialogVisible = false;
         },
         handleDialogs(response, callback) {
+            if (response == "not-allowed") {
+                bus.$emit("not-allowed", [this.reponse]);
+            }
             if (response.isXss) {
                 bus.$emit("xss-error",
                     [this, response.reason]);
@@ -1306,9 +1327,13 @@ const OpenCase = {
                     tumorSpecific: "",
                     category: "",
                     createdDate: "",
+                    createdSince: "",
                     modifiedDate: "",
+                    modifiedSince: "",
                     pmids: [],
                     nctids: [],
+                    tier: "",
+                    classification: ""
                 };
                 if (showUser) {
                     annotation.fullName = annotations[i].fullName;
@@ -1321,10 +1346,14 @@ const OpenCase = {
                     "Tumor"];
                 annotation.category = annotations[i].category;
                 annotation.createdDate = annotations[i].createdDate;
+                annotation.createdSince = annotations[i].createdSince;
                 annotation.modifiedDate = annotations[i].modifiedDate;
+                annotation.modifiedSince = annotations[i].modifiedSince;
                 annotation.pmids = annotations[i].pmids;
                 annotation.nctids = annotations[i].nctids;
                 annotation.scopeTooltip = this.$refs.annotationDialog.createLevelInformation(annotations[i]);
+                annotation.tier = annotations[i].tier;
+                annotation.classification = annotations[i].classification;
                 formatted.push(annotation);
             }
             return formatted;
@@ -1341,7 +1370,9 @@ const OpenCase = {
                     tumorSpecific: "",
                     category: "",
                     createdDate: "",
+                    createdSince: "",
                     modifiedDate: "",
+                    modifiedSince: "",
                     cnvGenes: ""
                 };
                 if (showUser) {
@@ -1355,7 +1386,9 @@ const OpenCase = {
                 annotation.category = annotations[i].category;
                 annotation.cnvGenes = annotations[i].cnvGenes ? annotations[i].cnvGenes.join(" ") : "";
                 annotation.createdDate = annotations[i].createdDate;
+                annotation.createdSince = annotations[i].createdSince;
                 annotation.modifiedDate = annotations[i].modifiedDate;
+                annotation.modifiedSince = annotations[i].modifiedSince;
                 annotation.scopeTooltip = this.$refs.cnvAnnotationDialog.createLevelInformation(annotations[i]);
                 formatted.push(annotation);
             }
@@ -1373,7 +1406,9 @@ const OpenCase = {
                     tumorSpecific: "",
                     category: "",
                     createdDate: "",
+                    createdSince: "",
                     modifiedDate: "",
+                    modifiedSince: "",
                 };
                 if (showUser) {
                     annotation.fullName = annotations[i].fullName;
@@ -1385,7 +1420,9 @@ const OpenCase = {
                     "Tumor"];
                 annotation.category = annotations[i].category;
                 annotation.createdDate = annotations[i].createdDate;
+                annotation.createdSince = annotations[i].createdSince;
                 annotation.modifiedDate = annotations[i].modifiedDate;
+                annotation.modifiedSince = annotations[i].modifiedSince;
                 annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
                 formatted.push(annotation);
             }
@@ -1620,13 +1657,8 @@ const OpenCase = {
                 })
                 .then(response => {
                     if (response.data.isAllowed) {
-                        // for (var i = 0; i < response.data.filters; i++) {
-                        //     var filterSet =  response.data.filters[i];
-                        //     filterSet.value = filterSet.value ? 
-                        // }
                         this.$refs.advancedFilter.filterSets = response.data.filters;
                         this.$refs.advancedFilter.filterSetItems = response.data.items;
-
                     }
                     else {
                         this.handleDialogs(response, this.loadUserFilterSets);
@@ -1708,9 +1740,9 @@ const OpenCase = {
             }
             );
         },
-        parseDate(dateWithTimeZone) {
-            if (dateWithTimeZone) {
-                return dateWithTimeZone.split("T")[0];
+        parseDate(annotation) {
+            if (annotation.modifiedDate) {
+                return annotation.modifiedSince + " (" + annotation.modifiedDate.split("T")[0] + ")";
             }
         },
         createExcelFile(content) {

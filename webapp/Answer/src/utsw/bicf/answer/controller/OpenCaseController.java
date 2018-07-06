@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,13 +85,13 @@ public class OpenCaseController {
 				new PermissionUtils(true, false, false));
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".exportSelection",
 				new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCaseAnnotation",
-				new PermissionUtils(true, true, false));
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadCaseAnnotation",
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCaseAnnotations",
 				new PermissionUtils(true, true, false));
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCNVDetails",
 				new PermissionUtils(true, false, false));
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getTranslocationDetails",
+				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadCaseAnnotations",
 				new PermissionUtils(true, false, false));
 
 	}
@@ -335,16 +336,24 @@ public class OpenCaseController {
 		VariantVcfAnnotationSummary summaryCanonical = null;
 		VariantVcfAnnotationSummary summaryOthers = null;
 		VariantDetailsSummary summary = null;
+		//sort annotations with the most recent first
+		Comparator<Annotation> annotationComparator = new Comparator<Annotation>() {
+			@Override
+			public int compare(Annotation o1, Annotation o2) {
+				return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+			}
+		};
 		if (variantDetails != null) {
 			// populate user info to be used by the UI
 			if (variantDetails.getReferenceVariant() != null
 					&& variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
 				for (Annotation a : variantDetails.getReferenceVariant().getUtswAnnotations()) {
-					User annotationUser = modelDAO.getUserByUserId(a.getUserId());
-					if (annotationUser != null) {
-						a.setFullName(annotationUser.getFullName());
-					}
+					Annotation.init(a, modelDAO); //format dates and add missing info
 				}
+				//Sort annotation by last modified
+				variantDetails.getReferenceVariant().setUtswAnnotations(
+						variantDetails.getReferenceVariant().getUtswAnnotations().stream()
+				.sorted(annotationComparator).collect(Collectors.toList()));
 			}
 			List<VCFAnnotation> vcfAnnotations = variantDetails.getVcfAnnotations();
 			if (!vcfAnnotations.isEmpty()) {

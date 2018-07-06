@@ -18,7 +18,6 @@ import org.jsoup.select.Elements;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
 public class MDAReportTemplate {
 
 	File sourceHTML;
@@ -28,19 +27,21 @@ public class MDAReportTemplate {
 	Map<String, FrequencyRow> frequencyRows = null;
 	List<BiomarkerTrialsRow> selectedBiomarkers = null;
 	List<BiomarkerTrialsRow> relevantBiomarkers = null;
+	List<BiomarkerTrialsRow> selectedAdditionalBiomarkers = null;
+	List<BiomarkerTrialsRow> relevantAdditionalBiomarkers = null;
 
 	public MDAReportTemplate(File sourceHTML) throws IOException {
 		this.sourceHTML = sourceHTML;
 		init();
 	}
-	
+
 	public MDAReportTemplate(String emailContent) {
 		if (emailContent != null && !emailContent.equals("")) {
 			Document htmlDoc = Jsoup.parse(emailContent);
 			parseEmail(htmlDoc);
 		}
 	}
-	
+
 	private void parseEmail(Document htmlDoc) {
 		this.mrn = htmlDoc.select("b:contains(MRN:)").first().nextSibling().outerHtml().trim();
 		this.patient = htmlDoc.select("b:contains(Patient:)").first().nextSibling().outerHtml().trim();
@@ -54,9 +55,17 @@ public class MDAReportTemplate {
 				// frequency table
 				frequencyRows = parseFrequencyTable(table);
 			} else if (table.select("caption:contains(Biomarker-Selected Trials)").first() != null) {
-				selectedBiomarkers = parseBiomarkerTable(table, "selected");
+				if (table.select("caption:contains(Biomarker-Selected Trials Requiring Additional Biomarkers)")
+						.first() != null)
+					selectedAdditionalBiomarkers = parseBiomarkerTable(table, "selected");
+				else
+					selectedBiomarkers = parseBiomarkerTable(table, "selected");
 			} else if (table.select("caption:contains(Biomarker-Relevant Trials)").first() != null) {
-				relevantBiomarkers = parseBiomarkerTable(table, "relevant");
+				if (table.select("caption:contains(Biomarker-Relevant Trials Requiring Additional Biomarkers)")
+						.first() != null)
+					relevantAdditionalBiomarkers = parseBiomarkerTable(table, "relevant");
+				else
+					relevantBiomarkers = parseBiomarkerTable(table, "relevant");
 			}
 		}
 	}
@@ -108,9 +117,9 @@ public class MDAReportTemplate {
 				// else there was something wrong
 			}
 		}
-//		for (AnnotationRow row : parsedRows.values()) {
-//			row.prettyPrint();
-//		}
+		// for (AnnotationRow row : parsedRows.values()) {
+		// row.prettyPrint();
+		// }
 		return parsedRows;
 	}
 
@@ -133,14 +142,15 @@ public class MDAReportTemplate {
 			values.setGermlineInT200Dataset(items.get(headerMap.get(FrequencyRow.HEADER_GERMLINE)).text());
 			parsedRows.put(values.getGene() + values.getAlteration(), values);
 		}
-//		for (FrequencyRow row : parsedRows.values()) {
-//			row.prettyPrint();
-//		}
+		// for (FrequencyRow row : parsedRows.values()) {
+		// row.prettyPrint();
+		// }
 		return parsedRows;
 	}
 
 	/**
 	 * Should handle both table or selected and relevant biomarker tables
+	 * 
 	 * @param table
 	 * @param selectedOrRelevant
 	 * @return
@@ -156,10 +166,16 @@ public class MDAReportTemplate {
 			Elements items = row.select("td");
 			BiomarkerTrialsRow values = new BiomarkerTrialsRow();
 			if (selectedOrRelevant.equals("selected")) {
-				values.setSelectedBiomarker(items.get(headerMap.get(BiomarkerTrialsRow.HEADER_SELECTED_BIOMARKER)).text());
+				values.setSelectedBiomarker(
+						items.get(headerMap.get(BiomarkerTrialsRow.HEADER_SELECTED_BIOMARKER)).text());
+			} else {
+				values.setSelectedBiomarker(
+						items.get(headerMap.get(BiomarkerTrialsRow.HEADER_RELEVANT_BIOMARKER)).text());
 			}
-			else {
-				values.setSelectedBiomarker(items.get(headerMap.get(BiomarkerTrialsRow.HEADER_RELEVANT_BIOMARKER)).text());
+			
+			Element elt = headerMap.get(BiomarkerTrialsRow.HEADER_ADD_REQUIRED_BIOMARKERS) != null ? items.get(headerMap.get(BiomarkerTrialsRow.HEADER_ADD_REQUIRED_BIOMARKERS)) : null;
+			if (elt != null) {
+				values.setAdditionalRequiredBiomarkers(elt.text());
 			}
 			values.setDrugs(parseUnderlineDrugs(items.get(headerMap.get(BiomarkerTrialsRow.HEADER_DRUGS))));
 			values.setTitle(items.get(headerMap.get(BiomarkerTrialsRow.HEADER_TITLE)).text());
@@ -170,9 +186,9 @@ public class MDAReportTemplate {
 			values.setDept(items.get(headerMap.get(BiomarkerTrialsRow.HEADER_DEPT)).text());
 			parsedRows.add(values);
 		}
-//		for (BiomarkerTrialsRow row : parsedRows) {
-//			row.prettyPrint();
-//		}
+		// for (BiomarkerTrialsRow row : parsedRows) {
+		// row.prettyPrint();
+		// }
 		return parsedRows;
 	}
 	
@@ -196,19 +212,19 @@ public class MDAReportTemplate {
 		}
 		return headerMap;
 	}
-	
+
 	public String createObjectJSON() throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(this);
 	}
 
-//	public File getSourceHTML() {
-//		return sourceHTML;
-//	}
-//
-//	public void setSourceHTML(File sourceHTML) {
-//		this.sourceHTML = sourceHTML;
-//	}
+	// public File getSourceHTML() {
+	// return sourceHTML;
+	// }
+	//
+	// public void setSourceHTML(File sourceHTML) {
+	// this.sourceHTML = sourceHTML;
+	// }
 
 	public String getMrn() {
 		return mrn;
@@ -256,6 +272,22 @@ public class MDAReportTemplate {
 
 	public void setPatient(String patient) {
 		this.patient = patient;
+	}
+
+	public List<BiomarkerTrialsRow> getSelectedAdditionalBiomarkers() {
+		return selectedAdditionalBiomarkers;
+	}
+
+	public void setSelectedAdditionalBiomarkers(List<BiomarkerTrialsRow> selectedAdditionalBiomarkers) {
+		this.selectedAdditionalBiomarkers = selectedAdditionalBiomarkers;
+	}
+
+	public List<BiomarkerTrialsRow> getRelevantAdditionalBiomarkers() {
+		return relevantAdditionalBiomarkers;
+	}
+
+	public void setRelevantAdditionalBiomarkers(List<BiomarkerTrialsRow> relevantAdditionalBiomarkers) {
+		this.relevantAdditionalBiomarkers = relevantAdditionalBiomarkers;
 	}
 
 }
