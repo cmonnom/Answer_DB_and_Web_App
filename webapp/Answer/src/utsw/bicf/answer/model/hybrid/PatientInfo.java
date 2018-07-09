@@ -68,6 +68,7 @@ public class PatientInfo {
 		table = new ListTable();
 		items = new ArrayList<CellItem>();
 		table.setItems(items);
+		items.add(new CellItem("OncoTree Diagnosis", orderCase.getOncotreeDiagnosis()));
 		items.add(new CellItem("Order date", orderCase.getEpicOrderDate()));
 		items.add(new CellItem("Tumor Collection Date", orderCase.getTumorCollectionDate()));
 		items.add(new CellItem("Lab Received date", orderCase.getReceivedDate()));

@@ -10,14 +10,16 @@ import utsw.bicf.answer.model.extmapping.Variant;
 public class VariantDetailsSummary {
 	
 	Variant variantDetails;
+	VariantRelatedSummary relatedSummary;
 	VariantVcfAnnotationSummary canonicalSummary;
 	VariantVcfAnnotationSummary otherSummary;
 	Boolean isAllowed = true;
 	
 
-	public VariantDetailsSummary(Variant variantDetails, VariantVcfAnnotationSummary canonicalSummary,
+	public VariantDetailsSummary(Variant variantDetails, VariantRelatedSummary relatedSummary, VariantVcfAnnotationSummary canonicalSummary,
 			VariantVcfAnnotationSummary otherSummary) {
 		super();
+		this.relatedSummary = relatedSummary;
 		this.variantDetails = variantDetails;
 		this.canonicalSummary = canonicalSummary;
 		this.otherSummary = otherSummary;
@@ -58,6 +60,14 @@ public class VariantDetailsSummary {
 
 	public void setOtherSummary(VariantVcfAnnotationSummary otherSummary) {
 		this.otherSummary = otherSummary;
+	}
+
+	public VariantRelatedSummary getRelatedSummary() {
+		return relatedSummary;
+	}
+
+	public void setRelatedSummary(VariantRelatedSummary relatedSummary) {
+		this.relatedSummary = relatedSummary;
 	}
 
 }

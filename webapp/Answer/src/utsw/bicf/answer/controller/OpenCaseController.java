@@ -40,6 +40,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterItems;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListItems;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListSaved;
+import utsw.bicf.answer.controller.serialization.vuetify.VariantRelatedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSummary;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
@@ -333,6 +334,7 @@ public class OpenCaseController {
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		Variant variantDetails = utils.getVariantDetails(variantId);
+		VariantRelatedSummary summaryRelated = null;
 		VariantVcfAnnotationSummary summaryCanonical = null;
 		VariantVcfAnnotationSummary summaryOthers = null;
 		VariantDetailsSummary summary = null;
@@ -355,6 +357,9 @@ public class OpenCaseController {
 						variantDetails.getReferenceVariant().getUtswAnnotations().stream()
 				.sorted(annotationComparator).collect(Collectors.toList()));
 			}
+			if (variantDetails.getRelatedVariants() != null && !variantDetails.getRelatedVariants().isEmpty()) {
+				summaryRelated = new VariantRelatedSummary(variantDetails.getRelatedVariants(), "chromPos");
+			}
 			List<VCFAnnotation> vcfAnnotations = variantDetails.getVcfAnnotations();
 			if (!vcfAnnotations.isEmpty()) {
 				List<VCFAnnotation> canonicalAnnotation = new ArrayList<VCFAnnotation>();
@@ -364,7 +369,7 @@ public class OpenCaseController {
 				otherAnnotations.remove(0);
 				summaryCanonical = new VariantVcfAnnotationSummary(canonicalAnnotation, "proteinPosition");
 				summaryOthers = new VariantVcfAnnotationSummary(otherAnnotations, "proteinPosition");
-				summary = new VariantDetailsSummary(variantDetails, summaryCanonical, summaryOthers);
+				summary = new VariantDetailsSummary(variantDetails, summaryRelated, summaryCanonical, summaryOthers);
 			}
 			return summary.createVuetifyObjectJSON();
 		}

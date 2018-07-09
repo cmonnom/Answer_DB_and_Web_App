@@ -177,6 +177,15 @@ const OpenCase = {
                                                 </v-list-tile-content>
                                             </v-list-tile>
 
+                                            <v-list-tile v-if="isSNP()" avatar :disabled="!currentVariantHasRelatedVariants" @click="toggleRelatedVariants()">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>link</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Related Variants</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+
                                             <v-list-tile v-if="isSNP()" avatar @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible">
                                                 <v-list-tile-avatar>
                                                     <v-icon>mdi-table-search</v-icon>
@@ -261,13 +270,6 @@ const OpenCase = {
                         <v-icon>mdi-table-search</v-icon>
                     </v-btn>
                     <span>Show/Hide Canonical VCF Annotations</span>
-                </v-tooltip>
-                <v-tooltip bottom v-if="isSNP()">
-                    <v-btn icon flat :color="annotationVariantOtherVisible ? 'amber accent-2' : ''" @click="annotationVariantOtherVisible = !annotationVariantOtherVisible"
-                        slot="activator">
-                        <v-icon>mdi-table-search</v-icon>
-                    </v-btn>
-                    <span>Show/Hide Other VCF Annotations</span>
                 </v-tooltip>
                 <v-tooltip bottom v-if="isSNP()">
                     <v-btn :disabled="!mdaAnnotationsExists()" icon flat :color="(mdaAnnotationsVisible && mdaAnnotationsExists()) ? 'amber accent-2' : ''"
@@ -380,21 +382,32 @@ const OpenCase = {
                                 </v-card>
                             </v-flex>
                         </v-slide-y-transition>
-                        <v-flex xs12>
-                            <v-slide-y-transition>
-                                <div class="pb-4 pt-2" v-show="annotationVariantCanonicalVisible && isSNP()">
+                        <v-slide-y-transition>
+                        <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedVariantsVisible()">
+                                <div>
+                                    <data-table ref="relatedVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related Variants"
+                                        initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="link">
+                                    </data-table>
+                                </div>
+                            </v-flex>
+                        </v-slide-y-transition>
+                        <v-slide-y-transition>
+                        <v-flex xs12 v-show="annotationVariantCanonicalVisible && isSNP()">
+                                <div>
                                     <data-table ref="canonicalVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Canonical VCF Annotations"
                                         initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="mdi-table-search">
                                     </data-table>
                                 </div>
-                            </v-slide-y-transition>
-                            <v-slide-y-transition>
-                                <data-table v-show="annotationVariantOtherVisible" ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false"
+                            </v-flex>
+                        </v-slide-y-transition>
+                        <v-slide-y-transition>
+                        <v-flex xs12  v-show="annotationVariantOtherVisible  && isSNP()">
+                                <data-table ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false"
                                     table-title="Other VCF Annotations" initial-sort="geneId" no-data-text="No Data" :show-row-count="true"
                                     title-icon="mdi-table-search">
                                 </data-table>
-                            </v-slide-y-transition>
-                        </v-flex>
+                            </v-flex>
+                        </v-slide-y-transition>
                         <!-- MDA Annotation card -->
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
@@ -438,71 +451,71 @@ const OpenCase = {
                                         </v-tooltip>
                                     </v-toolbar>
                                     <v-card-text>
-                                    <v-container grid-list-md fluid>
-                                        <v-layout row wrap>
-                                        <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in utswAnnotationsFormatted" :key="index">
-                                        <v-card >
-                                            <v-card-text class="subheading">
-                                                <v-container grid-list-md fluid>
-                                                    <v-layout row wrap>
-                                                        <v-flex xs12>
-                                                            From {{ annotation.fullName }}
-                                                            <span v-text="parseDate(annotation)"></span>
-                                                        </v-flex>
-                                                        <v-flex xs12>
-                                                            Scope:
-                                                            <v-tooltip bottom v-for="(scope, index) in annotation.scopes" :key="index">
-                                                                <v-chip disabled outline slot="activator">
-                                                                    <span :class="scope ? 'green--text' : 'red--text'">{{ annotation.scopeLevels[index] }}</span>
-                                                                    <v-icon right v-if="scope" color="green">check</v-icon>
-                                                                    <v-icon right v-if="!scope" color="red">close</v-icon>
-                                                                </v-chip>
-                                                                <span v-html="annotation.scopeTooltip"> </span>
-                                                            </v-tooltip>
-                                                        </v-flex>
-                                                        <v-flex xs12>
-                                                            <span v-if="annotation.category" class="pr-1">
-                                                                <b>{{ annotation.category }}:</b>
-                                                            </span>
-                                                            <span v-html="annotation.text"></span>
-                                                        </v-flex>
-                                                        <v-flex xs12>
-                                                            <span v-if="annotation.tier" class="pr-1">
-                                                                <b>Tier:</b>
-                                                            </span>
-                                                            <span v-html="annotation.tier"></span>
-                                                        </v-flex>
-                                                        <v-flex xs12>
-                                                        <span v-if="annotation.classification" class="pr-1">
-                                                            <b>Classification:</b>
-                                                        </span>
-                                                        <span v-html="annotation.classification"></span>
-                                                    </v-flex>
-                                                        <v-flex xs12 v-if="isCNV() && annotation.cnvGenes" class="pr-1">
-                                                            Apply to genes: {{ annotation.cnvGenes }}
-                                                        </v-flex>
-                                                        <v-flex xs12>
-                                                            <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>
-                                                            <v-tooltip v-if="id" bottom v-for="id in annotation.pmids" :key="id">
-                                                                <v-btn @click="handlePubMedIdLink(id)" slot="activator">
-                                                                    {{ id }}
-                                                                </v-btn>
-                                                                <span>Open in new tab</span>
-                                                            </v-tooltip>
-                                                            <span v-if="annotation.nctids" class="selectable pl-2">Clinical Trials:</span>
-                                                            <v-tooltip v-if="id" bottom v-for="id in annotation.nctids" :key="id">
-                                                                <v-btn @click="handleNCTIdLink(id)" slot="activator">
-                                                                    {{ id }}
-                                                                </v-btn>
-                                                                span>Open in new tab</span>
-                                                            </v-tooltip>
-                                                        </v-flex>
-                                                    </v-layout>
-                                                </v-container>
-                                            </v-card-text>
-                                        </v-card>
-                                        </v-flex>
-                                        </v-layout>
+                                        <v-container grid-list-md fluid>
+                                            <v-layout row wrap>
+                                                <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in utswAnnotationsFormatted" :key="index">
+                                                    <v-card>
+                                                        <v-card-text class="subheading">
+                                                            <v-container grid-list-md fluid>
+                                                                <v-layout row wrap>
+                                                                    <v-flex xs12>
+                                                                        From {{ annotation.fullName }}
+                                                                        <span v-text="parseDate(annotation)"></span>
+                                                                    </v-flex>
+                                                                    <v-flex xs12>
+                                                                        Scope:
+                                                                        <v-tooltip bottom v-for="(scope, index) in annotation.scopes" :key="index">
+                                                                            <v-chip disabled outline slot="activator">
+                                                                                <span :class="scope ? 'green--text' : 'red--text'">{{ annotation.scopeLevels[index] }}</span>
+                                                                                <v-icon right v-if="scope" color="green">check</v-icon>
+                                                                                <v-icon right v-if="!scope" color="red">close</v-icon>
+                                                                            </v-chip>
+                                                                            <span v-html="annotation.scopeTooltip"> </span>
+                                                                        </v-tooltip>
+                                                                    </v-flex>
+                                                                    <v-flex xs12>
+                                                                        <span v-if="annotation.category" class="pr-1">
+                                                                            <b>{{ annotation.category }}:</b>
+                                                                        </span>
+                                                                        <span v-html="annotation.text"></span>
+                                                                    </v-flex>
+                                                                    <v-flex xs12>
+                                                                        <span v-if="annotation.tier" class="pr-1">
+                                                                            <b>Tier:</b>
+                                                                        </span>
+                                                                        <span v-html="annotation.tier"></span>
+                                                                    </v-flex>
+                                                                    <v-flex xs12>
+                                                                        <span v-if="annotation.classification" class="pr-1">
+                                                                            <b>Classification:</b>
+                                                                        </span>
+                                                                        <span v-html="annotation.classification"></span>
+                                                                    </v-flex>
+                                                                    <v-flex xs12 v-if="isCNV() && annotation.cnvGenes" class="pr-1">
+                                                                        Apply to genes: {{ annotation.cnvGenes }}
+                                                                    </v-flex>
+                                                                    <v-flex xs12>
+                                                                        <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>
+                                                                        <v-tooltip v-if="id" bottom v-for="id in annotation.pmids" :key="id">
+                                                                            <v-btn @click="handlePubMedIdLink(id)" slot="activator">
+                                                                                {{ id }}
+                                                                            </v-btn>
+                                                                            <span>Open in new tab</span>
+                                                                        </v-tooltip>
+                                                                        <span v-if="annotation.nctids" class="selectable pl-2">Clinical Trials:</span>
+                                                                        <v-tooltip v-if="id" bottom v-for="id in annotation.nctids" :key="id">
+                                                                            <v-btn @click="handleNCTIdLink(id)" slot="activator">
+                                                                                {{ id }}
+                                                                            </v-btn>
+                                                                            span>Open in new tab</span>
+                                                                        </v-tooltip>
+                                                                    </v-flex>
+                                                                </v-layout>
+                                                            </v-container>
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-flex>
+                                            </v-layout>
                                         </v-container>
                                     </v-card-text>
                                 </v-card>
@@ -592,7 +605,7 @@ const OpenCase = {
             <span>Show/Hide Case Annotations</span>
         </v-tooltip>
         <v-badge color="red" right bottom overlap v-model="variantUnSaved" class="mini-badge">
-            <v-icon slot="badge" ></v-icon>
+            <v-icon slot="badge"></v-icon>
             <v-tooltip bottom>
                 <v-btn flat icon @click="openSaveDialog()" slot="activator" :color="saveDialogVisible ? 'amber accent-2' : ''">
                     <v-icon>mdi-clipboard-check</v-icon>
@@ -600,7 +613,8 @@ const OpenCase = {
                 <span>Review Variants Selected</span>
             </v-tooltip>
         </v-badge>
-        <v-progress-linear class="ml-4 mr-4" :slot="loadingVariantDetails ? 'extension' : ''" v-show="!caseName || loadingVariantDetails" :indeterminate="true" color="white"></v-progress-linear>
+        <v-progress-linear class="ml-4 mr-4" :slot="loadingVariantDetails ? 'extension' : ''" v-show="!caseName || loadingVariantDetails"
+            :indeterminate="true" color="white"></v-progress-linear>
     </v-toolbar>
 
     <v-slide-y-transition>
@@ -692,9 +706,7 @@ const OpenCase = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-tabs dark slider-color="warning" color="primary" 
-        fixed-tabs v-show="variantTabsVisible"
-        v-model="variantTabActive">
+        <v-tabs dark slider-color="warning" color="primary" fixed-tabs v-show="variantTabsVisible" v-model="variantTabActive">
             <v-tab>
                 SNP / Indel
             </v-tab>
@@ -708,8 +720,7 @@ const OpenCase = {
             <v-tab-item>
                 <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
                     no-data-text="No Data" :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()"
-                    :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons"
-                   @datatable-selection-changed="handleSelectionChanged">
+                    :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons" @datatable-selection-changed="handleSelectionChanged">
                     <v-fade-transition slot="action1">
                         <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
                             <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
@@ -767,6 +778,7 @@ const OpenCase = {
             linkTable: [],
             saveDialogVisible: false,
             annotationVariantDetailsVisible: true,
+            annotationVariantRelatedVisible: true,
             annotationVariantCanonicalVisible: true,
             annotationVariantOtherVisible: false,
             saveVariantDisabled: false,
@@ -797,7 +809,9 @@ const OpenCase = {
             reportGroups: [],
             geneVariantDetailsTableHovering: false,
             variantTabActive: null,
-            wasAdvancedFilteringVisibleBeforeTabChange: false
+            wasAdvancedFilteringVisibleBeforeTabChange: false,
+            currentVariantHasRelatedVariants: false
+           
         }
     }, methods: {
         toggleGeneVariantDetailsButtons(doShow) {
@@ -1097,6 +1111,16 @@ const OpenCase = {
                             }]
                         };
                         this.variantDataTables.push(dataTable);
+                        if (response.data.relatedSummary) {
+                            this.$refs.relatedVariantAnnotation.manualDataFiltered(response.data.relatedSummary);
+                            if (response.data.relatedSummary.items.length > 0) {
+                                this.currentVariantHasRelatedVariants = true;
+                                this.annotationVariantRelatedVisible = true;
+                            }
+                        }
+                        else {
+                            this.currentVariantHasRelatedVariants = false;
+                        }
                         this.$refs.canonicalVariantAnnotation.manualDataFiltered(response.data.canonicalSummary);
                         this.$refs.otherVariantAnnotations.manualDataFiltered(response.data.otherSummary);
                         this.userAnnotations = this.currentVariant.referenceVariant.utswAnnotations.filter(a => a.userId == this.userId);
@@ -1591,6 +1615,14 @@ const OpenCase = {
         },
         utswAnnotationsExists() {
             return this.utswAnnotationsFormatted.length > 0;
+        },
+        isRelatedVariantsVisible() {
+            return this.annotationVariantRelatedVisible && this.isSNP() && this.currentVariantHasRelatedVariants;
+        },
+        toggleRelatedVariants() {
+            if (this.currentVariantHasRelatedVariants) {
+                this.annotationVariantRelatedVisible = !this.annotationVariantRelatedVisible;
+            }
         },
         saveCurrentFilters() {
             this.$refs.advancedFilter.loading = true;

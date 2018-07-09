@@ -2,10 +2,12 @@ package utsw.bicf.answer.model.hybrid;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
+import utsw.bicf.answer.model.extmapping.Build;
 import utsw.bicf.answer.model.extmapping.Variant;
 
 public class SNPIndelVariantRow {
@@ -44,6 +46,8 @@ public class SNPIndelVariantRow {
 	Boolean repeat;
 	Boolean common;
 	Boolean inconsistent;
+	Map<String, Build> oldBuilds;
+	List<Variant> relatedVariants;
 	
 	
 	
@@ -81,6 +85,8 @@ public class SNPIndelVariantRow {
 		common = gnomadPopmaxAlleleFrequency != null && variant.getGnomadPopmaxAlleleFrequency() > 0.01;
 		repeat = variant.getRepeat();
 		inconsistent = variant.getInconsistent();
+		this.oldBuilds = variant.getOldBuilds();
+		this.relatedVariants = variant.getRelatedVariants();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		boolean failed = filters.contains(Variant.VALUE_FAIL);
@@ -326,6 +332,22 @@ public class SNPIndelVariantRow {
 
 	public Boolean getInconsistent() {
 		return inconsistent;
+	}
+
+
+
+
+
+	public Map<String, Build> getOldBuilds() {
+		return oldBuilds;
+	}
+
+
+
+
+
+	public List<Variant> getRelatedVariants() {
+		return relatedVariants;
 	}
 
 

@@ -35,6 +35,7 @@ public class OrderCase {
 	String rnaBam;
 	List<CNV> cnvs;
 	List<Translocation> translocations;
+	String oncotreeDiagnosis;
 	
 	
 	
@@ -321,6 +322,16 @@ public class OrderCase {
 
 	public void setTranslocations(List<Translocation> translocations) {
 		this.translocations = translocations;
+	}
+
+
+	public String getOncotreeDiagnosis() {
+		return oncotreeDiagnosis;
+	}
+
+
+	public void setOncotreeDiagnosis(String oncotreeDiagnosis) {
+		this.oncotreeDiagnosis = oncotreeDiagnosis;
 	}
 
 

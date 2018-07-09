@@ -1,6 +1,7 @@
 package utsw.bicf.answer.model.extmapping;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,6 +28,7 @@ public class Variant {
 	public static final String FIELD_GNOMAD_ALLELE_FREQUENCY = "gnomadPopmaxAlleleFrequency";
 	public static final String FIELD_NUM_CASES_SEEN = "numCasesSeen";
 	public static final String FIELD_IN_COSMIC = "inCosmic";
+	public static final String FIELD_OLD_BUILDS = "oldBuilds";
 	
 	//Some values like filter pass/fail need to be translated into boolean
 	//keep the values expected in the JSON string here
@@ -70,7 +72,8 @@ public class Variant {
 	ReferenceVariant referenceVariant;
 	Boolean mdaAnnotated;
 	Boolean utswAnnotated;
-	
+	Map<String, Build> oldBuilds;
+	List<Variant> relatedVariants;
 	
 	public Variant() {
 		
@@ -379,6 +382,41 @@ public class Variant {
 
 	public Boolean getInconsistent() {
 		return inconsistent;
+	}
+
+
+	public static String getFieldExacAlleleFrequency() {
+		return FIELD_EXAC_ALLELE_FREQUENCY;
+	}
+
+
+	public static String getFieldGnomadAlleleFrequency() {
+		return FIELD_GNOMAD_ALLELE_FREQUENCY;
+	}
+
+
+	public static String getFieldNumCasesSeen() {
+		return FIELD_NUM_CASES_SEEN;
+	}
+
+
+	public static String getFieldInCosmic() {
+		return FIELD_IN_COSMIC;
+	}
+
+
+	public static String getFieldOldBuilds() {
+		return FIELD_OLD_BUILDS;
+	}
+
+
+	public Map<String, Build> getOldBuilds() {
+		return oldBuilds;
+	}
+
+
+	public List<Variant> getRelatedVariants() {
+		return relatedVariants;
 	}
 
 
