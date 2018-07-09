@@ -3,7 +3,7 @@ const Home = {
         `<div>
   <v-dialog v-model="assignDialogVisible" max-width="50%">
     <v-card>
-      <v-toolbar dark color="primary">
+      <v-toolbar dense dark color="primary">
         <v-toolbar-title class="white--text">Assign case: {{ currentEpicOrderNumber }}</v-toolbar-title>
       </v-toolbar>
       <v-card-title>Pick who should work on this case:</v-card-title>
@@ -30,7 +30,7 @@ const Home = {
     </v-card>
   </v-dialog>
 
-  <v-toolbar dark color="primary" fixed app>
+  <v-toolbar dense dark color="primary" fixed app>
     <v-tooltip class="ml-0" bottom>
       <v-menu offset-y offset-x slot="activator" class="ml-0">
         <v-btn slot="activator" flat icon dark>

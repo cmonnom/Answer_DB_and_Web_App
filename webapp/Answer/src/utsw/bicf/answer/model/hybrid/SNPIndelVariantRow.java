@@ -49,6 +49,10 @@ public class SNPIndelVariantRow {
 	Boolean inconsistent;
 	Map<String, Build> oldBuilds;
 	List<Variant> relatedVariants;
+	Boolean inCosmic;
+	String oncokbGeneName;
+	String oncokbVariantName;
+	Boolean hasRelatedVariants;
 	
 	
 	
@@ -89,6 +93,10 @@ public class SNPIndelVariantRow {
 		inconsistent = variant.getInconsistent();
 		this.oldBuilds = variant.getOldBuilds();
 		this.relatedVariants = variant.getRelatedVariants();
+		this.hasRelatedVariants = variant.getHasRelatedVariants();
+		this.oncokbGeneName = variant.getOncokbGeneName();
+		this.oncokbVariantName = variant.getOncokbVariantName();
+		this.inCosmic = variant.getInCosmic();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		boolean failed = filters.contains(Variant.VALUE_FAIL);
@@ -358,6 +366,38 @@ public class SNPIndelVariantRow {
 
 	public String getReference() {
 		return reference;
+	}
+
+
+
+
+
+	public Boolean getInCosmic() {
+		return inCosmic;
+	}
+
+
+
+
+
+	public String getOncokbGeneName() {
+		return oncokbGeneName;
+	}
+
+
+
+
+
+	public String getOncokbVariantName() {
+		return oncokbVariantName;
+	}
+
+
+
+
+
+	public Boolean getHasRelatedVariants() {
+		return hasRelatedVariants;
 	}
 
 

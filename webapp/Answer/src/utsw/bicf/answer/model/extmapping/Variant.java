@@ -67,6 +67,7 @@ public class Variant {
 	Float gnomadPopmaxAlleleFrequency;
 	Boolean repeat;
 	Boolean inconsistent;
+	Boolean inCosmic;
 	
 	List<VCFAnnotation> vcfAnnotations;
 	AnnotationRow mdaAnnotation;
@@ -75,6 +76,10 @@ public class Variant {
 	Boolean utswAnnotated;
 	Map<String, Build> oldBuilds;
 	List<Variant> relatedVariants;
+	
+	String oncokbGeneName;
+	String oncokbVariantName;
+	Boolean hasRelatedVariants;
 	
 	public Variant() {
 		
@@ -335,6 +340,26 @@ public class Variant {
 
 	public String getReference() {
 		return reference;
+	}
+
+
+	public Boolean getInCosmic() {
+		return inCosmic;
+	}
+
+
+	public String getOncokbGeneName() {
+		return oncokbGeneName;
+	}
+
+
+	public String getOncokbVariantName() {
+		return oncokbVariantName;
+	}
+
+
+	public Boolean getHasRelatedVariants() {
+		return hasRelatedVariants;
 	}
 
 

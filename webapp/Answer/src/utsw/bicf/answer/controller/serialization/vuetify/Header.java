@@ -26,6 +26,7 @@ public class Header {
 	Boolean buttons; //to allow buttons instead of text in a cell
 	Boolean isHidden;
 	String align;
+	Boolean sortable = true;
 	
 	public Header(String text, String value, Units unit, ToolTip toolTip, Boolean isPassable) {
 		this.text = text;
@@ -206,6 +207,14 @@ public class Header {
 
 	public void setAlign(String align) {
 		this.align = align;
+	}
+
+	public Boolean getSortable() {
+		return sortable;
+	}
+
+	public void setSortable(Boolean sortable) {
+		this.sortable = sortable;
 	}
 
 }

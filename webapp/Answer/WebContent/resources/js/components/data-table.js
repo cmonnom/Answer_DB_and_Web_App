@@ -26,7 +26,7 @@ Vue.component('data-table', {
     template: `<div @mouseover="toggleShowButtons(true)" @mouseleave="toggleShowButtons(false)">
 
   <!-- Top tool bar with menu options -->
-  <v-toolbar dense dark color="primary" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
+  <v-toolbar dense dark color="primary" :class="fixed ? '' : 'elevation-0'" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
     <!-- icon with no function -->
     <v-icon v-if="titleIcon && !showLeftMenu" color="amber accent-2">{{ titleIcon }}</v-icon>
     <!-- menu with same functions as left side icons -->
@@ -294,9 +294,9 @@ Vue.component('data-table', {
 
 
   <!-- Data Table -->
-
+  <v-divider></v-divider>
   <v-data-table :id="tableId" v-model="selected" v-bind:headers="headers" v-bind:items="items" v-bind:search="search" hide-actions
-    v-bind:pagination.sync="pagination" :item-key="uniqueIdField" :no-data-text="noDataText" :loading="loading" :class="['elevation-1', toolbarVisible ? 'mt-1' : '']"
+    v-bind:pagination.sync="pagination" :item-key="uniqueIdField" :no-data-text="noDataText" :loading="loading" :class="['elevation-1', toolbarVisible ? 'mt-0' : '']"
     :custom-sort="customSort" ref="dataTable">
     <template slot="headers" slot-scope="props">
       <tr>
@@ -305,9 +305,9 @@ Vue.component('data-table', {
         </th>
         <th v-if="expandedDataUrl" class="primary">
         </th>
-        <th v-for="header in getSortedHeaders" :key="header.text" :class="['primary white--text', 'subheading', 'column sortable', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
-          @click="changeSort(header.value)" :width="header.width" :style="'min-width:' + header.width">
-          <v-icon class="table-sorting-icon">arrow_upward</v-icon>
+        <th v-for="header in getSortedHeaders" :key="header.text" :class="['primary white--text', 'subheading', header.sortable ? 'column sortable' : '', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
+          @click="changeSort(header)" :width="header.width" :style="'min-width:' + header.width">
+          <v-icon v-if="header.sortable" class="table-sorting-icon">arrow_upward</v-icon>
           <v-tooltip bottom v-if="header.toolTip">
             <span slot="activator" v-html="formattedHeader(header)">
             </span>
@@ -476,7 +476,11 @@ Vue.component('data-table', {
             if (this.selected.length) this.selected = []
             else this.selected = this.items.slice()
         },
-        changeSort(column) {
+        changeSort(header) {
+            if (!header.sortable) {
+                return;
+            }
+            var column = header.value;
             if (this.pagination.sortBy === column) {
                 this.pagination.descending = !this.pagination.descending
             } else {

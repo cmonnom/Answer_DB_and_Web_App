@@ -254,7 +254,10 @@ const OpenCase = {
 
                     </v-list>
                 </v-menu>
-                <v-toolbar-title class="ml-0">Annotations for variant: {{ currentVariant.geneName }} {{ currentVariant.notation }}
+                <v-toolbar-title class="ml-0">Annotations for Variant: 
+                <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
+                <span v-if="isCNV()">{{ currentVariant.chrom }}</span>
+                <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -364,8 +367,8 @@ const OpenCase = {
                                                                     <v-layout class="full-width">
                                                                         <v-flex xs12 class="text-xs-left grow">
                                                                             <span class="selectable">{{ item.label }}:</span>
-                                                                            <v-tooltip v-if="item.links && id !== null" bottom v-for="id in item.ids" :key="id">
-                                                                                <v-btn @click="handleIdLink(id)" slot="activator" v-html="formatIdLinkLabel(id, item)">
+                                                                            <v-tooltip v-if="item.links && id.value !== null" bottom v-for="(id, index) in item.ids" :key="index">
+                                                                                <v-btn @click="handleIdLink(id)" slot="activator" v-html="id.label">
                                                                                 </v-btn>
                                                                                 <span>Open in new tab</span>
                                                                             </v-tooltip>
@@ -621,19 +624,19 @@ const OpenCase = {
         <v-layout v-if="patientDetailsVisible">
             <v-flex xs12 md12 lg10 xl9>
                 <div class="text-xs-center pb-3">
-                    <v-toolbar dense dark color="primary">
-                        <!-- <v-icon>perm_identity</v-icon> -->
-                        <v-icon :color="patientDetailsVisible ? 'amber accent-2' : ''">assignment_ind</v-icon>
-                        <v-toolbar-title>Patient Details</v-toolbar-title>
-                        <v-spacer></v-spacer>
-                        <v-tooltip bottom>
-                            <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
-                                <v-icon>close</v-icon>
-                            </v-btn>
-                            <span>Close Details</span>
-                        </v-tooltip>
-                    </v-toolbar>
-                    <v-card>
+                <v-card>
+                <v-toolbar dense dark color="primary">
+                    <!-- <v-icon>perm_identity</v-icon> -->
+                    <v-icon :color="patientDetailsVisible ? 'amber accent-2' : ''">assignment_ind</v-icon>
+                    <v-toolbar-title>Patient Details</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-tooltip bottom>
+                        <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
+                            <v-icon>close</v-icon>
+                        </v-btn>
+                        <span>Close Details</span>
+                    </v-tooltip>
+                </v-toolbar>
                         <v-container grid-list-md fluid>
                             <v-layout row wrap>
                                 <v-flex xs4 v-for="table in patientTables" :key="table.name">
@@ -669,19 +672,19 @@ const OpenCase = {
     <v-slide-y-transition>
         <v-layout v-if="caseAnnotationsVisible">
             <v-flex xs12 class="pb-3">
-                <v-toolbar dense dark color="primary">
-                    <!-- <v-icon>perm_identity</v-icon> -->
-                    <v-icon :color="caseAnnotationsVisible ? 'amber accent-2' : ''">mdi-message-bulleted</v-icon>
-                    <v-toolbar-title>Case Annotations</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <v-tooltip bottom>
-                        <v-btn flat icon @click="caseAnnotationsVisible = false" slot="activator">
-                            <v-icon>close</v-icon>
-                        </v-btn>
-                        <span>Close Annotations</span>
-                    </v-tooltip>
-                </v-toolbar>
-                <v-card>
+            <v-card>
+            <v-toolbar dense dark color="primary">
+                <!-- <v-icon>perm_identity</v-icon> -->
+                <v-icon :color="caseAnnotationsVisible ? 'amber accent-2' : ''">mdi-message-bulleted</v-icon>
+                <v-toolbar-title>Case Annotations</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-tooltip bottom>
+                    <v-btn flat icon @click="caseAnnotationsVisible = false" slot="activator">
+                        <v-icon>close</v-icon>
+                    </v-btn>
+                    <span>Close Annotations</span>
+                </v-tooltip>
+            </v-toolbar>
                     <v-card-text>
                         <v-text-field :textarea="true" v-model="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
                         </v-text-field>
@@ -757,7 +760,9 @@ const OpenCase = {
 
 
 
-</div>` , data() { return {      firstTimeLoading: true,
+</div>` , data() {
+        return {
+            firstTimeLoading: true,
             loading: true,
             loadingVariantDetails: false,
             // breadcrumbs: [{text: "You are here:  Case", disabled: true}],
@@ -811,7 +816,7 @@ const OpenCase = {
             variantTabActive: null,
             wasAdvancedFilteringVisibleBeforeTabChange: false,
             currentVariantHasRelatedVariants: false
-           
+
         }
     }, methods: {
         toggleGeneVariantDetailsButtons(doShow) {
@@ -898,7 +903,7 @@ const OpenCase = {
             );
         },
         addCustomWarningFlags(snpIndelVariantSummary) {
-            for (var i =0; i < snpIndelVariantSummary.items.length; i++) {
+            for (var i = 0; i < snpIndelVariantSummary.items.length; i++) {
                 var item = snpIndelVariantSummary.items[i];
                 var iconFlags = item.iconFlags.iconFlags;
                 var warnings = [];
@@ -954,7 +959,7 @@ const OpenCase = {
             return this.$refs.advancedFilter && this.$refs.advancedFilter.advancedFilteringVisible;
         },
         handleTabChanged(newValue, oldValue) {
-             //SNP/Indel tab need to be active to allow filtering
+            //SNP/Indel tab need to be active to allow filtering
             if (!this.$refs.advancedFilter) {
                 return;
             }
@@ -1056,12 +1061,39 @@ const OpenCase = {
                         };
                         this.variantDataTables.push(infoTable);
 
+                        var oncoKBIds = [{
+                            type: "oncoKB",
+                            subtype: "gene",
+                            value: this.currentVariant.oncokbGeneName,
+                            label: "<span class='no-text-transform'>&nbsp;OncoKB Gene " + this.currentVariant.oncokbGeneName + "&nbsp;</span>",
+                        },
+                        {
+                            type: "oncoKB",
+                            subtype: "variant",
+                            value: this.currentVariant.oncokbVariantName,
+                            label: "<span class='no-text-transform'>&nbsp;OncoKB Variant " + this.currentVariant.oncokbVariantName + "&nbsp;</span>",
+                        }
+                           ];
+
+                        var variousIds = [];
+                        for (var i = 0 ; i < this.currentVariant.ids.length; i++) {
+                            variousIds.push({
+                                type: "various",
+                                subtype: null,
+                                value: this.currentVariant.ids[i],
+                                label: this.formatIdLinkLabel(this.currentVariant.ids[i], this.currentVariant.ids, this.currentVariant.cosmicPatients),
+                            });
+                        }   
+
                         this.linkTable = [{
-                            name: "linkTable", items: [
+                            name: "linkTable",
+                            items: [
                                 {
-                                    label: "IDs", ids:
-                                        this.currentVariant.ids, cosmicPatients: this.currentVariant.cosmicPatients, links: true
-                                }
+                                    label: "IDs",
+                                    ids: variousIds.concat(oncoKBIds),
+                                    cosmicPatients: this.currentVariant.cosmicPatients,
+                                    links: true
+                                },
                             ]
                         }];
 
@@ -1242,7 +1274,7 @@ const OpenCase = {
 
                         var infoTable2 = {
                             name: "infoTable2",
-                            items: [  {
+                            items: [{
                                 label: "Left Strand", value: this.currentVariant.leftStrand
                             },
                             {
@@ -1299,17 +1331,27 @@ const OpenCase = {
         },
         handleIdLink(id) {
             var link = "";
-            if (id.indexOf('rs') == 0) {
-                link = "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=" + id;
+            if (id.type == "various") {
+                if (id.value.indexOf('rs') == 0) {
+                    link = "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=" + id.value;
+                }
+                else if (id.value.indexOf('COSM') == 0) {
+                    link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.value.replace("COSM", "");
+                }
+                else if (id.value.indexOf('COSN') == 0) {
+                    link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.value.replace("COSN", "");
+                }
+                else { //Clinvar
+                    link = "https://www.ncbi.nlm.nih.gov/clinvar/variation/" + id.value;
+                }
             }
-            else if (id.indexOf('COSM') == 0) {
-                link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.replace("COSM", "");
-            }
-            else if (id.indexIf('COSN') == 0) {
-                link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.replace("COSN", "");
-            }
-            else { //Clinvar
-                link = "https://www.ncbi.nlm.nih.gov/clinvar/variation/" + id;
+            else if (id.type == "oncoKB") {
+                if (id.subtype == "gene") {
+                    link = "http://oncokb.org/#/gene/" + this.currentVariant.oncokbGeneName;
+                }
+                else  if (id.subtype == "variant") {
+                    link = "http://oncokb.org/#/gene/" + this.currentVariant.oncokbGeneName + "/variant/" + this.currentVariant.oncokbVariantName;
+                }
             }
             window.open(link, "_blank");
         },
@@ -1321,17 +1363,20 @@ const OpenCase = {
             var link = "https://clinicaltrials.gov/ct2/show/" + id;
             window.open(link, "_blank");
         },
+        handleOncoKBGeneLink(id) {
+
+        },
         openLink(link) {
             window.open(link, "_blank");
         },
-        formatIdLinkLabel(id, item) {
-            var cosmicIds = item.ids.filter(id => id.indexOf('COSM') == 0);
+        formatIdLinkLabel(id, ids, cosmicPatients) {
+            var cosmicIds = ids.filter(id => id.indexOf('COSM') == 0);
             var index = cosmicIds.indexOf(id);
             if (id.indexOf('rs') == 0) {
                 return "&nbsp;" + id + "&nbsp;";
             }
             else if (id.indexOf('COSM') == 0) {
-                return "&nbsp;" + id + " (" + item.cosmicPatients[index] + ")&nbsp;";
+                return "&nbsp;" + id + " (" + cosmicPatients[index] + ")&nbsp;";
             }
             else {
                 return "&nbsp;" + id + "&nbsp;";
@@ -1589,9 +1634,9 @@ const OpenCase = {
                     caseId: this.$route.params.id
                 },
                 data: {
-                        selectedSNPVariantIds: selectedSNPVariantIds,
-                        selectedCNVIds: selectedCNVIds,
-                        selectedTranslocationIds: selectedTranslocationIds
+                    selectedSNPVariantIds: selectedSNPVariantIds,
+                    selectedCNVIds: selectedCNVIds,
+                    selectedTranslocationIds: selectedTranslocationIds
                 }
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {

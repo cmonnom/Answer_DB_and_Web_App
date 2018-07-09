@@ -5,7 +5,7 @@ Vue.component('advanced-filter', {
     <!-- save filter set dialog -->
     <v-dialog v-model="saveFilterSetDialogVisible" max-width="500px">
         <v-card class="soft-grey-background">
-            <v-toolbar dense dark color="primary">
+            <v-toolbar dense dark color="primary" class="elevation-0">
                 <v-toolbar-title>Save Current Filter Set
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
@@ -102,7 +102,7 @@ Vue.component('advanced-filter', {
                                 <v-list-tile-content>
                                     <v-list-tile-title>
                                         <v-menu open-on-hover offset-x :close-on-content-click="true">
-                                            <span slot="activator">
+                                            <span slot="activator" class="pr-4">
                                                 <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Load Filter Set
                                             </span>
                                             <v-list>
@@ -128,7 +128,7 @@ Vue.component('advanced-filter', {
                             <v-list-tile class="list-menu" :disabled="reportGroups.length == 0 || disableFiltering">
                                 <v-list-tile-content>
                                     <v-menu open-on-hover offset-x :close-on-content-click="true">
-                                            <span slot="activator">
+                                            <span slot="activator" class="pr-4">
                                                     <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Load Gene Set
                                                 </span>
                                         <v-list>
