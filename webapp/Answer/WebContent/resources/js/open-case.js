@@ -20,7 +20,7 @@ const OpenCase = {
     <advanced-filter ref="advancedFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"></advanced-filter>
     <v-dialog v-model="saveDialogVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
-            <v-toolbar dark color="primary">
+            <v-toolbar dense dark color="primary">
                 <v-menu offset-y offset-x class="ml-0">
                     <v-btn slot="activator" flat icon dark>
                         <v-icon>more_vert</v-icon>
@@ -155,7 +155,7 @@ const OpenCase = {
     <!-- variant details dialog -->
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
-            <v-toolbar dark color="primary">
+            <v-toolbar dense dark color="primary">
                 <v-menu offset-y offset-x class="ml-0">
                     <v-btn slot="activator" flat icon dark>
                         <v-icon>more_vert</v-icon>
@@ -318,7 +318,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 md12 lg9 xl7 v-show="annotationVariantDetailsVisible">
                                 <v-card>
-                                    <v-toolbar dark color="primary">
+                                    <v-toolbar dense dark color="primary">
                                         <v-toolbar-title>
                                             <v-icon color="amber accent-2">zoom_in</v-icon>
                                             Variant Details
@@ -412,7 +412,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
                                 <v-card>
-                                    <v-toolbar dark color="primary">
+                                    <v-toolbar dense dark color="primary">
                                         <v-toolbar-title>
                                             <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
                                             MD Anderson Annotations
@@ -437,7 +437,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
                                 <v-card class="soft-grey-background">
-                                    <v-toolbar dark color="primary">
+                                    <v-toolbar dense dark color="primary">
                                         <v-toolbar-title>
                                             <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
                                             UTSW Annotations
@@ -548,7 +548,7 @@ const OpenCase = {
 
 
 
-    <v-toolbar dark color="primary" fixed app :extended="loadingVariantDetails">
+    <v-toolbar dense dark color="primary" fixed app :extended="loadingVariantDetails">
         <v-tooltip class="ml-0" bottom>
             <v-menu offset-y offset-x slot="activator" class="ml-0">
                 <v-btn slot="activator" flat icon dark>
@@ -621,7 +621,7 @@ const OpenCase = {
         <v-layout v-if="patientDetailsVisible">
             <v-flex xs12 md12 lg10 xl9>
                 <div class="text-xs-center pb-3">
-                    <v-toolbar dark color="primary">
+                    <v-toolbar dense dark color="primary">
                         <!-- <v-icon>perm_identity</v-icon> -->
                         <v-icon :color="patientDetailsVisible ? 'amber accent-2' : ''">assignment_ind</v-icon>
                         <v-toolbar-title>Patient Details</v-toolbar-title>
@@ -669,7 +669,7 @@ const OpenCase = {
     <v-slide-y-transition>
         <v-layout v-if="caseAnnotationsVisible">
             <v-flex xs12 class="pb-3">
-                <v-toolbar dark color="primary">
+                <v-toolbar dense dark color="primary">
                     <!-- <v-icon>perm_identity</v-icon> -->
                     <v-icon :color="caseAnnotationsVisible ? 'amber accent-2' : ''">mdi-message-bulleted</v-icon>
                     <v-toolbar-title>Case Annotations</v-toolbar-title>
@@ -706,7 +706,7 @@ const OpenCase = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-tabs dark slider-color="warning" color="primary" fixed-tabs v-show="variantTabsVisible" v-model="variantTabActive">
+        <v-tabs dark slider-color="warning" color="primary darken-1" fixed-tabs v-show="variantTabsVisible" v-model="variantTabActive">
             <v-tab>
                 SNP / Indel
             </v-tab>

@@ -7,7 +7,7 @@ Vue.component('edit-annotations', {
     <!-- annotation dialog -->
     <v-dialog v-model="annotationDialogVisible" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
         <v-card ref="annotationDialog" class="soft-grey-background">
-            <v-toolbar dark color="primary" class="mb-2">
+            <v-toolbar dense dark color="primary" class="mb-2">
                 <v-tooltip class="ml-0" bottom>
                     <v-menu offset-y offset-x slot="activator" class="ml-0">
                         <v-btn slot="activator" flat icon dark>
@@ -76,7 +76,7 @@ Vue.component('edit-annotations', {
                 </v-card>
                 <v-card class="mb-4" v-if="userEditingAnnotations.length > 0" v-for="(annotation, index) in userEditingAnnotations" :key="index"
                     :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                    <v-toolbar dark color="primary">
+                    <v-toolbar dense dark color="primary">
                         <v-tooltip bottom>
                             <v-btn slot="activator" :color="annotation.isVisible ? 'amber accent-2' : ''" icon flat @click="annotation.isVisible = !annotation.isVisible">
                                 <v-icon v-show="!annotation.isVisible">visibility_off</v-icon>

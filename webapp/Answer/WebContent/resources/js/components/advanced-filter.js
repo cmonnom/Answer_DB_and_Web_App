@@ -5,7 +5,7 @@ Vue.component('advanced-filter', {
     <!-- save filter set dialog -->
     <v-dialog v-model="saveFilterSetDialogVisible" max-width="500px">
         <v-card class="soft-grey-background">
-            <v-toolbar dark color="primary">
+            <v-toolbar dense dark color="primary">
                 <v-toolbar-title>Save Current Filter Set
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
@@ -81,7 +81,7 @@ Vue.component('advanced-filter', {
 
     <div v-if="advancedFilteringVisible">
         <v-navigation-drawer app width="500" class="elevation-5">
-            <v-toolbar>
+            <v-toolbar dense>
                 <v-tooltip class="ml-0" bottom>
                     <v-menu offset-y offset-x slot="activator" class="ml-0">
                         <v-btn slot="activator" flat icon dark>
@@ -232,7 +232,7 @@ Vue.component('advanced-filter', {
                 </v-tooltip>
             </v-toolbar>
         </v-navigation-drawer>
-        <v-navigation-drawer app width="500" class="mt-6" height="calc(100% - 64px)">
+        <v-navigation-drawer app width="500" class="mt-5" height="calc(100% - 48px)">
             <!-- displays which filters are active -->
             <div v-if="currentFilterSet" class="pl-2 pt-2 subheading">Current Filter Set: {{ currentFilterSet.listName }}</div>
             <div class="pt-2 pb-2">

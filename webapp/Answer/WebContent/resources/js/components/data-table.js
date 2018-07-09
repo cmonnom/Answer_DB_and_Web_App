@@ -26,7 +26,7 @@ Vue.component('data-table', {
     template: `<div @mouseover="toggleShowButtons(true)" @mouseleave="toggleShowButtons(false)">
 
   <!-- Top tool bar with menu options -->
-  <v-toolbar dark color="primary" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
+  <v-toolbar dense dark color="primary" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
     <!-- icon with no function -->
     <v-icon v-if="titleIcon && !showLeftMenu" color="amber accent-2">{{ titleIcon }}</v-icon>
     <!-- menu with same functions as left side icons -->
@@ -167,7 +167,7 @@ Vue.component('data-table', {
 
   <!-- Search Bar -->
   <v-slide-y-transition>
-    <v-toolbar light class="mt-1" v-show="showSearchBar">
+    <v-toolbar dense light class="mt-1" v-show="showSearchBar">
       <v-toolbar-title class="subheading">
         <v-btn icon @click="toggleSearchBar" slot="activator">
           <v-icon>keyboard_arrow_up</v-icon>
@@ -182,7 +182,7 @@ Vue.component('data-table', {
   <!-- Draggable Header -->
   <v-slide-y-transition>
     <div v-show="showDraggableHeader">
-      <v-toolbar light class="mt-1">
+      <v-toolbar dense light class="mt-1">
         <v-toolbar-title class="subheading">
           <v-btn icon @click="showDraggableHeader=!showDraggableHeader" slot="activator">
             <v-icon>keyboard_arrow_up</v-icon>
