@@ -34,6 +34,7 @@ public class SNPIndelVariantRow {
 	List<Integer> cosmicPatients;
 	List<String> externalIds; //list of external database ids (dbsnp, cosmic, etc)
 	String alt;
+	String reference;
 	List<String> filters; //list of filers
 	FlagValue iconFlags;
 	Boolean isSelected;
@@ -74,6 +75,7 @@ public class SNPIndelVariantRow {
 		this.cosmicPatients = variant.getCosmicPatients();
 		this.externalIds = variant.getIds();
 		this.alt = variant.getAlt();
+		this.reference = variant.getReference();
 		this.filters = variant.getFilters();
 		this.isSelected = variant.getSelected();
 		this.mdaAnnotated = variant.getMdaAnnotated();
@@ -348,6 +350,14 @@ public class SNPIndelVariantRow {
 
 	public List<Variant> getRelatedVariants() {
 		return relatedVariants;
+	}
+
+
+
+
+
+	public String getReference() {
+		return reference;
 	}
 
 

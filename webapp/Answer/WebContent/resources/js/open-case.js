@@ -1039,7 +1039,10 @@ const OpenCase = {
                                     this.currentVariant.notation
                             },
                             {
-                                label: "Alt", value: this.currentVariant.alt
+                                label: "Reference Allele(s)", value: this.currentVariant.reference
+                            },
+                            {
+                                label: "Alternate Allele(s)", value: this.currentVariant.alt
                             },
                             {
                                 label: "Type", value: this.currentVariant.type

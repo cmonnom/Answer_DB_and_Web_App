@@ -40,6 +40,10 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		headers.add(iconFlags);
 		Header effects = new Header("Effects", "effects");
 		headers.add(effects);
+		Header ref = new Header(new String[] {"Reference", "Allele(s)"}, "reference");
+		headers.add(ref);
+		Header alt = new Header(new String[] {"Alternate", "Allele(s)"}, "alt");
+		headers.add(alt);
 		Header tumorTotalDepth = new Header(new String[] {"Tumor"," Total Depth"}, "tumorTotalDepth", Units.NB);
 		headers.add(tumorTotalDepth);
 		Header taf = new Header(new String[] {"Tumor Alt", "Percent"}, "tumorAltFrequency", Units.PCT);

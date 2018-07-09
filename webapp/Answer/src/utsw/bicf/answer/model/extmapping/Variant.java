@@ -58,6 +58,7 @@ public class Variant {
 	List<Integer> cosmicPatients;
 	List<String> ids; //list of external database ids (dbsnp, cosmic, etc)
 	String alt;
+	String reference;
 	List<String> filters; //list of filers
 	Boolean selected;
 	Integer numCasesSeen;
@@ -290,69 +291,6 @@ public class Variant {
 	}
 
 
-	public static String getFieldChrom() {
-		return FIELD_CHROM;
-	}
-
-
-	public static String getFieldGeneName() {
-		return FIELD_GENE_NAME;
-	}
-
-
-	public static String getFieldTumorAltFrequency() {
-		return FIELD_TUMOR_ALT_FREQUENCY;
-	}
-
-
-	public static String getFieldTumorTotalDepth() {
-		return FIELD_TUMOR_TOTAL_DEPTH;
-	}
-
-
-	public static String getFieldNormalAltFrequency() {
-		return FIELD_NORMAL_ALT_FREQUENCY;
-	}
-
-
-	public static String getFieldNormalTotalDepth() {
-		return FIELD_NORMAL_TOTAL_DEPTH;
-	}
-
-
-	public static String getFieldRnaAltFrequency() {
-		return FIELD_RNA_ALT_FREQUENCY;
-	}
-
-
-	public static String getFieldRnaTotalDepth() {
-		return FIELD_RNA_TOTAL_DEPTH;
-	}
-
-
-	public static String getFieldEffects() {
-		return FIELD_EFFECTS;
-	}
-
-
-	public static String getFieldAnnotations() {
-		return FIELD_ANNOTATIONS;
-	}
-
-
-	public static String getFieldFilters() {
-		return FIELD_FILTERS;
-	}
-
-
-	public static String getValuePass() {
-		return VALUE_PASS;
-	}
-
-
-	public static String getValueFail() {
-		return VALUE_FAIL;
-	}
 
 
 	public Integer getNumCasesSeen() {
@@ -385,31 +323,6 @@ public class Variant {
 	}
 
 
-	public static String getFieldExacAlleleFrequency() {
-		return FIELD_EXAC_ALLELE_FREQUENCY;
-	}
-
-
-	public static String getFieldGnomadAlleleFrequency() {
-		return FIELD_GNOMAD_ALLELE_FREQUENCY;
-	}
-
-
-	public static String getFieldNumCasesSeen() {
-		return FIELD_NUM_CASES_SEEN;
-	}
-
-
-	public static String getFieldInCosmic() {
-		return FIELD_IN_COSMIC;
-	}
-
-
-	public static String getFieldOldBuilds() {
-		return FIELD_OLD_BUILDS;
-	}
-
-
 	public Map<String, Build> getOldBuilds() {
 		return oldBuilds;
 	}
@@ -417,6 +330,11 @@ public class Variant {
 
 	public List<Variant> getRelatedVariants() {
 		return relatedVariants;
+	}
+
+
+	public String getReference() {
+		return reference;
 	}
 
 
