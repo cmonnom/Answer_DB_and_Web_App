@@ -1001,6 +1001,43 @@ Vue.component('data-table', {
         },
         selectionChanged() {
             this.$emit('datatable-selection-changed', this.selected.length);
+        },
+        getFilteredItems() {
+            return this.$refs.dataTable.filteredItems;
+        },
+        getCurrentItemIdex(currentUniqueId) {
+            var length = this.getFilteredItems().length;
+            for (var i = 0; i < length; i++) {
+                var item = this.getFilteredItems()[i];
+                if (item[this.uniqueIdField] == currentUniqueId) {
+                    return i;
+                }
+            }
+            return -1;
+        },
+        isFirstItem(currentIndex) {
+            return currentIndex == 0;
+        },
+        isLastItem(currentIndex) {
+            return currentIndex == this.getFilteredItems().length - 1;
+        },
+        getPreviousItem(currentRow) {
+            if (currentRow[this.uniqueIdField] != null) {
+                var currentIndex = this.getCurrentItemIdex(currentRow[this.uniqueIdField]);
+                if (currentIndex > -1) { //found the current item
+                    return this.getFilteredItems()[ Math.max(0, currentIndex - 1)];
+                }
+            }
+            return null;
+        },
+        getNextItem(currentRow) {
+            if (currentRow[this.uniqueIdField] != null) {
+                var currentIndex = this.getCurrentItemIdex(currentRow[this.uniqueIdField]);
+                if (currentIndex > -1) { //found the current item
+                    return this.getFilteredItems()[ Math.min(this.getFilteredItems().length - 1, currentIndex + 1)];
+                }
+            }
+            return null;
         }
     },
     computed: {

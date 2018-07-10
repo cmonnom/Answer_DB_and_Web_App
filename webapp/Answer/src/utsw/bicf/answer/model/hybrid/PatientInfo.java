@@ -1,8 +1,11 @@
 package utsw.bicf.answer.model.hybrid;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.CellItem;
 import utsw.bicf.answer.controller.serialization.ListTable;
 import utsw.bicf.answer.model.FinalReport;
@@ -24,7 +27,14 @@ public class PatientInfo {
 		table.setItems(items);
 		items.add(new CellItem("Name", orderCase.getPatientName()));
 		items.add(new CellItem("MRN", orderCase.getMedicalRecordNumber()));
-		items.add(new CellItem("DOB", orderCase.getDateOfBirth()));
+		String dab = orderCase.getDateOfBirth();
+		if (dab != null) {
+			LocalDate dabDate = LocalDate.parse(dab, TypeUtils.monthFormatter);
+			LocalDate now = LocalDate.now();
+			int years = Period.between(dabDate, now).getYears();
+			dab = dab + " (" + years + " years old)";
+		}
+		items.add(new CellItem("DOB", dab));
 		items.add(new CellItem("Sex", orderCase.getGender()));
 		items.add(new CellItem("Order #", orderCase.getEpicOrderNumber())); 
 		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));

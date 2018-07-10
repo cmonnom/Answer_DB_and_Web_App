@@ -250,7 +250,7 @@ Vue.component('edit-annotations', {
                     </v-slide-y-transition>
                 </v-card>
             </v-card-text>
-            <v-card-actions>
+            <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
                     <v-btn slot="activator" color="primary" @click="addCustomAnnotation()">Add
                         <v-icon right dark>playlist_add</v-icon>

@@ -5,7 +5,7 @@ const OpenCase = {
             <v-card-text v-html="confirmationMessage" class="pl-2 pr-2 subheading">
 
             </v-card-text>
-            <v-card-actions>
+            <v-card-actions class="card-actions-bottom">
                 <v-btn color="primary" @click="proceedWithConfirmation" slot="activator">{{ confirmationProceedButton }}
                 </v-btn>
                 <v-btn color="error" @click="cancelConfirmation" slot="activator">{{ confirmationCancelButton }}
@@ -121,7 +121,7 @@ const OpenCase = {
                     initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3">
                 </data-table>
             </v-card-text>
-            <v-card-actions>
+            <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
                     <v-btn color="primary" :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator" :loading="saveLoading">Save
                         <v-icon right dark>save</v-icon>
@@ -178,13 +178,13 @@ const OpenCase = {
                                             </v-list-tile>
 
                                             <v-list-tile v-if="isSNP()" avatar :disabled="!currentVariantHasRelatedVariants" @click="toggleRelatedVariants()">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>link</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Related Variants</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
+                                                <v-list-tile-avatar>
+                                                    <v-icon>link</v-icon>
+                                                </v-list-tile-avatar>
+                                                <v-list-tile-content>
+                                                    <v-list-tile-title>Related Variants</v-list-tile-title>
+                                                </v-list-tile-content>
+                                            </v-list-tile>
 
                                             <v-list-tile v-if="isSNP()" avatar @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible">
                                                 <v-list-tile-avatar>
@@ -242,6 +242,33 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
+                        <v-list-tile avatar @click="startUserAnnotations()">
+                                <v-list-tile-avatar>
+                                    <v-icon>note_add</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Create/Edit Your Annotations</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+
+                            <v-list-tile avatar @click="selectVariantForReport()" v-if="!currentRow.isSelected" :disabled="saveDialogVisible">
+                                <v-list-tile-avatar>
+                                    <v-icon>done</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Select Variant</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>  
+                            
+                            <v-list-tile avatar @click="removeVariantFromReport()" v-if="currentRow.isSelected" :disabled="saveDialogVisible">
+                                <v-list-tile-avatar>
+                                    <v-icon>done</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Deselect Variant</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>   
+
                         <v-list-tile avatar @click="closeVariantDetails()">
                             <v-list-tile-avatar>
                                 <v-icon>cancel</v-icon>
@@ -254,10 +281,10 @@ const OpenCase = {
 
                     </v-list>
                 </v-menu>
-                <v-toolbar-title class="ml-0">Annotations for Variant: 
-                <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
-                <span v-if="isCNV()">{{ currentVariant.chrom }}</span>
-                <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
+                <v-toolbar-title class="ml-0">Annotations for Variant:
+                    <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
+                    <span v-if="isCNV()">{{ currentVariant.chrom }}</span>
+                    <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -298,6 +325,8 @@ const OpenCase = {
                     </v-btn>
                     <span>Open Bam Viewer in New Tab</span>
                 </v-tooltip>
+
+
                 <v-tooltip bottom>
                     <v-btn icon @click="closeVariantDetails()" slot="activator">
                         <v-icon>close</v-icon>
@@ -386,16 +415,16 @@ const OpenCase = {
                             </v-flex>
                         </v-slide-y-transition>
                         <v-slide-y-transition>
-                        <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedVariantsVisible()">
+                            <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedVariantsVisible()">
                                 <div>
-                                    <data-table ref="relatedVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related Variants"
-                                        initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="link">
+                                    <data-table ref="relatedVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related Variants" initial-sort="geneId"
+                                        no-data-text="No Data" :show-pagination="false" title-icon="link">
                                     </data-table>
                                 </div>
                             </v-flex>
                         </v-slide-y-transition>
                         <v-slide-y-transition>
-                        <v-flex xs12 v-show="annotationVariantCanonicalVisible && isSNP()">
+                            <v-flex xs12 v-show="annotationVariantCanonicalVisible && isSNP()">
                                 <div>
                                     <data-table ref="canonicalVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Canonical VCF Annotations"
                                         initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="mdi-table-search">
@@ -404,10 +433,9 @@ const OpenCase = {
                             </v-flex>
                         </v-slide-y-transition>
                         <v-slide-y-transition>
-                        <v-flex xs12  v-show="annotationVariantOtherVisible  && isSNP()">
-                                <data-table ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false"
-                                    table-title="Other VCF Annotations" initial-sort="geneId" no-data-text="No Data" :show-row-count="true"
-                                    title-icon="mdi-table-search">
+                            <v-flex xs12 v-show="annotationVariantOtherVisible  && isSNP()">
+                                <data-table ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false" table-title="Other VCF Annotations" initial-sort="geneId"
+                                    no-data-text="No Data" :show-row-count="true" title-icon="mdi-table-search">
                                 </data-table>
                             </v-flex>
                         </v-slide-y-transition>
@@ -527,7 +555,7 @@ const OpenCase = {
                     </v-layout>
                 </v-container>
             </v-card-text>
-            <v-card-actions>
+            <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
                     <v-btn color="primary" @click="startUserAnnotations()" slot="activator">Add/Edit
                         <v-icon right dark>note_add</v-icon>
@@ -540,7 +568,20 @@ const OpenCase = {
                 <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible" color="warning" @click="removeVariantFromReport()" slot="activator">Deselect Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn color="error" @click="closeVariantDetails()" slot="activator">Close
+                <v-tooltip top>
+                <v-btn :disabled="isFirstVariant" color="primary" @click="loadPrevVariant()" slot="activator">Prev. Variant
+                    <v-icon right dark>chevron_left</v-icon>
+                </v-btn>
+                <span>Show Previous Variant</span>
+            </v-tooltip>
+                <v-tooltip top>
+                <v-btn :disabled="isLastVariant" color="primary" @click="loadNextVariant()" slot="activator">
+                    <v-icon left dark>chevron_right</v-icon>
+                    Next Variant
+                </v-btn>
+                <span>Show Next Variant</span>
+            </v-tooltip>
+                <v-btn color="error" @click="closeVariantDetails()">Close
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
                 <breadcrumbs>
@@ -624,19 +665,19 @@ const OpenCase = {
         <v-layout v-if="patientDetailsVisible">
             <v-flex xs12 md12 lg10 xl9>
                 <div class="text-xs-center pb-3">
-                <v-card>
-                <v-toolbar dense dark color="primary">
-                    <!-- <v-icon>perm_identity</v-icon> -->
-                    <v-icon :color="patientDetailsVisible ? 'amber accent-2' : ''">assignment_ind</v-icon>
-                    <v-toolbar-title>Patient Details</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <v-tooltip bottom>
-                        <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
-                            <v-icon>close</v-icon>
-                        </v-btn>
-                        <span>Close Details</span>
-                    </v-tooltip>
-                </v-toolbar>
+                    <v-card>
+                        <v-toolbar dense dark color="primary">
+                            <!-- <v-icon>perm_identity</v-icon> -->
+                            <v-icon :color="patientDetailsVisible ? 'amber accent-2' : ''">assignment_ind</v-icon>
+                            <v-toolbar-title>Patient Details</v-toolbar-title>
+                            <v-spacer></v-spacer>
+                            <v-tooltip bottom>
+                                <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
+                                    <v-icon>close</v-icon>
+                                </v-btn>
+                                <span>Close Details</span>
+                            </v-tooltip>
+                        </v-toolbar>
                         <v-container grid-list-md fluid>
                             <v-layout row wrap>
                                 <v-flex xs4 v-for="table in patientTables" :key="table.name">
@@ -646,10 +687,10 @@ const OpenCase = {
                                                 <v-list-tile v-for="item in table.items" :key="item.label">
                                                     <v-list-tile-content class="pb-2">
                                                         <v-layout class="full-width">
-                                                            <v-flex xs6 class="text-xs-left grow">
+                                                            <v-flex xs5 class="text-xs-left grow">
                                                                 <span class="selectable">{{ item.label }}:</span>
                                                             </v-flex>
-                                                            <v-flex xs6 class="text-xs-right grow blue-grey--text text--lighten-1">
+                                                            <v-flex xs7 class="text-xs-right grow blue-grey--text text--lighten-1">
                                                                 <span class="selectable">{{ item.value }}</span>
                                                             </v-flex>
                                                         </v-layout>
@@ -672,24 +713,24 @@ const OpenCase = {
     <v-slide-y-transition>
         <v-layout v-if="caseAnnotationsVisible">
             <v-flex xs12 class="pb-3">
-            <v-card>
-            <v-toolbar dense dark color="primary">
-                <!-- <v-icon>perm_identity</v-icon> -->
-                <v-icon :color="caseAnnotationsVisible ? 'amber accent-2' : ''">mdi-message-bulleted</v-icon>
-                <v-toolbar-title>Case Annotations</v-toolbar-title>
-                <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                    <v-btn flat icon @click="caseAnnotationsVisible = false" slot="activator">
-                        <v-icon>close</v-icon>
-                    </v-btn>
-                    <span>Close Annotations</span>
-                </v-tooltip>
-            </v-toolbar>
+                <v-card>
+                    <v-toolbar dense dark color="primary">
+                        <!-- <v-icon>perm_identity</v-icon> -->
+                        <v-icon :color="caseAnnotationsVisible ? 'amber accent-2' : ''">mdi-message-bulleted</v-icon>
+                        <v-toolbar-title>Case Annotations</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                        <v-tooltip bottom>
+                            <v-btn flat icon @click="caseAnnotationsVisible = false" slot="activator">
+                                <v-icon>close</v-icon>
+                            </v-btn>
+                            <span>Close Annotations</span>
+                        </v-tooltip>
+                    </v-toolbar>
                     <v-card-text>
                         <v-text-field :textarea="true" v-model="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
                         </v-text-field>
                     </v-card-text>
-                    <v-card-actions>
+                    <v-card-actions class="card-actions-bottom">
                         <v-tooltip bottom>
                             <v-btn :disabled="loadingVariantDetails || isCaseAnnotationUnchanged()" slot="activator" color="success" @click="saveCaseAnnotations()">Save
                                 <v-icon right dark>save</v-icon>
@@ -760,7 +801,8 @@ const OpenCase = {
 
 
 
-</div>` , data() {
+</div>`,
+    data() {
         return {
             firstTimeLoading: true,
             loading: true,
@@ -815,7 +857,9 @@ const OpenCase = {
             geneVariantDetailsTableHovering: false,
             variantTabActive: null,
             wasAdvancedFilteringVisibleBeforeTabChange: false,
-            currentVariantHasRelatedVariants: false
+            currentVariantHasRelatedVariants: false,
+            isFirstVariant: false,
+            isLastVariant: false
 
         }
     }, methods: {
@@ -1018,6 +1062,36 @@ const OpenCase = {
             this.currentVariantType = "snp";
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
+            var table; //could be the selected variant table or the regular one
+            if (this.isSNP()) {
+                if (this.saveDialogVisible) {
+                    table = this.$refs.snpVariantsSelected;
+                }
+                else {
+                    table = this.$refs.geneVariantDetails;
+                }
+            }
+            else if (this.isCNV()) {
+                if (this.saveDialogVisible) {
+                    table = this.$refs.cnvVariantsSelected;
+                }
+                else {
+                    table = this.$refs.cnvDetails;
+                }
+            }
+            else if (this.isTranslocation()) {
+                if (this.saveDialogVisible) {
+                    table = this.$refs.translocationVariantsSelected;
+                }
+                else {
+                    table = this.$refs.cnvDetails;
+                }
+            }
+            var currentIndex = table.getCurrentItemIdex(this.currentRow.oid);
+            this.isFirstVariant = table.isFirstItem(currentIndex);
+            this.isLastVariant = table.isLastItem(currentIndex);
+
+
             this.loadingVariantDetails = true;
             axios.get(
                 webAppRoot + "/getVariantDetails",
@@ -1073,17 +1147,17 @@ const OpenCase = {
                             value: this.currentVariant.oncokbVariantName,
                             label: "<span class='no-text-transform'>&nbsp;OncoKB Variant " + this.currentVariant.oncokbVariantName + "&nbsp;</span>",
                         }
-                           ];
+                        ];
 
                         var variousIds = [];
-                        for (var i = 0 ; i < this.currentVariant.ids.length; i++) {
+                        for (var i = 0; i < this.currentVariant.ids.length; i++) {
                             variousIds.push({
                                 type: "various",
                                 subtype: null,
                                 value: this.currentVariant.ids[i],
                                 label: this.formatIdLinkLabel(this.currentVariant.ids[i], this.currentVariant.ids, this.currentVariant.cosmicPatients),
                             });
-                        }   
+                        }
 
                         this.linkTable = [{
                             name: "linkTable",
@@ -1315,7 +1389,7 @@ const OpenCase = {
                 {
                     items: items,
                     headers: headers,
-                    uniqueFieldId: "cdnaPosition",
+                    uniqueIdField: "oid",
                     headerOrder: headerOrder
                 }
             );
@@ -1349,7 +1423,7 @@ const OpenCase = {
                 if (id.subtype == "gene") {
                     link = "http://oncokb.org/#/gene/" + this.currentVariant.oncokbGeneName;
                 }
-                else  if (id.subtype == "variant") {
+                else if (id.subtype == "variant") {
                     link = "http://oncokb.org/#/gene/" + this.currentVariant.oncokbGeneName + "/variant/" + this.currentVariant.oncokbVariantName;
                 }
             }
@@ -1370,6 +1444,9 @@ const OpenCase = {
             window.open(link, "_blank");
         },
         formatIdLinkLabel(id, ids, cosmicPatients) {
+            if (id == null) {
+                return;
+            }
             var cosmicIds = ids.filter(id => id.indexOf('COSM') == 0);
             var index = cosmicIds.indexOf(id);
             if (id.indexOf('rs') == 0) {
@@ -1581,11 +1658,11 @@ const OpenCase = {
         },
         selectVariantForReport() {
             this.$refs.geneVariantDetails.addToSelection(this.currentRow);
-            this.closeVariantDetails();
+            // this.closeVariantDetails();
         },
         removeVariantFromReport() {
             this.$refs.geneVariantDetails.removeFromSelection(this.currentRow);
-            this.closeVariantDetails();
+            // this.closeVariantDetails();
         },
         updateSelectedVariantTable() {
             var selectedSNPVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected);
@@ -1596,17 +1673,17 @@ const OpenCase = {
             var snpHeaders = this.$refs.geneVariantDetails.headers;
             var snpHeaderOrder = this.$refs.geneVariantDetails.headerOrder;
             this.$refs.snpVariantsSelected.manualDataFiltered(
-                { items: selectedSNPVariants, headers: snpHeaders, uniqueFieldId: "chromPos", headerOrder: snpHeaderOrder });
+                { items: selectedSNPVariants, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });
 
             var cnvHeaders = this.$refs.cnvDetails.headers;
             var cnvHeaderOrder = this.$refs.cnvDetails.headerOrder;
             this.$refs.cnvVariantsSelected.manualDataFiltered(
-                { items: selectedCNVs, headers: cnvHeaders, uniqueFieldId: "chrom", headerOrder: cnvHeaderOrder });
+                { items: selectedCNVs, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrder });
 
             var snpHeaders = this.$refs.translocationDetails.headers;
             var snpHeaderOrder = this.$refs.translocationDetails.headerOrder;
             this.$refs.translocationVariantsSelected.manualDataFiltered(
-                { items: selectedTranslocations, headers: snpHeaders, uniqueFieldId: "fusionName", headerOrder: snpHeaderOrder });
+                { items: selectedTranslocations, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });
         },
         openSaveDialog() {
             this.updateSelectedVariantTable();
@@ -1963,9 +2040,88 @@ const OpenCase = {
                 }
             }
             return false; pat
+        },
+        //TODO
+        loadPrevVariant() {
+            var table; //could be the selected table or the regular one
+            if (this.isSNP()) {
+                if (this.saveDialogVisible) {
+                    table = this.$refs.snpVariantsSelected;
+                }
+                else {
+                    table = this.$refs.geneVariantDetails;
+                }
+                var prevVariant = table.getPreviousItem(this.currentRow);
+                if (prevVariant) {
+                    this.getVariantDetails(prevVariant);
+                }
+            }
+            else if (this.isCNV()) {
+                if (this.saveDialogVisible) {
+                    table = this.$refs.cnvVariantsSelected;
+                }
+                else {
+                    table = this.$refs.cnvDetails;
+                }
+                var prevVariant = table.getPreviousItem(this.currentRow);
+                if (prevVariant) {
+                    this.getCNVDetails(prevVariant);
+                }
+            }
+            else if (this.isTranslocation()) {
+                if (this.saveDialogVisible) {
+                    table = this.$refs.translocationVariantsSelected;
+                }
+                else {
+                    table = this.$refs.translocationDetails;
+                }
+                var prevVariant = table.getPreviousItem(this.currentRow);
+                if (prevVariant) {
+                    this.getTranslocationDetails(prevVariant);
+                }
+            }
+        },
+        loadNextVariant() {
+            var table; //could be the selected table or the regular one
+            if (this.isSNP()) {
+                if (this.saveDialogVisible) {
+                    table = this.$refs.snpVariantsSelected;
+                }
+                else {
+                    table = this.$refs.geneVariantDetails;
+                }
+                var prevVariant = table.getNextItem(this.currentRow);
+                if (prevVariant) {
+                    this.getVariantDetails(prevVariant);
+                }
+            }
+            else if (this.isCNV()) {
+                if (this.saveDialogVisible) {
+                    table = this.$refs.cnvVariantsSelected;
+                }
+                else {
+                    table = this.$refs.cnvDetails;
+                }
+                var prevVariant = table.getNextItem(this.currentRow);
+                if (prevVariant) {
+                    this.getCNVDetails(prevVariant);
+                }
+            }
+            else if (this.isTranslocation()) {
+                if (this.saveDialogVisible) {
+                    table = this.$refs.translocationVariantsSelected;
+                }
+                else {
+                    table = this.$refs.translocationDetails;
+                }
+                var prevVariant = table.getNextItem(this.currentRow);
+                if (prevVariant) {
+                    this.getTranslocationDetails(prevVariant);
+                }
+            }
         }
     },
-    mounted: function () {
+    mounted() {
         this.getAjaxData();
         this.loadUserFilterSets();
         bus.$emit("clear-item-selected", [this]);

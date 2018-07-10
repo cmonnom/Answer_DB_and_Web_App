@@ -55,7 +55,7 @@ Vue.component('advanced-filter', {
                     </v-flex>
                 </v-layout>
             </v-card-text>
-            <v-card-actions>
+            <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
                     <v-btn color="primary" :disabled="!isNameValid()" @click="saveCurrentFilters()" slot="activator">
                         <span v-if="saveFilterSetId == -1">Create</span>

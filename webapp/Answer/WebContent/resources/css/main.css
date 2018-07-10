@@ -245,3 +245,7 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 .no-text-transform {
     text-transform: none;
 }
+
+.card-actions-bottom {
+    align-items: flex-end;
+}
