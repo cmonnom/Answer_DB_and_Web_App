@@ -750,18 +750,19 @@ const OpenCase = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-tabs dark slider-color="warning" color="primary darken-1" fixed-tabs v-show="variantTabsVisible" v-model="variantTabActive">
-            <v-tab>
+        <v-tabs slot="extension" dark slider-color="warning" color="primary darken-1" fixed-tabs  v-model="variantTabActive">
+            <v-tab href="#tab-snp">
                 SNP / Indel
             </v-tab>
-            <v-tab>
+            <v-tab href="#tab-cnv">
                 CNV
             </v-tab>
-            <v-tab>
+            <v-tab href="#tab-translocation">
                 Fusion / Translocation
             </v-tab>
+            <v-tabs-items v-model="variantTabActive">
             <!-- SNP / Indel table -->
-            <v-tab-item>
+            <v-tab-item id="tab-snp">
                 <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
                     no-data-text="No Data" :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()"
                     :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons" @datatable-selection-changed="handleSelectionChanged">
@@ -784,22 +785,21 @@ const OpenCase = {
                 </data-table>
             </v-tab-item>
             <!-- CNV table -->
-            <v-tab-item>
+            <v-tab-item id="tab-cnv">
                 <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
                     :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()" :show-left-menu="true">
                 </data-table>
             </v-tab-item>
             <!--  Fusion / Translocation table -->
-            <v-tab-item>
+            <v-tab-item id="tab-translocation">
                 <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
                     no-data-text="No Data" :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()"
                     :show-left-menu="true">
                 </data-table>
             </v-tab-item>
+            </v-tabs-items>
         </v-tabs>
     </v-slide-y-transition>
-
-
 
 </div>`,
     data() {
@@ -855,12 +855,11 @@ const OpenCase = {
             confirmationCancelButton: "Cancel",
             reportGroups: [],
             geneVariantDetailsTableHovering: false,
-            variantTabActive: null,
+            variantTabActive: "tab-snp",
             wasAdvancedFilteringVisibleBeforeTabChange: false,
             currentVariantHasRelatedVariants: false,
             isFirstVariant: false,
             isLastVariant: false
-
         }
     }, methods: {
         toggleGeneVariantDetailsButtons(doShow) {
@@ -1007,14 +1006,14 @@ const OpenCase = {
             if (!this.$refs.advancedFilter) {
                 return;
             }
-            if (this.variantTabActive != "0") { //remember if filter was visible or not before the change
+            if (this.variantTabActive != "tab-snp") { //remember if filter was visible or not before the change
                 // this.wasAdvancedFilteringVisibleBeforeTabChange = this.$refs.advancedFilter.advancedFilteringVisible;
                 // if (this.wasAdvancedFilteringVisibleBeforeTabChange) {
                 //     this.$refs.advancedFilter.toggleFilters(); //hide filtering because of tab change
                 // }
                 this.$refs.advancedFilter.disableFiltering = true;
             }
-            if (this.$refs.advancedFilter && this.variantTabActive == "0") { //restore the previous visibility of the filter
+            if (this.$refs.advancedFilter && this.variantTabActive == "tab-snp") { //restore the previous visibility of the filter
                 // this.$refs.advancedFilter.toggleFilters(); //show filtering because it was previsously visible
                 this.$refs.advancedFilter.disableFiltering = false;
             }

@@ -1016,15 +1016,21 @@ Vue.component('data-table', {
             return -1;
         },
         isFirstItem(currentIndex) {
-            return currentIndex == 0;
+            return currentIndex == 0 && this.pagination.page == 1;
         },
         isLastItem(currentIndex) {
-            return currentIndex == this.getFilteredItems().length - 1;
+            var lastPage = this.pagination.page * this.pagination.rowsPerPage >= this.pagination.totalItems;
+            return currentIndex == this.getFilteredItems().length - 1
+            && lastPage;
         },
         getPreviousItem(currentRow) {
             if (currentRow[this.uniqueIdField] != null) {
                 var currentIndex = this.getCurrentItemIdex(currentRow[this.uniqueIdField]);
                 if (currentIndex > -1) { //found the current item
+                    if (currentIndex == 0 && this.pagination.page > 1) { //could need to load the previous table page
+                        this.pagination.page = this.pagination.page - 1;
+                        return this.getFilteredItems()[this.getFilteredItems().length - 1]; //select the last item from the previous page
+                    }
                     return this.getFilteredItems()[ Math.max(0, currentIndex - 1)];
                 }
             }
@@ -1034,6 +1040,11 @@ Vue.component('data-table', {
             if (currentRow[this.uniqueIdField] != null) {
                 var currentIndex = this.getCurrentItemIdex(currentRow[this.uniqueIdField]);
                 if (currentIndex > -1) { //found the current item
+                    var lastPage = this.pagination.page * this.pagination.rowsPerPage >= this.pagination.totalItems;
+                    if (currentIndex == this.getFilteredItems().length - 1 && !lastPage) { //could need to load the next table page
+                        this.pagination.page++;
+                        return this.getFilteredItems()[0]; //select the first item from the next page
+                    }
                     return this.getFilteredItems()[ Math.min(this.getFilteredItems().length - 1, currentIndex + 1)];
                 }
             }
