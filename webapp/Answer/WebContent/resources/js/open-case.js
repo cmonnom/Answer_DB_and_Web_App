@@ -888,9 +888,9 @@ const OpenCase = {
             loading: true,
             loadingVariantDetails: false,
             // breadcrumbs: [{text: "You are here:  Case", disabled: true}],
-            breadcrumbItemVariantDetails: { text: "Variant Details", disabled: true },
-            breadcrumbItemReview: { text: "Review Selected Variants", disabled: true },
-            breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: true },
+            breadcrumbItemVariantDetails: { text: "Variant Details", disabled: true, closingFunction: "closeVariantDetails" },
+            breadcrumbItemReview: { text: "Review Selected Variants", disabled: true, closingFunction: "closeSaveDialog" },
+            breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: true, closingFunction: "cancelAnnotations" },
             patientTables: [],
             patientDetailsVisible: false,
             caseAnnotationsVisible: false,
@@ -934,7 +934,7 @@ const OpenCase = {
             confirmationProceedButton: "Proceed",
             confirmationCancelButton: "Cancel",
             reportGroups: [],
-            geneVariantDetailsTableHovering: false,
+            geneVariantDetailsTableHovering: true,
             variantTabActive: "tab-snp",
             wasAdvancedFilteringVisibleBeforeTabChange: false,
             currentVariantHasRelatedVariants: false,
@@ -953,6 +953,7 @@ const OpenCase = {
             tempSelectedSNPVariants: [],
             tempSelectedCNVs: [],
             tempSelectedTranslocations: [],
+            topMostDialog: ""
 
         }
     }, methods: {
@@ -2101,6 +2102,7 @@ const OpenCase = {
         updateVariantDetailsBreadCrumbs(visible) {
             if (visible) {
                 bus.$emit("add-breadcrumb-level", this.breadcrumbItemVariantDetails);
+                this.topMostDialog = this.breadcrumbItemVariantDetails.closingFunction;
             }
             else {
                 bus.$emit("remove-breadcrumb-level", this);
@@ -2109,6 +2111,7 @@ const OpenCase = {
         updateSaveDialogBreadCrumbs(visible) {
             if (visible) {
                 bus.$emit("add-breadcrumb-level", this.breadcrumbItemReview);
+                this.topMostDialog = this.breadcrumbItemReview.closingFunction;
             }
             else {
                 bus.$emit("remove-breadcrumb-level", this);
@@ -2117,6 +2120,7 @@ const OpenCase = {
         updateEditAnnotationBreadcrumbs(visible) {
             if (visible) {
                 bus.$emit("add-breadcrumb-level", this.breadcrumbItemEditAnnotation);
+                this.topMostDialog = this.breadcrumbItemEditAnnotation.closingFunction;
             }
             else {
                 bus.$emit("remove-breadcrumb-level", this);
@@ -2336,6 +2340,18 @@ const OpenCase = {
             else if (this.isTranslocation()) {
                 this.getTranslocationDetails(this.currentRow);
             }
+        },
+        // Use this when need to close the annotation dialog from outside the edit-annotations component
+        cancelAnnotations() {
+            if (this.isSNP()) {
+                this.$refs.annotationDialog.cancelAnnotations();
+            }
+            else if (this.isCNV()) {
+                this.$refs.cnvAnnotationDialog.cancelAnnotations();
+            }
+            else if (this.isTranslocation()) {
+                this.$refs.translocationAnnotationDialog.cancelAnnotations();
+            }
         }
     },
     mounted() {
@@ -2350,17 +2366,32 @@ const OpenCase = {
         bus.$on('saving-annotations', (annotations) => {
             this.commitAnnotations(annotations);
         });
+        bus.$on('breadcrumb-level-down', (visibleFlag) => {
+            this.topMostDialog = visibleFlag;
+        });
+        router.beforeEach((to, from, next) => {
+            //if any dialog is open don't navigate
+            if (this.topMostDialog) { //null if level 1
+                next(false);
+                this[this.topMostDialog](); //hide the dialog
+            }
+            else {
+                next();
+            }
+        });
 
     },
     destroyed: function () {
         bus.$off('bam-viewer-closed');
         bus.$off('saving-annotations');
+        bus.$off('breadcrumb-level-down');
     },
     watch: {
         '$route': 'getAjaxData',
         variantDetailsVisible: "updateVariantDetailsBreadCrumbs",
         saveDialogVisible: "updateSaveDialogBreadCrumbs",
-        variantTabActive: "handleTabChanged"
+        variantTabActive: "handleTabChanged",
+        // saveDialogVisible: "handleSaveDialogRouteChanged"
         // breadcrumbs: function() {
         //     this.$refs.annotationDialog.breadcrumbs = this.breadcrumbs;
         // }

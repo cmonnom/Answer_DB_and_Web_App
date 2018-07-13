@@ -268,6 +268,11 @@ public class OpenCaseController {
 		DataTableFilter cosmicFilter = new DataTableFilter("In COSMIC", "Not In COSMIC", Variant.FIELD_IN_COSMIC);
 		cosmicFilter.setBoolean(true);
 		filters.add(cosmicFilter);
+		
+		DataTableFilter repeatFilter = new DataTableFilter("Has Repeats", "No Repeats", Variant.FIELD_HAS_REPEATS);
+		repeatFilter.setBoolean(true);
+		filters.add(repeatFilter);
+
 
 		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", Variant.FIELD_TUMOR_ALT_FREQUENCY);
 		tafFilter.setNumber(true);

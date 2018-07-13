@@ -42,10 +42,9 @@ public class Utils {
 							vf.getStringValues().add(new FilterStringValue(Variant.VALUE_PASS));
 //							vf.setValueTrue(true);
 						}
-						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)) {
-							vf.setValueTrue(true);
-						}
-						if (filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)) {
+						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)
+								|| filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)
+								|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)) {
 							vf.setValueTrue(true);
 						}
 					}
@@ -54,10 +53,9 @@ public class Utils {
 							vf.getStringValues().add(new FilterStringValue(Variant.VALUE_FAIL));
 //							vf.setValueFalse(true);
 						}
-						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)) {
-							vf.setValueFalse(true);
-						}
-						if (filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)) {
+						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)
+								|| filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)
+								|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)) {
 							vf.setValueFalse(true);
 						}
 					}

@@ -21,7 +21,7 @@ public class OrderCaseAvailable {
 		this.epicOrderDate =orderCase.getEpicOrderDate();
 		this.icd10 = orderCase.getIcd10();
 		this.caseId = orderCase.getCaseId();
-		
+		this.dateReceived = orderCase.getReceivedDate();
 		buttons.add(new Button("assignment_ind", "assignToUser", "Assign To", "info"));
 	}
 

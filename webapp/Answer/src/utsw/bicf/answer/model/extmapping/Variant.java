@@ -34,6 +34,7 @@ public class Variant {
 	//keep the values expected in the JSON string here
 	public static final String VALUE_PASS = "PASS";
 	public static final String VALUE_FAIL = "FailedQC";
+	public static final String FIELD_HAS_REPEATS = "isRepeat";
 	
 	Boolean isAllowed = true;
 	
@@ -88,6 +89,8 @@ public class Variant {
 	Boolean hasRelatedVariants;
 	
 	String tier;
+	
+	Boolean isOncokbVariant;
 	
 	public Variant() {
 		
@@ -508,6 +511,16 @@ public class Variant {
 
 	public Boolean getCallsetInconsistent() {
 		return callsetInconsistent;
+	}
+
+
+	public static String getFieldHasRepeats() {
+		return FIELD_HAS_REPEATS;
+	}
+
+
+	public Boolean getIsOncokbVariant() {
+		return isOncokbVariant;
 	}
 
 

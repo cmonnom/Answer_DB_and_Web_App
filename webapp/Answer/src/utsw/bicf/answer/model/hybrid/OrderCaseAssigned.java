@@ -32,6 +32,7 @@ public class OrderCaseAssigned {
 				}
 			}
 		}
+		this.dateReceived = orderCase.getReceivedDate();
 		this.assignedTo = userNames.stream().collect(Collectors.joining("<br/>"));
 		
 		buttons.add(new Button("assignment_ind", "assignToUser", "Reassign", "info"));

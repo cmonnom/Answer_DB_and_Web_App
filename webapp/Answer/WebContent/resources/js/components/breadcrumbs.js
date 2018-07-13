@@ -9,7 +9,7 @@ Vue.component('breadcrumbs', {
 </v-breadcrumbs>`,
   data() {
     return {
-      breadcrumbs: [{text: "You are here:  Case", disabled: true}]
+      breadcrumbs: [{text: "You are here:  Case", disabled: true, closingFunction: null}]
       
     }
 
@@ -22,6 +22,7 @@ Vue.component('breadcrumbs', {
     });
     bus.$on('remove-breadcrumb-level', () => {
         this.breadcrumbs.pop();
+        bus.$emit("breadcrumb-level-down", this.breadcrumbs[this.breadcrumbs.length -1].closingFunction);
     });
   },
   created: function () {
@@ -29,6 +30,7 @@ Vue.component('breadcrumbs', {
   destroyed: function () {
     bus.$off('add-breadcrumb-level');
     bus.$off('remove-breadcrumb-level');
+    
   },
   watch: {
   }

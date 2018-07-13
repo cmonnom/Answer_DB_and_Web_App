@@ -23,8 +23,9 @@ Vue.component('data-table', {
         "show-left-menu": { default: true, type: Boolean }
 
     },
-    template: `<div @mouseover="toggleShowButtons(true)" @mouseleave="toggleShowButtons(false)">
-
+    template: `<div>
+    <!-- Comment above and uncomment below to use the buttons on hover feature -->
+     <!-- <div @mouseover="toggleShowButtons(true)" @mouseleave="toggleShowButtons(false)"> -->
   <!-- Top tool bar with menu options -->
   <v-toolbar dense dark color="primary" :class="fixed ? '' : 'elevation-0'" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
     <!-- icon with no function -->
@@ -464,7 +465,7 @@ Vue.component('data-table', {
             doExport: false, //if true, the table will be exported as a CSV
             csvContent: "",
             headerOptionsVisible: false, //work in progress
-            showButtons: false
+            showButtons: true
         }
     },
     methods: {
