@@ -329,6 +329,9 @@ Vue.component('edit-annotations', {
                 tempAnnotation.isVisible = true;
                 this.userEditingAnnotations.push(tempAnnotation);
             }
+            if (this.userEditingAnnotations.length == 0) {
+                this.addCustomAnnotation();
+            }
             this.annotationDialogVisible = true;
         },
         addCustomAnnotation() {

@@ -1,18 +1,18 @@
 package utsw.bicf.answer.model.hybrid;
 
-import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
 import utsw.bicf.answer.model.extmapping.CNV;
 
 public class CNVRow {
 	
-	String oid; //variant id in MangoDB
+	String oid; //variant id in MongoDB
 	String genes;
 	String chrom;
 	String start;
@@ -25,9 +25,9 @@ public class CNVRow {
 	Boolean isSelected;
 	
 	public CNVRow(CNV cnv) {
-		this.oid = cnv.getMangoDBId().getOid();
+		this.oid = cnv.getMongoDBId().getOid();
 		this.genes = formatHTMLGenes(cnv.getGenes().stream().sorted().collect(Collectors.toList()));
-		this.chrom = cnv.getChrom();
+		this.chrom = TypeUtils.formatChromosome(cnv.getChrom());
 		this.start = NumberFormat.getInstance().format(cnv.getStart());
 		this.end = NumberFormat.getInstance().format(cnv.getEnd());
 		this.aberrationType = cnv.getAberrationType();
@@ -40,9 +40,9 @@ public class CNVRow {
 		if (utswAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 		}
-		else {
-			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
-		}
+//		else {
+//			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
+//		}
 		iconFlags = new FlagValue(icons);
 	}
 

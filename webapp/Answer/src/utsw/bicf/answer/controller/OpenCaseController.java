@@ -94,6 +94,8 @@ public class OpenCaseController {
 				new PermissionUtils(true, false, false));
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadCaseAnnotations",
 				new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveVariant",
+				new PermissionUtils(true, true, false));
 
 	}
 
@@ -137,7 +139,7 @@ public class OpenCaseController {
 				}
 			}
 		}
-		if (detailedCase == null) { //the case does not exist
+		if (detailedCase == null) { // the case does not exist
 			AjaxResponse response = new AjaxResponse();
 			response.setIsAllowed(false);
 			response.setSuccess(false);
@@ -145,8 +147,10 @@ public class OpenCaseController {
 			return response.createObjectJSON();
 		}
 		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
-		List<ReportGroupForDisplay> reportGroupsForDisplay = reportGroups.stream().map(r -> new ReportGroupForDisplay(r)).collect(Collectors.toList());
-		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "oid", user, reportGroupsForDisplay);
+		List<ReportGroupForDisplay> reportGroupsForDisplay = reportGroups.stream()
+				.map(r -> new ReportGroupForDisplay(r)).collect(Collectors.toList());
+		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "oid", user,
+				reportGroupsForDisplay);
 		return summary.createVuetifyObjectJSON();
 
 	}
@@ -194,22 +198,23 @@ public class OpenCaseController {
 			CaseAnnotation annotationToSave = mapper.readValue(annotationNode.toString(), CaseAnnotation.class);
 			if (annotationToSave != null) {
 				CaseAnnotation annotation = utils.getCaseAnnotation(caseId);
-				if (annotation != null) { // annotation should never be null. Make sure there is no funny business with user
+				if (annotation != null) { // annotation should never be null. Make sure there is no funny business with
+											// user
 											// id or oid
 					if (!annotation.getAssignedTo().contains(user.getUserId().toString())) {
 						response.setMessage(user.getFullName() + " is not assigned to this case");
 						return response.createObjectJSON();
 					}
-					if (annotationToSave.getMangoDBId() != null && annotation.getMangoDBId().getOid() != annotationToSave.getMangoDBId().getOid()) {
+					if (annotationToSave.getMongoDBId() != null
+							&& annotation.getMongoDBId().getOid() != annotationToSave.getMongoDBId().getOid()) {
 						response.setMessage("Invalid annotation");
 						return response.createObjectJSON();
 					}
 					annotation.setCaseAnnotation(annotationToSave.getCaseAnnotation());
 					utils.saveCaseAnnotation(response, annotation);
 					return response.createObjectJSON();
-					
-				}
-				else { 
+
+				} else {
 					response.setMessage("Could not retrieve annotation");
 					return response.createObjectJSON();
 
@@ -241,7 +246,7 @@ public class OpenCaseController {
 		geneFilter.setString(true);
 		geneFilter.setTooltip("comma separated");
 		filters.add(geneFilter);
-		
+
 		DataTableFilter somaticFilter = new DataTableFilter("Somatic Status", "somaticStatus");
 		somaticFilter.setSelect(true);
 		List<SearchItem> somaticSelectItems = new ArrayList<SearchItem>();
@@ -259,11 +264,11 @@ public class OpenCaseController {
 		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Unknown", Variant.FIELD_ANNOTATIONS);
 		annotatedFilter.setBoolean(true);
 		filters.add(annotatedFilter);
-		
+
 		DataTableFilter cosmicFilter = new DataTableFilter("In COSMIC", "Not In COSMIC", Variant.FIELD_IN_COSMIC);
 		cosmicFilter.setBoolean(true);
 		filters.add(cosmicFilter);
-		
+
 		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", Variant.FIELD_TUMOR_ALT_FREQUENCY);
 		tafFilter.setNumber(true);
 		filters.add(tafFilter);
@@ -308,15 +313,16 @@ public class OpenCaseController {
 		DataTableFilter exacFilter = new DataTableFilter("ExAC Allele %", Variant.FIELD_EXAC_ALLELE_FREQUENCY);
 		exacFilter.setNumber(true);
 		filters.add(exacFilter);
-		
-		DataTableFilter gnomadFilter = new DataTableFilter("gnomAD Pop. Max. Allele %", Variant.FIELD_GNOMAD_ALLELE_FREQUENCY);
+
+		DataTableFilter gnomadFilter = new DataTableFilter("gnomAD Pop. Max. Allele %",
+				Variant.FIELD_GNOMAD_ALLELE_FREQUENCY);
 		gnomadFilter.setNumber(true);
 		filters.add(gnomadFilter);
-		
+
 		DataTableFilter numCasesSeenFilter = new DataTableFilter("Nb. Cases Seen", Variant.FIELD_NUM_CASES_SEEN);
 		numCasesSeenFilter.setNumber(true);
 		filters.add(numCasesSeenFilter);
-		
+
 		DataTableFilter effectFilter = new DataTableFilter("Effects", Variant.FIELD_EFFECTS);
 		effectFilter.setCheckBox(true);
 		filters.add(effectFilter);
@@ -338,7 +344,7 @@ public class OpenCaseController {
 		VariantVcfAnnotationSummary summaryCanonical = null;
 		VariantVcfAnnotationSummary summaryOthers = null;
 		VariantDetailsSummary summary = null;
-		//sort annotations with the most recent first
+		// sort annotations with the most recent first
 		Comparator<Annotation> annotationComparator = new Comparator<Annotation>() {
 			@Override
 			public int compare(Annotation o1, Annotation o2) {
@@ -350,12 +356,11 @@ public class OpenCaseController {
 			if (variantDetails.getReferenceVariant() != null
 					&& variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
 				for (Annotation a : variantDetails.getReferenceVariant().getUtswAnnotations()) {
-					Annotation.init(a, modelDAO); //format dates and add missing info
+					Annotation.init(a, modelDAO); // format dates and add missing info
 				}
-				//Sort annotation by last modified
-				variantDetails.getReferenceVariant().setUtswAnnotations(
-						variantDetails.getReferenceVariant().getUtswAnnotations().stream()
-				.sorted(annotationComparator).collect(Collectors.toList()));
+				// Sort annotation by last modified
+				variantDetails.getReferenceVariant().setUtswAnnotations(variantDetails.getReferenceVariant()
+						.getUtswAnnotations().stream().sorted(annotationComparator).collect(Collectors.toList()));
 			}
 			if (variantDetails.getRelatedVariants() != null && !variantDetails.getRelatedVariants().isEmpty()) {
 				summaryRelated = new VariantRelatedSummary(variantDetails.getRelatedVariants(), "chromPos");
@@ -376,7 +381,7 @@ public class OpenCaseController {
 		return null;
 
 	}
-	
+
 	@RequestMapping(value = "/getCNVDetails")
 	@ResponseBody
 	public String getCNVDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
@@ -391,10 +396,11 @@ public class OpenCaseController {
 		return null;
 
 	}
-	
+
 	@RequestMapping(value = "/getTranslocationDetails")
 	@ResponseBody
-	public String getTranslocationDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
+	public String getTranslocationDetails(Model model, HttpSession session, @RequestParam String variantId)
+			throws Exception {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
@@ -561,10 +567,10 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase detailedCase = utils.getCaseDetails(caseId, data);
 		List<Variant> selectedVariants = detailedCase.getVariants().stream()
-				.filter(v -> selectedVariantIds.contains(v.getMangoDBId().getOid())).collect(Collectors.toList());
+				.filter(v -> selectedVariantIds.contains(v.getMongoDBId().getOid())).collect(Collectors.toList());
 		List<Variant> selectedVariantDetails = new ArrayList<Variant>();
 		for (Variant v : selectedVariants) {
-			Variant variantDetails = utils.getVariantDetails(v.getMangoDBId().getOid());
+			Variant variantDetails = utils.getVariantDetails(v.getMongoDBId().getOid());
 			selectedVariantDetails.add(variantDetails);
 		}
 		ExportSelectedVariants export = new ExportSelectedVariants(detailedCase, selectedVariantDetails,
@@ -587,5 +593,39 @@ public class OpenCaseController {
 
 		return response;
 
+	}
+
+	@RequestMapping(value = "/saveVariant")
+	@ResponseBody
+	public String saveVariant(Model model, HttpSession session, @RequestBody String data,
+			@RequestParam String caseId, @RequestParam String variantType) throws Exception {
+
+		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode nodeData = mapper.readTree(data);
+		Variant variant = mapper.readValue(nodeData.get("variant").toString(), Variant.class);
+		if (variant != null) {
+			OrderCase orderCase = utils.getCaseDetails(caseId, data);
+			if (orderCase != null) {
+				if (!orderCase.getAssignedTo().contains(user.getUserId().toString())) {
+					response.setMessage("User " + user.getFullName() + " cannot edit this case.");
+					return response.createObjectJSON();
+				}
+				utils.saveVariant(response, variant, variantType, variant.getMongoDBId().getOid());
+				return response.createObjectJSON();
+			}
+			else {
+				response.setMessage("No case found");
+				return response.createObjectJSON();
+			}
+		}
+		else { 
+			response.setMessage("Nothing to save");
+			return response.createObjectJSON();
+		}
 	}
 }

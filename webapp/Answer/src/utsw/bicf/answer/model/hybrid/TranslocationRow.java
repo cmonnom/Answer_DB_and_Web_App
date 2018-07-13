@@ -9,7 +9,7 @@ import utsw.bicf.answer.model.extmapping.Translocation;
 
 public class TranslocationRow {
 	
-	String oid; //variant id in MangoDB
+	String oid; //variant id in MongoDB
 	String fusionName;
 	String leftGene;
 	String rightGene;
@@ -25,7 +25,7 @@ public class TranslocationRow {
 	
 	
 	public TranslocationRow(Translocation translocation) {
-		this.oid = translocation.getMangoDBId().getOid();
+		this.oid = translocation.getMongoDBId().getOid();
 		this.fusionName = translocation.getFusionName();
 		this.leftGene = translocation.getLeftGene();
 		this.rightGene = translocation.getRightGene();
@@ -42,9 +42,9 @@ public class TranslocationRow {
 		if (utswAnnotated != null && utswAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 		}
-		else {
-			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
-		}
+//		else {
+//			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
+//		}
 		iconFlags = new FlagValue(icons);
 		
 	}

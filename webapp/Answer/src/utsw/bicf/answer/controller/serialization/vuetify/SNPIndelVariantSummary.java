@@ -30,6 +30,7 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 	public void initializeHeaders() {
 		Header chromPos = new Header("CHR", "chromPos");
 		chromPos.setWidth("200px");
+		chromPos.setAlign("right");
 		headers.add(chromPos);
 		Header geneVariant = new Header("Gene Variant", "geneVariant");
 		geneVariant.setWidth("225px");
@@ -38,6 +39,7 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		iconFlags.setWidth("150px");
 		iconFlags.setIsFlag(true);
 		iconFlags.setSortable(false);
+		iconFlags.setAlign("left");
 		headers.add(iconFlags);
 		Header effects = new Header("Effects", "effects");
 		headers.add(effects);

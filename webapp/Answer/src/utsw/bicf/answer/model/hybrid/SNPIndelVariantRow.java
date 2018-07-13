@@ -5,14 +5,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
 import utsw.bicf.answer.model.extmapping.Build;
+import utsw.bicf.answer.model.extmapping.Caller;
 import utsw.bicf.answer.model.extmapping.Variant;
 
 public class SNPIndelVariantRow {
 	
-	String oid; //variant id in MangoDB
+	String oid; //variant id in MongoDB
 	String chrom;
 	Integer pos;
 	String chromPos;
@@ -29,7 +31,7 @@ public class SNPIndelVariantRow {
 	String rnaAltFrequency;
 	Integer rnaAltDepth;
 	Integer rnaTotalDepth;
-	List<String> callSet;
+	List<Caller> callSet;
 	String type;
 	List<Integer> cosmicPatients;
 	List<String> externalIds; //list of external database ids (dbsnp, cosmic, etc)
@@ -44,9 +46,10 @@ public class SNPIndelVariantRow {
 	String exacAlleleFrequency;
 	String somaticStatus;
 	String gnomadPopmaxAlleleFrequency;
-	Boolean repeat;
+	Boolean isRepeat;
 	Boolean common;
-	Boolean inconsistent;
+	List<String> repeatTypes;
+	Boolean callsetInconsistent;
 	Map<String, Build> oldBuilds;
 	List<Variant> relatedVariants;
 	Boolean inCosmic;
@@ -57,10 +60,10 @@ public class SNPIndelVariantRow {
 	
 	
 	public SNPIndelVariantRow(Variant variant, List<ReportGroupForDisplay> reportGroups) {
-		this.oid = variant.getMangoDBId().getOid();
-		this.chrom = variant.getChrom();
+		this.oid = variant.getMongoDBId().getOid();
+		this.chrom = TypeUtils.formatChromosome(variant.getChrom());
 		this.pos = variant.getPos();
-		this.chromPos = variant.getChrom().toUpperCase() + ":" + variant.getPos();
+		this.chromPos = this.chrom + ":" + variant.getPos();
 		this.geneName = variant.getGeneName();
 		this.geneVariant = variant.getGeneName() + " " + variant.getNotation();
 		this.effects = variant.getEffects() != null ? variant.getEffects().stream().collect(Collectors.joining("<br/>")) : null;
@@ -89,8 +92,9 @@ public class SNPIndelVariantRow {
 		this.somaticStatus = variant.getSomaticStatus();
 		this.gnomadPopmaxAlleleFrequency = variant.getGnomadPopmaxAlleleFrequency() != null ? String.format("%.2f", variant.getGnomadPopmaxAlleleFrequency() * 100) : null;
 		common = gnomadPopmaxAlleleFrequency != null && variant.getGnomadPopmaxAlleleFrequency() > 0.01;
-		repeat = variant.getRepeat();
-		inconsistent = variant.getInconsistent();
+		isRepeat = variant.getIsRepeat();
+		callsetInconsistent = variant.getCallsetInconsistent();
+		repeatTypes = variant.getRepeatTypes();
 		this.oldBuilds = variant.getOldBuilds();
 		this.relatedVariants = variant.getRelatedVariants();
 		this.hasRelatedVariants = variant.getHasRelatedVariants();
@@ -109,15 +113,15 @@ public class SNPIndelVariantRow {
 		if (mdaAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "green", "MDA Annotations"));
 		}
-		else {
-			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No MDA Annotations"));
-		}
+//		else {
+//			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No MDA Annotations"));
+//		}
 		if (utswAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 		}
-		else {
-			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
-		}
+//		else {
+//			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
+//		}
 		iconFlags = new FlagValue(icons);
 		
 	}
@@ -143,7 +147,6 @@ public class SNPIndelVariantRow {
 //		}
 //		return false;
 //	}
-
 
 
 
@@ -188,7 +191,7 @@ public class SNPIndelVariantRow {
 	}
 
 
-	public List<String> getCallSet() {
+	public List<Caller> getCallSet() {
 		return callSet;
 	}
 
@@ -324,9 +327,6 @@ public class SNPIndelVariantRow {
 
 
 
-	public Boolean getRepeat() {
-		return repeat;
-	}
 
 
 
@@ -340,9 +340,6 @@ public class SNPIndelVariantRow {
 
 
 
-	public Boolean getInconsistent() {
-		return inconsistent;
-	}
 
 
 
@@ -398,6 +395,30 @@ public class SNPIndelVariantRow {
 
 	public Boolean getHasRelatedVariants() {
 		return hasRelatedVariants;
+	}
+
+
+
+
+
+	public Boolean getIsRepeat() {
+		return isRepeat;
+	}
+
+
+
+
+
+	public List<String> getRepeatTypes() {
+		return repeatTypes;
+	}
+
+
+
+
+
+	public Boolean getCallsetInconsistent() {
+		return callsetInconsistent;
 	}
 
 

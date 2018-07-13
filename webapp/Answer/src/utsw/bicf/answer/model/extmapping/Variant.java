@@ -11,7 +11,7 @@ import utsw.bicf.answer.reporting.parse.AnnotationRow;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Variant {
 	
-	//keep the name of fields in the JSON sent by MangoDB static
+	//keep the name of fields in the JSON sent by MongoDB static
 	//so they can all be centralized here
 	public static final String FIELD_CHROM = "chrom";
 	public static final String FIELD_GENE_NAME = "geneName";
@@ -38,22 +38,25 @@ public class Variant {
 	Boolean isAllowed = true;
 	
 	@JsonProperty("_id")
-	MangoDBId mangoDBId;
+	MongoDBId mongoDBId;
 	String chrom;
 	String geneName;
 	List<String> effects;
 	String notation;
 	Float tumorAltFrequency;
+	String tumorAltFrequencyFormatted;
 	Integer tumorAltDepth;
 	Integer tumorTotalDepth;
 	Float normalAltFrequency;
+	String normalAltFrequencyFormatted;
 	Integer normalAltDepth;
 	Integer normalTotalDepth;
 	Float rnaAltFrequency;
+	String rnaAltFrequencyFormatted;
 	Integer rnaAltDepth;
 	Integer rnaTotalDepth;
 	Integer pos;
-	List<String> callSet;
+	List<Caller> callSet;
 	String type;
 	List<Integer> cosmicPatients;
 	List<String> ids; //list of external database ids (dbsnp, cosmic, etc)
@@ -63,10 +66,13 @@ public class Variant {
 	Boolean selected;
 	Integer numCasesSeen;
 	Float exacAlleleFrequency;
+	String exacAlleleFrequencyFormatted;
 	String somaticStatus;
 	Float gnomadPopmaxAlleleFrequency;
-	Boolean repeat;
-	Boolean inconsistent;
+	String gnomadPopmaxAlleleFrequencyFormatted;
+	Boolean isRepeat;
+	List<String> repeatTypes;
+	Boolean callsetInconsistent;
 	Boolean inCosmic;
 	
 	List<VCFAnnotation> vcfAnnotations;
@@ -80,6 +86,8 @@ public class Variant {
 	String oncokbGeneName;
 	String oncokbVariantName;
 	Boolean hasRelatedVariants;
+	
+	String tier;
 	
 	public Variant() {
 		
@@ -127,6 +135,9 @@ public class Variant {
 
 
 	public Float getTumorAltFrequency() {
+		if (tumorAltFrequencyFormatted == null) {
+			tumorAltFrequencyFormatted = tumorAltFrequency != null ? String.format("%.2f", tumorAltFrequency * 100) : null;
+		}
 		return tumorAltFrequency;
 	}
 
@@ -156,12 +167,12 @@ public class Variant {
 	}
 
 
-	public List<String> getCallSet() {
+	public List<Caller> getCallSet() {
 		return callSet;
 	}
 
 
-	public void setCallSet(List<String> callSet) {
+	public void setCallSet(List<Caller> callSet) {
 		this.callSet = callSet;
 	}
 
@@ -222,6 +233,9 @@ public class Variant {
 
 
 	public Float getNormalAltFrequency() {
+		if (normalAltFrequencyFormatted == null) {
+			normalAltFrequencyFormatted = normalAltFrequency != null ? String.format("%.2f", normalAltFrequency * 100) : null;
+		}
 		return normalAltFrequency;
 	}
 
@@ -237,6 +251,9 @@ public class Variant {
 
 
 	public Float getRnaAltFrequency() {
+		if (rnaAltFrequencyFormatted == null) {
+			rnaAltFrequencyFormatted = rnaAltFrequency != null ? String.format("%.2f", rnaAltFrequency * 100) : null;
+		}
 		return rnaAltFrequency;
 	}
 
@@ -266,8 +283,8 @@ public class Variant {
 	}
 
 
-	public MangoDBId getMangoDBId() {
-		return mangoDBId;
+	public MongoDBId getMongoDBId() {
+		return mongoDBId;
 	}
 
 
@@ -304,6 +321,9 @@ public class Variant {
 
 
 	public Float getExacAlleleFrequency() {
+		if (exacAlleleFrequencyFormatted == null) {
+			exacAlleleFrequencyFormatted = exacAlleleFrequency != null ? String.format("%.2f", exacAlleleFrequency * 100) : null;
+		}
 		return exacAlleleFrequency;
 	}
 
@@ -314,17 +334,10 @@ public class Variant {
 
 
 	public Float getGnomadPopmaxAlleleFrequency() {
+		if (gnomadPopmaxAlleleFrequencyFormatted == null) {
+			gnomadPopmaxAlleleFrequencyFormatted = gnomadPopmaxAlleleFrequency != null ? String.format("%.2f", gnomadPopmaxAlleleFrequency * 100) : null;
+		}
 		return gnomadPopmaxAlleleFrequency;
-	}
-
-
-	public Boolean getRepeat() {
-		return repeat;
-	}
-
-
-	public Boolean getInconsistent() {
-		return inconsistent;
 	}
 
 
@@ -360,6 +373,141 @@ public class Variant {
 
 	public Boolean getHasRelatedVariants() {
 		return hasRelatedVariants;
+	}
+
+
+	public String getTier() {
+		return tier;
+	}
+
+
+	public String getTumorAltFrequencyFormatted() {
+		return tumorAltFrequencyFormatted;
+	}
+
+
+	public String getNormalAltFrequencyFormatted() {
+		return normalAltFrequencyFormatted;
+	}
+
+
+	public String getRnaAltFrequencyFormatted() {
+		return rnaAltFrequencyFormatted;
+	}
+
+
+	public String getExacAlleleFrequencyFormatted() {
+		return exacAlleleFrequencyFormatted;
+	}
+
+
+	public String getGnomadPopmaxAlleleFrequencyFormatted() {
+		return gnomadPopmaxAlleleFrequencyFormatted;
+	}
+
+
+	public static String getFieldChrom() {
+		return FIELD_CHROM;
+	}
+
+
+	public static String getFieldGeneName() {
+		return FIELD_GENE_NAME;
+	}
+
+
+	public static String getFieldTumorAltFrequency() {
+		return FIELD_TUMOR_ALT_FREQUENCY;
+	}
+
+
+	public static String getFieldTumorTotalDepth() {
+		return FIELD_TUMOR_TOTAL_DEPTH;
+	}
+
+
+	public static String getFieldNormalAltFrequency() {
+		return FIELD_NORMAL_ALT_FREQUENCY;
+	}
+
+
+	public static String getFieldNormalTotalDepth() {
+		return FIELD_NORMAL_TOTAL_DEPTH;
+	}
+
+
+	public static String getFieldRnaAltFrequency() {
+		return FIELD_RNA_ALT_FREQUENCY;
+	}
+
+
+	public static String getFieldRnaTotalDepth() {
+		return FIELD_RNA_TOTAL_DEPTH;
+	}
+
+
+	public static String getFieldEffects() {
+		return FIELD_EFFECTS;
+	}
+
+
+	public static String getFieldAnnotations() {
+		return FIELD_ANNOTATIONS;
+	}
+
+
+	public static String getFieldFilters() {
+		return FIELD_FILTERS;
+	}
+
+
+	public static String getFieldExacAlleleFrequency() {
+		return FIELD_EXAC_ALLELE_FREQUENCY;
+	}
+
+
+	public static String getFieldGnomadAlleleFrequency() {
+		return FIELD_GNOMAD_ALLELE_FREQUENCY;
+	}
+
+
+	public static String getFieldNumCasesSeen() {
+		return FIELD_NUM_CASES_SEEN;
+	}
+
+
+	public static String getFieldInCosmic() {
+		return FIELD_IN_COSMIC;
+	}
+
+
+	public static String getFieldOldBuilds() {
+		return FIELD_OLD_BUILDS;
+	}
+
+
+	public static String getValuePass() {
+		return VALUE_PASS;
+	}
+
+
+	public static String getValueFail() {
+		return VALUE_FAIL;
+	}
+
+
+	public Boolean getIsRepeat() {
+		return isRepeat;
+	}
+
+
+	public List<String> getRepeatTypes() {
+		return repeatTypes;
+	}
+
+
+	public Boolean getCallsetInconsistent() {
+		return callsetInconsistent;
 	}
 
 

@@ -10,7 +10,7 @@ public class CaseAnnotation {
 	
 
 	@JsonProperty("_id")
-	MangoDBId mangoDBId;
+	MongoDBId mongoDBId;
 	
 	String caseAnnotation;
 	List<String> assignedTo;
@@ -25,12 +25,12 @@ public class CaseAnnotation {
 		
 	}
 
-	public MangoDBId getMangoDBId() {
-		return mangoDBId;
+	public MongoDBId getMongoDBId() {
+		return mongoDBId;
 	}
 
-	public void setMangoDBId(MangoDBId mangoDBId) {
-		this.mangoDBId = mangoDBId;
+	public void setMongoDBId(MongoDBId mongoDBId) {
+		this.mongoDBId = mongoDBId;
 	}
 
 	public String getCaseAnnotation() {

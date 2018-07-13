@@ -21,7 +21,7 @@ public class Annotation {
 	
 
 	@JsonProperty("_id")
-	MangoDBId mangoDBId;
+	MongoDBId mongoDBId;
 	
 	//Name of the organization this annotation is from (eg. UTSW)
 	String origin;
@@ -82,12 +82,12 @@ public class Annotation {
 		return markedForDeletion;
 	}
 
-	public MangoDBId getMangoDBId() {
-		return mangoDBId;
+	public MongoDBId getMongoDBId() {
+		return mongoDBId;
 	}
 
-	public void setMangoDBId(MangoDBId mangoDBId) {
-		this.mangoDBId = mangoDBId;
+	public void setMongoDBId(MongoDBId mongoDBId) {
+		this.mongoDBId = mongoDBId;
 	}
 
 	public Integer getUserId() {

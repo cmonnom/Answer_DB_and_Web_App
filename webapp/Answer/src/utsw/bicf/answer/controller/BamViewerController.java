@@ -60,27 +60,27 @@ public class BamViewerController {
 		String normalBam = caseSummary.getNormalBam();
 		String tumorBam = caseSummary.getTumorBam();
 		String rnaBam = caseSummary.getRnaBam();
-		normalBam = "SHI710-27-6271_T_DNA_panel1385v2-1.final.bam"; //TODO delete this
+//		normalBam = "SHI710-27-6271_T_DNA_panel1385v2-1.final.bam"; //TODO delete this
 
 
 		if (normalBam != null) {
 			String bamLink = createBamLink(fileProps, normalBam);
 			model.addAttribute("normalBam", bamLink);
-			model.addAttribute("normalBai", createIndexLink(fileProps, normalBam + ".bai", bamLink + ".bai"));
+			model.addAttribute("normalBai", createIndexLink(fileProps, normalBam.replaceAll(".bam", ".bai"), bamLink + ".bai"));
 			model.addAttribute("normalLabel", normalBam);
 		}
 
 		if (tumorBam != null) {
 			String bamLink = createBamLink(fileProps, tumorBam);
 			model.addAttribute("tumorBam", bamLink);
-			model.addAttribute("tumorBai", createIndexLink(fileProps, tumorBam + ".bai", bamLink + ".bai"));
+			model.addAttribute("tumorBai", createIndexLink(fileProps, tumorBam.replaceAll(".bam", ".bai"), bamLink + ".bai"));
 			model.addAttribute("tumorLabel", tumorBam);
 		}
 
 		if (rnaBam != null) {
 			String bamLink = createBamLink(fileProps, rnaBam);
 			model.addAttribute("rnaBam", bamLink);
-			model.addAttribute("rnaBai", createIndexLink(fileProps, rnaBam + ".bai", bamLink + ".bai"));
+			model.addAttribute("rnaBai", createIndexLink(fileProps, rnaBam.replaceAll(".bam", ".bai"), bamLink + ".bai"));
 			model.addAttribute("rnaLabel", rnaBam);
 		}
 
@@ -110,6 +110,7 @@ public class BamViewerController {
 	 */
 	private static String createIndexLink(FileProperties fileProps, String targetName, String linkName) throws IOException {
 		File target = new File(fileProps.getBamFilesDir(), targetName);
+		System.out.println("link target " + target.getAbsolutePath() + " linkName: " + linkName + " exists? " + target.exists() );
 		if (!target.exists()) {
 			return null;
 		}

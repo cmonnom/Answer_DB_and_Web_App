@@ -7,6 +7,9 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
+import org.apache.commons.lang3.StringUtils;
 
 import utsw.bicf.answer.clarity.api.model.ClarityValue;
 
@@ -98,5 +101,26 @@ public class TypeUtils {
 			return null;
 		}
 		return value == 1 ? true : false;
+	}
+	
+	/**
+	 * From a chromosome number, format it so that it always
+	 * returns CHR## (2digit number) or CHR<SOME LETTERS>
+	 * @param chrom
+	 * @return
+	 */
+	public static String formatChromosome(String chrom) {
+		String formattedChrNb = null;
+		if (chrom != null && (chrom.startsWith("chr") || chrom.startsWith("CHR"))) {
+			String chrNb = chrom.substring(3, chrom.length());
+			boolean isNumber = StringUtils.isNumeric(chrNb);
+			if (isNumber) {
+				formattedChrNb = "CHR" + String.format(Locale.US, "%02d", Integer.parseInt(chrNb));
+			}
+			else {
+				formattedChrNb = chrom.toUpperCase();
+			}
+		}
+		return formattedChrNb;
 	}
 }

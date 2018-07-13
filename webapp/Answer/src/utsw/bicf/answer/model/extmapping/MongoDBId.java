@@ -2,7 +2,7 @@ package utsw.bicf.answer.model.extmapping;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MangoDBId {
+public class MongoDBId {
 	
 	@JsonProperty("$oid")
 	String oid;

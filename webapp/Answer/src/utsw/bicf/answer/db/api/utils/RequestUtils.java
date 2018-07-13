@@ -350,6 +350,39 @@ public class RequestUtils {
 		
 	}
 
+	public void saveVariant(AjaxResponse ajaxResponse, Variant variant, String variantType, String oid) throws URISyntaxException, ClientProtocolException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		if (variantType.equals("snp")) {
+			sbUrl.append("variant/");
+		}
+		else if (variantType.equals("cnv")) {
+			sbUrl.append("cnv/");
+		}
+		else if (variantType.equals("translocation")) {
+			sbUrl.append("translocation/");
+		}
+		sbUrl.append(oid);
+		URI uri = new URI(sbUrl.toString());
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		
+		requestPost.setEntity(new StringEntity(mapper.writeValueAsString(variant), ContentType.APPLICATION_JSON));
+		HttpResponse response = client.execute(requestPost);
+//		System.out.println(mapper.writeValueAsString(variant));
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode != HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		else {
+			ajaxResponse.setSuccess(true);
+			ajaxResponse.setIsAllowed(true);
+		}
+
+	}
+
 
 
 }

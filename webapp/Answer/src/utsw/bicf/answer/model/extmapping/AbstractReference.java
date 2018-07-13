@@ -15,7 +15,7 @@ public class AbstractReference {
 	Boolean isAllowed = true;
 
 	@JsonProperty("_id")
-	MangoDBId mangoDBId;
+	MongoDBId mongoDBId;
 	List<Annotation> utswAnnotations;
 	
 
@@ -23,8 +23,8 @@ public class AbstractReference {
 		this.utswAnnotations = utswAnnotations;
 	}
 
-	public void setMangoDBId(MangoDBId mangoDBId) {
-		this.mangoDBId = mangoDBId;
+	public void setMongoDBId(MongoDBId mongoDBId) {
+		this.mongoDBId = mongoDBId;
 	}
 
 
@@ -38,8 +38,8 @@ public class AbstractReference {
 	}
 
 
-	public MangoDBId getMangoDBId() {
-		return mangoDBId;
+	public MongoDBId getMongoDBId() {
+		return mongoDBId;
 	}
 
 
