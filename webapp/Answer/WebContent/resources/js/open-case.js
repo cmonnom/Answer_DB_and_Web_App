@@ -1296,7 +1296,7 @@ const OpenCase = {
                                 {
                                     label:
                                         "Tumor Alt Percent",
-                                    value: this.formatPercent(this.currentVariant.tumorAltFrequencyFormatted)
+                                    value: this.currentVariant.tumorAltFrequencyFormatted ? this.currentVariant.tumorAltFrequencyFormatted + "%" : "" //already formatted as pct
                                 },
                                 {
                                     label: "Normal Total Depth",
@@ -1304,14 +1304,14 @@ const OpenCase = {
                                 },
                                 {
                                     label: "Normal Alt Percent",
-                                    value: this.formatPercent(this.currentVariant.normalAltFrequencyFormatted)
+                                    value: this.currentVariant.normalAltFrequencyFormatted ? this.currentVariant.normalAltFrequencyFormatted + "%" : ""  //already formatted as pct
                                 }, {
                                     label: "RNA Total Depth",
                                     value: this.currentVariant.rnaTotalDepth
                                 },
                                 {
                                     label: "RNA Alt Percent",
-                                    value: this.formatPercent(this.currentVariant.rnaAltFrequencyFormatted)
+                                    value: this.currentVariant.rnaAltFrequencyFormatted ? this.currentVariant.rnaAltFrequencyFormatted + "%" : ""  //already formatted as pct
                                 },
                                 {
                                     label: "Exac Allele Frequency",
