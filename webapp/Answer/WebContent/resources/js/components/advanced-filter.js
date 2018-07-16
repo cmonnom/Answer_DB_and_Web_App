@@ -187,7 +187,7 @@ Vue.component('advanced-filter', {
 
                 <v-tooltip right>
                     <v-menu slot="activator" open-on-hover offset-y :close-on-content-click="true" :disabled="filterSets.length == 0 || disableFiltering">
-                        <v-btn flat icon slot="activator" color="primary" :disabled="filterSets.length == 0">
+                        <v-btn flat icon slot="activator" color="primary" :disabled="filterSets.length == 0 || disableFiltering">
                             <v-icon>mdi-filter-outline</v-icon>
                         </v-btn>
                         <v-list>
@@ -321,10 +321,10 @@ Vue.component('advanced-filter', {
 
 
                     <!-- filter flags -->
-                    <v-layout row class="pl-3 pr-3 primary" v-if="flagFilters.length > 0">
+                    <v-layout row :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3']" v-if="flagFilters.length > 0">
                         <v-expansion-panel expand class="expandable-filter elevation-0">
                             <v-expansion-panel-content :value="true">
-                                <div slot="header" class="" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">Flags</div>
+                                <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">Flags</div>
                                 <v-layout row class="pt-3" v-for="filter in flagFilters" :key="filter.fieldName">
                                     <v-flex xs6>
                                         <v-switch :disabled="disableFiltering" hide-details color="primary" :label="filter.headerTextTrue" v-model="filter.valueTrue" @change="updateFilterNeedsReload(true)"></v-switch>
@@ -385,7 +385,7 @@ Vue.component('advanced-filter', {
                     </v-layout>
 
                     <!-- checkbox -->
-                    <v-layout row v-for="filter in checkboxFilters" :key="filter.fieldName" class="pl-3 pr-3 primary">
+                    <v-layout row v-for="filter in checkboxFilters" :key="filter.fieldName" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3']">
                         <v-expansion-panel expand v-if="filter.isCheckBox" class="expandable-filter elevation-0">
                             <v-expansion-panel-content :value="true">
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']" >{{ filter.headerText }}</div>

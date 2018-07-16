@@ -10,7 +10,7 @@ Vue.component('login-full-page', {
         <v-flex class="text-xs-center elevation-1" xs12 md12 lg3 xl2>
         <div>
         <img :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'" alt="UTSW" width="100%" class="ml-0">
-        <img :src="dataUrlRoot + '/resources/images/answer-logo-large.png'" width="100%" alt="Answer" class="pl-4 pr-4 pb-3"/>       
+        <img :src="dataUrlRoot + '/resources/images/answer-logo-large-alpha.png'" width="100%" alt="Answer" class="pl-4 pr-4 pb-3"/>       
         <b>An</b>notation <b>S</b>oft<b>w</b>are for <b>E</b>lectronic <b>R</b>eporting
         </div>
         </v-flex>
