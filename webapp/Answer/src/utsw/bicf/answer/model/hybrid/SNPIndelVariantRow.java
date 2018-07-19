@@ -56,6 +56,7 @@ public class SNPIndelVariantRow {
 	String oncokbGeneName;
 	String oncokbVariantName;
 	Boolean hasRelatedVariants;
+	String impact;
 	
 	
 	
@@ -101,6 +102,7 @@ public class SNPIndelVariantRow {
 		this.oncokbGeneName = variant.getOncokbGeneName();
 		this.oncokbVariantName = variant.getOncokbVariantName();
 		this.inCosmic = variant.getInCosmic();
+		this.impact = variant.getImpact();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		boolean failed = filters.contains(Variant.VALUE_FAIL);
@@ -419,6 +421,14 @@ public class SNPIndelVariantRow {
 
 	public Boolean getCallsetInconsistent() {
 		return callsetInconsistent;
+	}
+
+
+
+
+
+	public String getImpact() {
+		return impact;
 	}
 
 

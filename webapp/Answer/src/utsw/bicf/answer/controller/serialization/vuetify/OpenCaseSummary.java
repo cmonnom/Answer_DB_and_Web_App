@@ -1,8 +1,10 @@
 package utsw.bicf.answer.controller.serialization.vuetify;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,7 +26,7 @@ public class OpenCaseSummary {
 	PatientInfo patientInfo;
 	String caseId;
 	String caseName;
-	List<String> effects; //unique list of effects. Used for filtering by checking which effects should be included
+	Map<String, Set<String>> effects; //unique list of effects. Used for filtering by checking which effects should be included
 	Integer userId;
 	SNPIndelVariantSummary snpIndelVariantSummary;
 	CNVSummary cnvSummary;
@@ -40,7 +42,7 @@ public class OpenCaseSummary {
 		this.caseId = aCase.getCaseId();
 		this.caseName = aCase.getCaseName();
 		this.userId = user.getUserId();
-		effects = getUniqueEffects(aCase);
+		this.effects = getUniqueEffects(aCase);
 		this.isAllowed = true;
 		this.reportGroups = reportGroups;
 	}
@@ -52,18 +54,29 @@ public class OpenCaseSummary {
 	 * @param aCase
 	 * @return
 	 */
-	private static List<String> getUniqueEffects(OrderCase aCase) {
-		Set<String> effects = new HashSet<String>();
+	private static Map<String, Set<String>> getUniqueEffects(OrderCase aCase) {
+		Map<String, Set<String>> effectsByImpact = new HashMap<String, Set<String>>(); 
 		for (Variant variant : aCase.getVariants()) {
+			Set<String> effects = effectsByImpact.get(variant.getImpact());
+			if (effects == null) {
+				effects = new HashSet<String>();
+			}
 			effects.addAll(variant.getEffects());
+			effectsByImpact.put(variant.getImpact(), effects);
 		}
-		List<String> effectsFormatted = new ArrayList<String>();
-		for (String effect : effects) {
-			effect = effect.replaceAll("_", " ");
-			effect = StringUtils.capitalize(effect);
-			effectsFormatted.add(effect);
+		Map<String, Set<String>> formattedEffectsByImpact = new HashMap<String, Set<String>>(); 
+		for (String impact : effectsByImpact.keySet()) {
+			Set<String> effects = effectsByImpact.get(impact);
+			Set<String> effectsFormatted = new HashSet<String>();
+			for (String effect : effects) {
+				effect = effect.replaceAll("_", " ");
+				effect = StringUtils.capitalize(effect);
+				effectsFormatted.add(effect);
+			}
+			formattedEffectsByImpact.put(impact, effectsFormatted.stream().sorted().collect(Collectors.toSet()));
 		}
-		return effectsFormatted.stream().sorted().collect(Collectors.toList());
+		return formattedEffectsByImpact;
+		
 	}
 
 	
@@ -96,11 +109,11 @@ public class OpenCaseSummary {
 		this.caseName = caseName;
 	}
 
-	public List<String> getEffects() {
+	public Map<String, Set<String>> getEffects() {
 		return effects;
 	}
 
-	public void setEffects(List<String> effects) {
+	public void setEffects(Map<String, Set<String>> effects) {
 		this.effects = effects;
 	}
 

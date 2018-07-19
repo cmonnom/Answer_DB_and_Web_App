@@ -28,7 +28,7 @@ Vue.component('advanced-filter', {
                     <v-flex xs12>
                         <v-divider></v-divider>
                         <div class="pt-2 pb-2">
-                            <v-chip v-if="isFilterUsed(filter)" label v-for="filter in filters" :key="filter.fieldName" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
+                            <v-chip v-if="isFilterUsed(filter)" label v-for="filter in filters" :key="filter.headerText" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
                                 text-color="white">
                                 <span v-html="getFilterChip(filter)"></span>
                                 <v-tooltip bottom>
@@ -38,7 +38,7 @@ Vue.component('advanced-filter', {
                                     <span>Clear Filter</span>
                                 </v-tooltip>
                             </v-chip>
-                            <div v-if="filter.isCheckBox" v-for="filter in filters" :key="filter.fieldName">
+                            <div v-if="filter.isCheckBox" v-for="filter in filters" :key="filter.headerText">
                                 <v-chip v-if="isCheckBoxFilterUsed(checkBox)" label v-for="checkBox in filter.checkBoxes" :key="checkBox.name" color="primary"
                                     text-color="white">
                                     <span v-html="getFilterCheckBoxChip(filter, checkBox)"></span>
@@ -128,9 +128,9 @@ Vue.component('advanced-filter', {
                             <v-list-tile class="list-menu" :disabled="reportGroups.length == 0 || disableFiltering">
                                 <v-list-tile-content>
                                     <v-menu open-on-hover offset-x :close-on-content-click="true">
-                                            <span slot="activator" class="pr-4">
-                                                    <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Load Gene Set
-                                                </span>
+                                        <span slot="activator" class="pr-4">
+                                            <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Load Gene Set
+                                        </span>
                                         <v-list>
                                             <v-list-tile v-for="(reportGroup, index) in reportGroups" :key="index" @click="loadReportGroup(reportGroup)">
                                                 <v-list-tile-content class="pr-4">
@@ -236,22 +236,22 @@ Vue.component('advanced-filter', {
             <!-- displays which filters are active -->
             <div v-if="currentFilterSet" class="pl-2 pt-2 subheading">Current Filter Set: {{ currentFilterSet.listName }}</div>
             <div class="pt-2 pb-2">
-                <v-chip v-if="isFilterUsed(filter)" label v-for="(filter, index1) in filters" :key="index1" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
+                <v-chip v-if="isFilterUsed(filter)" label v-for="(filter, index1) in filters" :key="index1" :color="getChipFilterColor(filter)"
                     text-color="white">
                     <span v-html="getFilterChip(filter)"></span>
                     <v-tooltip bottom>
-                        <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)">
+                        <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)" :disabled="disableFiltering">
                             <v-icon>close</v-icon>
                         </v-btn>
                         <span>Clear Filter</span>
                     </v-tooltip>
                 </v-chip>
                 <div v-if="filter.isCheckBox" v-for="(filter, index2) in filters" :key="index2">
-                    <v-chip v-if="isCheckBoxFilterUsed(checkBox)" label v-for="checkBox in filter.checkBoxes" :key="checkBox.name" color="primary"
+                    <v-chip v-if="isCheckBoxFilterUsed(checkBox)" label v-for="checkBox in filter.checkBoxes" :key="checkBox.name" :color="getChipFilterColor(filter)"
                         text-color="white">
                         <span v-html="getFilterCheckBoxChip(filter, checkBox)"></span>
                         <v-tooltip bottom>
-                            <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(checkBox)">
+                            <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(checkBox)" :disabled="disableFiltering">
                                 <v-icon>close</v-icon>
                             </v-btn>
                             <span>Clear Filter</span>
@@ -271,8 +271,7 @@ Vue.component('advanced-filter', {
                                 <v-flex xs7>
                                     <v-select multiple chips deletable-chips hide-details v-bind:items="filter.selectItems" clearable v-model="filter.value"
                                         item-text="name" item-value="value" :label="filter.headerText" @input="updateFilterNeedsReload(true)"
-                                        auto autocomplete clearable
-                                        :disabled="disableFiltering"></v-select>
+                                        auto autocomplete clearable :disabled="disableFiltering"></v-select>
                                 </v-flex>
                             </v-layout>
                         </v-flex>
@@ -298,7 +297,7 @@ Vue.component('advanced-filter', {
                                     <v-menu lazy :v-model="false" transition="scale-transition" offset-y full-width :nudge-right="40" max-width="290px" min-width="290px"
                                         :close-on-content-click="true">
                                         <v-text-field hide-details clearable slot="activator" label="From" v-model="filter.minValue" prepend-icon="event" readonly
-                                        :disabled="disableFiltering" @input="updateFilterNeedsReload(true)"></v-text-field>
+                                            :disabled="disableFiltering" @input="updateFilterNeedsReload(true)"></v-text-field>
                                         <v-date-picker v-model="filter.minValue" no-title scrollable>
                                             <v-spacer></v-spacer>
                                         </v-date-picker>
@@ -308,7 +307,7 @@ Vue.component('advanced-filter', {
                                     <v-menu lazy :v-model="false" transition="scale-transition" offset-y full-width :nudge-right="40" max-width="290px" min-width="290px"
                                         :close-on-content-click="true">
                                         <v-text-field hide-details slot="activator" clearable label="To" v-model="filter.maxValue" prepend-icon="event" readonly
-                                        :disabled="disableFiltering" @input="updateFilterNeedsReload(true)"></v-text-field>
+                                            :disabled="disableFiltering" @input="updateFilterNeedsReload(true)"></v-text-field>
                                         <v-date-picker v-model="filter.maxValue" no-title scrollable>
                                             <v-spacer></v-spacer>
                                         </v-date-picker>
@@ -325,16 +324,18 @@ Vue.component('advanced-filter', {
                         <v-expansion-panel expand class="expandable-filter elevation-0">
                             <v-expansion-panel-content :value="true">
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">Flags</div>
-                                <v-layout row class="pt-3" v-for="filter in flagFilters" :key="filter.fieldName">
+                                <v-layout row class="pt-3" v-for="filter in flagFilters" :key="filter.headerText">
                                     <v-flex xs6>
-                                        <v-switch :disabled="disableFiltering" hide-details color="primary" :label="filter.headerTextTrue" v-model="filter.valueTrue" @change="updateFilterNeedsReload(true)"></v-switch>
+                                        <v-switch :disabled="disableFiltering" hide-details color="primary" :label="filter.headerTextTrue" v-model="filter.valueTrue"
+                                            @change="updateFilterNeedsReload(true)"></v-switch>
                                     </v-flex>
                                     <v-flex xs5>
-                                        <v-switch :disabled="disableFiltering" hide-details color="primary" :label="filter.headerTextFalse" v-model="filter.valueFalse" @change="updateFilterNeedsReload(true)"></v-switch>
+                                        <v-switch :disabled="disableFiltering" hide-details color="primary" :label="filter.headerTextFalse" v-model="filter.valueFalse"
+                                            @change="updateFilterNeedsReload(true)"></v-switch>
                                     </v-flex>
                                     <v-flex>
                                         <v-tooltip right>
-                                            <v-icon :color="disableFiltering ? 'grey--text lighten-1' : 'primary'" slot="activator" >help</v-icon>
+                                            <v-icon :color="disableFiltering ? 'grey--text lighten-1' : 'primary'" slot="activator">help</v-icon>
                                             <div>
                                                 <span v-show="isBooleanFilterAllOrNone(filter)">
                                                     Current Filtering Criteria:
@@ -373,26 +374,35 @@ Vue.component('advanced-filter', {
                             <v-layout row>
                                 <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                                 <v-flex xs4>
-                                    <v-text-field :disabled="disableFiltering" clearable hide-details :name="filter.fieldName + '-min'" label="Min" v-model="filter.minValue" :rules="numberRules"
-                                        @input="updateFilterNeedsReload(true)"></v-text-field>
+                                    <v-text-field :disabled="disableFiltering" clearable hide-details :name="filter.fieldName + '-min'" label="Min" v-model="filter.minValue"
+                                        :rules="numberRules" @input="updateFilterNeedsReload(true)"></v-text-field>
                                 </v-flex>
                                 <v-flex xs4>
-                                    <v-text-field :disabled="disableFiltering" clearable hide-details :name="filter.fieldName + '-max'" label="Max" v-model="filter.maxValue" :rules="numberRules"
-                                        @input="updateFilterNeedsReload(true)"></v-text-field>
+                                    <v-text-field :disabled="disableFiltering" clearable hide-details :name="filter.fieldName + '-max'" label="Max" v-model="filter.maxValue"
+                                        :rules="numberRules" @input="updateFilterNeedsReload(true)"></v-text-field>
                                 </v-flex>
                             </v-layout>
                         </v-flex>
                     </v-layout>
 
                     <!-- checkbox -->
-                    <v-layout row v-for="filter in checkboxFilters" :key="filter.fieldName" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3']">
+                    <v-layout row v-for="filter in checkboxFilters" :key="filter.headerText" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3', 'mt-2']">
                         <v-expansion-panel expand v-if="filter.isCheckBox" class="expandable-filter elevation-0">
                             <v-expansion-panel-content :value="true">
-                                <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']" >{{ filter.headerText }}</div>
+                                <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">
+                                    {{ filter.headerText }}
+                                    <v-tooltip right>
+                                    <v-btn small slot="activator" :disabled="disableFiltering" flat @click.stop="toggleAllCheckBoxes(filter)" icon>
+                                        <v-icon>done_all</v-icon>
+                                    </v-btn>
+                                    <span>Select/Unselect All</span>
+                                </v-tooltip>
+                                </div>
                                 <v-layout row wrap>
                                     <v-flex xs12 lg6 v-for="(checkBox, index) in filter.checkBoxes" :key="index">
                                         <v-tooltip bottom>
-                                            <v-checkbox :disabled="disableFiltering" color="primary" slot="activator" hide-details :label="checkBox.name" v-model="checkBox.value" @change="updateFilterNeedsReload(true)"></v-checkbox>
+                                            <v-checkbox :disabled="disableFiltering" color="primary" slot="activator" hide-details :label="checkBox.name" v-model="checkBox.value"
+                                                @change="updateFilterNeedsReload(true)"></v-checkbox>
                                             <span>{{ checkBox.name }}</span>
                                         </v-tooltip>
                                     </v-flex>
@@ -400,6 +410,7 @@ Vue.component('advanced-filter', {
                             </v-expansion-panel-content>
                         </v-expansion-panel>
                     </v-layout>
+
                 </v-form>
             </v-container>
         </v-navigation-drawer>
@@ -407,7 +418,7 @@ Vue.component('advanced-filter', {
 </div>`, data() {
         return {
             filters: [],
-            effects: [],
+            effects: null,
             flagFilters: [],
             checkboxFilters: [],
             numberFilters: [],
@@ -443,15 +454,29 @@ Vue.component('advanced-filter', {
                     this.checkboxFilters.push(filter);
                     if (filter.fieldName == 'effects') {
                         if (filter.checkBoxes.length > 0) {
-                            return;
+                            continue;
                         }
                         filter.checkBoxes = [];
-                        for (var j = 0; j < this.effects.length; j++) {
-                            filter.checkBoxes.push({ name: this.effects[j], value: false });
+                        //impacts can be HIGH MODERATE LOW MODIFIER
+                        //each "effect" filter should have a category with the labels above
+                        //compare the filter category to the effect category to populate the correct filter checkboxes
+                        for (var impact in this.effects) {
+                            if (impact == filter.category && this.effects && this.effects[impact]) {
+                                for (var j = 0; j < this.effects[impact].length; j++) {
+                                    filter.checkBoxes.push({ name: this.effects[impact][j], value: false});
+                                }
+                            }
                         }
                     }
                 }
             }
+        },
+        toggleAllCheckBoxes(filter) {
+            var selectAll = filter.checkBoxes[0].value;
+            for (var i = 0; i < filter.checkBoxes.length; i++) {
+                filter.checkBoxes[i].value = !selectAll;
+            }
+            this.updateFilterNeedsReload(true);
         },
         populateFlagFilter() {
             this.flagFilters = [];
@@ -659,8 +684,8 @@ Vue.component('advanced-filter', {
             else {
                 filterToPopulate.value = loadedFilter.value;
             }
-            filterToPopulate.minValue = loadedFilter.minValue * multiplier;
-            filterToPopulate.maxValue = loadedFilter.maxValue * multiplier;
+            filterToPopulate.minValue = loadedFilter.minValue != null ? (loadedFilter.minValue * multiplier).toFixed(5) : null;
+            filterToPopulate.maxValue = loadedFilter.maxValue != null ? (loadedFilter.minValue * multiplier).toFixed(5) : null;
             filterToPopulate.minDateValue = null;
             filterToPopulate.maxDateValue = null;
             filterToPopulate.valueTrue = loadedFilter.valueTrue;
@@ -698,6 +723,12 @@ Vue.component('advanced-filter', {
 
                 }
             }
+        },
+        getChipFilterColor(filter) {
+            if (this.disableFiltering) {
+                return "grey";
+            }
+            return this.isInputNumberValid(filter) ? 'primary' : 'error';
         }
     },
     created: function () {

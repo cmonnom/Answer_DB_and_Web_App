@@ -2,7 +2,6 @@ package utsw.bicf.answer.controller.serialization;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,35 +27,45 @@ public class Utils {
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")
-	public static VariantFilterList parseFilters(String data) throws JsonParseException, JsonMappingException, IOException {
+	public static VariantFilterList parseFilters(String data, boolean parseToSave) throws JsonParseException, JsonMappingException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		DataFilterList filterList = mapper.readValue(data, DataFilterList.class);
-//		}
 		List<VariantFilter> activeFilters = new ArrayList<VariantFilter>();
+		VariantFilter impactFilter = null;
 		for (DataTableFilter filter : filterList.getFilters()) {
 			if (filter.isBoolean() != null && filter.isBoolean()) {
 				if (filter.getValueTrue() != null || filter.getValueFalse() != null) {
 					VariantFilter vf = new VariantFilter(filter.getFieldName());
-					if (filter.getValueTrue() != null && filter.getValueTrue()) {
-						if (filter.getFieldName().equals(Variant.FIELD_FILTERS)) {
-							vf.getStringValues().add(new FilterStringValue(Variant.VALUE_PASS));
-//							vf.setValueTrue(true);
-						}
-						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)
-								|| filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)
-								|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)) {
+					if (parseToSave) { //keep normal behavior to save in local database
+						if (filter.getValueTrue() != null && filter.getValueTrue()) {
 							vf.setValueTrue(true);
 						}
-					}
-					if (filter.getValueFalse() != null && filter.getValueFalse()) {
-						if (filter.getFieldName().equals(Variant.FIELD_FILTERS)) {
-							vf.getStringValues().add(new FilterStringValue(Variant.VALUE_FAIL));
-//							vf.setValueFalse(true);
-						}
-						if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)
-								|| filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)
-								|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)) {
+						if (filter.getValueFalse() != null && filter.getValueFalse()) {
 							vf.setValueFalse(true);
+						}
+					}
+					else { //change some boolean flags to string to query MongoDB
+						if (filter.getValueTrue() != null && filter.getValueTrue()) {
+							if (filter.getFieldName().equals(Variant.FIELD_FILTERS)) {
+								vf.getStringValues().add(new FilterStringValue(Variant.VALUE_PASS));
+//							vf.setValueTrue(true);
+							}
+							if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)
+									|| filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)
+									|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)) {
+								vf.setValueTrue(true);
+							}
+						}
+						if (filter.getValueFalse() != null && filter.getValueFalse()) {
+							if (filter.getFieldName().equals(Variant.FIELD_FILTERS)) {
+								vf.getStringValues().add(new FilterStringValue(Variant.VALUE_FAIL));
+//							vf.setValueFalse(true);
+							}
+							if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)
+									|| filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)
+									|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)) {
+								vf.setValueFalse(true);
+							}
 						}
 					}
 					if (!vf.getStringValues().isEmpty() || vf.getValueTrue() != null || vf.getValueFalse() != null) {
@@ -65,15 +74,35 @@ public class Utils {
 				}
 			}
 			else if (filter.isCheckBox() != null && filter.isCheckBox()) {
-				VariantFilter vf = new VariantFilter(filter.getFieldName());
+				List<VariantFilter> existingVFs = activeFilters.stream().filter(f -> f.getField().equals(filter.getFieldName())).collect(Collectors.toList());
+				VariantFilter vf = null;
+				if (existingVFs != null && !existingVFs.isEmpty()) {
+					vf = existingVFs.get(0); //a VariantFilter already exists (eg. with "effects"). Use that one instead of a new one.
+				}
+				else {
+					vf = new VariantFilter(filter.getFieldName());
+				}
 				List<SearchItem> checkBoxes = filter.getCheckBoxes();
 				for (SearchItem cb : checkBoxes) {
 					if (cb.getValue() != null && (boolean) cb.getValue()) {
-						vf.getStringValues().add(new FilterStringValue(cb.getName().replaceAll(" ", "_").toLowerCase()));
+						String fieldName = cb.getName().replaceAll(" ", "_").toLowerCase();
+						vf.getStringValues().add(new FilterStringValue(fieldName));
 					}
 				}
-				if (!vf.getStringValues().isEmpty() ) {
+				if (!vf.getStringValues().isEmpty() && !activeFilters.contains(vf) ) {
 					activeFilters.add(vf);
+				}
+				//if checkbox is "effect", I need to create a "impact" filter
+				if (filter.getFieldName().equals(Variant.FIELD_EFFECTS)) {
+					if (impactFilter == null) {
+						impactFilter = new VariantFilter(Variant.FIELD_IMPACT);
+						if (!impactFilter.getStringValues().stream()
+								.map(fsv -> fsv.getFilterString())
+								.collect(Collectors.toList())
+								.contains(filter.getCategory())) {
+							impactFilter.getStringValues().add(new FilterStringValue(filter.getCategory()));
+						}
+					}
 				}
 			}
 			else if (filter.isDate() != null && filter.isDate()) {
@@ -137,6 +166,10 @@ public class Utils {
 				}
 			}
 				
+		}
+		//add manually created filters here (like impact)
+		if (impactFilter != null) {
+			activeFilters.add(impactFilter);
 		}
 		VariantFilterList list = new VariantFilterList();
 		activeFilters.stream().forEach(filter -> filter.setFilterList(list));

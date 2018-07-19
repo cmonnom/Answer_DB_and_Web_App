@@ -386,6 +386,9 @@ Vue.component('edit-annotations', {
                 var annotation = JSON.parse(JSON.stringify(this.userEditingAnnotations[i]));
                 annotation.pmids = annotation.pmids ? annotation.pmids.split(",") : null;
                 annotation.nctids = annotation.nctids ? annotation.nctids.split(",") : null;
+                if (annotation.category == 'Chromosomal') {
+                    annotation.cnvGenes = [];
+                }
                 // annotation.category = annotation.selectedCategory ? annotation.selectedCategory : null;
                 // annotation.classification = annotation.selectedClassification ? annotation.selectedClassification : null;
                 // annotation.tier = annotation.selectedTier ? annotation.selectedTier : null;

@@ -40,6 +40,7 @@ public class DataTableFilter {
 	List<SearchItem> selectItems;
 	List<SearchItem> checkBoxes = new ArrayList<SearchItem>();
 	String tooltip;
+	String category;
 	
 	//Booleans need to be handled a bit differently because they can have 4 states: include/not include if true, include/not include if false, 
 	//For instance Pass QC:
@@ -217,6 +218,14 @@ public class DataTableFilter {
 
 	public void setTooltip(String tooltip) {
 		this.tooltip = tooltip;
+	}
+
+	public String getCategory() {
+		return category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
 	}
 	
 }

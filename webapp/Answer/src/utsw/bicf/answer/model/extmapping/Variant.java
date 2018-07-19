@@ -35,6 +35,7 @@ public class Variant {
 	public static final String VALUE_PASS = "PASS";
 	public static final String VALUE_FAIL = "FailedQC";
 	public static final String FIELD_HAS_REPEATS = "isRepeat";
+	public static final String FIELD_IMPACT = "impact";
 	
 	Boolean isAllowed = true;
 	
@@ -91,6 +92,7 @@ public class Variant {
 	String tier;
 	
 	Boolean isOncokbVariant;
+	String impact;
 	
 	public Variant() {
 		
@@ -521,6 +523,11 @@ public class Variant {
 
 	public Boolean getIsOncokbVariant() {
 		return isOncokbVariant;
+	}
+
+
+	public String getImpact() {
+		return impact;
 	}
 
 

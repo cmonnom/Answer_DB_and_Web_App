@@ -23,6 +23,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -127,7 +128,7 @@ public class RequestUtils {
 
 	public OrderCase getCaseDetails(String caseId, String data)
 			throws ClientProtocolException, IOException, URISyntaxException {
-		VariantFilterList filterList = Utils.parseFilters(data);
+		VariantFilterList filterList = Utils.parseFilters(data, false);
 		String filterParam = filterList.createJSON();
 		System.out.println(filterParam);
 
@@ -381,6 +382,32 @@ public class RequestUtils {
 			ajaxResponse.setIsAllowed(true);
 		}
 
+	}
+
+	public void sendVariantSelectionToMDA(AjaxResponse ajaxResponse, String caseId, List<String> selectedSNPVariantIds,
+			List<String> selectedCNVIds, List<String> selectedTranslocationIds) throws URISyntaxException, UnsupportedCharsetException, ClientProtocolException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/sendToMDA");
+		URI uri = new URI(sbUrl.toString());
+
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		SelectedVariantIds variantIds = new SelectedVariantIds();
+		variantIds.setSelectedSNPVariantIds(selectedSNPVariantIds);
+		variantIds.setSelectedCNVIds(selectedCNVIds);
+		variantIds.setSelectedTranslocationIds(selectedTranslocationIds);
+		requestPost.setEntity(new StringEntity(variantIds.createObjectJSON(), ContentType.APPLICATION_JSON));
+
+		HttpResponse response = client.execute(requestPost);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		
 	}
 
 

@@ -96,6 +96,8 @@ public class OpenCaseController {
 				new PermissionUtils(true, false, false));
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveVariant",
 				new PermissionUtils(true, true, false));
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".sendToMDA",
+				new PermissionUtils(true, true, false));
 
 	}
 
@@ -328,9 +330,25 @@ public class OpenCaseController {
 		numCasesSeenFilter.setNumber(true);
 		filters.add(numCasesSeenFilter);
 
-		DataTableFilter effectFilter = new DataTableFilter("Effects", Variant.FIELD_EFFECTS);
-		effectFilter.setCheckBox(true);
-		filters.add(effectFilter);
+		DataTableFilter effectFilterLOF = new DataTableFilter("LOF Effects (HIGH)", Variant.FIELD_EFFECTS);
+		effectFilterLOF.setCheckBox(true);
+		effectFilterLOF.setCategory("HIGH");
+		filters.add(effectFilterLOF);
+		
+		DataTableFilter effectFilterCoding = new DataTableFilter("Coding Change Effects (MODERATE)", Variant.FIELD_EFFECTS);
+		effectFilterCoding.setCheckBox(true);
+		effectFilterCoding.setCategory("MODERATE");
+		filters.add(effectFilterCoding);
+		
+		DataTableFilter effectFilterOther = new DataTableFilter("Other Coding Effects (LOW)", Variant.FIELD_EFFECTS);
+		effectFilterOther.setCheckBox(true);
+		effectFilterOther.setCategory("LOW");
+		filters.add(effectFilterOther);
+		
+		DataTableFilter effectFilterNonCoding = new DataTableFilter("Non Coding Effects (MODIFIER)", Variant.FIELD_EFFECTS);
+		effectFilterNonCoding.setCheckBox(true);
+		effectFilterNonCoding.setCategory("MODIFIER");
+		filters.add(effectFilterNonCoding);
 
 		VariantFilterItems items = new VariantFilterItems();
 		items.setFilters(filters);
@@ -476,7 +494,7 @@ public class OpenCaseController {
 		VariantFilterList filterList = null;
 		if (filterListId == -1) {
 			// create a new one
-			filterList = Utils.parseFilters(filters);
+			filterList = Utils.parseFilters(filters, true);
 			filterList.setUser(user);
 		} else {
 			filterList = modelDAO.getSessionFactory().getCurrentSession().get(VariantFilterList.class, filterListId);
@@ -488,7 +506,7 @@ public class OpenCaseController {
 			}
 			if (filterList != null) { // update all filters by removing and replacing them
 				modelDAO.deleteObject(filterList);
-				filterList = Utils.parseFilters(filters);
+				filterList = Utils.parseFilters(filters, true);
 				filterList.setUser(user);
 				// for (VariantFilter filter : filterList.getFilters()) {
 				// for (FilterStringValue v : filter.getStringValues()) {
@@ -599,6 +617,41 @@ public class OpenCaseController {
 		return response;
 
 	}
+	
+	@RequestMapping(value = "/sendToMDA")
+	@ResponseBody
+	public String sendToMDA(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestBody String data) throws Exception {
+		// AjaxResponse response = new AjaxResponse();
+		// response.setIsAllowed(false);
+		// response.setSuccess(false);
+		ObjectMapper mapper = new ObjectMapper();
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase detailedCase = utils.getCaseDetails(caseId, data);
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		DataFilterList dataPOJO = mapper.readValue(data, DataFilterList.class);
+		List<String> selectedSNPVariantIds = dataPOJO.getSelectedSNPVariantIds();
+		List<String> selectedCNVIds = dataPOJO.getSelectedCNVIds();
+		List<String> selectedTranslocationIds = dataPOJO.getSelectedTranslocationIds();
+
+		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		if (detailedCase != null) {
+			if (!detailedCase.getAssignedTo().contains(user.getUserId().toString())) {
+				response.setMessage("User " + user.getFullName() + " cannot edit this case.");
+				return response.createObjectJSON();
+			}
+			response.setIsAllowed(true);
+			utils.sendVariantSelectionToMDA(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds);
+			return response.createObjectJSON();
+		}
+		else {
+			response.setMessage("No case found");
+			return response.createObjectJSON();
+		}
+	}
+
 
 	@RequestMapping(value = "/saveVariant")
 	@ResponseBody

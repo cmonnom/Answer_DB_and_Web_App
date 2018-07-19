@@ -27,6 +27,15 @@ const OpenCase = {
                     </v-btn>
                     <v-list>
 
+                    <v-list-tile avatar @click="saveSelection()" :disabled="saveVariantDisabled || saveLoading">
+                    <v-list-tile-avatar>
+                        <v-icon>save</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Save Selected Variants</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
+
                         <v-list-tile avatar @click="exportSelectedVariants()" :disabled="saveVariantDisabled || exportLoading">
                             <v-list-tile-avatar>
                                 <v-icon>file_download</v-icon>
@@ -36,14 +45,16 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="saveSelection()" :disabled="saveVariantDisabled || saveLoading">
+                        <v-list-tile avatar @click="sendToMDA()" :disabled="saveVariantDisabled || sendToMDALoading">
                             <v-list-tile-avatar>
-                                <v-icon>save</v-icon>
+                                <v-icon>send</v-icon>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
-                                <v-list-tile-title>Save Selected Variants</v-list-tile-title>
+                                <v-list-tile-title>Send to MD Anderson</v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
+
+                       
 
                         <v-list-tile avatar @click="closeSaveDialog()">
                             <v-list-tile-avatar>
@@ -69,6 +80,12 @@ const OpenCase = {
                         <v-icon>file_download</v-icon>
                     </v-btn>
                     <span>Export to Excel</span>
+                </v-tooltip>
+                <v-tooltip bottom>
+                    <v-btn icon :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">
+                        <v-icon>send</v-icon>
+                    </v-btn>
+                    <span>Send To MD Anderson</span>
                 </v-tooltip>
                 <v-tooltip bottom>
                     <v-btn icon @click="closeSaveDialog" slot="activator">
@@ -123,7 +140,7 @@ const OpenCase = {
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
-                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator" :loading="saveLoading">Save
+                    <v-btn color="success" :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator" :loading="saveLoading">Save
                         <v-icon right dark>save</v-icon>
                     </v-btn>
                     <span>Save Selected Variants</span>
@@ -133,6 +150,12 @@ const OpenCase = {
                         <v-icon right dark>file_download</v-icon>
                     </v-btn>
                     <span>Export to Excel</span>
+                </v-tooltip>
+                <v-tooltip top>
+                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">Send to MDA
+                        <v-icon right dark>send</v-icon>
+                    </v-btn>
+                    <span>Send to MD Anderson</span>
                 </v-tooltip>
                 <v-btn color="error" @click="closeSaveDialog" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
@@ -431,7 +454,7 @@ const OpenCase = {
                                                                             </span>
                                                                             <v-data-table v-if="item.type == 'callSet'" :items="item.value" hide-actions hide-headers>
                                                                                 <template slot="items" slot-scope="props">
-                                                                                    <td >
+                                                                                    <td>
                                                                                         {{ props.item.label }}
                                                                                     </td>
                                                                                     <td v-for="i in item.columns" :key="i">{{ props.item["caller" + (i - 1)] }}</td>
@@ -442,21 +465,19 @@ const OpenCase = {
                                                                                 <v-flex xs6>
                                                                                     <v-select clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
                                                                                         :label="item.tooltip" single-line hide-details
-                                                                                        class="no-height-select"
-                                                                                        @input="variantDetailsUnSaved = true"></v-select>
+                                                                                        class="no-height-select" @input="variantDetailsUnSaved = true"></v-select>
                                                                                 </v-flex>
                                                                             </v-layout>
 
                                                                             <v-tooltip bottom v-for="(icon, index) in item.value" :key="index" v-if="item.type == 'flag'">
-                                                                            <v-chip v-if="icon.chip" slot="activator" :color="icon.color"
-                                                                            text-color="white" label small disabled>
-                                                                            {{ icon.iconName }}
-                                                                            </v-chip>
-                                                                            <v-icon v-if="!icon.chip" slot="activator" :color="icon.color">
-                                                                            {{ icon.iconName }}
-                                                                          </v-icon>
-                                                                          <span> {{ icon.tooltip }}</span>
-                                                                        </v-tooltip>
+                                                                                <v-chip v-if="icon.chip" slot="activator" :color="icon.color" text-color="white" label small disabled>
+                                                                                    {{ icon.iconName }}
+                                                                                </v-chip>
+                                                                                <v-icon v-if="!icon.chip" slot="activator" :color="icon.color">
+                                                                                    {{ icon.iconName }}
+                                                                                </v-icon>
+                                                                                <span> {{ icon.tooltip }}</span>
+                                                                            </v-tooltip>
 
                                                                         </v-flex>
                                                                     </v-layout>
@@ -619,7 +640,7 @@ const OpenCase = {
                                                                             <v-btn @click="handleNCTIdLink(id)" slot="activator">
                                                                                 {{ id }}
                                                                             </v-btn>
-                                                                            span>Open in new tab</span>
+                                                                            <span>Open in new tab</span>
                                                                         </v-tooltip>
                                                                     </v-flex>
                                                                 </v-layout>
@@ -694,7 +715,7 @@ const OpenCase = {
                             <v-icon>mdi-message-bulleted</v-icon>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
-                            <v-list-tile-title>Show/Hide Case Annotations</v-list-tile-title>
+                            <v-list-tile-title>Show/Hide Case Notes</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
 
@@ -727,7 +748,7 @@ const OpenCase = {
                 slot="activator">
                 <v-icon>mdi-message-bulleted</v-icon>
             </v-btn>
-            <span>Show/Hide Case Annotations</span>
+            <span>Show/Hide Case Notes</span>
         </v-tooltip>
         <v-badge color="red" right bottom overlap v-model="variantUnSaved" class="mini-badge">
             <v-icon slot="badge"></v-icon>
@@ -798,7 +819,7 @@ const OpenCase = {
                     <v-toolbar dense dark color="primary">
                         <!-- <v-icon>perm_identity</v-icon> -->
                         <v-icon :color="caseAnnotationsVisible ? 'amber accent-2' : ''">mdi-message-bulleted</v-icon>
-                        <v-toolbar-title>Case Annotations</v-toolbar-title>
+                        <v-toolbar-title>Case Notes</v-toolbar-title>
                         <v-spacer></v-spacer>
                         <v-tooltip bottom>
                             <v-btn flat icon @click="caseAnnotationsVisible = false" slot="activator">
@@ -868,14 +889,15 @@ const OpenCase = {
                 <!-- CNV table -->
                 <v-tab-item id="tab-cnv">
                     <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
-                        :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()" :show-left-menu="true">
+                        :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()" :show-left-menu="true"
+                        @datatable-selection-changed="handleSelectionChanged">
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
                 <v-tab-item id="tab-translocation">
                     <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
                         no-data-text="No Data" :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()"
-                        :show-left-menu="true">
+                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged">
                     </data-table>
                 </v-tab-item>
             </v-tabs-items>
@@ -925,6 +947,7 @@ const OpenCase = {
             externalWindowOpen: false,
             exportLoading: false,
             saveLoading: false,
+            sendToMDALoading: false,
             caseAnnotation: { caseAnnotation: "" },
             caseAnnotationOriginalText: "", //to verify if there has been a modification
             currentVariantType: "snp",
@@ -1163,29 +1186,11 @@ const OpenCase = {
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
             var table; //could be the selected variant table or the regular one
-            if (this.isSNP()) {
-                if (this.saveDialogVisible) {
-                    table = this.$refs.snpVariantsSelected;
-                }
-                else {
-                    table = this.$refs.geneVariantDetails;
-                }
+            if (this.saveDialogVisible) {
+                table = this.$refs.snpVariantsSelected;
             }
-            else if (this.isCNV()) {
-                if (this.saveDialogVisible) {
-                    table = this.$refs.cnvVariantsSelected;
-                }
-                else {
-                    table = this.$refs.cnvDetails;
-                }
-            }
-            else if (this.isTranslocation()) {
-                if (this.saveDialogVisible) {
-                    table = this.$refs.translocationVariantsSelected;
-                }
-                else {
-                    table = this.$refs.cnvDetails;
-                }
+            else {
+                table = this.$refs.geneVariantDetails;
             }
             var currentIndex = table.getCurrentItemIdex(this.currentRow.oid);
             this.isFirstVariant = table.isFirstItem(currentIndex);
@@ -1209,7 +1214,7 @@ const OpenCase = {
                             name: "infoTable",
                             items: [
                                 {
-                                    label: "Flags", 
+                                    label: "Flags",
                                     value: this.currentRow.iconFlags.iconFlags,
                                     type: "flag"
                                 },
@@ -1219,7 +1224,7 @@ const OpenCase = {
                                         + this.currentVariant.pos
                                 },
                                 {
-                                    label: "Gene", 
+                                    label: "Gene",
                                     value: this.currentVariant.geneName
                                 },
                                 {
@@ -1227,23 +1232,23 @@ const OpenCase = {
                                     value: this.currentVariant.notation
                                 },
                                 {
-                                    label: "Reference Allele(s)", 
+                                    label: "Reference Allele(s)",
                                     value: this.currentVariant.reference
                                 },
                                 {
-                                    label: "Alternate Allele(s)", 
+                                    label: "Alternate Allele(s)",
                                     value: this.currentVariant.alt
                                 },
                                 {
-                                    label: "Type", 
+                                    label: "Type",
                                     value: this.currentVariant.type
                                 },
                                 {
-                                    label: "Nb. Cases Seen", 
-                                    value: this.currentVariant.numCasesSeen
+                                    label: "Nb. Cases Seen",
+                                    value: this.currentVariant.numCasesSeen ? this.currentVariant.numCasesSeen + "" : ""
                                 },
                                 {
-                                    label: "Somatic Status", 
+                                    label: "Somatic Status",
                                     value: this.currentVariant.somaticStatus
                                 }]
                         };
@@ -1291,7 +1296,7 @@ const OpenCase = {
                             items: [
                                 {
                                     label: "Tumor Total Depth",
-                                    value: this.currentVariant.tumorTotalDepth
+                                    value: this.currentVariant.tumorTotalDepth ? this.currentVariant.tumorTotalDepth + "" : ""
                                 },
                                 {
                                     label:
@@ -1300,14 +1305,14 @@ const OpenCase = {
                                 },
                                 {
                                     label: "Normal Total Depth",
-                                    value: this.currentVariant.normalTotalDepth
+                                    value: this.currentVariant.normalTotalDepth ? this.currentVariant.normalTotalDepth + "" : ""
                                 },
                                 {
                                     label: "Normal Alt Percent",
                                     value: this.currentVariant.normalAltFrequencyFormatted ? this.currentVariant.normalAltFrequencyFormatted + "%" : ""  //already formatted as pct
                                 }, {
                                     label: "RNA Total Depth",
-                                    value: this.currentVariant.rnaTotalDepth
+                                    value: this.currentVariant.rnaTotalDepth ? this.currentVariant.rnaTotalDepth + "" : ""
                                 },
                                 {
                                     label: "RNA Alt Percent",
@@ -1379,6 +1384,18 @@ const OpenCase = {
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
             this.loadingVariantDetails = true;
+
+            var table; //could be the selected variant table or the regular one
+            if (this.saveDialogVisible) {
+                table = this.$refs.cnvVariantsSelected;
+            }
+            else {
+                table = this.$refs.cnvDetails;
+            }
+            var currentIndex = table.getCurrentItemIdex(this.currentRow.oid);
+            this.isFirstVariant = table.isFirstItem(currentIndex);
+            this.isLastVariant = table.isLastItem(currentIndex);
+
             axios.get(
                 webAppRoot + "/getCNVDetails",
                 {
@@ -1392,29 +1409,33 @@ const OpenCase = {
                         this.variantDataTables = [];
                         var infoTable = {
                             name: "infoTable",
-                            items: [{
-                                label: "Chromosome", value: this.currentVariant.chrom
-                            },
-                            {
-                                label: "Genes", type: "chip", value: this.currentVariant.genes.sort()
-                            },
-                            {
-                                label: "Start", value: this.currentVariant.startFormatted
-                            },
-                            {
-                                label: "End", value: this.currentVariant.endFormatted
-                            },
-                            {
-                                label: "Aberration Type", value: this.currentVariant.aberrationType
-                            },
-                            {
-                                label: "Copy Number", value: this.currentVariant.copyNumber
-                            },
-                            {
-                                label: "Score", value: this.currentVariant.score
-                            }]
+                            items: [
+                                {
+                                    label: "Chromosome", value: this.currentVariant.chrom
+                                },
+                                {
+                                    label: "Genes", type: "chip", value: this.currentVariant.genes.sort()
+                                },
+                                {
+                                    label: "Start", value: this.currentVariant.startFormatted
+                                },
+                                {
+                                    label: "End", value: this.currentVariant.endFormatted
+                                },
+                                {
+                                    label: "Aberration Type", value: this.currentVariant.aberrationType
+                                },
+                                {
+                                    label: "Copy Number", value: this.currentVariant.copyNumber ? this.currentVariant.copyNumber + "" : ""
+                                },
+                                {
+                                    label: "Score", value: this.currentVariant.score ? this.currentVariant.score + "" : ""
+                                }
+                            ]
                         };
                         this.variantDataTables.push(infoTable);
+
+                        this.linkTable = [];
 
                         this.userAnnotations = this.currentVariant.referenceCnv.utswAnnotations.filter(a => a.userId == this.userId);
                         this.$refs.cnvAnnotationDialog.userAnnotations = this.userAnnotations;
@@ -1439,6 +1460,18 @@ const OpenCase = {
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
             this.loadingVariantDetails = true;
+
+            if (this.saveDialogVisible) {
+                table = this.$refs.translocationVariantsSelected;
+            }
+            else {
+                table = this.$refs.translocationDetails;
+            }
+            var currentIndex = table.getCurrentItemIdex(this.currentRow.oid);
+            this.isFirstVariant = table.isFirstItem(currentIndex);
+            this.isLastVariant = table.isLastItem(currentIndex);
+
+
             axios.get(
                 webAppRoot + "/getTranslocationDetails",
                 {
@@ -1480,13 +1513,15 @@ const OpenCase = {
                                 label: "Right Strand", value: this.currentVariant.rightStrand
                             },
                             {
-                                label: "RNA Reads", value: this.currentVariant.rnaReads
+                                label: "RNA Reads", value: this.currentVariant.rnaReads ? this.currentVariant.rnaReads + "" : ""
                             },
                             {
-                                label: "DNA Reads", value: this.currentVariant.dnaReads
+                                label: "DNA Reads", value: this.currentVariant.dnaReads ? this.currentVariant.dnaReads + "" : ""
                             }]
                         };
                         this.variantDataTables.push(infoTable2);
+
+                        this.linkTable = [];
 
                         this.userAnnotations = this.currentVariant.referenceTranslocation.utswAnnotations.filter(a => a.userId == this.userId);
                         this.$refs.translocationAnnotationDialog.userAnnotations = this.userAnnotations;
@@ -1796,9 +1831,10 @@ const OpenCase = {
                         this.snackBarVisible = true;
 
                         //keep track of the selected variants and refresh
-                        this.tempSelectedSNPVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
-                        this.tempSelectedCNVs = this.$refs.cnvDetails.items.filter(item => item.isSelected).map(item => item.oid);
-                        this.tempSelectedTranslocations = this.$refs.translocationDetails.items.filter(item => item.isSelected).map(item => item.oid);
+                        var selectedIds = this.getSelectedVariantIds();
+                        this.tempSelectedSNPVariants = this.selectedIds.selectedSNPVariantIds;
+                        this.tempSelectedCNVs =this.selectedIds.selectedCNVIds;
+                        this.tempSelectedTranslocations = this.selectedIds.selectedTranslocationIds;
 
                         //once refreshed, reselect rows that were selected but not saved yet
                         this.$once('get-case-details-done', (annotations) => {
@@ -1879,9 +1915,7 @@ const OpenCase = {
                 return;
             }
             this.saveLoading = true;
-            var selectedSNPVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
-            var selectedCNVIds = this.$refs.cnvDetails.items.filter(item => item.isSelected).map(item => item.oid);
-            var selectedTranslocationIds = this.$refs.translocationDetails.items.filter(item => item.isSelected).map(item => item.oid);
+            var selectedIds = this.getSelectedVariantIds();
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveVariantSelection",
@@ -1889,9 +1923,9 @@ const OpenCase = {
                     caseId: this.$route.params.id
                 },
                 data: {
-                    selectedSNPVariantIds: selectedSNPVariantIds,
-                    selectedCNVIds: selectedCNVIds,
-                    selectedTranslocationIds: selectedTranslocationIds
+                    selectedSNPVariantIds: selectedIds.selectedSNPVariantIds,
+                    selectedCNVIds: selectedIds.selectedCNVIds,
+                    selectedTranslocationIds: selectedIds.selectedTranslocationIds
                 }
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
@@ -2036,6 +2070,16 @@ const OpenCase = {
                 && !this.annotationVariantOtherVisible
                 && !(this.utswAnnotationsVisible && this.utswAnnotationsExists());
         },
+        getSelectedVariantIds() {
+            var selectedSNPVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
+            var selectedCNVIds = this.$refs.cnvDetails.items.filter(item => item.isSelected).map(item => item.oid);
+            var selectedTranslocationIds = this.$refs.translocationDetails.items.filter(item => item.isSelected).map(item => item.oid);
+            return {
+                selectedSNPVariantIds: selectedSNPVariantIds,
+                selectedCNVIds: selectedCNVIds,
+                selectedTranslocationIds: selectedTranslocationIds
+            }
+        },
         exportSelectedVariants() {
             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
             // Use a flag to disable the action in the meantime
@@ -2043,9 +2087,7 @@ const OpenCase = {
                 return;
             }
             this.exportLoading = true;
-            var selectedSNPVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
-            var selectedCNVIds = this.$refs.cnvDetails.items.filter(item => item.isSelected).map(item => item.oid);
-            var selectedTranslocationIds = this.$refs.translocationDetails.items.filter(item => item.isSelected).map(item => item.oid);
+            var selectedIds = this.getSelectedVariantIds();
             axios({
                 method: 'post',
                 responseType: 'blob',
@@ -2055,9 +2097,9 @@ const OpenCase = {
                 },
                 data: {
                     filters: [],
-                    selectedSNPVariantIds: selectedSNPVariantIds,
-                    selectedCNVIds: selectedCNVIds,
-                    selectedTranslocationIds: selectedTranslocationIds
+                    selectedSNPVariantIds: selectedIds.selectedSNPVariantIds,
+                    selectedCNVIds: selectedIds.selectedCNVIds,
+                    selectedTranslocationIds: selectedIds.selectedTranslocationIds
                 }
             }).then(response => {
                 this.createExcelFile(response.data);
@@ -2074,6 +2116,41 @@ const OpenCase = {
                 this.exportLoading = false;
             }
             );
+        },
+        sendToMDA() {
+            // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
+            // Use a flag to disable the action in the meantime
+            if (this.saveVariantDisabled) {
+                return;
+            }
+            this.sendToMDALoading = true;
+            var selectedIds = this.getSelectedVariantIds();
+            axios({
+                method: 'post',
+                url: webAppRoot + "/sendToMDA",
+                params: {
+                    caseId: this.$route.params.id
+                },
+                data: {
+                    filters: [],
+                    selectedSNPVariantIds: selectedIds.selectedSNPVariantIds,
+                    selectedCNVIds: selectedIds.selectedCNVIds,
+                    selectedTranslocationIds: selectedIds.selectedTranslocationIds
+                }
+            }).then(response => {
+                this.sendToMDALoading = false;
+                if (response.data.isAllowed && response.data.success) {
+                    this.snackBarMessage = "Variants sent to MD Anderson";
+                    this.snackBarVisible = true;
+                }
+                else {
+                    this.handleDialogs(response.data, this.sendToMDA);
+                }
+            }).catch(error => {
+                this.sendToMDALoading = false;
+                console.log(error);
+                bus.$emit("some-error", [this, error]);
+            });
         },
         parseDate(annotation) {
             if (annotation.modifiedDate) {

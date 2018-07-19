@@ -13,7 +13,7 @@ const Home = {
             <v-switch :label="user.name" v-model="usersAssignedToCase[index]"></v-switch> 
           </v-list-tile>
         </v-list> -->
-        <v-layout row wrap>
+        <v-layout row wrap class="pl-2">
           <v-flex xs12 lg6 v-for="(user, index) in allUsers" :key="index">
             <v-switch :label="user.name" v-model="usersAssignedToCase[index]"></v-switch>
           </v-flex>
