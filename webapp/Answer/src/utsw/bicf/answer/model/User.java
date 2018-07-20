@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -39,11 +40,17 @@ public class User {
 	@Column(name="email")
 	String email;
 	
+//	@JsonIgnore
+//	@ManyToOne(cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+//	@JoinColumn(name="permission_id")
+//	Permission permission;
+	
 	@JsonIgnore
-	@ManyToOne(cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
-	@JoinColumn(name="permission_id")
-	Permission permission;
-
+	@OneToOne
+	@JoinColumn(name="individual_permission_id", unique=true)
+	IndividualPermission individualPermission;
+	
+	
 	public Integer getUserId() {
 		return userId;
 	}
@@ -76,13 +83,13 @@ public class User {
 		this.username = username;
 	}
 
-	public Permission getPermission() {
-		return permission;
-	}
-
-	public void setPermission(Permission permission) {
-		this.permission = permission;
-	}
+//	public Permission getPermission() {
+//		return permission;
+//	}
+//
+//	public void setPermission(Permission permission) {
+//		this.permission = permission;
+//	}
 	
 	public String getFullName() {
 		return this.first + " " + this.last;
@@ -94,6 +101,14 @@ public class User {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public IndividualPermission getIndividualPermission() {
+		return individualPermission;
+	}
+
+	public void setIndividualPermission(IndividualPermission individualPermission) {
+		this.individualPermission = individualPermission;
 	}
 	
 }

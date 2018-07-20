@@ -12,7 +12,8 @@ public class OrderCaseAssignedSummary extends Summary<OrderCaseAssigned>{
 		super(casesAssigned, "epicOrderNumber");
 		
 		//only allow to reassign if user can edit
-		if (user.getPermission().getAdmin() || (user.getPermission().getView() && user.getPermission().getEdit())) {
+		if (user.getIndividualPermission().getAdmin() 
+				|| (user.getIndividualPermission().getCanAssign())) {
 			Header actions = new Header("Reassign", "actions");
 			actions.setButtons(true);
 			headers.add(actions);

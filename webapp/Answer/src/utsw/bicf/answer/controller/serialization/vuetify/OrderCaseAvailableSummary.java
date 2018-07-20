@@ -12,7 +12,8 @@ public class OrderCaseAvailableSummary extends Summary<OrderCaseAvailable>{
 		super(orderCases, "epicOrderNumber");
 		
 		//only allow to assign if user can edit
-		if (user.getPermission().getAdmin() || (user.getPermission().getView() && user.getPermission().getEdit())) {
+		if (user.getIndividualPermission().getAdmin() 
+				|| (user.getIndividualPermission().getCanAssign())) {
 		Header actions = new Header(new String[] {"Assign", "To"}, "actions");
 		actions.setButtons(true);
 		headers.add(actions);

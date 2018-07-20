@@ -45,8 +45,9 @@ const Admin = {
                 </v-card-title>
                 <v-card-text>
                   <v-switch :label="'Can View: ' + (editView ? 'Yes' : 'No')" v-model="editView"></v-switch>
-                  <v-switch :label="'Can Edit: ' + (editEdit ? 'Yes' : 'No')" v-model="editEdit"></v-switch>
-                  <v-switch :label="'Can Finalize: ' + (editFinalize ? 'Yes' : 'No')" v-model="editFinalize"></v-switch>
+                  <v-switch :label="'Can Annotate: ' + (editAnnotate ? 'Yes' : 'No')" v-model="editAnnotate"></v-switch>
+                  <v-switch :label="'Can Select Variants: ' + (editSelect ? 'Yes' : 'No')" v-model="editSelect"></v-switch>
+                  <v-switch :label="'Can Assign Cases: ' + (editAssign ? 'Yes' : 'No')" v-model="editAssign"></v-switch>
                   <v-switch :label="'Is Admin: ' + (editAdmin ? 'Yes' : 'No')" v-model="editAdmin"></v-switch>
                 </v-card-text>
               </v-card>
@@ -99,8 +100,9 @@ const Admin = {
             currentEditUserFullName: "",
             currentEditUserId: null,
             editView: false,
-            editEdit: false,
-            editFinalize: false,
+            editAnnotate: false,
+            editSelect: false,
+            editAssign: false,
             editAdmin: false,
             editAdd: "Add",
             snackBarVisible: false,
@@ -123,17 +125,18 @@ const Admin = {
             this.userEmail = user.email;
             this.currentEditUserFullName = user.fullName;
             this.editView = user.viewValue.pass;
-            this.editEdit = user.editValue.pass;
-            this.editFinalize = user.finalizeValue.pass;
-            this.editAdmin = user.adminValue.pass;
+            this.editAnnotate = user.annotateValue.pass;
+            this.editSelect = user.selectValue.pass;
+            this.editAssign = user.assignValue.pass;
+            this.editAdmin = user.adminValue.pass; 
             this.editUserDialogVisible = true;
-
         },
         blockUser(userId) {
             console.log("blocking user " + userId);
             this.editView = false;
-            this.editEdit = false;
-            this.editFinalize = false;
+            this.editAnnotate = false;
+            this.editSelect = false;
+            this.editAssign = false;
             this.editAdmin = false;
             var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
             this.currentEditUserId = userId;
@@ -154,9 +157,10 @@ const Admin = {
                     username: this.$refs.editUsername.inputValue,
                     first: this.$refs.editFirstName.inputValue,
                     last: this.$refs.editLastName.inputValue,
-                    view: this.editView,
-                    edit: this.editEdit,
-                    finalize: this.editFinalize,
+                    canView: this.editView,
+                    canSelect: this.editSelect,
+                    canAnnotate: this.editAnnotate,
+                    canAssign: this.editAssign,
                     admin: this.editAdmin
                 }
             })
@@ -185,8 +189,9 @@ const Admin = {
             this.$refs.editEmail.inputValue = "";
             this.currentEditUserFullName = "";
             this.editView = false;
-            this.editEdit = false;
-            this.editFinalize = false;
+            this.editSelect = false;
+            this.editAnnotate = false;
+            this.editAssign = false;
             this.editAdmin = false;
             this.editUserDialogVisible = true;
 
@@ -194,38 +199,6 @@ const Admin = {
         getDialogMaxHeight() {
             var height = window.innerHeight - 120;
             return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: auto";
-        },
-        handleAdminChanged() {
-            if (this.editAdmin) {
-                this.editView = true;
-                this.editEdit = true;
-                this.editFinalize = true;
-            }
-        },
-        handleFinalizeChanged() {
-            if (this.editFinalize) {
-                this.editView = true;
-                this.editEdit = true;
-            }
-            else {
-                this.editAdmin = false;
-            }
-        },
-        handleEditChanged() {
-            if (this.editEdit) {
-                this.editView = true;
-            }
-            else {
-                this.editFinalize = false;
-                this.editAdmin = false;
-            }
-        },
-        handleViewChanged() {
-            if (!this.editView) {
-                this.editEdit = false;
-                this.editFinalize = false;
-                this.editAdmin = false;
-            }
         },
         handleDialogs(response, callback) {
             if (response.isXss) {
@@ -257,10 +230,6 @@ const Admin = {
     computed: {
     },
     watch: {
-        editAdmin: 'handleAdminChanged',
-        editFinalize: 'handleFinalizeChanged',
-        editEdit: 'handleEditChanged',
-        editView: 'handleViewChanged'
     }
 };
 

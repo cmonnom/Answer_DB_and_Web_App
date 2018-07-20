@@ -24,6 +24,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseForUserSummary
 import utsw.bicf.answer.controller.serialization.vuetify.UserSearchItems;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.hybrid.OrderCaseAssigned;
@@ -36,10 +37,10 @@ import utsw.bicf.answer.security.PermissionUtils;
 public class HomeController {
 	
 	static {
-		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".home", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getWorklists", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".assignToUser", new PermissionUtils(true, true, false));
-		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getAllUsersToAssign", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".home", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getWorklists", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".assignToUser", IndividualPermission.CAN_ASSIGN);
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getAllUsersToAssign", IndividualPermission.CAN_ASSIGN);
 	}
 
 	@Autowired

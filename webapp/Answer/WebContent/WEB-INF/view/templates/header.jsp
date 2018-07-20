@@ -1,7 +1,15 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <script>
         const webAppRoot = "${pageContext.request.contextPath}";
-        const isAdmin = "${isAdmin}" === 'true';
+        const permissions = {
+        		canView: "${permissions.canView}" === 'true',
+        		canAnnotate:  "${permissions.canAnnotate}" === 'true',
+        		canSelect:  "${permissions.canSelect}" === 'true',
+        		canAssign:  "${permissions.canAssign}" === 'true',
+        		admin: "${permissions.admin}" === 'true'
+        };
+        const isAdmin = permissions.admin === true;
+        		
         const csrf = { paramName: "${_csrf.parameterName}",
         value: "${_csrf.token}",
         csrf:"${_csrf}" }

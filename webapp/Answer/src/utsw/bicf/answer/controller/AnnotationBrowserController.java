@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.AnnotationSearchResult;
 import utsw.bicf.answer.security.PermissionUtils;
@@ -23,7 +24,7 @@ import utsw.bicf.answer.security.PermissionUtils;
 public class AnnotationBrowserController {
 	
 	static {
-		PermissionUtils.addPermission(AnnotationBrowserController.class.getCanonicalName() + ".annotationBrowser", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(AnnotationBrowserController.class.getCanonicalName() + ".annotationBrowser", IndividualPermission.CAN_ANNOTATE);
 	}
 
 	@Autowired

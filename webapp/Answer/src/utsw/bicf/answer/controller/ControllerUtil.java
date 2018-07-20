@@ -25,7 +25,7 @@ public class ControllerUtil {
 	public static String initializeModel(Model model, ServletContext servletContext, User user) throws IOException {
 		initJSFiles(model, servletContext);
 		if (user != null) {
-			model.addAttribute("isAdmin", user.getPermission().getAdmin());
+			model.addAttribute("permissions", user.getIndividualPermission());
 		}
 		model.addAttribute("timestamp", timestamp);
 		return "main-template";
@@ -33,7 +33,7 @@ public class ControllerUtil {
 	
 	public static String initializeExternalModel(Model model, ServletContext servletContext, User user, String template) throws IOException {
 		if (user != null) {
-			model.addAttribute("isAdmin", user.getPermission().getAdmin());
+			model.addAttribute("permissions", user.getIndividualPermission());
 		}
 		model.addAttribute("timestamp", timestamp);
 		return template;

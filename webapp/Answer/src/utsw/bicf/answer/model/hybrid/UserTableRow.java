@@ -5,7 +5,7 @@ import java.util.List;
 
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.PassableValue;
-import utsw.bicf.answer.model.Permission;
+import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 
 public class UserTableRow {
@@ -17,8 +17,9 @@ public class UserTableRow {
 	String userName;
 	String email;
 	PassableValue viewValue;
-	PassableValue editValue;
-	PassableValue finalizeValue;
+	PassableValue annotateValue;
+	PassableValue selectValue;
+	PassableValue assignValue;
 	PassableValue adminValue;
 	
 	List<Button> buttons = new ArrayList<Button>();
@@ -30,11 +31,12 @@ public class UserTableRow {
 		this.fullName = user.getFirst() + " " + user.getLast();
 		this.userName = user.getUsername();
 		this.email = user.getEmail();
-		Permission p = user.getPermission();
+		IndividualPermission p = user.getIndividualPermission();
 		
-		viewValue = new PassableValue("viewValue", "", p.getView());
-		editValue = new PassableValue("editValue", "", p.getEdit());
-		finalizeValue = new PassableValue("finalizeValue", "", p.getFinalize());
+		viewValue = new PassableValue("viewValue", "", p.getCanView());
+		annotateValue = new PassableValue("annotateValue", "", p.getCanAnnotate());
+		selectValue = new PassableValue("selectValue", "", p.getCanSelect());
+		assignValue = new PassableValue("assignValue", "", p.getCanAssign());
 		adminValue = new PassableValue("adminValue", "", p.getAdmin());
 		
 		buttons.add(new Button("create", "editUser", "Edit User", "info"));
@@ -45,15 +47,6 @@ public class UserTableRow {
 		return fullName;
 	}
 
-
-	public PassableValue getEditValue() {
-		return editValue;
-	}
-
-
-	public PassableValue getFinalizeValue() {
-		return finalizeValue;
-	}
 
 	public PassableValue getAdminValue() {
 		return adminValue;
@@ -85,6 +78,18 @@ public class UserTableRow {
 
 	public String getEmail() {
 		return email;
+	}
+
+	public PassableValue getAnnotateValue() {
+		return annotateValue;
+	}
+
+	public PassableValue getSelectValue() {
+		return selectValue;
+	}
+
+	public PassableValue getAssignValue() {
+		return assignValue;
 	}
 
 

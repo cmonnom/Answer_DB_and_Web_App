@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.UserTableSummary;
 import utsw.bicf.answer.dao.ModelDAO;
-import utsw.bicf.answer.model.Permission;
+import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 
 @Controller
@@ -55,8 +55,9 @@ public class AdminController {
 	@ResponseBody
 	public String saveUser(Model model, HttpSession session,
 			@RequestParam(defaultValue = "") Integer userId, @RequestParam String username,
-			@RequestParam String first, @RequestParam String last, @RequestParam Boolean view,
-			@RequestParam Boolean edit, @RequestParam Boolean finalize, @RequestParam Boolean admin)
+			@RequestParam String first, @RequestParam String last, @RequestParam Boolean canView,
+			@RequestParam Boolean canSelect, @RequestParam Boolean canAnnotate, 
+			@RequestParam Boolean canAssign, @RequestParam Boolean admin)
 			throws Exception {
 		User user = null;
 		AjaxResponse response = new AjaxResponse();
@@ -76,16 +77,16 @@ public class AdminController {
 		user.setLast(last);
 		user.setUsername(username);
 		
-		Permission permission = modelDAO.getPermission(view, edit, finalize, admin);
-		if (permission != null) {
-			user.setPermission(permission);
+		IndividualPermission individualPermission = user.getIndividualPermission();
+		if (individualPermission == null) {
+			individualPermission = new IndividualPermission();
 		}
-		else {
-			response = new AjaxResponse();
-			response.setSuccess(false);
-			response.setMessage("Permission does not exist");
-			return response.createObjectJSON();
-		}
+		individualPermission.setAdmin(admin);
+		individualPermission.setCanAnnotate(canAnnotate);
+		individualPermission.setCanAssign(canAssign);
+		individualPermission.setCanSelect(canSelect);
+		individualPermission.setCanView(canView);
+		modelDAO.saveObject(individualPermission);
 		modelDAO.saveObject(user);
 		
 		response.setSuccess(true);

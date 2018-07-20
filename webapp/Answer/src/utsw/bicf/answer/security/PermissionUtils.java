@@ -2,74 +2,71 @@ package utsw.bicf.answer.security;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpSession;
 
 import org.springframework.dao.DuplicateKeyException;
 
-import utsw.bicf.answer.controller.HomeController;
-import utsw.bicf.answer.model.Permission;
+import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 
 public class PermissionUtils {
 	
-	//the controller should explicitly give permission to proceed
-	public static final String CONTROLLER_ALLOWED = "controllerAllowed";
-	public static final String CAN_VIEW = "canView";
-	public static final String CAN_EDIT = "canEdit";
-	public static final String CAN_FINALIZE = "canFinalize";
-	
-	boolean canView;
-	boolean canEdit;
-	boolean canFinalize;
+	IndividualPermission permission;
+	List<String> fields;
 	
 	//Manage permission of every url by adding the name of the method
 	//and the permissions to permissionPerUrl (see HomeController)
-	private static final Map<String, PermissionUtils> permissionPerUrl = new HashMap<String, PermissionUtils>();
+	private static final Map<String, List<String>> permissionPerUrl = new HashMap<String, List<String>>();
 
 	
-	public PermissionUtils(boolean canView, boolean canEdit, boolean canFinalize) {
+	public PermissionUtils(List<String> fields) {
 		super();
-		this.canView = canView;
-		this.canEdit = canEdit;
-		this.canFinalize = canFinalize;
+		this.fields = fields;
 	}
 	
-	public static void addPermission(String method, PermissionUtils permission) throws DuplicateKeyException {
+	public static void addPermission(String method, List<String> fields) throws DuplicateKeyException {
 		if (permissionPerUrl.containsKey(method)) {
 			throw new DuplicateKeyException("This method has already been added");
 		}
-		permissionPerUrl.put(method, permission);
+		permissionPerUrl.put(method, fields);
+	}
+	
+	public static void addPermission(String method, String field) throws DuplicateKeyException {
+		if (permissionPerUrl.containsKey(method)) {
+			throw new DuplicateKeyException("This method has already been added");
+		}
+		List<String> fields = new ArrayList<String>();
+		fields.add(field);
+		permissionPerUrl.put(method, fields);
 	}
 
 	public static boolean canProceed(User user, Method method) throws IOException {
-		PermissionUtils controllerPermission = permissionPerUrl.get(method.getDeclaringClass().getCanonicalName() + "." + method.getName());
-		if (user != null && user.getPermission().getAdmin()) {
+		if (user == null) {
+			return false;
+		}
+		List<String> fields = permissionPerUrl.get(method.getDeclaringClass().getCanonicalName() + "." + method.getName());
+		IndividualPermission permission = user.getIndividualPermission();
+		if (user != null && permission.getAdmin()) {
 			return true;
 		}
-		if (controllerPermission != null) {
-			return canProceed(user, controllerPermission.canView, controllerPermission.canEdit, controllerPermission.canFinalize);
+		if (fields != null && !fields.isEmpty()) {
+			boolean canProceed = true;
+			for (String field : fields) {
+				switch(field) {
+				case IndividualPermission.CAN_VIEW: canProceed &= permission.getCanView(); break; 
+				case IndividualPermission.CAN_ANNOTATE: canProceed &= permission.getCanAnnotate(); break; 
+				case IndividualPermission.CAN_SELECT: canProceed &= permission.getCanSelect(); break; 
+				case IndividualPermission.CAN_ASSIGN: canProceed &= permission.getCanAssign(); break; 
+				default: canProceed = false; break;
+				}
+				
+			}
+			return canProceed;
 		}
 		return false; //permissions have not been set on this method
 	}
 	
-	public static boolean canProceed(User user, boolean canView, boolean canEdit, boolean canFinalize) throws IOException {
-		if (user == null) {
-			return false; //should have been tested for null before
-		}
-		Permission userPermissions = user.getPermission();
-		boolean isAllowed = false;
-		if (canView) {
-			isAllowed = userPermissions.getView();
-		}
-		if (canEdit) {
-			isAllowed &= userPermissions.getEdit();
-		}
-		if (canFinalize) {
-			isAllowed &= userPermissions.getFinalize();
-		}
-		return isAllowed;
-	}
 }

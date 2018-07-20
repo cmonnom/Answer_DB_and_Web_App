@@ -268,7 +268,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="startUserAnnotations()">
+                        <v-list-tile avatar @click="startUserAnnotations()" :disabled="!canProceed('canAnnotate')">
                             <v-list-tile-avatar>
                                 <v-icon>note_add</v-icon>
                             </v-list-tile-avatar>
@@ -277,7 +277,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="selectVariantForReport()" v-if="!currentRow.isSelected" :disabled="saveDialogVisible">
+                        <v-list-tile avatar @click="selectVariantForReport()" v-if="!currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect')">
                             <v-list-tile-avatar>
                                 <v-icon>done</v-icon>
                             </v-list-tile-avatar>
@@ -286,7 +286,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="removeVariantFromReport()" v-if="currentRow.isSelected" :disabled="saveDialogVisible">
+                        <v-list-tile avatar @click="removeVariantFromReport()" v-if="currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect')">
                             <v-list-tile-avatar>
                                 <v-icon>done</v-icon>
                             </v-list-tile-avatar>
@@ -382,7 +382,7 @@ const OpenCase = {
                                                 <v-icon color="amber accent-2">zoom_in</v-icon>
                                             </v-btn>
                                             <v-list>
-                                                <v-list-tile avatar @click="saveVariant()">
+                                                <v-list-tile avatar @click="saveVariant()" :disabled="!canProceed('canAnnotate')">
                                                     <v-list-tile-avatar>
                                                         <v-icon>save</v-icon>
                                                     </v-list-tile-avatar>
@@ -418,7 +418,7 @@ const OpenCase = {
                                         <v-badge color="red" right bottom overlap v-model="variantDetailsUnSaved" class="mini-badge">
                                             <v-icon slot="badge"></v-icon>
                                             <v-tooltip bottom>
-                                                <v-btn flat icon @click="saveVariant()" slot="activator" :loading="savingVariantDetails">
+                                                <v-btn flat icon @click="saveVariant()" slot="activator" :loading="savingVariantDetails" :disabled="!canProceed('canAnnotate')">
                                                     <v-icon>save</v-icon>
                                                 </v-btn>
                                                 <span>Save Variant Details</span>
@@ -603,15 +603,15 @@ const OpenCase = {
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
-                    <v-btn color="primary" @click="startUserAnnotations()" slot="activator">Add/Edit
+                    <v-btn color="primary" @click="startUserAnnotations()" slot="activator" :disabled="!canProceed('canAnnotate')">Add/Edit
                         <v-icon right dark>note_add</v-icon>
                     </v-btn>
                     <span>Create/Edit Your Annotations</span>
                 </v-tooltip>
-                <v-btn v-if="!currentRow.isSelected" :disabled="saveDialogVisible" color="success" @click="selectVariantForReport()" slot="activator">Select Variant
+                <v-btn v-if="!currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect')" color="success" @click="selectVariantForReport()" slot="activator">Select Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible" color="warning" @click="removeVariantFromReport()" slot="activator">Deselect Variant
+                <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect')" color="warning" @click="removeVariantFromReport()" slot="activator">Deselect Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
                 <v-tooltip top>
@@ -773,18 +773,18 @@ const OpenCase = {
                         </v-tooltip>
                     </v-toolbar>
                     <v-card-text>
-                        <v-text-field :textarea="true" v-model="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
+                        <v-text-field :textarea="true" :readonly="!canProceed('canAnnotate')" :disabled="!canProceed('canAnnotate')" v-model="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
                         </v-text-field>
                     </v-card-text>
                     <v-card-actions class="card-actions-bottom">
                         <v-tooltip bottom>
-                            <v-btn :disabled="loadingVariantDetails || isCaseAnnotationUnchanged()" slot="activator" color="success" @click="saveCaseAnnotations()">Save
+                            <v-btn :disabled="!canProceed('canAnnotate') || loadingVariantDetails || isCaseAnnotationUnchanged()" slot="activator" color="success" @click="saveCaseAnnotations()">Save
                                 <v-icon right dark>save</v-icon>
                             </v-btn>
                             <span>Save/Update Annotation</span>
                         </v-tooltip>
                         <v-tooltip bottom>
-                            <v-btn :disabled="loadingVariantDetails || isCaseAnnotationUnchanged()" slot="activator" color="error" @click="loadCaseAnnotations()">Discard Changes
+                            <v-btn :disabled="!canProceed('canAnnotate') || loadingVariantDetails || isCaseAnnotationUnchanged()" slot="activator" color="error" @click="loadCaseAnnotations()">Discard Changes
                                 <v-icon right dark>cancel</v-icon>
                             </v-btn>
                             <span>Revert to previous annotation</span>
@@ -810,7 +810,7 @@ const OpenCase = {
                 <!-- SNP / Indel table -->
                 <v-tab-item id="tab-snp">
                     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
-                        no-data-text="No Data" :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()"
+                        no-data-text="No Data" :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()"
                         :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons" @datatable-selection-changed="handleSelectionChanged">
                         <v-fade-transition slot="action1">
                             <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
@@ -833,14 +833,14 @@ const OpenCase = {
                 <!-- CNV table -->
                 <v-tab-item id="tab-cnv">
                     <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
-                        :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()" :show-left-menu="true"
+                        :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()" :show-left-menu="true"
                         @datatable-selection-changed="handleSelectionChanged">
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
                 <v-tab-item id="tab-translocation">
                     <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
-                        no-data-text="No Data" :enable-selection="true" :show-row-count="true" @refresh-requested="handleRefresh()"
+                        no-data-text="No Data" :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()"
                         :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged">
                     </data-table>
                 </v-tab-item>
@@ -924,6 +924,17 @@ const OpenCase = {
 
         }
     }, methods: {
+        canProceed(field) {
+            if (isAdmin) {
+                return true;
+            }
+            switch(field) {
+                case "canAnnotate": return permissions.canAnnotate;
+                case "canSelect": return permissions.canSelect;
+                case "canView": return permissions.canView;
+                default: return false;
+            }
+        },
         toggleGeneVariantDetailsButtons(doShow) {
             this.geneVariantDetailsTableHovering = doShow;
         },
@@ -1725,6 +1736,9 @@ const OpenCase = {
             return formatted;
         },
         startUserAnnotations() {
+            if (!this.canProceed('canSelect')) {
+                return;
+            }
             if (this.isSNP()) {
                 this.$refs.annotationDialog.startUserAnnotations();
             }
@@ -1817,18 +1831,22 @@ const OpenCase = {
                 });
         },
         selectVariantForReport() {
+            if (!this.canProceed('canSelect')) {
+                return;
+            }
             this.$refs.geneVariantDetails.addToSelection(this.currentRow);
-            // this.closeVariantDetails();
         },
         removeVariantFromReport() {
+            if (!this.canProceed('canSelect')) {
+                return;
+            }
             this.$refs.geneVariantDetails.removeFromSelection(this.currentRow);
-            // this.closeVariantDetails();
         },
         updateSelectedVariantTable() {
             var selectedSNPVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected);
             var selectedCNVs = this.$refs.cnvDetails.items.filter(item => item.isSelected);
             var selectedTranslocations = this.$refs.translocationDetails.items.filter(item => item.isSelected);
-            this.saveVariantDisabled = selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0;
+            this.saveVariantDisabled = selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0 || this.canProceed('canAnnotate');
 
             var snpHeaders = this.$refs.geneVariantDetails.headers;
             var snpHeaderOrder = this.$refs.geneVariantDetails.headerOrder;
@@ -2325,6 +2343,9 @@ const OpenCase = {
             }
         },
         saveVariant() {
+            if (!this.canProceed('canAnnotate')) {
+                return;
+            }
             this.savingVariantDetails = true;
             axios({
                 method: 'post',

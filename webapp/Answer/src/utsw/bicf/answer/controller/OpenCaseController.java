@@ -45,6 +45,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSum
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.FilterStringValue;
+import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilter;
@@ -67,37 +68,37 @@ public class OpenCaseController {
 
 	static {
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".openCase",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCaseDetails",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVariantFilters",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVariantDetails",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveVariantSelection",
-				new PermissionUtils(true, true, false));
+				IndividualPermission.CAN_SELECT);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".commitAnnotations",
-				new PermissionUtils(true, true, false));
+				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCurrentFilters",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadUserFilterSets",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".deleteFilterSet",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".exportSelection",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCaseAnnotations",
-				new PermissionUtils(true, true, false));
+				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCNVDetails",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getTranslocationDetails",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".loadCaseAnnotations",
-				new PermissionUtils(true, false, false));
+				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveVariant",
-				new PermissionUtils(true, true, false));
+				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".sendToMDA",
-				new PermissionUtils(true, true, false));
+				IndividualPermission.CAN_SELECT);
 
 	}
 

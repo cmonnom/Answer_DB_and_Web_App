@@ -28,9 +28,10 @@ public class UserTableSummary extends Summary<UserTableRow>{
 	public void initializeHeaders() {
 		headers.add(new Header("Name", "fullName"));
 		headers.add(new Header("User ID", "userName"));
-		headers.add(new Header("View", "viewValue", new ToolTip("Can view a case?"), true));
-		headers.add(new Header("Edit", "editValue", new ToolTip("Can edit a case?"), true));
-		headers.add(new Header("Finalize", "finalizeValue", new ToolTip("Can finalize a case?"), true));
+		headers.add(new Header("View", "viewValue", new ToolTip("Can a user view cases and annotations?"), true));
+		headers.add(new Header("Annotate", "annotateValue", new ToolTip("Can a user create annotations?"), true));
+		headers.add(new Header("Select", "selectValue", new ToolTip("Can a user select variants for reporting?"), true));
+		headers.add(new Header("Assign", "assignValue", new ToolTip("Can a user assign cases to other users?"), true));
 		headers.add(new Header("Admin", "adminValue", new ToolTip("Is user an admin?"), true));
 		Header actions = new Header("Edit User", "actions");
 		actions.setButtons(true);

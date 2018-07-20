@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseItems;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.PermissionUtils;
 
@@ -28,7 +29,7 @@ import utsw.bicf.answer.security.PermissionUtils;
 public class MenuController {
 	
 	static {
-		PermissionUtils.addPermission(MenuController.class.getCanonicalName() + ".getCaseItems", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(MenuController.class.getCanonicalName() + ".getCaseItems", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 

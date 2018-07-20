@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.FileProperties;
@@ -27,8 +28,8 @@ import utsw.bicf.answer.security.PermissionUtils;
 public class BamViewerController {
 
 	static {
-		PermissionUtils.addPermission(BamViewerController.class.getCanonicalName() + ".bamViewer", new PermissionUtils(true, false, false));
-		PermissionUtils.addPermission(BamViewerController.class.getCanonicalName() + ".getBams", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(BamViewerController.class.getCanonicalName() + ".bamViewer", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(BamViewerController.class.getCanonicalName() + ".getBams", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired

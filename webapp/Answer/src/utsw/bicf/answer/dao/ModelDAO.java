@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import utsw.bicf.answer.model.AnswerDBCredentials;
-import utsw.bicf.answer.model.Permission;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
@@ -153,39 +152,39 @@ public class ModelDAO {
 		return session.createQuery(hql, User.class).setParameter("userId", userId).uniqueResult();
 	}
 
-	/**
-	 * Permissions should be from finalized to edit to view
-	 * If finalize is true, edit and view should be true
-	 * If edit is true, view should be true
-	 * @param view
-	 * @param edit
-	 * @param finalize
-	 * @param admin
-	 * @return
-	 */
-	@Transactional
-	public Permission getPermission(Boolean view, Boolean edit, Boolean finalize, Boolean admin) {
-		Session session = sessionFactory.getCurrentSession();
-		String name = null;
-		if (admin) {
-			name = "admin";
-		}
-		else if (finalize) {
-			name = "view_edit_finalize";
-		}
-		else if (edit) {
-			name = "view_edit";
-		}
-		else if (view) {
-			name = "view_only";
-		}
-		else {
-			name = "disabled";
-		}
-		String hql = "from Permission where name = :name";
-		return session.createQuery(hql, Permission.class)
-				.setParameter("name", name).uniqueResult();
-	}
+//	/**
+//	 * Permissions should be from finalized to edit to view
+//	 * If finalize is true, edit and view should be true
+//	 * If edit is true, view should be true
+//	 * @param view
+//	 * @param edit
+//	 * @param finalize
+//	 * @param admin
+//	 * @return
+//	 */
+//	@Transactional
+//	public Permission getPermission(Boolean view, Boolean edit, Boolean finalize, Boolean admin) {
+//		Session session = sessionFactory.getCurrentSession();
+//		String name = null;
+//		if (admin) {
+//			name = "admin";
+//		}
+//		else if (finalize) {
+//			name = "view_edit_finalize";
+//		}
+//		else if (edit) {
+//			name = "view_edit";
+//		}
+//		else if (view) {
+//			name = "view_only";
+//		}
+//		else {
+//			name = "disabled";
+//		}
+//		String hql = "from Permission where name = :name";
+//		return session.createQuery(hql, Permission.class)
+//				.setParameter("name", name).uniqueResult();
+//	}
 
 	@Transactional
 	public List<VariantFilterList> getVariantFilterListsForUser(User user) {
