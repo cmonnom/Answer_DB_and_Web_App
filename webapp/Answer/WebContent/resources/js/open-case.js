@@ -189,7 +189,10 @@ const OpenCase = {
                                 <v-list-tile-title>
                                     <v-menu offset-y offset-x open-on-hover>
                                         <span slot="activator">
-                                            <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide </span>
+                                            <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide 
+                                            <!-- This is a hack to extend the menu active area because the title is much shorter than other items -->
+                                            <span v-for="i in 30" :key="i">&nbsp;</span>
+                                        </span>
                                         <v-list>
                                             <v-list-tile avatar @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible">
                                                 <v-list-tile-avatar>
@@ -587,66 +590,7 @@ const OpenCase = {
                                         <v-container grid-list-md fluid>
                                             <v-layout row wrap>
                                                 <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in utswAnnotationsFormatted" :key="index">
-                                                    <v-card>
-                                                        <v-card-text class="subheading">
-                                                            <v-container grid-list-md fluid>
-                                                                <v-layout row wrap>
-                                                                    <v-flex xs12>
-                                                                        From {{ annotation.fullName }}
-                                                                        <span v-text="parseDate(annotation)"></span>
-                                                                    </v-flex>
-                                                                    <v-flex xs12>
-                                                                        Scope:
-                                                                        <v-tooltip bottom v-for="(scope, index) in annotation.scopes" :key="index">
-                                                                            <v-chip disabled outline slot="activator">
-                                                                                <span :class="scope ? 'green--text' : 'red--text'">{{ annotation.scopeLevels[index] }}</span>
-                                                                                <v-icon right v-if="scope" color="green">check</v-icon>
-                                                                                <v-icon right v-if="!scope" color="red">close</v-icon>
-                                                                            </v-chip>
-                                                                            <span v-html="annotation.scopeTooltip"> </span>
-                                                                        </v-tooltip>
-                                                                    </v-flex>
-                                                                    <v-flex xs12>
-                                                                        <span v-if="annotation.category" class="pr-1">
-                                                                            <b>{{ annotation.category }}:</b>
-                                                                        </span>
-                                                                        <span v-html="annotation.text"></span>
-                                                                    </v-flex>
-                                                                    <v-flex xs12>
-                                                                        <span v-if="annotation.tier" class="pr-1">
-                                                                            <b>Tier:</b>
-                                                                        </span>
-                                                                        <span v-html="annotation.tier"></span>
-                                                                    </v-flex>
-                                                                    <v-flex xs12>
-                                                                        <span v-if="annotation.classification" class="pr-1">
-                                                                            <b>Classification:</b>
-                                                                        </span>
-                                                                        <span v-html="annotation.classification"></span>
-                                                                    </v-flex>
-                                                                    <v-flex xs12 v-if="isCNV() && annotation.cnvGenes" class="pr-1">
-                                                                        Apply to genes: {{ annotation.cnvGenes }}
-                                                                    </v-flex>
-                                                                    <v-flex xs12>
-                                                                        <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>
-                                                                        <v-tooltip v-if="id" bottom v-for="id in annotation.pmids" :key="id">
-                                                                            <v-btn @click="handlePubMedIdLink(id)" slot="activator">
-                                                                                {{ id }}
-                                                                            </v-btn>
-                                                                            <span>Open in new tab</span>
-                                                                        </v-tooltip>
-                                                                        <span v-if="annotation.nctids" class="selectable pl-2">Clinical Trials:</span>
-                                                                        <v-tooltip v-if="id" bottom v-for="id in annotation.nctids" :key="id">
-                                                                            <v-btn @click="handleNCTIdLink(id)" slot="activator">
-                                                                                {{ id }}
-                                                                            </v-btn>
-                                                                            <span>Open in new tab</span>
-                                                                        </v-tooltip>
-                                                                    </v-flex>
-                                                                </v-layout>
-                                                            </v-container>
-                                                        </v-card-text>
-                                                    </v-card>
+                                                    <utsw-annotation-card :annotation="annotation" :variant-type="currentVariantType"></utsw-annotation-card>
                                                 </v-flex>
                                             </v-layout>
                                         </v-container>
@@ -1632,14 +1576,14 @@ const OpenCase = {
             }
             window.open(link, "_blank");
         },
-        handlePubMedIdLink(id) {
-            var link = "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id;
-            window.open(link, "_blank");
-        },
-        handleNCTIdLink(id) {
-            var link = "https://clinicaltrials.gov/ct2/show/" + id;
-            window.open(link, "_blank");
-        },
+        // handlePubMedIdLink(id) {
+        //     var link = "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id;
+        //     window.open(link, "_blank");
+        // },
+        // handleNCTIdLink(id) {
+        //     var link = "https://clinicaltrials.gov/ct2/show/" + id;
+        //     window.open(link, "_blank");
+        // },
         handleOncoKBGeneLink(id) {
 
         },
@@ -1832,32 +1776,34 @@ const OpenCase = {
 
                         //keep track of the selected variants and refresh
                         var selectedIds = this.getSelectedVariantIds();
-                        this.tempSelectedSNPVariants = this.selectedIds.selectedSNPVariantIds;
-                        this.tempSelectedCNVs =this.selectedIds.selectedCNVIds;
-                        this.tempSelectedTranslocations = this.selectedIds.selectedTranslocationIds;
-
-                        //once refreshed, reselect rows that were selected but not saved yet
-                        this.$once('get-case-details-done', (annotations) => {
-                            for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
-                                var row = this.$refs.geneVariantDetails.items[i];
-                                if (this.tempSelectedSNPVariants.includes(row.oid)) {
-                                    row.isSelected = true;
+                        if (selectedIds) {
+                            this.tempSelectedSNPVariants = selectedIds.selectedSNPVariantIds;
+                            this.tempSelectedCNVs = selectedIds.selectedCNVIds;
+                            this.tempSelectedTranslocations = selectedIds.selectedTranslocationIds;
+    
+                            //once refreshed, reselect rows that were selected but not saved yet
+                            this.$once('get-case-details-done', (annotations) => {
+                                for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
+                                    var row = this.$refs.geneVariantDetails.items[i];
+                                    if (this.tempSelectedSNPVariants.includes(row.oid)) {
+                                        row.isSelected = true;
+                                    }
                                 }
-                            }
-                            for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
-                                var row = this.$refs.cnvDetails.items[i];
-                                if (this.tempSelectedCNVs.includes(row.oid)) {
-                                    row.isSelected = true;
+                                for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
+                                    var row = this.$refs.cnvDetails.items[i];
+                                    if (this.tempSelectedCNVs.includes(row.oid)) {
+                                        row.isSelected = true;
+                                    }
                                 }
-                            }
-                            for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
-                                var row = this.$refs.translocationDetails.items[i];
-                                if (this.tempSelectedTranslocations.includes(row.oid)) {
-                                    row.isSelected = true;
+                                for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
+                                    var row = this.$refs.translocationDetails.items[i];
+                                    if (this.tempSelectedTranslocations.includes(row.oid)) {
+                                        row.isSelected = true;
+                                    }
                                 }
-                            }
-                            this.updateSelectedVariantTable();
-                        });
+                                this.updateSelectedVariantTable();
+                            });
+                        }
                         //refresh
                         this.getAjaxData();
 
@@ -2152,11 +2098,11 @@ const OpenCase = {
                 bus.$emit("some-error", [this, error]);
             });
         },
-        parseDate(annotation) {
-            if (annotation.modifiedDate) {
-                return annotation.modifiedSince + " (" + annotation.modifiedDate.split("T")[0] + ")";
-            }
-        },
+        // parseDate(annotation) {
+        //     if (annotation.modifiedDate) {
+        //         return annotation.modifiedSince + " (" + annotation.modifiedDate.split("T")[0] + ")";
+        //     }
+        // },
         createExcelFile(content) {
             var url = window.URL.createObjectURL(new Blob([content]));
             var hiddenElement = document.createElement('a');

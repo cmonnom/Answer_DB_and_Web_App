@@ -1,7 +1,12 @@
 Vue.component('edit-annotations', {
     props: {
         title: { default: "", type: String },
-        type: { default: "snp", type: String }
+        type: { default: "snp", type: String },
+        limitScopeCase: { default: false, type: Boolean}, //not used yet
+        limitScopeGene: { default: false, type: Boolean}, //not used yet
+        limitScopeVariant: { default: false, type: Boolean}, //not used yet
+        limitScopeChromosome: { default: false, type: Boolean}, //used by CNV to limit the category choices
+        hideScope: {default: false, type: Boolean}
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -105,8 +110,11 @@ Vue.component('edit-annotations', {
                                             <v-layout row wrap>
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
+                                                    <v-card-text class="card__text_default" v-if="isSNP() && !hideScope">
+                                                        The scope has been preselected based on your annotation search.
+                                                    </v-card-text>
                                                         <!-- SNP -->
-                                                        <v-card-text class="card__text_default" v-if="isSNP()">
+                                                        <v-card-text class="card__text_default" v-if="isSNP() && !hideScope">
                                                             <div class="subheading pb-2">
                                                                 The
                                                                 <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
@@ -131,7 +139,7 @@ Vue.component('edit-annotations', {
                                                             <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
                                                         </v-card-text>
                                                         <!-- CNV and Translocation -->
-                                                        <v-card-text class="card__text_default" v-if="isCNV() || isTranslocation()">
+                                                        <v-card-text class="card__text_default" v-if="(isCNV() || isTranslocation())  && !hideScope">
                                                             <div class="subheading pb-2">
                                                                 The
                                                                 <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
@@ -513,6 +521,15 @@ Vue.component('edit-annotations', {
     created: function () {
     },
     destroyed: function () {
+    },
+    mounted() {
+        //don't put in mounted but maybe in a method called when edit annotation becomes visible
+        // if (this.limitScopeChromosome) {
+        //     this.annotationCategoriesCNV = ["Chromosomal"];
+        // }
+        // else {
+        //     this.annotationCategoriesCNV = ["Chromosomal", "Focal"];
+        // }
     },
     computed: {
     },

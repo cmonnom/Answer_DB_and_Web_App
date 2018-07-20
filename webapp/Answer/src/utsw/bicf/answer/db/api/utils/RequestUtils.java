@@ -34,6 +34,7 @@ import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
+import utsw.bicf.answer.model.extmapping.AnnotationSearchResult;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -409,6 +410,12 @@ public class RequestUtils {
 		}
 		
 	}
+
+	public AnnotationSearchResult getGetAnnotationsByGeneAndVariant(String gene, String variant) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 
 

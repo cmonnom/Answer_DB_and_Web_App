@@ -57,11 +57,7 @@ Vue.component('main-menu', {
 			menuItems: [
 				{ title: 'Home', iconBefore: 'home', name: 'Home', regularItem: true },
 				{ title: 'Open Case', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseSearch: true },
-				// { title: 'Sample Coverage', name: 'SampleCoverageNoSampleNoChrom', regularItem: true },
-				// { title: 'Low Coverage', name: 'LowCoverageBrowser', regularItem: true },
-				// { title: 'Seq Run Details', name: 'SeqRunDetailsTable', regularItem: true  },
-				// { title: 'Sample Details', name: 'SampleDetailsTable', regularItem: true  },
-				// { title: 'Subjects', name: 'Subjects', regularItem: true },
+				// { title: 'Annotations', name: 'AnnotationBrowser', regularItem: true }, // NOT READY YET
 				{ title: 'Admin', name: 'Admin', regularItem: true, adminOnly: true, iconBefore: 'settings' },
 				{ title: 'Logout', name: 'LogOut', iconBefore: 'exit_to_app', regularItem: true }
 			],

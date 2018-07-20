@@ -26,6 +26,14 @@ var router = new VueRouter({
 			}
 		},
 		{
+			path: webAppRoot + '/annotationBrowser',
+			name: 'AnnotationBrowser',
+			component: AnnotationBrowser,
+			meta: {
+				title: 'Annotation Browser'
+			}
+		},
+		{
 			path: webAppRoot + '/admin',
 			name: 'Admin',
 			component: Admin,

@@ -89,14 +89,14 @@ const Home = {
       <v-slide-x-transition>
         <v-flex xs6 v-show="caseAvailableTableVisible" >
           <data-table ref="casesAvailableTable" :fixed="false" :fetch-on-created="false" table-title="Cases Available" :initial-sort="'epicOrderDate'"
-            no-data-text="No Data" :show-pagination="false" title-icon="mdi-table-search">
+            no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search">
           </data-table>
         </v-flex>
       </v-slide-x-transition>
       <v-slide-x-transition>
         <v-flex xs6 v-show="caseAssignedTableVisible" >
           <data-table ref="casesAssignedTable" :fixed="false" :fetch-on-created="false" table-title="Cases Assigned" :initial-sort="'epicOrderDate'"
-            no-data-text="No Data" :show-pagination="false" title-icon="mdi-table-search">
+            no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search">
           </data-table>
         </v-flex>
       </v-slide-x-transition>

@@ -413,6 +413,9 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		CNV variantDetails = utils.getCNVDetails(variantId);
 		if (variantDetails != null) {
+			for (Annotation a : variantDetails.getReferenceCnv().getUtswAnnotations()) {
+				Annotation.init(a, modelDAO); // format dates and add missing info
+			}
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(variantDetails);
 		}
@@ -429,6 +432,9 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		Translocation variantDetails = utils.getTranslocationDetails(variantId);
 		if (variantDetails != null) {
+			for (Annotation a : variantDetails.getReferenceTranslocation().getUtswAnnotations()) {
+				Annotation.init(a, modelDAO); // format dates and add missing info
+			}
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(variantDetails);
 		}
