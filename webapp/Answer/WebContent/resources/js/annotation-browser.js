@@ -1,10 +1,10 @@
 const AnnotationBrowser = {
-    template:
-        `<div>
+  template:
+    `<div>
   
     <!-- annotation dialog -->
     <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        ref="annotationDialog" :title="geneName + ' ' + variantName"></edit-annotations>
+        ref="annotationDialog" :title="geneName" :hideScope="true" :limitScopeGene="true"></edit-annotations>
 
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         ref="cnvAnnotationDialog" :title="chrom"></edit-annotations>
@@ -27,10 +27,10 @@ const AnnotationBrowser = {
           <v-list-tile @click="utswAnnotationsVisible = !utswAnnotationsVisible">
             <v-list-tile-title>Show/Hide UTSW Annotations</v-list-tile-title>
           </v-list-tile>
-          <v-list-tile @click="mdaAnnotationsVisible = !mdaAnnotationsVisible">
-            <v-list-tile-title>Show/Hide MDA Annotations</v-list-tile-title>
-          </v-list-tile>
-          <v-list-tile @click="startUserAnnotations()">
+           <!-- <v-list-tile @click="mdaAnnotationsVisible = !mdaAnnotationsVisible">
+             <v-list-tile-title>Show/Hide MDA Annotations</v-list-tile-title>
+           </v-list-tile> -->
+          <v-list-tile @click="startUserAnnotations()" :disabled="!canAddEditAnnotations()">
             <v-list-tile-title>Create/Edit Your Annotations</v-list-tile-title>
           </v-list-tile>
         </v-list>
@@ -57,7 +57,7 @@ const AnnotationBrowser = {
     </v-tooltip>
 
     <v-tooltip bottom>
-      <v-btn icon @click="startUserAnnotations()" slot="activator">
+      <v-btn icon @click="startUserAnnotations()" slot="activator" :disabled="!canAddEditAnnotations()">
         <v-icon :color="editAnnotationVisible ? 'amber accent-2' : ''">note_add</v-icon>
       </v-btn>
       <span>Create/Edit Your Annotations</span>
@@ -68,7 +68,7 @@ const AnnotationBrowser = {
     <v-flex xs7>
     <v-card class="mb-3 pl-2">
       <v-card-title class="subheading">
-        Search for the genes or variants you would like to annotate:
+        Search for the genes you would like to annotate:
       </v-card-title>
       <v-card-text>
         <v-layout row wrap>
@@ -82,13 +82,13 @@ const AnnotationBrowser = {
           <v-flex xs7 v-show="variantType == 'snp'">
             <v-container grid-list-md class="mt-3">
               <v-layout row wrap>
-                <v-flex xs12 class="subheading">Search SNP Annotations by Gene/Variant:</v-flex>
+                <v-flex xs12 class="subheading">Search SNP Annotations by Gene:</v-flex>
                 <v-flex xs5>
                   <v-text-field slot="activator" autocomplete="off" clearable label="Gene Name" v-model="searchGene" hide-details></v-text-field>
                 </v-flex>
-                <v-flex xs5>
-                  <v-text-field slot="activator" autocomplete="off" clearable label="Variant" v-model="searchVariant" hide-details></v-text-field>
-                </v-flex>
+                 <!-- <v-flex xs5>
+                   <v-text-field slot="activator" autocomplete="off" clearable label="Variant" v-model="searchVariant" hide-details></v-text-field>
+                 </v-flex> -->
               </v-layout>
             </v-container>
           </v-flex>
@@ -154,7 +154,7 @@ const AnnotationBrowser = {
       </v-card-text>
       <v-card-actions class="card-actions-bottom">
         <v-tooltip top>
-          <v-btn color="primary" @click="startUserAnnotations()" slot="activator">Add/Edit
+          <v-btn color="primary" @click="startUserAnnotations()" slot="activator" :disabled="!canAddEditAnnotations()">Add/Edit
             <v-icon right dark>note_add</v-icon>
           </v-btn>
           <span>Create/Edit Your Annotations</span>
@@ -164,266 +164,309 @@ const AnnotationBrowser = {
 
   </v-container>
 </div>`
-, data() {
-        return {
-            searchGene: null,
-            searchVariant: null,
-            searchChrom: null,
-            searchLeftGene: null,
-            searchRightGene: null,
-            utswAnnotations: [],
-            mdaAnnotations: [],
-            currentVariant: null,
-            utswAnnotationsVisible: true,
-            mdaAnnotationsVisible: true,
-            editAnnotationVisible: false,
-            utswAnnotationsFormatted: [],
-            geneName: null,
-            variantName: null,
-            chrom: null,
-            leftGene: null,
-            rightGene: null,
-            variantType: 'snp',
-            topMostDialog: "",
-            userAnnotations: [],
-            snackBarVisible: false,
-            snackBarMessage: "",
-            variantId: null
+  , data() {
+    return {
+      breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: true, closingFunction: "cancelAnnotations" },
+      searchGene: null,
+      searchVariant: null,
+      searchChrom: null,
+      searchLeftGene: null,
+      searchRightGene: null,
+      utswAnnotations: [],
+      mdaAnnotations: [],
+      currentVariant: null,
+      utswAnnotationsVisible: true,
+      mdaAnnotationsVisible: false,
+      editAnnotationVisible: false,
+      utswAnnotationsFormatted: [],
+      geneName: null,
+      variantName: null,
+      chrom: null,
+      leftGene: null,
+      rightGene: null,
+      variantType: 'snp',
+      topMostDialog: "",
+      userAnnotations: [],
+      snackBarVisible: false,
+      snackBarMessage: "",
+      variantId: null
+
+    }
+  },
+  methods: {
+    handleDialogs(response, callback) {
+      if (response.isXss) {
+        bus.$emit("xss-error", [this, response.reason]);
+      }
+      else if (response.isLogin) {
+        bus.$emit("login-needed", [this, callback])
+      }
+      else if (response.success === false) {
+        bus.$emit("some-error", [this, response.message]);
+      }
+    },
+    canProceed(field) {
+      if (isAdmin) {
+        return true;
+      }
+      switch (field) {
+        case "canAnnotate": return permissions.canAnnotate;
+        case "canView": return permissions.canView;
+        default: return false;
+      }
+    },
+    isSNP() {
+      return this.variantType == "snp";
+    },
+    isCNV() {
+      return this.variantType == "cnv";
+    },
+    isTranslocation() {
+      return this.variantType == "translocation";
+    },
+    searchForAnnotations() {
+      this.utswAnnotations = [];
+      this.mdaAnnotations = [];
+      this.geneName = this.searchGene;
+      this.variantName = this.searchVariant;
+      this.chrom = this.searchChrom;
+      this.leftGene = this.searchLeftGene;
+      this.rightGene = this.searchRightGene;
+      this.variantType = this.variantType;
+      this.variantId = null; //reset this field in case the search is not variant specific
+      axios.get("./searchForAnnotations", {
+        params: {
+          gene: this.geneName,
+          variant: this.variantName,
+          chrom: this.chrom,
+          leftGene: this.leftGene,
+          rightGene: this.rightGene,
+          variantType: this.variantType,
 
         }
-    },
-    methods: {
-        handleDialogs(response, callback) {
-            if (response.isXss) {
-                bus.$emit("xss-error", [this, response.reason]);
-            }
-            else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
-            }
-            else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
-            }
-        },
-        searchForAnnotations() {
-            this.utswAnnotations = [];
-            this.mdaAnnotations = [];
-            this.geneName = this.searchGene;
-            this.variantName = this.searchVariant;
-            this.chrom = this.searchChrom;
-            this.leftGene = this.searchLeftGene;
-            this.rightGene = this.searchRightGene;
-            this.variantType = this.variantType;
-            this.variantId = null; //reset this field in case the search is not variant specific
-            axios.get("./searchForAnnotations", {
-                params: {
-                    gene: this.geneName,
-                    variant: this.variantName,
-                    chrom: this.chrom,
-                    leftGene: this.leftGene,
-                    rightGene: this.rightGene,
-                    variantType: this.variantType,
-                     
-                }
-            })
-                .then(response => {
-                    if (response.data.isAllowed && response.data.success) {
-                        this.utswAnnotations = response.data.utswAnnotations;
-                        this.mdaAnnotations = response.data.mdaAnnotations;
-                        this.geneName = response.data.geneName;
-                        this.variantName = response.data.variantName;
-                        this.chrom = response.data.chrom;
-                        this.leftGene = response.data.leftGene;
-                        this.rightGene = response.data.rightGene;
-                        this.variantType = response.data.variantType;
-                        this.variantId = response.data.variantId;
-                    }
-                    else {
-                        this.handleDialogs(response.data, this.searchForAnnotations);
-                    }
-                })
-                .catch(error => {
-                    alert(error);
-                });
-        },
-        formatAnnotations() {
-            this.utswAnnotationsFormatted = this.formatLocalAnnotations(this.utswAnnotations, true);
-            // this.userAnnotationsFormatted = this.formatLocalAnnotations(this.userAnnotations, false);
-        },
-        formatCNVAnnotations() {
-            this.utswAnnotationsFormatted = this.formatLocalCNVAnnotations(this.utswAnnotations, true);
-        },
-        formatTranslocationAnnotations() {
-            this.utswAnnotationsFormatted = this.formatLocalTranslocationAnnotations(this.utswAnnotations, true);
-        },
-        formatLocalAnnotations(annotations, showUser) {
-            var formatted = [];
-            for (var i = 0; i < annotations.length; i++) {
-                var annotation = {
-                    fullName: "",
-                    text: "",
-                    scopes: [],
-                    scopeLevels: [],
-                    scopeTooltip: "",
-                    tumorSpecific: "",
-                    category: "",
-                    createdDate: "",
-                    createdSince: "",
-                    modifiedDate: "",
-                    modifiedSince: "",
-                    pmids: [],
-                    nctids: [],
-                    tier: "",
-                    classification: ""
-                };
-                if (showUser) {
-                    annotation.fullName = annotations[i].fullName;
-                }
-                annotation.text = annotations[i].text.replace(/\n/g, "<br/>");
-                annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isGeneSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
-                annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
-                "Gene " + (annotations[i].isGeneSpecific ? annotations[i].geneId : ''),
-                "Variant " + (annotations[i].isVariantSpecific ? currentVariant.notation : ''),
-                    "Tumor"];
-                annotation.category = annotations[i].category;
-                annotation.createdDate = annotations[i].createdDate;
-                annotation.createdSince = annotations[i].createdSince;
-                annotation.modifiedDate = annotations[i].modifiedDate;
-                annotation.modifiedSince = annotations[i].modifiedSince;
-                annotation.pmids = annotations[i].pmids;
-                annotation.nctids = annotations[i].nctids;
-                annotation.scopeTooltip = this.$refs.annotationDialog.createLevelInformation(annotations[i]);
-                annotation.tier = annotations[i].tier;
-                annotation.classification = annotations[i].classification;
-                formatted.push(annotation);
-            }
-            return formatted;
-        },
-        formatLocalCNVAnnotations(annotations, showUser) {
-            var formatted = [];
-            for (var i = 0; i < annotations.length; i++) {
-                var annotation = {
-                    fullName: "",
-                    text: "",
-                    scopes: [],
-                    scopeLevels: [],
-                    scopeTooltip: "",
-                    tumorSpecific: "",
-                    category: "",
-                    createdDate: "",
-                    createdSince: "",
-                    modifiedDate: "",
-                    modifiedSince: "",
-                    cnvGenes: ""
-                };
-                if (showUser) {
-                    annotation.fullName = annotations[i].fullName;
-                }
-                annotation.text = annotations[i].text.replace(/\n/g, "<br/>");
-                annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
-                annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
-                "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.chrom : ''),
-                    "Tumor"];
-                annotation.category = annotations[i].category;
-                annotation.cnvGenes = annotations[i].cnvGenes ? annotations[i].cnvGenes.join(" ") : "";
-                annotation.createdDate = annotations[i].createdDate;
-                annotation.createdSince = annotations[i].createdSince;
-                annotation.modifiedDate = annotations[i].modifiedDate;
-                annotation.modifiedSince = annotations[i].modifiedSince;
-                annotation.scopeTooltip = this.$refs.cnvAnnotationDialog.createLevelInformation(annotations[i]);
-                formatted.push(annotation);
-            }
-            return formatted;
-        },
-        formatLocalTranslocationAnnotations(annotations, showUser) {
-            var formatted = [];
-            for (var i = 0; i < annotations.length; i++) {
-                var annotation = {
-                    fullName: "",
-                    text: "",
-                    scopes: [],
-                    scopeLevels: [],
-                    scopeTooltip: "",
-                    tumorSpecific: "",
-                    category: "",
-                    createdDate: "",
-                    createdSince: "",
-                    modifiedDate: "",
-                    modifiedSince: "",
-                };
-                if (showUser) {
-                    annotation.fullName = annotations[i].fullName;
-                }
-                annotation.text = annotations[i].text.replace(/\n/g, "<br/>");
-                annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
-                annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
-                "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.fusionName : ''),
-                    "Tumor"];
-                annotation.category = annotations[i].category;
-                annotation.createdDate = annotations[i].createdDate;
-                annotation.createdSince = annotations[i].createdSince;
-                annotation.modifiedDate = annotations[i].modifiedDate;
-                annotation.modifiedSince = annotations[i].modifiedSince;
-                annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
-                formatted.push(annotation);
-            }
-            return formatted;
-        },
-        updateEditAnnotationBreadcrumbs(visible) {
-          if (visible) {
-              bus.$emit("add-breadcrumb-level", this.breadcrumbItemEditAnnotation);
-              this.topMostDialog = this.breadcrumbItemEditAnnotation.closingFunction;
+      })
+        .then(response => {
+          if (response.data.isAllowed && response.data.success) {
+            this.utswAnnotations = response.data.utswAnnotations;
+            this.mdaAnnotations = response.data.mdaAnnotations;
+            this.geneName = response.data.geneName;
+            this.variantName = response.data.variantName;
+            this.chrom = response.data.chrom;
+            this.leftGene = response.data.leftGene;
+            this.rightGene = response.data.rightGene;
+            this.variantType = response.data.variantType;
+            this.variantId = response.data.variantId;
           }
           else {
-              bus.$emit("remove-breadcrumb-level", this);
+            this.handleDialogs(response.data, this.searchForAnnotations);
           }
-      },
-        startUserAnnotations() {
+        })
+        .catch(error => {
+          alert(error);
+        });
+    },
+    canAddEditAnnotations() {
+      return this.canProceed('canAnnotate');
+    },
+    formatAnnotations() {
+      this.utswAnnotationsFormatted = this.formatLocalAnnotations(this.utswAnnotations, true);
+      // this.userAnnotationsFormatted = this.formatLocalAnnotations(this.userAnnotations, false);
+    },
+    formatCNVAnnotations() {
+      this.utswAnnotationsFormatted = this.formatLocalCNVAnnotations(this.utswAnnotations, true);
+    },
+    formatTranslocationAnnotations() {
+      this.utswAnnotationsFormatted = this.formatLocalTranslocationAnnotations(this.utswAnnotations, true);
+    },
+    formatLocalAnnotations(annotations, showUser) {
+      var formatted = [];
+      for (var i = 0; i < annotations.length; i++) {
+        var annotation = {
+          fullName: "",
+          text: "",
+          scopes: [],
+          scopeLevels: [],
+          scopeTooltip: "",
+          tumorSpecific: "",
+          category: "",
+          createdDate: "",
+          createdSince: "",
+          modifiedDate: "",
+          modifiedSince: "",
+          pmids: [],
+          nctids: [],
+          tier: "",
+          classification: ""
+        };
+        if (showUser) {
+          annotation.fullName = annotations[i].fullName;
+        }
+        annotation.text = annotations[i].text.replace(/\n/g, "<br/>");
+        annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isGeneSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
+        annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
+        "Gene " + (annotations[i].isGeneSpecific ? annotations[i].geneId : ''),
+        "Variant " + (annotations[i].isVariantSpecific ? currentVariant.notation : ''),
+          "Tumor"];
+        annotation.category = annotations[i].category;
+        annotation.createdDate = annotations[i].createdDate;
+        annotation.createdSince = annotations[i].createdSince;
+        annotation.modifiedDate = annotations[i].modifiedDate;
+        annotation.modifiedSince = annotations[i].modifiedSince;
+        annotation.pmids = annotations[i].pmids;
+        annotation.nctids = annotations[i].nctids;
+        annotation.scopeTooltip = this.$refs.annotationDialog.createLevelInformation(annotations[i]);
+        annotation.tier = annotations[i].tier;
+        annotation.classification = annotations[i].classification;
+        formatted.push(annotation);
+      }
+      return formatted;
+    },
+    formatLocalCNVAnnotations(annotations, showUser) {
+      var formatted = [];
+      for (var i = 0; i < annotations.length; i++) {
+        var annotation = {
+          fullName: "",
+          text: "",
+          scopes: [],
+          scopeLevels: [],
+          scopeTooltip: "",
+          tumorSpecific: "",
+          category: "",
+          createdDate: "",
+          createdSince: "",
+          modifiedDate: "",
+          modifiedSince: "",
+          cnvGenes: ""
+        };
+        if (showUser) {
+          annotation.fullName = annotations[i].fullName;
+        }
+        annotation.text = annotations[i].text.replace(/\n/g, "<br/>");
+        annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
+        annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
+        "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.chrom : ''),
+          "Tumor"];
+        annotation.category = annotations[i].category;
+        annotation.cnvGenes = annotations[i].cnvGenes ? annotations[i].cnvGenes.join(" ") : "";
+        annotation.createdDate = annotations[i].createdDate;
+        annotation.createdSince = annotations[i].createdSince;
+        annotation.modifiedDate = annotations[i].modifiedDate;
+        annotation.modifiedSince = annotations[i].modifiedSince;
+        annotation.scopeTooltip = this.$refs.cnvAnnotationDialog.createLevelInformation(annotations[i]);
+        formatted.push(annotation);
+      }
+      return formatted;
+    },
+    formatLocalTranslocationAnnotations(annotations, showUser) {
+      var formatted = [];
+      for (var i = 0; i < annotations.length; i++) {
+        var annotation = {
+          fullName: "",
+          text: "",
+          scopes: [],
+          scopeLevels: [],
+          scopeTooltip: "",
+          tumorSpecific: "",
+          category: "",
+          createdDate: "",
+          createdSince: "",
+          modifiedDate: "",
+          modifiedSince: "",
+        };
+        if (showUser) {
+          annotation.fullName = annotations[i].fullName;
+        }
+        annotation.text = annotations[i].text.replace(/\n/g, "<br/>");
+        annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
+        annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
+        "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.fusionName : ''),
+          "Tumor"];
+        annotation.category = annotations[i].category;
+        annotation.createdDate = annotations[i].createdDate;
+        annotation.createdSince = annotations[i].createdSince;
+        annotation.modifiedDate = annotations[i].modifiedDate;
+        annotation.modifiedSince = annotations[i].modifiedSince;
+        annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
+        formatted.push(annotation);
+      }
+      return formatted;
+    },
+    updateEditAnnotationBreadcrumbs(visible) {
+      if (visible) {
+        bus.$emit("add-breadcrumb-level", this.breadcrumbItemEditAnnotation);
+        this.topMostDialog = this.breadcrumbItemEditAnnotation.closingFunction;
+      }
+      else {
+        bus.$emit("remove-breadcrumb-level", this);
+      }
+    },
+    startUserAnnotations() {
+      if (!this.canProceed('canAnnotate')) {
+        return;
+      }
+      if (this.isSNP()) {
+        this.$refs.annotationDialog.startUserAnnotations();
+      }
+      else if (this.isCNV()) {
+        this.$refs.cnvAnnotationDialog.cnvGeneItems = this.currentVariant.genes;
+        this.$refs.cnvAnnotationDialog.startUserAnnotations();
+      }
+      else if (this.isTranslocation()) {
+        this.$refs.translocationAnnotationDialog.startUserAnnotations();
+      }
+    },
+    commitAnnotations(userAnnotations) {
+      this.userAnnotations = userAnnotations;
+      for (var i = 0; i < this.userAnnotations.length; i++) {
+        if (this.isSNP()) {
+          this.userAnnotations[i].isGeneSpecific = true,
+            this.userAnnotations[i].isVariantSpecific = false;
+          this.userAnnotations[i].isCaseSpecific = false;
+        }
 
+      }
+      axios({
+        method: 'post',
+        url: webAppRoot + "/commitAnnotations",
+        params: {
+          caseId: "",
+          geneId: this.geneName ? this.geneName : "",
+          variantId: this.variantId ? this.variantId : ""
         },
-        commitAnnotations(userAnnotations) {
-          this.userAnnotations = userAnnotations;
-          axios({
-              method: 'post',
-              url: webAppRoot + "/commitAnnotations",
-              params: {
-                  caseId: "",
-                  geneId: this.geneName ? this.geneName : "",
-                  variantId: this.variantId ? this.variantId : ""
-              },
-              data: {
-                  annotations: this.userAnnotations,
-              }
-          })
-              .then(response => {
-                  if (response.data.isAllowed && response.data.success) {
-                      this.snackBarMessage = "Annotation(s) Saved";
-                      this.snackBarVisible = true;
-                      //refresh
-                      this.searchForAnnotations();
+        data: {
+          annotations: this.userAnnotations,
+        }
+      })
+        .then(response => {
+          if (response.data.isAllowed && response.data.success) {
+            this.snackBarMessage = "Annotation(s) Saved";
+            this.snackBarVisible = true;
+            //refresh
+            this.searchForAnnotations();
 
-                  } else {
-                      this.handleDialogs(response.data, this.commitAnnotations);
-                  }
-              })
-              .catch(error => {
-                  console.log(error);
-                  bus.$emit("some-error", [this, error]);
-              });
-      },
+          } else {
+            this.handleDialogs(response.data, this.commitAnnotations);
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          bus.$emit("some-error", [this, error]);
+        });
+    },
 
-    },
-    mounted: function () {
+  },
+  mounted: function () {
 
-    },
-    destroyed: function () {
+  },
+  destroyed: function () {
 
-    },
-    created: function () {
+  },
+  created: function () {
 
-    },
-    computed: {
-    },
-    watch: {
-    }
+  },
+  computed: {
+  },
+  watch: {
+  }
 };
 

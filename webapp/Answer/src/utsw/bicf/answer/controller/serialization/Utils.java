@@ -93,8 +93,9 @@ public class Utils {
 					activeFilters.add(vf);
 				}
 				//if checkbox is "effect", I need to create a "impact" filter
-				if (filter.getFieldName().equals(Variant.FIELD_EFFECTS)) {
-					if (impactFilter == null) {
+				if (filter.getFieldName().equals(Variant.FIELD_EFFECTS) && !filter.getCheckBoxes().isEmpty()) {
+					boolean someBoxChecked = !filter.getCheckBoxes().stream().filter(c -> (Boolean) c.getValue() == true).collect(Collectors.toList()).isEmpty();
+					if (someBoxChecked && impactFilter == null) {
 						impactFilter = new VariantFilter(Variant.FIELD_IMPACT);
 						if (!impactFilter.getStringValues().stream()
 								.map(fsv -> fsv.getFilterString())

@@ -2,8 +2,11 @@ package utsw.bicf.answer.controller.serialization;
 
 public class CellItem {
 	
+	public static final String TYPE_TEXT = "text";
+	
 	String label;
 	String value;
+	String type;
 	
 	public CellItem() {
 	}
@@ -23,6 +26,12 @@ public class CellItem {
 	}
 	public void setValue(String value) {
 		this.value = value;
+	}
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
 	}
 
 }

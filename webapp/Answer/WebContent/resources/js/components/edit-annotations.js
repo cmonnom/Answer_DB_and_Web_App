@@ -49,7 +49,7 @@ Vue.component('edit-annotations', {
                     </v-menu>
                     <span>Annotation Menu</span>
                 </v-tooltip>
-                <v-toolbar-title>Your Annotations for variant: {{ title }}</v-toolbar-title>
+                <v-toolbar-title v-text="createTitle()"></v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom >
                     <v-btn icon slot="activator" @click="addCustomAnnotation()">
@@ -110,7 +110,7 @@ Vue.component('edit-annotations', {
                                             <v-layout row wrap>
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                    <v-card-text class="card__text_default" v-if="isSNP() && !hideScope">
+                                                    <v-card-text class="card__text_default" v-if="isSNP() && hideScope">
                                                         The scope has been preselected based on your annotation search.
                                                     </v-card-text>
                                                         <!-- SNP -->
@@ -361,7 +361,7 @@ Vue.component('edit-annotations', {
                 isTumorSpecific: false,
                 userId: null,
                 variantId: null,
-                isGeneSpecific: false,
+                isGeneSpecific: this.limitScopeGene,
                 isVariantSpecific: this.isCNV() || this.isTranslocation() ? true : false,
                 isCaseSpecific: false,
                 category: null,
@@ -516,7 +516,15 @@ Vue.component('edit-annotations', {
         isTranslocation() {
             return this.type == "translocation";
         },
-
+        createTitle() {
+            if (this.limitScopeGene) {
+                return "Your Annotations for gene: " + this.title;
+            }
+            else {
+                return "Your Annotations for variant: " + this.title;
+            }
+            
+        }
     },
     created: function () {
     },

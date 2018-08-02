@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
@@ -24,7 +25,8 @@ import utsw.bicf.answer.security.PermissionUtils;
 public class AnnotationBrowserController {
 	
 	static {
-		PermissionUtils.addPermission(AnnotationBrowserController.class.getCanonicalName() + ".annotationBrowser", IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(AnnotationBrowserController.class.getCanonicalName() + ".annotationBrowser", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(AnnotationBrowserController.class.getCanonicalName() + ".searchForAnnotations", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired
@@ -51,8 +53,15 @@ public class AnnotationBrowserController {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AnnotationSearchResult result = utils.getGetAnnotationsByGeneAndVariant(gene, variant);
-		return result.createVuetifyObjectJSON();
+		if (result != null) {
+			return result.createObjectJSON();
+		}
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		response.setSuccess(false);
+		response.setMessage("No annotations found");
 
+		return response.createObjectJSON();
 	}
 	
 	

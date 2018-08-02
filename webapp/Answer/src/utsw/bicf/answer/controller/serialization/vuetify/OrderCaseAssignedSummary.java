@@ -14,7 +14,7 @@ public class OrderCaseAssignedSummary extends Summary<OrderCaseAssigned>{
 		//only allow to reassign if user can edit
 		if (user.getIndividualPermission().getAdmin() 
 				|| (user.getIndividualPermission().getCanAssign())) {
-			Header actions = new Header("Reassign", "actions");
+			Header actions = new Header("Actions", "actions");
 			actions.setButtons(true);
 			headers.add(actions);
 		}

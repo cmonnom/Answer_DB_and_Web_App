@@ -17,14 +17,14 @@ public class AnnotationSearchResult {
 	String leftGene;
 	String rightGene;
 	String variantType;
-	
+	Boolean isSearchValid;
 	
 	public AnnotationSearchResult() {
 		
 	}
 
 
-	public String createVuetifyObjectJSON() throws JsonProcessingException {
+	public String createObjectJSON() throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(this);
 	}
@@ -107,6 +107,16 @@ public class AnnotationSearchResult {
 
 	public void setSeenInCasesCount(Integer seenInCasesCount) {
 		this.seenInCasesCount = seenInCasesCount;
+	}
+
+
+	public Boolean getIsSearchValid() {
+		return isSearchValid;
+	}
+
+
+	public void setIsSearchValid(Boolean isSearchValid) {
+		this.isSearchValid = isSearchValid;
 	}
 
 }

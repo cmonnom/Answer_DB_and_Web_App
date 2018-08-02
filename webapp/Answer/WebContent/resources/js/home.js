@@ -179,7 +179,7 @@ const Home = {
             axios.get("./assignToUser", {
                 params: {
                     caseId: this.currentCaseId,
-                    userIdsParam: userIds.join("|")
+                    userIdsParam: userIds.join(",")
                 }
             })
                 .then(response => {
@@ -250,6 +250,7 @@ const Home = {
     destroyed: function () {
         bus.$off('assignToUser');
         bus.$off('open');
+        bus.$off('open-read-only');
     },
     created: function () {
         bus.$on('assignToUser', (item) => {
@@ -274,6 +275,9 @@ const Home = {
         });
         bus.$on('open', (item) => {
             router.push("./openCase/" + item.caseId);
+        });
+        bus.$on('open-read-only', (item) => {
+            router.push("./openCase/" + item.caseId + "?readOnly=true");
         });
     },
     computed: {

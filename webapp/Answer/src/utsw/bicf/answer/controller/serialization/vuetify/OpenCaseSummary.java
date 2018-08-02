@@ -1,6 +1,7 @@
 package utsw.bicf.answer.controller.serialization.vuetify;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,16 +11,21 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.clarity.api.utils.APIResponse;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.FinalReport;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
+import utsw.bicf.answer.security.QcAPIAuthentication;
 
 public class OpenCaseSummary {
 	
@@ -33,8 +39,9 @@ public class OpenCaseSummary {
 	TranslocationSummary translocationSummary;
 	Boolean isAllowed;
 	List<ReportGroupForDisplay> reportGroups;
+	String qcUrl;
 
-	public OpenCaseSummary(ModelDAO modelDAO, OrderCase aCase, FinalReport finalReport, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) {
+	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, FinalReport finalReport, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
 		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups);
 		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField);
 		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField);
@@ -45,6 +52,11 @@ public class OpenCaseSummary {
 		this.effects = getUniqueEffects(aCase);
 		this.isAllowed = true;
 		this.reportGroups = reportGroups;
+		RequestUtils utils = new RequestUtils(qcAPI);
+		APIResponse resp = utils.getOrderIdFromLimsId(caseId);
+		if (resp != null) {
+			this.qcUrl = qcAPI.getUrl() + resp.getMessage();
+		}
 	}
 
 	
@@ -173,6 +185,16 @@ public class OpenCaseSummary {
 
 	public void setReportGroups(List<ReportGroupForDisplay> reportGroups) {
 		this.reportGroups = reportGroups;
+	}
+
+
+	public String getQcUrl() {
+		return qcUrl;
+	}
+
+
+	public void setQcUrl(String qcUrl) {
+		this.qcUrl = qcUrl;
 	}
 
 

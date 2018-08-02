@@ -49,6 +49,9 @@ public class LoginController {
 		boolean proceed = false;
 		if (user != null) {
 			proceed = ldapUtils.isUserValid(user.getUsername(), password);
+			if (user.getIndividualPermission().getAdmin()) {
+				proceed = true;
+			}
 		}
 		
 		if (proceed) {

@@ -13,10 +13,11 @@ public class OrderCaseAvailableSummary extends Summary<OrderCaseAvailable>{
 		
 		//only allow to assign if user can edit
 		if (user.getIndividualPermission().getAdmin() 
-				|| (user.getIndividualPermission().getCanAssign())) {
-		Header actions = new Header(new String[] {"Assign", "To"}, "actions");
+				|| (user.getIndividualPermission().getCanView())) {
+		Header actions = new Header("Actions", "actions");
 		actions.setButtons(true);
 		headers.add(actions);
+		
 		}
 		
 		//keep in the same order

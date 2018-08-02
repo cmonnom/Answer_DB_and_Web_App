@@ -19,7 +19,7 @@ public class OrderCaseAssigned {
 	
 	List<Button> buttons = new ArrayList<Button>();
 	
-	public OrderCaseAssigned(OrderCase orderCase, List<User> users) {
+	public OrderCaseAssigned(OrderCase orderCase, List<User> users, User curentUser) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
 		this.epicOrderDate = orderCase.getEpicOrderDate();
 		this.caseId = orderCase.getCaseId();
@@ -34,8 +34,12 @@ public class OrderCaseAssigned {
 		}
 		this.dateReceived = orderCase.getReceivedDate();
 		this.assignedTo = userNames.stream().collect(Collectors.joining("<br/>"));
-		
-		buttons.add(new Button("assignment_ind", "assignToUser", "Reassign", "info"));
+		if (curentUser.getIndividualPermission().getCanAssign()) {
+			buttons.add(new Button("assignment_ind", "assignToUser", "Reassign", "info"));
+		}
+		if (curentUser.getIndividualPermission().getCanView()) {
+			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
+		}
 	}
 
 	public String getEpicOrderNumber() {

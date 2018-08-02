@@ -66,7 +66,7 @@ const OpenCase = {
                         </v-list-tile>
                     </v-list>
                 </v-menu>
-                <v-toolbar-title>Review Selected Variants
+                <v-toolbar-title>Review Selected Variants for {{ caseName }}
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -168,13 +168,13 @@ const OpenCase = {
 
     <!-- annotation dialog -->
     <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation"></edit-annotations>
+        ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"></edit-annotations>
 
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        ref="cnvAnnotationDialog" :title="currentVariant.chrom"></edit-annotations>
+        ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'""></edit-annotations>
 
     <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        ref="translocationAnnotationDialog" :title="currentVariant.chrom"></edit-annotations>
+        ref="translocationAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'""></edit-annotations>
     <!-- variant details dialog -->
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
@@ -311,6 +311,7 @@ const OpenCase = {
                     <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
                     <span v-if="isCNV()">{{ currentVariant.chrom }}</span>
                     <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
+                    <span> -- {{ caseName }} -- </span>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -382,7 +383,7 @@ const OpenCase = {
                                                 <v-icon color="amber accent-2">zoom_in</v-icon>
                                             </v-btn>
                                             <v-list>
-                                                <v-list-tile avatar @click="saveVariant()" :disabled="!canProceed('canAnnotate')">
+                                                <v-list-tile avatar @click="saveVariant()" :disabled="!canProceed('canAnnotate') || viewOnly()">
                                                     <v-list-tile-avatar>
                                                         <v-icon>save</v-icon>
                                                     </v-list-tile-avatar>
@@ -418,7 +419,7 @@ const OpenCase = {
                                         <v-badge color="red" right bottom overlap v-model="variantDetailsUnSaved" class="mini-badge">
                                             <v-icon slot="badge"></v-icon>
                                             <v-tooltip bottom>
-                                                <v-btn flat icon @click="saveVariant()" slot="activator" :loading="savingVariantDetails" :disabled="!canProceed('canAnnotate')">
+                                                <v-btn flat icon @click="saveVariant()" slot="activator" :loading="savingVariantDetails" :disabled="!canProceed('canAnnotate')  || viewOnly()">
                                                     <v-icon>save</v-icon>
                                                 </v-btn>
                                                 <span>Save Variant Details</span>
@@ -468,7 +469,8 @@ const OpenCase = {
                                                                                 <v-flex xs6>
                                                                                     <v-select clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
                                                                                         :label="item.tooltip" single-line hide-details
-                                                                                        class="no-height-select" @input="variantDetailsUnSaved = true"></v-select>
+                                                                                        class="no-height-select" @input="variantDetailsUnSaved = true"
+                                                                                        :disabled="!canProceed('canAnnotate')  || viewOnly()"></v-select>
                                                                                 </v-flex>
                                                                             </v-layout>
 
@@ -694,6 +696,12 @@ const OpenCase = {
             </v-btn>
             <span>Show/Hide Case Notes</span>
         </v-tooltip>
+        <v-tooltip bottom>
+        <v-btn icon flat slot="activator" :href="qcUrl" target="_blank" rel="noreferrer" :disabled="!qcUrl">
+        QC
+        </v-btn>
+            <span>Open QC in NuCLIA</span>
+        </v-tooltip>
         <v-badge color="red" right bottom overlap v-model="variantUnSaved" class="mini-badge">
             <v-icon slot="badge"></v-icon>
             <v-tooltip bottom>
@@ -714,9 +722,56 @@ const OpenCase = {
                     <v-card>
                         <v-toolbar dense dark color="primary">
                             <!-- <v-icon>perm_identity</v-icon> -->
-                            <v-icon :color="patientDetailsVisible ? 'amber accent-2' : ''">assignment_ind</v-icon>
+                            <v-menu offset-y offset-x class="ml-0">
+                                            <v-btn slot="activator" flat icon dark>
+                                                <v-icon color="amber accent-2">assignment_ind</v-icon>
+                                            </v-btn>
+                                            <v-list>
+                                                <v-list-tile avatar @click="savePatientDetails()" :disabled="!canProceed('canAnnotate') || viewOnly()">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>save</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Save Patient Details</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+
+                                                <v-list-tile avatar @click="revertPatientDetails()" :disabled="!canProceed('canAnnotate') || viewOnly()">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>settings_backup_restore</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Restore From Last Saved</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+
+                                                <v-list-tile avatar @click="patientDetailsVisible = false">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>cancel</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Close Patient Details</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+                                            </v-list>
+                                        </v-menu>
                             <v-toolbar-title>Patient Details</v-toolbar-title>
                             <v-spacer></v-spacer>
+                                        <v-badge color="red" right bottom overlap v-model="variantDetailsUnSaved" class="mini-badge">
+                                            <v-icon slot="badge"></v-icon>
+                                            <v-tooltip bottom>
+                                                <v-btn flat icon @click="savePatientDetails()" slot="activator" :loading="savingVariantDetails" :disabled="!canProceed('canAnnotate')  || viewOnly()">
+                                                    <v-icon>save</v-icon>
+                                                </v-btn>
+                                                <span>Save Patient Details</span>
+                                            </v-tooltip>
+                                        </v-badge>
+                                        <v-tooltip bottom>
+                                            <v-btn flat icon @click="revertPatientDetails()" slot="activator" :disabled="!canProceed('canAnnotate') || viewOnly()">
+                                                <v-icon>settings_backup_restore</v-icon>
+                                            </v-btn>
+                                            <span>Restore Last Saved Patient Details</span>
+                                        </v-tooltip>
                             <v-tooltip bottom>
                                 <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
                                     <v-icon>close</v-icon>
@@ -736,8 +791,19 @@ const OpenCase = {
                                                             <v-flex xs5 class="text-xs-left grow">
                                                                 <span class="selectable">{{ item.label }}:</span>
                                                             </v-flex>
-                                                            <v-flex xs7 class="text-xs-right grow blue-grey--text text--lighten-1">
-                                                                <span class="selectable">{{ item.value }}</span>
+                                                            <v-flex :class="[item.type ? 'xs5' : 'xs7','text-xs-right', 'grow', 'blue-grey--text', 'text--lighten-1']">
+                                                                <span v-if="item.type == null" class="selectable">{{ item.value }}</span>
+                                                                <v-text-field :disabled="!canProceed('canAnnotate') || viewOnly()" v-if="item.type == 'text'" class="pt-2"
+                                                                value="patientDetailsOncoTreeDiagnosis" v-model="patientDetailsOncoTreeDiagnosis" hide-details>
+                                                                </v-text-field>
+                                                            </v-flex>
+                                                            <v-flex xs2 v-if="item.type == 'text'">
+                                                            <v-tooltip bottom>
+                                                            <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator" :disabled="!canProceed('canAnnotate') || viewOnly()">
+                                                                <v-icon> open_in_new</v-icon>
+                                                            </v-btn>
+                                                            <span>Open OncoTree in New Tab</span>
+                                                        </v-tooltip>
                                                             </v-flex>
                                                         </v-layout>
                                                     </v-list-tile-content>
@@ -810,7 +876,7 @@ const OpenCase = {
                 <!-- SNP / Indel table -->
                 <v-tab-item id="tab-snp">
                     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
-                        no-data-text="No Data" :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()"
+                        no-data-text="No Data" :enable-selection="canProceed('canSelect') && !viewOnly()" :show-row-count="true" @refresh-requested="handleRefresh()"
                         :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons" @datatable-selection-changed="handleSelectionChanged">
                         <v-fade-transition slot="action1">
                             <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
@@ -920,7 +986,9 @@ const OpenCase = {
             tempSelectedSNPVariants: [],
             tempSelectedCNVs: [],
             tempSelectedTranslocations: [],
-            topMostDialog: ""
+            topMostDialog: "",
+            patientDetailsOncoTreeDiagnosis: "",
+            qcUrl: ""
 
         }
     }, methods: {
@@ -975,8 +1043,10 @@ const OpenCase = {
             }).then(response => {
                 if (response.data.isAllowed) {
                     this.patientTables = response.data.patientInfo.patientTables;
-                    this.caseName = response.data.caseName;
+                    this.caseName = response.data.caseName + " (" + this.patientTables[0].items[0].value + ")"; //careful when swapping item positions
+                    this.patientDetailsOncoTreeDiagnosis = this.patientTables[2].items[0].value; //careful when swapping item positions
                     this.caseId = response.data.caseId;
+                    this.qcUrl = response.data.qcUrl;
                     this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
                     this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary);
                     this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
@@ -1846,7 +1916,7 @@ const OpenCase = {
             var selectedSNPVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected);
             var selectedCNVs = this.$refs.cnvDetails.items.filter(item => item.isSelected);
             var selectedTranslocations = this.$refs.translocationDetails.items.filter(item => item.isSelected);
-            this.saveVariantDisabled = selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0 || this.canProceed('canAnnotate');
+            this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.viewOnly();
 
             var snpHeaders = this.$refs.geneVariantDetails.headers;
             var snpHeaderOrder = this.$refs.geneVariantDetails.headerOrder;
@@ -2396,6 +2466,18 @@ const OpenCase = {
             else if (this.isTranslocation()) {
                 this.$refs.translocationAnnotationDialog.cancelAnnotations();
             }
+        },
+        viewOnly() {
+            return this.$route.query.readOnly === "true";
+        },
+        savePatientDetails() {
+
+        },
+        revertPatientDetails() {
+
+        },
+        openOncoTree() {
+            window.open("http://oncotree.mskcc.org", "_blank");
         }
     },
     mounted() {

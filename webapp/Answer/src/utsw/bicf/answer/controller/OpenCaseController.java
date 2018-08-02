@@ -3,6 +3,7 @@ package utsw.bicf.answer.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -12,6 +13,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
+import org.apache.http.client.ClientProtocolException;
 import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -61,6 +63,7 @@ import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.PermissionUtils;
+import utsw.bicf.answer.security.QcAPIAuthentication;
 
 @Controller
 @RequestMapping("/")
@@ -108,10 +111,16 @@ public class OpenCaseController {
 	ModelDAO modelDAO;
 	@Autowired
 	FileProperties fileProperties;
+	@Autowired
+	QcAPIAuthentication qcAPI;
 
 	@RequestMapping("/openCase/{caseId}")
-	public String openCase(Model model, HttpSession session, @PathVariable String caseId) throws IOException {
-		model.addAttribute("urlRedirect", "openCase/" + caseId);
+	public String openCase(Model model, HttpSession session, @PathVariable String caseId, @RequestParam(required=false, defaultValue="false") Boolean readOnly) throws IOException, UnsupportedOperationException, URISyntaxException {
+		String url = "openCase/" + caseId;
+		if (readOnly != null && readOnly) {
+			url += "?readOnly=" + readOnly;
+		}
+		model.addAttribute("urlRedirect", url);
 		User user = (User) session.getAttribute("user");
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
@@ -130,14 +139,14 @@ public class OpenCaseController {
 			for (OrderCase c : cases) {
 				if (c.getCaseId().equals(caseId)) {
 					detailedCase = utils.getCaseDetails(caseId, filters);
-					if (detailedCase == null || !detailedCase.getAssignedTo().contains(user.getUserId().toString())) {
-						// user is not assigned to this case
-						AjaxResponse response = new AjaxResponse();
-						response.setIsAllowed(false);
-						response.setSuccess(false);
-						response.setMessage(user.getFullName() + " is not assigned to this case");
-						return response.createObjectJSON();
-					}
+//					if (detailedCase == null || !detailedCase.getAssignedTo().contains(user.getUserId().toString())) {
+//						// user is not assigned to this case
+//						AjaxResponse response = new AjaxResponse();
+//						response.setIsAllowed(false);
+//						response.setSuccess(false);
+//						response.setMessage(user.getFullName() + " is not assigned to this case");
+//						return response.createObjectJSON();
+//					}
 					break; // found that the case exists
 				}
 			}
@@ -152,7 +161,7 @@ public class OpenCaseController {
 		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
 		List<ReportGroupForDisplay> reportGroupsForDisplay = reportGroups.stream()
 				.map(r -> new ReportGroupForDisplay(r)).collect(Collectors.toList());
-		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, detailedCase, null, "oid", user,
+		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, qcAPI, detailedCase, null, "oid", user,
 				reportGroupsForDisplay);
 		return summary.createVuetifyObjectJSON();
 
@@ -162,18 +171,18 @@ public class OpenCaseController {
 	@ResponseBody
 	public String loadCaseAnnotations(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 
-		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+//		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		CaseAnnotation annotation = utils.getCaseAnnotation(caseId);
 		if (annotation != null && annotation.getCaseId() != null) {
-			if (!annotation.getAssignedTo().contains(user.getUserId().toString())) {
-				AjaxResponse response = new AjaxResponse();
-				response.setIsAllowed(false);
-				response.setSuccess(false);
-				response.setMessage(user.getFullName() + " is not assigned to this case");
-				return response.createObjectJSON();
-			}
+//			if (!annotation.getAssignedTo().contains(user.getUserId().toString())) {
+//				AjaxResponse response = new AjaxResponse();
+//				response.setIsAllowed(false);
+//				response.setSuccess(false);
+//				response.setMessage(user.getFullName() + " is not assigned to this case");
+//				return response.createObjectJSON();
+//			}
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(annotation);
 		}
@@ -449,6 +458,18 @@ public class OpenCaseController {
 			@RequestParam String caseId) throws Exception {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
+		
+		if (caseId.equals("")) { //for annotations within a case
+			User user = (User) session.getAttribute("user");
+			if (!isUserAssignedToCase(utils, caseId, user, null)) {
+				// user is not assigned to this case
+				response.setIsAllowed(false);
+				response.setSuccess(false);
+				response.setMessage(user.getFullName() + " is not assigned to this case");
+				return response.createObjectJSON();
+			}
+		}
+		
 		response.setIsAllowed(true);
 		ObjectMapper mapper = new ObjectMapper();
 		DataFilterList dataPOJO = mapper.readValue(data, DataFilterList.class);
@@ -467,6 +488,17 @@ public class OpenCaseController {
 		User user = (User) session.getAttribute("user");
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
+		if (caseId.equals("")) { //for annotations within a case
+			if (!isUserAssignedToCase(utils, caseId, user, null)) {
+				// user is not assigned to this case
+				response.setIsAllowed(false);
+				response.setSuccess(false);
+				response.setMessage(user.getFullName() + " is not assigned to this case");
+				return response.createObjectJSON();
+			}
+		}
+//	}
+		
 		response.setIsAllowed(true);
 
 		List<Annotation> userAnnotations = new ArrayList<Annotation>();
@@ -692,5 +724,14 @@ public class OpenCaseController {
 			response.setMessage("Nothing to save");
 			return response.createObjectJSON();
 		}
+	}
+	
+	public static boolean isUserAssignedToCase(RequestUtils utils, String caseId, User user, String filters) throws ClientProtocolException, IOException, URISyntaxException {
+		if (filters == null) {
+			filters = "{filters: []}";
+		}
+		OrderCase detailedCase = utils.getCaseDetails(caseId, filters);
+		return (detailedCase == null || !detailedCase.getAssignedTo().contains(user.getUserId().toString()));
+		
 	}
 }

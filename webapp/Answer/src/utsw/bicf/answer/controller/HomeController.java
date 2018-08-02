@@ -75,7 +75,7 @@ public class HomeController {
 			List<OrderCaseAvailable> casesAvailable = 
 					caseList.stream()
 					.filter(c -> c.getAssignedTo() == null || c.getAssignedTo().isEmpty())
-					.map(c -> new OrderCaseAvailable(c))
+					.map(c -> new OrderCaseAvailable(c, user))
 					.collect(Collectors.toList());
 			List<OrderCaseForUser> casesForUser = 
 					caseList.stream()
@@ -85,7 +85,7 @@ public class HomeController {
 			List<OrderCaseAssigned> casesAssigned = 
 					caseList.stream()
 					.filter(c -> c.getAssignedTo() != null && !c.getAssignedTo().isEmpty())
-					.map(c -> new OrderCaseAssigned(c, modelDAO.getAllUsers()))
+					.map(c -> new OrderCaseAssigned(c, modelDAO.getAllUsers(), user))
 					.collect(Collectors.toList());
 			
 			OrderCaseAvailableSummary availSummary = new OrderCaseAvailableSummary(casesAvailable, user);
@@ -124,7 +124,7 @@ public class HomeController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		List<User> users = modelDAO.getAllUsers();
 		List<User> realUsers = new ArrayList<User>();
-		String[] userIds = userIdsParam.split("|");
+		String[] userIds = userIdsParam.split(",");
 		for (String userId : userIds) {
 			if (StringUtils.isNumeric(userId)) {
 				Integer userIdInt = Integer.parseInt(userId);

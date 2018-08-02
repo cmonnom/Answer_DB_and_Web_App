@@ -27,6 +27,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.clarity.api.utils.APIResponse;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.dao.ModelDAO;
@@ -38,9 +39,11 @@ import utsw.bicf.answer.model.extmapping.AnnotationSearchResult;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.SearchSNPAnnotation;
 import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.security.QcAPIAuthentication;
 
 /**
  * All API requests to the annotation DB should be here.
@@ -52,11 +55,16 @@ public class RequestUtils {
 
 	ModelDAO modelDAO;
 	AnswerDBCredentials dbProps;
+	QcAPIAuthentication qcAPI;
 
 	public RequestUtils(ModelDAO modelDAO) {
 		super();
 		this.modelDAO = modelDAO;
 		this.dbProps = modelDAO.getAnswerDBCredentials();
+	}
+	
+	public RequestUtils(QcAPIAuthentication qcAPI) {
+		this.qcAPI = qcAPI;
 	}
 
 	public final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
@@ -411,12 +419,45 @@ public class RequestUtils {
 		
 	}
 
-	public AnnotationSearchResult getGetAnnotationsByGeneAndVariant(String gene, String variant) {
-		// TODO Auto-generated method stub
+	public AnnotationSearchResult getGetAnnotationsByGeneAndVariant(String gene, String variant) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("searchannotations/");
+		URI uri = new URI(sbUrl.toString());
+
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		SearchSNPAnnotation search = new SearchSNPAnnotation();
+		search.setGeneSymbolOrSynonym(gene);
+		search.setVariant(variant);
+		
+		requestPost.setEntity(new StringEntity(search.createObjectJSON(), ContentType.APPLICATION_JSON));
+
+		HttpResponse response = client.execute(requestPost);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AnnotationSearchResult result = mapper.readValue(response.getEntity().getContent(), AnnotationSearchResult.class);
+			return result;
+		}
 		return null;
 	}
 
+	public APIResponse getOrderIdFromLimsId(String caseId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
+		StringBuilder sbUrl = new StringBuilder(qcAPI.getApi());
+		sbUrl.append("?caseNb=").append(caseId).append("&token=").append(qcAPI.getToken());
+		URI uri = new URI(sbUrl.toString());
 
+		requestGet = new HttpGet(uri);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			APIResponse apiResponse = mapper.readValue(response.getEntity().getContent(), APIResponse.class);
+			return apiResponse;
+		}
+		return null;
+	}
 
 
 }

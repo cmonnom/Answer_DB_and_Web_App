@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import utsw.bicf.answer.controller.serialization.Button;
+import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 
 public class OrderCaseAvailable {
@@ -16,13 +17,18 @@ public class OrderCaseAvailable {
 	
 	List<Button> buttons = new ArrayList<Button>();
 	
-	public OrderCaseAvailable(OrderCase orderCase) {
+	public OrderCaseAvailable(OrderCase orderCase, User user) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
 		this.epicOrderDate =orderCase.getEpicOrderDate();
 		this.icd10 = orderCase.getIcd10();
 		this.caseId = orderCase.getCaseId();
 		this.dateReceived = orderCase.getReceivedDate();
-		buttons.add(new Button("assignment_ind", "assignToUser", "Assign To", "info"));
+		if (user.getIndividualPermission().getCanAssign()) {
+			buttons.add(new Button("assignment_ind", "assignToUser", "Assign To", "info"));
+		}
+		if (user.getIndividualPermission().getCanView()) {
+			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
+		}
 	}
 
 	public String getEpicOrderNumber() {

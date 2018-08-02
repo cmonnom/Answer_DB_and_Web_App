@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Handle responses from API calls in the form of a string.
  * Use addError to add error message to the list which will
@@ -11,11 +13,13 @@ import java.util.stream.Collectors;
  * @author Guillaume
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class APIResponse {
 	
 	String message;
 	List<String> errors = new ArrayList<String>();
 	String results;
+	Boolean success;
 	
 	public String getMessage() {
 		return message;
@@ -47,5 +51,11 @@ public class APIResponse {
 			sb.append(errors.stream().collect(Collectors.joining(lineSeparator)));
 		}
 		return sb.toString();
+	}
+	public Boolean getSuccess() {
+		return success;
+	}
+	public void setSuccess(Boolean success) {
+		this.success = success;
 	}
 }
