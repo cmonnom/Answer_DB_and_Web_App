@@ -57,6 +57,7 @@ public class OpenCaseSummary {
 		if (resp != null) {
 			this.qcUrl = qcAPI.getUrl() + resp.getMessage();
 		}
+		
 	}
 
 	

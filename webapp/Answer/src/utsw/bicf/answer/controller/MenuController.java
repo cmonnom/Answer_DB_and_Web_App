@@ -21,6 +21,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseItems;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
+import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.PermissionUtils;
 
@@ -43,11 +44,12 @@ public class MenuController {
 		try {
 			//send user to Ben's API to retrieve all active cases
 			RequestUtils utils = new RequestUtils(modelDAO);
+			User user = (User) session.getAttribute("user");
 			OrderCase[] cases = utils.getActiveCases();
 			if (cases != null) {
 				List<OrderCase> assignedCases = new ArrayList<OrderCase>();
 				for (OrderCase c : cases) {
-					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty()) {
+					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && OpenCaseController.isUserAssignedToCase(utils, c.getCaseId(), user, null)) {
 						assignedCases.add(c);
 					}
 				}

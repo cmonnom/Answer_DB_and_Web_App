@@ -23,7 +23,17 @@ var router = new VueRouter({
 			component: OpenCase,
 			meta: {
 				title: 'OpenCase Id: '
-			}
+			},
+			props: { readonly: false}
+		},
+		{
+			path: webAppRoot + '/openCaseReadOnly/:id',
+			name: 'OpenCase',
+			component: OpenCase,
+			meta: {
+				title: 'OpenCase Id: '
+			},
+			props: { readonly: true}
 		},
 		{
 			path: webAppRoot + '/annotationBrowser',

@@ -13,6 +13,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +73,8 @@ public class OpenCaseController {
 
 	static {
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".openCase",
+				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".openCaseReadOnly",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCaseDetails",
 				IndividualPermission.CAN_VIEW);
@@ -115,15 +119,27 @@ public class OpenCaseController {
 	QcAPIAuthentication qcAPI;
 
 	@RequestMapping("/openCase/{caseId}")
-	public String openCase(Model model, HttpSession session, @PathVariable String caseId, @RequestParam(required=false, defaultValue="false") Boolean readOnly) throws IOException, UnsupportedOperationException, URISyntaxException {
+	public String openCase(Model model, HttpSession session, @PathVariable String caseId) throws IOException, UnsupportedOperationException, URISyntaxException {
 		String url = "openCase/" + caseId;
-		if (readOnly != null && readOnly) {
-			url += "?readOnly=" + readOnly;
-		}
-		model.addAttribute("urlRedirect", url);
 		User user = (User) session.getAttribute("user");
+		model.addAttribute("urlRedirect", url);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		if (user != null && !isUserAssignedToCase(utils, caseId, user, null)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
+		
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
+	
+	@RequestMapping("/openCaseReadOnly/{caseId}")
+	public String openCaseReadOnly(Model model, HttpSession session, @PathVariable String caseId) throws IOException, UnsupportedOperationException, URISyntaxException {
+		String url = "openCaseReadOnly/" + caseId;
+		User user = (User) session.getAttribute("user");
+		model.addAttribute("urlRedirect", url);
+		return ControllerUtil.initializeModel(model, servletContext, user);
+	}
+	
+	
 
 	@RequestMapping(value = "/getCaseDetails")
 	@ResponseBody
@@ -139,14 +155,6 @@ public class OpenCaseController {
 			for (OrderCase c : cases) {
 				if (c.getCaseId().equals(caseId)) {
 					detailedCase = utils.getCaseDetails(caseId, filters);
-//					if (detailedCase == null || !detailedCase.getAssignedTo().contains(user.getUserId().toString())) {
-//						// user is not assigned to this case
-//						AjaxResponse response = new AjaxResponse();
-//						response.setIsAllowed(false);
-//						response.setSuccess(false);
-//						response.setMessage(user.getFullName() + " is not assigned to this case");
-//						return response.createObjectJSON();
-//					}
 					break; // found that the case exists
 				}
 			}
@@ -728,10 +736,10 @@ public class OpenCaseController {
 	
 	public static boolean isUserAssignedToCase(RequestUtils utils, String caseId, User user, String filters) throws ClientProtocolException, IOException, URISyntaxException {
 		if (filters == null) {
-			filters = "{filters: []}";
+			filters = "{\"filters\": []}";
 		}
 		OrderCase detailedCase = utils.getCaseDetails(caseId, filters);
-		return (detailedCase == null || !detailedCase.getAssignedTo().contains(user.getUserId().toString()));
+		return (detailedCase == null || detailedCase.getAssignedTo().contains(user.getUserId().toString()));
 		
 	}
 }

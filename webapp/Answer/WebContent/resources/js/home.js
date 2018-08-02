@@ -277,7 +277,7 @@ const Home = {
             router.push("./openCase/" + item.caseId);
         });
         bus.$on('open-read-only', (item) => {
-            router.push("./openCase/" + item.caseId + "?readOnly=true");
+            router.push("./openCaseReadOnly/" + item.caseId);
         });
     },
     computed: {
