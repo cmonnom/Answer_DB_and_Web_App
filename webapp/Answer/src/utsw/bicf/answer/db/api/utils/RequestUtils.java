@@ -473,20 +473,27 @@ public class RequestUtils {
 		return null;
 	}
 
-	public APIResponse getOrderIdFromLimsId(String caseId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
+	public APIResponse getOrderIdFromLimsId(String caseId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException {
 		StringBuilder sbUrl = new StringBuilder(qcAPI.getApi());
 		sbUrl.append("?caseNb=").append(caseId).append("&token=").append(qcAPI.getToken());
 		URI uri = new URI(sbUrl.toString());
 
 		requestGet = new HttpGet(uri);
 
-		HttpResponse response = client.execute(requestGet);
-
-		int statusCode = response.getStatusLine().getStatusCode();
-		if (statusCode == HttpStatus.SC_OK) {
-			APIResponse apiResponse = mapper.readValue(response.getEntity().getContent(), APIResponse.class);
-			return apiResponse;
+		HttpResponse response;
+		try {
+			response = client.execute(requestGet);
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode == HttpStatus.SC_OK) {
+				APIResponse apiResponse = mapper.readValue(response.getEntity().getContent(), APIResponse.class);
+				return apiResponse;
+			}
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+
 		return null;
 	}
 
