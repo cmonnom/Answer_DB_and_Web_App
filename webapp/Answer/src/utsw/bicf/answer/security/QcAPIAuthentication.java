@@ -3,7 +3,7 @@ package utsw.bicf.answer.security;
 public class QcAPIAuthentication {
 	
 	String url;
-	String api;
+//	String api;
 	String token;
 	
 	public String getUrl() {
@@ -12,12 +12,12 @@ public class QcAPIAuthentication {
 	public void setUrl(String url) {
 		this.url = url;
 	}
-	public String getApi() {
-		return api;
-	}
-	public void setApi(String api) {
-		this.api = api;
-	}
+//	public String getApi() {
+//		return api;
+//	}
+//	public void setApi(String api) {
+//		this.api = api;
+//	}
 	public String getToken() {
 		return token;
 	}

@@ -70,7 +70,7 @@
 	
 	<bean id="qcAPIAuthentication" class="utsw.bicf.answer.security.QcAPIAuthentication">
 		<property name="url" value="${qc.data.url}" />
-		<property name="api" value="${qc.api.url}" />
+<!-- 		<property name="api" value="${qc.api.url}" /> -->
 		<property name="token" value="${qc.token}" />
 	</bean>
 	

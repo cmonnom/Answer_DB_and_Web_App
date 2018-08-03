@@ -16,9 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.clarity.api.utils.APIResponse;
 import utsw.bicf.answer.dao.ModelDAO;
-import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.FinalReport;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -52,12 +50,7 @@ public class OpenCaseSummary {
 		this.effects = getUniqueEffects(aCase);
 		this.isAllowed = true;
 		this.reportGroups = reportGroups;
-		RequestUtils utils = new RequestUtils(qcAPI);
-		APIResponse resp = utils.getOrderIdFromLimsId(caseId);
-		if (resp != null) {
-			this.qcUrl = qcAPI.getUrl() + resp.getMessage();
-		}
-		
+		this.qcUrl = qcAPI.getUrl();
 	}
 
 	
@@ -197,6 +190,16 @@ public class OpenCaseSummary {
 	public void setQcUrl(String qcUrl) {
 		this.qcUrl = qcUrl;
 	}
+
+
+//	public String getQcUrl() {
+//		return qcUrl;
+//	}
+//
+//
+//	public void setQcUrl(String qcUrl) {
+//		this.qcUrl = qcUrl;
+//	}
 
 
 }

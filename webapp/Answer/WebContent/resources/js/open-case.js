@@ -1054,7 +1054,7 @@ const OpenCase = {
                     this.caseName = response.data.caseName + " (" + this.patientTables[0].items[0].value + ")"; //careful when swapping item positions
                     this.patientDetailsOncoTreeDiagnosis = this.patientTables[2].items[0].value; //careful when swapping item positions
                     this.caseId = response.data.caseId;
-                    this.qcUrl = response.data.qcUrl;
+                    this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true";
                     this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
                     this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary);
                     this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
