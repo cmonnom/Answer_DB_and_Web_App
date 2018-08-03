@@ -49,7 +49,7 @@ public class MenuController {
 			if (cases != null) {
 				List<OrderCase> assignedCases = new ArrayList<OrderCase>();
 				for (OrderCase c : cases) {
-					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && OpenCaseController.isUserAssignedToCase(utils, c.getCaseId(), user, null)) {
+					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && OpenCaseController.isUserAssignedToCase(utils, c.getCaseId(), user)) {
 						assignedCases.add(c);
 					}
 				}

@@ -143,7 +143,10 @@ public class AOPAspect {
 		boolean isValid = true;
 		if (tree.isTextual()) {
 			String argString = tree.textValue();
-			String sanitized = policy.sanitize(argString).replaceAll("&#64;", "@").replaceAll("&gt;", ">"); // emails are ok
+			String sanitized = policy.sanitize(argString)
+					.replaceAll("&#64;", "@")
+					.replaceAll("&gt;", ">")
+					.replaceAll("&#43;", "+"); // emails are ok
 			isValid &= argString.equals(sanitized);
 			return isValid;
 		} else if (tree.isNumber()) {

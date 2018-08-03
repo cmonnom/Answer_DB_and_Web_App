@@ -38,8 +38,6 @@ public class OrderCase {
 	String oncotreeDiagnosis;
 	
 	
-	
-	
 	public OrderCase() {
 		
 	}
@@ -334,9 +332,6 @@ public class OrderCase {
 		this.oncotreeDiagnosis = oncotreeDiagnosis;
 	}
 
-
-
-	
 
 
 }

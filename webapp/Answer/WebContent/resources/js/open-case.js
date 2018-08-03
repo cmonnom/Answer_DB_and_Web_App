@@ -740,7 +740,7 @@ const OpenCase = {
                                                     </v-list-tile-content>
                                                 </v-list-tile>
 
-                                                <v-list-tile avatar @click="revertPatientDetails()" :disabled="!canProceed('canAnnotate') || readonly">
+                                                <v-list-tile avatar @click="getPatientDetails()" :disabled="!canProceed('canAnnotate') || readonly">
                                                     <v-list-tile-avatar>
                                                         <v-icon>settings_backup_restore</v-icon>
                                                     </v-list-tile-avatar>
@@ -761,17 +761,17 @@ const OpenCase = {
                                         </v-menu>
                             <v-toolbar-title>Patient Details</v-toolbar-title>
                             <v-spacer></v-spacer>
-                                        <v-badge color="red" right bottom overlap v-model="variantDetailsUnSaved" class="mini-badge">
+                                        <v-badge color="red" right bottom overlap v-model="patientDetailsUnSaved" class="mini-badge">
                                             <v-icon slot="badge"></v-icon>
                                             <v-tooltip bottom>
-                                                <v-btn flat icon @click="savePatientDetails()" slot="activator" :loading="savingVariantDetails" :disabled="!canProceed('canAnnotate')  || readonly">
+                                                <v-btn flat icon @click="savePatientDetails()" slot="activator" :loading="savingPatientDetails" :disabled="!canProceed('canAnnotate')  || readonly">
                                                     <v-icon>save</v-icon>
                                                 </v-btn>
                                                 <span>Save Patient Details</span>
                                             </v-tooltip>
                                         </v-badge>
                                         <v-tooltip bottom>
-                                            <v-btn flat icon @click="revertPatientDetails()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">
+                                            <v-btn flat icon @click="getPatientDetails()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">
                                                 <v-icon>settings_backup_restore</v-icon>
                                             </v-btn>
                                             <span>Restore Last Saved Patient Details</span>
@@ -798,12 +798,13 @@ const OpenCase = {
                                                             <v-flex :class="[item.type ? 'xs5' : 'xs7','text-xs-right', 'grow', 'blue-grey--text', 'text--lighten-1']">
                                                                 <span v-if="item.type == null" class="selectable">{{ item.value }}</span>
                                                                 <v-text-field :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text'" class="pt-2"
-                                                                value="patientDetailsOncoTreeDiagnosis" v-model="patientDetailsOncoTreeDiagnosis" hide-details>
+                                                                value="patientDetailsOncoTreeDiagnosis" v-model="patientDetailsOncoTreeDiagnosis" hide-details
+                                                                @input="patientDetailsUnSaved = true">
                                                                 </v-text-field>
                                                             </v-flex>
                                                             <v-flex xs2 v-if="item.type == 'text'">
                                                             <v-tooltip bottom>
-                                                            <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">
+                                                            <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator">
                                                                 <v-icon> open_in_new</v-icon>
                                                             </v-btn>
                                                             <span>Open OncoTree in New Tab</span>
@@ -986,7 +987,9 @@ const OpenCase = {
                 '4',
                 '5'],
             variantDetailsUnSaved: false,
+            patientDetailsUnSaved: false,
             savingVariantDetails: false,
+            savingPatientDetails: false,
             tempSelectedSNPVariants: [],
             tempSelectedCNVs: [],
             tempSelectedTranslocations: [],
@@ -2422,6 +2425,9 @@ const OpenCase = {
                 return;
             }
             this.savingVariantDetails = true;
+            var lightVariant = {};
+            lightVariant["_id"] = this.currentVariant._id;
+            lightVariant["tier"] = this.currentVariant.tier;
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveVariant",
@@ -2430,8 +2436,8 @@ const OpenCase = {
                     caseId: this.$route.params.id,
                 },
                 data: {
-                    filters: this.$refs.advancedFilter.filters,
-                    variant: this.currentVariant
+                    // filters: this.$refs.advancedFilter.filters,
+                    variant: lightVariant
                 }
             }).then(response => {
                 if (response.data.isAllowed) {
@@ -2472,11 +2478,55 @@ const OpenCase = {
                 this.$refs.translocationAnnotationDialog.cancelAnnotations();
             }
         },
-        savePatientDetails() {
-
+        getPatientDetails() {
+            axios.get(
+                webAppRoot + "/getPatientDetails",
+                {
+                    params: {
+                        caseId: this.$route.params.id
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed) {
+                        this.patientDetailsUnSaved = false;
+                        this.patientTables = response.data.patientTables;
+                        this.patientDetailsOncoTreeDiagnosis = this.patientTables[2].items[0].value; //careful when swapping item positions
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.getPatientDetails);
+                    }
+                }).catch(error => {
+                    console.log(error);
+                    bus.$emit("some-error", [this, error]);
+                });
         },
-        revertPatientDetails() {
-
+        savePatientDetails() {
+            if (!this.canProceed('canAnnotate')) {
+                return;
+            }
+            this.savingPatientDetails = true;
+            axios({
+                method: 'post',
+                url: webAppRoot + "/savePatientDetails",
+                params: {
+                    oncotreeDiagnosis: this.patientDetailsOncoTreeDiagnosis,
+                    caseId: this.$route.params.id,
+                }
+            }).then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    this.getPatientDetails();
+                    this.snackBarMessage = "Patient Details Saved";
+                    this.snackBarVisible = true;
+                }
+                else {
+                    this.handleDialogs(response.data, this.savePatientDetails);
+                }
+                this.savingPatientDetails = false;
+            }).catch(error => {
+                this.savingPatientDetails = false;
+                console.log(error);
+                bus.$emit("some-error", [this, error]);
+            });
         },
         openOncoTree() {
             window.open("http://oncotree.mskcc.org", "_blank");

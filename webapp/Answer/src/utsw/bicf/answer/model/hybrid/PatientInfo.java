@@ -14,6 +14,7 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 public class PatientInfo {
 	
 	List<ListTable> patientTables = new ArrayList<ListTable>();
+	Boolean isAllowed = true;
 	
 	
 	
@@ -95,5 +96,14 @@ public class PatientInfo {
 	public void setPatientTables(List<ListTable> patientTables) {
 		this.patientTables = patientTables;
 	}
+
+	public Boolean getIsAllowed() {
+		return isAllowed;
+	}
+
+	public void setIsAllowed(Boolean isAllowed) {
+		this.isAllowed = isAllowed;
+	}
+
 
 }

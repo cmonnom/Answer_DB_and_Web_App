@@ -137,6 +137,9 @@ public class RequestUtils {
 
 	public OrderCase getCaseDetails(String caseId, String data)
 			throws ClientProtocolException, IOException, URISyntaxException {
+		if (data == null) {
+			data = "{\"filters\": []}";
+		}
 		VariantFilterList filterList = Utils.parseFilters(data, false);
 		String filterParam = filterList.createJSON();
 		System.out.println(filterParam);
@@ -309,6 +312,34 @@ public class RequestUtils {
 		addAuthenticationHeader(requestGet);
 
 		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			OrderCase orderCase = mapper.readValue(response.getEntity().getContent(), OrderCase.class);
+			return orderCase;
+		}
+		return null;
+	}
+	
+	/**
+	 * Get a summary of the case with basic information
+	 * and no variant info
+	 * @param caseId
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
+	public OrderCase saveCaseSummary(String caseId, OrderCase caseSummary) throws ClientProtocolException, IOException, URISyntaxException {
+
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/summary");
+		URI uri = new URI(sbUrl.toString());
+
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		requestPost.setEntity(new StringEntity(mapper.writeValueAsString(caseSummary), ContentType.APPLICATION_JSON));
+		HttpResponse response = client.execute(requestPost);
 
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {

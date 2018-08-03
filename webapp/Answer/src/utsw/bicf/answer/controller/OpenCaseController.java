@@ -61,6 +61,7 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
 import utsw.bicf.answer.security.FileProperties;
@@ -106,6 +107,10 @@ public class OpenCaseController {
 				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".sendToMDA",
 				IndividualPermission.CAN_SELECT);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getPatientDetails",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".savePatientDetails",
+				IndividualPermission.CAN_ANNOTATE);
 
 	}
 
@@ -124,7 +129,7 @@ public class OpenCaseController {
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
 		RequestUtils utils = new RequestUtils(modelDAO);
-		if (user != null && !isUserAssignedToCase(utils, caseId, user, null)) {
+		if (user != null && !isUserAssignedToCase(utils, caseId, user)) {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 		}
 		
@@ -469,7 +474,7 @@ public class OpenCaseController {
 		
 		if (caseId.equals("")) { //for annotations within a case
 			User user = (User) session.getAttribute("user");
-			if (!isUserAssignedToCase(utils, caseId, user, null)) {
+			if (!isUserAssignedToCase(utils, caseId, user)) {
 				// user is not assigned to this case
 				response.setIsAllowed(false);
 				response.setSuccess(false);
@@ -497,7 +502,7 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		if (caseId.equals("")) { //for annotations within a case
-			if (!isUserAssignedToCase(utils, caseId, user, null)) {
+			if (!isUserAssignedToCase(utils, caseId, user)) {
 				// user is not assigned to this case
 				response.setIsAllowed(false);
 				response.setSuccess(false);
@@ -714,7 +719,7 @@ public class OpenCaseController {
 		JsonNode nodeData = mapper.readTree(data);
 		Variant variant = mapper.readValue(nodeData.get("variant").toString(), Variant.class);
 		if (variant != null) {
-			OrderCase orderCase = utils.getCaseDetails(caseId, data);
+			OrderCase orderCase = utils.getCaseDetails(caseId, null);
 			if (orderCase != null) {
 				if (!orderCase.getAssignedTo().contains(user.getUserId().toString())) {
 					response.setMessage("User " + user.getFullName() + " cannot edit this case.");
@@ -734,12 +739,61 @@ public class OpenCaseController {
 		}
 	}
 	
-	public static boolean isUserAssignedToCase(RequestUtils utils, String caseId, User user, String filters) throws ClientProtocolException, IOException, URISyntaxException {
-		if (filters == null) {
-			filters = "{\"filters\": []}";
-		}
-		OrderCase detailedCase = utils.getCaseDetails(caseId, filters);
-		return (detailedCase == null || detailedCase.getAssignedTo().contains(user.getUserId().toString()));
+	public static boolean isUserAssignedToCase(RequestUtils utils, String caseId, User user) throws ClientProtocolException, IOException, URISyntaxException {
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		return (caseSummary == null || caseSummary.getAssignedTo().contains(user.getUserId().toString()));
 		
+	}
+	
+	@RequestMapping(value = "/getPatientDetails")
+	@ResponseBody
+	public String getPatientDetails(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (caseSummary != null) {
+			PatientInfo patientInfo = new PatientInfo(caseSummary, null);
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.writeValueAsString(patientInfo);
+		}
+		return null;
+
+	}
+	
+	@RequestMapping(value = "/savePatientDetails")
+	@ResponseBody
+	public String savePatientDetails(Model model, HttpSession session, @RequestParam String oncotreeDiagnosis,
+			@RequestParam String caseId) throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = (User) session.getAttribute("user");
+		boolean isAssigned = isUserAssignedToCase(utils, caseId, user);
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(isAssigned);
+		if (isAssigned) {
+			OrderCase caseSummary = utils.getCaseSummary(caseId);
+			if (caseSummary != null) {
+				caseSummary.setOncotreeDiagnosis(oncotreeDiagnosis);
+				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);
+				if (savedCaseSummary != null) {
+					response.setSuccess(true);
+				}
+				else { //something was wrong with saving the oncotreediagnosis
+					response.setMessage("Error: Verify that the data is valid (eg. OncoTree Diagnosis exists?)");
+					response.setSuccess(false);
+				}
+			}
+			else {
+				response.setSuccess(false);
+				response.setMessage("The case id " + caseId + " does not exist.");
+			}
+		}
+		else {
+			response.setMessage("You are not allowed to edit this case");
+		}
+		return response.createObjectJSON();
+
 	}
 }
