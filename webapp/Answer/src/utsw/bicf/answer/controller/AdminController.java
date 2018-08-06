@@ -55,7 +55,8 @@ public class AdminController {
 	@ResponseBody
 	public String saveUser(Model model, HttpSession session,
 			@RequestParam(defaultValue = "") Integer userId, @RequestParam String username,
-			@RequestParam String first, @RequestParam String last, @RequestParam Boolean canView,
+			@RequestParam String first, @RequestParam String last, @RequestParam String email,
+			@RequestParam Boolean canView,
 			@RequestParam Boolean canSelect, @RequestParam Boolean canAnnotate, 
 			@RequestParam Boolean canAssign, @RequestParam Boolean admin)
 			throws Exception {
@@ -76,10 +77,12 @@ public class AdminController {
 		user.setFirst(first);
 		user.setLast(last);
 		user.setUsername(username);
+		user.setEmail(email);
 		
 		IndividualPermission individualPermission = user.getIndividualPermission();
 		if (individualPermission == null) {
 			individualPermission = new IndividualPermission();
+			user.setIndividualPermission(individualPermission);
 		}
 		individualPermission.setAdmin(admin);
 		individualPermission.setCanAnnotate(canAnnotate);
@@ -87,6 +90,7 @@ public class AdminController {
 		individualPermission.setCanSelect(canSelect);
 		individualPermission.setCanView(canView);
 		modelDAO.saveObject(individualPermission);
+		
 		modelDAO.saveObject(user);
 		
 		response.setSuccess(true);

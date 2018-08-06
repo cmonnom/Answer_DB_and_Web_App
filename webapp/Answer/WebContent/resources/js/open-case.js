@@ -164,8 +164,8 @@ const OpenCase = {
                 <v-btn color="error" @click="closeSaveDialog" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
-                <breadcrumbs>
-                </breadcrumbs>
+                <!-- <breadcrumbs>
+                </breadcrumbs> -->
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -636,8 +636,8 @@ const OpenCase = {
                 <v-btn color="error" @click="closeVariantDetails()">Close
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
-                <breadcrumbs>
-                </breadcrumbs>
+                <!-- <breadcrumbs>
+                </breadcrumbs> -->
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -995,8 +995,7 @@ const OpenCase = {
             tempSelectedTranslocations: [],
             topMostDialog: "",
             patientDetailsOncoTreeDiagnosis: "",
-            qcUrl: ""
-
+            qcUrl: "",
         }
     }, methods: {
         canProceed(field) {
@@ -1080,6 +1079,10 @@ const OpenCase = {
                         setTimeout(() => {
                             this.variantTabsVisible = true;
                         }, 1000);
+                        
+                        setTimeout(() => {
+                            this.loadFromParams();
+                        }, 500);
                     }
                 }
                 else {
@@ -1096,6 +1099,41 @@ const OpenCase = {
                 bus.$emit("some-error", [this, error]);
             }
             );
+        },
+        loadFromParams() {
+            var argVariantOid = this.$route.query.variantId;
+            var variantType = this.$route.query.variantType;
+            var showReviewSelection = this.$route.query.showReview;
+            if (argVariantOid && variantType) {
+                //find item
+                if (variantType == 'snp') {
+                    for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
+                        if (this.$refs.geneVariantDetails.items[i].oid == argVariantOid) {
+                            this.getVariantDetails(this.$refs.geneVariantDetails.items[i]);
+                            break;
+                        }
+                    }
+                }
+                else if (variantType == 'cnv') {
+                    for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
+                        if (this.$refs.cnvDetails.items[i].oid == argVariantOid) {
+                            this.getCNVDetails(this.$refs.cnvDetails.items[i]);
+                            break;
+                        }
+                    }
+                }
+                else if (variantType == 'translocation') {
+                    for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
+                        if (this.$refs.translocationDetails.items[i].oid == argVariantOid) {
+                            this.getTranslocationDetails(this.$refs.translocationDetails.items[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (showReviewSelection) {
+                this.openSaveDialog();
+            }
         },
         addCustomWarningFlags(snpIndelVariantSummary) {
             for (var i = 0; i < snpIndelVariantSummary.items.length; i++) {
@@ -1216,6 +1254,7 @@ const OpenCase = {
         },
         getVariantDetails(item) {
             this.currentVariantType = "snp";
+           
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
             var table; //could be the selected variant table or the regular one
@@ -1401,6 +1440,7 @@ const OpenCase = {
                         this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
+                        router.push({query: {variantType:this.currentVariantType, variantId: this.currentRow.oid, showReview: this.saveDialogVisible}});
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getVariantDetails.bind(null,
@@ -1477,6 +1517,7 @@ const OpenCase = {
                         this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
+                        router.push({query: {variantType:this.currentVariantType, variantId: this.currentRow.oid}});
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getCNVDetails.bind(null,
@@ -1563,6 +1604,7 @@ const OpenCase = {
                         this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
+                        router.push({query: {variantType:this.currentVariantType, variantId: this.currentRow.oid}});
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getTranslocationDetails.bind(null,
@@ -1945,10 +1987,12 @@ const OpenCase = {
             this.updateSelectedVariantTable();
             this.toggleHTMLOverlay(true);
             this.saveDialogVisible = true;
+            router.push({query: {showReview:true}});
         },
         closeSaveDialog() {
             this.saveDialogVisible = false;
             this.toggleHTMLOverlay(false);
+            router.push({query: {}});
         },
         saveSelection() {
             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
@@ -2095,6 +2139,7 @@ const OpenCase = {
         closeVariantDetails() {
             this.variantDetailsVisible = false;
             this.toggleHTMLOverlay(false);
+            router.push({query: {showReview: this.$route.query.showReview}}); //could be closing variant details from the review selection page. Keep the review selection page open.
         },
         toggleHTMLOverlay(hideScrollBar) {
             var html = document.querySelector("html");
@@ -2219,18 +2264,18 @@ const OpenCase = {
 
         },
         updateVariantDetailsBreadCrumbs(visible) {
-            if (visible) {
-                bus.$emit("add-breadcrumb-level", this.breadcrumbItemVariantDetails);
-                this.topMostDialog = this.breadcrumbItemVariantDetails.closingFunction;
-            }
-            else {
-                bus.$emit("remove-breadcrumb-level", this);
-            }
+            // if (visible) {
+            //     bus.$emit("add-breadcrumb-level", this.breadcrumbItemVariantDetails);
+            //     // this.topMostDialog = this.breadcrumbItemVariantDetails.closingFunction;
+            // }
+            // else {
+            //     bus.$emit("remove-breadcrumb-level", this);
+            // }
         },
         updateSaveDialogBreadCrumbs(visible) {
             if (visible) {
                 bus.$emit("add-breadcrumb-level", this.breadcrumbItemReview);
-                this.topMostDialog = this.breadcrumbItemReview.closingFunction;
+                // this.topMostDialog = this.breadcrumbItemReview.closingFunction;
             }
             else {
                 bus.$emit("remove-breadcrumb-level", this);
@@ -2530,7 +2575,28 @@ const OpenCase = {
         },
         openOncoTree() {
             window.open("http://oncotree.mskcc.org", "_blank");
-        }
+        },
+        handleRouteChanged(newRoute, oldRoute) {
+            if (newRoute.path != oldRoute.path) { //prevent reloading data if only changing the query router.push({query: {test:"hello3"}})
+                this.getAjaxData();
+            }
+            else { //look at the query
+                // console.log(newRoute.query, oldRoute.query);
+                if (JSON.stringify(newRoute.query) != JSON.stringify(oldRoute.query)) { //some params changed
+                    if (JSON.stringify(newRoute.query) == "{}") {
+                        //close everything
+                        this.closeSaveDialog();
+                        this.closeVariantDetails();
+                    }
+                    else if (newRoute.query.showReview === "true") {
+                        this.openSaveDialog();
+                    }
+                    else if (newRoute.query.variantId) {
+                        this.loadFromParams();
+                    }
+                }
+            }
+    }
     },
     mounted() {
         this.getAjaxData();
@@ -2565,7 +2631,7 @@ const OpenCase = {
         bus.$off('breadcrumb-level-down');
     },
     watch: {
-        '$route': 'getAjaxData',
+        '$route': 'handleRouteChanged',
         variantDetailsVisible: "updateVariantDetailsBreadCrumbs",
         saveDialogVisible: "updateSaveDialogBreadCrumbs",
         variantTabActive: "handleTabChanged",

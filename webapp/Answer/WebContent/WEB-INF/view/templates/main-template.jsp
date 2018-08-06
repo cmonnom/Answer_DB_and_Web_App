@@ -42,6 +42,7 @@ response.setDateHeader ("Expires", 0);
 					<script src="${pageContext.request.contextPath}/resources/js/vue-starter.js?timestamp=${timestamp}"></script>
 				</c:when>
 				<c:otherwise>
+					
 					<script>window.location = "${pageContext.request.contextPath}/login?urlRedirect=${urlRedirect}"</script>
 				</c:otherwise>
 			</c:choose>

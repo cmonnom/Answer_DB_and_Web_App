@@ -24,7 +24,8 @@
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/main.css?timestamp=${timestamp}">
 
 
-<link rel="shortcut icon" type="image/x-icon" href="https://www.utsouthwestern.net/favicon.ico" />
+<!-- <link rel="shortcut icon" type="image/x-icon" href="https://www.utsouthwestern.net/favicon.ico" /> -->
+<link rel="shortcut icon" type="image/x-icon" href="${pageContext.request.contextPath}/resources/images/answer-logo-icon-xsmall.png" />
 
 
 <script src="https://unpkg.com/vue/dist/vue.js"></script>

@@ -13,8 +13,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,8 +122,17 @@ public class OpenCaseController {
 	QcAPIAuthentication qcAPI;
 
 	@RequestMapping("/openCase/{caseId}")
-	public String openCase(Model model, HttpSession session, @PathVariable String caseId) throws IOException, UnsupportedOperationException, URISyntaxException {
+	public String openCase(Model model, HttpSession session, @PathVariable String caseId,
+			@RequestParam(defaultValue="", required=false) String variantId,
+			@RequestParam(defaultValue="", required=false) String variantType,
+			@RequestParam(defaultValue="false", required=false) Boolean showReview) throws IOException, UnsupportedOperationException, URISyntaxException {
 		String url = "openCase/" + caseId;
+		if (!variantId.equals("") && !variantType.equals("")) {
+			url += "?variantId=" + variantId + "&amp;variantType=" + variantType;
+		}
+		else if (showReview) {
+			url += "?showReview=true";
+		}
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
 		RequestUtils utils = new RequestUtils(modelDAO);

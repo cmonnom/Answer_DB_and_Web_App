@@ -199,12 +199,12 @@ Vue.component('edit-annotations', {
                                                                         single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
-                                                            <v-layout row wrap v-show="isCNV() && annotation.category == 'Focal'">
-                                                                <v-flex xs5 class="mt-1">
+                                                            <v-layout row wrap v-show="isCNV()" >
+                                                                <v-flex xs5 class="mt-1 pt-4">
                                                                     Genes:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.cnvGenes" :disabled="annotation.markedForDeletion" :items="cnvGeneItems" v-model="annotation.cnvGenes"
+                                                                    <v-select clearable :value="annotation.cnvGenes" :disabled="annotation.markedForDeletion || annotation.category != 'Focal'" :items="cnvGeneItems" v-model="annotation.cnvGenes"
                                                                         label="Select Gene(s)" chips deletable-chips multiple
                                                                         single-line hide-details></v-select>
                                                                 </v-flex>
@@ -277,8 +277,8 @@ Vue.component('edit-annotations', {
                     </v-btn>
                     <span>Discard changes</span>
                 </v-tooltip>
-                <breadcrumbs>
-                </breadcrumbs>
+                <!-- <breadcrumbs>
+                </breadcrumbs> -->
             </v-card-actions>
         </v-card>
     </v-dialog>
