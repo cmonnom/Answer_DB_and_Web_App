@@ -126,12 +126,9 @@ public class OpenCaseController {
 			@RequestParam(defaultValue="", required=false) String variantId,
 			@RequestParam(defaultValue="", required=false) String variantType,
 			@RequestParam(defaultValue="false", required=false) Boolean showReview) throws IOException, UnsupportedOperationException, URISyntaxException {
-		String url = "openCase/" + caseId;
+		String url = "openCase/" + caseId + "?showReview=" + showReview;
 		if (!variantId.equals("") && !variantType.equals("")) {
-			url += "?variantId=" + variantId + "&amp;variantType=" + variantType;
-		}
-		else if (showReview) {
-			url += "?showReview=true";
+			url += "%26variantId=" + variantId + "%26variantType=" + variantType;
 		}
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
@@ -144,8 +141,14 @@ public class OpenCaseController {
 	}
 	
 	@RequestMapping("/openCaseReadOnly/{caseId}")
-	public String openCaseReadOnly(Model model, HttpSession session, @PathVariable String caseId) throws IOException, UnsupportedOperationException, URISyntaxException {
-		String url = "openCaseReadOnly/" + caseId;
+	public String openCaseReadOnly(Model model, HttpSession session, @PathVariable String caseId,
+			@RequestParam(defaultValue="", required=false) String variantId,
+			@RequestParam(defaultValue="", required=false) String variantType,
+			@RequestParam(defaultValue="false", required=false) Boolean showReview) throws IOException, UnsupportedOperationException, URISyntaxException {
+		String url = "openCaseReadOnly/" + caseId + "?showReview=" + showReview;
+		if (!variantId.equals("") && !variantType.equals("")) {
+			url += "%26variantId=" + variantId + "%26variantType=" + variantType;
+		}
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
 		return ControllerUtil.initializeModel(model, servletContext, user);
