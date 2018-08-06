@@ -1131,7 +1131,7 @@ const OpenCase = {
                     }
                 }
             }
-            else if (showReviewSelection) {
+            else if (showReviewSelection === "true") {
                 this.openSaveDialog();
             }
         },
