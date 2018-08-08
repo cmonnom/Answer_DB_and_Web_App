@@ -36,6 +36,9 @@ public class LDAPAuthentication {
 		init();
 		DirContext ctx = null;
 		try {
+			if (userPassword == null || userPassword.equals("")) {
+				return false;
+			}
 			ctx = new InitialDirContext(env);
 			SearchControls ctls = new SearchControls();
 			ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);

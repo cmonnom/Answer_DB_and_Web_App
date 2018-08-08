@@ -175,7 +175,19 @@ const OpenCase = {
         ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"></edit-annotations>
 
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'""></edit-annotations>
+        ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'"">
+        <v-slide-y-transition slot="variantDetails">
+                            <v-flex xs12 md12 lg11 xl10 mb-2 v-show="annotationVariantDetailsVisible">
+                                <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable"
+                                :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant"
+                                @revert-variant="revertVariant" @save-variant="saveVariant"
+                                ref="cnvVariantDetailsPanel">
+
+                                </variant-details>
+                            </v-flex>
+                        </v-slide-y-transition>
+                       
+        </edit-annotations>
 
     <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         ref="translocationAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'""></edit-annotations>

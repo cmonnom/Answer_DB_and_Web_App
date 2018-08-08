@@ -36,6 +36,7 @@ public class OrderCase {
 	List<CNV> cnvs;
 	List<Translocation> translocations;
 	String oncotreeDiagnosis;
+	Integer totalCases;
 	
 	
 	public OrderCase() {
@@ -330,6 +331,16 @@ public class OrderCase {
 
 	public void setOncotreeDiagnosis(String oncotreeDiagnosis) {
 		this.oncotreeDiagnosis = oncotreeDiagnosis;
+	}
+
+
+	public Integer getTotalCases() {
+		return totalCases;
+	}
+
+
+	public void setTotalCases(Integer totalCases) {
+		this.totalCases = totalCases;
 	}
 
 

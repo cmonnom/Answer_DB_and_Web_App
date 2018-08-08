@@ -43,6 +43,7 @@ public class SNPIndelVariantRow {
 	Boolean mdaAnnotated;
 	Boolean utswAnnotated;
 	Integer numCasesSeen;
+	String numCasesSeenFormatted;
 	String exacAlleleFrequency;
 	String somaticStatus;
 	String gnomadPopmaxAlleleFrequency;
@@ -60,7 +61,7 @@ public class SNPIndelVariantRow {
 	
 	
 	
-	public SNPIndelVariantRow(Variant variant, List<ReportGroupForDisplay> reportGroups) {
+	public SNPIndelVariantRow(Variant variant, List<ReportGroupForDisplay> reportGroups, Integer totalCases) {
 		this.oid = variant.getMongoDBId().getOid();
 		this.chrom = TypeUtils.formatChromosome(variant.getChrom());
 		this.pos = variant.getPos();
@@ -89,6 +90,7 @@ public class SNPIndelVariantRow {
 		this.mdaAnnotated = variant.getMdaAnnotated();
 		this.utswAnnotated = variant.getUtswAnnotated();
 		this.numCasesSeen = variant.getNumCasesSeen();
+		this.numCasesSeenFormatted = this.numCasesSeen + "/" + totalCases;
 		this.exacAlleleFrequency = variant.getExacAlleleFrequency() != null ? String.format("%.2f", variant.getExacAlleleFrequency() * 100) : null;
 		this.somaticStatus = variant.getSomaticStatus();
 		this.gnomadPopmaxAlleleFrequency = variant.getGnomadPopmaxAlleleFrequency() != null ? String.format("%.2f", variant.getGnomadPopmaxAlleleFrequency() * 100) : null;
@@ -429,6 +431,14 @@ public class SNPIndelVariantRow {
 
 	public String getImpact() {
 		return impact;
+	}
+
+
+
+
+
+	public String getNumCasesSeenFormatted() {
+		return numCasesSeenFormatted;
 	}
 
 
