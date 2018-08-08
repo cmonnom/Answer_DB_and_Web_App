@@ -20,7 +20,7 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 	private static List<SNPIndelVariantRow> createRows(ModelDAO modelDAO, OrderCase aCase, List<ReportGroupForDisplay> reportGroups) {
 		List<SNPIndelVariantRow> rows = new ArrayList<SNPIndelVariantRow>();
 		for (Variant variant : aCase.getVariants()) {
-			rows.add(new SNPIndelVariantRow(variant, reportGroups));
+			rows.add(new SNPIndelVariantRow(variant, reportGroups, aCase.getTotalCases()));
 			
 		}
 		return rows;
@@ -67,7 +67,7 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		raf.setWidth("100px");
 		headers.add(raf);
 		
-		Header numCasesSeen = new Header(new String[] {"Nb Cases", "Seen"}, "numCasesSeen", Units.NB);
+		Header numCasesSeen = new Header(new String[] {"Nb Cases", "Seen"}, "numCasesSeenFormatted", Units.NB);
 		numCasesSeen.setWidth("50px");
 		headers.add(numCasesSeen);
 		

@@ -141,7 +141,7 @@ public class ModelDAO {
 	@Transactional
 	public List<User> getAllUsers() {
 		Session session = sessionFactory.getCurrentSession();
-		String hql = "from User";
+		String hql = "from User order by last";
 		return session.createQuery(hql, User.class).list();
 	}
 	
