@@ -12,13 +12,22 @@ Vue.component('edit-annotations', {
     <!-- annotation dialog -->
     <v-dialog v-model="annotationDialogVisible" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
         <v-card ref="annotationDialog" class="soft-grey-background">
-            <v-toolbar dense dark color="primary" class="mb-2">
+            <v-toolbar dense dark color="primary">
                 <v-tooltip class="ml-0" bottom>
                     <v-menu offset-y offset-x slot="activator" class="ml-0">
                         <v-btn slot="activator" flat icon dark>
                             <v-icon>more_vert</v-icon>
                         </v-btn>
                         <v-list>
+                        <v-list-tile avatar @click="togglePanel()">
+                            <v-list-tile-avatar>
+                                <v-icon>zoom_in</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Show/Hide Variant Details</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
                             <v-list-tile avatar @click="addCustomAnnotation()">
                                 <v-list-tile-avatar>
                                     <v-icon>playlist_add</v-icon>
@@ -51,6 +60,13 @@ Vue.component('edit-annotations', {
                 </v-tooltip>
                 <v-toolbar-title v-text="createTitle()"></v-toolbar-title>
                 <v-spacer></v-spacer>
+                <v-tooltip bottom>
+                    <v-btn icon flat :color="annotationVariantDetailsVisible ? 'amber accent-2' : ''" @click="togglePanel()"
+                        slot="activator">
+                        <v-icon>zoom_in</v-icon>
+                    </v-btn>
+                    <span>Show/Hide Variant Details</span>
+                 </v-tooltip>
                 <v-tooltip bottom >
                     <v-btn icon slot="activator" @click="addCustomAnnotation()">
                         <v-icon>playlist_add</v-icon>
@@ -317,7 +333,9 @@ Vue.component('edit-annotations', {
                 '3',
                 '4',
                 '5'],
-            cnvGeneItems: []    
+            cnvGeneItems: [],
+            annotationVariantDetailsVisible: true
+                
         }
 
     },
@@ -412,7 +430,6 @@ Vue.component('edit-annotations', {
             this.annotationDialogVisible = false;
             this.$nextTick(function () { //wait until dialog is closed 
                 this.userEditingAnnotations = [];
-                this.$emit("cancel-annotations", null);
             });
         },
         isNumberList(v) {
@@ -528,7 +545,10 @@ Vue.component('edit-annotations', {
                 return "Your Annotations for variant: " + this.title;
             }
             
-        }
+        },
+        togglePanel() {
+            this.$emit("toggle-panel", this);
+        },
     },
     created: function () {
     },

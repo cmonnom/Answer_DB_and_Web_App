@@ -125,11 +125,11 @@ public class OpenCaseController {
 	public String openCase(Model model, HttpSession session, @PathVariable String caseId,
 			@RequestParam(defaultValue="", required=false) String variantId,
 			@RequestParam(defaultValue="", required=false) String variantType,
-			@RequestParam(defaultValue="false", required=false) Boolean showReview) throws IOException, UnsupportedOperationException, URISyntaxException {
-		String url = "openCase/" + caseId + "?showReview=" + showReview;
-		if (!variantId.equals("") && !variantType.equals("")) {
-			url += "%26variantId=" + variantId + "%26variantType=" + variantType;
-		}
+			@RequestParam(defaultValue="false", required=false) Boolean showReview,
+			@RequestParam(defaultValue="", required=false) String edit) throws IOException, UnsupportedOperationException, URISyntaxException {
+		String url = "openCase/" + caseId + "?showReview=" + showReview
+				+ "%26variantId=" + variantId + "%26variantType=" + variantType
+				+ "%26edit=" + edit;
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
 		RequestUtils utils = new RequestUtils(modelDAO);
@@ -144,11 +144,11 @@ public class OpenCaseController {
 	public String openCaseReadOnly(Model model, HttpSession session, @PathVariable String caseId,
 			@RequestParam(defaultValue="", required=false) String variantId,
 			@RequestParam(defaultValue="", required=false) String variantType,
-			@RequestParam(defaultValue="false", required=false) Boolean showReview) throws IOException, UnsupportedOperationException, URISyntaxException {
-		String url = "openCaseReadOnly/" + caseId + "?showReview=" + showReview;
-		if (!variantId.equals("") && !variantType.equals("")) {
-			url += "%26variantId=" + variantId + "%26variantType=" + variantType;
-		}
+			@RequestParam(defaultValue="false", required=false) Boolean showReview,
+			@RequestParam(defaultValue="", required=false) String edit) throws IOException, UnsupportedOperationException, URISyntaxException {
+		String url = "openCase/" + caseId + "?showReview=" + showReview
+				+ "%26variantId=" + variantId + "%26variantType=" + variantType
+				+ "%26edit=" + edit;
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
 		return ControllerUtil.initializeModel(model, servletContext, user);
@@ -297,7 +297,7 @@ public class OpenCaseController {
 		passQCFilter.setBoolean(true);
 		filters.add(passQCFilter);
 
-		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Unknown", Variant.FIELD_ANNOTATIONS);
+		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Not Annotated", Variant.FIELD_ANNOTATIONS);
 		annotatedFilter.setBoolean(true);
 		filters.add(annotatedFilter);
 
@@ -483,7 +483,7 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		
-		if (caseId.equals("")) { //for annotations within a case
+		if (!caseId.equals("")) { //for annotations within a case
 			User user = (User) session.getAttribute("user");
 			if (!isUserAssignedToCase(utils, caseId, user)) {
 				// user is not assigned to this case
@@ -512,7 +512,7 @@ public class OpenCaseController {
 		User user = (User) session.getAttribute("user");
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
-		if (caseId.equals("")) { //for annotations within a case
+		if (!caseId.equals("")) { //for annotations within a case
 			if (!isUserAssignedToCase(utils, caseId, user)) {
 				// user is not assigned to this case
 				response.setIsAllowed(false);

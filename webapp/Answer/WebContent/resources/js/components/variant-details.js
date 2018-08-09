@@ -13,7 +13,7 @@ Vue.component('variant-details', {
               <v-icon color="amber accent-2">zoom_in</v-icon>
           </v-btn>
           <v-list>
-              <v-list-tile v-if="!noEdit" avatar @click="saveVariant()" :disabled="annotationDisabled">
+              <v-list-tile v-if="!noEdit" avatar @click="saveVariant()" :disabled="noEdit">
                   <v-list-tile-avatar>
                       <v-icon>save</v-icon>
                   </v-list-tile-avatar>
@@ -31,7 +31,7 @@ Vue.component('variant-details', {
                   </v-list-tile-content>
               </v-list-tile>
 
-              <v-list-tile avatar @click="annotationVariantDetailsVisible = false">
+              <v-list-tile avatar @click="hidePanel()">
                   <v-list-tile-avatar>
                       <v-icon>cancel</v-icon>
                   </v-list-tile-avatar>
@@ -49,7 +49,7 @@ Vue.component('variant-details', {
       <v-badge color="red" v-if="!noEdit" right bottom overlap v-model="variantDetailsUnSaved" class="mini-badge">
           <v-icon slot="badge"></v-icon>
           <v-tooltip bottom>
-              <v-btn flat icon @click="saveVariant()" slot="activator" :loading="savingVariantDetails" :disabled="annotationDisabled">
+              <v-btn flat icon @click="saveVariant()" slot="activator" :loading="savingVariantDetails" :disabled="noEdit">
                   <v-icon>save</v-icon>
               </v-btn>
               <span>Save Variant Details</span>
@@ -62,7 +62,7 @@ Vue.component('variant-details', {
           <span>Restore Last Saved Variant Details</span>
       </v-tooltip>
       <v-tooltip bottom>
-          <v-btn icon @click="annotationVariantDetailsVisible = false" slot="activator">
+          <v-btn icon @click="hidePanel()" slot="activator">
               <v-icon>close</v-icon>
           </v-btn>
           <span>Close Details</span>
@@ -100,7 +100,7 @@ Vue.component('variant-details', {
                                                   <v-select clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
                                                       :label="item.tooltip" single-line hide-details
                                                       class="no-height-select" @input="variantDetailsUnSaved = true"
-                                                      :disabled="annotationDisabled"></v-select>
+                                                      :disabled="noEdit"></v-select>
                                               </v-flex>
                                           </v-layout>
 
@@ -151,9 +151,7 @@ Vue.component('variant-details', {
 </v-card>`,
   data() {
     return {
-      annotationVariantDetailsVisible: true,
       savingVariantDetails: false,
-      annotationDisabled: false,
       variantDetailsUnSaved: false
     }
 
@@ -164,6 +162,15 @@ Vue.component('variant-details', {
     },
     saveVariant() {
       this.$emit("save-variant", this);
+    },
+    showPanel() {
+      this.$emit("show-panel", this);
+    },
+    hidePanel() {
+      this.$emit("hide-panel", this);
+    },
+    togglePanel() {
+      this.$emit("toggle-panel", this);
     },
     handleIdLink(id) {
       var link = "";

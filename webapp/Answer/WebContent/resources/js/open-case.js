@@ -60,7 +60,7 @@ const OpenCase = {
 
                        
 
-                        <v-list-tile avatar @click="closeSaveDialog()">
+                        <v-list-tile avatar @click="closeSaveDialog(true)">
                             <v-list-tile-avatar>
                                 <v-icon>close</v-icon>
                             </v-list-tile-avatar>
@@ -92,7 +92,7 @@ const OpenCase = {
                     <span>Send To MD Anderson</span>
                 </v-tooltip>
                 <v-tooltip bottom>
-                    <v-btn icon @click="closeSaveDialog" slot="activator">
+                    <v-btn icon @click="closeSaveDialog(true)" slot="activator">
                         <v-icon>close</v-icon>
                     </v-btn>
                     <span>Close</span>
@@ -161,7 +161,7 @@ const OpenCase = {
                     </v-btn>
                     <span>Send to MD Anderson</span>
                 </v-tooltip>
-                <v-btn color="error" @click="closeSaveDialog" slot="activator">Cancel
+                <v-btn color="error" @click="closeSaveDialog(true)" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
                 <!-- <breadcrumbs>
@@ -175,22 +175,24 @@ const OpenCase = {
         ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"></edit-annotations>
 
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'"">
+        ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'"" @toggle-panel="handlePanelVisibility()">
         <v-slide-y-transition slot="variantDetails">
-                            <v-flex xs12 md12 lg11 xl10 mb-2 v-show="annotationVariantDetailsVisible">
-                                <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable"
-                                :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant"
-                                @revert-variant="revertVariant" @save-variant="saveVariant"
-                                ref="cnvVariantDetailsPanel">
+            <v-flex xs12 md12 lg11 xl10 mb-2 v-show="editAnnotationVariantDetailsVisible">
+                <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable"
+                :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
+                @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()"
+                @revert-variant="revertVariant" @save-variant="saveVariant"
+                ref="cnvVariantDetailsPanel">
 
-                                </variant-details>
-                            </v-flex>
-                        </v-slide-y-transition>
+                </variant-details>
+            </v-flex>
+        </v-slide-y-transition>
                        
         </edit-annotations>
 
     <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         ref="translocationAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'""></edit-annotations>
+
     <!-- variant details dialog -->
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
@@ -311,7 +313,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="closeVariantDetails()">
+                        <v-list-tile avatar @click="closeVariantDetails(true)">
                             <v-list-tile-avatar>
                                 <v-icon>cancel</v-icon>
                             </v-list-tile-avatar>
@@ -371,7 +373,7 @@ const OpenCase = {
 
 
                 <v-tooltip bottom>
-                    <v-btn icon @click="closeVariantDetails()" slot="activator">
+                    <v-btn icon @click="closeVariantDetails(true)" slot="activator">
                         <v-icon>close</v-icon>
                     </v-btn>
                     <span>Close Variant</span>
@@ -621,15 +623,15 @@ const OpenCase = {
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
-                    <v-btn color="primary" @click="startUserAnnotations()" slot="activator" :disabled="!canProceed('canAnnotate')">Add/Edit
+                    <v-btn color="primary" @click="startUserAnnotations()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">Add/Edit
                         <v-icon right dark>note_add</v-icon>
                     </v-btn>
                     <span>Create/Edit Your Annotations</span>
                 </v-tooltip>
-                <v-btn v-if="!currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect')" color="success" @click="selectVariantForReport()" slot="activator">Select Variant
+                <v-btn v-if="!currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect') || readonly" color="success" @click="selectVariantForReport()" slot="activator">Select Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect')" color="warning" @click="removeVariantFromReport()" slot="activator">Deselect Variant
+                <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect') || readonly" color="warning" @click="removeVariantFromReport()" slot="activator">Deselect Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
                 <v-tooltip top>
@@ -645,7 +647,7 @@ const OpenCase = {
                     </v-btn>
                     <span>Show Next Variant</span>
                 </v-tooltip>
-                <v-btn color="error" @click="closeVariantDetails()">Close
+                <v-btn color="error" @click="closeVariantDetails(true)">Close
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
                 <!-- <breadcrumbs>
@@ -1008,6 +1010,13 @@ const OpenCase = {
             topMostDialog: "",
             patientDetailsOncoTreeDiagnosis: "",
             qcUrl: "",
+            editAnnotationVariantDetailsVisible: true,
+            urlQuery: {
+                showReview: false,
+                variantId: null,
+                variantType: null,
+                edit: false
+            }
         }
     }, methods: {
         canProceed(field) {
@@ -1113,38 +1122,64 @@ const OpenCase = {
             );
         },
         loadFromParams() {
-            var argVariantOid = this.$route.query.variantId;
-            var variantType = this.$route.query.variantType;
-            var showReviewSelection = this.$route.query.showReview;
-            if (argVariantOid && variantType) {
+            this.urlQuery.variantId = this.$route.query.variantId;
+            this.urlQuery.variantType = this.$route.query.variantType;
+            this.urlQuery.showReview = this.$route.query.showReview === true || this.$route.query.showReview === "true";
+            this.urlQuery.edit = this.$route.query.edit === true;
+
+            if (!this.urlQuery.showReview) { //close save/review dialog
+                this.closeSaveDialog();
+            }
+            if (!this.urlQuery.variantId) { //close variant details
+                this.closeVariantDetails();
+            }
+            if (!this.urlQuery.edit) { //close edit anntation
+                if (this.isSNP()) {
+                    this.$refs.annotationDialog.cancelAnnotations();
+                }
+                else if (this.isCNV()) {
+                    this.$refs.cnvAnnotationDialog.cancelAnnotations();
+                }
+                else if (this.isTranslocation()) {
+                    this.$refs.translocationAnnotationDialog.cancelAnnotations();
+                }
+            }
+
+            //first open save/review dialog
+            if (this.urlQuery.showReview) {
+                this.openSaveDialog();
+            }
+            //then open variant details
+            if (this.urlQuery.variantId && this.urlQuery.variantType) {
                 //find item
-                if (variantType == 'snp') {
+                if (this.urlQuery.variantType == 'snp') {
                     for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
-                        if (this.$refs.geneVariantDetails.items[i].oid == argVariantOid) {
+                        if (this.$refs.geneVariantDetails.items[i].oid == this.urlQuery.variantId) {
                             this.getVariantDetails(this.$refs.geneVariantDetails.items[i]);
                             break;
                         }
                     }
                 }
-                else if (variantType == 'cnv') {
+                else if (this.urlQuery.variantType == 'cnv') {
                     for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
-                        if (this.$refs.cnvDetails.items[i].oid == argVariantOid) {
+                        if (this.$refs.cnvDetails.items[i].oid == this.urlQuery.variantId) {
                             this.getCNVDetails(this.$refs.cnvDetails.items[i]);
                             break;
                         }
                     }
                 }
-                else if (variantType == 'translocation') {
+                else if (this.urlQuery.variantType == 'translocation') {
                     for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
-                        if (this.$refs.translocationDetails.items[i].oid == argVariantOid) {
+                        if (this.$refs.translocationDetails.items[i].oid == this.urlQuery.variantId) {
                             this.getTranslocationDetails(this.$refs.translocationDetails.items[i]);
                             break;
                         }
                     }
                 }
             }
-            else if (showReviewSelection === "true") {
-                this.openSaveDialog();
+            //finally, open edit annotation
+            if (this.urlQuery.edit === "true") {
+                this.startUserAnnotations();
             }
         },
         addCustomWarningFlags(snpIndelVariantSummary) {
@@ -1452,7 +1487,6 @@ const OpenCase = {
                         this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
-                        router.push({query: {variantType:this.currentVariantType, variantId: this.currentRow.oid, showReview: this.saveDialogVisible}});
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getVariantDetails.bind(null,
@@ -1529,7 +1563,6 @@ const OpenCase = {
                         this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
-                        router.push({query: {variantType:this.currentVariantType, variantId: this.currentRow.oid}});
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getCNVDetails.bind(null,
@@ -1616,7 +1649,6 @@ const OpenCase = {
                         this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
-                        router.push({query: {variantType:this.currentVariantType, variantId: this.currentRow.oid}});
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getTranslocationDetails.bind(null,
@@ -1868,7 +1900,7 @@ const OpenCase = {
             return formatted;
         },
         startUserAnnotations() {
-            if (!this.canProceed('canSelect')) {
+            if (!this.canProceed('canSelect') || this.readOnly) {
                 return;
             }
             if (this.isSNP()) {
@@ -1963,13 +1995,13 @@ const OpenCase = {
                 });
         },
         selectVariantForReport() {
-            if (!this.canProceed('canSelect')) {
+            if (!this.canProceed('canSelect') || this.readOnly) {
                 return;
             }
             this.$refs.geneVariantDetails.addToSelection(this.currentRow);
         },
         removeVariantFromReport() {
-            if (!this.canProceed('canSelect')) {
+            if (!this.canProceed('canSelect') || this.readOnly) {
                 return;
             }
             this.$refs.geneVariantDetails.removeFromSelection(this.currentRow);
@@ -1999,12 +2031,13 @@ const OpenCase = {
             this.updateSelectedVariantTable();
             this.toggleHTMLOverlay(true);
             this.saveDialogVisible = true;
-            router.push({query: {showReview:true}});
         },
-        closeSaveDialog() {
+        closeSaveDialog(goBack) { //goBack if coming from a button, not from the navigation
             this.saveDialogVisible = false;
             this.toggleHTMLOverlay(false);
-            router.push({query: {}});
+            if (goBack) {
+                router.back();
+            }
         },
         saveSelection() {
             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
@@ -2033,7 +2066,7 @@ const OpenCase = {
                     this.getAjaxData();
                     this.variantUnSaved = false;
                     this.saveLoading = false;
-                    this.closeSaveDialog();
+                    this.closeSaveDialog(true);
                 }
                 else {
                     this.saveLoading = false;
@@ -2148,10 +2181,12 @@ const OpenCase = {
             link += "&caseId=" + this.$route.params.id;
             return link;
         },
-        closeVariantDetails() {
+        closeVariantDetails(goBack) {
             this.variantDetailsVisible = false;
             this.toggleHTMLOverlay(false);
-            router.push({query: {showReview: this.$route.query.showReview}}); //could be closing variant details from the review selection page. Keep the review selection page open.
+            if (goBack) {
+                router.back();
+            }
         },
         toggleHTMLOverlay(hideScrollBar) {
             var html = document.querySelector("html");
@@ -2276,30 +2311,31 @@ const OpenCase = {
 
         },
         updateVariantDetailsBreadCrumbs(visible) {
-            // if (visible) {
-            //     bus.$emit("add-breadcrumb-level", this.breadcrumbItemVariantDetails);
-            //     // this.topMostDialog = this.breadcrumbItemVariantDetails.closingFunction;
-            // }
-            // else {
-            //     bus.$emit("remove-breadcrumb-level", this);
-            // }
+            if (visible) {
+            this.urlQuery.variantId = this.currentVariant._id.$oid;
+            this.urlQuery.variantType = this.currentVariantType;
+            router.push({query: this.urlQuery});
+            }
+            else {
+            // router.back();
+            }
         },
         updateSaveDialogBreadCrumbs(visible) {
             if (visible) {
-                bus.$emit("add-breadcrumb-level", this.breadcrumbItemReview);
-                // this.topMostDialog = this.breadcrumbItemReview.closingFunction;
+                this.urlQuery.showReview = true;
+                router.push({query: this.urlQuery});
             }
             else {
-                bus.$emit("remove-breadcrumb-level", this);
+                // router.back();
             }
         },
         updateEditAnnotationBreadcrumbs(visible) {
             if (visible) {
-                bus.$emit("add-breadcrumb-level", this.breadcrumbItemEditAnnotation);
-                this.topMostDialog = this.breadcrumbItemEditAnnotation.closingFunction;
+                this.urlQuery.edit = true;
+                router.push({query: this.urlQuery});
             }
             else {
-                bus.$emit("remove-breadcrumb-level", this);
+                router.back();
             }
         },
         saveCaseAnnotations() {
@@ -2594,20 +2630,19 @@ const OpenCase = {
             }
             else { //look at the query
                 // console.log(newRoute.query, oldRoute.query);
-                if (JSON.stringify(newRoute.query) != JSON.stringify(oldRoute.query)) { //some params changed
-                    if (JSON.stringify(newRoute.query) == "{}") {
-                        //close everything
-                        this.closeSaveDialog();
-                        this.closeVariantDetails();
-                    }
-                    else if (newRoute.query.showReview === "true") {
-                        this.openSaveDialog();
-                    }
-                    else if (newRoute.query.variantId) {
-                        this.loadFromParams();
-                    }
+                var newRouteQuery = JSON.stringify(newRoute.query);
+                if (newRouteQuery != JSON.stringify(oldRoute.query)) { //some params changed
+                    this.loadFromParams();
                 }
             }
+    },
+    handlePanelVisibility(visible) {
+        if (visible == null) {
+            this.editAnnotationVariantDetailsVisible = !this.editAnnotationVariantDetailsVisible;
+        }
+        else {
+            this.editAnnotationVariantDetailsVisible = visible;
+        }
     }
     },
     mounted() {
@@ -2622,25 +2657,25 @@ const OpenCase = {
         bus.$on('saving-annotations', (annotations) => {
             this.commitAnnotations(annotations);
         });
-        bus.$on('breadcrumb-level-down', (visibleFlag) => {
-            this.topMostDialog = visibleFlag;
-        });
-        router.beforeEach((to, from, next) => {
-            //if any dialog is open don't navigate
-            if (this.topMostDialog) { //null if level 1
-                next(false);
-                this[this.topMostDialog](); //hide the dialog
-            }
-            else {
-                next();
-            }
-        });
+        // bus.$on('breadcrumb-level-down', (visibleFlag) => {
+        //     this.topMostDialog = visibleFlag;
+        // });
+        // router.beforeEach((to, from, next) => {
+        //     //if any dialog is open don't navigate
+        //     if (this.topMostDialog) { //null if level 1
+        //         next(false);
+        //         this[this.topMostDialog](); //hide the dialog
+        //     }
+        //     else {
+        //         next();
+        //     }
+        // });
 
     },
     destroyed: function () {
         bus.$off('bam-viewer-closed');
         bus.$off('saving-annotations');
-        bus.$off('breadcrumb-level-down');
+        // bus.$off('breadcrumb-level-down');
     },
     watch: {
         '$route': 'handleRouteChanged',
