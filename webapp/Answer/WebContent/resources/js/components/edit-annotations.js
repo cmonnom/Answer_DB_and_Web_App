@@ -175,10 +175,10 @@ Vue.component('edit-annotations', {
                                                         </v-card-text>
                                                     </v-card>
                                                 </v-flex>
-                                                <v-flex xs12 sm6 md4 v-if="!isTranslocation()">
+                                                <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                        <!-- SNP -->
-                                                        <v-card-text v-if="isSNP()" class="card__text_default subheading">
+                                                        <!-- SNP  or fusion-->
+                                                        <v-card-text v-if="isSNP() || isTranslocation()" class="card__text_default subheading">
                                                             <v-layout row wrap>
                                                                 <v-flex xs5 class="mt-1">
                                                                     Annotation Category:
@@ -228,6 +228,25 @@ Vue.component('edit-annotations', {
                                                                     <v-select clearable :value="annotation.cnvGenes" :disabled="annotation.markedForDeletion || annotation.category != 'Focal'" :items="cnvGeneItems" v-model="annotation.cnvGenes"
                                                                         label="Select Gene(s)" chips deletable-chips multiple
                                                                         single-line hide-details></v-select>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5 class="mt-1">
+                                                                    Classification:
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <v-select clearable :value="annotation.classification" :disabled="annotation.markedForDeletion" :items="annotationClassifications"
+                                                                        v-model="annotation.classification" label="Select a Classification"
+                                                                        single-line class="no-height no-height-select"></v-select>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5 class="mt-1">
+                                                                    Tier:
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <v-select clearable :value="annotation.tier" :disabled="annotation.markedForDeletion" :items="annotationTiers" v-model="annotation.tier"
+                                                                        label="Select a Tier" single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                         </v-card-text>

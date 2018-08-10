@@ -23,6 +23,7 @@ public class Header {
 	Boolean isActionable;
 	Boolean isFlag;
 	String width;
+	Integer widthValue;
 	Boolean buttons; //to allow buttons instead of text in a cell
 	Boolean isHidden;
 	String align;
@@ -215,6 +216,14 @@ public class Header {
 
 	public void setSortable(Boolean sortable) {
 		this.sortable = sortable;
+	}
+
+	public Integer getWidthValue() {
+		return widthValue;
+	}
+
+	public void setWidthValue(Integer widthValue) {
+		this.widthValue = widthValue;
 	}
 
 }

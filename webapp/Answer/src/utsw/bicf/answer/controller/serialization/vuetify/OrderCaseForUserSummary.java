@@ -15,6 +15,7 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 
 	@Override
 	public void initializeHeaders() {
+		headers.add(new Header("Patient Name", "patientName"));
 		headers.add(new Header(new String[] {"Epic","Order Nb"}, "epicOrderNumber"));
 		headers.add(new Header(new String[] {"Epic", "Order Date"}, "epicOrderDate"));
 		Header icd10 = new Header("ICD 10", "icd10");

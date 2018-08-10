@@ -34,14 +34,18 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		headers.add(chromPos);
 		Header geneVariant = new Header("Gene Variant", "geneVariant");
 		geneVariant.setWidth("225px");
+		geneVariant.setWidthValue(225);
 		headers.add(geneVariant);
 		Header iconFlags = new Header("Flags", "iconFlags");
 		iconFlags.setWidth("150px");
+		iconFlags.setWidthValue(150);
 		iconFlags.setIsFlag(true);
 		iconFlags.setSortable(false);
 		iconFlags.setAlign("left");
 		headers.add(iconFlags);
 		Header effects = new Header("Effects", "effects");
+		effects.setWidth("220px");
+		effects.setWidthValue(220);
 		headers.add(effects);
 		Header ref = new Header(new String[] {"Reference", "Allele(s)"}, "reference");
 		headers.add(ref);

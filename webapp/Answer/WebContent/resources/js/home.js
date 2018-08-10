@@ -40,12 +40,9 @@ const Home = {
           <v-list-tile @click="toggleTable('forUser')">
           <v-list-tile-title>Show/Hide My Cases</v-list-tile-title>
         </v-list-tile>
-          <v-list-tile @click="toggleTable('available')">
-            <v-list-tile-title>Show/Hide Cases Available</v-list-tile-title>
+          <v-list-tile @click="toggleTable('all')">
+            <v-list-tile-title>Show/Hide All Cases Table</v-list-tile-title>
           </v-list-tile>
-        <v-list-tile @click="toggleTable('assigned')">
-          <v-list-tile-title>Show/Hide Cases Assigned</v-list-tile-title>
-        </v-list-tile>
       </v-list>
     </v-menu>
     <span>Worklist Menu</span>
@@ -63,17 +60,10 @@ const Home = {
     </v-tooltip>
     
     <v-tooltip bottom>
-      <v-btn icon @click="toggleTable('available')" slot="activator">
-        <v-icon :color="caseAvailableTableVisible ? 'amber accent-2' : ''">mdi-table-search</v-icon>
+      <v-btn icon @click="toggleTable('all')" slot="activator">
+        <v-icon :color="caseAllTableVisible ? 'amber accent-2' : ''">mdi-table-search</v-icon>
       </v-btn>
-      <span>Show/Hide Cases Available</span>
-    </v-tooltip>
-
-    <v-tooltip bottom>
-      <v-btn icon @click="toggleTable('assigned')" slot="activator">
-        <v-icon :color="caseAssignedTableVisible ? 'amber accent-2' : ''">mdi-table-search</v-icon>
-      </v-btn>
-      <span>Show/Hide Cases Assigned</span>
+      <span>Show/Hide All Cases Table</span>
     </v-tooltip>
 
   </v-toolbar>
@@ -86,20 +76,15 @@ const Home = {
           </data-table>
         </v-flex>
       </v-slide-x-transition>
+
       <v-slide-x-transition>
-        <v-flex xs6 v-show="caseAvailableTableVisible" >
-          <data-table ref="casesAvailableTable" :fixed="false" :fetch-on-created="false" table-title="Cases Available" :initial-sort="'epicOrderDate'"
+        <v-flex xs12 v-show="caseAllTableVisible" >
+          <data-table ref="casesAllTable" :fixed="false" :fetch-on-created="false" table-title="All Cases" :initial-sort="'epicOrderDate'"
             no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search">
           </data-table>
         </v-flex>
       </v-slide-x-transition>
-      <v-slide-x-transition>
-        <v-flex xs6 v-show="caseAssignedTableVisible" >
-          <data-table ref="casesAssignedTable" :fixed="false" :fetch-on-created="false" table-title="Cases Assigned" :initial-sort="'epicOrderDate'"
-            no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search">
-          </data-table>
-        </v-flex>
-      </v-slide-x-transition>
+
     </v-layout>
   </v-container>
 </div>`,
@@ -110,9 +95,8 @@ const Home = {
             allUsers: [],
             usersAssignedToCase: [],
             currentEpicOrderNumber: "",
-            caseAvailableTableVisible: true,
             caseForUserTableVisible: true,
-            caseAssignedTableVisible: true,
+            caseAllTableVisible: true,
             tableFlex: 'xs4',
         }
     },
@@ -135,9 +119,8 @@ const Home = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        this.$refs.casesAvailableTable.manualDataFiltered(response.data.casesAvailable);
+                        this.$refs.casesAllTable.manualDataFiltered(response.data.casesAll);
                         this.$refs.casesForUserTable.manualDataFiltered(response.data.casesForUser);
-                        this.$refs.casesAssignedTable.manualDataFiltered(response.data.casesAssigned);
                     }
                     else {
                         this.handleDialogs(response.data, this.getWorklists);
@@ -199,47 +182,48 @@ const Home = {
             this.assignDialogVisible = false;
             this.usersAssignedToCase = [];
         },
-        setFlexClass() {
-            var xs = 12;
-            var nbPanelVisible = 0;
-            if (this.caseAvailableTableVisible) {
-                nbPanelVisible++;
-            }
-            if (this.caseForUserTableVisible) {
-                nbPanelVisible++;
-            }
-            if (this.caseAssignedTableVisible) {
-                nbPanelVisible++;
-            }
-            if (nbPanelVisible == 0) {
-                this.tableFlex = "xs" + 12;
-            }
-            else {
-                this.tableFlex = "xs" + (xs / nbPanelVisible);
-            }
-        },
+        //use this to make tables  resize when other are shown/hidden
+        // setFlexClass() {
+        //     var xs = 12;
+        //     var nbPanelVisible = 0;
+        //     if (this.caseAvailableTableVisible) {
+        //         nbPanelVisible++;
+        //     }
+        //     if (this.caseForUserTableVisible) {
+        //         nbPanelVisible++;
+        //     }
+        //     if (this.caseAssignedTableVisible) {
+        //         nbPanelVisible++;
+        //     }
+        //     if (nbPanelVisible == 0) {
+        //         this.tableFlex = "xs" + 12;
+        //     }
+        //     else {
+        //         this.tableFlex = "xs" + (xs / nbPanelVisible);
+        //     }
+        // },
         toggleTable(tableName) {
             var restoring = false;
-            if (tableName == 'available') {
-                this.caseAvailableTableVisible = !this.caseAvailableTableVisible;
-                restoring = this.caseAvailableTableVisible;
+            if (tableName == 'all') {
+                this.caseAllTableVisible = !this.caseAllTableVisible;
+                restoring = this.caseAllTableVisible;
             }
             else if (tableName == 'forUser') {
                 this.caseForUserTableVisible = !this.caseForUserTableVisible;
                 restoring = this.caseForUserTableVisible;
             }
-            else {
-                this.caseAssignedTableVisible = !this.caseAssignedTableVisible;
-                restoring = this.caseAssignedTableVisible;
-            }
-            if (restoring) {
-                this.setFlexClass();
-            }
-            else {
-                setTimeout(() => {
-                    this.setFlexClass();
-                }, 400);
-            }
+            // else {
+            //     this.caseAssignedTableVisible = !this.caseAssignedTableVisible;
+            //     restoring = this.caseAssignedTableVisible;
+            // }
+            // if (restoring) {
+            //     this.setFlexClass();
+            // }
+            // else {
+            //     setTimeout(() => {
+            //         this.setFlexClass();
+            //     }, 400);
+            // }
         }
 
     },

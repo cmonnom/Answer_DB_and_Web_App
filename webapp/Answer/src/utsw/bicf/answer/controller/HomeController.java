@@ -18,8 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.AllOrderCasesSummary;
-import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseAssignedSummary;
-import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseAvailableSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseAllSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseForUserSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.UserSearchItems;
 import utsw.bicf.answer.dao.ModelDAO;
@@ -27,8 +26,7 @@ import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
-import utsw.bicf.answer.model.hybrid.OrderCaseAssigned;
-import utsw.bicf.answer.model.hybrid.OrderCaseAvailable;
+import utsw.bicf.answer.model.hybrid.OrderCaseAll;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
 import utsw.bicf.answer.security.PermissionUtils;
 
@@ -72,27 +70,21 @@ public class HomeController {
 				caseList.add(c);
 			}
 			//filter by assigned/user/available
-			List<OrderCaseAvailable> casesAvailable = 
-					caseList.stream()
-					.filter(c -> c.getAssignedTo() == null || c.getAssignedTo().isEmpty())
-					.map(c -> new OrderCaseAvailable(c, user))
-					.collect(Collectors.toList());
 			List<OrderCaseForUser> casesForUser = 
 					caseList.stream()
 					.filter(c -> c.getAssignedTo() != null && c.getAssignedTo().contains(user.getUserId().toString()))
 					.map(c -> new OrderCaseForUser(c))
 					.collect(Collectors.toList());
-			List<OrderCaseAssigned> casesAssigned = 
+			
+			List<OrderCaseAll> casesAll = 
 					caseList.stream()
-					.filter(c -> c.getAssignedTo() != null && !c.getAssignedTo().isEmpty())
-					.map(c -> new OrderCaseAssigned(c, modelDAO.getAllUsers(), user))
+					.map(c -> new OrderCaseAll(c, modelDAO.getAllUsers(), user))
 					.collect(Collectors.toList());
 			
-			OrderCaseAvailableSummary availSummary = new OrderCaseAvailableSummary(casesAvailable, user);
+			OrderCaseAllSummary allSummary = new OrderCaseAllSummary(casesAll, user);
 			OrderCaseForUserSummary forUserSummary = new OrderCaseForUserSummary(casesForUser);
-			OrderCaseAssignedSummary assignedSummary = new OrderCaseAssignedSummary(casesAssigned, user);
 			
-			AllOrderCasesSummary summary = new AllOrderCasesSummary(availSummary, forUserSummary, assignedSummary);
+			AllOrderCasesSummary summary = new AllOrderCasesSummary(allSummary, forUserSummary);
 			summary.setSuccess(true);
 			return summary.createVuetifyObjectJSON();
 		}

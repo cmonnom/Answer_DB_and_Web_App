@@ -3,29 +3,21 @@ package utsw.bicf.answer.controller.serialization.vuetify;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.model.hybrid.OrderCaseAll;
+
 public class AllOrderCasesSummary {
 	
-	OrderCaseAvailableSummary casesAvailable;
+	OrderCaseAllSummary casesAll;
 	OrderCaseForUserSummary casesForUser;
-	OrderCaseAssignedSummary casesAssigned;
 	Boolean isAllowed = true;
 	Boolean success = false;
 	
-	public AllOrderCasesSummary(OrderCaseAvailableSummary availSummary, OrderCaseForUserSummary forUserSummary,
-			OrderCaseAssignedSummary assignedSummary) {
+	public AllOrderCasesSummary(OrderCaseAllSummary allSummary, OrderCaseForUserSummary forUserSummary) {
 		super();
-		this.casesAvailable = availSummary;
+		this.casesAll = allSummary;
 		this.casesForUser = forUserSummary;
-		this.casesAssigned = assignedSummary;
 	}
 
-	public OrderCaseAvailableSummary getCasesAvailable() {
-		return casesAvailable;
-	}
-
-	public void setCasesAvailable(OrderCaseAvailableSummary casesAvailable) {
-		this.casesAvailable = casesAvailable;
-	}
 
 	public OrderCaseForUserSummary getCasesForUser() {
 		return casesForUser;
@@ -35,13 +27,6 @@ public class AllOrderCasesSummary {
 		this.casesForUser = casesForUser;
 	}
 
-	public OrderCaseAssignedSummary getCasesAssigned() {
-		return casesAssigned;
-	}
-
-	public void setCasesAssigned(OrderCaseAssignedSummary casesAssigned) {
-		this.casesAssigned = casesAssigned;
-	}
 	
 	public String createVuetifyObjectJSON() throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
@@ -62,6 +47,16 @@ public class AllOrderCasesSummary {
 
 	public void setSuccess(Boolean success) {
 		this.success = success;
+	}
+
+
+	public OrderCaseAllSummary getCasesAll() {
+		return casesAll;
+	}
+
+
+	public void setCasesAll(OrderCaseAllSummary casesAll) {
+		this.casesAll = casesAll;
 	}
 	
 

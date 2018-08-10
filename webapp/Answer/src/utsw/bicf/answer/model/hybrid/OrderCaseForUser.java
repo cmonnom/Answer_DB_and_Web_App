@@ -13,6 +13,7 @@ public class OrderCaseForUser {
 	String dateReceived;
 	String icd10;
 	String caseId;
+	String patientName;
 	
 	List<Button> buttons = new ArrayList<Button>();
 	
@@ -22,6 +23,7 @@ public class OrderCaseForUser {
 		this.icd10 = orderCase.getIcd10();
 		this.caseId = orderCase.getCaseId();
 		this.dateReceived = orderCase.getReceivedDate();
+		this.patientName = orderCase.getPatientName();
 		buttons.add(new Button("create", "open", "Work on Case", "info"));
 	}
 
@@ -47,6 +49,14 @@ public class OrderCaseForUser {
 
 	public String getCaseId() {
 		return caseId;
+	}
+
+	public String getPatientName() {
+		return patientName;
+	}
+
+	public void setPatientName(String patientName) {
+		this.patientName = patientName;
 	}
 
 

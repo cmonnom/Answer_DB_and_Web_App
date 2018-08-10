@@ -207,9 +207,6 @@ Vue.component('data-table', {
             <draggable :list="headerOrder" @start="draggingStarted" @end="itemDragging=''" class="draggable">
               <v-chip label v-for="header in headerOrder" :key="header" :color="color" text-color="white" :class="[{'is-dragging':isDragging(header)}, 'elevation-1', 'draggable']"
                 :id="header">
-                <!-- <v-avatar>
-              <v-icon>swap_horiz</v-icon>
-            </v-avatar> -->
                 <span class="draggable">{{ getHeaderByValue(header) }}</span>
                 <v-btn :color="getHeaderButtonColor(header)" icon flat small @click="toggleHeaderHidden(header)">
                   <v-icon>visibility</v-icon>
@@ -320,19 +317,22 @@ Vue.component('data-table', {
           </span>
         </th>
       </tr>
-      <tr v-show="headerOptionsVisible">
+
+      <tr v-show="showDraggableHeader">
         <th v-if="enableSelection" :class="[color, 'white--text']" style="width:50px"></th>
         <th v-if="expandedDataUrl" :class="color"></th>
         <th v-for="header in getSortedHeaders" :key="header.text" :class="[color, 'white--text', 'subheading']" :width="header.width"
           :style="'min-width:' + header.width">
-          <v-tooltip bottom>
-            <v-btn slot="activator" :color="getHeaderButtonColor(header, true)" icon flat small @click="toggleHeaderHidden(header, true)">
-              <v-icon>visibility</v-icon>
-            </v-btn>
-            <span>Show/Hide Header</span>
-          </v-tooltip>
+          <!-- <v-btn flat icon small @click="decreaseHeaderWidth(header)">
+            <v-icon>mdi-unfold-less-vertical</v-icon>
+          </v-btn>
+          <v-btn flat icon small @click="increaseHeaderWidth(header)">
+            <v-icon>mdi-unfold-more-vertical</v-icon>
+          </v-btn> -->
+          <v-slider color="red" step="10" style="max-width:100px" max="500" v-model="header.widthValue" @input="updateHeaderWidth($event, header)"></v-slider>
         </th>
       </tr>
+
     </template>
 
     <template slot="items" slot-scope="props">
@@ -1051,7 +1051,28 @@ Vue.component('data-table', {
                 }
             }
             return null;
-        }
+        },
+        decreaseHeaderWidth(header) {
+            var value = 0;
+            if (header.width) {
+               value = parseInt(header.width.replace("px", ""));
+            }
+            value -= value >= 0 ? 10 : 0;
+            header.width = value + "px";
+        },
+        increaseHeaderWidth(header) {
+            var value = 0;
+            if (header.width) {
+               value = parseInt(header.width.replace("px", ""));
+            }
+            value += 10;
+            header.width = value + "px";
+        },
+        updateHeaderWidth(event, header) {
+            if (header.widthValue) {
+                header.width = header.widthValue + "px";
+            }
+        },
     },
     computed: {
         getSortedHeaders: function () {

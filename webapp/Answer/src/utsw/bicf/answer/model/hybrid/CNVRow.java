@@ -27,6 +27,7 @@ public class CNVRow {
 	public CNVRow(CNV cnv) {
 		this.oid = cnv.getMongoDBId().getOid();
 		this.genes = formatHTMLGenes(cnv.getGenes().stream().sorted().collect(Collectors.toList()));
+		this.genes = cnv.getGenes().stream().sorted().collect(Collectors.joining(" "));
 		this.chrom = TypeUtils.formatChromosome(cnv.getChrom());
 		this.start = NumberFormat.getInstance().format(cnv.getStart());
 		this.end = NumberFormat.getInstance().format(cnv.getEnd());

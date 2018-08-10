@@ -249,3 +249,7 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 .card-actions-bottom {
     align-items: flex-end;
 }
+
+table.table tbody td {
+    word-break: break-word;
+}

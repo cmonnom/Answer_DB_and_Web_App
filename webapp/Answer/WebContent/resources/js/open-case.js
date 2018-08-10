@@ -1005,7 +1005,7 @@ const OpenCase = {
             this.urlQuery.variantId = this.$route.query.variantId;
             this.urlQuery.variantType = this.$route.query.variantType;
             this.urlQuery.showReview = this.$route.query.showReview === true || this.$route.query.showReview === "true";
-            this.urlQuery.edit = this.$route.query.edit === true;
+            this.urlQuery.edit = this.$route.query.edit === true || this.$route.query.edit === "true";
 
             if (!this.urlQuery.showReview) { //close save/review dialog
                 this.closeSaveDialog();
@@ -1058,7 +1058,7 @@ const OpenCase = {
                 }
             }
             //finally, open edit annotation
-            if (this.urlQuery.edit === "true") {
+            if (this.urlQuery.edit === true) {
                 this.startUserAnnotations();
             }
         },
@@ -1540,12 +1540,6 @@ const OpenCase = {
                     bus.$emit("some-error", [this, error]);
                 });
         },
-        //determines if the regular variant details label should be used
-        //like Gene, Notation Nb.Cases Seen etc.
-        //so that it behaves like a regular "label: string" combo
-        isRegularVariantDetailsLabel(type) {
-            return !type || type == 'chip' || type == 'callSet' || type == 'flag';
-        },
         formatSNPCallers(callers) {
             var labels = ['Name:', 'Alt:', 'Tumor Total Depth:', 'Tumor Alt Percent:', 'Normal Total Depth:', 'Normal Alt Percent:'];
             var callerNames = callers.map(c => c.callerName);
@@ -1604,43 +1598,6 @@ const OpenCase = {
         },
         openTranslocation(item) {
             this.getTranslocationDetails(item);
-        },
-        handleIdLink(id) {
-            var link = "";
-            if (id.type == "various") {
-                if (id.value.indexOf('rs') == 0) {
-                    link = "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=" + id.value;
-                }
-                else if (id.value.indexOf('COSM') == 0) {
-                    link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.value.replace("COSM", "");
-                }
-                else if (id.value.indexOf('COSN') == 0) {
-                    link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.value.replace("COSN", "");
-                }
-                else { //Clinvar
-                    link = "https://www.ncbi.nlm.nih.gov/clinvar/variation/" + id.value;
-                }
-            }
-            else if (id.type == "oncoKB") {
-                if (id.subtype == "gene") {
-                    link = "http://oncokb.org/#/gene/" + this.currentVariant.oncokbGeneName;
-                }
-                else if (id.subtype == "variant") {
-                    link = "http://oncokb.org/#/gene/" + this.currentVariant.oncokbGeneName + "/variant/" + this.currentVariant.oncokbVariantName;
-                }
-            }
-            window.open(link, "_blank");
-        },
-        // handlePubMedIdLink(id) {
-        //     var link = "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id;
-        //     window.open(link, "_blank");
-        // },
-        // handleNCTIdLink(id) {
-        //     var link = "https://clinicaltrials.gov/ct2/show/" + id;
-        //     window.open(link, "_blank");
-        // },
-        handleOncoKBGeneLink(id) {
-
         },
         openLink(link) {
             window.open(link, "_blank");
@@ -1724,7 +1681,9 @@ const OpenCase = {
                     createdSince: "",
                     modifiedDate: "",
                     modifiedSince: "",
-                    cnvGenes: ""
+                    cnvGenes: "",
+                    tier: "",
+                    classification: ""
                 };
                 if (showUser) {
                     annotation.fullName = annotations[i].fullName;
@@ -1741,6 +1700,8 @@ const OpenCase = {
                 annotation.modifiedDate = annotations[i].modifiedDate;
                 annotation.modifiedSince = annotations[i].modifiedSince;
                 annotation.scopeTooltip = this.$refs.cnvAnnotationDialog.createLevelInformation(annotations[i]);
+                annotation.tier = annotations[i].tier;
+                annotation.classification = annotations[i].classification;
                 formatted.push(annotation);
             }
             return formatted;
@@ -1760,6 +1721,8 @@ const OpenCase = {
                     createdSince: "",
                     modifiedDate: "",
                     modifiedSince: "",
+                    tier: "",
+                    classification: ""
                 };
                 if (showUser) {
                     annotation.fullName = annotations[i].fullName;
@@ -1775,6 +1738,8 @@ const OpenCase = {
                 annotation.modifiedDate = annotations[i].modifiedDate;
                 annotation.modifiedSince = annotations[i].modifiedSince;
                 annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
+                annotation.tier = annotations[i].tier;
+                annotation.classification = annotations[i].classification;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2539,6 +2504,7 @@ const OpenCase = {
         bus.$on('saving-annotations', (annotations) => {
             this.commitAnnotations(annotations);
         });
+        this.$refs.geneVariantDetails.headerOptionsVisible=true;
         // bus.$on('breadcrumb-level-down', (visibleFlag) => {
         //     this.topMostDialog = visibleFlag;
         // });
