@@ -20,14 +20,15 @@ Vue.component('data-table', {
         "show-pagination": { default: true, type: Boolean },
         "show-row-count": { default: false, type: Boolean },
         "title-icon": { default: null, type: String },
-        "show-left-menu": { default: true, type: Boolean }
+        "show-left-menu": { default: true, type: Boolean },
+        "color": { default: "primary", type: String}
 
     },
     template: `<div>
     <!-- Comment above and uncomment below to use the buttons on hover feature -->
      <!-- <div @mouseover="toggleShowButtons(true)" @mouseleave="toggleShowButtons(false)"> -->
   <!-- Top tool bar with menu options -->
-  <v-toolbar dense dark color="primary" :class="fixed ? '' : 'elevation-0'" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
+  <v-toolbar dense dark :color="color" :class="fixed ? '' : 'elevation-0'" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
     <!-- icon with no function -->
     <v-icon v-if="titleIcon && !showLeftMenu" color="amber accent-2">{{ titleIcon }}</v-icon>
     <!-- menu with same functions as left side icons -->
@@ -196,7 +197,7 @@ Vue.component('data-table', {
         <v-layout>
           <v-flex>
             <v-tooltip bottom>
-              <v-btn slot="activator" icon flat color="primary" small @click="toggleHeaderHidden()">
+              <v-btn slot="activator" icon flat :color="color" small @click="toggleHeaderHidden()">
                 <v-icon>visibility</v-icon>
               </v-btn>
               <span>Show/Hide all</span>
@@ -204,7 +205,7 @@ Vue.component('data-table', {
           </v-flex>
           <v-flex>
             <draggable :list="headerOrder" @start="draggingStarted" @end="itemDragging=''" class="draggable">
-              <v-chip label v-for="header in headerOrder" :key="header" color="primary" text-color="white" :class="[{'is-dragging':isDragging(header)}, 'elevation-1', 'draggable']"
+              <v-chip label v-for="header in headerOrder" :key="header" :color="color" text-color="white" :class="[{'is-dragging':isDragging(header)}, 'elevation-1', 'draggable']"
                 :id="header">
                 <!-- <v-avatar>
               <v-icon>swap_horiz</v-icon>
@@ -230,10 +231,10 @@ Vue.component('data-table', {
           Filters
         </div>
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="clearFilters">
+        <v-btn :color="color" @click="clearFilters">
           Clear
         </v-btn>
-        <v-btn color="primary" @click="filterData">
+        <v-btn :color="color" @click="filterData">
           Refresh
         </v-btn>
         <v-tooltip bottom>
@@ -301,12 +302,12 @@ Vue.component('data-table', {
     :custom-sort="customSort" ref="dataTable">
     <template slot="headers" slot-scope="props">
       <tr>
-        <th v-if="enableSelection" class="primary white--text" style="width:50px">
+        <th v-if="enableSelection" :class="[color, 'white--text']" style="width:50px">
           <v-checkbox v-if="enableSelectAll" hide-details @click.native="toggleAll" :input-value="props.all" :indeterminate="props.indeterminate"></v-checkbox>
         </th>
-        <th v-if="expandedDataUrl" class="primary">
+        <th v-if="expandedDataUrl" :class="color">
         </th>
-        <th v-for="header in getSortedHeaders" :key="header.text" :class="['primary white--text', 'subheading', header.sortable ? 'column sortable' : '', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
+        <th v-for="header in getSortedHeaders" :key="header.text" :class="[color, 'white--text', 'subheading', header.sortable ? 'column sortable' : '', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
           @click="changeSort(header)" :width="header.width" :style="'min-width:' + header.width">
           <v-icon v-if="header.sortable" class="table-sorting-icon">arrow_upward</v-icon>
           <v-tooltip bottom v-if="header.toolTip">
@@ -320,9 +321,9 @@ Vue.component('data-table', {
         </th>
       </tr>
       <tr v-show="headerOptionsVisible">
-        <th v-if="enableSelection" class="primary white--text" style="width:50px"></th>
-        <th v-if="expandedDataUrl" class="primary"></th>
-        <th v-for="header in getSortedHeaders" :key="header.text" :class="['primary white--text', 'subheading']" :width="header.width"
+        <th v-if="enableSelection" :class="[color, 'white--text']" style="width:50px"></th>
+        <th v-if="expandedDataUrl" :class="color"></th>
+        <th v-for="header in getSortedHeaders" :key="header.text" :class="[color, 'white--text', 'subheading']" :width="header.width"
           :style="'min-width:' + header.width">
           <v-tooltip bottom>
             <v-btn slot="activator" :color="getHeaderButtonColor(header, true)" icon flat small @click="toggleHeaderHidden(header, true)">
@@ -337,7 +338,7 @@ Vue.component('data-table', {
     <template slot="items" slot-scope="props">
       <tr :active="props.selected">
         <td v-if="enableSelection" style="width:50px" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
-          <v-checkbox primary hide-details :input-value="props.selected" @click="handleSelectionChange(props)" v-model="props.item.isSelected"
+          <v-checkbox :color="color" hide-details :input-value="props.selected" @click="handleSelectionChange(props)" v-model="props.item.isSelected"
             :ripple="false"></v-checkbox>
         </td>
         <td v-if="expandedDataUrl" class="pl-0 pr-0" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']" @click="expandRow(props.item[uniqueIdField], props)">

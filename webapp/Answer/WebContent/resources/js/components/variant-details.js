@@ -4,10 +4,11 @@ Vue.component('variant-details', {
     variantDataTables: { default: [], type: Array },
     linkTable: { default: [], type: Array },
     widthClass: { default: "", type: String },
-    currentVariant: { default: {}, type: Object }
+    currentVariant: { default: {}, type: Object },
+    color: {default: "primary", type: String}
   },
   template: ` <v-card>
-  <v-toolbar dense dark color="primary">
+  <v-toolbar dense dark :color="color">
       <v-menu offset-y offset-x class="ml-0">
           <v-btn slot="activator" flat icon dark>
               <v-icon color="amber accent-2">zoom_in</v-icon>

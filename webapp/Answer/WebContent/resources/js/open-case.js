@@ -24,7 +24,7 @@ const OpenCase = {
     <advanced-filter ref="advancedFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"></advanced-filter>
     <v-dialog v-model="saveDialogVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
-            <v-toolbar dense dark color="primary">
+            <v-toolbar dense dark :color="colors.saveReview">
                 <v-menu offset-y offset-x class="ml-0">
                     <v-btn slot="activator" flat icon dark>
                         <v-icon>more_vert</v-icon>
@@ -133,13 +133,16 @@ const OpenCase = {
                     </v-card-text>
                 </v-card>
                 <data-table ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected SNP/Indel Variants"
-                    initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3">
+                    initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3"
+                    :color="colors.saveReview">
                 </data-table>
                 <data-table ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected CNVs" initial-sort="chrom"
-                    no-data-text="No Data" :show-row-count="true" class="pb-3">
+                    no-data-text="No Data" :show-row-count="true" class="pb-3"
+                    :color="colors.saveReview">
                 </data-table>
                 <data-table ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected Translocations"
-                    initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3">
+                    initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3"
+                    :color="colors.saveReview">
                 </data-table>
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
@@ -171,17 +174,17 @@ const OpenCase = {
     </v-dialog>
 
     <!-- annotation dialog -->
-    <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
+    <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" :color="colors.editAnnotation"
         ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"></edit-annotations>
 
-    <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
+    <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" :color="colors.editAnnotation"
         ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'"" @toggle-panel="handlePanelVisibility()">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg11 xl10 mb-2 v-show="editAnnotationVariantDetailsVisible">
                 <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable"
                 :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                 @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()"
-                @revert-variant="revertVariant" @save-variant="saveVariant"
+                @revert-variant="revertVariant" @save-variant="saveVariant" :color="colors.editAnnotation"
                 ref="cnvVariantDetailsPanel">
 
                 </variant-details>
@@ -190,13 +193,13 @@ const OpenCase = {
                        
         </edit-annotations>
 
-    <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
+    <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" :color="colors.editAnnotation"
         ref="translocationAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'""></edit-annotations>
 
     <!-- variant details dialog -->
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
-            <v-toolbar dense dark color="primary">
+            <v-toolbar dense dark :color="colors.variantDetails">
                 <v-menu offset-y offset-x class="ml-0">
                     <v-btn slot="activator" flat icon dark>
                         <v-icon>more_vert</v-icon>
@@ -394,156 +397,22 @@ const OpenCase = {
                         <!-- card showing the same data as the summary row -->
                         <v-slide-y-transition>
                             <v-flex xs12 md12 lg11 xl10 v-show="annotationVariantDetailsVisible">
-                                <v-card>
-                                    <v-toolbar dense dark color="primary">
-                                        <v-menu offset-y offset-x class="ml-0">
-                                            <v-btn slot="activator" flat icon dark>
-                                                <v-icon color="amber accent-2">zoom_in</v-icon>
-                                            </v-btn>
-                                            <v-list>
-                                                <v-list-tile avatar @click="saveVariant()" :disabled="!canProceed('canAnnotate') || readonly">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>save</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Save Variant Details</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
 
-                                                <v-list-tile avatar @click="revertVariant()">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>settings_backup_restore</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Restore From Last Saved</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
+                            <variant-details :no-edit="false" :variant-data-tables="variantDataTables" :link-table="linkTable"
+                            :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
+                            @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()"
+                            @revert-variant="revertVariant" @save-variant="saveVariant" :color="colors.variantDetails"
+                            ref="variantDetailsPanel">
+                            </variant-details>
 
-                                                <v-list-tile avatar @click="annotationVariantDetailsVisible = false">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>cancel</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Close Details</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-                                            </v-list>
-                                        </v-menu>
-                                        <v-toolbar-title>
-                                            Variant Details
-                                        </v-toolbar-title>
-
-                                        <v-spacer></v-spacer>
-                                        <v-badge color="red" right bottom overlap v-model="variantDetailsUnSaved" class="mini-badge">
-                                            <v-icon slot="badge"></v-icon>
-                                            <v-tooltip bottom>
-                                                <v-btn flat icon @click="saveVariant()" slot="activator" :loading="savingVariantDetails" :disabled="!canProceed('canAnnotate')  || readonly">
-                                                    <v-icon>save</v-icon>
-                                                </v-btn>
-                                                <span>Save Variant Details</span>
-                                            </v-tooltip>
-                                        </v-badge>
-                                        <v-tooltip bottom>
-                                            <v-btn flat icon @click="revertVariant()" slot="activator">
-                                                <v-icon>settings_backup_restore</v-icon>
-                                            </v-btn>
-                                            <span>Restore Last Saved Variant Details</span>
-                                        </v-tooltip>
-                                        <v-tooltip bottom>
-                                            <v-btn icon @click="annotationVariantDetailsVisible = false" slot="activator">
-                                                <v-icon>close</v-icon>
-                                            </v-btn>
-                                            <span>Close Details</span>
-                                        </v-tooltip>
-
-                                    </v-toolbar>
-                                    <v-container grid-list-md fluid>
-                                        <v-layout row wrap>
-                                            <v-flex :class="getWidthClassForVariantDetails()" v-for="table in variantDataTables" :key="table.name">
-                                                <v-card flat>
-                                                    <v-card-text>
-                                                        <v-list class="dense-tiles">
-                                                            <v-list-tile v-for="item in table.items" :key="item.label">
-                                                                <v-list-tile-content class="pb-2">
-                                                                    <v-layout class="full-width">
-                                                                        <v-flex xs12 class="text-xs-left grow">
-                                                                            <span v-if="isRegularVariantDetailsLabel(item.type)" class="selectable">{{ item.label }}:</span>
-                                                                            <span v-if="!item.type" v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
-                                                                            <span v-if="item.type == 'chip'">
-                                                                                <v-chip disabled class="selectable" v-for="chip in item.value" :key="chip">
-                                                                                    {{ chip }}
-                                                                                </v-chip>
-                                                                            </span>
-                                                                            <v-data-table v-if="item.type == 'callSet'" :items="item.value" hide-actions hide-headers>
-                                                                                <template slot="items" slot-scope="props">
-                                                                                    <td>
-                                                                                        {{ props.item.label }}
-                                                                                    </td>
-                                                                                    <td v-for="i in item.columns" :key="i">{{ props.item["caller" + (i - 1)] }}</td>
-                                                                                </template>
-                                                                            </v-data-table>
-                                                                            <v-layout v-if="item.type == 'select'" class="full-width">
-                                                                                <v-flex xs2 class="selectable">{{ item.label }}:</v-flex>
-                                                                                <v-flex xs6>
-                                                                                    <v-select clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
-                                                                                        :label="item.tooltip" single-line hide-details
-                                                                                        class="no-height-select" @input="variantDetailsUnSaved = true"
-                                                                                        :disabled="!canProceed('canAnnotate')  || readonly"></v-select>
-                                                                                </v-flex>
-                                                                            </v-layout>
-
-                                                                            <v-tooltip bottom v-for="(icon, index) in item.value" :key="index" v-if="item.type == 'flag'">
-                                                                                <v-chip v-if="icon.chip" slot="activator" :color="icon.color" text-color="white" label small disabled>
-                                                                                    {{ icon.iconName }}
-                                                                                </v-chip>
-                                                                                <v-icon v-if="!icon.chip" slot="activator" :color="icon.color">
-                                                                                    {{ icon.iconName }}
-                                                                                </v-icon>
-                                                                                <span> {{ icon.tooltip }}</span>
-                                                                            </v-tooltip>
-
-                                                                        </v-flex>
-                                                                    </v-layout>
-                                                                </v-list-tile-content>
-                                                            </v-list-tile>
-                                                        </v-list>
-                                                    </v-card-text>
-                                                </v-card>
-                                            </v-flex>
-                                        </v-layout>
-                                        <v-layout row wrap>
-                                            <v-flex xs12 v-for="table in linkTable" :key="table.name">
-                                                <v-card flat>
-                                                    <v-card-text>
-                                                        <v-list class="dense-tiles">
-                                                            <v-list-tile v-for="item in table.items" :key="item.label">
-                                                                <v-list-tile-content class="pb-2">
-                                                                    <v-layout class="full-width">
-                                                                        <v-flex xs12 class="text-xs-left grow">
-                                                                            <span class="selectable">{{ item.label }}:</span>
-                                                                            <v-tooltip v-if="item.links && id.value !== null" bottom v-for="(id, index) in item.ids" :key="index">
-                                                                                <v-btn @click="handleIdLink(id)" slot="activator" v-html="id.label">
-                                                                                </v-btn>
-                                                                                <span>Open in new tab</span>
-                                                                            </v-tooltip>
-                                                                        </v-flex>
-                                                                    </v-layout>
-                                                                </v-list-tile-content>
-                                                            </v-list-tile>
-                                                        </v-list>
-                                                    </v-card-text>
-                                                </v-card>
-                                            </v-flex>
-                                        </v-layout>
-                                    </v-container>
-                                </v-card>
                             </v-flex>
                         </v-slide-y-transition>
                         <v-slide-y-transition>
                             <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedVariantsVisible()">
                                 <div>
                                     <data-table ref="relatedVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related Variants" initial-sort="geneId"
-                                        no-data-text="No Data" :show-pagination="false" title-icon="link">
+                                        no-data-text="No Data" :show-pagination="false" title-icon="link"
+                                        :color="colors.variantDetails">
                                     </data-table>
                                 </div>
                             </v-flex>
@@ -552,7 +421,8 @@ const OpenCase = {
                             <v-flex xs12 v-show="annotationVariantCanonicalVisible && isSNP()">
                                 <div>
                                     <data-table ref="canonicalVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Canonical VCF Annotations"
-                                        initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="mdi-table-search">
+                                        initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="mdi-table-search"
+                                        :color="colors.variantDetails">
                                     </data-table>
                                 </div>
                             </v-flex>
@@ -560,7 +430,8 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="annotationVariantOtherVisible  && isSNP()">
                                 <data-table ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false" table-title="Other VCF Annotations" initial-sort="geneId"
-                                    no-data-text="No Data" :show-row-count="true" title-icon="mdi-table-search">
+                                    no-data-text="No Data" :show-row-count="true" title-icon="mdi-table-search"
+                                    :color="colors.variantDetails">
                                 </data-table>
                             </v-flex>
                         </v-slide-y-transition>
@@ -568,7 +439,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
                                 <v-card>
-                                    <v-toolbar dense dark color="primary">
+                                    <v-toolbar dense dark :color="colors.variantDetails">
                                         <v-toolbar-title>
                                             <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
                                             MD Anderson Annotations
@@ -593,7 +464,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
                                 <v-card class="soft-grey-background">
-                                    <v-toolbar dense dark color="primary">
+                                    <v-toolbar dense dark :color="colors.variantDetails">
                                         <v-toolbar-title>
                                             <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
                                             UTSW Annotations
@@ -658,7 +529,7 @@ const OpenCase = {
 
 
 
-    <v-toolbar dense dark color="primary" fixed app :extended="loadingVariantDetails">
+    <v-toolbar dense dark :color="colors.openCase" fixed app :extended="loadingVariantDetails">
         <v-tooltip class="ml-0" bottom>
             <v-menu offset-y offset-x slot="activator" class="ml-0">
                 <v-btn slot="activator" flat icon dark>
@@ -738,7 +609,7 @@ const OpenCase = {
             <v-flex xs12 md12 lg10 xl9>
                 <div class="text-xs-center pb-3">
                     <v-card>
-                        <v-toolbar dense dark color="primary">
+                        <v-toolbar dense dark :color="colors.openCase">
                             <!-- <v-icon>perm_identity</v-icon> -->
                             <v-menu offset-y offset-x class="ml-0">
                                             <v-btn slot="activator" flat icon dark>
@@ -845,7 +716,7 @@ const OpenCase = {
         <v-layout v-if="caseAnnotationsVisible">
             <v-flex xs12 class="pb-3">
                 <v-card>
-                    <v-toolbar dense dark color="primary">
+                    <v-toolbar dense dark :color="colors.openCase">
                         <!-- <v-icon>perm_identity</v-icon> -->
                         <v-icon :color="caseAnnotationsVisible ? 'amber accent-2' : ''">mdi-message-bulleted</v-icon>
                         <v-toolbar-title>Case Notes</v-toolbar-title>
@@ -896,7 +767,8 @@ const OpenCase = {
                 <v-tab-item id="tab-snp">
                     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
                         no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
-                        :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons" @datatable-selection-changed="handleSelectionChanged">
+                        :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons" @datatable-selection-changed="handleSelectionChanged"
+                        :color="colors.openCase">
                         <v-fade-transition slot="action1">
                             <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
                                 <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
@@ -919,14 +791,16 @@ const OpenCase = {
                 <v-tab-item id="tab-cnv">
                     <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
                         :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()" :show-left-menu="true"
-                        @datatable-selection-changed="handleSelectionChanged">
+                        @datatable-selection-changed="handleSelectionChanged"
+                        :color="colors.openCase">
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
                 <v-tab-item id="tab-translocation">
                     <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
                         no-data-text="No Data" :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()"
-                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged">
+                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged"
+                        :color="colors.openCase">
                     </data-table>
                 </v-tab-item>
             </v-tabs-items>
@@ -1016,6 +890,12 @@ const OpenCase = {
                 variantId: null,
                 variantType: null,
                 edit: false
+            },
+            colors: {
+                openCase: "primary",
+                variantDetails: "teal lighten-1",
+                saveReview: "teal",
+                editAnnotation: "teal darken-1"
             }
         }
     }, methods: {
@@ -2537,6 +2417,7 @@ const OpenCase = {
                     this.revertVariant();
                     this.snackBarMessage = "Variant Saved";
                     this.snackBarVisible = true;
+                    this.$refs.variantDetailsPanel.variantDetailsUnSaved = false; //update badge on save button
                 }
                 else {
                     this.handleDialogs(response.data, this.saveVariant);
@@ -2558,6 +2439,7 @@ const OpenCase = {
             else if (this.isTranslocation()) {
                 this.getTranslocationDetails(this.currentRow);
             }
+            this.$refs.variantDetailsPanel.variantDetailsUnSaved = false;  //update badge on save button
         },
         // Use this when need to close the annotation dialog from outside the edit-annotations component
         cancelAnnotations() {
