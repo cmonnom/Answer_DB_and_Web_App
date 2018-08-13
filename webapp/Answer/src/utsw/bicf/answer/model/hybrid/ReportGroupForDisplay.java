@@ -11,6 +11,7 @@ public class ReportGroupForDisplay {
 	String groupName;
 	String description;
 	String link;
+	Boolean required;
 	List<String> genesToReport;
 	
 	public ReportGroupForDisplay() {
@@ -21,7 +22,7 @@ public class ReportGroupForDisplay {
 		this.groupName = reportGroup.getGroupName();
 		this.description = reportGroup.getDescription();
 		this.link = reportGroup.getLink();
-//		reportGroup.populateGenesToReport(modelDAO);
+		this.required = reportGroup.getRequired();
 		genesToReport = reportGroup.getGenesToReport().stream()
 				.map(g -> g.getGeneName()).sorted().collect(Collectors.toList());
 	}
@@ -49,6 +50,14 @@ public class ReportGroupForDisplay {
 	}
 	public void setGenesToReport(List<String> genesToReport) {
 		this.genesToReport = genesToReport;
+	}
+
+	public Boolean getRequired() {
+		return required;
+	}
+
+	public void setRequired(Boolean required) {
+		this.required = required;
 	}
 
 }

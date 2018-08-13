@@ -37,6 +37,9 @@ public class ReportGroup {
 	@Column(name="link")
 	String link;
 
+	@Column(name="required")
+	Boolean required;
+	
 //	@Transient
 	@OneToMany(mappedBy="reportGroup", fetch=FetchType.EAGER, cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH, CascadeType.REMOVE})
 	List<GeneToReport> genesToReport;
@@ -80,6 +83,14 @@ public class ReportGroup {
 
 	public void setGenesToReport(List<GeneToReport> genesToReport) {
 		this.genesToReport = genesToReport;
+	}
+
+	public Boolean getRequired() {
+		return required;
+	}
+
+	public void setRequired(Boolean required) {
+		this.required = required;
 	}
 
 //	public void populateGenesToReport(ModelDAO modelDAO) {

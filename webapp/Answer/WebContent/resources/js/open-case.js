@@ -102,7 +102,7 @@ const OpenCase = {
                 <v-card v-show="!areReportableGeneSelected()" class="mt-2 mb-2">
                     <v-card-text>
                         The following genes should be included in the report if pathogenic or likely pathogenic :
-                        <v-tooltip bottom v-for="(reportGroup, index1) in reportGroups" :key="index1">
+                        <v-tooltip bottom v-for="(reportGroup, index1) in requiredReportGroups" :key="index1">
                             <v-menu slot="activator" max-width="500px" offset-x>
                                 <v-btn slot="activator">
                                     {{ reportGroup.groupName}}
@@ -860,6 +860,7 @@ const OpenCase = {
             confirmationProceedButton: "Proceed",
             confirmationCancelButton: "Cancel",
             reportGroups: [],
+            requiredReportGroups: [],
             geneVariantDetailsTableHovering: true,
             variantTabActive: "tab-snp",
             wasAdvancedFilteringVisibleBeforeTabChange: false,
@@ -967,6 +968,7 @@ const OpenCase = {
                     this.addCNVHeaderAction(response.data.cnvSummary.headers);
                     this.addFusionHeaderAction(response.data.translocationSummary.headers);
                     this.reportGroups = response.data.reportGroups;
+                    this.requiredReportGroups = this.reportGroups.filter(r => r.required);
                     this.$refs.advancedFilter.reportGroups = this.reportGroups;
                     //only show hidden elements if it's the 1st time the page
                     //loads
@@ -2256,9 +2258,11 @@ const OpenCase = {
             }
             var geneNamesToReport = [];
             for (var i = 0; i < this.reportGroups.length; i++) {
-                var genesToReport = this.reportGroups[i].genesToReport;
-                for (var j = 0; j < genesToReport.length; j++) {
-                    geneNamesToReport.push(genesToReport[j]);
+                if (this.reportGroups[i].required) {
+                    var genesToReport = this.reportGroups[i].genesToReport;
+                    for (var j = 0; j < genesToReport.length; j++) {
+                        geneNamesToReport.push(genesToReport[j]);
+                    }
                 }
             }
             for (var i = 0; i < geneNamesToReport.length; i++) {
