@@ -174,4 +174,25 @@ public class AdminController {
 		
 		return response.createObjectJSON();
 	}
+	
+	@RequestMapping(value = "/deleteReportGroup")
+	@ResponseBody
+	public String deleteReportGroup(Model model, HttpSession session,
+			@RequestParam Integer reportGroupId)
+			throws Exception {
+		ReportGroup reportGroup = null;
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		if (reportGroupId != null) { //edit user
+			reportGroup = modelDAO.getReportGroupById(reportGroupId);
+			if (reportGroup == null) {
+				response.setSuccess(false);
+				response.setMessage("This gene set does not exist");
+				return response.createObjectJSON();
+			}
+			modelDAO.deleteObject(reportGroup);
+			response.setSuccess(true);
+		}
+		return response.createObjectJSON();
+	}
 }

@@ -123,6 +123,25 @@ const Admin = {
     </v-card>
   </v-dialog>
 
+  <v-dialog v-model="deleteGeneSetDialogVisible" width="400px">
+    <v-card class="soft-grey-background">
+      <v-card-title class="subheading">Are you sure?</v-card-title>
+      <v-card-text class="pl-2 pr-2">
+      You are about to delete <b>{{ currentEditGeneSetGroupName }}</b>.<br/>
+      Click Delete to permanently delete this gene set.<br/>
+      Click Cancel to keep the panel.<br/>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn color="warning" @click="deleteReportGroup()" :disabled="deleteGeneSetDisabled">Delete
+          <v-icon right dark>delete</v-icon>
+        </v-btn>
+        <v-btn color="error" @click="deleteGeneSetDialogVisible = false">Cancel
+          <v-icon right dark>cancel</v-icon>
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <v-toolbar dense dark color="primary" fixed app>
     <v-toolbar-title class="white--text">
       Manage Application
@@ -151,7 +170,7 @@ const Admin = {
   </data-table>
 
   <!-- Create new Gene sets -->
-  <data-table ref="geneSetTable" :fixed="false" :fetch-on-created="true" table-title="Gene Sets Filters" :initial-sort="'groupName'" no-data-text="No Data"
+  <data-table ref="geneSetTable" :fixed="false" :fetch-on-created="true" table-title="Gene Sets" :initial-sort="'groupName'" no-data-text="No Data"
   class="pt-3"
     data-url="./getAllReportGroups" >
     <v-fade-transition slot="action1">
@@ -191,7 +210,10 @@ const Admin = {
       currentEditGeneSetGroupName: "",
       currentEditGeneSetReportGroupId: null,
       editGenes: "",
-      saveGeneSetDisabled: false
+      saveGeneSetDisabled: false,
+      deleteGeneSetDisabled: false,
+      deleteGeneSetDialogVisible: false
+
     }
   },
   methods: {
@@ -311,8 +333,35 @@ const Admin = {
       this.editGenes = reportGroup.genes;
       this.editGeneSetDialogVisible = true;
     },
+    confirmDeleteReportGroup(reportGroupId) {
+      var reportGroup = this.$refs.geneSetTable.items.filter(item => item.reportGroupId == reportGroupId)[0];
+      this.currentEditGeneSetReportGroupId = reportGroup.reportGroupId;
+      this.currentEditGeneSetGroupName = reportGroup.groupName;
+      this.deleteGeneSetDialogVisible = true;
+    },
     deleteReportGroup(reportGroupId) {
-
+      this.snackBarMessage = 'Gene Set deleted successfully';
+      this.deleteGeneSetDisabled = true;
+      axios.get("./deleteReportGroup", {
+        params: {
+          reportGroupId: this.currentEditGeneSetReportGroupId
+        }
+      })
+        .then(response => {
+          if (response.data.isAllowed && response.data.success) {
+            this.$refs.geneSetTable.getAjaxData();
+            this.snackBarVisible = true;
+            this.deleteGeneSetDialogVisible = false;
+          }
+          else {
+            this.handleDialogs(response.data, this.saveEdits);
+          }
+          this.deleteGeneSetDisabled = false;
+        })
+        .catch(error => {
+          alert(error);
+          this.deleteGeneSetDisabled = false;
+        });
     },
     cancelEditsGeneSet() {
       this.editGeneSetDialogVisible = false;
@@ -372,7 +421,7 @@ const Admin = {
       this.editReportGroup(item.reportGroupId);
     });
     bus.$on('deleteReportGroup', (item) => {
-      this.deleteReportGroup(item.reportGroupId);
+      this.confirmDeleteReportGroup(item.reportGroupId);
     });
   },
   computed: {
