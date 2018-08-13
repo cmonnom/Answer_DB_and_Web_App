@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import utsw.bicf.answer.model.AnswerDBCredentials;
+import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
@@ -68,7 +69,7 @@ public class ModelDAO {
 	public void saveObject(Object object) {
 		sessionFactory.getCurrentSession().saveOrUpdate(object);
 	}
-
+	
 	@Transactional
 	public <T> T getObject(Class<T> clazz, int id) {
 		return sessionFactory.getCurrentSession().get(clazz, id);
@@ -151,6 +152,13 @@ public class ModelDAO {
 		String hql = "from User where userId = :userId";
 		return session.createQuery(hql, User.class).setParameter("userId", userId).uniqueResult();
 	}
+	
+	@Transactional
+	public ReportGroup getReportGroupById(Integer reportGroupId) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from ReportGroup where reportGroupId = :reportGroupId";
+		return session.createQuery(hql, ReportGroup.class).setParameter("reportGroupId", reportGroupId).uniqueResult();
+	}
 
 //	/**
 //	 * Permissions should be from finalized to edit to view
@@ -199,6 +207,15 @@ public class ModelDAO {
 		Session session = sessionFactory.getCurrentSession();
 		String hql = "from ReportGroup";
 		return session.createQuery(hql, ReportGroup.class).list();
+	}
+	
+	@Transactional
+	public List<GeneToReport> getAllGenesToReportInReportGroup(ReportGroup reportGroup) {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "select * from gene_to_report where report_group_id = :reportGroupId";
+		return session.createNativeQuery(sql, GeneToReport.class).
+				setParameter("reportGroupId", reportGroup.getReportGroupId())
+				.list();
 	}
 
 //	@Transactional

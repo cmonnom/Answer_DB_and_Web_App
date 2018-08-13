@@ -3,6 +3,7 @@ package utsw.bicf.answer.model.hybrid;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.ReportGroup;
 
 public class ReportGroupForDisplay {
@@ -20,6 +21,7 @@ public class ReportGroupForDisplay {
 		this.groupName = reportGroup.getGroupName();
 		this.description = reportGroup.getDescription();
 		this.link = reportGroup.getLink();
+//		reportGroup.populateGenesToReport(modelDAO);
 		genesToReport = reportGroup.getGenesToReport().stream()
 				.map(g -> g.getGeneName()).sorted().collect(Collectors.toList());
 	}

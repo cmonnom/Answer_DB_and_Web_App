@@ -182,6 +182,7 @@ public class OpenCaseController {
 			return response.createObjectJSON();
 		}
 		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
+//		reportGroups.stream().forEach(r -> r.populateGenesToReport(modelDAO));
 		List<ReportGroupForDisplay> reportGroupsForDisplay = reportGroups.stream()
 				.map(r -> new ReportGroupForDisplay(r)).collect(Collectors.toList());
 		

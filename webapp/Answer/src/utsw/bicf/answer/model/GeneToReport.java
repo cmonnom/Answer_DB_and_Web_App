@@ -26,6 +26,7 @@ public class GeneToReport {
 	@Column(name="gene_name")
 	String geneName;
 	
+//	@Transient
 	@ManyToOne(cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
 	@JoinColumn(name="report_group_id")
 	ReportGroup reportGroup;

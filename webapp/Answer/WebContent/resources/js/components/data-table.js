@@ -390,6 +390,12 @@ Vue.component('data-table', {
             </v-btn>
             <span v-html="button.tooltip"></span>
           </v-tooltip>
+
+          <v-tooltip bottom v-if="header.isLink">
+            <a :href="props.item[header.value]" slot="activator" target="_blank" rel="noreferrer">{{ props.item[header.value] }}</a>
+            <span>Open Link in New Tab</span>
+          </v-tooltip>
+
         </td>
       </tr>
     </template>
@@ -864,7 +870,7 @@ Vue.component('data-table', {
             if (header.isPassable === true || header.isActionable === true) {
                 itemString = item.value;
             }
-            else if (header.isFlag) {
+            else if (header.isFlag || header.isLink) {
                 return "";
             }
             else if (header.buttons) {

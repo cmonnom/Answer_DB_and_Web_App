@@ -28,6 +28,7 @@ public class Header {
 	Boolean isHidden;
 	String align;
 	Boolean sortable = true;
+	Boolean isLink;
 	
 	public Header(String text, String value, Units unit, ToolTip toolTip, Boolean isPassable) {
 		this.text = text;
@@ -224,6 +225,14 @@ public class Header {
 
 	public void setWidthValue(Integer widthValue) {
 		this.widthValue = widthValue;
+	}
+
+	public Boolean getIsLink() {
+		return isLink;
+	}
+
+	public void setIsLink(Boolean isLink) {
+		this.isLink = isLink;
 	}
 
 }

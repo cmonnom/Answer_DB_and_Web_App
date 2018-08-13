@@ -1,6 +1,7 @@
 package utsw.bicf.answer.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletContext;
@@ -9,14 +10,21 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.controller.serialization.DataReportGroup;
+import utsw.bicf.answer.controller.serialization.vuetify.ReportGroupTableSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.UserTableSummary;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.IndividualPermission;
+import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
 
 @Controller
@@ -51,6 +59,18 @@ public class AdminController {
 		return summary.createVuetifyObjectJSON();
 	}
 	
+	@RequestMapping(value = "/getAllReportGroups")
+	@ResponseBody
+	public String getAllReportGroups(Model model, HttpSession session)
+			throws Exception {
+
+		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
+//		reportGroups.stream().forEach(r -> r.populateGenesToReport(modelDAO));
+		ReportGroupTableSummary summary = new ReportGroupTableSummary(reportGroups);
+		
+		return summary.createVuetifyObjectJSON();
+	}
+	
 	@RequestMapping(value = "/saveUser")
 	@ResponseBody
 	public String saveUser(Model model, HttpSession session,
@@ -67,7 +87,7 @@ public class AdminController {
 			user = modelDAO.getUserByUserId(userId);
 			if (user == null) {
 				response.setSuccess(false);
-				response.setMessage("This user does not exit");
+				response.setMessage("This user does not exist");
 				return response.createObjectJSON();
 			}
 		}
@@ -98,4 +118,60 @@ public class AdminController {
 		return response.createObjectJSON();
 	}
 	
+	@RequestMapping(value = "/saveReportGroup")
+	@ResponseBody
+	public String saveReportGroup(Model model, HttpSession session,
+			@RequestParam(defaultValue = "") Integer reportGroupId, @RequestBody String data)
+			throws Exception {
+		ReportGroup reportGroup = null;
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		if (reportGroupId != null) { //edit user
+			reportGroup = modelDAO.getReportGroupById(reportGroupId);
+			if (reportGroup == null) {
+				response.setSuccess(false);
+				response.setMessage("This gene set does not exist");
+				return response.createObjectJSON();
+			}
+		}
+		else { //new reportGroup
+			reportGroup = new ReportGroup();
+		}
+		ObjectMapper mapper = new ObjectMapper();
+		DataReportGroup dataPOJO = mapper.readValue(data, DataReportGroup.class);
+		reportGroup.setGroupName(dataPOJO.getGroupName());
+		reportGroup.setDescription(dataPOJO.getDescription());
+		reportGroup.setLink(dataPOJO.getReferenceUrl());
+		String[] geneNames = dataPOJO.getGenes().toUpperCase().split("[, \r\n]");
+		List<String> geneNamesClean = new ArrayList<String>();
+		for (String g : geneNames) {
+			g = g.trim();
+			if (g.length() > 0) {
+				geneNamesClean.add(g);
+			}
+		}
+		modelDAO.saveObject(reportGroup); //if new reportGroup, this will create an id in the database
+		List<GeneToReport> oldGenesToReport = reportGroup.getGenesToReport();
+		List<GeneToReport> genesToReport = new ArrayList<GeneToReport>();
+		if (oldGenesToReport != null) {
+			for (GeneToReport g : oldGenesToReport) {
+				modelDAO.deleteObject(g);
+			}
+		}
+		
+		for (String g : geneNamesClean) {
+			GeneToReport gene = new GeneToReport();
+			gene.setGeneName(g);
+			gene.setReportGroup(reportGroup);
+			modelDAO.saveObject(gene);
+			genesToReport.add(gene);
+		}
+		reportGroup.setGenesToReport(genesToReport);
+		
+		modelDAO.saveObject(reportGroup);
+		
+		response.setSuccess(true);
+		
+		return response.createObjectJSON();
+	}
 }

@@ -11,6 +11,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import utsw.bicf.answer.dao.ModelDAO;
 
 @Entity
 @Table(name="report_group")
@@ -34,6 +37,7 @@ public class ReportGroup {
 	@Column(name="link")
 	String link;
 
+//	@Transient
 	@OneToMany(mappedBy="reportGroup", fetch=FetchType.EAGER, cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH, CascadeType.REMOVE})
 	List<GeneToReport> genesToReport;
 	
@@ -78,7 +82,9 @@ public class ReportGroup {
 		this.genesToReport = genesToReport;
 	}
 
-	
+//	public void populateGenesToReport(ModelDAO modelDAO) {
+//		this.genesToReport = modelDAO.getAllGenesToReportInReportGroup(this);
+//	}
 
 
 	
