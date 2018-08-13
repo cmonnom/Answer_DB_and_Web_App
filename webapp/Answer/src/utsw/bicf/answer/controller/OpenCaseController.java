@@ -184,7 +184,9 @@ public class OpenCaseController {
 		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
 //		reportGroups.stream().forEach(r -> r.populateGenesToReport(modelDAO));
 		List<ReportGroupForDisplay> reportGroupsForDisplay = reportGroups.stream()
-				.map(r -> new ReportGroupForDisplay(r)).collect(Collectors.toList());
+				.map(r -> new ReportGroupForDisplay(r))
+				.sorted()
+				.collect(Collectors.toList());
 		
 		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, qcAPI, detailedCase, null, "oid", user,
 				reportGroupsForDisplay);

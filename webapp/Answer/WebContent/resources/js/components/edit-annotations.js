@@ -102,7 +102,7 @@ Vue.component('edit-annotations', {
 
                 <v-card class="mb-4" v-if="userEditingAnnotations.length > 0" v-for="(annotation, index) in userEditingAnnotations" :key="index"
                     :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                    <v-toolbar dense dark :color="color">
+                    <v-toolbar class="elevation-0" dense dark :color="color">
                         <v-tooltip bottom>
                             <v-btn slot="activator" :color="annotation.isVisible ? 'amber accent-2' : ''" icon flat @click="annotation.isVisible = !annotation.isVisible">
                                 <v-icon v-show="!annotation.isVisible">visibility_off</v-icon>

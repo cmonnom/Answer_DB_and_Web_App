@@ -439,7 +439,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
                                 <v-card>
-                                    <v-toolbar dense dark :color="colors.variantDetails">
+                                    <v-toolbar class="elevation-0" dense dark :color="colors.variantDetails">
                                         <v-toolbar-title>
                                             <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
                                             MD Anderson Annotations
@@ -464,7 +464,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
                                 <v-card class="soft-grey-background">
-                                    <v-toolbar dense dark :color="colors.variantDetails">
+                                    <v-toolbar class="elevation-0" dense dark :color="colors.variantDetails">
                                         <v-toolbar-title>
                                             <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
                                             UTSW Annotations
@@ -609,7 +609,7 @@ const OpenCase = {
             <v-flex xs12 md12 lg10 xl9>
                 <div class="text-xs-center pb-3">
                     <v-card>
-                        <v-toolbar dense dark :color="colors.openCase">
+                        <v-toolbar class="elevation-0" dense dark :color="colors.openCase">
                             <!-- <v-icon>perm_identity</v-icon> -->
                             <v-menu offset-y offset-x class="ml-0">
                                             <v-btn slot="activator" flat icon dark>
@@ -716,7 +716,7 @@ const OpenCase = {
         <v-layout v-if="caseAnnotationsVisible">
             <v-flex xs12 class="pb-3">
                 <v-card>
-                    <v-toolbar dense dark :color="colors.openCase">
+                    <v-toolbar class="elevation-0" dense dark :color="colors.openCase">
                         <!-- <v-icon>perm_identity</v-icon> -->
                         <v-icon :color="caseAnnotationsVisible ? 'amber accent-2' : ''">mdi-message-bulleted</v-icon>
                         <v-toolbar-title>Case Notes</v-toolbar-title>

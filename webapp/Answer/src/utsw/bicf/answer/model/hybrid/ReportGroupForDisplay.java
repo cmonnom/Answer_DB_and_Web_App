@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.ReportGroup;
 
-public class ReportGroupForDisplay {
+public class ReportGroupForDisplay implements Comparable<ReportGroupForDisplay>{
 	
 	String groupName;
 	String description;
@@ -58,6 +58,15 @@ public class ReportGroupForDisplay {
 
 	public void setRequired(Boolean required) {
 		this.required = required;
+	}
+
+	@Override
+	public int compareTo(ReportGroupForDisplay o) {
+		if (o != null && o.getGroupName() != null) {
+			return this.getGroupName().compareTo(o.getGroupName());
+		}
+		return 0;
+		
 	}
 
 }
