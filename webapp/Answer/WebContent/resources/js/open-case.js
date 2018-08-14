@@ -1747,7 +1747,7 @@ const OpenCase = {
             return formatted;
         },
         startUserAnnotations() {
-            if (!this.canProceed('canSelect') || this.readOnly) {
+            if (!this.canProceed('canSelect') || this.readonly) {
                 return;
             }
             if (this.isSNP()) {
@@ -1842,13 +1842,13 @@ const OpenCase = {
                 });
         },
         selectVariantForReport() {
-            if (!this.canProceed('canSelect') || this.readOnly) {
+            if (!this.canProceed('canSelect') || this.readonly) {
                 return;
             }
             this.$refs.geneVariantDetails.addToSelection(this.currentRow);
         },
         removeVariantFromReport() {
-            if (!this.canProceed('canSelect') || this.readOnly) {
+            if (!this.canProceed('canSelect') || this.readonly) {
                 return;
             }
             this.$refs.geneVariantDetails.removeFromSelection(this.currentRow);
@@ -2497,6 +2497,13 @@ const OpenCase = {
     }
     },
     mounted() {
+        this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",
+        this.snackBarVisible = this.readonly;
+        if (this.readonly) {
+            setTimeout(() => {
+                bus.$emit("update-status", ["VIEW ONLY MODE"]);
+            }, 4200); //show after snackbar is dismissed
+        }
         this.getAjaxData();
         this.loadUserFilterSets();
         bus.$emit("clear-item-selected", [this]);
@@ -2527,6 +2534,7 @@ const OpenCase = {
     destroyed: function () {
         bus.$off('bam-viewer-closed');
         bus.$off('saving-annotations');
+        bus.$emit("update-status-off", this);
         // bus.$off('breadcrumb-level-down');
     },
     watch: {

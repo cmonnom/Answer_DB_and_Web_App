@@ -49,6 +49,15 @@ Vue.component('main-menu', {
 				</v-menu>
 			</v-list-tile-action>
 		</v-list-tile>
+		<v-slide-x-transition>
+		<v-list-tile class="menu-status grey--text" v-if="statusVisible">
+		<v-list-tile-content>
+			<v-list-tile-title class="subheading">
+				{{ statusMessage }}
+			</v-list-tile-title>
+		</v-list-tile-content>
+		</v-list-tile>
+		</v-slide-x-transition>
 
 	</v-list>
 </v-navigation-drawer>`,
@@ -64,7 +73,9 @@ Vue.component('main-menu', {
 			caseItemSelected: null,
 			cases: [],
 			caseUpdateUrl: webAppRoot + "/getCaseItems",
-			isMinied: false
+			isMinied: false,
+			statusVisible:false,
+			statusMessage: ""
 		}
 
 	},
@@ -136,12 +147,22 @@ Vue.component('main-menu', {
 
 			 });
 		});
+		bus.$on('update-status', args => {
+			this.statusVisible = true;
+			this.statusMessage = args[0];
+		});
+		bus.$on('update-status-off', args => {
+			this.statusVisible = false;
+			this.statusMessage = "";
+		});
 	},
 	destroyed: function() {
 		bus.$off('shrink-menu');
 		bus.$off('expand-menu');
 		bus.$off('clear-item-selected');
 		bus.$off('need-layout-resize');
+		bus.$off('update-status');
+		bus.$off('update-status-off');
 	},
 	watch: {
 		isMinied: 'emitMenuChanged'

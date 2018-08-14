@@ -253,3 +253,9 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 table.table tbody td {
     word-break: break-word;
 }
+
+/* Used by the nvaigation drawer to display some info */
+.menu-status {
+    bottom: 0px;
+    position: fixed;
+}
