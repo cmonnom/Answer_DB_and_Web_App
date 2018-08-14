@@ -104,12 +104,21 @@
 		<property name="bamFilesPath" value="${bam.file.location}" />
 	</bean>
 	
+	<bean id="emailProps" class="utsw.bicf.answer.security.EmailProperties">
+		<property name="from" value="${email.from}" />
+		<property name="signature" value="${email.signature}" />
+		<property name="rootUrl" value="${email.root.url}" />
+		<property name="doSend" value="${email.do.send}" />
+	</bean>
+	
+
+	
 	<!-- Setup Hibernate transaction manager -->
 	<bean id="transactionManager"
 		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
 		<property name="sessionFactory" ref="sessionFactory" />
 	</bean>
-
+	
 	<!-- Enable configuration of transactional behavior based on annotations -->
 	<tx:annotation-driven transaction-manager="transactionManager" />
 

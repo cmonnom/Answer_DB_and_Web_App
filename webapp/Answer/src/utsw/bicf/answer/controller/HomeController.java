@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +29,8 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.hybrid.OrderCaseAll;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
+import utsw.bicf.answer.security.EmailProperties;
+import utsw.bicf.answer.security.NotificationUtils;
 import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
@@ -45,6 +48,8 @@ public class HomeController {
 	ServletContext servletContext;
 	@Autowired
 	ModelDAO modelDAO;
+	@Autowired
+	EmailProperties emailProps;
 
 	@RequestMapping("/home")
 	public String home(Model model, HttpSession session) throws IOException {
@@ -108,12 +113,18 @@ public class HomeController {
 	
 	@RequestMapping(value = "/assignToUser")
 	@ResponseBody
-	public String assignToUser(Model model, HttpSession session, @RequestParam String userIdsParam,
+	public String assignToUser(Model model, HttpSession session, HttpServletRequest request,
+			@RequestParam String userIdsParam,
 			@RequestParam String caseId)
 			throws Exception {
 		
-		//send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
+		
+		OrderCase orderCase = utils.getCaseSummary(caseId);
+		List<String> alreadyAssignedTo = new ArrayList<String>();
+		if (orderCase != null) {
+			alreadyAssignedTo = orderCase.getAssignedTo(); //to skip users already notified
+		}
 		List<User> users = modelDAO.getAllUsers();
 		List<User> realUsers = new ArrayList<User>();
 		String[] userIds = userIdsParam.split(",");
@@ -129,6 +140,44 @@ public class HomeController {
 			}
 		}
 		AjaxResponse response = utils.assignCaseToUser(realUsers, caseId);
+		if (response.getSuccess()) {
+			User currentUser = (User) session.getAttribute("user");
+			for (User user : realUsers) {
+				if (alreadyAssignedTo.contains(user.getUserId() + "")
+						|| user.getUserId() == currentUser.getUserId()) { 
+					continue; //skip users that already received the email and current user
+				}
+				String subject = "You have a new case: " + caseId;
+				StringBuilder message = new StringBuilder()
+						.append("<html>")
+						.append(NotificationUtils.HEAD)
+						.append("<body>")
+						.append("<img src='")
+						.append(emailProps.getRootUrl())
+						.append("/resources/images/answer-logo-small-alpha.png'")
+						.append(" width='150px' />")
+						.append("<p>Dr. ").append(user.getLast()).append(",</p><br/>")
+						.append("<b>")
+						.append(currentUser.getFullName())
+						.append("</b>")
+						.append(" assigned you a new case. ")
+						.append("<b>")
+						.append("Case Id: ").append(caseId).append("<br/>")
+						.append("</b>")
+						.append("Follow this link to access it: ")
+						.append("<a href='")
+						.append(emailProps.getRootUrl()).append("openCase/").append(caseId)
+						.append("'>")
+						.append(emailProps.getRootUrl()).append("openCase/").append(caseId)
+						.append("</a><br/><br/>")
+						.append(emailProps.getSignature())
+						.append("</body></html>");
+//				String email = "guillaume.jimenez@utsouthwestern.edu"; //for testing to avoid sending other people emails
+				String email = user.getEmail();
+				boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), email, subject, message.toString());
+				System.out.println("An email was sent. Success:" + success);
+			}
+		}
 		
 		return response.createObjectJSON();
 		

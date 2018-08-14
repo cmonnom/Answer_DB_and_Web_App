@@ -744,7 +744,7 @@ Vue.component('data-table', {
         },
         handleScroll(event) {
             if (!this.stickyHeader) {
-                this.stickyHeader = $('table').stickyTableHeaders({ fixedOffset: 64 }); //need to use the html element rather than the element id
+                this.stickyHeader = $('table').stickyTableHeaders({ fixedOffset: 48 }); //need to use the html element rather than the element id
             }
             this.$nextTick(function () {
                 $(window).trigger('resize.stickyTableHeaders');

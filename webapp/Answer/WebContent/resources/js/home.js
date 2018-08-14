@@ -20,12 +20,16 @@ const Home = {
         </v-layout>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="success" @click="assignToUser()">Save
+      <v-tooltip bottom>
+        <v-btn color="success" @click="assignToUser()" slot="activator">Save
           <v-icon right dark>save</v-icon>
         </v-btn>
+        <span>Answer will send an email notification<br/>to the selected users</span>
+        </v-tooltip>
         <v-btn color="error" @click="cancelAssign()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
+        
       </v-card-actions>
     </v-card>
   </v-dialog>
