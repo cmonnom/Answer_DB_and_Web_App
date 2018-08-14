@@ -398,7 +398,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 md12 lg11 xl10 v-show="annotationVariantDetailsVisible">
 
-                            <variant-details :no-edit="false" :variant-data-tables="variantDataTables" :link-table="linkTable"
+                            <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable"
                             :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                             @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()"
                             @revert-variant="revertVariant" @save-variant="saveVariant" :color="colors.variantDetails"
