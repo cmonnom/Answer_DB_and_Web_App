@@ -7,7 +7,8 @@ Vue.component('edit-annotations', {
         limitScopeVariant: { default: false, type: Boolean}, //not used yet
         limitScopeChromosome: { default: false, type: Boolean}, //used by CNV to limit the category choices
         hideScope: {default: false, type: Boolean},
-        color: {default: "primary", type: String}
+        color: {default: "primary", type: String},
+        breadcrumbs: { default: [], type: Array },
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -88,6 +89,12 @@ Vue.component('edit-annotations', {
                 </v-tooltip>
             </v-toolbar>
             <v-card-text :style="getDialogMaxHeight(130)">
+                <v-breadcrumbs class="pt-2">
+                <v-icon slot="divider">forward</v-icon>
+                    <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"  @click.native="breadcrumbNavigation(index)">
+                    {{ item.text }}
+                    </v-breadcrumbs-item>
+                 </v-breadcrumbs>
                 <v-card v-if="userEditingAnnotations.length == 0">
                     <v-card-text>
                         Click on
@@ -354,8 +361,7 @@ Vue.component('edit-annotations', {
                 '4',
                 '5'],
             cnvGeneItems: [],
-            annotationVariantDetailsVisible: true
-                
+            annotationVariantDetailsVisible: true,
         }
 
     },
@@ -559,15 +565,21 @@ Vue.component('edit-annotations', {
         },
         createTitle() {
             if (this.limitScopeGene) {
-                return "Your Annotations for gene: " + this.title;
+                return "Create/Edit Annotations for gene: " + this.title;
             }
             else {
-                return "Your Annotations for variant: " + this.title;
+                return "Create/Edit Annotations for variant: " + this.title;
             }
             
         },
         togglePanel() {
             this.$emit("toggle-panel", this);
+        },
+        disableBreadCrumbItem(item, index) {
+            return (item.disabled || index == this.breadcrumbs.length - 1);
+        },
+        breadcrumbNavigation(index) {
+            this.$emit("breadcrumb-navigation", index);
         },
     },
     created: function () {

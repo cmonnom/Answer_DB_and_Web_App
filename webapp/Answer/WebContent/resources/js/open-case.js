@@ -60,7 +60,7 @@ const OpenCase = {
 
                        
 
-                        <v-list-tile avatar @click="closeSaveDialog(true)">
+                        <v-list-tile avatar @click="closeSaveDialog()">
                             <v-list-tile-avatar>
                                 <v-icon>close</v-icon>
                             </v-list-tile-avatar>
@@ -92,13 +92,21 @@ const OpenCase = {
                     <span>Send To MD Anderson</span>
                 </v-tooltip>
                 <v-tooltip bottom>
-                    <v-btn icon @click="closeSaveDialog(true)" slot="activator">
+                    <v-btn icon @click="closeSaveDialog()" slot="activator">
                         <v-icon>close</v-icon>
                     </v-btn>
                     <span>Close</span>
                 </v-tooltip>
             </v-toolbar>
             <v-card-text :style="getDialogMaxHeight(120)">
+
+            <v-breadcrumbs class="pt-2" >
+            <v-icon slot="divider">forward</v-icon>
+                <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)" @click.native="breadcrumbNavigation(index)">
+                {{ item.text }}
+                </v-breadcrumbs-item>
+            </v-breadcrumbs>
+
                 <v-card v-show="!areReportableGeneSelected()" class="mt-2 mb-2">
                     <v-card-text>
                         The following genes should be included in the report if pathogenic or likely pathogenic :
@@ -164,21 +172,22 @@ const OpenCase = {
                     </v-btn>
                     <span>Send to MD Anderson</span>
                 </v-tooltip>
-                <v-btn color="error" @click="closeSaveDialog(true)" slot="activator">Cancel
+                <v-btn color="error" @click="closeSaveDialog()" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
-                <!-- <breadcrumbs>
-                </breadcrumbs> -->
             </v-card-actions>
         </v-card>
     </v-dialog>
 
     <!-- annotation dialog -->
     <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" :color="colors.editAnnotation"
-        ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"></edit-annotations>
+        ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"
+        :breadcrumbs="breadcrumbs"
+        @breadcrumb-navigation="breadcrumbNavigation"></edit-annotations>
 
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" :color="colors.editAnnotation"
-        ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'"" @toggle-panel="handlePanelVisibility()">
+        ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'"" @toggle-panel="handlePanelVisibility()"
+        :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg11 xl10 mb-2 v-show="editAnnotationVariantDetailsVisible">
                 <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable"
@@ -194,7 +203,8 @@ const OpenCase = {
         </edit-annotations>
 
     <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" :color="colors.editAnnotation"
-        ref="translocationAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'""></edit-annotations>
+        ref="translocationAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'""
+        :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation"></edit-annotations>
 
     <!-- variant details dialog -->
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
@@ -383,7 +393,16 @@ const OpenCase = {
                 </v-tooltip>
 
             </v-toolbar>
+            
             <v-card-text :style="getDialogMaxHeight(120)">
+
+            <v-breadcrumbs class="pt-2 pb-2">
+            <v-icon slot="divider">forward</v-icon>
+                <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"  @click.native="breadcrumbNavigation(index)">
+                {{ item.text }}
+                </v-breadcrumbs-item>
+            </v-breadcrumbs>
+
                 <v-container grid-list-md fluid>
                     <v-layout row wrap>
                         <v-slide-y-transition>
@@ -521,8 +540,6 @@ const OpenCase = {
                 <v-btn color="error" @click="closeVariantDetails(true)">Close
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
-                <!-- <breadcrumbs>
-                </breadcrumbs> -->
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -603,6 +620,13 @@ const OpenCase = {
         <v-progress-linear class="ml-4 mr-4" :slot="loadingVariantDetails ? 'extension' : ''" v-show="!caseName || loadingVariantDetails"
             :indeterminate="true" color="white"></v-progress-linear>
     </v-toolbar>
+
+    <v-breadcrumbs class="pt-2">
+    <v-icon slot="divider">forward</v-icon>
+        <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"  @click.native="breadcrumbNavigation(index)">
+        {{ item.text }}
+        </v-breadcrumbs-item>
+    </v-breadcrumbs>
 
     <v-slide-y-transition>
         <v-layout v-if="patientDetailsVisible">
@@ -813,9 +837,11 @@ const OpenCase = {
             loading: true,
             loadingVariantDetails: false,
             // breadcrumbs: [{text: "You are here:  Case", disabled: true}],
-            breadcrumbItemVariantDetails: { text: "Variant Details", disabled: true, closingFunction: "closeVariantDetails" },
-            breadcrumbItemReview: { text: "Review Selected Variants", disabled: true, closingFunction: "closeSaveDialog" },
-            breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: true, closingFunction: "cancelAnnotations" },
+            breadcrumbItemVariantDetails: { text: "Variant Details", disabled: false, params:["variantId", "variantType"] },
+            breadcrumbItemReview: { text: "Review", disabled: false, params:["showReview"] },
+            breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: false , params:["edit"] },
+            breadcrumbItemWorkOnCase: { text: "Case Overview", disabled: false, params:[]},
+            breadcrumbs: [],
             patientTables: [],
             patientDetailsVisible: false,
             caseAnnotationsVisible: false,
@@ -1004,8 +1030,8 @@ const OpenCase = {
             );
         },
         loadFromParams() {
-            this.urlQuery.variantId = this.$route.query.variantId;
-            this.urlQuery.variantType = this.$route.query.variantType;
+            this.urlQuery.variantId = this.$route.query.variantId ? this.$route.query.variantId : null;
+            this.urlQuery.variantType = this.$route.query.variantType ? this.$route.query.variantType : null;
             this.urlQuery.showReview = this.$route.query.showReview === true || this.$route.query.showReview === "true";
             this.urlQuery.edit = this.$route.query.edit === true || this.$route.query.edit === "true";
 
@@ -1028,41 +1054,74 @@ const OpenCase = {
             }
 
             //first open save/review dialog
-            if (this.urlQuery.showReview) {
-                this.openSaveDialog();
+            if (this.urlQuery.showReview === true) {
+                this.$nextTick( this.openSaveDialog());
             }
             //then open variant details
             if (this.urlQuery.variantId && this.urlQuery.variantType) {
-                //find item
-                if (this.urlQuery.variantType == 'snp') {
-                    for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
-                        if (this.$refs.geneVariantDetails.items[i].oid == this.urlQuery.variantId) {
-                            this.getVariantDetails(this.$refs.geneVariantDetails.items[i]);
-                            break;
+                var delay = 0;
+                setTimeout(() => {
+                    //find item
+                    if (this.urlQuery.variantType == 'snp') {
+                        for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
+                            if (this.$refs.geneVariantDetails.items[i].oid == this.urlQuery.variantId) {
+                                this.$nextTick(this.getVariantDetails(this.$refs.geneVariantDetails.items[i]));
+                                break;
+                            }
                         }
                     }
-                }
-                else if (this.urlQuery.variantType == 'cnv') {
-                    for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
-                        if (this.$refs.cnvDetails.items[i].oid == this.urlQuery.variantId) {
-                            this.getCNVDetails(this.$refs.cnvDetails.items[i]);
-                            break;
+                    else if (this.urlQuery.variantType == 'cnv') {
+                        for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
+                            if (this.$refs.cnvDetails.items[i].oid == this.urlQuery.variantId) {
+                                this.$nextTick(this.getCNVDetails(this.$refs.cnvDetails.items[i]));
+                                break;
+                            }
                         }
                     }
-                }
-                else if (this.urlQuery.variantType == 'translocation') {
-                    for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
-                        if (this.$refs.translocationDetails.items[i].oid == this.urlQuery.variantId) {
-                            this.getTranslocationDetails(this.$refs.translocationDetails.items[i]);
-                            break;
+                    else if (this.urlQuery.variantType == 'translocation') {
+                        for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
+                            if (this.$refs.translocationDetails.items[i].oid == this.urlQuery.variantId) {
+                                this.$nextTick(this.getTranslocationDetails(this.$refs.translocationDetails.items[i]));
+                                break;
+                            }
                         }
                     }
-                }
+                }, delay);
             }
-            //finally, open edit annotation
+            // //finally, open edit annotation
+            // if (this.urlQuery.edit === true) {
+            //     setTimeout(() => {
+            //         this.startUserAnnotations()
+            //     }, 2000);
+            // }
+           
+            //build the breadcrumb trail
+            this.breadcrumbs = [];
+            this.breadcrumbs.push(this.breadcrumbItemWorkOnCase);
+            if (this.urlQuery.showReview === true) {
+                this.breadcrumbs.push(this.breadcrumbItemReview);
+            }
+            if (this.urlQuery.variantId && this.urlQuery.variantType) {
+                this.breadcrumbs.push(this.breadcrumbItemVariantDetails);
+            }
             if (this.urlQuery.edit === true) {
-                this.startUserAnnotations();
+                this.breadcrumbs.push(this.breadcrumbItemEditAnnotation);
             }
+
+        },
+        breadcrumbNavigation(index) {
+            //change the urlQuery based on walking up the breadcrumbs
+            var goBack = this.breadcrumbs.length - index;
+            for (var i = 0; i < goBack; i++) {
+                var currentBreadcrumb = this.breadcrumbs.pop();
+                for (var j = 0; j < currentBreadcrumb.params.length; j++) {
+                    this.urlQuery[currentBreadcrumb.params[j]] = null;
+                }
+            }
+            this.updateRoute();
+        },
+        disableBreadCrumbItem(item, index) {
+            return (item.disabled || index == this.breadcrumbs.length - 1);
         },
         addCustomWarningFlags(snpIndelVariantSummary) {
             for (var i = 0; i < snpIndelVariantSummary.items.length; i++) {
@@ -1198,7 +1257,7 @@ const OpenCase = {
             this.isLastVariant = table.isLastItem(currentIndex);
 
 
-            this.loadingVariantDetails = true;
+            // this.loadingVariantDetails = true;
             axios.get(
                 webAppRoot + "/getVariantDetails",
                 {
@@ -1369,6 +1428,11 @@ const OpenCase = {
                         this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
+                        this.updateVariantDetails();
+
+                         //finally, open edit annotation
+                         this.handleEditAnnotationOpening();
+                     
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getVariantDetails.bind(null,
@@ -1384,7 +1448,7 @@ const OpenCase = {
             this.currentVariantType = "cnv";
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
-            this.loadingVariantDetails = true;
+            // this.loadingVariantDetails = true;
 
             var table; //could be the selected variant table or the regular one
             if (this.saveDialogVisible) {
@@ -1445,6 +1509,9 @@ const OpenCase = {
                         this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
+                        this.updateVariantDetails();
+                         //finally, open edit annotation
+                         this.handleEditAnnotationOpening();
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getCNVDetails.bind(null,
@@ -1531,6 +1598,9 @@ const OpenCase = {
                         this.loadingVariantDetails = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
+                        this.updateVariantDetails();
+                         //finally, open edit annotation
+                         this.handleEditAnnotationOpening();
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getTranslocationDetails.bind(null,
@@ -1541,6 +1611,13 @@ const OpenCase = {
                     console.log(error);
                     bus.$emit("some-error", [this, error]);
                 });
+        },
+        handleEditAnnotationOpening() {
+            if (this.urlQuery.edit === true) {
+                setTimeout(() => {
+                    this.startUserAnnotations();
+                }, 1000);
+            }
         },
         formatSNPCallers(callers) {
             var labels = ['Name:', 'Alt:', 'Tumor Total Depth:', 'Tumor Alt Percent:', 'Normal Total Depth:', 'Normal Alt Percent:'];
@@ -1878,13 +1955,22 @@ const OpenCase = {
             this.updateSelectedVariantTable();
             this.toggleHTMLOverlay(true);
             this.saveDialogVisible = true;
+            this.urlQuery.showReview = true;
+            this.updateRoute();
+            // //add breadcrumb if not the last already to avoid duplicates
+            // if (this.breadcrumbs[this.breadcrumbs.length - 1].text != this.breadcrumbItemReview.text) {
+            //     this.breadcrumbs.push(this.breadcrumbItemReview);
+
+            // }
         },
-        closeSaveDialog(goBack) { //goBack if coming from a button, not from the navigation
+        closeSaveDialog() {
             this.saveDialogVisible = false;
             this.toggleHTMLOverlay(false);
-            if (goBack) {
-                router.back();
-            }
+            this.urlQuery.showReview = false;
+            this.updateRoute();
+        },
+        updateRoute() {
+            router.push({query: this.urlQuery});
         },
         saveSelection() {
             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
@@ -2028,12 +2114,12 @@ const OpenCase = {
             link += "&caseId=" + this.$route.params.id;
             return link;
         },
-        closeVariantDetails(goBack) {
+        closeVariantDetails() {
             this.variantDetailsVisible = false;
             this.toggleHTMLOverlay(false);
-            if (goBack) {
-                router.back();
-            }
+            this.urlQuery.variantId = null;
+            this.urlQuery.variantType = null;
+            this.updateRoute();
         },
         toggleHTMLOverlay(hideScrollBar) {
             var html = document.querySelector("html");
@@ -2157,33 +2243,18 @@ const OpenCase = {
             document.body.removeChild(hiddenElement);
 
         },
-        updateVariantDetailsBreadCrumbs(visible) {
-            if (visible) {
+        updateVariantDetails() {
             this.urlQuery.variantId = this.currentVariant._id.$oid;
             this.urlQuery.variantType = this.currentVariantType;
-            router.push({query: this.urlQuery});
-            }
-            else {
-            // router.back();
-            }
+            this.updateRoute();
         },
         updateSaveDialogBreadCrumbs(visible) {
-            if (visible) {
                 this.urlQuery.showReview = true;
-                router.push({query: this.urlQuery});
-            }
-            else {
-                // router.back();
-            }
+                this.updateRoute();
         },
         updateEditAnnotationBreadcrumbs(visible) {
-            if (visible) {
                 this.urlQuery.edit = true;
-                router.push({query: this.urlQuery});
-            }
-            else {
-                router.back();
-            }
+                this.updateRoute();
         },
         saveCaseAnnotations() {
             axios({
@@ -2539,8 +2610,8 @@ const OpenCase = {
     },
     watch: {
         '$route': 'handleRouteChanged',
-        variantDetailsVisible: "updateVariantDetailsBreadCrumbs",
-        saveDialogVisible: "updateSaveDialogBreadCrumbs",
+        // variantDetailsVisible: "updateVariantDetailsBreadCrumbs",
+        // saveDialogVisible: "updateSaveDialogBreadCrumbs",
         variantTabActive: "handleTabChanged",
         // saveDialogVisible: "handleSaveDialogRouteChanged"
         // breadcrumbs: function() {

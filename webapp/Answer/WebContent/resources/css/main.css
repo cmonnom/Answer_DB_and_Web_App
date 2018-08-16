@@ -216,11 +216,11 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
     width: 100%;
 }
 
-.breadcrumbs {
+/* .breadcrumbs {
     right: 5px;
     position: fixed;
     padding: 0px;
-}
+} */
 
 .margin-auto {
     margin: auto;
