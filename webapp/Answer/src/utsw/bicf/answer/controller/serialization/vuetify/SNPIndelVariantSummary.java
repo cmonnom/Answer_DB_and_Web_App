@@ -43,6 +43,8 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		iconFlags.setSortable(false);
 		iconFlags.setAlign("left");
 		headers.add(iconFlags);
+		Header exonNb = new Header("Exon #", "rank");
+		headers.add(exonNb);
 		Header effects = new Header("Effects", "effects");
 		effects.setWidth("220px");
 		effects.setWidthValue(220);

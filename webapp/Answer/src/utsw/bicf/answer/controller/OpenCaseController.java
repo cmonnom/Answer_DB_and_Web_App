@@ -103,6 +103,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveVariant",
 				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveSelectedAnnotationsForVariant",
+				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".sendToMDA",
 				IndividualPermission.CAN_SELECT);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getPatientDetails",
@@ -416,7 +418,7 @@ public class OpenCaseController {
 			if (variantDetails.getReferenceVariant() != null
 					&& variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
 				for (Annotation a : variantDetails.getReferenceVariant().getUtswAnnotations()) {
-					Annotation.init(a, modelDAO); // format dates and add missing info
+					Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
 				}
 				// Sort annotation by last modified
 				variantDetails.getReferenceVariant().setUtswAnnotations(variantDetails.getReferenceVariant()
@@ -451,7 +453,7 @@ public class OpenCaseController {
 		CNV variantDetails = utils.getCNVDetails(variantId);
 		if (variantDetails != null) {
 			for (Annotation a : variantDetails.getReferenceCnv().getUtswAnnotations()) {
-				Annotation.init(a, modelDAO); // format dates and add missing info
+				Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
 			}
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(variantDetails);
@@ -470,7 +472,7 @@ public class OpenCaseController {
 		Translocation variantDetails = utils.getTranslocationDetails(variantId);
 		if (variantDetails != null) {
 			for (Annotation a : variantDetails.getReferenceTranslocation().getUtswAnnotations()) {
-				Annotation.init(a, modelDAO); // format dates and add missing info
+				Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
 			}
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(variantDetails);
@@ -739,6 +741,7 @@ public class OpenCaseController {
 					response.setMessage("User " + user.getFullName() + " cannot edit this case.");
 					return response.createObjectJSON();
 				}
+//				stripVariant(variant);
 				utils.saveVariant(response, variant, variantType, variant.getMongoDBId().getOid());
 				return response.createObjectJSON();
 			}
@@ -752,6 +755,100 @@ public class OpenCaseController {
 			return response.createObjectJSON();
 		}
 	}
+	
+	@RequestMapping(value = "/saveSelectedAnnotationsForVariant")
+	@ResponseBody
+	public String saveSelectedAnnotationsForVariant(Model model, HttpSession session, @RequestBody String data,
+			@RequestParam String caseId, @RequestParam String variantType) throws Exception {
+
+		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode nodeData = mapper.readTree(data);
+		
+		OrderCase orderCase = utils.getCaseDetails(caseId, null);
+		if (orderCase == null) {
+			response.setMessage("No case found");
+			return response.createObjectJSON();
+		}
+		if (orderCase != null && !orderCase.getAssignedTo().contains(user.getUserId().toString())) {
+			response.setMessage("User " + user.getFullName() + " cannot edit this case.");
+			return response.createObjectJSON();
+		}
+		
+		if (variantType.equals("snp")) {
+			Variant variant = mapper.readValue(nodeData.get("variant").toString(), Variant.class);
+			if (variant != null) {
+//				stripVariantForAnnotations(variant);
+				variant.setType(variantType);
+				utils.saveSelectedAnnotations(response, variant, variantType, variant.getMongoDBId().getOid());
+				return response.createObjectJSON();
+			}
+			else { 
+				response.setMessage("Nothing to save");
+				return response.createObjectJSON();
+			}
+		}
+		else if (variantType.equals("cnv")) {
+			CNV variant = mapper.readValue(nodeData.get("variant").toString(), CNV.class);
+			if (variant != null) {
+//				stripVariantForAnnotations(variant);
+				variant.setType(variantType);
+				utils.saveSelectedAnnotations(response, variant, variantType, variant.getMongoDBId().getOid());
+				return response.createObjectJSON();
+			}
+			else { 
+				response.setMessage("Nothing to save");
+				return response.createObjectJSON();
+			}
+		}
+		else if (variantType.equals("translocation")) {
+			Translocation variant = mapper.readValue(nodeData.get("variant").toString(), Translocation.class);
+			if (variant != null) {
+//				stripVariantForAnnotations(variant);
+				variant.setType(variantType);
+				utils.saveSelectedAnnotations(response, variant, variantType, variant.getMongoDBId().getOid());
+				return response.createObjectJSON();
+			}
+			else { 
+				response.setMessage("Nothing to save");
+				return response.createObjectJSON();
+			}
+		}
+		return response.createObjectJSON();
+	}
+	
+	/**
+	 * Remove heavy or transient objects from Variant
+	 * to make it lighter or to avoid saving unwanted fields
+	 * For instance we don't want to save the annotations selected
+	 * when saving the variant tier
+	 * @param variant
+	 */
+//	private static void stripVariant(Variant variant) {
+//		variant.setReferenceVariant(null);
+//		variant.setAnnotationIdsForReporting(null);
+//		variant.setVcfAnnotations(null);
+//		variant.setRelatedVariants(null);
+//	}
+//	
+//	private static void stripVariantForAnnotations(Variant variant) {
+//		variant.setReferenceVariant(null);
+//		variant.setTier(null);
+//		variant.setVcfAnnotations(null);
+//		variant.setRelatedVariants(null);
+//	}
+//	
+//	private static void stripVariantForAnnotations(CNV variant) {
+//		variant.setGenes(null);
+//	}
+//	
+//	private static void stripVariantForAnnotations(Translocation variant) {
+//		variant.setReferenceTranslocation(null);
+//	}
 	
 	public static boolean isUserAssignedToCase(RequestUtils utils, String caseId, User user) throws ClientProtocolException, IOException, URISyntaxException {
 		OrderCase caseSummary = utils.getCaseSummary(caseId);

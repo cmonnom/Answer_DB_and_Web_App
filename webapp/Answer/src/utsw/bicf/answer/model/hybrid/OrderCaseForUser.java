@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import utsw.bicf.answer.controller.serialization.Button;
+import utsw.bicf.answer.controller.serialization.FlagValue;
+import utsw.bicf.answer.controller.serialization.VuetifyIcon;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 
 public class OrderCaseForUser {
@@ -16,6 +18,7 @@ public class OrderCaseForUser {
 	String patientName;
 	
 	List<Button> buttons = new ArrayList<Button>();
+	FlagValue iconFlags;
 	
 	public OrderCaseForUser(OrderCase orderCase) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
@@ -25,6 +28,20 @@ public class OrderCaseForUser {
 		this.dateReceived = orderCase.getReceivedDate();
 		this.patientName = orderCase.getPatientName();
 		buttons.add(new Button("create", "open", "Work on Case", "info"));
+		
+		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
+		int step = 0;
+		int totalSteps = OrderCase.getTotalSteps();
+		if (orderCase.getHistory() != null && !orderCase.getHistory().isEmpty()) {
+			step = orderCase.getHistory().get(orderCase.getHistory().size() - 1).getStep(); //get the last step
+		}
+		
+		for (int i = 0; i < totalSteps; i++) {
+			String color = i <= step ? "info" : "grey";
+			icons.add(new VuetifyIcon("mdi-numeric-" + i + "-box", color, OrderCase.getStepTooltip(i)));
+		}
+		
+		iconFlags = new FlagValue(icons);
 	}
 
 	public String getEpicOrderNumber() {
@@ -57,6 +74,10 @@ public class OrderCaseForUser {
 
 	public void setPatientName(String patientName) {
 		this.patientName = patientName;
+	}
+
+	public FlagValue getIconFlags() {
+		return iconFlags;
 	}
 
 

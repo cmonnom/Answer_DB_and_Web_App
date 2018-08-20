@@ -4,6 +4,19 @@ const OpenCase = {
 
     },
     template: `<div>
+    
+    <!-- splash screen dialog -->
+    <div class="splash-screen" v-if="splashDialog">
+    <v-layout align-center justify-center row fill-height class="splash-screen-item">
+    <v-progress-circular
+    :size="100"
+    :width="10"
+    color="teal"
+    indeterminate  ></v-progress-circular>
+  </v-layout>
+  </div>
+
+    <div>
     <v-dialog v-model="confirmationDialogVisible" max-width="300px">
         <v-card>
             <v-card-text v-html="confirmationMessage" class="pl-2 pr-2 subheading">
@@ -31,14 +44,14 @@ const OpenCase = {
                     </v-btn>
                     <v-list>
 
-                    <v-list-tile avatar @click="saveSelection()" :disabled="saveVariantDisabled || saveLoading">
-                    <v-list-tile-avatar>
-                        <v-icon>save</v-icon>
-                    </v-list-tile-avatar>
-                    <v-list-tile-content>
-                        <v-list-tile-title>Save Selected Variants</v-list-tile-title>
-                    </v-list-tile-content>
-                </v-list-tile>
+                        <v-list-tile avatar @click="saveSelection()" :disabled="saveVariantDisabled || saveLoading">
+                            <v-list-tile-avatar>
+                                <v-icon>save</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Save Selected Variants</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
 
                         <v-list-tile avatar @click="exportSelectedVariants()" :disabled="saveVariantDisabled || exportLoading">
                             <v-list-tile-avatar>
@@ -58,7 +71,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                       
+
 
                         <v-list-tile avatar @click="closeSaveDialog()">
                             <v-list-tile-avatar>
@@ -100,12 +113,13 @@ const OpenCase = {
             </v-toolbar>
             <v-card-text :style="getDialogMaxHeight(120)">
 
-            <v-breadcrumbs class="pt-2" >
-            <v-icon slot="divider">forward</v-icon>
-                <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)" @click.native="breadcrumbNavigation(index)">
-                {{ item.text }}
-                </v-breadcrumbs-item>
-            </v-breadcrumbs>
+                <v-breadcrumbs class="pt-2">
+                    <v-icon slot="divider">forward</v-icon>
+                    <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"
+                        @click.native="breadcrumbNavigation(index)">
+                        {{ item.text }}
+                    </v-breadcrumbs-item>
+                </v-breadcrumbs>
 
                 <v-card v-show="!areReportableGeneSelected()" class="mt-2 mb-2">
                     <v-card-text>
@@ -141,16 +155,13 @@ const OpenCase = {
                     </v-card-text>
                 </v-card>
                 <data-table ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected SNP/Indel Variants"
-                    initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3"
-                    :color="colors.saveReview">
+                    initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" :color="colors.saveReview">
                 </data-table>
                 <data-table ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected CNVs" initial-sort="chrom"
-                    no-data-text="No Data" :show-row-count="true" class="pb-3"
-                    :color="colors.saveReview">
+                    no-data-text="No Data" :show-row-count="true" class="pb-3" :color="colors.saveReview">
                 </data-table>
                 <data-table ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected Translocations"
-                    initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3"
-                    :color="colors.saveReview">
+                    initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" :color="colors.saveReview">
                 </data-table>
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
@@ -180,31 +191,32 @@ const OpenCase = {
     </v-dialog>
 
     <!-- annotation dialog -->
-    <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" :color="colors.editAnnotation"
-        ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"
-        :breadcrumbs="breadcrumbs"
+    <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
+        :color="colors.editAnnotation" ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"
+        :breadcrumbs="breadcrumbs" :annotation-categories="annotationCategories" :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
         @breadcrumb-navigation="breadcrumbNavigation"></edit-annotations>
 
-    <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" :color="colors.editAnnotation"
-        ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'"" @toggle-panel="handlePanelVisibility()"
-        :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation">
+    <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
+        :color="colors.editAnnotation" ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'" @toggle-panel="handlePanelVisibility()"
+        :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories-c-n-v="annotationCategoriesCNV"
+        :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg11 xl10 mb-2 v-show="editAnnotationVariantDetailsVisible">
-                <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable"
-                :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
-                @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()"
-                @revert-variant="revertVariant" @save-variant="saveVariant" :color="colors.editAnnotation"
-                ref="cnvVariantDetailsPanel">
+                <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()"
+                    :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
+                    @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" @save-variant="saveVariant" :color="colors.editAnnotation"
+                    ref="cnvVariantDetailsPanel">
 
                 </variant-details>
             </v-flex>
         </v-slide-y-transition>
-                       
-        </edit-annotations>
 
-    <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs" :color="colors.editAnnotation"
-        ref="translocationAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'""
-        :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation"></edit-annotations>
+    </edit-annotations>
+
+    <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
+        :color="colors.editAnnotation" ref="translocationAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'"
+        :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories="annotationCategories"
+        :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"></edit-annotations>
 
     <!-- variant details dialog -->
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
@@ -220,7 +232,7 @@ const OpenCase = {
                                 <v-list-tile-title>
                                     <v-menu offset-y offset-x open-on-hover>
                                         <span slot="activator">
-                                            <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide 
+                                            <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide
                                             <!-- This is a hack to extend the menu active area because the title is much shorter than other items -->
                                             <span v-for="i in 30" :key="i">&nbsp;</span>
                                         </span>
@@ -393,15 +405,16 @@ const OpenCase = {
                 </v-tooltip>
 
             </v-toolbar>
-            
+
             <v-card-text :style="getDialogMaxHeight(120)">
 
-            <v-breadcrumbs class="pt-2 pb-2">
-            <v-icon slot="divider">forward</v-icon>
-                <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"  @click.native="breadcrumbNavigation(index)">
-                {{ item.text }}
-                </v-breadcrumbs-item>
-            </v-breadcrumbs>
+                <v-breadcrumbs class="pt-2 pb-2">
+                    <v-icon slot="divider">forward</v-icon>
+                    <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"
+                        @click.native="breadcrumbNavigation(index)">
+                        {{ item.text }}
+                    </v-breadcrumbs-item>
+                </v-breadcrumbs>
 
                 <v-container grid-list-md fluid>
                     <v-layout row wrap>
@@ -417,12 +430,11 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 md12 lg11 xl10 v-show="annotationVariantDetailsVisible">
 
-                            <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable"
-                            :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
-                            @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()"
-                            @revert-variant="revertVariant" @save-variant="saveVariant" :color="colors.variantDetails"
-                            ref="variantDetailsPanel">
-                            </variant-details>
+                                <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable"
+                                    :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
+                                    @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
+                                    @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel">
+                                </variant-details>
 
                             </v-flex>
                         </v-slide-y-transition>
@@ -430,8 +442,7 @@ const OpenCase = {
                             <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedVariantsVisible()">
                                 <div>
                                     <data-table ref="relatedVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related Variants" initial-sort="geneId"
-                                        no-data-text="No Data" :show-pagination="false" title-icon="link"
-                                        :color="colors.variantDetails">
+                                        no-data-text="No Data" :show-pagination="false" title-icon="link" :color="colors.variantDetails">
                                     </data-table>
                                 </div>
                             </v-flex>
@@ -449,8 +460,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="annotationVariantOtherVisible  && isSNP()">
                                 <data-table ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false" table-title="Other VCF Annotations" initial-sort="geneId"
-                                    no-data-text="No Data" :show-row-count="true" title-icon="mdi-table-search"
-                                    :color="colors.variantDetails">
+                                    no-data-text="No Data" :show-row-count="true" title-icon="mdi-table-search" :color="colors.variantDetails">
                                 </data-table>
                             </v-flex>
                         </v-slide-y-transition>
@@ -484,11 +494,71 @@ const OpenCase = {
                             <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
                                 <v-card class="soft-grey-background">
                                     <v-toolbar class="elevation-0" dense dark :color="colors.variantDetails">
-                                        <v-toolbar-title>
-                                            <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
-                                            UTSW Annotations
-                                        </v-toolbar-title>
+                                    <v-menu offset-y offset-x class="ml-0">
+                                    <v-btn slot="activator" flat icon dark>
+                                                <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
+                                            </v-btn>
+                                            <v-list>
+                                                <v-list-tile avatar @click="searchAnnotationsVisible = !searchAnnotationsVisible">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>search</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Show/Hide Search Annotations</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+
+                                                <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="saveAnnotationSelection()" :loading="savingAnnotationSelection">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>save</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Save Selection</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+
+                                            <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="revertAnnotationSelection()">
+                                                <v-list-tile-avatar>
+                                                    <v-icon>settings_backup_restore</v-icon>
+                                                </v-list-tile-avatar>
+                                                <v-list-tile-content>
+                                                    <v-list-tile-title>Restore Last Saved Selection</v-list-tile-title>
+                                                </v-list-tile-content>
+                                            </v-list-tile>
+
+                                                <v-list-tile avatar @click="utswAnnotationsVisible = false">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>mdi-message-bulleted</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Close UTSW Annotations</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+                                            </v-list>
+                                </v-menu>
+                                        <v-toolbar-title class="ml-0">UTSW Annotations</v-toolbar-title>
                                         <v-spacer></v-spacer>
+                                        <v-tooltip bottom>
+                                            <v-btn flat icon @click="searchAnnotationsVisible = !searchAnnotationsVisible" slot="activator" :color="searchAnnotationsVisible ? 'amber accent-2' : ''">
+                                                <v-icon>search</v-icon>
+                                            </v-btn>
+                                            <span>Show/Hide Search Annotations</span>
+                                        </v-tooltip>
+                                        <v-badge color="red" v-if="canProceed('canAnnotate') && !readonly" right bottom overlap v-model="annotationSelectionUnSaved" class="mini-badge">
+                                            <v-icon slot="badge"></v-icon>
+                                            <v-tooltip bottom>
+                                                <v-btn flat icon @click="saveAnnotationSelection()" slot="activator">
+                                                    <v-icon>save</v-icon>
+                                                </v-btn>
+                                                <span>Save Selection</span>
+                                            </v-tooltip>
+                                        </v-badge>
+                                        <v-tooltip bottom>
+                                            <v-btn flat icon v-if="canProceed('canAnnotate') && !readonly" @click="revertAnnotationSelection()" slot="activator">
+                                                <v-icon>settings_backup_restore</v-icon>
+                                            </v-btn>
+                                            <span>Restore Last Saved Selection</span>
+                                        </v-tooltip>
                                         <v-tooltip bottom>
                                             <v-btn icon @click="utswAnnotationsVisible = false" slot="activator">
                                                 <v-icon>close</v-icon>
@@ -499,8 +569,54 @@ const OpenCase = {
                                     <v-card-text>
                                         <v-container grid-list-md fluid>
                                             <v-layout row wrap>
-                                                <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in utswAnnotationsFormatted" :key="index">
-                                                    <utsw-annotation-card :annotation="annotation" :variant-type="currentVariantType"></utsw-annotation-card>
+                                            <v-slide-y-transition>
+                                                <v-flex xs12 v-show="searchAnnotationsVisible">
+                                                    <v-card>
+                                                        <v-card-title class="subheading">
+                                                            Search Annotation Cards
+                                                            <v-spacer></v-spacer>
+
+                                                        </v-card-title>
+                                                        <v-card-text class="pl-2 pr-2">
+                                                            <v-layout row wrap>
+                                                                <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                    <v-text-field clearable append-icon="search" label="Search any text" v-model="searchAnnotations" @input="matchAnnotationFilter"></v-text-field>
+                                                                </v-flex>
+                                                                <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                    <v-select v-if="isSNP() || isTranslocation()" clearable :value="searchAnnotationCategory" :items="annotationCategories" v-model="searchAnnotationCategory"
+                                                                        label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
+                                                                    <v-select v-if="isCNV()" clearable :value="searchAnnotationCategory" :items="annotationCategoriesCNV" v-model="searchAnnotationCategory"
+                                                                        label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
+                                                                </v-flex>
+
+                                                                <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                    <v-select clearable :value="searchAnnotationClassification" :items="annotationClassifications" v-model="searchAnnotationClassification"
+                                                                        label="Search by Classification" multiple @input="matchAnnotationFilter"></v-select>
+                                                                </v-flex>
+
+                                                                <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                    <v-select clearable :value="searchAnnotationTier" :items="variantTiers" v-model="searchAnnotationTier" label="Search by Tier"
+                                                                        multiple @input="matchAnnotationFilter"></v-select>
+                                                                </v-flex>
+
+                                                                <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                    <v-select v-if="isSNP()" clearable :value="searchAnnotationScope" :items="scopesSNP" v-model="searchAnnotationScope" label="Search by Scope"
+                                                                        multiple @input="matchAnnotationFilter"></v-select>
+                                                                    <v-select v-if="isCNV()" clearable :value="searchAnnotationScope" :items="scopesCNV" v-model="searchAnnotationScope" label="Search by Scope"
+                                                                        multiple @input="matchAnnotationFilter"></v-select>
+                                                                    <v-select v-if="isTranslocation()" clearable :value="searchAnnotationScope" :items="scopesTranslocation" v-model="searchAnnotationScope"
+                                                                        label="Search by Scope" multiple @input="matchAnnotationFilter"></v-select>
+                                                                </v-flex>
+
+                                                            </v-layout>
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-flex>
+                                                </v-slide-y-transition>    
+                                                <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in utswAnnotationsFormatted" :key="index" v-show="annotation.visible">
+                                                    <utsw-annotation-card :annotation="annotation" :variant-type="currentVariantType"
+                                                    :no-edit="!canProceed('canAnnotate') || readonly"
+                                                    @annotation-selection-changed="handleAnnotationSelectionChanged()"></utsw-annotation-card>
                                                 </v-flex>
                                             </v-layout>
                                         </v-container>
@@ -518,10 +634,12 @@ const OpenCase = {
                     </v-btn>
                     <span>Create/Edit Your Annotations</span>
                 </v-tooltip>
-                <v-btn v-if="!currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect') || readonly" color="success" @click="selectVariantForReport()" slot="activator">Select Variant
+                <v-btn v-if="!currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect') || readonly" color="success"
+                    @click="selectVariantForReport()" slot="activator">Select Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect') || readonly" color="warning" @click="removeVariantFromReport()" slot="activator">Deselect Variant
+                <v-btn v-if="currentRow.isSelected" :disabled="saveDialogVisible || !canProceed('canSelect') || readonly" color="warning"
+                    @click="removeVariantFromReport()" slot="activator">Deselect Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
                 <v-tooltip top>
@@ -603,9 +721,9 @@ const OpenCase = {
             <span>Show/Hide Case Notes</span>
         </v-tooltip>
         <v-tooltip bottom>
-        <v-btn icon flat slot="activator" :href="qcUrl" target="_blank" rel="noreferrer" :disabled="!qcUrl">
-        QC
-        </v-btn>
+            <v-btn icon flat slot="activator" :href="qcUrl" target="_blank" rel="noreferrer" :disabled="!qcUrl">
+                QC
+            </v-btn>
             <span>Open QC in NuCLIA</span>
         </v-tooltip>
         <v-badge color="red" right bottom overlap v-model="variantUnSaved" class="mini-badge">
@@ -617,14 +735,15 @@ const OpenCase = {
                 <span>Review Variants Selected</span>
             </v-tooltip>
         </v-badge>
-        <v-progress-linear class="ml-4 mr-4" :slot="loadingVariantDetails ? 'extension' : ''" v-show="!caseName || loadingVariantDetails"
+        <v-progress-linear class="ml-4 mr-4" :slot="loadingVariantDetails ? 'extension' : ''" v-show="(!caseName || loadingVariantDetails) && !splashDialog"
             :indeterminate="true" color="white"></v-progress-linear>
     </v-toolbar>
 
     <v-breadcrumbs class="pt-2">
-    <v-icon slot="divider">forward</v-icon>
-        <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"  @click.native="breadcrumbNavigation(index)">
-        {{ item.text }}
+        <v-icon slot="divider">forward</v-icon>
+        <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"
+            @click.native="breadcrumbNavigation(index)">
+            {{ item.text }}
         </v-breadcrumbs-item>
     </v-breadcrumbs>
 
@@ -634,57 +753,56 @@ const OpenCase = {
                 <div class="text-xs-center pb-3">
                     <v-card>
                         <v-toolbar class="elevation-0" dense dark :color="colors.openCase">
-                            <!-- <v-icon>perm_identity</v-icon> -->
                             <v-menu offset-y offset-x class="ml-0">
-                                            <v-btn slot="activator" flat icon dark>
-                                                <v-icon color="amber accent-2">assignment_ind</v-icon>
-                                            </v-btn>
-                                            <v-list>
-                                                <v-list-tile avatar @click="savePatientDetails()" :disabled="!canProceed('canAnnotate') || readonly">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>save</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Save Patient Details</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
+                                <v-btn slot="activator" flat icon dark>
+                                    <v-icon color="amber accent-2">assignment_ind</v-icon>
+                                </v-btn>
+                                <v-list>
+                                    <v-list-tile avatar @click="savePatientDetails()" :disabled="!canProceed('canAnnotate') || readonly">
+                                        <v-list-tile-avatar>
+                                            <v-icon>save</v-icon>
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>Save Patient Details</v-list-tile-title>
+                                        </v-list-tile-content>
+                                    </v-list-tile>
 
-                                                <v-list-tile avatar @click="getPatientDetails()" :disabled="!canProceed('canAnnotate') || readonly">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>settings_backup_restore</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Restore From Last Saved</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
+                                    <v-list-tile avatar @click="getPatientDetails()" :disabled="!canProceed('canAnnotate') || readonly">
+                                        <v-list-tile-avatar>
+                                            <v-icon>settings_backup_restore</v-icon>
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>Restore From Last Saved</v-list-tile-title>
+                                        </v-list-tile-content>
+                                    </v-list-tile>
 
-                                                <v-list-tile avatar @click="patientDetailsVisible = false">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>cancel</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Close Patient Details</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-                                            </v-list>
-                                        </v-menu>
+                                    <v-list-tile avatar @click="patientDetailsVisible = false">
+                                        <v-list-tile-avatar>
+                                            <v-icon>cancel</v-icon>
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>Close Patient Details</v-list-tile-title>
+                                        </v-list-tile-content>
+                                    </v-list-tile>
+                                </v-list>
+                            </v-menu>
                             <v-toolbar-title>Patient Details</v-toolbar-title>
                             <v-spacer></v-spacer>
-                                        <v-badge color="red" right bottom overlap v-model="patientDetailsUnSaved" class="mini-badge">
-                                            <v-icon slot="badge"></v-icon>
-                                            <v-tooltip bottom>
-                                                <v-btn flat icon @click="savePatientDetails()" slot="activator" :loading="savingPatientDetails" :disabled="!canProceed('canAnnotate')  || readonly">
-                                                    <v-icon>save</v-icon>
-                                                </v-btn>
-                                                <span>Save Patient Details</span>
-                                            </v-tooltip>
-                                        </v-badge>
-                                        <v-tooltip bottom>
-                                            <v-btn flat icon @click="getPatientDetails()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">
-                                                <v-icon>settings_backup_restore</v-icon>
-                                            </v-btn>
-                                            <span>Restore Last Saved Patient Details</span>
-                                        </v-tooltip>
+                            <v-badge color="red" right bottom overlap v-model="patientDetailsUnSaved" class="mini-badge">
+                                <v-icon slot="badge"></v-icon>
+                                <v-tooltip bottom>
+                                    <v-btn flat icon @click="savePatientDetails()" slot="activator" :loading="savingPatientDetails" :disabled="!canProceed('canAnnotate')  || readonly">
+                                        <v-icon>save</v-icon>
+                                    </v-btn>
+                                    <span>Save Patient Details</span>
+                                </v-tooltip>
+                            </v-badge>
+                            <v-tooltip bottom>
+                                <v-btn flat icon @click="getPatientDetails()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">
+                                    <v-icon>settings_backup_restore</v-icon>
+                                </v-btn>
+                                <span>Restore Last Saved Patient Details</span>
+                            </v-tooltip>
                             <v-tooltip bottom>
                                 <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
                                     <v-icon>close</v-icon>
@@ -706,18 +824,17 @@ const OpenCase = {
                                                             </v-flex>
                                                             <v-flex :class="[item.type ? 'xs5' : 'xs7','text-xs-right', 'grow', 'blue-grey--text', 'text--lighten-1']">
                                                                 <span v-if="item.type == null" class="selectable">{{ item.value }}</span>
-                                                                <v-text-field :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text'" class="pt-2"
-                                                                value="patientDetailsOncoTreeDiagnosis" v-model="patientDetailsOncoTreeDiagnosis" hide-details
-                                                                @input="patientDetailsUnSaved = true">
+                                                                <v-text-field :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text'" class="pt-2" value="patientDetailsOncoTreeDiagnosis"
+                                                                    v-model="patientDetailsOncoTreeDiagnosis" hide-details @input="patientDetailsUnSaved = true">
                                                                 </v-text-field>
                                                             </v-flex>
                                                             <v-flex xs2 v-if="item.type == 'text'">
-                                                            <v-tooltip bottom>
-                                                            <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator">
-                                                                <v-icon> open_in_new</v-icon>
-                                                            </v-btn>
-                                                            <span>Open OncoTree in New Tab</span>
-                                                        </v-tooltip>
+                                                                <v-tooltip bottom>
+                                                                    <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator">
+                                                                        <v-icon> open_in_new</v-icon>
+                                                                    </v-btn>
+                                                                    <span>Open OncoTree in New Tab</span>
+                                                                </v-tooltip>
                                                             </v-flex>
                                                         </v-layout>
                                                     </v-list-tile-content>
@@ -753,18 +870,21 @@ const OpenCase = {
                         </v-tooltip>
                     </v-toolbar>
                     <v-card-text>
-                        <v-text-field :textarea="true" :readonly="!canProceed('canAnnotate') || readonly" :disabled="!canProceed('canAnnotate') || readonly" v-model="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
+                        <v-text-field :textarea="true" :readonly="!canProceed('canAnnotate') || readonly" :disabled="!canProceed('canAnnotate') || readonly"
+                            v-model="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
                         </v-text-field>
                     </v-card-text>
                     <v-card-actions class="card-actions-bottom">
                         <v-tooltip bottom>
-                            <v-btn :disabled="!canProceed('canAnnotate') || loadingVariantDetails || isCaseAnnotationUnchanged() || readonly" slot="activator" color="success" @click="saveCaseAnnotations()">Save
+                            <v-btn :disabled="!canProceed('canAnnotate') || loadingVariantDetails || isCaseAnnotationUnchanged() || readonly" slot="activator"
+                                color="success" @click="saveCaseAnnotations()">Save
                                 <v-icon right dark>save</v-icon>
                             </v-btn>
                             <span>Save/Update Annotation</span>
                         </v-tooltip>
                         <v-tooltip bottom>
-                            <v-btn :disabled="!canProceed('canAnnotate') || loadingVariantDetails || isCaseAnnotationUnchanged() || readonly" slot="activator" color="error" @click="loadCaseAnnotations()">Discard Changes
+                            <v-btn :disabled="!canProceed('canAnnotate') || loadingVariantDetails || isCaseAnnotationUnchanged() || readonly" slot="activator"
+                                color="error" @click="loadCaseAnnotations()">Discard Changes
                                 <v-icon right dark>cancel</v-icon>
                             </v-btn>
                             <span>Revert to previous annotation</span>
@@ -790,9 +910,9 @@ const OpenCase = {
                 <!-- SNP / Indel table -->
                 <v-tab-item id="tab-snp">
                     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
-                        no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
-                        :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons" @datatable-selection-changed="handleSelectionChanged"
-                        :color="colors.openCase">
+                        no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true"
+                        @refresh-requested="handleRefresh()" :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons"
+                        @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
                         <v-fade-transition slot="action1">
                             <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
                                 <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
@@ -814,33 +934,31 @@ const OpenCase = {
                 <!-- CNV table -->
                 <v-tab-item id="tab-cnv">
                     <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
-                        :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()" :show-left-menu="true"
-                        @datatable-selection-changed="handleSelectionChanged"
-                        :color="colors.openCase">
+                        :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()"
+                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
                 <v-tab-item id="tab-translocation">
                     <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
                         no-data-text="No Data" :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()"
-                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged"
-                        :color="colors.openCase">
+                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
                     </data-table>
                 </v-tab-item>
             </v-tabs-items>
         </v-tabs>
     </v-slide-y-transition>
-
+</div>
 </div>`, data() {
         return {
             firstTimeLoading: true,
             loading: true,
             loadingVariantDetails: false,
             // breadcrumbs: [{text: "You are here:  Case", disabled: true}],
-            breadcrumbItemVariantDetails: { text: "Variant Details", disabled: false, params:["variantId", "variantType"] },
-            breadcrumbItemReview: { text: "Review", disabled: false, params:["showReview"] },
-            breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: false , params:["edit"] },
-            breadcrumbItemWorkOnCase: { text: "Case Overview", disabled: false, params:[]},
+            breadcrumbItemVariantDetails: { text: "Variant Details", disabled: false, params: ["variantId", "variantType"] },
+            breadcrumbItemReview: { text: "Review", disabled: false, params: ["showReview"] },
+            breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: false, params: ["edit"] },
+            breadcrumbItemWorkOnCase: { text: "Case Overview", disabled: false, params: [] },
             breadcrumbs: [],
             patientTables: [],
             patientDetailsVisible: false,
@@ -896,11 +1014,36 @@ const OpenCase = {
             variantTiers: [
                 '1A',
                 '1B',
-                '2A',
-                '2B',
+                '2C',
+                '2D',
                 '3',
                 '4',
                 '5'],
+            annotationCategories: [
+                'Gene Function',
+                'Variant Function',
+                'Therapy',
+                'Epidemiology',
+                'Prognosis',
+                'Diagnosis'],
+            annotationCategoriesCNV: [
+                'Chromosomal',
+                'Focal'],
+            annotationClassifications: [
+                'VUS',
+                'Benign',
+                'Likely benign',
+                'Likely pathogenic',
+                'Pathogenic'],
+            scopesSNP: [
+                'Case', 'Gene', 'Variant', 'Tumor'
+            ],
+            scopesCNV: [
+                'Case', 'Tumor'
+            ],
+            scopesTranslocation: [
+                'Case', 'Tumor'
+            ],
             variantDetailsUnSaved: false,
             patientDetailsUnSaved: false,
             savingVariantDetails: false,
@@ -923,14 +1066,27 @@ const OpenCase = {
                 variantDetails: "teal lighten-1",
                 saveReview: "teal",
                 editAnnotation: "teal darken-1"
-            }
+            },
+            searchAnnotations: "",
+            searchAnnotationsVisible: false,
+            searchAnnotationClassification: [],
+            searchAnnotationCategory: [],
+            searchAnnotationTier: [],
+            searchAnnotationScope: [],
+            annotationSelectionUnSaved: false,
+            savingAnnotationSelection: false,
+            splashDialog: splashDialog,
+            splashProgress: 0,
+            splashSteps: 0,
+            annotationIdsForReporting: [] //save the state of the selection in case the user close/open another page
+
         }
     }, methods: {
         canProceed(field) {
             if (isAdmin) {
                 return true;
             }
-            switch(field) {
+            switch (field) {
                 case "canAnnotate": return permissions.canAnnotate;
                 case "canSelect": return permissions.canSelect;
                 case "canView": return permissions.canView;
@@ -1008,11 +1164,23 @@ const OpenCase = {
                         setTimeout(() => {
                             this.variantTabsVisible = true;
                         }, 1000);
-                        
+
                         setTimeout(() => {
                             this.loadFromParams();
                         }, 500);
                     }
+                    //calculate progress
+                    this.splashSteps = 1;
+                    if (this.$route.query.variantId ? this.$route.query.variantId : null) {
+                        this.splashSteps ++;
+                    }
+                    if (this.$route.query.showReview === true || this.$route.query.showReview === "true") {
+                        this.splashSteps ++;
+                    }
+                    if (this.$route.query.edit === true || this.$route.query.edit === "true") {
+                        this.splashSteps ++;
+                    }
+                    this.splashSteps == 1 ? this.splashProgress = 100 : this.splashProgress = 30;
                 }
                 else {
                     this.handleDialogs(response.data, this.getAjaxData);
@@ -1035,6 +1203,18 @@ const OpenCase = {
             this.urlQuery.showReview = this.$route.query.showReview === true || this.$route.query.showReview === "true";
             this.urlQuery.edit = this.$route.query.edit === true || this.$route.query.edit === "true";
 
+            //calculate progress
+            this.splashSteps = 1;
+            if (this.urlQuery.variantId) {
+                this.splashSteps ++;
+            }
+            if (this.urlQuery.showReview) {
+                this.splashSteps ++;
+            }
+            if (this.urlQuery.edit) {
+                this.splashSteps ++;
+            }
+
             if (!this.urlQuery.showReview) { //close save/review dialog
                 this.closeSaveDialog();
             }
@@ -1042,20 +1222,25 @@ const OpenCase = {
                 this.closeVariantDetails();
             }
             if (!this.urlQuery.edit) { //close edit anntation
-                if (this.isSNP()) {
-                    this.$refs.annotationDialog.cancelAnnotations();
-                }
-                else if (this.isCNV()) {
-                    this.$refs.cnvAnnotationDialog.cancelAnnotations();
-                }
-                else if (this.isTranslocation()) {
-                    this.$refs.translocationAnnotationDialog.cancelAnnotations();
-                }
+                this.cancelAnnotations();
+                // if (this.isSNP()) {
+                //     this.$refs.annotationDialog.cancelAnnotations();
+                // }
+                // else if (this.isCNV()) {
+                //     this.$refs.cnvAnnotationDialog.cancelAnnotations();
+                // }
+                // else if (this.isTranslocation()) {
+                //     this.$refs.translocationAnnotationDialog.cancelAnnotations();
+                // }
             }
 
             //first open save/review dialog
             if (this.urlQuery.showReview === true) {
-                this.$nextTick( this.openSaveDialog());
+                this.$nextTick(this.openSaveDialog());
+               
+            }
+            if (this.urlQuery.variantType) {
+                this.variantTabActive = "tab-" + this.urlQuery.variantType;
             }
             //then open variant details
             if (this.urlQuery.variantId && this.urlQuery.variantType) {
@@ -1094,7 +1279,7 @@ const OpenCase = {
             //         this.startUserAnnotations()
             //     }, 2000);
             // }
-           
+
             //build the breadcrumb trail
             this.breadcrumbs = [];
             this.breadcrumbs.push(this.breadcrumbItemWorkOnCase);
@@ -1108,6 +1293,9 @@ const OpenCase = {
                 this.breadcrumbs.push(this.breadcrumbItemEditAnnotation);
             }
 
+        },
+        updateSplashProgress() {
+            this.splashProgress +=  Math.min(100, Math.floor(70 / (this.splashSteps - 1)));
         },
         breadcrumbNavigation(index) {
             //change the urlQuery based on walking up the breadcrumbs
@@ -1242,7 +1430,7 @@ const OpenCase = {
         },
         getVariantDetails(item) {
             this.currentVariantType = "snp";
-           
+
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
             var table; //could be the selected variant table or the regular one
@@ -1281,7 +1469,10 @@ const OpenCase = {
                                 {
                                     label: "Chromosome Position",
                                     value: this.currentVariant.chrom + ":"
-                                        + this.currentVariant.pos
+                                        + this.currentVariant.pos,
+                                    type: "link",
+                                    url: this.createUCSCLink(),
+                                    tooltip: "Open Genome Browser"
                                 },
                                 {
                                     label: "Gene",
@@ -1393,7 +1584,7 @@ const OpenCase = {
                             name: "dataTable",
                             items: [
                                 {
-                                    label: "Tier",
+                                    label: "Reported Tier",
                                     type: "select",
                                     fieldName: "tier",
                                     tooltip: "Select a Tier",
@@ -1423,16 +1614,20 @@ const OpenCase = {
                         this.userAnnotations = this.currentVariant.referenceVariant.utswAnnotations.filter(a => a.userId == this.userId);
                         this.$refs.annotationDialog.userAnnotations = this.userAnnotations;
                         this.utswAnnotations = this.currentVariant.referenceVariant.utswAnnotations;
+                        this.reloadPreviousSelectedState();
                         this.mdaAnnotations = this.currentVariant.mdaAnnotation ? this.currentVariant.mdaAnnotation : "";
                         this.formatAnnotations();
                         this.loadingVariantDetails = false;
+                        this.annotationSelectionUnSaved = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
 
-                         //finally, open edit annotation
-                         this.handleEditAnnotationOpening();
-                     
+                        //finally, open edit annotation
+                        this.handleEditAnnotationOpening();
+
+                        this.updateSplashProgress();
+
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getVariantDetails.bind(null,
@@ -1505,13 +1700,17 @@ const OpenCase = {
                         this.userAnnotations = this.currentVariant.referenceCnv.utswAnnotations.filter(a => a.userId == this.userId);
                         this.$refs.cnvAnnotationDialog.userAnnotations = this.userAnnotations;
                         this.utswAnnotations = this.currentVariant.referenceCnv.utswAnnotations;
+                        this.reloadPreviousSelectedState();
                         this.formatCNVAnnotations();
                         this.loadingVariantDetails = false;
+                        this.annotationSelectionUnSaved = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
-                         //finally, open edit annotation
-                         this.handleEditAnnotationOpening();
+                        //finally, open edit annotation
+                        this.handleEditAnnotationOpening();
+
+                        this.updateSplashProgress();
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getCNVDetails.bind(null,
@@ -1594,13 +1793,17 @@ const OpenCase = {
                         this.userAnnotations = this.currentVariant.referenceTranslocation.utswAnnotations.filter(a => a.userId == this.userId);
                         this.$refs.translocationAnnotationDialog.userAnnotations = this.userAnnotations;
                         this.utswAnnotations = this.currentVariant.referenceTranslocation.utswAnnotations;
+                        this.reloadPreviousSelectedState();
                         this.formatTranslocationAnnotations();
                         this.loadingVariantDetails = false;
+                        this.annotationSelectionUnSaved = false;
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
-                         //finally, open edit annotation
-                         this.handleEditAnnotationOpening();
+                        //finally, open edit annotation
+                        this.handleEditAnnotationOpening();
+
+                        this.updateSplashProgress();
                     } else {
                         this.loadingVariantDetails = false;
                         this.handleDialogs(response.data, this.getTranslocationDetails.bind(null,
@@ -1611,6 +1814,20 @@ const OpenCase = {
                     console.log(error);
                     bus.$emit("some-error", [this, error]);
                 });
+        },
+        reloadPreviousSelectedState() {
+            for (var i = 0; i < this.annotationIdsForReporting.length; i++) {
+                for (var j = 0; j < this.utswAnnotations.length; j++) {
+                    if (this.annotationIdsForReporting[i].$oid == this.utswAnnotations[j]._id.$oid) {
+                        this.utswAnnotations[j].isSelected = true; //only set if true, do not unset if false
+                    }
+                }
+            }
+        },
+        createUCSCLink() {
+            return "https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position="
+                + this.currentVariant.chrom + ":" + (this.currentVariant.pos - 50)
+                + "-" + (this.currentVariant.pos + 50);
         },
         handleEditAnnotationOpening() {
             if (this.urlQuery.edit === true) {
@@ -1706,6 +1923,7 @@ const OpenCase = {
             var formatted = [];
             for (var i = 0; i < annotations.length; i++) {
                 var annotation = {
+                    _id: "",
                     fullName: "",
                     text: "",
                     scopes: [],
@@ -1720,8 +1938,11 @@ const OpenCase = {
                     pmids: [],
                     nctids: [],
                     tier: "",
-                    classification: ""
+                    classification: "",
+                    visible: true,
+                    isSelected: false
                 };
+                annotation._id = annotations[i]._id;
                 if (showUser) {
                     annotation.fullName = annotations[i].fullName;
                 }
@@ -1741,6 +1962,7 @@ const OpenCase = {
                 annotation.scopeTooltip = this.$refs.annotationDialog.createLevelInformation(annotations[i]);
                 annotation.tier = annotations[i].tier;
                 annotation.classification = annotations[i].classification;
+                annotation.isSelected = annotations[i].isSelected;
                 formatted.push(annotation);
             }
             return formatted;
@@ -1749,6 +1971,7 @@ const OpenCase = {
             var formatted = [];
             for (var i = 0; i < annotations.length; i++) {
                 var annotation = {
+                    _id: "",
                     fullName: "",
                     text: "",
                     scopes: [],
@@ -1762,8 +1985,11 @@ const OpenCase = {
                     modifiedSince: "",
                     cnvGenes: "",
                     tier: "",
-                    classification: ""
+                    classification: "",
+                    visible: true,
+                    isSelected: false
                 };
+                annotation._id = annotations[i]._id;
                 if (showUser) {
                     annotation.fullName = annotations[i].fullName;
                 }
@@ -1781,6 +2007,7 @@ const OpenCase = {
                 annotation.scopeTooltip = this.$refs.cnvAnnotationDialog.createLevelInformation(annotations[i]);
                 annotation.tier = annotations[i].tier;
                 annotation.classification = annotations[i].classification;
+                annotation.isSelected = annotations[i].isSelected;
                 formatted.push(annotation);
             }
             return formatted;
@@ -1789,6 +2016,7 @@ const OpenCase = {
             var formatted = [];
             for (var i = 0; i < annotations.length; i++) {
                 var annotation = {
+                    _id: "",
                     fullName: "",
                     text: "",
                     scopes: [],
@@ -1801,8 +2029,11 @@ const OpenCase = {
                     modifiedDate: "",
                     modifiedSince: "",
                     tier: "",
-                    classification: ""
+                    classification: "",
+                    visible: true,
+                    isSelected: false
                 };
+                annotation._id = annotations[i]._id;
                 if (showUser) {
                     annotation.fullName = annotations[i].fullName;
                 }
@@ -1819,6 +2050,7 @@ const OpenCase = {
                 annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
                 annotation.tier = annotations[i].tier;
                 annotation.classification = annotations[i].classification;
+                annotation.isSelected = annotations[i].isSelected;
                 formatted.push(annotation);
             }
             return formatted;
@@ -1837,16 +2069,20 @@ const OpenCase = {
             else if (this.isTranslocation()) {
                 this.$refs.translocationAnnotationDialog.startUserAnnotations();
             }
+            this.updateSplashProgress();
         },
         formatAnnotations() {
             this.utswAnnotationsFormatted = this.formatLocalAnnotations(this.utswAnnotations, true);
             // this.userAnnotationsFormatted = this.formatLocalAnnotations(this.userAnnotations, false);
+            this.matchAnnotationFilter();
         },
         formatCNVAnnotations() {
             this.utswAnnotationsFormatted = this.formatLocalCNVAnnotations(this.utswAnnotations, true);
+            this.matchAnnotationFilter();
         },
         formatTranslocationAnnotations() {
             this.utswAnnotationsFormatted = this.formatLocalTranslocationAnnotations(this.utswAnnotations, true);
+            this.matchAnnotationFilter();
         },
         commitAnnotations(userAnnotations) {
             this.userAnnotations = userAnnotations;
@@ -1882,7 +2118,7 @@ const OpenCase = {
                             this.tempSelectedSNPVariants = selectedIds.selectedSNPVariantIds;
                             this.tempSelectedCNVs = selectedIds.selectedCNVIds;
                             this.tempSelectedTranslocations = selectedIds.selectedTranslocationIds;
-    
+
                             //once refreshed, reselect rows that were selected but not saved yet
                             this.$once('get-case-details-done', (annotations) => {
                                 for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
@@ -1957,11 +2193,7 @@ const OpenCase = {
             this.saveDialogVisible = true;
             this.urlQuery.showReview = true;
             this.updateRoute();
-            // //add breadcrumb if not the last already to avoid duplicates
-            // if (this.breadcrumbs[this.breadcrumbs.length - 1].text != this.breadcrumbItemReview.text) {
-            //     this.breadcrumbs.push(this.breadcrumbItemReview);
-
-            // }
+            this.updateSplashProgress();
         },
         closeSaveDialog() {
             this.saveDialogVisible = false;
@@ -1970,7 +2202,7 @@ const OpenCase = {
             this.updateRoute();
         },
         updateRoute() {
-            router.push({query: this.urlQuery});
+            router.push({ query: this.urlQuery });
         },
         saveSelection() {
             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
@@ -2119,6 +2351,7 @@ const OpenCase = {
             this.toggleHTMLOverlay(false);
             this.urlQuery.variantId = null;
             this.urlQuery.variantType = null;
+            this.urlQuery.edit = false; //also close edit but it should have been done earlier
             this.updateRoute();
         },
         toggleHTMLOverlay(hideScrollBar) {
@@ -2248,13 +2481,13 @@ const OpenCase = {
             this.urlQuery.variantType = this.currentVariantType;
             this.updateRoute();
         },
-        updateSaveDialogBreadCrumbs(visible) {
-                this.urlQuery.showReview = true;
-                this.updateRoute();
-        },
+        // updateSaveDialogBreadCrumbs(visible) {
+        //     this.urlQuery.showReview = true;
+        //     this.updateRoute();
+        // },
         updateEditAnnotationBreadcrumbs(visible) {
-                this.urlQuery.edit = true;
-                this.updateRoute();
+            this.urlQuery.edit = visible;
+            this.updateRoute();
         },
         saveCaseAnnotations() {
             axios({
@@ -2481,6 +2714,69 @@ const OpenCase = {
             }
             this.$refs.variantDetailsPanel.variantDetailsUnSaved = false;  //update badge on save button
         },
+        saveAnnotationSelection() {
+            if (!this.canProceed('canAnnotate')) {
+                return;
+            }
+            this.savingAnnotationSelection = true;
+            var lightVariant = {};
+            lightVariant["_id"] = this.currentVariant._id;
+            lightVariant["annotationIdsForReporting"] = [];
+            for (var i = 0; i < this.utswAnnotationsFormatted.length; i++) {
+                if (this.utswAnnotationsFormatted[i].isSelected) {
+                    lightVariant["annotationIdsForReporting"].push(this.utswAnnotationsFormatted[i]._id);
+                }
+            }
+            axios({
+                method: 'post',
+                url: webAppRoot + "/saveSelectedAnnotationsForVariant",
+                params: {
+                    variantType: this.currentVariantType,
+                    caseId: this.$route.params.id,
+                },
+                data: {
+                    // filters: this.$refs.advancedFilter.filters,
+                    variant: lightVariant
+                }
+            }).then(response => {
+                if (response.data.isAllowed) {
+                    this.revertAnnotationSelection();
+                    this.snackBarMessage = "Annotation Selection Saved";
+                    this.snackBarVisible = true;
+                    this.annotationSelectionUnSaved = false;
+                }
+                else {
+                    this.handleDialogs(response.data, this.saveVasaveAnnotationSelectionriant);
+                }
+                this.savingAnnotationSelection = false;
+            }).catch(error => {
+                this.savingAnnotationSelection = false;
+                console.log(error);
+                bus.$emit("some-error", [this, error]);
+            });
+        },
+        revertAnnotationSelection() {
+            if (this.isSNP()) {
+                this.getVariantDetails(this.currentRow);
+            }
+            else if (this.isCNV()) {
+                this.getCNVDetails(this.currentRow);
+            }
+            else if (this.isTranslocation()) {
+                this.getTranslocationDetails(this.currentRow);
+            }
+            this.annotationIdsForReporting = []; //rest the unsaved list of ids
+            this.annotationSelectionUnSaved = false; //update badge on save button
+        },
+        handleAnnotationSelectionChanged() {
+            this.annotationSelectionUnSaved = true;
+            this.annotationIdsForReporting = [];
+            for (var j = 0; j < this.utswAnnotationsFormatted.length; j++) {
+                if (this.utswAnnotationsFormatted[j].isSelected) {
+                    this.annotationIdsForReporting.push(this.utswAnnotationsFormatted[j]._id);
+                }
+            }
+        },
         // Use this when need to close the annotation dialog from outside the edit-annotations component
         cancelAnnotations() {
             if (this.isSNP()) {
@@ -2557,19 +2853,122 @@ const OpenCase = {
                     this.loadFromParams();
                 }
             }
-    },
-    handlePanelVisibility(visible) {
-        if (visible == null) {
-            this.editAnnotationVariantDetailsVisible = !this.editAnnotationVariantDetailsVisible;
+        },
+        handlePanelVisibility(visible) {
+            if (visible == null) {
+                this.editAnnotationVariantDetailsVisible = !this.editAnnotationVariantDetailsVisible;
+            }
+            else {
+                this.editAnnotationVariantDetailsVisible = visible;
+            }
+        },
+        matchAnnotationFilter() {
+            if (this.searchAnnotations || this.searchAnnotationCategory.length > 0
+                || this.searchAnnotationClassification.length > 0 || this.searchAnnotationTier.length > 0
+                || this.searchAnnotationScope.length > 0) {
+                for (var i = 0; i < this.utswAnnotationsFormatted.length; i++) {
+                    var foundTextMatch = false;
+                    var foundCategoryMatch = false;
+                    var foundClassificationMatch = false;
+                    var foundTierMatch = false;
+                    var foundScopeMatch = false;
+                    if (this.searchAnnotations) {
+                        for (var field in this.utswAnnotationsFormatted[i]) {
+                            if (field == "scopeTooltip") {
+                                continue;
+                            }
+                            else if (this.utswAnnotationsFormatted[i][field] && (this.utswAnnotationsFormatted[i][field] + "").indexOf(this.searchAnnotations) > -1) {
+                                foundTextMatch = true;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        foundTextMatch = true;
+                    }
+                    // continue search with Category
+                    if (this.searchAnnotationCategory.length > 0) {
+                        if (this.searchAnnotationCategory.includes(this.utswAnnotationsFormatted[i].category)) {
+                            foundCategoryMatch = true;
+                        }
+                    }
+                    else {
+                        foundCategoryMatch = true;
+                    }
+                    // continue search with Classification
+                    if (this.searchAnnotationClassification.length > 0) {
+                        if (this.searchAnnotationClassification.includes(this.utswAnnotationsFormatted[i].classification)) {
+                            foundClassificationMatch = true;
+                        }
+                    }
+                    else {
+                        foundClassificationMatch = true;
+                    }
+                    // continue search with Tier
+                    if (this.searchAnnotationTier.length > 0) {
+                        if (this.searchAnnotationTier.includes(this.utswAnnotationsFormatted[i].tier)) {
+                            foundTierMatch = true;
+                        }
+                    }
+                    else {
+                        foundTierMatch = true;
+                    }
+                    // continue search with Scope
+                    //the select items need to match the scopeLevels array
+                    //to find the corresponding scope flag
+                    if (this.searchAnnotationScope.length > 0) {
+                        for (var j = 0; j < this.searchAnnotationScope.length; j++) {
+                            var scope = this.searchAnnotationScope[j];
+                            var scopeIndex = -1;
+                            for (var k = 0; k < this.utswAnnotationsFormatted[i].scopeLevels.length; k++) { //iterate through scopeLevels to find a match
+                                if (this.utswAnnotationsFormatted[i].scopeLevels[k].indexOf(scope) > -1) {
+                                    scopeIndex = k;
+                                    break;
+                                }
+                            }
+                            if (scopeIndex > -1 && this.utswAnnotationsFormatted[i].scopes[scopeIndex]) {
+                                foundScopeMatch = true;
+                                break;
+                            }
+
+                        }
+                    }
+                    else {
+                        foundScopeMatch = true;
+                    }
+                    this.utswAnnotationsFormatted[i].visible = foundTextMatch
+                        && foundCategoryMatch
+                        && foundClassificationMatch
+                        && foundTierMatch
+                        && foundScopeMatch;
+                }
+            }
+            else {
+                for (var i = 0; i < this.utswAnnotationsFormatted.length; i++) {
+                    this.utswAnnotationsFormatted[i].visible = true;
+                }
+            }
+        },
+        manageSplashScreen() {
+            if (this.splashDialog) {
+                document.querySelector(".splash-screen").style = getDialogMaxHeight(0);
+            }
+        },
+        handleSplashVisibility() {
+            if (this.splashProgress > 95) {
+                setTimeout(() => {
+                    this.splashDialog = false;
+                    splashDialog = false; //disable from now on
+                }, 500);
+            }
+            else {
+
+            }
         }
-        else {
-            this.editAnnotationVariantDetailsVisible = visible;
-        }
-    }
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",
-        this.snackBarVisible = this.readonly;
+            this.snackBarVisible = this.readonly;
         if (this.readonly) {
             setTimeout(() => {
                 bus.$emit("update-status", ["VIEW ONLY MODE"]);
@@ -2586,21 +2985,9 @@ const OpenCase = {
         bus.$on('saving-annotations', (annotations) => {
             this.commitAnnotations(annotations);
         });
-        this.$refs.geneVariantDetails.headerOptionsVisible=true;
-        // bus.$on('breadcrumb-level-down', (visibleFlag) => {
-        //     this.topMostDialog = visibleFlag;
-        // });
-        // router.beforeEach((to, from, next) => {
-        //     //if any dialog is open don't navigate
-        //     if (this.topMostDialog) { //null if level 1
-        //         next(false);
-        //         this[this.topMostDialog](); //hide the dialog
-        //     }
-        //     else {
-        //         next();
-        //     }
-        // });
+        this.$refs.geneVariantDetails.headerOptionsVisible = true;
 
+        this.manageSplashScreen();
     },
     destroyed: function () {
         bus.$off('bam-viewer-closed');
@@ -2610,13 +2997,8 @@ const OpenCase = {
     },
     watch: {
         '$route': 'handleRouteChanged',
-        // variantDetailsVisible: "updateVariantDetailsBreadCrumbs",
-        // saveDialogVisible: "updateSaveDialogBreadCrumbs",
         variantTabActive: "handleTabChanged",
-        // saveDialogVisible: "handleSaveDialogRouteChanged"
-        // breadcrumbs: function() {
-        //     this.$refs.annotationDialog.breadcrumbs = this.breadcrumbs;
-        // }
+        splashProgress: "handleSplashVisibility"
     }
 
 };

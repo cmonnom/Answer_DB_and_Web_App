@@ -25,6 +25,9 @@ public class CNV {
 	String caseId;
 	Boolean utswAnnotated;
 	Boolean selected;
+	String type;
+	
+	List<MongoDBId> annotationIdsForReporting;
 	
 	AbstractReference referenceCnv;
 	
@@ -188,6 +191,19 @@ public class CNV {
 		this.referenceCnv = referenceCnv;
 	}
 
+	public List<MongoDBId> getAnnotationIdsForReporting() {
+		return annotationIdsForReporting;
+	}
+
+
+	public String getType() {
+		return type;
+	}
+
+
+	public void setType(String type) {
+		this.type = type;
+	}
 
 
 

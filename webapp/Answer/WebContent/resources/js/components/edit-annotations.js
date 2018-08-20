@@ -9,6 +9,10 @@ Vue.component('edit-annotations', {
         hideScope: {default: false, type: Boolean},
         color: {default: "primary", type: String},
         breadcrumbs: { default: [], type: Array },
+        annotationCategories: {default: () => [], type: Array},
+        annotationCategoriesCNV: {default: () => [], type: Array},
+        annotationClassifications: {default:() => [], type: Array},
+        annotationTiers: {default: () => [], type: Array},
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -339,27 +343,7 @@ Vue.component('edit-annotations', {
             userEditingAnnotations: [],
             numberRules: [(v) => { return this.isNumberList(v) || 'Only numbers, separated by comma' }],
             nctRules: [(v) => { return this.isNCTNumberList(v) || 'Must start with NCT + number. If more than one, use a comma' }],
-            annotationCategories: [
-                'Gene Function',
-                'Variant Function',
-                'Therapy'],
-            annotationCategoriesCNV: [
-                'Chromosomal',
-                'Focal'],
-            annotationClassifications: [
-                'VUS',
-                'Benign',
-                'Likely benign',
-                'Likely pathogenic',
-                'Pathogenic'],
-            annotationTiers: [
-                '1A',
-                '1B',
-                '2A',
-                '2B',
-                '3',
-                '4',
-                '5'],
+           
             cnvGeneItems: [],
             annotationVariantDetailsVisible: true,
         }
@@ -454,9 +438,9 @@ Vue.component('edit-annotations', {
         },
         cancelAnnotations() {
             this.annotationDialogVisible = false;
-            this.$nextTick(function () { //wait until dialog is closed 
-                this.userEditingAnnotations = [];
-            });
+            // this.$nextTick(function () { //wait until dialog is closed 
+            //     this.userEditingAnnotations = [];
+            // });
         },
         isNumberList(v) {
             var valid = !isNaN(v);

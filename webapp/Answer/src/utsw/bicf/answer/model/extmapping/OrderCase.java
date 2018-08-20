@@ -1,11 +1,22 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderCase {
+	
+	private static final Map<Integer, String> stepTooltip = new HashMap<Integer, String>();
+	static {
+		stepTooltip.put(0, "Not assigned");
+		stepTooltip.put(1, "Working on annotations");
+		stepTooltip.put(2, "Variant selection under review");
+		stepTooltip.put(3, "Creating the report");
+		stepTooltip.put(4, "Finalized");
+	}
 	
 	Boolean active;
 	String authorizingPhysician;
@@ -37,6 +48,7 @@ public class OrderCase {
 	List<Translocation> translocations;
 	String oncotreeDiagnosis;
 	Integer totalCases;
+	List<CaseHistory> history;
 	
 	
 	public OrderCase() {
@@ -341,6 +353,25 @@ public class OrderCase {
 
 	public void setTotalCases(Integer totalCases) {
 		this.totalCases = totalCases;
+	}
+
+
+	public List<CaseHistory> getHistory() {
+		return history;
+	}
+
+
+	public void setHistory(List<CaseHistory> history) {
+		this.history = history;
+	}
+
+
+	public static String getStepTooltip(int i) {
+		return stepTooltip.get(i);
+	}
+	
+	public static int getTotalSteps() {
+		return stepTooltip.size();
 	}
 
 

@@ -1,5 +1,7 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -22,6 +24,9 @@ public class Translocation {
 	String caseId;
 	Boolean selected;
 	Boolean utswAnnotated;
+	String type;
+	
+	List<MongoDBId> annotationIdsForReporting;
 	
 	AbstractReference referenceTranslocation;
 	
@@ -149,7 +154,17 @@ public class Translocation {
 		this.referenceTranslocation = referenceTranslocation;
 	}
 
+	public List<MongoDBId> getAnnotationIdsForReporting() {
+		return annotationIdsForReporting;
+	}
 
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
 
 
 

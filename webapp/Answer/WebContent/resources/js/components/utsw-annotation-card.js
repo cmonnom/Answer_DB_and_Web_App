@@ -3,16 +3,24 @@
 Vue.component('utsw-annotation-card', {
     props: {
         "annotation": Object,
-        "variantType": {default: "snp", type: String}
+        "variantType": {default: "snp", type: String},
+        noEdit: { default: true, type: Boolean },
     },
     template: `<div>
     <v-card>
     <v-card-text class="subheading">
         <v-container grid-list-md fluid>
             <v-layout row wrap>
-                <v-flex xs12>
+                <v-flex xs11>
                     From {{ annotation.fullName }}
                     <span v-text="parseDate(annotation)"></span>
+                </v-flex>
+                <v-flex xs1>
+                <v-tooltip bottom>
+                    <v-switch slot="activator" class="no-height" :disabled="noEdit"
+                    v-model="annotation.isSelected" @change="annotationSelectionChanged"></v-switch>
+                    <span>Select/Unselect for Report</span>
+                    </v-tooltip>
                 </v-flex>
                 <v-flex xs12>
                     Scope:
@@ -95,6 +103,9 @@ Vue.component('utsw-annotation-card', {
         isTranslocation() {
             return this.variantType == "translocation";
         },
+        annotationSelectionChanged() {
+            this.$emit("annotation-selection-changed");
+        }
     },
     computed: {
 

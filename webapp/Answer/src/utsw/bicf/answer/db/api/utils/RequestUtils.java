@@ -397,11 +397,8 @@ public class RequestUtils {
 		if (variantType.equals("snp")) {
 			sbUrl.append("variant/");
 		}
-		else if (variantType.equals("cnv")) {
-			sbUrl.append("cnv/");
-		}
-		else if (variantType.equals("translocation")) {
-			sbUrl.append("translocation/");
+		else {
+			ajaxResponse.setSuccess(false);
 		}
 		sbUrl.append(oid);
 		URI uri = new URI(sbUrl.toString());
@@ -422,6 +419,42 @@ public class RequestUtils {
 			ajaxResponse.setIsAllowed(true);
 		}
 
+	}
+	
+	public void saveSelectedAnnotations(AjaxResponse ajaxResponse, Object variant, String variantType, String oid) throws URISyntaxException, ClientProtocolException, IOException {
+			ObjectMapper mapper = new ObjectMapper();
+			StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+			if (variantType.equals("snp")) {
+				sbUrl.append("variant/");
+			}
+			else if (variantType.equals("cnv")) {
+				sbUrl.append("cnv/"); //TODO we might use the same api "variant"
+			}
+			else if (variantType.equals("translocation")) {
+				sbUrl.append("translocation/");  //TODO we might use the same api "variant"
+			}
+			else {
+				ajaxResponse.setSuccess(false);
+			}
+			sbUrl.append(oid).append("/selectannotations");
+			URI uri = new URI(sbUrl.toString());
+			requestPost = new HttpPost(uri);
+			addAuthenticationHeader(requestPost);
+			
+			requestPost.setEntity(new StringEntity(mapper.writeValueAsString(variant), ContentType.APPLICATION_JSON));
+			HttpResponse response = client.execute(requestPost);
+//			System.out.println(mapper.writeValueAsString(variant));
+
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode != HttpStatus.SC_OK) {
+				ajaxResponse.setSuccess(false);
+				ajaxResponse.setMessage("Something went wrong");
+			}
+			else {
+				ajaxResponse.setSuccess(true);
+				ajaxResponse.setIsAllowed(true);
+			}
+		
 	}
 
 	public void sendVariantSelectionToMDA(AjaxResponse ajaxResponse, String caseId, List<String> selectedSNPVariantIds,
@@ -472,6 +505,8 @@ public class RequestUtils {
 		}
 		return null;
 	}
+
+
 
 //	public APIResponse getOrderIdFromLimsId(String caseId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException {
 //		StringBuilder sbUrl = new StringBuilder(qcAPI.getApi());

@@ -42,7 +42,7 @@ Vue.component('variant-details', {
               </v-list-tile>
           </v-list>
       </v-menu>
-      <v-toolbar-title>
+      <v-toolbar-title class="ml-0">
           Variant Details
       </v-toolbar-title>
 
@@ -79,14 +79,20 @@ Vue.component('variant-details', {
                           <v-list-tile v-for="item in table.items" :key="item.label">
                               <v-list-tile-content class="pb-2">
                                   <v-layout class="full-width">
-                                      <v-flex xs12 class="text-xs-left grow">
-                                          <span v-if="isRegularVariantDetailsLabel(item.type)" class="selectable">{{ item.label }}:</span>
-                                          <span v-if="!item.type" v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
+                                      <v-flex xs12 :class="[item.type == 'link' ? 'pb-0' : '', 'text-xs-left', 'grow']">
+                                          <span v-if="isRegularVariantDetailsLabel(item.type)" class="selectable]">{{ item.label }}:</span>
+                                          <span v-if="!item.type || item.type == 'link'" v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
                                           <span v-if="item.type == 'chip'">
                                               <v-chip disabled class="selectable" v-for="chip in item.value" :key="chip">
                                                   {{ chip }}
                                               </v-chip>
                                           </span>
+                                          <v-tooltip bottom v-if="item.type == 'link'">
+                                              <v-btn slot="activator" color="primary" icon flat @click="openUrl(item)" class="mt-0 mb-0">
+                                                <v-icon>open_in_new</v-icon>
+                                              </v-btn>
+                                              <span>{{ item.tooltip }}</span>
+                                          </v-tooltip>    
                                           <v-data-table v-if="item.type == 'callSet'" :items="item.value" hide-actions hide-headers>
                                               <template slot="items" slot-scope="props">
                                                   <td>
@@ -96,7 +102,7 @@ Vue.component('variant-details', {
                                               </template>
                                           </v-data-table>
                                           <v-layout v-if="item.type == 'select'" class="full-width">
-                                              <v-flex xs2 class="selectable">{{ item.label }}:</v-flex>
+                                              <v-flex xs4 class="selectable pt-2">{{ item.label }}:</v-flex>
                                               <v-flex xs6>
                                                   <v-select clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
                                                       :label="item.tooltip" single-line hide-details
@@ -203,7 +209,10 @@ Vue.component('variant-details', {
     //like Gene, Notation Nb.Cases Seen etc.
     //so that it behaves like a regular "label: string" combo
     isRegularVariantDetailsLabel(type) {
-      return !type || type == 'chip' || type == 'callSet' || type == 'flag';
+      return !type || type == 'chip' || type == 'callSet' || type == 'flag' || type == 'link';
+    },
+    openUrl(item) {
+        window.open(item.url, "_blank");
     },
   },
   mounted: function () {

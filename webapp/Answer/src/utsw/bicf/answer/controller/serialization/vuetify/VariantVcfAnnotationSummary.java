@@ -30,7 +30,7 @@ public class VariantVcfAnnotationSummary extends Summary<VCFAnnotation> {
 		headers.add(featureId);
 		Header transcriptBiotype = new Header(new String[] { "Transcript", "Biotype" }, "transcriptBiotype");
 		headers.add(transcriptBiotype);
-		Header rank = new Header("Rank", "rank");
+		Header rank = new Header("Exon #", "rank");
 		headers.add(rank);
 		Header codingNotation = new Header(new String[] { "Coding", "Notation" }, "codingNotation");
 		headers.add(codingNotation);

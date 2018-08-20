@@ -3,9 +3,7 @@ package utsw.bicf.answer.model.extmapping;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -52,6 +50,7 @@ public class Annotation {
 	List<String> nctids;
 	String type;
 	List<String> cnvGenes;
+	Boolean isSelected;
 	
 	public Annotation() {
 		
@@ -278,9 +277,10 @@ public class Annotation {
 	 * After the object has been retrieved, use this method to
 	 * populate the LocalDateTime objects, user info, etc.
 	 * @param a
+	 * @param list 
 	 * @param modelDAO
 	 */
-	public static void init(Annotation a, ModelDAO modelDAO) {
+	public static void init(Annotation a, List<MongoDBId> selectedAnnotationIds, ModelDAO modelDAO) {
 		User annotationUser = modelDAO.getUserByUserId(a.getUserId());
 		if (annotationUser != null) {
 			a.setFullName(annotationUser.getFullName());
@@ -328,6 +328,21 @@ public class Annotation {
 			a.setModifiedSince("just now");
 		}
 		
+		//the list of selected annotations is not specific to the annotation but to the case/variant
+		if (selectedAnnotationIds != null) {
+			a.isSelected = selectedAnnotationIds.contains(a.getMongoDBId());
+		}
+		else {
+			a.isSelected = false;
+		}
+	}
+
+	public Boolean getIsSelected() {
+		return isSelected;
+	}
+
+	public void setIsSelected(Boolean isSelected) {
+		this.isSelected = isSelected;
 	}
 
 

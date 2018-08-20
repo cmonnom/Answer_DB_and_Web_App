@@ -94,6 +94,8 @@ public class Variant {
 	Boolean isOncokbVariant;
 	String impact;
 	
+	List<MongoDBId> annotationIdsForReporting;
+	
 	public Variant() {
 		
 	}
@@ -529,6 +531,209 @@ public class Variant {
 	public String getImpact() {
 		return impact;
 	}
+
+
+	public List<MongoDBId> getAnnotationIdsForReporting() {
+		return annotationIdsForReporting;
+	}
+
+
+	public void setMongoDBId(MongoDBId mongoDBId) {
+		this.mongoDBId = mongoDBId;
+	}
+
+
+	public void setEffects(List<String> effects) {
+		this.effects = effects;
+	}
+
+
+	public void setTumorAltFrequencyFormatted(String tumorAltFrequencyFormatted) {
+		this.tumorAltFrequencyFormatted = tumorAltFrequencyFormatted;
+	}
+
+
+	public void setTumorTotalDepth(Integer tumorTotalDepth) {
+		this.tumorTotalDepth = tumorTotalDepth;
+	}
+
+
+	public void setNormalAltFrequency(Float normalAltFrequency) {
+		this.normalAltFrequency = normalAltFrequency;
+	}
+
+
+	public void setNormalAltFrequencyFormatted(String normalAltFrequencyFormatted) {
+		this.normalAltFrequencyFormatted = normalAltFrequencyFormatted;
+	}
+
+
+	public void setNormalAltDepth(Integer normalAltDepth) {
+		this.normalAltDepth = normalAltDepth;
+	}
+
+
+	public void setNormalTotalDepth(Integer normalTotalDepth) {
+		this.normalTotalDepth = normalTotalDepth;
+	}
+
+
+	public void setRnaAltFrequency(Float rnaAltFrequency) {
+		this.rnaAltFrequency = rnaAltFrequency;
+	}
+
+
+	public void setRnaAltFrequencyFormatted(String rnaAltFrequencyFormatted) {
+		this.rnaAltFrequencyFormatted = rnaAltFrequencyFormatted;
+	}
+
+
+	public void setRnaAltDepth(Integer rnaAltDepth) {
+		this.rnaAltDepth = rnaAltDepth;
+	}
+
+
+	public void setRnaTotalDepth(Integer rnaTotalDepth) {
+		this.rnaTotalDepth = rnaTotalDepth;
+	}
+
+
+	public void setReference(String reference) {
+		this.reference = reference;
+	}
+
+
+	public void setFilters(List<String> filters) {
+		this.filters = filters;
+	}
+
+
+	public void setSelected(Boolean selected) {
+		this.selected = selected;
+	}
+
+
+	public void setNumCasesSeen(Integer numCasesSeen) {
+		this.numCasesSeen = numCasesSeen;
+	}
+
+
+	public void setExacAlleleFrequency(Float exacAlleleFrequency) {
+		this.exacAlleleFrequency = exacAlleleFrequency;
+	}
+
+
+	public void setExacAlleleFrequencyFormatted(String exacAlleleFrequencyFormatted) {
+		this.exacAlleleFrequencyFormatted = exacAlleleFrequencyFormatted;
+	}
+
+
+	public void setSomaticStatus(String somaticStatus) {
+		this.somaticStatus = somaticStatus;
+	}
+
+
+	public void setGnomadPopmaxAlleleFrequency(Float gnomadPopmaxAlleleFrequency) {
+		this.gnomadPopmaxAlleleFrequency = gnomadPopmaxAlleleFrequency;
+	}
+
+
+	public void setGnomadPopmaxAlleleFrequencyFormatted(String gnomadPopmaxAlleleFrequencyFormatted) {
+		this.gnomadPopmaxAlleleFrequencyFormatted = gnomadPopmaxAlleleFrequencyFormatted;
+	}
+
+
+	public void setIsRepeat(Boolean isRepeat) {
+		this.isRepeat = isRepeat;
+	}
+
+
+	public void setRepeatTypes(List<String> repeatTypes) {
+		this.repeatTypes = repeatTypes;
+	}
+
+
+	public void setCallsetInconsistent(Boolean callsetInconsistent) {
+		this.callsetInconsistent = callsetInconsistent;
+	}
+
+
+	public void setInCosmic(Boolean inCosmic) {
+		this.inCosmic = inCosmic;
+	}
+
+
+	public void setVcfAnnotations(List<VCFAnnotation> vcfAnnotations) {
+		this.vcfAnnotations = vcfAnnotations;
+	}
+
+
+	public void setMdaAnnotation(AnnotationRow mdaAnnotation) {
+		this.mdaAnnotation = mdaAnnotation;
+	}
+
+
+	public void setReferenceVariant(ReferenceVariant referenceVariant) {
+		this.referenceVariant = referenceVariant;
+	}
+
+
+	public void setMdaAnnotated(Boolean mdaAnnotated) {
+		this.mdaAnnotated = mdaAnnotated;
+	}
+
+
+	public void setUtswAnnotated(Boolean utswAnnotated) {
+		this.utswAnnotated = utswAnnotated;
+	}
+
+
+	public void setOldBuilds(Map<String, Build> oldBuilds) {
+		this.oldBuilds = oldBuilds;
+	}
+
+
+	public void setRelatedVariants(List<Variant> relatedVariants) {
+		this.relatedVariants = relatedVariants;
+	}
+
+
+	public void setOncokbGeneName(String oncokbGeneName) {
+		this.oncokbGeneName = oncokbGeneName;
+	}
+
+
+	public void setOncokbVariantName(String oncokbVariantName) {
+		this.oncokbVariantName = oncokbVariantName;
+	}
+
+
+	public void setHasRelatedVariants(Boolean hasRelatedVariants) {
+		this.hasRelatedVariants = hasRelatedVariants;
+	}
+
+
+	public void setTier(String tier) {
+		this.tier = tier;
+	}
+
+
+	public void setIsOncokbVariant(Boolean isOncokbVariant) {
+		this.isOncokbVariant = isOncokbVariant;
+	}
+
+
+	public void setImpact(String impact) {
+		this.impact = impact;
+	}
+
+
+	public void setAnnotationIdsForReporting(List<MongoDBId> annotationIdsForReporting) {
+		this.annotationIdsForReporting = annotationIdsForReporting;
+	}
+
+
+
 
 
 }
