@@ -96,6 +96,8 @@ public class Variant {
 	
 	List<MongoDBId> annotationIdsForReporting;
 	
+	String rank;
+	
 	public Variant() {
 		
 	}
@@ -730,6 +732,16 @@ public class Variant {
 
 	public void setAnnotationIdsForReporting(List<MongoDBId> annotationIdsForReporting) {
 		this.annotationIdsForReporting = annotationIdsForReporting;
+	}
+
+
+	public String getRank() {
+		return rank;
+	}
+
+
+	public void setRank(String rank) {
+		this.rank = rank;
 	}
 
 

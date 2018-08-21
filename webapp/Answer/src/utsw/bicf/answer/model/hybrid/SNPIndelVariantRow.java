@@ -58,6 +58,7 @@ public class SNPIndelVariantRow {
 	String oncokbVariantName;
 	Boolean hasRelatedVariants;
 	String impact;
+	String rank;
 	
 	
 	
@@ -105,6 +106,7 @@ public class SNPIndelVariantRow {
 		this.oncokbVariantName = variant.getOncokbVariantName();
 		this.inCosmic = variant.getInCosmic();
 		this.impact = variant.getImpact();
+		this.rank = variant.getRank();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		boolean failed = filters.contains(Variant.VALUE_FAIL);
@@ -439,6 +441,14 @@ public class SNPIndelVariantRow {
 
 	public String getNumCasesSeenFormatted() {
 		return numCasesSeenFormatted;
+	}
+
+
+
+
+
+	public String getRank() {
+		return rank;
 	}
 
 

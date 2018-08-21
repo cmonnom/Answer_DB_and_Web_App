@@ -71,6 +71,14 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
+                        <v-list-tile avatar @click="openSelectReviewerDialog()" :disabled="saveVariantDisabled">
+                        <v-list-tile-avatar>
+                            <v-icon>how_to_reg</v-icon>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Ready for Review</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
 
 
                         <v-list-tile avatar @click="closeSaveDialog()">
@@ -1061,11 +1069,17 @@ const OpenCase = {
                 variantType: null,
                 edit: false
             },
+            // colors: {
+            //     openCase: "primary",
+            //     variantDetails: "teal lighten-1",
+            //     saveReview: "teal",
+            //     editAnnotation: "teal darken-1"
+            // },
             colors: {
                 openCase: "primary",
-                variantDetails: "teal lighten-1",
-                saveReview: "teal",
-                editAnnotation: "teal darken-1"
+                variantDetails: "primary",
+                saveReview: "primary",
+                editAnnotation: "primary"
             },
             searchAnnotations: "",
             searchAnnotationsVisible: false,
@@ -1078,7 +1092,8 @@ const OpenCase = {
             splashDialog: splashDialog,
             splashProgress: 0,
             splashSteps: 0,
-            annotationIdsForReporting: [] //save the state of the selection in case the user close/open another page
+            annotationIdsForReporting: [], //save the state of the selection in case the user close/open another page
+            selectReviewerDialogVisible: false
 
         }
     }, methods: {
@@ -2964,6 +2979,9 @@ const OpenCase = {
             else {
 
             }
+        },
+        openSelectReviewerDialog() {
+            //TODO
         }
     },
     mounted() {
