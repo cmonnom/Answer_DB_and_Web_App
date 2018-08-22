@@ -47,5 +47,32 @@ public class NotificationUtils {
 		return false;
 	}
 	
-
+	public static String buildStandardMessage(String message, EmailProperties emailProps, String link) {
+		StringBuilder fullMessage = new StringBuilder()
+				.append("<html>")
+				.append(NotificationUtils.HEAD)
+				.append("<body>")
+				.append("<img src='")
+				.append(emailProps.getRootUrl())
+				.append("/resources/images/answer-logo-small-alpha.png'")
+				.append(" width='150px' />")
+//				.append("<p>Dr. ").append(toName).append(",</p><br/>")
+//				.append("<b>")
+//				.append(initiatorName)
+//				.append("</b>")
+//				.append(" assigned you a new case. ")
+//				.append("<b>")
+//				.append("Case Id: ").append(caseId).append("<br/>")
+//				.append("</b>")
+				.append(message)
+				.append("Follow this link to access it: ")
+				.append("<a href='")
+				.append(link)
+				.append("'>")
+				.append(link)
+				.append("</a><br/><br/>")
+				.append(emailProps.getSignature())
+				.append("</body></html>");
+		return fullMessage.toString();
+	}
 }

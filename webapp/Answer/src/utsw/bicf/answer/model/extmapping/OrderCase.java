@@ -48,7 +48,7 @@ public class OrderCase {
 	List<Translocation> translocations;
 	String oncotreeDiagnosis;
 	Integer totalCases;
-	List<CaseHistory> history;
+	List<CaseHistory> caseHistory;
 	
 	
 	public OrderCase() {
@@ -356,14 +356,6 @@ public class OrderCase {
 	}
 
 
-	public List<CaseHistory> getHistory() {
-		return history;
-	}
-
-
-	public void setHistory(List<CaseHistory> history) {
-		this.history = history;
-	}
 
 
 	public static String getStepTooltip(int i) {
@@ -372,6 +364,16 @@ public class OrderCase {
 	
 	public static int getTotalSteps() {
 		return stepTooltip.size();
+	}
+
+
+	public List<CaseHistory> getCaseHistory() {
+		return caseHistory;
+	}
+
+
+	public void setCaseHistory(List<CaseHistory> caseHistory) {
+		this.caseHistory = caseHistory;
 	}
 
 

@@ -60,6 +60,7 @@ public class PermissionUtils {
 				case IndividualPermission.CAN_ANNOTATE: canProceed &= permission.getCanAnnotate(); break; 
 				case IndividualPermission.CAN_SELECT: canProceed &= permission.getCanSelect(); break; 
 				case IndividualPermission.CAN_ASSIGN: canProceed &= permission.getCanAssign(); break; 
+				case IndividualPermission.CAN_REVIEW: canProceed &= permission.getCanReview(); break; 
 				default: canProceed = false; break;
 				}
 				

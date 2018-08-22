@@ -20,7 +20,7 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 		steps.setIsFlag(true);
 		steps.setSortable(false);
 		steps.setAlign("left");
-		//headers.add(steps);  //keep hidden until ready for prime time.
+		headers.add(steps);  //keep hidden until ready for prime time.
 		headers.add(new Header(new String[] {"Epic","Order Nb"}, "epicOrderNumber"));
 		headers.add(new Header(new String[] {"Epic", "Order Date"}, "epicOrderDate"));
 		Header icd10 = new Header("ICD 10", "icd10");

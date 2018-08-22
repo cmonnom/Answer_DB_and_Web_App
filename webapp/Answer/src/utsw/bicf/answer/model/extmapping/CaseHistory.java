@@ -6,19 +6,21 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class CaseHistory {
 	
 	
-	String dateStatus;
+	String time;
 	Integer step;
 	
 	public CaseHistory() {
 		
 	}
 
-	public String getDateStatus() {
-		return dateStatus;
-	}
 
 	public Integer getStep() {
 		return step;
+	}
+
+
+	public String getTime() {
+		return time;
 	}
 
 

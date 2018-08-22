@@ -78,7 +78,8 @@ public class AdminController {
 			@RequestParam String first, @RequestParam String last, @RequestParam String email,
 			@RequestParam Boolean canView,
 			@RequestParam Boolean canSelect, @RequestParam Boolean canAnnotate, 
-			@RequestParam Boolean canAssign, @RequestParam Boolean admin)
+			@RequestParam Boolean canAssign, @RequestParam Boolean canReview,
+			@RequestParam Boolean admin)
 			throws Exception {
 		User user = null;
 		AjaxResponse response = new AjaxResponse();
@@ -109,6 +110,7 @@ public class AdminController {
 		individualPermission.setCanAssign(canAssign);
 		individualPermission.setCanSelect(canSelect);
 		individualPermission.setCanView(canView);
+		individualPermission.setCanReview(canReview);
 		modelDAO.saveObject(individualPermission);
 		
 		modelDAO.saveObject(user);

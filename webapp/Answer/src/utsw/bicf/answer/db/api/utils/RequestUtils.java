@@ -506,31 +506,30 @@ public class RequestUtils {
 		return null;
 	}
 
+	public void caseReadyForReview(AjaxResponse ajaxResponse, String caseId) throws URISyntaxException, ClientProtocolException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/review");
+		URI uri = new URI(sbUrl.toString());
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		
+		HttpResponse response = client.execute(requestPost);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode != HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		else {
+			ajaxResponse.setSuccess(true);
+			ajaxResponse.setIsAllowed(true);
+		}
+		
+	}
 
 
-//	public APIResponse getOrderIdFromLimsId(String caseId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException {
-//		StringBuilder sbUrl = new StringBuilder(qcAPI.getApi());
-//		sbUrl.append("?caseNb=").append(caseId).append("&token=").append(qcAPI.getToken());
-//		URI uri = new URI(sbUrl.toString());
-//
-//		requestGet = new HttpGet(uri);
-//
-//		HttpResponse response;
-//		try {
-//			response = client.execute(requestGet);
-//			int statusCode = response.getStatusLine().getStatusCode();
-//			if (statusCode == HttpStatus.SC_OK) {
-//				APIResponse apiResponse = mapper.readValue(response.getEntity().getContent(), APIResponse.class);
-//				return apiResponse;
-//			}
-//		} catch (ClientProtocolException e) {
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//
-//		return null;
-//	}
+
 
 
 }

@@ -71,7 +71,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="openSelectReviewerDialog()" :disabled="saveVariantDisabled">
+                        <v-list-tile avatar @click="markAsReadyForReview()" :disabled="saveVariantDisabled">
                         <v-list-tile-avatar>
                             <v-icon>how_to_reg</v-icon>
                         </v-list-tile-avatar>
@@ -112,6 +112,12 @@ const OpenCase = {
                     </v-btn>
                     <span>Send To MD Anderson</span>
                 </v-tooltip>
+                <v-tooltip bottom>
+                <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator">
+                    <v-icon>how_to_reg</v-icon>
+                </v-btn>
+                <span>Mark as Ready for Review. Email reviewer(s)</span>
+            </v-tooltip>
                 <v-tooltip bottom>
                     <v-btn icon @click="closeSaveDialog()" slot="activator">
                         <v-icon>close</v-icon>
@@ -190,6 +196,13 @@ const OpenCase = {
                         <v-icon right dark>send</v-icon>
                     </v-btn>
                     <span>Send to MD Anderson</span>
+                </v-tooltip>
+                <v-tooltip top>
+                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator" >
+                        Ready for Review
+                    <v-icon right dark>how_to_reg</v-icon>
+                    </v-btn>
+                    <span>Mark as Ready for Review. Email reviewer(s)</span>
                 </v-tooltip>
                 <v-btn color="error" @click="closeSaveDialog()" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
@@ -1093,7 +1106,6 @@ const OpenCase = {
             splashProgress: 0,
             splashSteps: 0,
             annotationIdsForReporting: [], //save the state of the selection in case the user close/open another page
-            selectReviewerDialogVisible: false
 
         }
     }, methods: {
@@ -1149,6 +1161,7 @@ const OpenCase = {
             }).then(response => {
                 if (response.data.isAllowed) {
                     this.patientTables = response.data.patientInfo.patientTables;
+                    this.caseAssignedTo = response.data.assignedToIds;
                     this.caseName = response.data.caseName + " (" + this.patientTables[0].items[0].value + ")"; //careful when swapping item positions
                     this.patientDetailsOncoTreeDiagnosis = this.patientTables[2].items[0].value; //careful when swapping item positions
                     this.caseId = response.data.caseId;
@@ -2980,8 +2993,24 @@ const OpenCase = {
 
             }
         },
-        openSelectReviewerDialog() {
-            //TODO
+        markAsReadyForReview() {
+            axios.get(webAppRoot + "/readyForReview", {
+                params: {
+                    caseId: this.$route.params.id
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                       this.snackBarMessage = "The reviewer has been notified.";
+                       this.snackBarVisible = true;
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.markAsReadyForReview);
+                    }
+                })
+                .catch(error => {
+                    alert(error);
+                });
         }
     },
     mounted() {
@@ -3004,14 +3033,14 @@ const OpenCase = {
             this.commitAnnotations(annotations);
         });
         this.$refs.geneVariantDetails.headerOptionsVisible = true;
-
         this.manageSplashScreen();
+    },
+    created() {
     },
     destroyed: function () {
         bus.$off('bam-viewer-closed');
         bus.$off('saving-annotations');
         bus.$emit("update-status-off", this);
-        // bus.$off('breadcrumb-level-down');
     },
     watch: {
         '$route': 'handleRouteChanged',

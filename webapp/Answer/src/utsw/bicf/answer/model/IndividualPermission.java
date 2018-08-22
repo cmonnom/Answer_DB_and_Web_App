@@ -21,6 +21,7 @@ public class IndividualPermission {
 	public static final String CAN_ANNOTATE = "canAnnotate";
 	public static final String CAN_SELECT = "canSelect";
 	public static final String CAN_ASSIGN = "canAssign";
+	public static final String CAN_REVIEW = "canReview";
 	
 	public IndividualPermission() {
 		
@@ -46,6 +47,9 @@ public class IndividualPermission {
 	
 	@Column(name="admin")
 	Boolean admin;
+	
+	@Column(name="can_review")
+	Boolean canReview;
 
 	public Integer getIndividualPermission() {
 		return individualPermission;
@@ -98,6 +102,14 @@ public class IndividualPermission {
 	public String createVuetifyObjectJSON() throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(this);
+	}
+
+	public Boolean getCanReview() {
+		return canReview;
+	}
+
+	public void setCanReview(Boolean canReview) {
+		this.canReview = canReview;
 	}
 	
 }

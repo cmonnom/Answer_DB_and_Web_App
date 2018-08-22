@@ -35,7 +35,7 @@ public class OrderCaseAllSummary extends Summary<OrderCaseAll>{
 		steps.setIsFlag(true);
 		steps.setSortable(false);
 		steps.setAlign("left");
-//		headers.add(steps); //keep hidden until ready for prime time.
+		headers.add(steps); //keep hidden until ready for prime time.
 		
 		headers.add(new Header(new String[] {"Epic","Order Nb"}, "epicOrderNumber"));
 		headers.add(new Header(new String[] {"Epic", "Order Date"}, "epicOrderDate"));

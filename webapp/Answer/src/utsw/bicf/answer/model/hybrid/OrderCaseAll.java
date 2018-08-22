@@ -51,8 +51,8 @@ public class OrderCaseAll {
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		int step = 0;
 		int totalSteps = OrderCase.getTotalSteps();
-		if (orderCase.getHistory() != null && !orderCase.getHistory().isEmpty()) {
-			step = orderCase.getHistory().get(orderCase.getHistory().size() - 1).getStep(); //get the last step
+		if (orderCase.getCaseHistory() != null && !orderCase.getCaseHistory().isEmpty()) {
+			step = orderCase.getCaseHistory().get(orderCase.getCaseHistory().size() - 1).getStep(); //get the last step
 		}
 		
 		for (int i = 0; i < totalSteps; i++) {

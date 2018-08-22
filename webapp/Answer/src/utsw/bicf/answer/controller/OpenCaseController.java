@@ -62,7 +62,9 @@ import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
+import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
+import utsw.bicf.answer.security.NotificationUtils;
 import utsw.bicf.answer.security.PermissionUtils;
 import utsw.bicf.answer.security.QcAPIAuthentication;
 
@@ -111,6 +113,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".savePatientDetails",
 				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".readyForReview",
+				IndividualPermission.CAN_ANNOTATE);
 
 	}
 
@@ -122,6 +126,8 @@ public class OpenCaseController {
 	FileProperties fileProperties;
 	@Autowired
 	QcAPIAuthentication qcAPI;
+	@Autowired
+	EmailProperties emailProps;
 
 	@RequestMapping("/openCase/{caseId}")
 	public String openCase(Model model, HttpSession session, @PathVariable String caseId,
@@ -856,6 +862,10 @@ public class OpenCaseController {
 		
 	}
 	
+	public static boolean isUserAssignedToCase(OrderCase caseSummary, User user) throws ClientProtocolException, IOException, URISyntaxException {
+		return (caseSummary == null || caseSummary.getAssignedTo().contains(user.getUserId().toString()));
+	}
+	
 	@RequestMapping(value = "/getPatientDetails")
 	@ResponseBody
 	public String getPatientDetails(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
@@ -906,5 +916,52 @@ public class OpenCaseController {
 		}
 		return response.createObjectJSON();
 
+	}
+	
+	
+	@RequestMapping(value = "/readyForReview")
+	@ResponseBody
+	public String readyForReview(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User currentUser = (User) session.getAttribute("user");
+		boolean isAssigned = isUserAssignedToCase(utils, caseId, currentUser);
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(isAssigned);
+		if (isAssigned) {
+			utils.caseReadyForReview(response, caseId);
+			if (response.getSuccess()) {
+				List<User> users = modelDAO.getAllUsers();
+				OrderCase caseSummary = utils.getCaseSummary(caseId);
+				for (User aUser : users) {
+					if (!aUser.equals(currentUser) && isUserAssignedToCase(caseSummary, aUser) && aUser.getIndividualPermission().getCanReview()) {
+						String subject = "You have a new case: " + caseId;
+						StringBuilder message = new StringBuilder()
+								.append("<p>Dr. ").append(aUser.getLast()).append(",</p><br/>")
+								.append("<b>")
+								.append(currentUser.getFullName())
+								.append("</b>")
+								.append(" marked a case as ready for review. ")
+								.append("<b>")
+								.append("Case Id: ").append(caseId).append("</b><br/>")
+								.append("<br/>")
+								.append("You are receiving this message because you are a reviewer on this case.<br/><br/>");								;
+
+								String toEmail = aUser.getEmail();
+//								String toEmail = "guillaume.jimenez@utsouthwestern.edu"; //for testing to avoid sending other people emails
+								String link = new StringBuilder().append(emailProps.getRootUrl()).append("openCase/").append(caseId)
+										.append("?showReview=true").toString();
+								String fullMessage = NotificationUtils.buildStandardMessage(message.toString(), emailProps, link);
+								boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), toEmail, subject, fullMessage);
+								System.out.println("An email was sent. Success:" + success);
+					}
+				}
+			}
+			else {
+				response.setMessage("You are not allowed to edit this case");
+			}
+		}
+		return response.createObjectJSON();
 	}
 }

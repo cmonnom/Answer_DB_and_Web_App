@@ -149,13 +149,6 @@ public class HomeController {
 				}
 				String subject = "You have a new case: " + caseId;
 				StringBuilder message = new StringBuilder()
-						.append("<html>")
-						.append(NotificationUtils.HEAD)
-						.append("<body>")
-						.append("<img src='")
-						.append(emailProps.getRootUrl())
-						.append("/resources/images/answer-logo-small-alpha.png'")
-						.append(" width='150px' />")
 						.append("<p>Dr. ").append(user.getLast()).append(",</p><br/>")
 						.append("<b>")
 						.append(currentUser.getFullName())
@@ -163,18 +156,13 @@ public class HomeController {
 						.append(" assigned you a new case. ")
 						.append("<b>")
 						.append("Case Id: ").append(caseId).append("<br/>")
-						.append("</b>")
-						.append("Follow this link to access it: ")
-						.append("<a href='")
-						.append(emailProps.getRootUrl()).append("openCase/").append(caseId)
-						.append("'>")
-						.append(emailProps.getRootUrl()).append("openCase/").append(caseId)
-						.append("</a><br/><br/>")
-						.append(emailProps.getSignature())
-						.append("</body></html>");
-//				String email = "guillaume.jimenez@utsouthwestern.edu"; //for testing to avoid sending other people emails
-				String email = user.getEmail();
-				boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), email, subject, message.toString());
+						.append("</b>");
+						
+				String toEmail = user.getEmail();
+//				String toEmail = "guillaume.jimenez@utsouthwestern.edu"; //for testing to avoid sending other people emails
+				String link = new StringBuilder().append(emailProps.getRootUrl()).append("openCase/").append(caseId).toString();
+				String fullMessage = NotificationUtils.buildStandardMessage(message.toString(), emailProps, link);
+				boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), toEmail, subject, fullMessage);
 				System.out.println("An email was sent. Success:" + success);
 			}
 		}

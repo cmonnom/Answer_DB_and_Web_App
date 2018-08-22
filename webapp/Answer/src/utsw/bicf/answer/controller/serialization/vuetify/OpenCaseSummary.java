@@ -38,6 +38,7 @@ public class OpenCaseSummary {
 	Boolean isAllowed;
 	List<ReportGroupForDisplay> reportGroups;
 	String qcUrl;
+	List<String> assignedToIds;
 
 	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, FinalReport finalReport, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
 		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups);
@@ -51,6 +52,7 @@ public class OpenCaseSummary {
 		this.isAllowed = true;
 		this.reportGroups = reportGroups;
 		this.qcUrl = qcAPI.getUrl();
+		this.assignedToIds = aCase.getAssignedTo();
 	}
 
 	
@@ -189,6 +191,16 @@ public class OpenCaseSummary {
 
 	public void setQcUrl(String qcUrl) {
 		this.qcUrl = qcUrl;
+	}
+
+
+	public List<String> getAssignedToIds() {
+		return assignedToIds;
+	}
+
+
+	public void setAssignedToIds(List<String> assignedToIds) {
+		this.assignedToIds = assignedToIds;
 	}
 
 

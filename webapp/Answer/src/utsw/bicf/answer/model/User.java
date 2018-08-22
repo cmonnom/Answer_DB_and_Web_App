@@ -11,7 +11,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import utsw.bicf.answer.model.extmapping.MongoDBId;
 
 @Entity
 @Table(name="answer_user")
@@ -39,11 +43,6 @@ public class User {
 	
 	@Column(name="email")
 	String email;
-	
-//	@JsonIgnore
-//	@ManyToOne(cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
-//	@JoinColumn(name="permission_id")
-//	Permission permission;
 	
 	@JsonIgnore
 	@OneToOne
@@ -109,6 +108,25 @@ public class User {
 
 	public void setIndividualPermission(IndividualPermission individualPermission) {
 		this.individualPermission = individualPermission;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) { return false; }
+		   if (obj == this) { return true; }
+		   if (obj.getClass() != getClass()) {
+		     return false;
+		   }
+		   User rhs = (User) obj;
+		   return new EqualsBuilder()
+//		                 .appendSuper(super.equals(obj))
+		                 .append(userId, rhs.userId)
+		                 .isEquals();
+	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode();
 	}
 	
 }

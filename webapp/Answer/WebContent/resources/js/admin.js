@@ -49,6 +49,7 @@ const Admin = {
                   <v-switch :label="'Can Annotate: ' + (editAnnotate ? 'Yes' : 'No')" v-model="editAnnotate"></v-switch>
                   <v-switch :label="'Can Select Variants: ' + (editSelect ? 'Yes' : 'No')" v-model="editSelect"></v-switch>
                   <v-switch :label="'Can Assign Cases: ' + (editAssign ? 'Yes' : 'No')" v-model="editAssign"></v-switch>
+                  <v-switch :label="'Can Review Cases: ' + (editReview ? 'Yes' : 'No')" v-model="editReview"></v-switch>
                   <v-switch :label="'Is Admin: ' + (editAdmin ? 'Yes' : 'No')" v-model="editAdmin"></v-switch>
                 </v-card-text>
               </v-card>
@@ -201,6 +202,7 @@ const Admin = {
       editAnnotate: false,
       editSelect: false,
       editAssign: false,
+      editReview: false,
       editAdmin: false,
       editAdd: "Add",
       snackBarVisible: false,
@@ -230,6 +232,7 @@ const Admin = {
       this.editAnnotate = user.annotateValue.pass;
       this.editSelect = user.selectValue.pass;
       this.editAssign = user.assignValue.pass;
+      this.editReview = user.reviewValue.pass;
       this.editAdmin = user.adminValue.pass;
       this.editUserDialogVisible = true;
     },
@@ -239,6 +242,7 @@ const Admin = {
       this.editAnnotate = false;
       this.editSelect = false;
       this.editAssign = false;
+      this.editReview = false;
       this.editAdmin = false;
       var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
       this.currentEditUserId = userId;
@@ -262,6 +266,7 @@ const Admin = {
           canSelect: this.editSelect,
           canAnnotate: this.editAnnotate,
           canAssign: this.editAssign,
+          canReview: this.editReview,
           admin: this.editAdmin
         }
       })
@@ -293,6 +298,7 @@ const Admin = {
       this.editSelect = false;
       this.editAnnotate = false;
       this.editAssign = false;
+      this.editReview = false;
       this.editAdmin = false;
       this.editUserDialogVisible = true;
 
