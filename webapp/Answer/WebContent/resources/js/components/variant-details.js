@@ -106,7 +106,7 @@ Vue.component('variant-details', {
                                               <v-flex xs6>
                                                   <v-select clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
                                                       :label="item.tooltip" single-line hide-details
-                                                      class="no-height-select" @input="variantDetailsUnSaved = true"
+                                                      class="no-height-select" @input="variantDetailsChanged"
                                                       :disabled="noEdit"></v-select>
                                               </v-flex>
                                           </v-layout>
@@ -214,6 +214,13 @@ Vue.component('variant-details', {
     openUrl(item) {
         window.open(item.url, "_blank");
     },
+    // handleVariantDetailsChanged() {
+    //     this.$emit("variant-details-changed");
+    // }
+    variantDetailsChanged() {
+        this.variantDetailsUnSaved = true;
+        // this.$emit("variant-details-changed");
+    }
   },
   mounted: function () {
   },
@@ -223,6 +230,7 @@ Vue.component('variant-details', {
 
   },
   watch: {
+    //   variantDetailsUnSaved: this.handleVariantDetailsChanged()
   }
 
 

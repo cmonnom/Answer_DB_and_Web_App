@@ -241,6 +241,7 @@ const Home = {
         bus.$off('open-read-only');
     },
     created: function () {
+        splashDialog = false; //disable splash screen if coming from Home
         bus.$on('assignToUser', (item) => {
             this.currentEpicOrderNumber = item.epicOrderNumber;
             this.currentCaseId = item.caseId;

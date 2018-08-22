@@ -91,7 +91,9 @@ const OpenCase = {
                         </v-list-tile>
                     </v-list>
                 </v-menu>
-                <v-toolbar-title>Review Selected Variants for {{ caseName }}
+                <v-toolbar-title class="ml-0">
+                    Review Selected Variants for {{ caseName }}
+              <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -371,11 +373,13 @@ const OpenCase = {
 
                     </v-list>
                 </v-menu>
-                <v-toolbar-title class="ml-0">Annotations for Variant:
-                    <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
-                    <span v-if="isCNV()">{{ currentVariant.chrom }}</span>
-                    <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
-                    <span> -- {{ caseName }} -- </span>
+                <v-toolbar-title class="ml-0">
+          Annotations for Variant:
+              <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
+              <span v-if="isCNV()">{{ currentVariant.chrom }}</span>
+              <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
+              <span> -- {{ caseName }} -- </span>
+            <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -723,7 +727,8 @@ const OpenCase = {
             <span>Case Menu</span>
         </v-tooltip>
         <v-toolbar-title class="white--text ml-0">
-            Working on case: {{ caseName }}
+        Working on case: {{ caseName }}
+        <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
@@ -1456,7 +1461,7 @@ const OpenCase = {
         getDialogMaxHeight(offset) {
             getDialogMaxHeight(offset);
         },
-        getVariantDetails(item) {
+        getVariantDetails(item, resetSaveFlags) {
             this.currentVariantType = "snp";
 
             this.currentVariantFlags = item.iconFlags.iconFlags;
@@ -1646,7 +1651,9 @@ const OpenCase = {
                         this.mdaAnnotations = this.currentVariant.mdaAnnotation ? this.currentVariant.mdaAnnotation : "";
                         this.formatAnnotations();
                         this.loadingVariantDetails = false;
-                        this.annotationSelectionUnSaved = false;
+                        if (resetSaveFlags) {
+                            this.annotationSelectionUnSaved = false;
+                        }
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
@@ -1667,7 +1674,7 @@ const OpenCase = {
                     bus.$emit("some-error", [this, error]);
                 });
         },
-        getCNVDetails(item) {
+        getCNVDetails(item, resetSaveFlags) {
             this.currentVariantType = "cnv";
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
@@ -1731,7 +1738,9 @@ const OpenCase = {
                         this.reloadPreviousSelectedState();
                         this.formatCNVAnnotations();
                         this.loadingVariantDetails = false;
-                        this.annotationSelectionUnSaved = false;
+                        if (resetSaveFlags) {
+                            this.annotationSelectionUnSaved = false;
+                        }
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
@@ -1750,7 +1759,7 @@ const OpenCase = {
                     bus.$emit("some-error", [this, error]);
                 });
         },
-        getTranslocationDetails(item) {
+        getTranslocationDetails(item, resetSaveFlags) {
             this.currentVariantType = "translocation";
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
@@ -1824,7 +1833,9 @@ const OpenCase = {
                         this.reloadPreviousSelectedState();
                         this.formatTranslocationAnnotations();
                         this.loadingVariantDetails = false;
-                        this.annotationSelectionUnSaved = false;
+                        if (resetSaveFlags) {
+                            this.annotationSelectionUnSaved = false;
+                        }
                         this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
@@ -2785,13 +2796,13 @@ const OpenCase = {
         },
         revertAnnotationSelection() {
             if (this.isSNP()) {
-                this.getVariantDetails(this.currentRow);
+                this.getVariantDetails(this.currentRow, true);
             }
             else if (this.isCNV()) {
-                this.getCNVDetails(this.currentRow);
+                this.getCNVDetails(this.currentRow, true);
             }
             else if (this.isTranslocation()) {
-                this.getTranslocationDetails(this.currentRow);
+                this.getTranslocationDetails(this.currentRow, true);
             }
             this.annotationIdsForReporting = []; //rest the unsaved list of ids
             this.annotationSelectionUnSaved = false; //update badge on save button
@@ -3011,6 +3022,28 @@ const OpenCase = {
                 .catch(error => {
                     alert(error);
                 });
+        },
+        createSaveTooltip() {
+            var tooltip = ["Some edits have not been saved yet:"];
+            if (this.annotationSelectionUnSaved) {
+                tooltip.push("- Annotation Selection");
+            }
+            if (this.variantUnSaved) {
+                tooltip.push("- Variant Selection");
+            }
+            if (this.patientDetailsUnSaved) {
+                tooltip.push("- Patient Details");
+            }
+            if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
+                tooltip.push("- Variant Details");
+            }
+            if (tooltip.length > 1) {
+                return tooltip.join("<br/>");
+            }
+            return "";
+        },
+        isSaveNeededBadgeVisible() {
+            return this.annotationSelectionUnSaved || this.variantUnSaved || this.patientDetailsUnSaved || (this.$refs.variantDetailsPanel ? this.$refs.variantDetailsPanel.variantDetailsUnSaved : false);
         }
     },
     mounted() {
@@ -3036,6 +3069,9 @@ const OpenCase = {
         this.manageSplashScreen();
     },
     created() {
+      
+    },
+    computed: {
     },
     destroyed: function () {
         bus.$off('bam-viewer-closed');

@@ -238,6 +238,10 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
     height: 20%;
 }
 
+.title-save-badge > .badge__badge {
+    top: -25px !important;
+}
+
 .expansion-panel__header:hover {
     background: rgba(0,0,0,.12);
 }
