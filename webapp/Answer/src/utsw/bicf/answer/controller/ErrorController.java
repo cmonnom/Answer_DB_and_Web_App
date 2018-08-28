@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import utsw.bicf.answer.controller.ControllerUtil;
+import utsw.bicf.answer.security.FileProperties;
 
 @Controller
 @RequestMapping("/")
@@ -18,10 +19,13 @@ public class ErrorController {
 	
 	@Autowired 
 	ServletContext servletContext;
+	@Autowired
+	FileProperties fileProps;
 
 	@RequestMapping("/404")
 	public String error(Model model, HttpSession session) throws IOException {
 		ControllerUtil.initializeModel(model, servletContext, null);
+		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		return "error";
 	}
 

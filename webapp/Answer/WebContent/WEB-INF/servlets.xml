@@ -102,6 +102,7 @@
 		<property name="excelFilesPath" value="${excel.file.location}" />
 		<property name="bamLinksPath" value="${bam.link.location}" />
 		<property name="bamFilesPath" value="${bam.file.location}" />
+		<property name="productionEnv" value="${production.env}" />
 	</bean>
 	
 	<bean id="emailProps" class="utsw.bicf.answer.security.EmailProperties">

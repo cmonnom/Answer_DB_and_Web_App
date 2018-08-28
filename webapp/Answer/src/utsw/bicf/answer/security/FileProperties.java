@@ -12,6 +12,7 @@ public class FileProperties {
 	File bamLinksDir;
 	String bamFilesPath;
 	File bamFilesDir;
+	Boolean productionEnv;
 	
 	public String getMdaFilesPath() {
 		return mdaFilesPath;
@@ -84,6 +85,12 @@ public class FileProperties {
 	}
 	public void setBamFilesDir(File bamFilesDir) {
 		this.bamFilesDir = bamFilesDir;
+	}
+	public Boolean getProductionEnv() {
+		return productionEnv;
+	}
+	public void setProductionEnv(Boolean productionEnv) {
+		this.productionEnv = productionEnv;
 	}
 	
 	

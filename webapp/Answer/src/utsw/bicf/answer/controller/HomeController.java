@@ -30,6 +30,7 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.hybrid.OrderCaseAll;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
 import utsw.bicf.answer.security.EmailProperties;
+import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
 import utsw.bicf.answer.security.PermissionUtils;
 
@@ -50,10 +51,13 @@ public class HomeController {
 	ModelDAO modelDAO;
 	@Autowired
 	EmailProperties emailProps;
+	@Autowired
+	FileProperties fileProps;
 
 	@RequestMapping("/home")
 	public String home(Model model, HttpSession session) throws IOException {
 		model.addAttribute("urlRedirect", "home");
+		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		User user = (User) session.getAttribute("user");
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}

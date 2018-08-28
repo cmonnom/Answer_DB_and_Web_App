@@ -9,9 +9,11 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.security.FileProperties;
 
 public class ControllerUtil {
 	

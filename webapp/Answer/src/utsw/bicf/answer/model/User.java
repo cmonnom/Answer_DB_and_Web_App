@@ -10,6 +10,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
@@ -48,7 +49,6 @@ public class User {
 	@OneToOne
 	@JoinColumn(name="individual_permission_id", unique=true)
 	IndividualPermission individualPermission;
-	
 	
 	public Integer getUserId() {
 		return userId;
@@ -128,5 +128,5 @@ public class User {
 	public int hashCode() {
 		return super.hashCode();
 	}
-	
+
 }

@@ -276,5 +276,10 @@ table.table tbody td {
 
 .splash-screen-item {
     position: absolute;
-    left: 48%;
+    /* left: 48%; */
+    width: 100%;
+}
+
+.max300 {
+    max-width: 300px !important;
 }

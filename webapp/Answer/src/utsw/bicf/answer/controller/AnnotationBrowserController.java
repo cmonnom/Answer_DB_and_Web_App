@@ -18,6 +18,7 @@ import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.AnnotationSearchResult;
+import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
@@ -33,10 +34,13 @@ public class AnnotationBrowserController {
 	ServletContext servletContext;
 	@Autowired
 	ModelDAO modelDAO;
+	@Autowired
+	FileProperties fileProps;
 
 	@RequestMapping("/annotationBrowser")
 	public String annotationBrowser(Model model, HttpSession session) throws IOException {
 		model.addAttribute("urlRedirect", "annotationBrowser");
+		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		User user = (User) session.getAttribute("user");
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}

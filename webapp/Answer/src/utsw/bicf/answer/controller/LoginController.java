@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import utsw.bicf.answer.controller.serialization.TargetPage;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.LDAPAuthentication;
 
 @Controller
@@ -30,10 +31,13 @@ public class LoginController {
 	ServletContext servletContext;
 	@Autowired
 	LDAPAuthentication ldapUtils;
+	@Autowired
+	FileProperties fileProps;
 
 	@RequestMapping("/login")
 	public String login(Model model, HttpSession session) throws IOException {
 		User user = (User) session.getAttribute("user");
+		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		ControllerUtil.initializeModel(model, servletContext, user);
 		return "login";
 	}

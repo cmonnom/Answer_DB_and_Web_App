@@ -16,7 +16,7 @@ public class ZingChartData {
 	public ZingChartData() {
 	}
 	
-	public String createVuetifyObjectJSON() throws JsonProcessingException {
+	public String createObjectJSON() throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(this);
 	}

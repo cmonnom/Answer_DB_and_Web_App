@@ -9,6 +9,7 @@
         		admin: "${permissions.admin}" === 'true'
         };
         const isAdmin = permissions.admin === true;
+        const isProduction = "${isProduction}";
         		
         const csrf = { paramName: "${_csrf.parameterName}",
         value: "${_csrf.token}",
@@ -27,8 +28,14 @@
 <!-- <link rel="shortcut icon" type="image/x-icon" href="https://www.utsouthwestern.net/favicon.ico" /> -->
 <link rel="shortcut icon" type="image/x-icon" href="${pageContext.request.contextPath}/resources/images/answer-logo-icon-xsmall.png" />
 
-
-<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<c:choose>
+<c:when test="${isProduction == 'false'}">
+   <script src="https://unpkg.com/vue/dist/vue.js"></script>
+</c:when>
+<c:otherwise>
+   <script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+</c:otherwise>
+</c:choose>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.6.0/Sortable.min.js"></script> 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.14.1/vuedraggable.min.js"></script>
@@ -47,10 +54,14 @@
 <script src="${pageContext.request.contextPath}/resources/js/header.js?timestamp=${timestamp}"></script>
 <script src="${pageContext.request.contextPath}/resources/js/components/login.js?timestamp=${timestamp}"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
-<script src="https://unpkg.com/vue-chartjs/dist/vue-chartjs.min.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+<script src="https://unpkg.com/vue-chartjs/dist/vue-chartjs.min.js"></script> -->
 
 <script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" />
 
 <c:forEach var = "componentFile" items="${componentFiles}">
 		<script src="${pageContext.request.contextPath}/resources/js/components/${componentFile}?timestamp=${timestamp}"></script>

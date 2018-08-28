@@ -45,6 +45,7 @@ public class BamViewerController {
 		model.addAttribute("urlRedirect", "bamViewer?locus=" + locus + "%26caseId=" + caseId);
 		model.addAttribute("locus", locus);
 		model.addAttribute("caseId", caseId);
+		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		User user = (User) session.getAttribute("user");
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);

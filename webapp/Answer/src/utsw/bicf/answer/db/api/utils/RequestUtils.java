@@ -1,15 +1,18 @@
 package utsw.bicf.answer.db.api.utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -23,11 +26,9 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.clarity.api.utils.APIResponse;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.dao.ModelDAO;
@@ -36,7 +37,10 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.AnnotationSearchResult;
+import utsw.bicf.answer.model.extmapping.CNRData;
+import utsw.bicf.answer.model.extmapping.CNSData;
 import utsw.bicf.answer.model.extmapping.CNV;
+import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.SearchSNPAnnotation;
@@ -391,11 +395,17 @@ public class RequestUtils {
 		
 	}
 
-	public void saveVariant(AjaxResponse ajaxResponse, Variant variant, String variantType, String oid) throws URISyntaxException, ClientProtocolException, IOException {
+	public void saveVariant(AjaxResponse ajaxResponse, Object variant, String variantType) throws URISyntaxException, ClientProtocolException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		String oid = null;
 		if (variantType.equals("snp")) {
+			oid = ((Variant) variant).getMongoDBId().getOid();
 			sbUrl.append("variant/");
+		}
+		if (variantType.equals("cnv")) {
+			oid = ((CNV) variant).getMongoDBId().getOid();
+			sbUrl.append("cnv/");
 		}
 		else {
 			ajaxResponse.setSuccess(false);
@@ -526,6 +536,60 @@ public class RequestUtils {
 			ajaxResponse.setIsAllowed(true);
 		}
 		
+	}
+
+	public CNVPlotData getCnvPlotData(String caseId, String chrom) throws URISyntaxException, ClientProtocolException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/cnvPlot");
+		URI uri = new URI(sbUrl.toString());
+
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		return test(chrom);
+		
+//		int statusCode = response.getStatusLine().getStatusCode();
+//		if (statusCode == HttpStatus.SC_OK) {
+//			CNVPlotData plotData = mapper.readValue(response.getEntity().getContent(), CNVPlotData.class);
+//			return plotData;
+//		}
+//		return null;
+	}
+
+	private CNVPlotData test(String chromFilter) throws IOException {
+		List<String> cnrRows = FileUtils.readLines(new File("/opt/answer/files/cnr2.csv"));
+		List<String> cnsRows = FileUtils.readLines(new File("/opt/answer/files/cns2.csv"));
+		
+		List<CNRData> cnrDataList = new ArrayList<CNRData>();
+		List<CNSData> cnsDataList = new ArrayList<CNSData>();
+		for (String row : cnrRows) {
+			if (row.startsWith("chromosome")) {
+				continue;
+			}
+			String[] items = row.split(",");
+			String cnrChrom = items[0];
+			if (chromFilter == null || cnrChrom.equals(chromFilter)) {
+				cnrDataList.add(new CNRData(cnrChrom, Long.parseLong(items[1]), Long.parseLong(items[2]), items[3], Double.parseDouble(items[4]), Double.parseDouble(items[4])));
+			}
+		}
+		for (String row : cnsRows) {
+			if (row.startsWith("chromosome")) {
+				continue;
+			}
+			String[] items = row.split(",");
+			if (items.length >= 5) {
+				String cnsChrom = items[0];
+				if (chromFilter == null || cnsChrom.equals(chromFilter)) {
+					cnsDataList.add(new CNSData(cnsChrom, Long.parseLong(items[1]), Long.parseLong(items[2]), Double.parseDouble(items[3]), Integer.parseInt(items[4])));
+				}
+			}
+		}
+		CNVPlotData data = new CNVPlotData();
+		data.setCnrData(cnrDataList);
+		data.setCnsData(cnsDataList);
+		return data;
 	}
 
 

@@ -8,11 +8,9 @@ const OpenCase = {
     <!-- splash screen dialog -->
     <div class="splash-screen" v-if="splashDialog">
     <v-layout align-center justify-center row fill-height class="splash-screen-item">
-    <v-progress-circular
-    :size="100"
-    :width="10"
-    color="teal"
-    indeterminate  ></v-progress-circular>
+    <v-slide-x-transition>
+    <span class="subheading" color="primary" v-show="splashTextVisible">{{ splashTextCurrent }}</span>
+    </v-slide-x-transition>
   </v-layout>
   </div>
 
@@ -227,8 +225,9 @@ const OpenCase = {
             <v-flex xs12 md12 lg11 xl10 mb-2 v-show="editAnnotationVariantDetailsVisible">
                 <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()"
                     :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
-                    @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" @save-variant="saveVariant" :color="colors.editAnnotation"
-                    ref="cnvVariantDetailsPanel">
+                    @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
+                    ref="cnvVariantDetailsPanel"
+                    :variant-type="currentVariantType">
 
                 </variant-details>
             </v-flex>
@@ -458,7 +457,8 @@ const OpenCase = {
                                 <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable"
                                     :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                                     @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
-                                    @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel">
+                                    @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel"
+                                    :variant-type="currentVariantType">
                                 </variant-details>
 
                             </v-flex>
@@ -1070,6 +1070,12 @@ const OpenCase = {
             scopesTranslocation: [
                 'Case', 'Tumor'
             ],
+            aberrationTypes: [
+                'amplification',
+                'gain',
+                'hemizygous loss',
+                'homozygous loss'
+            ],
             variantDetailsUnSaved: false,
             patientDetailsUnSaved: false,
             savingVariantDetails: false,
@@ -1108,12 +1114,33 @@ const OpenCase = {
             annotationSelectionUnSaved: false,
             savingAnnotationSelection: false,
             splashDialog: splashDialog,
+            splashTextCurrent: "Warming Up...",
+            splashTextItems: [
+                "Acquiring Patient Data...",
+                "Spellchecking Annotations...",
+                "Formatting Input...",
+                "Initializing User Permissions...",
+                "Rendering Page...",
+                "Coloring Icons...",
+                "Loading User Preferences...",
+                "Dusting Off Variants",
+                "Translocating Translocations",
+                "Reviewing Reviewers..."
+            ],
             splashProgress: 0,
             splashSteps: 0,
+            splashTextVisible: true,
             annotationIdsForReporting: [], //save the state of the selection in case the user close/open another page
 
         }
     }, methods: {
+        createSplashText() {
+            var newText= "";
+            while (newText == "" || this.splashTextCurrent == newText) {
+                    newText = this.splashTextItems[Math.floor(Math.random() * this.splashTextItems.length)]
+                }
+            this.splashTextCurrent = newText;
+        },
         canProceed(field) {
             if (isAdmin) {
                 return true;
@@ -1147,6 +1174,7 @@ const OpenCase = {
                 bus.$emit("login-needed", [this, callback])
             }
             else if (response.success === false) {
+                this.splashProgress = 100; //should dismiss the splash dialog
                 bus.$emit("some-error", [this, response.message]);
             }
         },
@@ -1718,7 +1746,14 @@ const OpenCase = {
                                     label: "End", value: this.currentVariant.endFormatted
                                 },
                                 {
-                                    label: "Aberration Type", value: this.currentVariant.aberrationType
+                                    label: "Aberration Type",
+                                    type: "select",
+                                    fieldName: "aberrationType",
+                                    tooltip: "Select Aberration Type",
+                                    items: this.aberrationTypes,
+                                    help: true,
+                                    helpMessage: this.buildAberrationTypeHelp(),
+                                    value: this.currentVariant.aberrationType
                                 },
                                 {
                                     label: "Copy Number", value: this.currentVariant.copyNumber ? this.currentVariant.copyNumber + "" : ""
@@ -1746,7 +1781,7 @@ const OpenCase = {
                         this.updateVariantDetails();
                         //finally, open edit annotation
                         this.handleEditAnnotationOpening();
-
+                        // this.$refs.variantDetailsPanel.updateCNVPlot();
                         this.updateSplashProgress();
                     } else {
                         this.loadingVariantDetails = false;
@@ -2713,6 +2748,7 @@ const OpenCase = {
             var lightVariant = {};
             lightVariant["_id"] = this.currentVariant._id;
             lightVariant["tier"] = this.currentVariant.tier;
+            lightVariant["aberrationType"] = this.currentVariant.aberrationType;
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveVariant",
@@ -2896,9 +2932,11 @@ const OpenCase = {
         handlePanelVisibility(visible) {
             if (visible == null) {
                 this.editAnnotationVariantDetailsVisible = !this.editAnnotationVariantDetailsVisible;
+                this.annotationVariantDetailsVisible = ! this.annotationVariantDetailsVisible;
             }
             else {
                 this.editAnnotationVariantDetailsVisible = visible;
+                this.annotationVariantDetailsVisible = visible;
             }
         },
         matchAnnotationFilter() {
@@ -2990,6 +3028,13 @@ const OpenCase = {
         },
         manageSplashScreen() {
             if (this.splashDialog) {
+                splashInterval = setInterval(() => {
+                    this.splashTextVisible = !this.splashTextVisible;
+                    if (this.splashTextVisible) {
+                        this.createSplashText();
+                    }
+                    }
+                    , 1000);
                 document.querySelector(".splash-screen").style = getDialogMaxHeight(0);
             }
         },
@@ -2998,6 +3043,9 @@ const OpenCase = {
                 setTimeout(() => {
                     this.splashDialog = false;
                     splashDialog = false; //disable from now on
+                    if (splashInterval) {
+                        clearInterval(splashInterval);
+                    }
                 }, 500);
             }
             else {
@@ -3044,6 +3092,13 @@ const OpenCase = {
         },
         isSaveNeededBadgeVisible() {
             return this.annotationSelectionUnSaved || this.variantUnSaved || this.patientDetailsUnSaved || (this.$refs.variantDetailsPanel ? this.$refs.variantDetailsPanel.variantDetailsUnSaved : false);
+        },
+        buildAberrationTypeHelp() {
+            var message = "amplification: High level copy number gain</br>"
+            + "gain: Low level copy number gain</br>"
+    + "homozygous loss: Two copy loss</br>"
+    + "hemizygous loss: Single Copy Loss with remaining allele WT</br>";
+            return message;
         }
     },
     mounted() {

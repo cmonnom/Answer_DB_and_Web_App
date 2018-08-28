@@ -157,7 +157,7 @@ public class CNV {
 
 
 	public String getStartFormatted() {
-		if (startFormatted == null) {
+		if (startFormatted == null && start != null) {
 			startFormatted = NumberFormat.getInstance().format(start);
 		}
 		return startFormatted;
@@ -170,7 +170,7 @@ public class CNV {
 
 
 	public String getEndFormatted() {
-		if (endFormatted == null) {
+		if (endFormatted == null && end != null) {
 			endFormatted = NumberFormat.getInstance().format(end);
 		}
 		return endFormatted;

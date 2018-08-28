@@ -13,3 +13,4 @@ function getDialogMaxHeight(offset) {
 //controls the visibility of the splash dialog
 //ths goal is to hide the page until it's ready
 var splashDialog = true;
+var splashInterval;

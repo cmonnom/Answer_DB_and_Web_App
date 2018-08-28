@@ -8,14 +8,9 @@ const Home = {
       </v-toolbar>
       <v-card-title>Pick who should work on this case:</v-card-title>
       <v-card-text>
-        <!-- <v-list>
-          <v-list-tile class="dense-tiles" v-for="(user, index) in allUsers" :key="index">
-            <v-switch :label="user.name" v-model="usersAssignedToCase[index]"></v-switch> 
-          </v-list-tile>
-        </v-list> -->
         <v-layout row wrap class="pl-2">
           <v-flex xs12 lg6 v-for="(user, index) in allUsers" :key="index">
-            <v-switch :label="user.name" v-model="usersAssignedToCase[index]"></v-switch>
+            <v-switch :label="createUserLabel(user)" v-model="usersAssignedToCase[index]"></v-switch>
           </v-flex>
         </v-layout>
       </v-card-text>
@@ -228,6 +223,10 @@ const Home = {
             //         this.setFlexClass();
             //     }, 400);
             // }
+        },
+        createUserLabel(user) {
+            var title = user.canReview ? "(Reviewer)" : "";
+            return user.name + " " + title;
         }
 
     },

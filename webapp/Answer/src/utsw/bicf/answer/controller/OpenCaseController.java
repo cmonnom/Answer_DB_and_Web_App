@@ -37,6 +37,7 @@ import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
 import utsw.bicf.answer.controller.serialization.Utils;
+import utsw.bicf.answer.controller.serialization.zingchart.CNVChartData;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterItems;
@@ -54,6 +55,7 @@ import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.CNV;
+import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
@@ -115,6 +117,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".readyForReview",
 				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCNVChartData",
+				IndividualPermission.CAN_VIEW);
 
 	}
 
@@ -128,6 +132,8 @@ public class OpenCaseController {
 	QcAPIAuthentication qcAPI;
 	@Autowired
 	EmailProperties emailProps;
+	@Autowired
+	FileProperties fileProps;
 
 	@RequestMapping("/openCase/{caseId}")
 	public String openCase(Model model, HttpSession session, @PathVariable String caseId,
@@ -140,6 +146,7 @@ public class OpenCaseController {
 				+ "%26edit=" + edit;
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
+		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		RequestUtils utils = new RequestUtils(modelDAO);
 		if (user != null && !isUserAssignedToCase(utils, caseId, user)) {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
@@ -154,11 +161,12 @@ public class OpenCaseController {
 			@RequestParam(defaultValue="", required=false) String variantType,
 			@RequestParam(defaultValue="false", required=false) Boolean showReview,
 			@RequestParam(defaultValue="", required=false) String edit) throws IOException, UnsupportedOperationException, URISyntaxException {
-		String url = "openCase/" + caseId + "?showReview=" + showReview
+		String url = "openCaseReadOnly/" + caseId + "?showReview=" + showReview
 				+ "%26variantId=" + variantId + "%26variantType=" + variantType
 				+ "%26edit=" + edit;
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
+		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
 	
@@ -739,7 +747,16 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode nodeData = mapper.readTree(data);
-		Variant variant = mapper.readValue(nodeData.get("variant").toString(), Variant.class);
+		Object variant = null;
+		if (variantType.equals("snp")) {
+			variant = mapper.readValue(nodeData.get("variant").toString(), Variant.class);
+		}
+		else if (variantType.equals("cnv")) {
+			variant = mapper.readValue(nodeData.get("variant").toString(), CNV.class);
+		}
+		else if (variantType.equals("translocation")) {
+			variant = mapper.readValue(nodeData.get("variant").toString(), Translocation.class);
+		}
 		if (variant != null) {
 			OrderCase orderCase = utils.getCaseDetails(caseId, null);
 			if (orderCase != null) {
@@ -748,7 +765,7 @@ public class OpenCaseController {
 					return response.createObjectJSON();
 				}
 //				stripVariant(variant);
-				utils.saveVariant(response, variant, variantType, variant.getMongoDBId().getOid());
+				utils.saveVariant(response, variant, variantType);
 				return response.createObjectJSON();
 			}
 			else {
@@ -963,5 +980,27 @@ public class OpenCaseController {
 			}
 		}
 		return response.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/getCNVChartData")
+	@ResponseBody
+	public String getCNVChartData(Model model, HttpSession session, @RequestParam String caseId, @RequestParam(defaultValue="all", required=false) String chrom) throws Exception {
+
+		RequestUtils utils = new RequestUtils(modelDAO);
+		if (chrom.equals("all")) {
+			chrom = null;
+		}
+		CNVPlotData cnvPlotData = utils.getCnvPlotData(caseId, chrom);
+		if (cnvPlotData != null) {
+			return new CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData()).createObjectJSON();
+		}
+		else {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+			
+			return response.createObjectJSON();
+		}
+
 	}
 }
