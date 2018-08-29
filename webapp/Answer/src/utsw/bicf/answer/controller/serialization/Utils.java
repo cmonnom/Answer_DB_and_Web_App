@@ -109,7 +109,7 @@ public class Utils {
 			else if (filter.isDate() != null && filter.isDate()) {
 				//TODO
 			}
-			else if (filter.isNumber() != null && filter.isNumber()) {
+			else if ((filter.isNumber() != null && filter.isNumber()) || (filter.isReverseNumber() != null && filter.isReverseNumber())) {
 				if (filter.getMinValue() != null || filter.getMaxValue() != null) {
 					VariantFilter vf = new VariantFilter(filter.getFieldName());
 					if (filter.getMinValue() != null) {

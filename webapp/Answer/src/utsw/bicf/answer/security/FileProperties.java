@@ -13,6 +13,7 @@ public class FileProperties {
 	String bamFilesPath;
 	File bamFilesDir;
 	Boolean productionEnv;
+	String genePanelSearchUrl;
 	
 	public String getMdaFilesPath() {
 		return mdaFilesPath;
@@ -91,6 +92,12 @@ public class FileProperties {
 	}
 	public void setProductionEnv(Boolean productionEnv) {
 		this.productionEnv = productionEnv;
+	}
+	public String getGenePanelSearchUrl() {
+		return genePanelSearchUrl;
+	}
+	public void setGenePanelSearchUrl(String genePanelSearchUrl) {
+		this.genePanelSearchUrl = genePanelSearchUrl;
 	}
 	
 	

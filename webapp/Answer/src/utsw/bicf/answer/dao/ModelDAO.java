@@ -218,6 +218,16 @@ public class ModelDAO {
 				.list();
 	}
 
+	@SuppressWarnings("unchecked")
+	@Transactional
+	public List<String> getGenesInPanels(List<String> cleanGenes) {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "SELECT gene_name FROM gene_to_report where gene_name in :cleanGenes";
+		return session.createNativeQuery(sql).
+				setParameter("cleanGenes", cleanGenes)
+				.list();
+	}
+
 //	@Transactional
 //	public OrderCase getOrderCaseByEpicOrderNumber(Integer epicOrderNumber) {
 //		Session session = sessionFactory.getCurrentSession();

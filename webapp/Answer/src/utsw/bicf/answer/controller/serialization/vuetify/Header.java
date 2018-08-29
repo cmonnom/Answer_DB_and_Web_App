@@ -29,6 +29,7 @@ public class Header {
 	String align;
 	Boolean sortable = true;
 	Boolean isLink;
+	Boolean canHighlight; //enable to compare the content of items with an array of values to highlight (eg: gene name filter)
 	
 	public Header(String text, String value, Units unit, ToolTip toolTip, Boolean isPassable) {
 		this.text = text;
@@ -233,6 +234,14 @@ public class Header {
 
 	public void setIsLink(Boolean isLink) {
 		this.isLink = isLink;
+	}
+
+	public Boolean getCanHighlight() {
+		return canHighlight;
+	}
+
+	public void setCanHighlight(Boolean canHighlight) {
+		this.canHighlight = canHighlight;
 	}
 
 }

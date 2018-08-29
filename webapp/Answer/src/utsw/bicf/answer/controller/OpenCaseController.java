@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.DataFilterList;
 import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
@@ -119,7 +120,9 @@ public class OpenCaseController {
 				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCNVChartData",
 				IndividualPermission.CAN_VIEW);
-
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".verifyGeneNames",
+				IndividualPermission.CAN_VIEW);
+		
 	}
 
 	@Autowired
@@ -287,6 +290,7 @@ public class OpenCaseController {
 		List<DataTableFilter> filters = new ArrayList<DataTableFilter>();
 
 		DataTableFilter chrFilter = new DataTableFilter("Chromosome", "chrom");
+		chrFilter.setType("snp");
 		chrFilter.setSelect(true);
 		List<SearchItem> selectItems = new ArrayList<SearchItem>();
 		for (int i = 1; i <= 23; i++) {
@@ -298,11 +302,15 @@ public class OpenCaseController {
 		chrFilter.setSelectItems(selectItems);
 
 		DataTableFilter geneFilter = new DataTableFilter("Gene Name(s)", Variant.FIELD_GENE_NAME);
+		geneFilter.setType("snp");
 		geneFilter.setString(true);
 		geneFilter.setTooltip("comma separated");
+		Button geneButton = new Button("spellcheck", "verifyGeneNames", "Click here to check for untargeted genes", "primary");
+		geneFilter.setButton(geneButton);
 		filters.add(geneFilter);
 
 		DataTableFilter somaticFilter = new DataTableFilter("Somatic Status", "somaticStatus");
+		somaticFilter.setType("snp");
 		somaticFilter.setSelect(true);
 		List<SearchItem> somaticSelectItems = new ArrayList<SearchItem>();
 		somaticSelectItems.add(new SearchItemString("Somatic", "Somatic"));
@@ -313,23 +321,28 @@ public class OpenCaseController {
 		somaticFilter.setSelectItems(somaticSelectItems);
 
 		DataTableFilter passQCFilter = new DataTableFilter("Pass QC", "Fail QC", Variant.FIELD_FILTERS);
+		passQCFilter.setType("snp");
 		passQCFilter.setBoolean(true);
 		filters.add(passQCFilter);
 
 		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Not Annotated", Variant.FIELD_ANNOTATIONS);
+		annotatedFilter.setType("snp");
 		annotatedFilter.setBoolean(true);
 		filters.add(annotatedFilter);
 
 		DataTableFilter cosmicFilter = new DataTableFilter("In COSMIC", "Not In COSMIC", Variant.FIELD_IN_COSMIC);
+		cosmicFilter.setType("snp");
 		cosmicFilter.setBoolean(true);
 		filters.add(cosmicFilter);
 		
 		DataTableFilter repeatFilter = new DataTableFilter("Has Repeats", "No Repeats", Variant.FIELD_HAS_REPEATS);
+		repeatFilter.setType("snp");
 		repeatFilter.setBoolean(true);
 		filters.add(repeatFilter);
 
 
 		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", Variant.FIELD_TUMOR_ALT_FREQUENCY);
+		tafFilter.setType("snp");
 		tafFilter.setNumber(true);
 		filters.add(tafFilter);
 
@@ -340,10 +353,12 @@ public class OpenCaseController {
 
 		DataTableFilter tumorTotalDepthFilter = new DataTableFilter("Tumor Total Depth",
 				Variant.FIELD_TUMOR_TOTAL_DEPTH);
+		tumorTotalDepthFilter.setType("snp");
 		tumorTotalDepthFilter.setNumber(true);
 		filters.add(tumorTotalDepthFilter);
 
 		DataTableFilter nafFilter = new DataTableFilter("Normal Alt %", Variant.FIELD_NORMAL_ALT_FREQUENCY);
+		nafFilter.setType("snp");
 		nafFilter.setNumber(true);
 		filters.add(nafFilter);
 
@@ -354,10 +369,12 @@ public class OpenCaseController {
 
 		DataTableFilter normalTotalDepthFilter = new DataTableFilter("Normal Total Depth",
 				Variant.FIELD_NORMAL_TOTAL_DEPTH);
+		normalTotalDepthFilter.setType("snp");
 		normalTotalDepthFilter.setNumber(true);
 		filters.add(normalTotalDepthFilter);
 
 		DataTableFilter rafFilter = new DataTableFilter("Rna Alt %", Variant.FIELD_RNA_ALT_FREQUENCY);
+		rafFilter.setType("snp");
 		rafFilter.setNumber(true);
 		filters.add(rafFilter);
 
@@ -367,41 +384,65 @@ public class OpenCaseController {
 		// filters.add(rnaDepthFilter);
 
 		DataTableFilter rnaTotalDepthFilter = new DataTableFilter("RNA Total Depth", Variant.FIELD_RNA_TOTAL_DEPTH);
+		rnaTotalDepthFilter.setType("snp");
 		rnaTotalDepthFilter.setNumber(true);
 		filters.add(rnaTotalDepthFilter);
 
 		DataTableFilter exacFilter = new DataTableFilter("ExAC Allele %", Variant.FIELD_EXAC_ALLELE_FREQUENCY);
+		exacFilter.setType("snp");
 		exacFilter.setNumber(true);
 		filters.add(exacFilter);
 
 		DataTableFilter gnomadFilter = new DataTableFilter("gnomAD Pop. Max. Allele %",
 				Variant.FIELD_GNOMAD_ALLELE_FREQUENCY);
+		gnomadFilter.setType("snp");
 		gnomadFilter.setNumber(true);
 		filters.add(gnomadFilter);
 
 		DataTableFilter numCasesSeenFilter = new DataTableFilter("Nb. Cases Seen", Variant.FIELD_NUM_CASES_SEEN);
+		numCasesSeenFilter.setType("snp");
 		numCasesSeenFilter.setNumber(true);
 		filters.add(numCasesSeenFilter);
 
 		DataTableFilter effectFilterLOF = new DataTableFilter("LOF Effects (HIGH)", Variant.FIELD_EFFECTS);
+		effectFilterLOF.setType("snp");
 		effectFilterLOF.setCheckBox(true);
 		effectFilterLOF.setCategory("HIGH");
 		filters.add(effectFilterLOF);
 		
 		DataTableFilter effectFilterCoding = new DataTableFilter("Coding Change Effects (MODERATE)", Variant.FIELD_EFFECTS);
+		effectFilterCoding.setType("snp");
 		effectFilterCoding.setCheckBox(true);
 		effectFilterCoding.setCategory("MODERATE");
 		filters.add(effectFilterCoding);
 		
 		DataTableFilter effectFilterOther = new DataTableFilter("Other Coding Effects (LOW)", Variant.FIELD_EFFECTS);
+		effectFilterOther.setType("snp");
 		effectFilterOther.setCheckBox(true);
 		effectFilterOther.setCategory("LOW");
 		filters.add(effectFilterOther);
 		
 		DataTableFilter effectFilterNonCoding = new DataTableFilter("Non Coding Effects (MODIFIER)", Variant.FIELD_EFFECTS);
+		effectFilterNonCoding.setType("snp");
 		effectFilterNonCoding.setCheckBox(true);
 		effectFilterNonCoding.setCategory("MODIFIER");
 		filters.add(effectFilterNonCoding);
+		
+		//CNV filters
+
+		DataTableFilter cnvGeneFilter = new DataTableFilter("Gene Name(s)", Variant.FIELD_CNV_GENE_NAME);
+		cnvGeneFilter.setType("cnv");
+		cnvGeneFilter.setString(true);
+		cnvGeneFilter.setTooltip("comma separated");
+		Button cnvGeneButton = new Button("spellcheck", "verifyCNVGeneNames", "Click here to remove genes not in our panels", "primary");
+		cnvGeneFilter.setButton(cnvGeneButton);
+		filters.add(cnvGeneFilter);
+		
+		DataTableFilter cnFilter = new DataTableFilter("Copy Number", Variant.FIELD_CNV_COPY_NUMBER);
+		cnFilter.setType("cnv");
+		cnFilter.setReverseNumber(true);
+		filters.add(cnFilter);
+		
 
 		VariantFilterItems items = new VariantFilterItems();
 		items.setFilters(filters);
@@ -1003,4 +1044,39 @@ public class OpenCaseController {
 		}
 
 	}
+	
+	@RequestMapping(value = "/verifyGeneNames")
+	@ResponseBody
+	public String verifyGeneNames(Model model, HttpSession session, @RequestParam String type, @RequestParam String genesParam) throws Exception {
+
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		
+		String[] genes = genesParam.split(",");
+		List<String> cleanGenes = new ArrayList<String>();
+		for (String gene : genes) {
+			cleanGenes.add(gene.trim().toUpperCase());
+		}
+		
+		List<String> genesFound = modelDAO.getGenesInPanels(cleanGenes);
+		List<String> invalidGenes = new ArrayList<String>();
+		for (String gene : cleanGenes) {
+			if (!genesFound.contains(gene)) {
+				invalidGenes.add(gene);
+			}
+		}
+		if (!invalidGenes.isEmpty() ) {
+			StringBuilder message = new StringBuilder("Some genes are untargeted:<br/>");
+			message.append(invalidGenes.stream().collect(Collectors.joining(" "))).append("<br/><br/>");
+			message.append("Click <a href='").append(fileProps.getGenePanelSearchUrl()).append("' target='blank'>").append(" here </a> to see which genes we sequence.<br/><br/>");
+			response.setMessage(message.toString());
+		}
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+
+		return response.createObjectJSON();
+
+	}
+	
 }

@@ -30,6 +30,9 @@ public class Variant {
 	public static final String FIELD_IN_COSMIC = "inCosmic";
 	public static final String FIELD_OLD_BUILDS = "oldBuilds";
 	
+	public static final String FIELD_CNV_GENE_NAME = "cnvGeneName";
+	public static final String FIELD_CNV_COPY_NUMBER = "cnvCopyNumber";
+	
 	//Some values like filter pass/fail need to be translated into boolean
 	//keep the values expected in the JSON string here
 	public static final String VALUE_PASS = "PASS";

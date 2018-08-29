@@ -153,8 +153,8 @@ Vue.component('variant-details', {
                                             <v-icon slot="activator" color="primary">help</v-icon>
                                         <span >
                                         - Brighter points are likely a copy number change (copy number equals 2)<br/>
-                                        - Clic and Drag the mouse to zoom in.<br/>
-                                        - Right-Clic on the chart to display more actions<br/>
+                                        - Click and Drag the mouse to zoom in.<br/>
+                                        - Right-Click on the chart to display more actions<br/>
                                         - Mouse over a data point to get more information (tooltip)<br/>
                                         - The plot with ALL chromosomes doesn't have tooltips for faster loading.</span>
                                         </v-tooltip>  

@@ -1,7 +1,16 @@
 Vue.component('advanced-filter', {
     props: {
+        title: {default: "Filters", type: String},
+        type: {default: "snp", type: String}
     },
     template: `<div>
+    <!-- error message dialog -->
+    <v-dialog v-model="messageDialogVisible" max-width="50%">
+    <v-card>
+        <v-card-text v-html="message" class="pl-2 pr-2 subheading">
+        </v-card-text>
+    </v-card>
+</v-dialog>
     <!-- save filter set dialog -->
     <v-dialog v-model="saveFilterSetDialogVisible" max-width="500px">
         <v-card class="soft-grey-background">
@@ -28,8 +37,9 @@ Vue.component('advanced-filter', {
                     <v-flex xs12>
                         <v-divider></v-divider>
                         <div class="pt-2 pb-2">
-                            <v-chip v-if="isFilterUsed(filter)" label v-for="filter in filters" :key="filter.headerText" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
+                            <v-chip v-if="isFilterUsed(filter)" label v-for="filter in filters" :key="filter.fieldName" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
                                 text-color="white">
+                                <v-avatar class="" v-text="getFormattedType(filter.type)"></v-avatar>
                                 <span v-html="getFilterChip(filter)"></span>
                                 <v-tooltip bottom>
                                     <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)">
@@ -175,7 +185,7 @@ Vue.component('advanced-filter', {
                     <span>Filter Menu</span>
                 </v-tooltip>
                 <div class="title ml-0">
-                    Filters
+                    {{ title }}
                 </div>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -238,6 +248,7 @@ Vue.component('advanced-filter', {
             <div class="pt-2 pb-2">
                 <v-chip v-if="isFilterUsed(filter)" label v-for="(filter, index1) in filters" :key="index1" :color="getChipFilterColor(filter)"
                     text-color="white">
+                    <v-avatar class="" v-text="getFormattedType(filter.type)"></v-avatar>
                     <span v-html="getFilterChip(filter)"></span>
                     <v-tooltip bottom>
                         <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)" :disabled="disableFiltering">
@@ -263,7 +274,7 @@ Vue.component('advanced-filter', {
             <!-- list of possible filters -->
             <v-container grid-list-md>
                 <v-form v-model="filtersValid" :class="[disableFiltering ? 'grey--text lighten-1' : '']">
-                    <v-layout row v-for="(filter, index3) in filters" :key="index3" class="pl-3 pr-3">
+                    <v-layout row v-for="(filter, index3) in getFiltersByType(filters)" :key="index3" :class="[filter.button? '' : 'pr-3', 'pl-3']">
 
                         <v-flex xs12 v-if="filter.isSelect">
                             <v-layout>
@@ -280,11 +291,19 @@ Vue.component('advanced-filter', {
                         <v-flex xs12 v-if="filter.isString">
                             <v-layout>
                                 <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
-                                <v-flex xs7>
+                                <v-flex xs6>
                                     <v-tooltip right>
                                         <v-text-field slot="activator" autocomplete="off" clearable :ref="'filter' + filter.fieldName" hide-details :name="filter.fieldName"
-                                            :disabled="disableFiltering" :label="filter.headerText" v-model="filter.value" @input="updateFilterNeedsReload(true)"></v-text-field>
-                                        <span>{{ filter.tooltip }}</span>
+                                            :disabled="disableFiltering" :label="filter.headerText" v-model="filter.value" @input="updateFilterNeedsReload(true, filter)"></v-text-field>
+                                        <span v-html="createLongTooltip(filter)">{{ filter.tooltip }}</span>
+                                    </v-tooltip>
+                                    </v-flex>
+                                    <v-flex xs mt-2>
+                                    <v-tooltip right v-if="filter.button">
+                                        <v-btn slot="activator" icon flat small @click="handleFilterAction(filter.button.action)" :color="filter.button.color" :disabled="disableFiltering || !filter.value">
+                                            <v-icon> {{ filter.button.icon }} </v-icon>
+                                        </v-btn>
+                                        <span>{{ filter.button.tooltip }}</span>
                                     </v-tooltip>
                                 </v-flex>
                             </v-layout>
@@ -320,11 +339,11 @@ Vue.component('advanced-filter', {
 
 
                     <!-- filter flags -->
-                    <v-layout row :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3']" v-if="flagFilters.length > 0">
+                    <v-layout row :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3']" v-if="getFiltersByType(flagFilters).length > 0">
                         <v-expansion-panel expand class="expandable-filter elevation-0">
                             <v-expansion-panel-content :value="true">
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">Flags</div>
-                                <v-layout row class="pt-3" v-for="filter in flagFilters" :key="filter.headerText">
+                                <v-layout row class="pt-3" v-for="filter in getFiltersByType(flagFilters)" :key="filter.fieldName">
                                     <v-flex xs6>
                                         <v-switch :disabled="disableFiltering" hide-details color="primary" :label="filter.headerTextTrue" v-model="filter.valueTrue"
                                             @change="updateFilterNeedsReload(true)"></v-switch>
@@ -369,7 +388,7 @@ Vue.component('advanced-filter', {
                     </v-layout>
 
                     <!-- filter numbers -->
-                    <v-layout row v-for="filter in numberFilters" :key="filter.fieldName" class="pl-3 pr-3">
+                    <v-layout row v-for="filter in getFiltersByType(numberFilters)" :key="filter.fieldName" class="pl-3 pr-3">
                         <v-flex xs12 v-if="filter.isNumber">
                             <v-layout row>
                                 <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
@@ -383,10 +402,23 @@ Vue.component('advanced-filter', {
                                 </v-flex>
                             </v-layout>
                         </v-flex>
+                        <v-flex xs12 v-if="filter.isReverseNumber">
+                            <v-layout row>
+                                <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
+                                <v-flex xs4>
+                                    <v-text-field :disabled="disableFiltering" clearable hide-details :name="filter.fieldName + '-min'" label="Less Than" v-model="filter.minValue"
+                                        :rules="numberRules" @input="updateFilterNeedsReload(true)"></v-text-field>
+                                </v-flex>
+                                <v-flex xs4>
+                                    <v-text-field :disabled="disableFiltering" clearable hide-details :name="filter.fieldName + '-max'" label="More Than" v-model="filter.maxValue"
+                                        :rules="numberRules" @input="updateFilterNeedsReload(true)"></v-text-field>
+                                </v-flex>
+                            </v-layout>
+                        </v-flex>
                     </v-layout>
 
                     <!-- checkbox -->
-                    <v-layout row v-for="filter in checkboxFilters" :key="filter.headerText" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3', 'mt-2']">
+                    <v-layout row v-for="filter in getFiltersByType(checkboxFilters)" :key="filter.headerText" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3', 'mt-2']">
                         <v-expansion-panel expand v-if="filter.isCheckBox" class="expandable-filter elevation-0">
                             <v-expansion-panel-content :value="true">
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">
@@ -435,7 +467,9 @@ Vue.component('advanced-filter', {
             loading: false,
             reportGroups: [],
             disableFiltering: false,
-            filterNameRules: [v => { return /^[a-zA-Z0-9_. -]*$/.test(v) || "Only Letters and Numbers" }]
+            filterNameRules: [v => { return /^[a-zA-Z0-9_. -]*$/.test(v) || "Only Letters and Numbers" }],
+            messageDialogVisible: false,
+            message: ""
         }
 
     },
@@ -491,7 +525,7 @@ Vue.component('advanced-filter', {
             this.numberFilters = [];
             for (var i = 0; i < this.filters.length; i++) {
                 var filter = this.filters[i];
-                if (filter.isNumber) {
+                if (filter.isNumber || filter.isReverseNumber) {
                     this.numberFilters.push(filter);
                 }
             }
@@ -524,13 +558,14 @@ Vue.component('advanced-filter', {
                 this.currentFilterSet = "";
                 this.filterData();
             }
+            this.$emit("update-highlight", filter);
         },
         clearCheckBoxFilter(checkBox) {
             checkBox.value = false;
             this.currentFilterSet = "";
             this.filterData();
         },
-        getFilterChip(filter) { //TODO 
+        getFilterChip(filter) {
             if (filter.isSelect) {
                 return filter.headerText + ": <b>" + filter.value + "</b>";
             }
@@ -579,7 +614,7 @@ Vue.component('advanced-filter', {
                 else {
                     return filter.headerText + " contains <b>" + displayValue + "</b>";
                 }
-            } if (filter.isNumber) { // 
+            } if (filter.isNumber  || filter.isReverseNumber) { // 
                 return filter.headerText + ": <b>[ "
                     + (filter.minValue != null ? filter.minValue : '') + ":"
                     + (filter.maxValue != null ? filter.maxValue : '') + " ]</b>";
@@ -600,7 +635,7 @@ Vue.component('advanced-filter', {
             if (filter.isCheckBox) {
                 return false; //handled in a separate chip
             }
-            if (filter.isNumber) {
+            if (filter.isNumber  || filter.isReverseNumber) {
                 return (filter.minValue != null && filter.minValue !== "")
                     || (filter.maxValue != null && filter.maxValue !== "")
             }
@@ -613,7 +648,7 @@ Vue.component('advanced-filter', {
             return filter.value != null && filter.value.length > 0;
         },
         isCheckBoxFilterUsed(checkBox) { return checkBox.value == true; }, isInputNumberValid(filter) {
-            if (filter.isNumber) {
+            if (filter.isNumber  || filter.isReverseNumber) {
                 var isValid = (filter.minValue === "" || !isNaN(filter.minValue)) && (filter.maxValue === "" || !isNaN(filter.maxValue));
                 if (isValid) {
                     if (filter.minValue !== "" && filter.minValue != null) {
@@ -704,21 +739,29 @@ Vue.component('advanced-filter', {
                 }
             }
         },
-        updateFilterNeedsReload(needsReload) {
+        updateFilterNeedsReload(needsReload, filter) {
             this.filterNeedsReload = needsReload;
             if (needsReload) {
                 this.currentFilterSet = "";
+            }
+            if (filter && filter.fieldName == "cnvGeneName") {
+                //update table to highlight genes
+                this.$emit("update-highlight", filter);
             }
         },
         //add the list of genes from the given reportGroup
         //to the gene name filter
         loadReportGroup(reportGroup) {
+            var geneNameField = "geneName";
+            if (this.type == "cnv") {
+                geneNameField = "cnvGeneName";
+            }
             for (var i = 0; i < this.filters.length; i++) {
                 var filter = this.filters[i];
-                if (filter.fieldName == "geneName") {
+                if (filter.fieldName == geneNameField) {
                     var geneNames = reportGroup.genesToReport.join(", ");
                     filter.value = geneNames;
-                    this.filterNeedsReload = true;
+                    this.updateFilterNeedsReload(true, filter);
                     break;
 
                 }
@@ -729,7 +772,103 @@ Vue.component('advanced-filter', {
                 return "grey";
             }
             return this.isInputNumberValid(filter) ? 'primary' : 'error';
-        }
+        },
+        getFiltersByType(filters) {
+            return filters.filter(f => f.type == this.type);
+        },
+        getFormattedType(type) {
+            if (type == "snp" || type == "cnv") {
+                return type.toUpperCase();
+            }
+            else if (type == "translocation") {
+                return "FTL"; //place holder. Find a better way to handle this
+            }
+        },
+        createLongTooltip(filter) {
+            var tooltip = "Separate Gene Names by comma.";
+            var items = null;
+            if (filter.value) {
+                tooltip = "";
+                if (Array.isArray(filter.value)) {
+                    items = filter.value;
+                }
+                else {
+                    items = filter.value.split(",");
+                }
+                for (var i = 0; i < items.length; i++) {
+                    var item = items[i].trim();
+                    tooltip += item;
+                    if (i > 0 && i % 5 == 0) {
+                        tooltip += "<br/>";
+                    }
+                    else {
+                        tooltip += " ";
+                    }
+                }
+            }
+            return tooltip;
+        },
+        handleFilterAction(action) {
+            switch(action) {
+               case "verifyGeneNames": this.verifyGeneNames("snp"); break;
+               case "verifyCNVGeneNames": this.verifyGeneNames("cnv"); break;
+
+            }
+        },
+        verifyGeneNames(type) {
+            var genesFilter = null;
+            if (type == "snp") {
+                genesFilter = this.filters.filter(f => f.fieldName == "geneName")[0].value;
+            }
+            else {
+                genesFilter = this.filters.filter(f => f.fieldName == "cnvGeneName")[0].value;
+            }
+            if (!genesFilter || genesFilter.length == 0) {
+                return;
+            }
+            axios({
+                method: 'post',
+                url: webAppRoot + "/verifyGeneNames",
+                params: {
+                    type: type,
+                    genesParam: genesFilter
+                },
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        //update geneName or cnvGeneName and inform user if any gene was removed
+                        if (response.data.message) {
+                            this.message = response.data.message;
+                            this.messageDialogVisible = true;
+                        }
+                        else {
+                            this.$emit("filter-action-success", "All genes are valid.");
+                        }
+                    } else {
+                        this.handleDialogs(response.data, this.verifyGeneNames.bind(null, type));
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                    bus.$emit("some-error", [this, error]);
+                });
+        },
+        handleDialogs(response, callback) {
+            if (response == "not-allowed") {
+                bus.$emit("not-allowed", [this.reponse]);
+            }
+            if (response.isXss) {
+                bus.$emit("xss-error",
+                    [this, response.reason]);
+            }
+            else if (response.isLogin) {
+                bus.$emit("login-needed", [this, callback])
+            }
+            else if (response.success === false) {
+                this.splashProgress = 100; //should dismiss the splash dialog
+                bus.$emit("some-error", [this, response.message]);
+            }
+        },
     },
     created: function () {
     },

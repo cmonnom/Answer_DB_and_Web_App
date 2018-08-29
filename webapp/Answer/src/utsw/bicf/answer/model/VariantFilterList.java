@@ -1,8 +1,9 @@
 package utsw.bicf.answer.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -15,10 +16,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import utsw.bicf.answer.model.extmapping.Variant;
 
 @Entity
 @Table(name="variant_filter_list")
@@ -40,6 +44,14 @@ public class VariantFilterList {
 	@Column(name="list_name")
 	String listName;
 
+	@Transient
+	public static Map<String, String> filtersType = new HashMap<String, String>();
+	//TODO for now, there are only 2 types but if we filter on translocations, we'll need to add all snp filters to  VariantFilterList.filtersType
+	static {
+		filtersType.put(Variant.FIELD_CNV_COPY_NUMBER, "cnv");
+		filtersType.put(Variant.FIELD_CNV_GENE_NAME, "cnv");
+		
+	}
 
 	public String createJSON() throws JsonProcessingException {
 		for (VariantFilter filter : filters) {

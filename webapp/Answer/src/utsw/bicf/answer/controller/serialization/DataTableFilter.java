@@ -42,6 +42,14 @@ public class DataTableFilter {
 	String tooltip;
 	String category;
 	
+	String type;
+	@JsonProperty("isReverseNumber")
+	Boolean isReverseNumber; //flag to handles cases where we want values less than min and more than max
+	
+//	Some fields like gene names need to be verified against an existing list
+	//button will add a button next to the filter to handle such action
+	Button button;
+	
 	//Booleans need to be handled a bit differently because they can have 4 states: include/not include if true, include/not include if false, 
 	//For instance Pass QC:
 	//We need a flag for  "include Pass QC" or "do not include Pass QC"
@@ -91,6 +99,10 @@ public class DataTableFilter {
 	public Boolean isNumber() {
 		return isNumber;
 	}
+	
+	public Boolean isReverseNumber() {
+		return isReverseNumber;
+	}
 
 	public Boolean isDate() {
 		return isDate;
@@ -126,6 +138,10 @@ public class DataTableFilter {
 
 	public void setNumber(Boolean isNumber) {
 		this.isNumber = isNumber;
+	}
+	
+	public void setReverseNumber(Boolean isReverseNumber) {
+		this.isReverseNumber = isReverseNumber;
 	}
 
 	public void setDate(Boolean isDate) {
@@ -226,6 +242,22 @@ public class DataTableFilter {
 
 	public void setCategory(String category) {
 		this.category = category;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public Button getButton() {
+		return button;
+	}
+
+	public void setButton(Button button) {
+		this.button = button;
 	}
 	
 }

@@ -39,8 +39,6 @@ public class VariantFilter {
 	@Transient
 	List<String> simpleStringValues;
 	
-	public VariantFilter() {
-	}
 
 	@Column(name="min_value")
 	Double minValue;
@@ -52,6 +50,9 @@ public class VariantFilter {
 	Boolean valueTrue;
 	@Column(name="value_false")
 	Boolean valueFalse;
+	
+	@Transient
+	String type;
 
 	
 	@JsonIgnore
@@ -59,6 +60,8 @@ public class VariantFilter {
 	@JoinColumn(name="variant_filter_list_id")
 	VariantFilterList filterList;
 
+	public VariantFilter() {
+	}
 
 	public String getField() {
 		return field;
@@ -72,6 +75,12 @@ public class VariantFilter {
 		super();
 		this.field = field;
 		this.stringValues = new ArrayList<FilterStringValue>();
+		if (VariantFilterList.filtersType.containsKey(field)) {
+			this.type = VariantFilterList.filtersType.get(field); //TODO only cnv filters for now
+		}
+		else { //TODO for now, there are only 2 types but if we filter on translocations, we'll need to add all snp filters to  VariantFilterList.filtersType
+			this.type = "snp";
+		}
 	}
 
 	public List<FilterStringValue> getStringValues() {
@@ -144,6 +153,14 @@ public class VariantFilter {
 
 	public void setSimpleStringValues(List<String> simpleStringValues) {
 		this.simpleStringValues = simpleStringValues;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 
 

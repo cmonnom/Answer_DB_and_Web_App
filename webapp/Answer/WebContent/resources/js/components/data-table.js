@@ -21,7 +21,8 @@ Vue.component('data-table', {
         "show-row-count": { default: false, type: Boolean },
         "title-icon": { default: null, type: String },
         "show-left-menu": { default: true, type: Boolean },
-        "color": { default: "primary", type: String}
+        "color": { default: "primary", type: String },
+        highlights: { default: () => {}, type: Object }
 
     },
     template: `<div>
@@ -350,8 +351,7 @@ Vue.component('data-table', {
 
 
           <v-tooltip bottom v-if="props.item.tooltips && props.item.tooltips[header.value]" max-width="500px">
-            <span slot="activator">
-              {{ formattedItem(header, props.item[header.value]) }}
+            <span slot="activator" v-html="formattedItem(header, props.item[header.value])">
             </span>
             <span v-html="props.item.tooltips[header.value]">
             </span>
@@ -423,7 +423,7 @@ Vue.component('data-table', {
         <template slot="items" slot-scope="props">
           <tr @click="expandRow(props.item[uniqueIdField], props)">
             <td v-for="header in expandedHeaders" :class="alignHeader(header)">
-              <span>{{ formattedItem(header, props.item[header.value]) }}</span>
+              <span v-html="formattedItem(header, props.item[header.value])"></span>
 
               <v-icon color="green" v-if="showPassFlag(header, props.item)">check_circle</v-icon>
               <v-icon color="red" v-if="showFailFlag(header, props.item)">cancel</v-icon>
@@ -836,13 +836,13 @@ Vue.component('data-table', {
             //go with the align property first
             if (header.align != null) {
                 if (header.align == "left") {
-                    return  "text-xs-left";
+                    return "text-xs-left";
                 }
                 if (header.align == "center") {
-                    return  "text-xs-center";
+                    return "text-xs-center";
                 }
                 if (header.align == "right") {
-                    return  "text-xs-right";
+                    return "text-xs-right";
                 }
             }
             if (header.unit != null) {
@@ -884,6 +884,18 @@ Vue.component('data-table', {
             }
             if (header.unit && header.unit.value != "Date") {
                 itemString += " " + header.unit.value;
+            }
+            if (header.canHighlight) {
+                var toHighlight = this.highlights ? this.highlights[header.value] : null; //array of items to highlight
+                if (toHighlight) {
+                    var items = itemString.split(" ");
+                    for (var i = 0; i < items.length; i++) {
+                        if (toHighlight.includes(items[i])) {
+                            items[i] = "<b>" + items[i] + "</b>";
+                        }
+                    }
+                    itemString = items.join(" ");
+                }
             }
             return itemString;
         },
@@ -1029,7 +1041,7 @@ Vue.component('data-table', {
         isLastItem(currentIndex) {
             var lastPage = this.pagination.page * this.pagination.rowsPerPage >= this.pagination.totalItems;
             return currentIndex == this.getFilteredItems().length - 1
-            && lastPage;
+                && lastPage;
         },
         getPreviousItem(currentRow) {
             if (currentRow[this.uniqueIdField] != null) {
@@ -1039,7 +1051,7 @@ Vue.component('data-table', {
                         this.pagination.page = this.pagination.page - 1;
                         return this.getFilteredItems()[this.getFilteredItems().length - 1]; //select the last item from the previous page
                     }
-                    return this.getFilteredItems()[ Math.max(0, currentIndex - 1)];
+                    return this.getFilteredItems()[Math.max(0, currentIndex - 1)];
                 }
             }
             return null;
@@ -1053,7 +1065,7 @@ Vue.component('data-table', {
                         this.pagination.page++;
                         return this.getFilteredItems()[0]; //select the first item from the next page
                     }
-                    return this.getFilteredItems()[ Math.min(this.getFilteredItems().length - 1, currentIndex + 1)];
+                    return this.getFilteredItems()[Math.min(this.getFilteredItems().length - 1, currentIndex + 1)];
                 }
             }
             return null;
@@ -1061,7 +1073,7 @@ Vue.component('data-table', {
         decreaseHeaderWidth(header) {
             var value = 0;
             if (header.width) {
-               value = parseInt(header.width.replace("px", ""));
+                value = parseInt(header.width.replace("px", ""));
             }
             value -= value >= 0 ? 10 : 0;
             header.width = value + "px";
@@ -1069,7 +1081,7 @@ Vue.component('data-table', {
         increaseHeaderWidth(header) {
             var value = 0;
             if (header.width) {
-               value = parseInt(header.width.replace("px", ""));
+                value = parseInt(header.width.replace("px", ""));
             }
             value += 10;
             header.width = value + "px";
@@ -1108,7 +1120,7 @@ Vue.component('data-table', {
             this.previousPageNb = pageNb;
             return pageNb;
         }
-       
+
 
 
 

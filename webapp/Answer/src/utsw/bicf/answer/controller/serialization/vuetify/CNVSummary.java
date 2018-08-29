@@ -32,6 +32,7 @@ public class CNVSummary extends Summary<CNVRow> {
 		Header gene = new Header("Genes", "genes");
 		gene.setWidth("200px");
 		gene.setAlign("left");
+		gene.setCanHighlight(true);
 		headers.add(gene);
 		Header iconFlags = new Header("Flags", "iconFlags");
 		iconFlags.setWidth("50px");

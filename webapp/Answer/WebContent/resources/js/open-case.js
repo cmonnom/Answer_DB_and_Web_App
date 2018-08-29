@@ -32,7 +32,9 @@ const OpenCase = {
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
-    <advanced-filter ref="advancedFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"></advanced-filter>
+    <advanced-filter ref="advancedFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"
+        :type="currentFilterType"
+        @update-highlight="updateHighlights" @filter-action-success="showSnackBarMessage"></advanced-filter>
     <v-dialog v-model="saveDialogVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
             <v-toolbar dense dark :color="colors.saveReview">
@@ -923,13 +925,13 @@ const OpenCase = {
 
     <v-slide-y-transition>
         <v-tabs slot="extension" dark slider-color="warning" color="primary darken-1" fixed-tabs v-model="variantTabActive">
-            <v-tab href="#tab-snp">
+            <v-tab href="#tab-snp" :ripple="false">
                 SNP / Indel
             </v-tab>
-            <v-tab href="#tab-cnv">
+            <v-tab href="#tab-cnv" :ripple="false">
                 CNV
             </v-tab>
-            <v-tab href="#tab-translocation">
+            <v-tab href="#tab-translocation" :ripple="false">
                 Fusion / Translocation
             </v-tab>
             <v-tabs-items v-model="variantTabActive">
@@ -941,13 +943,13 @@ const OpenCase = {
                         @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
                         <v-fade-transition slot="action1">
                             <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
-                                <v-btn slot="activator" flat icon @click="toggleFilters" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
+                                <v-btn slot="activator" flat icon @click="toggleFilters('snp')" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
                                     <v-icon>filter_list</v-icon>
                                 </v-btn>
                                 <span>Advanced Filtering</span>
                             </v-tooltip>
                         </v-fade-transition>
-                        <v-list-tile avatar @click="toggleFilters" slot="action1MenuItem">
+                        <v-list-tile avatar @click="toggleFilters('snp')" slot="action1MenuItem">
                             <v-list-tile-avatar>
                                 <v-icon>filter_list</v-icon>
                             </v-list-tile-avatar>
@@ -961,7 +963,24 @@ const OpenCase = {
                 <v-tab-item id="tab-cnv">
                     <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
                         :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()"
-                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
+                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase"
+                        :highlights="highlights">
+                        <v-fade-transition slot="action1">
+                            <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
+                                <v-btn slot="activator" flat icon @click="toggleFilters('cnv')" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
+                                    <v-icon>filter_list</v-icon>
+                                </v-btn>
+                                <span>Advanced Filtering</span>
+                            </v-tooltip>
+                        </v-fade-transition>
+                        <v-list-tile avatar @click="toggleFilters('cnv')" slot="action1MenuItem">
+                            <v-list-tile-avatar>
+                                <v-icon>filter_list</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Advanced Filtering</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
@@ -1131,7 +1150,10 @@ const OpenCase = {
             splashSteps: 0,
             splashTextVisible: true,
             annotationIdsForReporting: [], //save the state of the selection in case the user close/open another page
-
+            currentFilterType: "snp",
+            highlights: {
+                genes: []
+            }
         }
     }, methods: {
         createSplashText() {
@@ -1438,22 +1460,35 @@ const OpenCase = {
             if (!this.$refs.advancedFilter) {
                 return;
             }
-            if (this.variantTabActive != "tab-snp") { //remember if filter was visible or not before the change
-                // this.wasAdvancedFilteringVisibleBeforeTabChange = this.$refs.advancedFilter.advancedFilteringVisible;
-                // if (this.wasAdvancedFilteringVisibleBeforeTabChange) {
-                //     this.$refs.advancedFilter.toggleFilters(); //hide filtering because of tab change
-                // }
-                this.$refs.advancedFilter.disableFiltering = true;
-            }
-            if (this.$refs.advancedFilter && this.variantTabActive == "tab-snp") { //restore the previous visibility of the filter
-                // this.$refs.advancedFilter.toggleFilters(); //show filtering because it was previsously visible
+            if (this.variantTabActive == "tab-snp") {
+                this.currentFilterType = "snp";
                 this.$refs.advancedFilter.disableFiltering = false;
             }
+            else if (this.variantTabActive == "tab-cnv") {
+                this.currentFilterType = "cnv";
+                this.$refs.advancedFilter.disableFiltering = false;
+            }
+            else { //no filter for translocation for now
+                this.$refs.advancedFilter.disableFiltering = true;
+            }
+            // if (this.variantTabActive != "tab-snp") { //remember if filter was visible or not before the change
+            //     // this.wasAdvancedFilteringVisibleBeforeTabChange = this.$refs.advancedFilter.advancedFilteringVisible;
+            //     // if (this.wasAdvancedFilteringVisibleBeforeTabChange) {
+            //     //     this.$refs.advancedFilter.toggleFilters(); //hide filtering because of tab change
+            //     // }
+            //     this.$refs.advancedFilter.disableFiltering = true;
+            //     this.currentFilterType
+            // }
+            // if (this.$refs.advancedFilter && this.variantTabActive == "tab-snp") { //restore the previous visibility of the filter
+            //     // this.$refs.advancedFilter.toggleFilters(); //show filtering because it was previsously visible
+            //     this.$refs.advancedFilter.disableFiltering = false;
+            // }
         },
         filterData() {
             this.getAjaxData();
         },
-        toggleFilters() {
+        toggleFilters(type) {
+            this.currentFilterType = type;
             this.$refs.advancedFilter.toggleFilters();
         },
         addSNPIndelHeaderAction(headers) {
@@ -2233,12 +2268,14 @@ const OpenCase = {
                 return;
             }
             this.$refs.geneVariantDetails.addToSelection(this.currentRow);
+            this.handleSelectionChanged();
         },
         removeVariantFromReport() {
             if (!this.canProceed('canSelect') || this.readonly) {
                 return;
             }
             this.$refs.geneVariantDetails.removeFromSelection(this.currentRow);
+            this.handleSelectionChanged();
         },
         updateSelectedVariantTable() {
             var selectedSNPVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected);
@@ -3099,6 +3136,27 @@ const OpenCase = {
     + "homozygous loss: Two copy loss</br>"
     + "hemizygous loss: Single Copy Loss with remaining allele WT</br>";
             return message;
+        },
+        updateHighlights(filter) {
+            if (filter.fieldName == "cnvGeneName") {
+                var items = null;
+                if (filter.value) {
+                    if (Array.isArray(filter.value)) {
+                        items = filter.value;
+                    }
+                    else {
+                        items = filter.value.split(",");
+                    }
+                    for (var i = 0; i < items.length; i++) {
+                        items[i] = items[i].trim();
+                    }
+                }
+                this.highlights.genes = items;
+            }
+        },
+        showSnackBarMessage(message) {
+            this.snackBarMessage = message;
+            this.snackBarVisible = true;
         }
     },
     mounted() {

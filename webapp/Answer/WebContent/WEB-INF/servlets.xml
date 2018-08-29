@@ -103,6 +103,7 @@
 		<property name="bamLinksPath" value="${bam.link.location}" />
 		<property name="bamFilesPath" value="${bam.file.location}" />
 		<property name="productionEnv" value="${production.env}" />
+		<property name="genePanelSearchUrl" value="${gene.panel.search.url}" />
 	</bean>
 	
 	<bean id="emailProps" class="utsw.bicf.answer.security.EmailProperties">
