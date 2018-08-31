@@ -283,3 +283,9 @@ table.table tbody td {
 .max300 {
     max-width: 300px !important;
 }
+
+.btn-toggle .btn {
+    opacity: 1;
+    cursor: pointer;
+    
+}

@@ -1025,15 +1025,24 @@ public class OpenCaseController {
 	
 	@RequestMapping(value = "/getCNVChartData")
 	@ResponseBody
-	public String getCNVChartData(Model model, HttpSession session, @RequestParam String caseId, @RequestParam(defaultValue="all", required=false) String chrom) throws Exception {
+	public String getCNVChartData(Model model, HttpSession session, @RequestParam String caseId, @RequestParam(defaultValue="all", required=false) String chrom,
+			@RequestParam(defaultValue="", required=false) String genesParam) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
 		if (chrom.equals("all")) {
 			chrom = null;
+			genesParam = "";//don't color genes in this view
+		}
+		List<String> selectedGenes = new ArrayList<String>();
+		if (!genesParam.equals("")) {
+			String[] selectedGenesArray = genesParam.split(",");
+			for (String gene : selectedGenesArray) {
+				selectedGenes.add(gene.trim());
+			}
 		}
 		CNVPlotData cnvPlotData = utils.getCnvPlotData(caseId, chrom);
 		if (cnvPlotData != null) {
-			return new CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData()).createObjectJSON();
+			return new CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData(), selectedGenes).createObjectJSON();
 		}
 		else {
 			AjaxResponse response = new AjaxResponse();

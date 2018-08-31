@@ -228,7 +228,7 @@ const OpenCase = {
                 <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()"
                     :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
                     @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
-                    ref="cnvVariantDetailsPanel"
+                    ref="cnvVariantDetailsPanel" cnv-plot-id="cnvPlotEdit"
                     :variant-type="currentVariantType">
 
                 </variant-details>
@@ -460,7 +460,7 @@ const OpenCase = {
                                     :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                                     @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                                     @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel"
-                                    :variant-type="currentVariantType">
+                                    :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails">
                                 </variant-details>
 
                             </v-flex>
@@ -1765,6 +1765,14 @@ const OpenCase = {
                         this.variantDetailsUnSaved = false;
                         this.currentVariant = response.data;
                         this.variantDataTables = [];
+                        var geneChips = [];
+                        for (var i = 0; i < this.currentVariant.genes.length; i++) {
+                            geneChips.push({
+                                name: this.currentVariant.genes[i],
+                                selected: true
+                            })
+                        }
+                        this.currentVariant.geneChips = geneChips.sort();
                         var infoTable = {
                             name: "infoTable",
                             items: [
@@ -1772,7 +1780,7 @@ const OpenCase = {
                                     label: "Chromosome", value: this.currentVariant.chrom
                                 },
                                 {
-                                    label: "Genes", type: "chip", value: this.currentVariant.genes.sort()
+                                    label: "Genes", type: "chip", value: this.currentVariant.geneChips
                                 },
                                 {
                                     label: "Start", value: this.currentVariant.startFormatted

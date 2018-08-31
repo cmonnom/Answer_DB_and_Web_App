@@ -6,7 +6,8 @@ Vue.component('variant-details', {
         widthClass: { default: "", type: String },
         currentVariant: { default: {}, type: Object },
         color: { default: "primary", type: String },
-        variantType: { default: "snp", type: String }
+        variantType: { default: "snp", type: String },
+        cnvPlotId: { default: "cnvPlot", type: String }
     },
     template: ` <v-card>
   <v-toolbar class="elevation-0" dense dark :color="color">
@@ -84,9 +85,16 @@ Vue.component('variant-details', {
                                           <span v-if="isRegularVariantDetailsLabel(item.type)" class="selectable]">{{ item.label }}:</span>
                                           <span v-if="!item.type || item.type == 'link'" v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
                                           <span v-if="item.type == 'chip'">
-                                              <v-chip disabled class="selectable" v-for="chip in item.value" :key="chip">
-                                                  {{ chip }}
-                                              </v-chip>
+                                                <v-btn-toggle v-model="genesSelected" multiple class="elevation-0">
+                                                <v-layout row wrap>
+                                                    <v-flex pl-0 pr-0 v-for="chip in item.value" :key="chip.name">
+                                                        <v-btn flat class="selectable">
+                                                        {{ chip.name }}
+                                                        </v-btn>
+                                                    </v-flex>
+                                                </v-layout>
+                                             
+                                              </v-btn-toggle>
                                           </span>
                                           <v-tooltip bottom v-if="item.type == 'link'">
                                               <v-btn slot="activator" color="primary" icon flat @click="openUrl(item)" class="mt-0 mb-0">
@@ -152,14 +160,16 @@ Vue.component('variant-details', {
                                         <v-tooltip top content-clas="subheading">
                                             <v-icon slot="activator" color="primary">help</v-icon>
                                         <span >
-                                        - Brighter points are likely a copy number change (copy number equals 2)<br/>
+                                        - Darker points are likely a copy number change (copy number equals 2)<br/>
+                                        &nbsp;&nbsp;or represent selected genes<br/>
                                         - Click and Drag the mouse to zoom in.<br/>
                                         - Right-Click on the chart to display more actions<br/>
+                                        - Click on the legend to show/hide series<br/>
                                         - Mouse over a data point to get more information (tooltip)<br/>
                                         - The plot with ALL chromosomes doesn't have tooltips for faster loading.</span>
                                         </v-tooltip>  
                                       <div :style="fullSizeChart">
-                                      <div id="cnvPlot" style="height: 100%"></div>
+                                      <div :id="cnvPlotId" style="height: 100%"></div>
                                         </div>
                                       </v-flex>
       </v-layout>
@@ -205,11 +215,14 @@ Vue.component('variant-details', {
             cnvPlotLoading: false,
             cnvPlotLoadingChrom: false,
             cividisColors: {
+                blue100: "#00204d",
                 blue90: "#00306f",
+                blue75: "#38486b",
                 brown50: "#a39a76",
                 yellow25: "#e4cf5b",
                 yellow5: "#f9e04a"
-            }
+            },
+            genesSelected: []
         }
 
     },
@@ -274,12 +287,7 @@ Vue.component('variant-details', {
         applySeriesStyle(series) {
             series.forEach((serie, index) => {
                 if (serie.type == "scatter") {
-                    if (index == 0) {
-                        serie.marker = { backgroundColor: this.cividisColors.yellow5 }
-                    }
-                    else {
-                        serie.marker = { backgroundColor: this.cividisColors.brown50 }
-                    }
+                        serie.marker = { backgroundColor: serie.color}
                     serie.hoverMarker = {
                         size: 4,
                         backgroundColor: this.cividisColors.blue90,
@@ -287,18 +295,19 @@ Vue.component('variant-details', {
                     }
                 }
                 else if (serie.type == "line") {
-                    serie.marker = { backgroundColor: this.cividisColors.blue90, lineColor: this.cividisColors.blue90 }
-                    serie.lineColor = this.cividisColors.blue90;
+                    // serie.marker = { backgroundColor: this.cividisColors.blue90, lineColor: this.cividisColors.blue90 }
+                    serie.marker = { backgroundColor: serie.color, lineColor: serie.color }
+                    serie.lineColor = serie.color;
                     serie.hoverMarker = {
-                        size: 4,
+                        size: 6,
                         backgroundColor: this.cividisColors.blue90,
                         alpha: 1
                     }
-                    if (index != series.length - 1) {
-                        serie.legendItem = {
-                            visible:false // turn off legend item
-                        }
-                    }
+                    // if (index != series.length - 1) {
+                    //     serie.legendItem = {
+                    //         visible:false // turn off legend item
+                    //     }
+                    // }
                 }
             });
         },
@@ -311,10 +320,16 @@ Vue.component('variant-details', {
                 this.cnvPlotLoadingChrom = false;
                 this.cnvPlotLoading = true;
             }
+            var genesParam = [];
+            for (var i = 0; i < this.genesSelected.length; i++) {
+                genesParam.push(this.currentVariant.geneChips[this.genesSelected[i]].name);
+            }
             axios.get(webAppRoot + "/getCNVChartData", {
                 params: {
                     caseId: this.$route.params.id,
-                    chrom: chrom
+                    chrom: chrom,
+                    genesParam: genesParam.join(",")
+
                 }
             })
             .then(response => {
@@ -334,8 +349,8 @@ Vue.component('variant-details', {
                                         text: response.data.sortedChrs[i],
                                         angle: this.cnvPlotLoadingChrom ? 0 : 270, //only rotate for ALL chromosomes
                                         "offset-x": 0,
-                                        "offset-y": -250,
-                                        color: "#7d7d7d"
+                                        "offset-y": -10,
+                                        color: "black"
                                     },
                                     valueRange: true
                                 });
@@ -360,7 +375,7 @@ Vue.component('variant-details', {
                                         type: "circle",
                                         shadow: false,
                                         size: 2,
-                                        alpha: 0.2,
+                                        alpha: 0.5,
 
                                     },
                                     tooltip: {
@@ -380,34 +395,26 @@ Vue.component('variant-details', {
                                     },
                                 },
                                 plotArea: {
-                                    adjustLayout: true
+                                    adjustLayout: false,
+                                    // "margin-left":"0%",
+                                    // "margin-right":"0%",
+                                    "margin-top":"0%",
+                                    "margin-bottom":"0%",
                                 },
                                 series: response.data.series,
                                 //// very slow preview at the moment. Try to fix this
                                 // "preview":{
 
-                                // },
-                                // plot: {
-                                //     alpha: 1,
-                                //     tooltip: {
-                                //         visible: false
-                                //     }
-                                // },
                                 title: {
-                                    text: 'CNV Plot for ' + (this.cnvPlotLoadingChrom ? this.currentVariant.chrom : 'all Chromosomes') ,
-                                    fontSize: 12
+                                    text: this.createCnvPlotTitle(),
+                                    fontSize: 12,
+                                    adjustLayout: false,
+                                    "margin-left":"0%",
+                                    "margin-right":"0%",
+                                    "margin-top":"0%",
+                                    "margin-bottom":"0%",
                                 },
-                                legend: {
-                                    "layout":"1x3", //row x column
-                                    "x":"10%",
-                                    "y":"8%",
-                                    // align: "center",
-                                    adjustLayout: true
-                                },
-                                // legend: {
-                                //     marginBottom: "65px",
-                                //     marginLeft: "50px"
-                                // },
+                                legend: this.getLegend(),
                                 scaleX: {
                                     zooming: true,
                                     // labels: response.data.labels,
@@ -438,20 +445,11 @@ Vue.component('variant-details', {
                                     minValue: -5,
                                     maxValue: 5
                                 },
-                                // crosshairX: {
-                                //     plotLabel: {
-                                //         headerText: 'Gene: %data-labels',
-                                //         text: "<b style='color:%color'>%t</b> Copy Ratio: %v"
-                                //     },
-                                //     scaleLabel: {
-                                //         visible: false,
-                                //       }
-                                // },
                             }]
                         };
                         this.$nextTick(() => {
                             zingchart.render({
-                                id: 'cnvPlot',
+                                id: this.cnvPlotId,
                                 data: this.cnvPlotDataConfig,
                                 height: "90%",
                                 output: 'canvas'
@@ -483,10 +481,11 @@ Vue.component('variant-details', {
             if (size == 1) {
                 return ""; //default color because only one
             }
-            return index % 2 == 0 ? "" : "gray";
+            // return index % 2 == 0 ? "" : "gray";
+            return index % 2 == 0 ? this.cividisColors.yellow5 : "";
         },
         resetZoom() {
-            zingchart.exec('cnvPlot', 'viewall', {
+            zingchart.exec(this.cnvPlotId, 'viewall', {
                 graphid: 0
             });
         },
@@ -505,6 +504,30 @@ Vue.component('variant-details', {
                 bus.$emit("some-error", [this, response.message]);
             }
         },
+        getLegend() {
+            return {
+                 "layout": "1x4", //row x column
+                "margin-left":"10%",
+                // "margin-top":"8%",
+                marginBottom: "0%",
+                maxItems: 4,
+                "overflow": "page",
+                // align: "center",
+            }
+        },
+        createCnvPlotTitle() {
+            var title = 'CNV Plot for ';
+            if (!this.cnvPlotLoadingChrom) {
+                title +=   'all Chromosomes (CN=2 VS Others)';
+            }
+            else if (this.genesSelected.length > 0) {
+                title += this.currentVariant.chrom + " (highlight selected genes)";
+            }
+            else {
+                title += this.currentVariant.chrom + " (CN=2 VS Others)";
+            }
+            return title;
+        }
     },
     mounted: function () {
 

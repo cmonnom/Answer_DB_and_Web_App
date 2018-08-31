@@ -11,6 +11,8 @@ public class Values {
 	@JsonProperty("data-labels")
 	List<String> dataLabels;
 	String type;
+	String color;
+	Float alpha;
 	
 	public Values(List<Object> values, String text, List<String> dataLabels) {
 		super();
@@ -49,6 +51,22 @@ public class Values {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getColor() {
+		return color;
+	}
+
+	public void setColor(String color) {
+		this.color = color;
+	}
+
+	public Float getAlpha() {
+		return alpha;
+	}
+
+	public void setAlpha(Float alpha) {
+		this.alpha = alpha;
 	}
 
 
