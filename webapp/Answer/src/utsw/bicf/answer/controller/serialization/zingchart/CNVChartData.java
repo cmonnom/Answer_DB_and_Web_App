@@ -78,7 +78,8 @@ public class CNVChartData extends ZingChartData {
 		valuesByGenes.add(valuesOther);
 		
 		//selected genes
-		for (String gene : cnrByGene.keySet()) {
+		List<String> sortedGenes = cnrByGene.keySet().stream().sorted().collect(Collectors.toList());
+		for (String gene : sortedGenes) {
 			if (selectedGenes.contains(gene)) {
 				List<Object> data = new ArrayList<Object>();
 				List<String> dataLabels = new ArrayList<String>();
@@ -233,7 +234,7 @@ public class CNVChartData extends ZingChartData {
 			list.add(cnr);
 			byChr.put(cnr.getChr(), list);
 		}
-		
+
 		sortedChrs = byChr.keySet().stream().sorted().collect(Collectors.toList());
 		Long max = 0L;
 		for (String chr : sortedChrs) {
@@ -251,9 +252,23 @@ public class CNVChartData extends ZingChartData {
 			
 		}
 		
+		//TODO test this
+//		long missingMax = chrMax.values().stream().max(Comparator.comparing(Long::valueOf)).get();
+//		for (CNSData cns : cnsData) {
+//			if (!chrMax.containsKey(cns.getChr())) {
+//				//a cns exists without any cnr. Need to create a max entry
+//				chrMax.put(cns.getChr(), missingMax + cns.getStart());
+//			}
+//		}
+		
 		//adjust start and end for CNS
 		for (CNSData cns : cnsData) {
 			max = chrMax.get(cns.getChr());
+			if (max == null) {
+				continue; //skip this CNS
+//				max = missingMax + 1;
+//				missingMax += cns.getEnd();
+			}
 			cns.setStart(cns.getStart() + max);
 			cns.setEnd(cns.getEnd() + max);
 		}

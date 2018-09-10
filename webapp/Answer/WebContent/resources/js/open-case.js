@@ -8,9 +8,7 @@ const OpenCase = {
     <!-- splash screen dialog -->
     <div class="splash-screen" v-if="splashDialog">
     <v-layout align-center justify-center row fill-height class="splash-screen-item">
-    <v-slide-x-transition>
-    <span class="subheading" color="primary" v-show="splashTextVisible">{{ splashTextCurrent }}</span>
-    </v-slide-x-transition>
+    <span class="subheading" >{{ splashTextCurrent }}</span>
   </v-layout>
   </div>
 
@@ -220,7 +218,7 @@ const OpenCase = {
         @breadcrumb-navigation="breadcrumbNavigation"></edit-annotations>
 
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        :color="colors.editAnnotation" ref="cnvAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'" @toggle-panel="handlePanelVisibility()"
+        :color="colors.editAnnotation" ref="cnvAnnotationDialog" :title="formatChrom(currentVariant.chrom)  + ' -- ' + caseName + ' --'" @toggle-panel="handlePanelVisibility()"
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories-c-n-v="annotationCategoriesCNV"
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications">
         <v-slide-y-transition slot="variantDetails">
@@ -377,7 +375,7 @@ const OpenCase = {
                 <v-toolbar-title class="ml-0">
           Annotations for Variant:
               <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
-              <span v-if="isCNV()">{{ currentVariant.chrom }}</span>
+              <span v-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
               <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
               <span> -- {{ caseName }} -- </span>
             <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
@@ -1769,7 +1767,7 @@ const OpenCase = {
                         for (var i = 0; i < this.currentVariant.genes.length; i++) {
                             geneChips.push({
                                 name: this.currentVariant.genes[i],
-                                selected: true
+                                selected: false
                             })
                         }
                         this.currentVariant.geneChips = geneChips.sort();
@@ -1777,7 +1775,7 @@ const OpenCase = {
                             name: "infoTable",
                             items: [
                                 {
-                                    label: "Chromosome", value: this.currentVariant.chrom
+                                    label: "Chromosome", value: formatChrom(this.currentVariant.chrom)
                                 },
                                 {
                                     label: "Genes", type: "chip", value: this.currentVariant.geneChips
@@ -3079,7 +3077,7 @@ const OpenCase = {
                         this.createSplashText();
                     }
                     }
-                    , 1000);
+                    , 750);
                 document.querySelector(".splash-screen").style = getDialogMaxHeight(0);
             }
         },
@@ -3165,6 +3163,9 @@ const OpenCase = {
         showSnackBarMessage(message) {
             this.snackBarMessage = message;
             this.snackBarVisible = true;
+        },
+        formatChrom(chrom) { //needed to call the global function from v-text
+            return formatChrom(chrom);
         }
     },
     mounted() {

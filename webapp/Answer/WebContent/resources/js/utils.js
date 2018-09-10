@@ -14,3 +14,18 @@ function getDialogMaxHeight(offset) {
 //ths goal is to hide the page until it's ready
 var splashDialog = true;
 var splashInterval;
+
+//format chromosome name with leading 0 if needed
+function formatChrom(chrom) {
+    var formattedChrNb = null;
+    if (chrom && (chrom.startsWith("chr") || chrom.startsWith("CHR"))) {
+        var chrNb = chrom.substring(3, chrom.length);
+        if (!isNaN(chrNb)) {
+            formattedChrNb = "CHR" + (parseInt(chrNb) < 10 ? '0' : '') + chrNb;
+        }
+        else {
+            formattedChrNb = chrom.toUpperCase();
+        }
+    }
+    return formattedChrNb;
+}

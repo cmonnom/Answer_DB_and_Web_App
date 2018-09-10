@@ -84,8 +84,15 @@ Vue.component('variant-details', {
                                       <v-flex xs12 :class="[item.type == 'link' ? 'pb-0' : '', 'text-xs-left', 'grow']">
                                           <span v-if="isRegularVariantDetailsLabel(item.type)" class="selectable]">{{ item.label }}:</span>
                                           <span v-if="!item.type || item.type == 'link'" v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
+                                          <v-tooltip bottom>
+                                          <v-btn slot="activator" v-if="item.type == 'chip'" flat icon color="primary" @click="toggleAllGenes" :loading="toggleAllLoading">
+                                          <v-icon>done_all</v-icon>
+                                          </v-btn>
+                                          <span>Toggle all genes for CNV Plot</span>
+                                          </v-tooltip>
                                           <span v-if="item.type == 'chip'">
-                                                <v-btn-toggle v-model="genesSelected" multiple class="elevation-0">
+                                          <span class="subheading warning--text" v-show="cnvPlotNeedsReload" >Click on <span v-text="getChrButtonName()"></span> to refresh the CNV Plot.</span>
+                                                <v-btn-toggle v-model="genesSelected" multiple class="elevation-0" @change="handleGeneSelectionChanged">
                                                 <v-layout row wrap>
                                                     <v-flex pl-0 pr-0 v-for="chip in item.value" :key="chip.name">
                                                         <v-btn flat class="selectable">
@@ -95,6 +102,7 @@ Vue.component('variant-details', {
                                                 </v-layout>
                                              
                                               </v-btn-toggle>
+                                              
                                           </span>
                                           <v-tooltip bottom v-if="item.type == 'link'">
                                               <v-btn slot="activator" color="primary" icon flat @click="openUrl(item)" class="mt-0 mb-0">
@@ -111,7 +119,7 @@ Vue.component('variant-details', {
                                               </template>
                                           </v-data-table>
                                           <v-layout v-if="item.type == 'select'" class="full-width">
-                                          <v-flex class="selectable pt-2">{{ item.label }}:</v-flex>
+                                          <v-flex class="selectable pt-2 pl-0">{{ item.label }}:</v-flex>
                                           <v-flex xs6 class="max300" >
                                           <v-tooltip right>
                                                   <v-select slot="activator" clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
@@ -142,10 +150,12 @@ Vue.component('variant-details', {
                                       </v-card>
                                       </v-flex>
                                       <v-flex xs5 v-if="variantType == 'cnv'">
-                                      <span class="subheading">CNV Plot: </span>
+                                      <span class="subheading">Load CNV Plot: </span>
                                       <v-tooltip bottom>
-                                        <v-btn slot="activator" @click="updateCNVPlot(currentVariant.chrom)" :loading="cnvPlotLoadingChrom" :disabled="cnvPlotLoading">{{ currentVariant.chrom }}</v-btn>
-                                        <span>Plot only {{ currentVariant.chrom }} (faster)</span>
+                                        <v-btn slot="activator" @click="updateCNVPlot(currentVariant.chrom)" :loading="cnvPlotLoadingChrom" :disabled="cnvPlotLoading"
+                                        :class="[cnvPlotNeedsReload ? 'amber--text accent-2' : '']"
+                                        ><span v-text="formatChrom(currentVariant.chrom)"></span></v-btn>
+                                        <span>Plot only <span v-text="formatChrom(currentVariant.chrom)"></span> (faster)</span>
                                       </v-tooltip>
                                       <v-tooltip bottom>
                                         <v-btn slot="activator" @click="updateCNVPlot()" :loading="cnvPlotLoading" :disabled="cnvPlotLoadingChrom">All</v-btn>
@@ -153,20 +163,20 @@ Vue.component('variant-details', {
                                       </v-tooltip>
                                       <v-tooltip bottom>
                                         <v-btn slot="activator" @click="resetZoom()" :disabled="cnvPlotReady()">
-                                        <v-icon>cached</v-icon>
+                                        <v-icon>zoom_out</v-icon>
                                         </v-btn>
                                         <span>Reset Zoom Level</span>
                                         </v-tooltip>
                                         <v-tooltip top content-clas="subheading">
                                             <v-icon slot="activator" color="primary">help</v-icon>
                                         <span >
-                                        - Darker points are likely a copy number change (copy number equals 2)<br/>
+                                        - Darker points are a likely copy number change (copy number equals 2)<br/>
                                         &nbsp;&nbsp;or represent selected genes<br/>
                                         - Click and Drag the mouse to zoom in.<br/>
                                         - Right-Click on the chart to display more actions<br/>
                                         - Click on the legend to show/hide series<br/>
                                         - Mouse over a data point to get more information (tooltip)<br/>
-                                        - The plot with ALL chromosomes doesn't have tooltips for faster loading.</span>
+                                        - The chart with ALL chromosomes doesn't have tooltips for faster loading.</span>
                                         </v-tooltip>  
                                       <div :style="fullSizeChart">
                                       <div :id="cnvPlotId" style="height: 100%"></div>
@@ -210,7 +220,10 @@ Vue.component('variant-details', {
                     { id: 'ViewSource', enabled: 'none' },
                     { id: 'HideGuide', enabled: 'none' },
                     { id: 'ShowGuide', enabled: 'none' }
-                ]
+                ],
+                watermark: {
+                    position: "tr" //br (default), bl, tr, tl
+                }
             },
             cnvPlotLoading: false,
             cnvPlotLoadingChrom: false,
@@ -222,7 +235,9 @@ Vue.component('variant-details', {
                 yellow25: "#e4cf5b",
                 yellow5: "#f9e04a"
             },
-            genesSelected: []
+            genesSelected: [],
+            cnvPlotNeedsReload: false,
+            toggleAllLoading: false,
         }
 
     },
@@ -287,7 +302,7 @@ Vue.component('variant-details', {
         applySeriesStyle(series) {
             series.forEach((serie, index) => {
                 if (serie.type == "scatter") {
-                        serie.marker = { backgroundColor: serie.color}
+                    serie.marker = { backgroundColor: serie.color }
                     serie.hoverMarker = {
                         size: 4,
                         backgroundColor: this.cividisColors.blue90,
@@ -332,9 +347,9 @@ Vue.component('variant-details', {
 
                 }
             })
-            .then(response => {
-                if (response.data.isAllowed) {
-                    startTime = new Date();
+                .then(response => {
+                    if (response.data.isAllowed) {
+                        startTime = new Date();
                         this.applySeriesStyle(response.data.series);
                         var chrMarkers = [];
                         for (var i = 0; i < response.data.maxChroms.length; i++) {
@@ -398,8 +413,8 @@ Vue.component('variant-details', {
                                     adjustLayout: false,
                                     // "margin-left":"0%",
                                     // "margin-right":"0%",
-                                    "margin-top":"0%",
-                                    "margin-bottom":"0%",
+                                    "margin-top": "0%",
+                                    "margin-bottom": "0%",
                                 },
                                 series: response.data.series,
                                 //// very slow preview at the moment. Try to fix this
@@ -409,10 +424,10 @@ Vue.component('variant-details', {
                                     text: this.createCnvPlotTitle(),
                                     fontSize: 12,
                                     adjustLayout: false,
-                                    "margin-left":"0%",
-                                    "margin-right":"0%",
-                                    "margin-top":"0%",
-                                    "margin-bottom":"0%",
+                                    "margin-left": "0%",
+                                    "margin-right": "0%",
+                                    "margin-top": "0%",
+                                    "margin-bottom": "0%",
                                 },
                                 legend: this.getLegend(),
                                 scaleX: {
@@ -459,12 +474,15 @@ Vue.component('variant-details', {
                             var endTime = new Date();
                             var timeDiff = endTime - startTime;
                             console.log((timeDiff / 1000) + "s");
+                            this.cnvPlotNeedsReload = false;
+                            this.toggleAllLoading = false;
                         });
                     }
                     else {
-                        this.handleDialogs(response, this.updateCNVPlot.bind(null, chrom));
+                        this.handleDialogs(response.data, this.updateCNVPlot.bind(null, chrom));
                         this.cnvPlotLoading = false;
                         this.cnvPlotLoadingChrom = false;
+                        this.toggleAllLoading = false;
                     }
                 })
                 .catch(error => {
@@ -472,6 +490,7 @@ Vue.component('variant-details', {
                     console.log(error);
                     this.cnvPlotLoading = false;
                     this.cnvPlotLoadingChrom = false;
+                    this.toggleAllLoading = false;
                 });
         },
         cnvPlotReady() {
@@ -506,8 +525,8 @@ Vue.component('variant-details', {
         },
         getLegend() {
             return {
-                 "layout": "1x4", //row x column
-                "margin-left":"10%",
+                "layout": "1x4", //row x column
+                "margin-left": "10%",
                 // "margin-top":"8%",
                 marginBottom: "0%",
                 maxItems: 4,
@@ -518,16 +537,46 @@ Vue.component('variant-details', {
         createCnvPlotTitle() {
             var title = 'CNV Plot for ';
             if (!this.cnvPlotLoadingChrom) {
-                title +=   'all Chromosomes (CN=2 VS Others)';
+                title += 'all Chromosomes (CN=2 VS Others)';
             }
             else if (this.genesSelected.length > 0) {
-                title += this.currentVariant.chrom + " (highlight selected genes)";
+                title += formatChrom(this.currentVariant.chrom) + " (selected genes in dark)";
             }
             else {
-                title += this.currentVariant.chrom + " (CN=2 VS Others)";
+                title += formatChrom(this.currentVariant.chrom) + " (CN=2 VS Others)";
             }
             return title;
+        },
+        handleGeneSelectionChanged() {
+            this.cnvPlotNeedsReload = true;
+        },
+        toggleAllGenes() {
+            this.toggleAllLoading = true;
+            for (var i = 0; i < this.variantDataTables.length; i++) {
+                var items = this.variantDataTables[i].items;
+                for (var j = 0; j < items.length; j++) {
+                    var item = items[j];
+                    if (item.type == "chip") {
+                        this.genesSelected = [];
+                        var newSelectedState = !item.value[0].selected;
+                        for (var k = 0; k < item.value.length; k++) {
+                            item.value[k].selected = newSelectedState;
+                            if (newSelectedState) {
+                                this.genesSelected.push(k);
+                            }
+                        }
+                    }
+                }
+            }
+            this.updateCNVPlot(this.currentVariant.chrom);
+        },
+        getChrButtonName() {
+            return formatChrom(this.currentVariant.chrom);
+        },
+        formatChrom(chrom) { //needed to call the global function from v-text
+            return formatChrom(chrom);
         }
+       
     },
     mounted: function () {
 

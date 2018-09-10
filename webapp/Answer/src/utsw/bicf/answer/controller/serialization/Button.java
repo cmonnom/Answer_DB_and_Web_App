@@ -12,6 +12,10 @@ public class Button {
 	String tooltip;
 	String color; //name of the color (could be a Vuetify color like warning or info)
 	
+	public Button() {
+		
+	}
+	
 	public Button(String icon, String action, String tooltip, String color) {
 		super();
 		this.icon = icon;

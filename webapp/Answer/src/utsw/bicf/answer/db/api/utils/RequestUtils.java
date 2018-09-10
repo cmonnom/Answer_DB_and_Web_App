@@ -41,6 +41,7 @@ import utsw.bicf.answer.model.extmapping.CNRData;
 import utsw.bicf.answer.model.extmapping.CNSData;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
+import utsw.bicf.answer.model.extmapping.CNVPlotDataRaw;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.SearchSNPAnnotation;
@@ -539,8 +540,13 @@ public class RequestUtils {
 	}
 
 	public CNVPlotData getCnvPlotData(String caseId, String chrom) throws URISyntaxException, ClientProtocolException, IOException {
+		List<String> toSkip = new ArrayList<String>();
+		toSkip.add("chrX");
+		toSkip.add("chrY");
+		toSkip.add("chr22_KI270879v1_alt");
+		
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("case/").append(caseId).append("/cnvPlot");
+		sbUrl.append("case/").append(caseId).append("/cnvplot");
 		URI uri = new URI(sbUrl.toString());
 
 		requestGet = new HttpGet(uri);
@@ -548,14 +554,58 @@ public class RequestUtils {
 
 		HttpResponse response = client.execute(requestGet);
 
-		return test(chrom);
+//		return test(chrom);
 		
-//		int statusCode = response.getStatusLine().getStatusCode();
-//		if (statusCode == HttpStatus.SC_OK) {
-//			CNVPlotData plotData = mapper.readValue(response.getEntity().getContent(), CNVPlotData.class);
-//			return plotData;
-//		}
-//		return null;
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			CNVPlotDataRaw plotDataRaw = mapper.readValue(response.getEntity().getContent(), CNVPlotDataRaw.class);
+			CNVPlotData plotData = new CNVPlotData();
+			List<CNRData> cnrDataList = new ArrayList<CNRData>();
+			List<CNSData> cnsDataList = new ArrayList<CNSData>();
+			
+			for (List<String> items : plotDataRaw.getCnr()) {
+				if (items.get(0).equals("Gene")) {
+					continue; //skip the 1st row
+				}
+				String cnrChrom = items.get(1);
+				if (chrom == null || cnrChrom.equals(chrom)) {
+					String gene = items.get(0);
+					Long start = Long.parseLong(items.get(2));
+					Long end = Long.parseLong(items.get(3));
+					Double depth = Double.parseDouble(items.get(5));
+					Double log2 = Double.parseDouble(items.get(4));
+					Double weight = Double.parseDouble(items.get(6));
+					if (!toSkip.contains(cnrChrom)) { //skip chromosomes in the toSkip list
+						cnrDataList.add(new CNRData(cnrChrom, start, end, gene, log2, weight));
+					}
+				}
+				
+			}
+			
+			for (List<String> items : plotDataRaw.getCns()) {
+				if (items.get(0).equals("Chromosome")) {
+					continue; //skip the 1st row
+				}
+				String cnrChrom = items.get(0);
+				if (chrom == null || cnrChrom.equals(chrom)) {
+					Long start = Long.parseLong(items.get(1));
+					Long end = Long.parseLong(items.get(2));
+					Double log2 = Double.parseDouble(items.get(3));
+					Integer cn = Integer.parseInt(items.get(4));
+					if (!toSkip.contains(cnrChrom)) { //skip chromosomes in the toSkip list
+						cnsDataList.add(new CNSData(cnrChrom, start, end, log2, cn));
+					}
+				}
+				
+			}
+			
+			
+			plotData.setCaseId(plotDataRaw.getCaseId());
+			plotData.setCnrData(cnrDataList);
+			plotData.setCnsData(cnsDataList);
+			return plotData;
+		}
+		return null;
 	}
 
 	private CNVPlotData test(String chromFilter) throws IOException {
