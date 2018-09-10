@@ -1167,10 +1167,10 @@ const OpenCase = {
         }
     }, methods: {
         createSplashText() {
-            var newText= "";
+            var newText = "";
             while (newText == "" || this.splashTextCurrent == newText) {
-                    newText = this.splashTextItems[Math.floor(Math.random() * this.splashTextItems.length)]
-                }
+                newText = this.splashTextItems[Math.floor(Math.random() * this.splashTextItems.length)]
+            }
             this.splashTextCurrent = newText;
         },
         canProceed(field) {
@@ -1265,13 +1265,13 @@ const OpenCase = {
                     //calculate progress
                     this.splashSteps = 1;
                     if (this.$route.query.variantId ? this.$route.query.variantId : null) {
-                        this.splashSteps ++;
+                        this.splashSteps++;
                     }
                     if (this.$route.query.showReview === true || this.$route.query.showReview === "true") {
-                        this.splashSteps ++;
+                        this.splashSteps++;
                     }
                     if (this.$route.query.edit === true || this.$route.query.edit === "true") {
-                        this.splashSteps ++;
+                        this.splashSteps++;
                     }
                     this.splashSteps == 1 ? this.splashProgress = 100 : this.splashProgress = 30;
                 }
@@ -1290,7 +1290,7 @@ const OpenCase = {
             }
             );
         },
-        loadFromParams() {
+        loadFromParams(newRouteQuery, oldRouteQuery) {
             this.urlQuery.variantId = this.$route.query.variantId ? this.$route.query.variantId : null;
             this.urlQuery.variantType = this.$route.query.variantType ? this.$route.query.variantType : null;
             this.urlQuery.showReview = this.$route.query.showReview === true || this.$route.query.showReview === "true";
@@ -1299,13 +1299,13 @@ const OpenCase = {
             //calculate progress
             this.splashSteps = 1;
             if (this.urlQuery.variantId) {
-                this.splashSteps ++;
+                this.splashSteps++;
             }
             if (this.urlQuery.showReview) {
-                this.splashSteps ++;
+                this.splashSteps++;
             }
             if (this.urlQuery.edit) {
-                this.splashSteps ++;
+                this.splashSteps++;
             }
 
             if (!this.urlQuery.showReview) { //close save/review dialog
@@ -1314,7 +1314,7 @@ const OpenCase = {
             if (!this.urlQuery.variantId) { //close variant details
                 this.closeVariantDetails();
             }
-            if (!this.urlQuery.edit) { //close edit anntation
+            if (!this.urlQuery.edit) { //close edit annotation
                 this.cancelAnnotations();
                 // if (this.isSNP()) {
                 //     this.$refs.annotationDialog.cancelAnnotations();
@@ -1330,7 +1330,7 @@ const OpenCase = {
             //first open save/review dialog
             if (this.urlQuery.showReview === true) {
                 this.$nextTick(this.openSaveDialog());
-               
+
             }
             if (this.urlQuery.variantType) {
                 this.variantTabActive = "tab-" + this.urlQuery.variantType;
@@ -1343,24 +1343,33 @@ const OpenCase = {
                     if (this.urlQuery.variantType == 'snp') {
                         for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
                             if (this.$refs.geneVariantDetails.items[i].oid == this.urlQuery.variantId) {
-                                this.$nextTick(this.getVariantDetails(this.$refs.geneVariantDetails.items[i]));
-                                break;
+                                if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
+                                    || !newRouteQuery) {
+                                    this.$nextTick(this.getVariantDetails(this.$refs.geneVariantDetails.items[i]));
+                                    break;
+                                }
                             }
                         }
                     }
                     else if (this.urlQuery.variantType == 'cnv') {
                         for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
                             if (this.$refs.cnvDetails.items[i].oid == this.urlQuery.variantId) {
-                                this.$nextTick(this.getCNVDetails(this.$refs.cnvDetails.items[i]));
-                                break;
+                                if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
+                                    || !newRouteQuery) {
+                                    this.$nextTick(this.getCNVDetails(this.$refs.cnvDetails.items[i]));
+                                    break;
+                                }
                             }
                         }
                     }
                     else if (this.urlQuery.variantType == 'translocation') {
                         for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
                             if (this.$refs.translocationDetails.items[i].oid == this.urlQuery.variantId) {
-                                this.$nextTick(this.getTranslocationDetails(this.$refs.translocationDetails.items[i]));
-                                break;
+                                if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
+                                    || !newRouteQuery) {
+                                    this.$nextTick(this.getTranslocationDetails(this.$refs.translocationDetails.items[i]));
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1385,10 +1394,11 @@ const OpenCase = {
             if (this.urlQuery.edit === true) {
                 this.breadcrumbs.push(this.breadcrumbItemEditAnnotation);
             }
+            this.toggleHTMLOverlay();
 
         },
         updateSplashProgress() {
-            this.splashProgress +=  Math.min(100, Math.floor(70 / (this.splashSteps - 1)));
+            this.splashProgress += Math.min(100, Math.floor(70 / (this.splashSteps - 1)));
         },
         breadcrumbNavigation(index) {
             //change the urlQuery based on walking up the breadcrumbs
@@ -1727,7 +1737,6 @@ const OpenCase = {
                         if (resetSaveFlags) {
                             this.annotationSelectionUnSaved = false;
                         }
-                        this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
 
@@ -1835,7 +1844,6 @@ const OpenCase = {
                         if (resetSaveFlags) {
                             this.annotationSelectionUnSaved = false;
                         }
-                        this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
                         //finally, open edit annotation
@@ -1930,7 +1938,6 @@ const OpenCase = {
                         if (resetSaveFlags) {
                             this.annotationSelectionUnSaved = false;
                         }
-                        this.toggleHTMLOverlay(true);
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
                         //finally, open edit annotation
@@ -2020,13 +2027,22 @@ const OpenCase = {
             }
         },
         openVariant(item) {
-            this.getVariantDetails(item);
+            // this.getVariantDetails(item);
+            this.urlQuery.variantType = "snp";
+            this.urlQuery.variantId = item.oid;
+            this.updateRoute();
         },
         openCNV(item) {
-            this.getCNVDetails(item);
+            // this.getCNVDetails(item);
+            this.urlQuery.variantType = "cnv";
+            this.urlQuery.variantId = item.oid;
+            this.updateRoute();
         },
         openTranslocation(item) {
-            this.getTranslocationDetails(item);
+            // this.getTranslocationDetails(item);
+            this.urlQuery.variantType = "translocation";
+            this.urlQuery.variantId = item.oid;
+            this.updateRoute();
         },
         openLink(link) {
             window.open(link, "_blank");
@@ -2324,7 +2340,6 @@ const OpenCase = {
         },
         openSaveDialog() {
             this.updateSelectedVariantTable();
-            this.toggleHTMLOverlay(true);
             this.saveDialogVisible = true;
             this.urlQuery.showReview = true;
             this.updateRoute();
@@ -2332,7 +2347,6 @@ const OpenCase = {
         },
         closeSaveDialog() {
             this.saveDialogVisible = false;
-            this.toggleHTMLOverlay(false);
             this.urlQuery.showReview = false;
             this.updateRoute();
         },
@@ -2483,15 +2497,14 @@ const OpenCase = {
         },
         closeVariantDetails() {
             this.variantDetailsVisible = false;
-            this.toggleHTMLOverlay(false);
             this.urlQuery.variantId = null;
             this.urlQuery.variantType = null;
             this.urlQuery.edit = false; //also close edit but it should have been done earlier
             this.updateRoute();
         },
-        toggleHTMLOverlay(hideScrollBar) {
+        toggleHTMLOverlay() {
             var html = document.querySelector("html");
-            if (hideScrollBar) {
+            if (this.urlQuery.variantId || this.urlQuery.showReview) {
                 html.style.overflow = "hidden";
             }
             else {
@@ -2985,15 +2998,16 @@ const OpenCase = {
             else { //look at the query
                 // console.log(newRoute.query, oldRoute.query);
                 var newRouteQuery = JSON.stringify(newRoute.query);
-                if (newRouteQuery != JSON.stringify(oldRoute.query)) { //some params changed
-                    this.loadFromParams();
+                var oldRouteQuery = JSON.stringify(oldRoute.query);
+                if (newRouteQuery != oldRouteQuery) { //some params changed
+                    this.loadFromParams(newRoute.query, oldRoute.query);
                 }
             }
         },
         handlePanelVisibility(visible) {
             if (visible == null) {
                 this.editAnnotationVariantDetailsVisible = !this.editAnnotationVariantDetailsVisible;
-                this.annotationVariantDetailsVisible = ! this.annotationVariantDetailsVisible;
+                this.annotationVariantDetailsVisible = !this.annotationVariantDetailsVisible;
             }
             else {
                 this.editAnnotationVariantDetailsVisible = visible;
@@ -3094,7 +3108,7 @@ const OpenCase = {
                     if (this.splashTextVisible) {
                         this.createSplashText();
                     }
-                    }
+                }
                     , 750);
                 document.querySelector(".splash-screen").style = getDialogMaxHeight(0);
             }
@@ -3121,8 +3135,8 @@ const OpenCase = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                       this.snackBarMessage = "The reviewer has been notified.";
-                       this.snackBarVisible = true;
+                        this.snackBarMessage = "The reviewer has been notified.";
+                        this.snackBarVisible = true;
                     }
                     else {
                         this.handleDialogs(response.data, this.markAsReadyForReview);
@@ -3156,9 +3170,9 @@ const OpenCase = {
         },
         buildAberrationTypeHelp() {
             var message = "amplification: High level copy number gain</br>"
-            + "gain: Low level copy number gain</br>"
-    + "homozygous loss: Two copy loss</br>"
-    + "hemizygous loss: Single Copy Loss with remaining allele WT</br>";
+                + "gain: Low level copy number gain</br>"
+                + "homozygous loss: Two copy loss</br>"
+                + "hemizygous loss: Single Copy Loss with remaining allele WT</br>";
             return message;
         },
         updateHighlights(filter) {
@@ -3209,7 +3223,7 @@ const OpenCase = {
         this.manageSplashScreen();
     },
     created() {
-      
+
     },
     computed: {
     },
