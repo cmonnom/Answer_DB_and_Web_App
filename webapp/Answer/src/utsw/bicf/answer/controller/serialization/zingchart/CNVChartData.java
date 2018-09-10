@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import utsw.bicf.answer.model.extmapping.CNRData;
@@ -20,9 +19,22 @@ public class CNVChartData extends ZingChartData {
 	List<Long> maxChroms = new ArrayList<Long>();
 	long dataPointCount = 0;
 	long minChrom = -1;
-	String cnrCN2Color = "#00204d"; //cividis blue100
-	String cnrOtherColor = "#a39a76"; //cividis brown50
-	String cnsColor = "#f9e04a"; //yellow5
+	public static final String cnrCN2Color = "#00204d"; //cividis blue100
+	public static final String cnrOtherColor = "#a39a76"; //cividis brown50
+	public static final String cnsColor = "#f9e04a"; //yellow5
+	
+	public static final List<String> highlightedGeneColors = new ArrayList<String>();
+	static {
+		highlightedGeneColors.add(cnrCN2Color); //cividis blue100
+//		highlightedGeneColors.add("#002961"); //cividis blue95
+//		highlightedGeneColors.add("#00326f"); //cividis blue88
+//		highlightedGeneColors.add("#1f3c6d"); //cividis blue82
+//		highlightedGeneColors.add("#35466b"); //cividis blue75
+//		highlightedGeneColors.add("#4a536b"); //cividis blue70
+//		highlightedGeneColors.add("002961"); //cividis blue95
+		
+	}
+	
 	
 	public CNVChartData(List<CNSData> cnsData, List<CNRData> cnrData, List<String> selectedGenes) {
 		
@@ -72,25 +84,27 @@ public class CNVChartData extends ZingChartData {
 		valuesOther.setAlpha(0.2F);
 		for (CNRData cnr : cnrNotInSelectedGenes) {
 			dataOther.add(new Object[] {cnr.getStart(), cnr.getLog2()});
-			dataLabelsOther.add(cnr.getGene());
+			dataLabelsOther.add("Gene: " + cnr.getGene() + " Log2:" + cnr.getLog2());
 			dataPointCount++;
 		}
 		valuesByGenes.add(valuesOther);
 		
 		//selected genes
 		List<String> sortedGenes = cnrByGene.keySet().stream().sorted().collect(Collectors.toList());
+		int colorCounter = 0;
 		for (String gene : sortedGenes) {
 			if (selectedGenes.contains(gene)) {
 				List<Object> data = new ArrayList<Object>();
 				List<String> dataLabels = new ArrayList<String>();
 				Values values = new Values(data, gene, dataLabels);
 				values.setType("scatter");
-				values.setColor(cnrCN2Color);
+				values.setColor(highlightedGeneColors.get(colorCounter % highlightedGeneColors.size()));
+				colorCounter++;
 				values.setAlpha(1F);
 				List<CNRData> cnrList = cnrByGene.get(gene);
 				for (CNRData cnr : cnrList) {
 					data.add(new Object[] {cnr.getStart(), cnr.getLog2()});
-					dataLabels.add(cnr.getGene());
+					dataLabels.add("Gene: " + cnr.getGene() + " Log2:" + cnr.getLog2());
 					dataPointCount++;
 				}
 				valuesByGenes.add(values);
@@ -111,36 +125,36 @@ public class CNVChartData extends ZingChartData {
 		values.setAlpha(1F);
 		data.add(new Object[] {cns.getStart(), cns.getLog2()});
 		data.add(new Object[] {cns.getEnd(), cns.getLog2()});
-		dataLabels.add(cns.getLog2() + "");
+		dataLabels.add("Log2: " + cns.getLog2() + " CN:" + cns.getCn());
 		return values;
 	}
 	
 	//To make each gene distinct. Too slow and not very useful
-	private List<Values> createCNRSeriesByGene(List<CNRData> cnrData) {
-		Map<String, List<CNRData>> cnrByGene = new HashMap<String, List<CNRData>>();
-		for (CNRData cnr : cnrData) {
-			List<CNRData> list = new ArrayList<CNRData>();
-			if (cnrByGene.containsKey(cnr.getGene())) {
-				list = cnrByGene.get(cnr.getGene());
-			}
-			list.add(cnr);
-			cnrByGene.put(cnr.getGene(), list);
-		}
-		List<Values> valuesByGene = new ArrayList<Values>();
-		for (String gene : cnrByGene.keySet()) {
-			List<CNRData> list = cnrByGene.get(gene);
-			List<Object> data = new ArrayList<Object>();
-			List<String> dataLabels = new ArrayList<String>();
-			Values values = new Values(data, "CNR", dataLabels);
-			values.setType("scatter");
-			for (CNRData cnr : list) {
-				data.add(new Object[] {cnr.getStart(), cnr.getLog2()});
-				dataLabels.add(gene);
-			}
-			valuesByGene.add(values);
-		}
-		return valuesByGene;
-	}
+//	private List<Values> createCNRSeriesByGene(List<CNRData> cnrData) {
+//		Map<String, List<CNRData>> cnrByGene = new HashMap<String, List<CNRData>>();
+//		for (CNRData cnr : cnrData) {
+//			List<CNRData> list = new ArrayList<CNRData>();
+//			if (cnrByGene.containsKey(cnr.getGene())) {
+//				list = cnrByGene.get(cnr.getGene());
+//			}
+//			list.add(cnr);
+//			cnrByGene.put(cnr.getGene(), list);
+//		}
+//		List<Values> valuesByGene = new ArrayList<Values>();
+//		for (String gene : cnrByGene.keySet()) {
+//			List<CNRData> list = cnrByGene.get(gene);
+//			List<Object> data = new ArrayList<Object>();
+//			List<String> dataLabels = new ArrayList<String>();
+//			Values values = new Values(data, "CNR", dataLabels);
+//			values.setType("scatter");
+//			for (CNRData cnr : list) {
+//				data.add(new Object[] {cnr.getStart(), cnr.getLog2()});
+//				dataLabels.add("Gene: " + gene + " Log2: " + cnr.getLog2());
+//			}
+//			valuesByGene.add(values);
+//		}
+//		return valuesByGene;
+//	}
 	
 	/**
 	 * Creates 2 series:
@@ -186,7 +200,7 @@ public class CNVChartData extends ZingChartData {
 		values2.setAlpha(0.5F);
 		for (CNRData cnr : cnr2) {
 			data2.add(new Object[] {cnr.getStart(), cnr.getLog2()});
-			dataLabels2.add(cnr.getGene());
+			dataLabels2.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 			dataPointCount++;
 		}
 		valuesByCN.add(values2);
@@ -199,7 +213,7 @@ public class CNVChartData extends ZingChartData {
 		valuesOther.setAlpha(0.5F);
 		for (CNRData cnr : cnrOther) {
 			dataOther.add(new Object[] {cnr.getStart(), cnr.getLog2()});
-			dataLabelsOther.add(cnr.getGene());
+			dataLabelsOther.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 			dataPointCount++;
 		}
 		valuesByCN.add(valuesOther);
@@ -207,18 +221,18 @@ public class CNVChartData extends ZingChartData {
 		return valuesByCN;
 	}
 	
-	private Values createCNRSeries(List<CNRData> cnrData) {
-		List<Object> data = new ArrayList<Object>();
-		List<String> dataLabels = new ArrayList<String>();
-		Values values = new Values(data, "CNR", dataLabels);
-		values.setType("scatter");
-		for (CNRData cnr : cnrData) {
-			data.add(new Object[] {cnr.getStart(), cnr.getLog2()});
-			dataLabels.add(cnr.getGene());
-		}
-		
-		return values;
-	}
+//	private Values createCNRSeries(List<CNRData> cnrData) {
+//		List<Object> data = new ArrayList<Object>();
+//		List<String> dataLabels = new ArrayList<String>();
+//		Values values = new Values(data, "CNR", dataLabels);
+//		values.setType("scatter");
+//		for (CNRData cnr : cnrData) {
+//			data.add(new Object[] {cnr.getStart(), cnr.getLog2()});
+//			dataLabels.add(cnr.getGene());
+//		}
+//		
+//		return values;
+//	}
 
 	private void updateStartEnd(List<CNSData> cnsData, List<CNRData> cnrData) {
 		Map<String, Long> chrMax = new HashMap<String, Long>();
@@ -306,27 +320,27 @@ public class CNVChartData extends ZingChartData {
 		this.minChrom = minChrom;
 	}
 
-	public String getCnrCN2Color() {
-		return cnrCN2Color;
-	}
-
-	public void setCnrCN2Color(String cnrCN2Color) {
-		this.cnrCN2Color = cnrCN2Color;
-	}
-
-	public String getCnrOtherColor() {
-		return cnrOtherColor;
-	}
-
-	public void setCnrOtherColor(String cnrOtherColor) {
-		this.cnrOtherColor = cnrOtherColor;
-	}
-
-	public String getCnsColor() {
-		return cnsColor;
-	}
-
-	public void setCnsColor(String cnsColor) {
-		this.cnsColor = cnsColor;
-	}
+//	public String getCnrCN2Color() {
+//		return cnrCN2Color;
+//	}
+//
+//	public void setCnrCN2Color(String cnrCN2Color) {
+//		this.cnrCN2Color = cnrCN2Color;
+//	}
+//
+//	public String getCnrOtherColor() {
+//		return cnrOtherColor;
+//	}
+//
+//	public void setCnrOtherColor(String cnrOtherColor) {
+//		this.cnrOtherColor = cnrOtherColor;
+//	}
+//
+//	public String getCnsColor() {
+//		return cnsColor;
+//	}
+//
+//	public void setCnsColor(String cnsColor) {
+//		this.cnsColor = cnsColor;
+//	}
 }

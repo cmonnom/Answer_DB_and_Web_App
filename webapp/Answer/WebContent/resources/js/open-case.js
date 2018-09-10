@@ -215,14 +215,26 @@ const OpenCase = {
     <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         :color="colors.editAnnotation" ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"
         :breadcrumbs="breadcrumbs" :annotation-categories="annotationCategories" :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
-        @breadcrumb-navigation="breadcrumbNavigation"></edit-annotations>
+        @toggle-panel="handlePanelVisibility()"
+        @breadcrumb-navigation="breadcrumbNavigation">
+        <v-slide-y-transition slot="variantDetails">
+            <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
+            <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable"
+                :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
+                @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
+                @save-variant="saveVariant" :color="colors.variantDetails"
+                :variant-type="currentVariantType" cnv-plot-id="cnvPlotEditUnused">
+            </variant-details>
+            </v-flex>
+        </v-slide-y-transition>
+        </edit-annotations>
 
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         :color="colors.editAnnotation" ref="cnvAnnotationDialog" :title="formatChrom(currentVariant.chrom)  + ' -- ' + caseName + ' --'" @toggle-panel="handlePanelVisibility()"
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories-c-n-v="annotationCategoriesCNV"
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications">
         <v-slide-y-transition slot="variantDetails">
-            <v-flex xs12 md12 lg11 xl10 mb-2 v-show="editAnnotationVariantDetailsVisible">
+            <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
                 <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()"
                     :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
                     @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
@@ -452,7 +464,7 @@ const OpenCase = {
                         </v-slide-y-transition>
                         <!-- card showing the same data as the summary row -->
                         <v-slide-y-transition>
-                            <v-flex xs12 md12 lg11 xl10 v-show="annotationVariantDetailsVisible">
+                            <v-flex xs12 md12 lg12 xl11 v-show="annotationVariantDetailsVisible">
 
                                 <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable"
                                     :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
@@ -1780,6 +1792,11 @@ const OpenCase = {
                                 {
                                     label: "Genes", type: "chip", value: this.currentVariant.geneChips
                                 },
+                            ]
+                        };
+                        var infoTable2 = {
+                            name: "infoTable2",
+                            items: [
                                 {
                                     label: "Start", value: this.currentVariant.startFormatted
                                 },
@@ -1805,6 +1822,7 @@ const OpenCase = {
                             ]
                         };
                         this.variantDataTables.push(infoTable);
+                        this.variantDataTables.push(infoTable2);
 
                         this.linkTable = [];
 

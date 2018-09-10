@@ -74,7 +74,7 @@ Vue.component('variant-details', {
   </v-toolbar>
   <v-container grid-list-md fluid>
       <v-layout row wrap>
-          <v-flex :class="[variantType == 'cnv' ? 'md7' : '', widthClass]" v-for="table in variantDataTables" :key="table.name">
+          <v-flex :class="[variantType == 'cnv' ? 'md6' : '', widthClass]" v-for="table in variantDataTables" :key="table.name">
               <v-card flat>
                   <v-card-text>
                       <v-list class="dense-tiles">
@@ -94,7 +94,7 @@ Vue.component('variant-details', {
                                           <span class="subheading warning--text" v-show="cnvPlotNeedsReload" >Click on <span v-text="getChrButtonName()"></span> to refresh the CNV Plot.</span>
                                                 <v-btn-toggle v-model="genesSelected" multiple class="elevation-0" @change="handleGeneSelectionChanged">
                                                 <v-layout row wrap>
-                                                    <v-flex pl-0 pr-0 v-for="chip in item.value" :key="chip.name">
+                                                    <v-flex pl-0 pr-0 pt-0 pb-0 v-for="chip in item.value" :key="chip.name">
                                                         <v-btn flat class="selectable">
                                                         {{ chip.name }}
                                                         </v-btn>
@@ -149,12 +149,14 @@ Vue.component('variant-details', {
                                       </v-card-text>
                                       </v-card>
                                       </v-flex>
-                                      <v-flex xs5 v-if="variantType == 'cnv'">
+                                      <v-flex xs12 md12 lg12 xl10 v-if="variantType == 'cnv'">
                                       <span class="subheading">Load CNV Plot: </span>
                                       <v-tooltip bottom>
                                         <v-btn slot="activator" @click="updateCNVPlot(currentVariant.chrom)" :loading="cnvPlotLoadingChrom" :disabled="cnvPlotLoading"
-                                        :class="[cnvPlotNeedsReload ? 'amber--text accent-2' : '']"
-                                        ><span v-text="formatChrom(currentVariant.chrom)"></span></v-btn>
+                                        :class="[cnvPlotNeedsReload ? 'amber accent-2' : '']"
+                                        ><span v-text="formatChrom(currentVariant.chrom)"></span>
+                                        <v-icon right dark>refresh</v-icon>
+                                        </v-btn>
                                         <span>Plot only <span v-text="formatChrom(currentVariant.chrom)"></span> (faster)</span>
                                       </v-tooltip>
                                       <v-tooltip bottom>
@@ -178,7 +180,7 @@ Vue.component('variant-details', {
                                         - Mouse over a data point to get more information (tooltip)<br/>
                                         - The chart with ALL chromosomes doesn't have tooltips for faster loading.</span>
                                         </v-tooltip>  
-                                      <div :style="fullSizeChart">
+                                      <div :style="cnvPlotDataConfig ? fullSizeChart : ''">
                                       <div :id="cnvPlotId" style="height: 100%"></div>
                                         </div>
                                       </v-flex>
@@ -395,19 +397,28 @@ Vue.component('variant-details', {
                                     },
                                     tooltip: {
                                         visible: true,
-                                        rules: [
-                                            {
-                                                rule: "'%data-labels' != %v",
-                                                text: "Gene: %data-labels Copy Ratio: %v"
+                                        text: "%data-labels"
+                                        // rules: [
+                                        //     {
+                                        //         rule: "'%data-labels' != %v",
+                                        //         text: "Gene: %data-labels Copy Ratio: %v"
 
-                                            },
-                                            {
-                                                rule: "'%data-labels' == %v",
-                                                text: "Copy Ratio: %v"
+                                        //     },
+                                        //     {
+                                        //         rule: "'%data-labels' == %v",
+                                        //         text: "Copy Ratio: %v %data-labels"
 
-                                            }
-                                        ]
+                                        //     }
+                                        // ]
                                     },
+                                    highlightMarker: {
+                                        size: 4,
+                                        backgroundColor: this.cividisColors.yellow25
+                                    },
+                                    highlightState: {
+                                        lineWidth: 4,
+                                        lineColor: this.cividisColors.blue100
+                                    }
                                 },
                                 plotArea: {
                                     adjustLayout: false,
@@ -525,13 +536,16 @@ Vue.component('variant-details', {
         },
         getLegend() {
             return {
-                "layout": "1x4", //row x column
-                "margin-left": "10%",
-                // "margin-top":"8%",
-                marginBottom: "0%",
-                maxItems: 4,
+                // "layout": "1x4", //row x column
+                // "margin-left": "10%",
+                "margin-top":"8%",
+                // marginBottom: "0%",
+                // maxItems: 4,
                 "overflow": "page",
                 // align: "center",
+                adjustLayout: true,
+                highlightPlot: true,
+               
             }
         },
         createCnvPlotTitle() {
