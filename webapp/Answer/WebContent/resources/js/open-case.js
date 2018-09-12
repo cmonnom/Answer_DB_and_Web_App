@@ -362,7 +362,7 @@ const OpenCase = {
 
                         <v-list-tile avatar @click="startUserAnnotations()" :disabled="!canProceed('canAnnotate')">
                             <v-list-tile-avatar>
-                                <v-icon>note_add</v-icon>
+                                <v-icon>create</v-icon>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
                                 <v-list-tile-title>Create/Edit Your Annotations</v-list-tile-title>
@@ -564,12 +564,21 @@ const OpenCase = {
                                                     </v-list-tile-content>
                                                 </v-list-tile>
 
+                                                <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="startUserAnnotations">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>create</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Create/Edit Your Annotations</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+
                                                 <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="saveAnnotationSelection()" :loading="savingAnnotationSelection">
                                                     <v-list-tile-avatar>
                                                         <v-icon>save</v-icon>
                                                     </v-list-tile-avatar>
                                                     <v-list-tile-content>
-                                                        <v-list-tile-title>Save Selection</v-list-tile-title>
+                                                        <v-list-tile-title>Save Selection (all variant types)</v-list-tile-title>
                                                     </v-list-tile-content>
                                                 </v-list-tile>
 
@@ -600,13 +609,19 @@ const OpenCase = {
                                             </v-btn>
                                             <span>Show/Hide Search Annotations</span>
                                         </v-tooltip>
+                                        <v-tooltip bottom>
+                                        <v-btn flat icon v-if="canProceed('canAnnotate') && !readonly" @click="startUserAnnotations()" slot="activator">
+                                            <v-icon>create</v-icon>
+                                        </v-btn>
+                                        <span>Create/Edit Your Annotations</span>
+                                        </v-tooltip>
                                         <v-badge color="red" v-if="canProceed('canAnnotate') && !readonly" right bottom overlap v-model="annotationSelectionUnSaved" class="mini-badge">
                                             <v-icon slot="badge"></v-icon>
                                             <v-tooltip bottom>
                                                 <v-btn flat icon @click="saveAnnotationSelection()" slot="activator">
                                                     <v-icon>save</v-icon>
                                                 </v-btn>
-                                                <span>Save Selection</span>
+                                                <span>Save Selection (all variant types)</span>
                                             </v-tooltip>
                                         </v-badge>
                                         <v-tooltip bottom>
@@ -691,7 +706,7 @@ const OpenCase = {
             <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
                     <v-btn color="primary" @click="startUserAnnotations()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">Add/Edit
-                        <v-icon right dark>note_add</v-icon>
+                        <v-icon right dark>create</v-icon>
                     </v-btn>
                     <span>Create/Edit Your Annotations</span>
                 </v-tooltip>
