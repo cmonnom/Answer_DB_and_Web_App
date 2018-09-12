@@ -8,7 +8,7 @@ const OpenCase = {
     <!-- splash screen dialog -->
     <div class="splash-screen" v-if="splashDialog">
     <v-layout align-center justify-center row fill-height class="splash-screen-item">
-    <span class="subheading" >{{ splashTextCurrent }}</span>
+	<span class="subheading">{{ splashTextCurrent }}</span>
   </v-layout>
   </div>
 
@@ -219,7 +219,7 @@ const OpenCase = {
         @breadcrumb-navigation="breadcrumbNavigation">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
-            <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable"
+            <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType" 
                 :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                 @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                 @save-variant="saveVariant" :color="colors.variantDetails"
@@ -231,11 +231,11 @@ const OpenCase = {
 
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         :color="colors.editAnnotation" ref="cnvAnnotationDialog" :title="formatChrom(currentVariant.chrom)  + ' -- ' + caseName + ' --'" @toggle-panel="handlePanelVisibility()"
-        :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories-c-n-v="annotationCategoriesCNV"
+        :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories-c-n-v="annotationCategoriesCNV" :annotation-breadth="annotationBreadth"
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
-                <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()"
+                <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()" :type="currentVariantType"
                     :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
                     @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
                     ref="cnvVariantDetailsPanel" cnv-plot-id="cnvPlotEdit"
@@ -385,7 +385,11 @@ const OpenCase = {
                     </v-list>
                 </v-menu>
                 <v-toolbar-title class="ml-0">
-          Annotations for Variant:
+          Annotations for 
+          <span v-if="isSNP()">SNP</span>
+          <span v-if="isCNV()">CNV</span>
+          <span v-if="isTranslocation()">FTL</span>
+          Variant:
               <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
               <span v-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
               <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
@@ -466,7 +470,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 md12 lg12 xl11 v-show="annotationVariantDetailsVisible">
 
-                                <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable"
+                                <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType"
                                     :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                                     @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                                     @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel"
@@ -624,6 +628,11 @@ const OpenCase = {
                                                                         label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
                                                                     <v-select v-if="isCNV()" clearable :value="searchAnnotationCategory" :items="annotationCategoriesCNV" v-model="searchAnnotationCategory"
                                                                         label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
+                                                                </v-flex>
+
+                                                                <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                    <v-select v-if="isCNV()" clearable :value="searchAnnotationBreadth" :items="annotationBreadth" v-model="searchAnnotationBreadth"
+                                                                        label="Search by Breadth" multiple @input="matchAnnotationFilter"></v-select>
                                                                 </v-flex>
 
                                                                 <v-flex xs6 sm6 md3 lg3 xl2>
@@ -858,13 +867,20 @@ const OpenCase = {
                                                     <v-list-tile-content class="pb-2">
                                                         <v-layout class="full-width">
                                                             <v-flex xs5 class="text-xs-left grow">
-                                                                <span class="selectable">{{ item.label }}:</span>
+                                                                <span :class="[item.type == 'text' ? 'pt-4' : '', 'selectable']">{{ item.label }}:</span>
                                                             </v-flex>
                                                             <v-flex :class="[item.type ? 'xs5' : 'xs7','text-xs-right', 'grow', 'blue-grey--text', 'text--lighten-1']">
                                                                 <span v-if="item.type == null" class="selectable">{{ item.value }}</span>
-                                                                <v-text-field :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text'" class="pt-2" value="patientDetailsOncoTreeDiagnosis"
+                                                                <!-- <v-text-field :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text'" class="pt-2" value="patientDetailsOncoTreeDiagnosis"
                                                                     v-model="patientDetailsOncoTreeDiagnosis" hide-details @input="patientDetailsUnSaved = true">
-                                                                </v-text-field>
+                                                                </v-text-field> -->
+                                                                <v-tooltip bottom>
+                                                                <v-select class="pt-0" slot="activator" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text' && item.field == 'oncotree'" 
+                                                                v-model="patientDetailsOncoTreeDiagnosis" :items="oncotree" label="Code" autocomplete single-line return-object
+                                                                item-text="text" item-value="text" hide-details @input="patientDetailsUnSaved = true">
+                                                                </v-select>
+                                                                <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
+                                                                </v-tooltip>
                                                             </v-flex>
                                                             <v-flex xs2 v-if="item.type == 'text'">
                                                                 <v-tooltip bottom>
@@ -1082,6 +1098,11 @@ const OpenCase = {
                 'Prognosis',
                 'Diagnosis'],
             annotationCategoriesCNV: [
+                'Therapy',
+                'Epidemiology',
+                'Prognosis',
+                'Diagnosis'],
+            annotationBreadth: [
                 'Chromosomal',
                 'Focal'],
             annotationClassifications: [
@@ -1138,6 +1159,7 @@ const OpenCase = {
             searchAnnotationsVisible: false,
             searchAnnotationClassification: [],
             searchAnnotationCategory: [],
+            searchAnnotationBreadth: [],
             searchAnnotationTier: [],
             searchAnnotationScope: [],
             annotationSelectionUnSaved: false,
@@ -1163,7 +1185,9 @@ const OpenCase = {
             currentFilterType: "snp",
             highlights: {
                 genes: []
-            }
+            },
+            oncotree: [],
+            // oncotreeRules: [(v) => { return this.checkOncoTreeDiagnosis(v) || 'Only numbers, separated by comma' }],
         }
     }, methods: {
         createSplashText() {
@@ -1228,7 +1252,9 @@ const OpenCase = {
                     this.patientTables = response.data.patientInfo.patientTables;
                     this.caseAssignedTo = response.data.assignedToIds;
                     this.caseName = response.data.caseName + " (" + this.patientTables[0].items[0].value + ")"; //careful when swapping item positions
-                    this.patientDetailsOncoTreeDiagnosis = this.patientTables[2].items[0].value; //careful when swapping item positions
+                    this.patientTables[2].items[0].field = "oncotree";
+                    this.patientDetailsOncoTreeDiagnosis = { text: this.patientTables[2].items[0].value, label: "" }; //careful when swapping item positions
+                    this.populateOncotreeLabel(); //update the label
                     this.caseId = response.data.caseId;
                     this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true";
                     this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
@@ -2136,7 +2162,8 @@ const OpenCase = {
                     tier: "",
                     classification: "",
                     visible: true,
-                    isSelected: false
+                    isSelected: false,
+                    breadth: ""
                 };
                 annotation._id = annotations[i]._id;
                 if (showUser) {
@@ -2148,6 +2175,7 @@ const OpenCase = {
                 "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.chrom : ''),
                     "Tumor"];
                 annotation.category = annotations[i].category;
+                annotation.category = annotations[i].breadth;
                 annotation.cnvGenes = annotations[i].cnvGenes ? annotations[i].cnvGenes.join(" ") : "";
                 annotation.createdDate = annotations[i].createdDate;
                 annotation.createdSince = annotations[i].createdSince;
@@ -2950,7 +2978,9 @@ const OpenCase = {
                     if (response.data.isAllowed) {
                         this.patientDetailsUnSaved = false;
                         this.patientTables = response.data.patientTables;
-                        this.patientDetailsOncoTreeDiagnosis = this.patientTables[2].items[0].value; //careful when swapping item positions
+                        this.patientTables[2].items[0].field = "oncotree";
+                        this.patientDetailsOncoTreeDiagnosis = { text: this.patientTables[2].items[0].value, label: ""}; //careful when swapping item positions
+                        this.populateOncotreeLabel(); //update the label
                     }
                     else {
                         this.handleDialogs(response.data, this.getPatientDetails);
@@ -2969,7 +2999,7 @@ const OpenCase = {
                 method: 'post',
                 url: webAppRoot + "/savePatientDetails",
                 params: {
-                    oncotreeDiagnosis: this.patientDetailsOncoTreeDiagnosis,
+                    oncotreeDiagnosis: this.patientDetailsOncoTreeDiagnosis.text,
                     caseId: this.$route.params.id,
                 }
             }).then(response => {
@@ -3021,6 +3051,7 @@ const OpenCase = {
                 for (var i = 0; i < this.utswAnnotationsFormatted.length; i++) {
                     var foundTextMatch = false;
                     var foundCategoryMatch = false;
+                    var foundBreadthMatch = false;
                     var foundClassificationMatch = false;
                     var foundTierMatch = false;
                     var foundScopeMatch = false;
@@ -3046,6 +3077,15 @@ const OpenCase = {
                     }
                     else {
                         foundCategoryMatch = true;
+                    }
+                     // continue search with Breadth
+                     if (this.searchAnnotationBreadth.length > 0) {
+                        if (this.searchAnnotationBreadth.includes(this.utswAnnotationsFormatted[i].breadth)) {
+                            foundBreadthMatch = true;
+                        }
+                    }
+                    else {
+                        foundBreadthMatch = true;
                     }
                     // continue search with Classification
                     if (this.searchAnnotationClassification.length > 0) {
@@ -3198,6 +3238,44 @@ const OpenCase = {
         },
         formatChrom(chrom) { //needed to call the global function from v-text
             return formatChrom(chrom);
+        },
+        populateOncotreeLabel() {
+            for (var i = 0; i < this.oncotree.length; i++) {
+                if (this.oncotree[i].text == this.patientDetailsOncoTreeDiagnosis.text) {
+                    this.patientDetailsOncoTreeDiagnosis.label = this.oncotree[i].label;
+                    break;
+                }
+            }
+        },
+
+        collectOncoTreeDiagnosis() {
+            axios.get(
+                "http://oncotree.mskcc.org/api/tumorTypes",
+                {
+                    params: {
+                    }
+                })
+                .then(response => {
+                    console.log(response);
+                    this.oncotree = [];
+                    if (response && response.status == 200) {
+                        for (var i = 0; i < response.data.length; i++) {
+                            this.oncotree.push({text:response.data[i].code, label: response.data[i].name});
+                        }
+                        this.populateOncotreeLabel(); //update the label in case this ajax call returned after patientDetails ajax
+                        this.oncotree.sort(function(a, b) {
+                            if (a.text < b.text) return -1;
+                            if (a.text > b.text) return 1;
+                            return 0;
+                        });
+                    }
+                    else {
+                        bus.$emit("some-error", [this, "Cannot retrieve OncoTree"]);
+                    }
+                }).catch(error => {
+                    console.log(error);
+                    bus.$emit("some-error", [this, error]);
+                });
         }
     },
     mounted() {
@@ -3208,6 +3286,7 @@ const OpenCase = {
                 bus.$emit("update-status", ["VIEW ONLY MODE"]);
             }, 4200); //show after snackbar is dismissed
         }
+        this.collectOncoTreeDiagnosis();
         this.getAjaxData();
         this.loadUserFilterSets();
         bus.$emit("clear-item-selected", [this]);

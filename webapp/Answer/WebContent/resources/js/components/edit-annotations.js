@@ -5,14 +5,15 @@ Vue.component('edit-annotations', {
         limitScopeCase: { default: false, type: Boolean}, //not used yet
         limitScopeGene: { default: false, type: Boolean}, //not used yet
         limitScopeVariant: { default: false, type: Boolean}, //not used yet
-        limitScopeChromosome: { default: false, type: Boolean}, //used by CNV to limit the category choices
+        limitScopeChromosome: { default: false, type: Boolean}, //used by CNV to limit the breadth choices
         hideScope: {default: false, type: Boolean},
         color: {default: "primary", type: String},
         breadcrumbs: { default: [], type: Array },
         annotationCategories: {default: () => [], type: Array},
-        annotationCategoriesCNV: {default: () => [], type: Array},
+        annotationBreadth: {default: () => [], type: Array},
         annotationClassifications: {default:() => [], type: Array},
         annotationTiers: {default: () => [], type: Array},
+        annotationCategoriesCNV: {default: () => [], type: Array},
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -154,18 +155,18 @@ Vue.component('edit-annotations', {
                                                             </div>
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
-                                                                    v-model="annotation.isCaseSpecific" @change="selectCategory(annotation)"></v-switch>
+                                                                    v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
                                                                 <span>Select if this annotation only applies to this case
                                                                     <br/>(need to select Gene or Variant Specific first)</span>
                                                             </v-tooltip>
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Gene Specific" v-model="annotation.isGeneSpecific"
-                                                                    @change="selectCategory(annotation, 'Gene Function')"></v-switch>
+                                                                    @change="selectBreadth(annotation, 'Gene Function')"></v-switch>
                                                                 <span>Select either Gene or Variant Specific or both</span>
                                                             </v-tooltip>
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Variant Specific" v-model="annotation.isVariantSpecific"
-                                                                    @change="selectCategory(annotation, 'Variant Function')"></v-switch>
+                                                                    @change="selectBreadth(annotation, 'Variant Function')"></v-switch>
                                                                 <span>Select either Gene or Variant Specific or both</span>
                                                             </v-tooltip>
                                                             <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
@@ -179,7 +180,7 @@ Vue.component('edit-annotations', {
                                                             </div>
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
-                                                                    v-model="annotation.isCaseSpecific" @change="selectCategory(annotation)"></v-switch>
+                                                                    v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
                                                                 <span>Select if this annotation only applies to this case only</span>
                                                             </v-tooltip>
                                                             <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
@@ -226,8 +227,17 @@ Vue.component('edit-annotations', {
                                                                     Annotation Category:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.category" :disabled="annotation.markedForDeletion" :items="annotationCategoriesCNV"
-                                                                        v-model="annotation.category" label="Select a Category"
+                                                                    <v-select clearable :value="annotation.category" :disabled="annotation.markedForDeletion" :items="annotationCategoriesCNV" v-model="annotation.category"
+                                                                        label="Select a Category" single-line class="no-height no-height-select"></v-select>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5 class="mt-1">
+                                                                    Annotation Breadth:
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <v-select clearable :value="annotation.breadth" :disabled="annotation.markedForDeletion" :items="annotationBreadth"
+                                                                        v-model="annotation.breadth" label="Select Chrom vs Focal"
                                                                         single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
@@ -236,7 +246,7 @@ Vue.component('edit-annotations', {
                                                                     Genes:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.cnvGenes" :disabled="annotation.markedForDeletion || annotation.category != 'Focal'" :items="cnvGeneItems" v-model="annotation.cnvGenes"
+                                                                    <v-select clearable :value="annotation.cnvGenes" :disabled="annotation.markedForDeletion || annotation.breadth != 'Focal'" :items="cnvGeneItems" v-model="annotation.cnvGenes"
                                                                         label="Select Gene(s)" chips deletable-chips multiple
                                                                         single-line hide-details></v-select>
                                                                 </v-flex>
@@ -363,9 +373,6 @@ Vue.component('edit-annotations', {
                 //need to convert pmid arrays into strings
                 tempAnnotation.pmids = tempAnnotation.pmids ? tempAnnotation.pmids.join(",") : null;
                 tempAnnotation.nctids = tempAnnotation.nctids ? tempAnnotation.nctids.join(",") : null;
-                // tempAnnotation.selectedCategory = tempAnnotation.category;
-                // tempAnnotation.selectedClassification = tempAnnotation.classification;
-                // tempAnnotation.selectedTier = tempAnnotation.tier;
                 tempAnnotation.isVisible = true;
                 this.userEditingAnnotations.push(tempAnnotation);
             }
@@ -397,22 +404,15 @@ Vue.component('edit-annotations', {
                 isVariantSpecific: this.isCNV() || this.isTranslocation() ? true : false,
                 isCaseSpecific: false,
                 category: null,
-                // selectedCategory: null,
                 createdDate: null,
                 modifiedDate: null,
                 _id: null,
                 classification: null,
                 tier: null,
-                // selectedTier: null,
-                // selectedClassification: null,
                 nctids: "",
                 type: this.type,
                 cnvGenes: []
             });
-            // this.$nextTick(function () {
-            //     this.$refs.editAnnotation[this.$refs.editAnnotation.length - 1].focus(); this.$vuetify.goTo(
-            //         "textarea:last-child");
-            // });
         },
         saveAnnotations() {
              // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
@@ -426,21 +426,15 @@ Vue.component('edit-annotations', {
                 var annotation = JSON.parse(JSON.stringify(this.userEditingAnnotations[i]));
                 annotation.pmids = annotation.pmids ? annotation.pmids.split(",") : null;
                 annotation.nctids = annotation.nctids ? annotation.nctids.split(",") : null;
-                if (annotation.category == 'Chromosomal') {
+                if (annotation.breadth == 'Chromosomal') {
                     annotation.cnvGenes = [];
                 }
-                // annotation.category = annotation.selectedCategory ? annotation.selectedCategory : null;
-                // annotation.classification = annotation.selectedClassification ? annotation.selectedClassification : null;
-                // annotation.tier = annotation.selectedTier ? annotation.selectedTier : null;
                 this.userAnnotations.push(annotation);
             }
             this.$emit("saving-annotations", this.userAnnotations);
         },
         cancelAnnotations() {
             this.annotationDialogVisible = false;
-            // this.$nextTick(function () { //wait until dialog is closed 
-            //     this.userEditingAnnotations = [];
-            // });
         },
         isNumberList(v) {
             var valid = !isNaN(v);
@@ -507,9 +501,9 @@ Vue.component('edit-annotations', {
             text = text + ".";
             return text;
         },
-        selectCategory(annotation, category) {
-            if (category && !annotation.selectedCategory) {
-                annotation.selectedCategory = this.annotationCategories.filter(item => item == category)[0];
+        selectBreadth(annotation, breadth) {
+            if (breadth && !annotation.selectedBreadth) {
+                annotation.selectedBreadth = this.annotationCategories.filter(item => item == breadth)[0];
             }
         },
         deleteAnnotation(annotation, index) {
@@ -552,7 +546,18 @@ Vue.component('edit-annotations', {
                 return "Create/Edit Annotations for gene: " + this.title;
             }
             else {
-                return "Create/Edit Annotations for variant: " + this.title;
+                var typeTitle = "";
+                if (this.isSNP()) {
+                    typeTitle = "SNP";
+                }
+                else if (this.isCNV()) {
+                    typeTitle = "CNV";
+                }
+                else if (this.isTranslocation()) {
+                    typeTitle = "FTL";
+                }
+                return "Create/Edit Annotations for " + typeTitle +
+                " Variant: " + this.title;
             }
             
         },
@@ -571,13 +576,6 @@ Vue.component('edit-annotations', {
     destroyed: function () {
     },
     mounted() {
-        //don't put in mounted but maybe in a method called when edit annotation becomes visible
-        // if (this.limitScopeChromosome) {
-        //     this.annotationCategoriesCNV = ["Chromosomal"];
-        // }
-        // else {
-        //     this.annotationCategoriesCNV = ["Chromosomal", "Focal"];
-        // }
     },
     computed: {
     },

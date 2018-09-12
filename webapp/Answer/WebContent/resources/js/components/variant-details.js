@@ -7,7 +7,8 @@ Vue.component('variant-details', {
         currentVariant: { default: {}, type: Object },
         color: { default: "primary", type: String },
         variantType: { default: "snp", type: String },
-        cnvPlotId: { default: "cnvPlot", type: String }
+        cnvPlotId: { default: "cnvPlot", type: String },
+        type: { default: "snp", type: String }
     },
     template: ` <v-card>
   <v-toolbar class="elevation-0" dense dark :color="color">
@@ -45,6 +46,7 @@ Vue.component('variant-details', {
           </v-list>
       </v-menu>
       <v-toolbar-title class="ml-0">
+      <span v-text="getVariantTypeTitle()"></span>
           Variant Details
       </v-toolbar-title>
 
@@ -178,7 +180,8 @@ Vue.component('variant-details', {
                                         - Right-Click on the chart to display more actions<br/>
                                         - Click on the legend to show/hide series<br/>
                                         - Mouse over a data point to get more information (tooltip)<br/>
-                                        - The chart with ALL chromosomes doesn't have tooltips for faster loading.</span>
+                                        - The chart with ALL chromosomes doesn't have tooltips for faster loading.<br/>
+                                        - You can highlight specific genes by clicking on the list above.</span>
                                         </v-tooltip>  
                                       <div :style="cnvPlotDataConfig ? fullSizeChart : ''">
                                       <div :id="cnvPlotId" style="height: 100%"></div>
@@ -589,7 +592,27 @@ Vue.component('variant-details', {
         },
         formatChrom(chrom) { //needed to call the global function from v-text
             return formatChrom(chrom);
-        }
+        },
+        getVariantTypeTitle() {
+            if (this.isSNP()) {
+                return "SNP";
+            }
+            else if (this.isCNV()) {
+                return "CNV";
+            }
+            else if (this.isTranslocation()) {
+                return "FTL";
+            }
+        },
+        isSNP() {
+            return this.type == "snp";
+        },
+        isCNV() {
+            return this.type == "cnv";
+        },
+        isTranslocation() {
+            return this.type == "translocation";
+        },
        
     },
     mounted: function () {

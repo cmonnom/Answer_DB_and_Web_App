@@ -40,19 +40,19 @@ Vue.component('utsw-annotation-card', {
                     <span v-html="annotation.text"></span>
                 </v-flex>
                 <v-flex xs12>
-                    <span v-if="annotation.tier" class="pr-1">
-                        <b>Tier:</b>
-                    </span>
-                    <span v-html="annotation.tier"></span>
-                </v-flex>
-                <v-flex xs12>
                     <span v-if="annotation.classification" class="pr-1">
                         <b>Classification:</b>
                     </span>
                     <span v-html="annotation.classification"></span>
                 </v-flex>
+                <v-flex xs12>
+                    <span v-if="annotation.tier" class="pr-1">
+                        <b>Tier:</b>
+                    </span>
+                    <span v-html="annotation.tier"></span>
+                </v-flex>
                 <v-flex xs12 v-if="isCNV() && annotation.cnvGenes" class="pr-1">
-                    Apply to genes: {{ annotation.cnvGenes }}
+                    Applies to genes: {{ annotation.cnvGenes }}
                 </v-flex>
                 <v-flex xs12>
                     <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>

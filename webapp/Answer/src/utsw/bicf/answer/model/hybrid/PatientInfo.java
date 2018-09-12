@@ -82,9 +82,9 @@ public class PatientInfo {
 		CellItem oncoTreeItem = new CellItem("OncoTree Diagnosis", orderCase.getOncotreeDiagnosis());
 		oncoTreeItem.setType(CellItem.TYPE_TEXT);
 		items.add(oncoTreeItem);
-		items.add(new CellItem("Order date", orderCase.getEpicOrderDate()));
+		items.add(new CellItem("Order Date", orderCase.getEpicOrderDate()));
 		items.add(new CellItem("Tumor Collection Date", orderCase.getTumorCollectionDate()));
-		items.add(new CellItem("Lab Received date", orderCase.getReceivedDate()));
+		items.add(new CellItem("Lab Received Date", orderCase.getReceivedDate()));
 		patientTables.add(table);
 		
 	}

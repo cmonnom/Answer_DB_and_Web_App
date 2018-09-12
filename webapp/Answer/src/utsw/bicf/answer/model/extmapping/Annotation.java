@@ -51,6 +51,7 @@ public class Annotation {
 	String type;
 	List<String> cnvGenes;
 	Boolean isSelected;
+	String breadth;
 	
 	public Annotation() {
 		
@@ -343,6 +344,14 @@ public class Annotation {
 
 	public void setIsSelected(Boolean isSelected) {
 		this.isSelected = isSelected;
+	}
+
+	public String getBreadth() {
+		return breadth;
+	}
+
+	public void setBreadth(String breadth) {
+		this.breadth = breadth;
 	}
 
 
