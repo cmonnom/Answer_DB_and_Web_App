@@ -69,7 +69,7 @@ public class PatientInfo {
 		items.add(new CellItem("Institution", orderCase.getInstitution()));
 		items.add(new CellItem("Tumor Tissue", orderCase.getTumorTissueType()));
 		items.add(new CellItem("Germline Tissue", orderCase.getNormalTissueType()));
-		items.add(new CellItem("ICD 10", orderCase.getIcd10()));
+		items.add(new CellItem("ICD10", orderCase.getIcd10()));
 		items.add(new CellItem("Clinical Stage", ""));//TODO
 		items.add(new CellItem("Treatment Status", ""));//TODO
 //		items.add(new CellItem("Clinical Stage", patient.getClinicalStage()));//TODO

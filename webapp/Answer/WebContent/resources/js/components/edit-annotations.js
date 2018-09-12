@@ -15,7 +15,8 @@ Vue.component('edit-annotations', {
         annotationTiers: {default: () => [], type: Array},
         annotationCategoriesCNV: {default: () => [], type: Array},
         currentVariant: {default: () => {}, type: Object},
-        annotationVariantDetailsVisible: {default: true, type: Boolean}
+        annotationVariantDetailsVisible: {default: true, type: Boolean},
+        backColor: {default: "orange lighten-4", type: String}
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -95,7 +96,7 @@ Vue.component('edit-annotations', {
                     <span>Close and Discard Changes</span>
                 </v-tooltip>
             </v-toolbar>
-            <v-card-text :style="getDialogMaxHeight(130)">
+            <v-card-text :style="getDialogMaxHeight(130)" :class="['pl-3', 'pr-3', backColor]">
                 <v-breadcrumbs class="pt-2">
                 <v-icon slot="divider">forward</v-icon>
                     <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"  @click.native="breadcrumbNavigation(index)">
@@ -346,7 +347,7 @@ Vue.component('edit-annotations', {
                     </v-slide-y-transition>
                 </v-card>
             </v-card-text>
-            <v-card-actions class="card-actions-bottom">
+            <v-card-actions :class="['card-actions-bottom', backColor]">
                 <v-tooltip top>
                     <v-btn slot="activator" color="primary" @click="addCustomAnnotation()">Add
                         <v-icon right dark>playlist_add</v-icon>

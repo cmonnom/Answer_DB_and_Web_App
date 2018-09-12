@@ -125,7 +125,7 @@ const OpenCase = {
                     <span>Close</span>
                 </v-tooltip>
             </v-toolbar>
-            <v-card-text :style="getDialogMaxHeight(120)">
+            <v-card-text :style="getDialogMaxHeight(120)" class="pl-3 pr-3">
 
                 <v-breadcrumbs class="pt-2">
                     <v-icon slot="divider">forward</v-icon>
@@ -461,7 +461,7 @@ const OpenCase = {
 
             </v-toolbar>
 
-            <v-card-text :style="getDialogMaxHeight(120)">
+            <v-card-text :style="getDialogMaxHeight(120)" class="pl-2 pr-2">
 
                 <v-breadcrumbs class="pt-2 pb-2">
                     <v-icon slot="divider">forward</v-icon>
@@ -895,15 +895,12 @@ const OpenCase = {
                                             <v-list class="dense-tiles">
                                                 <v-list-tile v-for="item in table.items" :key="item.label">
                                                     <v-list-tile-content class="pb-2">
-                                                        <v-layout class="full-width">
-                                                            <v-flex xs5 class="text-xs-left grow">
+                                                        <v-layout class="full-width " justify-space-between>
+                                                            <v-flex class="text-xs-left xs">
                                                                 <span :class="[item.type == 'text' ? 'pt-4' : '', 'selectable']">{{ item.label }}:</span>
                                                             </v-flex>
-                                                            <v-flex :class="[item.type ? 'xs5' : 'xs7','text-xs-right', 'grow', 'blue-grey--text', 'text--lighten-1']">
+                                                            <v-flex :class="[item.type ? 'xs5' : 'xs','text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
                                                                 <span v-if="item.type == null" class="selectable">{{ item.value }}</span>
-                                                                <!-- <v-text-field :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text'" class="pt-2" value="patientDetailsOncoTreeDiagnosis"
-                                                                    v-model="patientDetailsOncoTreeDiagnosis" hide-details @input="patientDetailsUnSaved = true">
-                                                                </v-text-field> -->
                                                                 <v-tooltip bottom>
                                                                 <v-select class="pt-0" slot="activator" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text' && item.field == 'oncotree'" 
                                                                 v-model="patientDetailsOncoTreeDiagnosis" :items="oncotree" autocomplete single-line return-object
@@ -912,7 +909,7 @@ const OpenCase = {
                                                                 <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
                                                                 </v-tooltip>
                                                             </v-flex>
-                                                            <v-flex xs2 v-if="item.type == 'text'">
+                                                            <v-flex xs2 v-if="item.type == 'text' && item.field == 'oncotree'">
                                                                 <v-tooltip bottom>
                                                                     <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator">
                                                                         <v-icon> open_in_new</v-icon>
