@@ -14,6 +14,8 @@ Vue.component('edit-annotations', {
         annotationClassifications: {default:() => [], type: Array},
         annotationTiers: {default: () => [], type: Array},
         annotationCategoriesCNV: {default: () => [], type: Array},
+        currentVariant: {default: () => {}, type: Object},
+        annotationVariantDetailsVisible: {default: true, type: Boolean}
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -141,6 +143,7 @@ Vue.component('edit-annotations', {
                                     <v-form>
                                         <v-container grid-list-md fluid>
                                             <v-layout row wrap>
+                                                <!-- Scope -->
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
                                                     <v-card-text class="card__text_default" v-if="isSNP() && hideScope">
@@ -171,8 +174,8 @@ Vue.component('edit-annotations', {
                                                             </v-tooltip>
                                                             <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
                                                         </v-card-text>
-                                                        <!-- CNV and Translocation -->
-                                                        <v-card-text class="card__text_default" v-if="(isCNV() || isTranslocation())  && !hideScope">
+                                                        <!-- CNV -->
+                                                        <v-card-text class="card__text_default" v-if="isCNV()  && !hideScope">
                                                             <div class="subheading pb-2">
                                                                 The
                                                                 <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
@@ -181,10 +184,34 @@ Vue.component('edit-annotations', {
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
                                                                     v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
-                                                                <span>Select if this annotation only applies to this case only</span>
+                                                                <span>Select if this annotation applies to this case only</span>
                                                             </v-tooltip>
                                                             <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
                                                         </v-card-text>
+                                                        <!-- Translocation -->
+                                                        <v-card-text class="card__text_default" v-if="isTranslocation()  && !hideScope">
+                                                        <div class="subheading pb-2">
+                                                            The
+                                                            <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
+                                                            cases or genes:
+                                                        </div>
+                                                        <v-tooltip bottom>
+                                                            <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
+                                                                v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
+                                                            <span>Select if this annotation applies to this case only</span>
+                                                        </v-tooltip>
+                                                        <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                        <v-tooltip bottom>
+                                                            <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" :label="'Left Gene Specific: ' + annotation.leftGene"
+                                                                v-model="annotation.isLeftSpecific"></v-switch>
+                                                            <span>Select if this annotation applies to the left gene</span>
+                                                        </v-tooltip>
+                                                        <v-tooltip bottom>
+                                                        <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" :label="'Right Gene Specific: ' + annotation.rightGene"
+                                                            v-model="annotation.isRightSpecific"></v-switch>
+                                                        <span>Select if this annotation applies to the right gene</span>
+                                                    </v-tooltip>
+                                                    </v-card-text>
                                                     </v-card>
                                                 </v-flex>
                                                 <v-flex xs12 sm6 md4>
@@ -355,7 +382,6 @@ Vue.component('edit-annotations', {
             nctRules: [(v) => { return this.isNCTNumberList(v) || 'Must start with NCT + number. If more than one, use a comma' }],
            
             cnvGeneItems: [],
-            annotationVariantDetailsVisible: true,
         }
 
     },
@@ -403,6 +429,8 @@ Vue.component('edit-annotations', {
                 isGeneSpecific: this.limitScopeGene,
                 isVariantSpecific: this.isCNV() || this.isTranslocation() ? true : false,
                 isCaseSpecific: false,
+                isLeftSpecific: false,
+                isRightSpecific: false,
                 category: null,
                 createdDate: null,
                 modifiedDate: null,
@@ -411,7 +439,9 @@ Vue.component('edit-annotations', {
                 tier: null,
                 nctids: "",
                 type: this.type,
-                cnvGenes: []
+                cnvGenes: [],
+                leftGene: this.currentVariant.leftGene,
+                rightGene: this.currentVariant.rightGene
             });
         },
         saveAnnotations() {
@@ -482,8 +512,8 @@ Vue.component('edit-annotations', {
             var text = "This annotation's scope is limited to ";
             var commaNeeded = false;
             if (annotation.isCaseSpecific) {
-                commaNeeded = true;
                 text = text + "this case";
+                commaNeeded = true;
             }
             if (annotation.isGeneSpecific) {
                 if (commaNeeded) {
@@ -497,6 +527,21 @@ Vue.component('edit-annotations', {
                     text = text + ", ";
                 }
                 text = text + "this variant";
+                commaNeeded = true;
+            }
+            if (annotation.isLeftSpecific) {
+                if (commaNeeded) {
+                    text = text + ", ";
+                }
+                text = text + annotation.leftGene;
+                commaNeeded = true;
+            }
+            if (annotation.isRightSpecific) {
+                if (commaNeeded) {
+                    text = text + ", ";
+                }
+                text = text + annotation.rightGene;
+                commaNeeded = true;
             }
             text = text + ".";
             return text;

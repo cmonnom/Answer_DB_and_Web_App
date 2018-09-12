@@ -43,6 +43,8 @@ public class Annotation {
 	Boolean isCaseSpecific;
 	Boolean isVariantSpecific;
 	Boolean isGeneSpecific;
+	Boolean isLeftSpecific;
+	Boolean isRightSpecific;
 	String category;
 	String fullName;
 	String classification;
@@ -52,6 +54,8 @@ public class Annotation {
 	List<String> cnvGenes;
 	Boolean isSelected;
 	String breadth;
+	String leftGene;
+	String rightGene;
 	
 	public Annotation() {
 		
@@ -352,6 +356,38 @@ public class Annotation {
 
 	public void setBreadth(String breadth) {
 		this.breadth = breadth;
+	}
+
+	public Boolean getIsLeftSpecific() {
+		return isLeftSpecific;
+	}
+
+	public void setIsLeftSpecific(Boolean isLeftSpecific) {
+		this.isLeftSpecific = isLeftSpecific;
+	}
+
+	public Boolean getIsRightSpecific() {
+		return isRightSpecific;
+	}
+
+	public void setIsRightSpecific(Boolean isRightSpecific) {
+		this.isRightSpecific = isRightSpecific;
+	}
+
+	public String getLeftGene() {
+		return leftGene;
+	}
+
+	public void setLeftGene(String leftGene) {
+		this.leftGene = leftGene;
+	}
+
+	public String getRightGene() {
+		return rightGene;
+	}
+
+	public void setRightGene(String rightGene) {
+		this.rightGene = rightGene;
 	}
 
 

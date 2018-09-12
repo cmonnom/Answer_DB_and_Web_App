@@ -215,8 +215,9 @@ const OpenCase = {
     <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         :color="colors.editAnnotation" ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"
         :breadcrumbs="breadcrumbs" :annotation-categories="annotationCategories" :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
-        @toggle-panel="handlePanelVisibility()"
-        @breadcrumb-navigation="breadcrumbNavigation">
+        @toggle-panel="handlePanelVisibility()" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
+        @breadcrumb-navigation="breadcrumbNavigation"
+        :current-variant="currentVariant">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
             <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType" 
@@ -232,7 +233,8 @@ const OpenCase = {
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         :color="colors.editAnnotation" ref="cnvAnnotationDialog" :title="formatChrom(currentVariant.chrom)  + ' -- ' + caseName + ' --'" @toggle-panel="handlePanelVisibility()"
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories-c-n-v="annotationCategoriesCNV" :annotation-breadth="annotationBreadth"
-        :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications">
+        :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
+        :current-variant="currentVariant" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
                 <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()" :type="currentVariantType"
@@ -248,9 +250,22 @@ const OpenCase = {
     </edit-annotations>
 
     <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        :color="colors.editAnnotation" ref="translocationAnnotationDialog" :title="currentVariant.chrom  + ' -- ' + caseName + ' --'"
+        :color="colors.editAnnotation" ref="translocationAnnotationDialog" :title="currentVariant.fusionName  + ' -- ' + caseName + ' --'"
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories="annotationCategories"
-        :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"></edit-annotations>
+        :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
+        :current-variant="currentVariant" @toggle-panel="handlePanelVisibility()">
+        <v-slide-y-transition slot="variantDetails">
+            <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
+                    <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()" :type="currentVariantType"
+                        :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
+                        @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
+                        cnv-plot-id="cnvPlotEditUnusedFTL"
+                        :variant-type="currentVariantType">
+
+                    </variant-details>
+            </v-flex>
+            </v-slide-y-transition>
+        </edit-annotations>
 
     <!-- variant details dialog -->
     <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
@@ -876,7 +891,7 @@ const OpenCase = {
                                                                 </v-text-field> -->
                                                                 <v-tooltip bottom>
                                                                 <v-select class="pt-0" slot="activator" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text' && item.field == 'oncotree'" 
-                                                                v-model="patientDetailsOncoTreeDiagnosis" :items="oncotree" label="Code" autocomplete single-line return-object
+                                                                v-model="patientDetailsOncoTreeDiagnosis" :items="oncotree" autocomplete single-line return-object
                                                                 item-text="text" item-value="text" hide-details @input="patientDetailsUnSaved = true">
                                                                 </v-select>
                                                                 <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
@@ -2163,7 +2178,7 @@ const OpenCase = {
                     classification: "",
                     visible: true,
                     isSelected: false,
-                    breadth: ""
+                    breadth: "",
                 };
                 annotation._id = annotations[i]._id;
                 if (showUser) {
@@ -2208,26 +2223,33 @@ const OpenCase = {
                     tier: "",
                     classification: "",
                     visible: true,
-                    isSelected: false
+                    isSelected: false,
+                    leftGene: "",
+                    rightGene: "",
+                    isLeftSpecific: false,
+                    isRightSpecific: false
+                    
                 };
                 annotation._id = annotations[i]._id;
                 if (showUser) {
                     annotation.fullName = annotations[i].fullName;
                 }
                 annotation.text = annotations[i].text.replace(/\n/g, "<br/>");
-                annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
+                annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific, annotations[i].isLeftSpecific, annotations[i].isRightSpecific];
                 annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
                 "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.fusionName : ''),
-                    "Tumor"];
+                    "Tumor", this.currentVariant.leftGene, this.currentVariant.rightGene];
                 annotation.category = annotations[i].category;
                 annotation.createdDate = annotations[i].createdDate;
                 annotation.createdSince = annotations[i].createdSince;
                 annotation.modifiedDate = annotations[i].modifiedDate;
                 annotation.modifiedSince = annotations[i].modifiedSince;
-                annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
                 annotation.tier = annotations[i].tier;
                 annotation.classification = annotations[i].classification;
                 annotation.isSelected = annotations[i].isSelected;
+                annotation.leftGene = annotations[i].leftGene;
+                annotation.rightGene = annotations[i].rightGene;
+                annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
                 formatted.push(annotation);
             }
             return formatted;
@@ -2323,7 +2345,7 @@ const OpenCase = {
                         this.getAjaxData();
 
                     } else {
-                        this.handleDialogs(response.data, this.commitAnnotations);
+                        this.handleDialogs(response.data, this.commitAnnotations.bind(null, userAnnotations));
                     }
                 })
                 .catch(error => {
@@ -3036,12 +3058,20 @@ const OpenCase = {
         },
         handlePanelVisibility(visible) {
             if (visible == null) {
-                this.editAnnotationVariantDetailsVisible = !this.editAnnotationVariantDetailsVisible;
-                this.annotationVariantDetailsVisible = !this.annotationVariantDetailsVisible;
+                if (this.urlQuery.edit) {
+                    this.editAnnotationVariantDetailsVisible = !this.editAnnotationVariantDetailsVisible;
+                }
+                else {
+                    this.annotationVariantDetailsVisible = !this.annotationVariantDetailsVisible;
+                }
             }
             else {
+                if (this.urlQuery.edit) {
                 this.editAnnotationVariantDetailsVisible = visible;
-                this.annotationVariantDetailsVisible = visible;
+                }
+                else {
+                    this.annotationVariantDetailsVisible = visible;
+                }
             }
         },
         matchAnnotationFilter() {
@@ -3256,7 +3286,6 @@ const OpenCase = {
                     }
                 })
                 .then(response => {
-                    console.log(response);
                     this.oncotree = [];
                     if (response && response.status == 200) {
                         for (var i = 0; i < response.data.length; i++) {
