@@ -7,6 +7,7 @@ public class CellItem {
 	String label;
 	String value;
 	String type;
+	String field;
 	
 	public CellItem() {
 	}
@@ -32,6 +33,12 @@ public class CellItem {
 	}
 	public void setType(String type) {
 		this.type = type;
+	}
+	public String getField() {
+		return field;
+	}
+	public void setField(String field) {
+		this.field = field;
 	}
 
 }

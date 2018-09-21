@@ -3,6 +3,7 @@ package utsw.bicf.answer.controller.serialization.vuetify;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.controller.serialization.ToolTip;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
 
 public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
@@ -15,6 +16,15 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 
 	@Override
 	public void initializeHeaders() {
+		Header type = new Header("Type", "typeFlags");
+		type.setIsFlag(true);
+		type.setToolTip(new ToolTip("Clinical or Research Case"));
+		headers.add(type);
+		
+		Header hiddenType = new Header("Case Type", "caseType");
+		hiddenType.setIsHidden(true);
+		headers.add(hiddenType);
+		
 		headers.add(new Header("Patient Name", "patientName"));
 		Header steps = new Header("Progress", "iconFlags");
 		steps.setIsFlag(true);

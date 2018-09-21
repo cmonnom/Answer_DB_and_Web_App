@@ -16,9 +16,11 @@ public class OrderCaseForUser {
 	String icd10;
 	String caseId;
 	String patientName;
+	FlagValue typeFlags;
+	String caseType;
 	
 	List<Button> buttons = new ArrayList<Button>();
-	FlagValue iconFlags;
+	FlagValue progressFlags;
 	
 	public OrderCaseForUser(OrderCase orderCase) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
@@ -28,6 +30,26 @@ public class OrderCaseForUser {
 		this.dateReceived = orderCase.getReceivedDate();
 		this.patientName = orderCase.getPatientName();
 		buttons.add(new Button("create", "open", "Work on Case", "info"));
+		
+		List<VuetifyIcon> typeIcons = new ArrayList<VuetifyIcon>();
+		String iconName = null;
+		String tooltip = null;
+//		//TODO remove this
+//		if (orderCase.getCaseId().equals("ORD528")) {
+//			orderCase.setType(OrderCase.TYPE_RESEARCH);
+//		}
+		if (OrderCase.TYPE_CLINICAL.equals(orderCase.getType())) {
+			iconName = "fa-user-md";
+			tooltip = OrderCase.TYPE_CLINICAL + " case";
+		}
+		else if (OrderCase.TYPE_RESEARCH.equals(orderCase.getType())) {
+			iconName = "fa-flask";
+			tooltip = OrderCase.TYPE_RESEARCH + " case";
+		}
+		typeIcons.add(new VuetifyIcon(iconName, "grey", tooltip));
+		typeFlags = new FlagValue(typeIcons);
+		
+		this.caseType = orderCase.getType();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		int step = 0;
@@ -41,7 +63,7 @@ public class OrderCaseForUser {
 			icons.add(new VuetifyIcon("mdi-numeric-" + i + "-box", color, OrderCase.getStepTooltip(i)));
 		}
 		
-		iconFlags = new FlagValue(icons);
+		progressFlags = new FlagValue(icons);
 	}
 
 	public String getEpicOrderNumber() {
@@ -76,8 +98,16 @@ public class OrderCaseForUser {
 		this.patientName = patientName;
 	}
 
-	public FlagValue getIconFlags() {
-		return iconFlags;
+	public FlagValue getTypeFlags() {
+		return typeFlags;
+	}
+
+	public FlagValue getProgressFlags() {
+		return progressFlags;
+	}
+
+	public String getCaseType() {
+		return caseType;
 	}
 
 

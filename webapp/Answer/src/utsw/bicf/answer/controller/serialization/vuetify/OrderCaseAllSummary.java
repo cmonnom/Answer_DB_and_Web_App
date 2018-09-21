@@ -3,6 +3,7 @@ package utsw.bicf.answer.controller.serialization.vuetify;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.controller.serialization.ToolTip;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.hybrid.OrderCaseAll;
 
@@ -29,13 +30,22 @@ public class OrderCaseAllSummary extends Summary<OrderCaseAll>{
 
 	@Override
 	public void initializeHeaders() {
+		Header type = new Header("Type", "typeFlags");
+		type.setIsFlag(true);
+		type.setToolTip(new ToolTip("Clinical or Research Case"));
+		headers.add(type);
+		
+		Header hiddenType = new Header("Case Type", "caseType");
+		hiddenType.setIsHidden(true);
+		headers.add(hiddenType);
+		
 		headers.add(new Header("Patient Name", "patientName"));
 		
-		Header steps = new Header("Progress", "iconFlags");
+		Header steps = new Header("Progress", "progressFlags");
 		steps.setIsFlag(true);
 		steps.setSortable(false);
 		steps.setAlign("left");
-		headers.add(steps); //keep hidden until ready for prime time.
+		headers.add(steps);
 		
 		headers.add(new Header(new String[] {"Epic","Order Nb"}, "epicOrderNumber"));
 		headers.add(new Header(new String[] {"Epic", "Order Date"}, "epicOrderDate"));

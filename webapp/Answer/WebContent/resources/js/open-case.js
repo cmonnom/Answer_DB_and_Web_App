@@ -4,6 +4,8 @@ const OpenCase = {
 
     },
     template: `<div>
+
+    <goodies></goodies>
     
     <!-- splash screen dialog -->
     <div class="splash-screen" v-if="splashDialog">
@@ -90,7 +92,11 @@ const OpenCase = {
                     </v-list>
                 </v-menu>
                 <v-toolbar-title class="ml-0">
-                    Review Selected Variants for {{ caseName }}
+                    Review Selected Variants for {{ caseName }} 
+                    <v-tooltip bottom>
+                    <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
+                  <span>{{caseType}} case</span>  
+                  </v-tooltip>
               <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
@@ -214,6 +220,7 @@ const OpenCase = {
     <!-- annotation dialog -->
     <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         :color="colors.editAnnotation" ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"
+        :caseIcon="caseTypeIcon" :caseType="caseType"
         :breadcrumbs="breadcrumbs" :annotation-categories="annotationCategories" :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
         @toggle-panel="handlePanelVisibility()" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
         @breadcrumb-navigation="breadcrumbNavigation"
@@ -231,7 +238,8 @@ const OpenCase = {
         </edit-annotations>
 
     <edit-annotations type="cnv" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        :color="colors.editAnnotation" ref="cnvAnnotationDialog" :title="formatChrom(currentVariant.chrom)  + ' -- ' + caseName + ' --'" @toggle-panel="handlePanelVisibility()"
+        :color="colors.editAnnotation" ref="cnvAnnotationDialog" :title="formatChrom(currentVariant.chrom)  + ' -- ' + caseName + ' --'" 
+        :caseIcon="caseTypeIcon" :caseType="caseType" @toggle-panel="handlePanelVisibility()"
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories-c-n-v="annotationCategoriesCNV" :annotation-breadth="annotationBreadth"
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
         :current-variant="currentVariant" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible">
@@ -251,6 +259,7 @@ const OpenCase = {
 
     <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         :color="colors.editAnnotation" ref="translocationAnnotationDialog" :title="currentVariant.fusionName  + ' -- ' + caseName + ' --'"
+        :caseIcon="caseTypeIcon" :caseType="caseType"
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories="annotationCategories"
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
         :current-variant="currentVariant" @toggle-panel="handlePanelVisibility()">
@@ -408,7 +417,12 @@ const OpenCase = {
               <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
               <span v-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
               <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
-              <span> -- {{ caseName }} -- </span>
+              <span> -- {{ caseName }} -- </span> 
+            <v-tooltip bottom>
+              <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
+            <span>{{caseType}} case</span>  
+            </v-tooltip>
+
             <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
@@ -778,7 +792,11 @@ const OpenCase = {
             <span>Case Menu</span>
         </v-tooltip>
         <v-toolbar-title class="white--text ml-0">
-        Working on case: {{ caseName }}
+        Working on case: {{ caseName }} 
+        <v-tooltip bottom>
+              <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
+            <span>{{caseType}} case</span>  
+            </v-tooltip>
         <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
         </v-toolbar-title>
         <v-spacer></v-spacer>
@@ -1214,7 +1232,9 @@ const OpenCase = {
                 genes: []
             },
             oncotree: [],
-            // oncotreeRules: [(v) => { return this.checkOncoTreeDiagnosis(v) || 'Only numbers, separated by comma' }],
+            waitingForGoodies: false,
+            caseType: "",
+            caseTypeIcon: ""
         }
     }, methods: {
         createSplashText() {
@@ -1247,7 +1267,7 @@ const OpenCase = {
         },
         handleDialogs(response, callback) {
             if (response == "not-allowed") {
-                bus.$emit("not-allowed", [this.reponse]);
+                bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
                 bus.$emit("xss-error",
@@ -1276,25 +1296,44 @@ const OpenCase = {
                 }
             }).then(response => {
                 if (response.data.isAllowed) {
+                    // var start = new Date();
                     this.patientTables = response.data.patientInfo.patientTables;
                     this.caseAssignedTo = response.data.assignedToIds;
-                    this.caseName = response.data.caseName + " (" + this.patientTables[0].items[0].value + ")"; //careful when swapping item positions
-                    this.patientTables[2].items[0].field = "oncotree";
-                    this.patientDetailsOncoTreeDiagnosis = { text: this.patientTables[2].items[0].value, label: "" }; //careful when swapping item positions
-                    this.populateOncotreeLabel(); //update the label
+                    this.caseType = response.data.type;
+                    if (this.caseType == "Clinical") {
+                        this.caseTypeIcon = "fa-user-md";
+                    }
+                    else if (this.caseType == "Research") {
+                        this.caseTypeIcon = "fa-flask";
+                    }
+                    this.extractPatientDetailsInfo(response.data.caseName);
+                    // var step = new Date() - start;
+                    // console.log(1, step); 
                     this.caseId = response.data.caseId;
                     this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true";
                     this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
-                    this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary);
+                    // step = new Date() - start;
+                    // console.log(2, step); 
+                    this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+                    // step = new Date() - start;
+                    // console.log(3, step); 
                     this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
+                    // step = new Date() - start;
+                    // console.log(4, step); 
                     this.$refs.translocationDetails.manualDataFiltered(response.data.translocationSummary);
+                    // step = new Date() - start;
+                    // console.log(5, step); 
                     this.$refs.advancedFilter.effects = response.data.effects;
                     this.userId = response.data.userId;
                     this.$refs.advancedFilter.populateCheckBoxes();
+                    // step = new Date() - start;
+                    // console.log(6, step); 
                     this.$refs.advancedFilter.filterNeedsReload = false;
                     this.addSNPIndelHeaderAction(response.data.snpIndelVariantSummary.headers);
                     this.addCNVHeaderAction(response.data.cnvSummary.headers);
                     this.addFusionHeaderAction(response.data.translocationSummary.headers);
+                    // step = new Date() - start;
+                    // console.log(7, step); 
                     this.reportGroups = response.data.reportGroups;
                     this.requiredReportGroups = this.reportGroups.filter(r => r.required);
                     this.$refs.advancedFilter.reportGroups = this.reportGroups;
@@ -1343,6 +1382,20 @@ const OpenCase = {
             }
             );
         },
+        extractPatientDetailsInfo(caseName) {
+            for (var i = 0; i < this.patientTables.length; i++) {
+                for (var j = 0; j < this.patientTables[i].items.length; j++) {
+                    var item = this.patientTables[i].items[j];
+                    if (caseName && item.field == "caseName") {
+                        this.caseName = caseName + " (" + item.value + ")"; 
+                    }
+                    else if (item.field == "oncotree") {
+                        this.patientDetailsOncoTreeDiagnosis = { text: item.value, label: "" };
+                    }
+                }
+            }
+            this.populateOncotreeLabel(); //update the label
+        },
         loadFromParams(newRouteQuery, oldRouteQuery) {
             this.urlQuery.variantId = this.$route.query.variantId ? this.$route.query.variantId : null;
             this.urlQuery.variantType = this.$route.query.variantType ? this.$route.query.variantType : null;
@@ -1369,15 +1422,6 @@ const OpenCase = {
             }
             if (!this.urlQuery.edit) { //close edit annotation
                 this.cancelAnnotations();
-                // if (this.isSNP()) {
-                //     this.$refs.annotationDialog.cancelAnnotations();
-                // }
-                // else if (this.isCNV()) {
-                //     this.$refs.cnvAnnotationDialog.cancelAnnotations();
-                // }
-                // else if (this.isTranslocation()) {
-                //     this.$refs.translocationAnnotationDialog.cancelAnnotations();
-                // }
             }
 
             //first open save/review dialog
@@ -1428,12 +1472,6 @@ const OpenCase = {
                     }
                 }, delay);
             }
-            // //finally, open edit annotation
-            // if (this.urlQuery.edit === true) {
-            //     setTimeout(() => {
-            //         this.startUserAnnotations()
-            //     }, 2000);
-            // }
 
             //build the breadcrumb trail
             this.breadcrumbs = [];
@@ -2311,6 +2349,13 @@ const OpenCase = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
+                        if (response.data.message == "true") {
+                            this.waitingForGoodies = true;
+                            this.snackBarMessage = "Annotation(s) Saved";
+                        }
+                        else if (response.data.message == "false") {
+                            this.snackBarMessage = "No Change Detected";
+                        }
                         if (this.isSNP()) {
                             this.getVariantDetails(this.currentRow);
                         }
@@ -2320,8 +2365,16 @@ const OpenCase = {
                         else if (this.isTranslocation()) {
                             this.getTranslocationDetails(this.currentRow);
                         }
-                        this.snackBarMessage = "Annotation(s) Saved";
-                        this.snackBarVisible = true;
+                        this.$nextTick(() => {
+                            this.cancelAnnotations();
+                            this.snackBarVisible = true;
+                            if (this.waitingForGoodies) { //TODO test this
+                                this.waitingForGoodies = false;
+                                setTimeout(() => {
+                                    bus.$emit("show-goodies");
+                                }, 1000); //1sec might help with having the proper top/left calculated
+                            }
+                        });
 
                         //keep track of the selected variants and refresh
                         var selectedIds = this.getSelectedVariantIds();
@@ -2353,9 +2406,11 @@ const OpenCase = {
                                 this.updateSelectedVariantTable();
                             });
                         }
-                        //refresh
-                        this.getAjaxData();
-
+                        //refresh but wait a bit otherwise the processing
+                        //of all the data makes the UI not responsive
+                        setTimeout(() => {
+                            this.getAjaxData();
+                        }, 3000); 
                     } else {
                         this.handleDialogs(response.data, this.commitAnnotations.bind(null, userAnnotations));
                     }
@@ -2662,11 +2717,6 @@ const OpenCase = {
                 bus.$emit("some-error", [this, error]);
             });
         },
-        // parseDate(annotation) {
-        //     if (annotation.modifiedDate) {
-        //         return annotation.modifiedSince + " (" + annotation.modifiedDate.split("T")[0] + ")";
-        //     }
-        // },
         createExcelFile(content) {
             var url = window.URL.createObjectURL(new Blob([content]));
             var hiddenElement = document.createElement('a');
@@ -2691,10 +2741,6 @@ const OpenCase = {
             this.urlQuery.variantType = this.currentVariantType;
             this.updateRoute();
         },
-        // updateSaveDialogBreadCrumbs(visible) {
-        //     this.urlQuery.showReview = true;
-        //     this.updateRoute();
-        // },
         updateEditAnnotationBreadcrumbs(visible) {
             this.urlQuery.edit = visible;
             this.updateRoute();
@@ -3012,9 +3058,8 @@ const OpenCase = {
                     if (response.data.isAllowed) {
                         this.patientDetailsUnSaved = false;
                         this.patientTables = response.data.patientTables;
-                        this.patientTables[2].items[0].field = "oncotree";
-                        this.patientDetailsOncoTreeDiagnosis = { text: this.patientTables[2].items[0].value, label: ""}; //careful when swapping item positions
-                        this.populateOncotreeLabel(); //update the label
+                        this.extractPatientDetailsInfo();
+                        
                     }
                     else {
                         this.handleDialogs(response.data, this.getPatientDetails);
@@ -3291,32 +3336,34 @@ const OpenCase = {
         },
 
         collectOncoTreeDiagnosis() {
-            axios.get(
-                "http://oncotree.mskcc.org/api/tumorTypes",
-                {
-                    params: {
-                    }
-                })
-                .then(response => {
-                    this.oncotree = [];
-                    if (response && response.status == 200) {
-                        for (var i = 0; i < response.data.length; i++) {
-                            this.oncotree.push({text:response.data[i].code, label: response.data[i].name});
-                        }
-                        this.populateOncotreeLabel(); //update the label in case this ajax call returned after patientDetails ajax
-                        this.oncotree.sort(function(a, b) {
-                            if (a.text < b.text) return -1;
-                            if (a.text > b.text) return 1;
-                            return 0;
-                        });
-                    }
-                    else {
-                        bus.$emit("some-error", [this, "Cannot retrieve OncoTree"]);
-                    }
-                }).catch(error => {
-                    console.log(error);
-                    bus.$emit("some-error", [this, error]);
-                });
+            this.oncotree = oncotree;
+            this.populateOncotreeLabel();
+            // axios.get(
+            //     "http://oncotree.mskcc.org/api/tumorTypes",
+            //     {
+            //         params: {
+            //         }
+            //     })
+            //     .then(response => {
+            //         this.oncotree = [];
+            //         if (response && response.status == 200) {
+            //             for (var i = 0; i < response.data.length; i++) {
+            //                 this.oncotree.push({text:response.data[i].code, label: response.data[i].name});
+            //             }
+            //             this.populateOncotreeLabel(); //update the label in case this ajax call returned after patientDetails ajax
+            //             this.oncotree.sort(function(a, b) {
+            //                 if (a.text < b.text) return -1;
+            //                 if (a.text > b.text) return 1;
+            //                 return 0;
+            //             });
+            //         }
+            //         else {
+            //             bus.$emit("some-error", [this, "Cannot retrieve OncoTree"]);
+            //         }
+            //     }).catch(error => {
+            //         console.log(error);
+            //         bus.$emit("some-error", [this, error]);
+            //     });
         }
     },
     mounted() {
@@ -3333,23 +3380,20 @@ const OpenCase = {
         bus.$emit("clear-item-selected", [this]);
         this.getVariantFilters();
         this.loadCaseAnnotations();
-        bus.$on('bam-viewer-closed', () => {
-            this.externalWindowOpen = false;
-        });
-        bus.$on('saving-annotations', (annotations) => {
-            this.commitAnnotations(annotations);
-        });
+       
         this.$refs.geneVariantDetails.headerOptionsVisible = true;
         this.manageSplashScreen();
     },
     created() {
-
+        bus.$on('bam-viewer-closed', () => {
+            this.externalWindowOpen = false;
+        });
     },
     computed: {
     },
     destroyed: function () {
         bus.$off('bam-viewer-closed');
-        bus.$off('saving-annotations');
+        // bus.$off('saving-annotations');
         bus.$emit("update-status-off", this);
     },
     watch: {

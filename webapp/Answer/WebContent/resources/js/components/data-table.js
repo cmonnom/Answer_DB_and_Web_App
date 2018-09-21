@@ -802,7 +802,9 @@ Vue.component('data-table', {
                     r = r.value;
                 }
                 if (s.iconFlags || r.iconFlags) {
-                    return 0; // can't sort icon flags
+                        s = s.iconFlags[0].tooltip;
+                        r = r.iconFlags[0].tooltip;
+                        // return 0; // can't sort icon flags
                 }
                 if (!isNaN(s) && !isNaN(r))
                     return s - r;

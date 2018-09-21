@@ -101,6 +101,8 @@ public class Variant {
 	
 	String rank;
 	
+	String relatedCNV;
+	
 	public Variant() {
 		
 	}
@@ -745,6 +747,16 @@ public class Variant {
 
 	public void setRank(String rank) {
 		this.rank = rank;
+	}
+
+
+	public String getRelatedCNV() {
+		return relatedCNV;
+	}
+
+
+	public void setRelatedCNV(String relatedCNV) {
+		this.relatedCNV = relatedCNV;
 	}
 
 

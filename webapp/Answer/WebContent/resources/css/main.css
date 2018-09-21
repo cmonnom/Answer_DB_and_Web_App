@@ -289,3 +289,12 @@ table.table tbody td {
     cursor: pointer;
     
 }
+
+.goodies {
+    position: fixed;
+    z-index: 1000;
+}
+
+.centered {
+    text-align: center;
+}

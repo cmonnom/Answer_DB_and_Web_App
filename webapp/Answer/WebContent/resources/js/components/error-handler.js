@@ -35,7 +35,7 @@ Vue.component('error-handler', {
         doCallBacks() {
             this.busy = true; //prevents other events
             this.showLoginDialog = false;
-            console.log(this.callBacks);
+            // console.log(this.callBacks);
             for (var i = 0; i < this.callBacks.length; i++) {
                 var callBack = this.callBacks[i];
                 if (callBack) {

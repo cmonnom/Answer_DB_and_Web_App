@@ -9,6 +9,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderCase {
 	
+	public static final String TYPE_CLINICAL = "Clinical";
+	public static final String TYPE_RESEARCH = "Research";
+	
 	private static final Map<Integer, String> stepTooltip = new HashMap<Integer, String>();
 	static {
 		stepTooltip.put(0, "Not assigned");
@@ -49,7 +52,9 @@ public class OrderCase {
 	String oncotreeDiagnosis;
 	Integer totalCases;
 	List<CaseHistory> caseHistory;
-	
+	String type; //Clinical or Research
+	String clinicalStage;
+	String treatmentStatus;
 	
 	public OrderCase() {
 		
@@ -374,6 +379,36 @@ public class OrderCase {
 
 	public void setCaseHistory(List<CaseHistory> caseHistory) {
 		this.caseHistory = caseHistory;
+	}
+
+
+	public String getType() {
+		return type;
+	}
+
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+
+	public String getClinicalStage() {
+		return clinicalStage;
+	}
+
+
+	public void setClinicalStage(String clinicalStage) {
+		this.clinicalStage = clinicalStage;
+	}
+
+
+	public String getTreatmentStatus() {
+		return treatmentStatus;
+	}
+
+
+	public void setTreatmentStatus(String treatmentStatus) {
+		this.treatmentStatus = treatmentStatus;
 	}
 
 

@@ -602,7 +602,10 @@ public class OpenCaseController {
 			}
 			userAnnotations.add(userAnnotation);
 		}
-		utils.commitAnnotation(response, caseId, variantId, userAnnotations);
+		boolean didChange = utils.commitAnnotation(response, caseId, variantId, userAnnotations);
+		if (response.getSuccess()) {
+			response.setMessage(didChange + ""); //ajax should check the message in commitAnnotation
+		}
 		return response.createObjectJSON();
 
 	}

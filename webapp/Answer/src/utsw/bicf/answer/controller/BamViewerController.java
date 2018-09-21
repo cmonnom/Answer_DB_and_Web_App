@@ -55,9 +55,6 @@ public class BamViewerController {
 		if (caseSummary == null) {
 			return ControllerUtil.initializeModelError(model, servletContext);
 		}
-		if (!caseSummary.getAssignedTo().contains(user.getUserId().toString())) {
-			return ControllerUtil.initializeModelError(model, servletContext);
-		}
 		// At this point everything should be granted to access the bams
 		String normalBam = caseSummary.getNormalBam();
 		String tumorBam = caseSummary.getTumorBam();

@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -27,6 +28,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
@@ -275,8 +277,9 @@ public class RequestUtils {
 		}
 	}
 
-	public void commitAnnotation(AjaxResponse ajaxResponse, String caseId, String variantId,
+	public boolean commitAnnotation(AjaxResponse ajaxResponse, String caseId, String variantId,
 			List<Annotation> annotations) throws URISyntaxException, ClientProtocolException, IOException {
+		boolean didChange = false;
 		ObjectMapper mapper = new ObjectMapper();
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("annotations/");
@@ -293,9 +296,11 @@ public class RequestUtils {
 			ajaxResponse.setMessage("Something went wrong");
 		}
 		else {
+			String r = IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset());
+			didChange = r.contains("true");
 			ajaxResponse.setSuccess(true);
 		}
-
+		return didChange;
 	}
 
 	/**
@@ -308,7 +313,6 @@ public class RequestUtils {
 	 * @throws URISyntaxException
 	 */
 	public OrderCase getCaseSummary(String caseId) throws ClientProtocolException, IOException, URISyntaxException {
-
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/summary");
 		URI uri = new URI(sbUrl.toString());

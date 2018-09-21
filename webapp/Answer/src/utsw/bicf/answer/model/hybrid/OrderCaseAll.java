@@ -20,9 +20,11 @@ public class OrderCaseAll {
 	String assignedTo;
 	List<String> assignedToIds;
 	String patientName;
+	FlagValue typeFlags;
+	String caseType;
 	
 	List<Button> buttons = new ArrayList<Button>();
-	FlagValue iconFlags;
+	FlagValue progressFlags;
 	
 	public OrderCaseAll(OrderCase orderCase, List<User> users, User curentUser) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
@@ -48,6 +50,22 @@ public class OrderCaseAll {
 			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
 		}
 		
+		List<VuetifyIcon> typeIcons = new ArrayList<VuetifyIcon>();
+		String iconName = null;
+		String tooltip = null;
+		if (OrderCase.TYPE_CLINICAL.equals(orderCase.getType())) {
+			iconName = "fa-user-md";
+			tooltip = OrderCase.TYPE_CLINICAL + " case";
+		}
+		else if (OrderCase.TYPE_RESEARCH.equals(orderCase.getType())) {
+			iconName = "fa-flask";
+			tooltip = OrderCase.TYPE_RESEARCH + " case";
+		}
+		typeIcons.add(new VuetifyIcon(iconName, "grey", tooltip));
+		typeFlags = new FlagValue(typeIcons);
+		
+		this.caseType = orderCase.getType();
+		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		int step = 0;
 		int totalSteps = OrderCase.getTotalSteps();
@@ -60,7 +78,7 @@ public class OrderCaseAll {
 			icons.add(new VuetifyIcon("mdi-numeric-" + i + "-box", color, OrderCase.getStepTooltip(i)));
 		}
 		
-		iconFlags = new FlagValue(icons);
+		progressFlags = new FlagValue(icons);
 	}
 
 	public String getEpicOrderNumber() {
@@ -99,8 +117,17 @@ public class OrderCaseAll {
 		return patientName;
 	}
 
-	public FlagValue getIconFlags() {
-		return iconFlags;
+
+	public FlagValue getTypeFlags() {
+		return typeFlags;
+	}
+
+	public FlagValue getProgressFlags() {
+		return progressFlags;
+	}
+
+	public String getCaseType() {
+		return caseType;
 	}
 
 

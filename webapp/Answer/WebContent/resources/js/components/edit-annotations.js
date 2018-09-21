@@ -16,7 +16,9 @@ Vue.component('edit-annotations', {
         annotationCategoriesCNV: {default: () => [], type: Array},
         currentVariant: {default: () => {}, type: Object},
         annotationVariantDetailsVisible: {default: true, type: Boolean},
-        backColor: {default: "orange lighten-4", type: String}
+        backColor: {default: "orange lighten-4", type: String},
+        caseIcon: {default: "", type: String},
+        caseType: {default: "", type: String},
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -68,7 +70,12 @@ Vue.component('edit-annotations', {
                     </v-menu>
                     <span>Annotation Menu</span>
                 </v-tooltip>
-                <v-toolbar-title v-text="createTitle()"></v-toolbar-title>
+                <v-toolbar-title><span v-text="createTitle()"></span>
+                <v-tooltip bottom>
+                <v-icon slot="activator" size="20" class="pb-1 pl-1"> {{ caseIcon }} </v-icon>
+                <span>{{ caseType }} case</span>
+                </v-tooltip>
+                </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
                     <v-btn icon flat :color="annotationVariantDetailsVisible ? 'amber accent-2' : ''" @click="togglePanel()"
@@ -451,7 +458,7 @@ Vue.component('edit-annotations', {
             if (this.saveIsDisabled()) {
                 return;
             }
-            this.annotationDialogVisible = false;
+            // this.annotationDialogVisible = false;
             this.userAnnotations = [];
             for (var i = 0; i < this.userEditingAnnotations.length; i++) {
                 var annotation = JSON.parse(JSON.stringify(this.userEditingAnnotations[i]));

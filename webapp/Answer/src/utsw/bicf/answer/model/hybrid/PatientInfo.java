@@ -26,7 +26,9 @@ public class PatientInfo {
 		ListTable table = new ListTable();
 		List<CellItem> items = new ArrayList<CellItem>();
 		table.setItems(items);
-		items.add(new CellItem("Name", orderCase.getPatientName()));
+		CellItem caseName = new CellItem("Name", orderCase.getPatientName());
+		caseName.setField("caseName");
+		items.add(caseName);
 		items.add(new CellItem("MRN", orderCase.getMedicalRecordNumber()));
 		String dab = orderCase.getDateOfBirth();
 		if (dab != null) {
@@ -70,10 +72,10 @@ public class PatientInfo {
 		items.add(new CellItem("Tumor Tissue", orderCase.getTumorTissueType()));
 		items.add(new CellItem("Germline Tissue", orderCase.getNormalTissueType()));
 		items.add(new CellItem("ICD10", orderCase.getIcd10()));
-		items.add(new CellItem("Clinical Stage", ""));//TODO
-		items.add(new CellItem("Treatment Status", ""));//TODO
-//		items.add(new CellItem("Clinical Stage", patient.getClinicalStage()));//TODO
-//		items.add(new CellItem("Treatment Status", patient.getTreatmentStatus()));//TODO
+		CellItem clinicalStage = new CellItem("Clinical Stage", orderCase.getClinicalStage());
+		items.add(clinicalStage);//TODO
+		CellItem treatmentStatus = new CellItem("Treatment Status", orderCase.getTreatmentStatus());
+		items.add(treatmentStatus);//TODO
 		patientTables.add(table);
 		
 		table = new ListTable();
@@ -81,6 +83,7 @@ public class PatientInfo {
 		table.setItems(items);
 		CellItem oncoTreeItem = new CellItem("OncoTree Diagnosis", orderCase.getOncotreeDiagnosis());
 		oncoTreeItem.setType(CellItem.TYPE_TEXT);
+		oncoTreeItem.setField("oncotree");
 		items.add(oncoTreeItem);
 		items.add(new CellItem("Order Date", orderCase.getEpicOrderDate()));
 		items.add(new CellItem("Tumor Collection Date", orderCase.getTumorCollectionDate()));
