@@ -30,6 +30,7 @@ const OpenCase = {
     </v-dialog>
     <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
+        <a :href="snackBarLink"><v-icon dark>{{ snackBarLinkIcon }}</v-icon></a>
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
     <advanced-filter ref="advancedFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"
@@ -44,7 +45,7 @@ const OpenCase = {
                     </v-btn>
                     <v-list>
 
-                        <v-list-tile avatar @click="saveSelection()" :disabled="saveVariantDisabled || saveLoading">
+                        <v-list-tile avatar @click="saveSelection(true)" :disabled="saveVariantDisabled || saveLoading">
                             <v-list-tile-avatar>
                                 <v-icon>save</v-icon>
                             </v-list-tile-avatar>
@@ -55,7 +56,7 @@ const OpenCase = {
 
                         <v-list-tile avatar @click="exportSelectedVariants()" :disabled="saveVariantDisabled || exportLoading">
                             <v-list-tile-avatar>
-                                <v-icon>file_download</v-icon>
+                                <v-icon>mdi-file-excel</v-icon>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
                                 <v-list-tile-title>Export to Excel</v-list-tile-title>
@@ -64,21 +65,30 @@ const OpenCase = {
 
                         <v-list-tile avatar @click="sendToMDA()" :disabled="saveVariantDisabled || sendToMDALoading">
                             <v-list-tile-avatar>
-                                <v-icon>send</v-icon>
+                                MDA
                             </v-list-tile-avatar>
                             <v-list-tile-content>
-                                <v-list-tile-title>Send to MD Anderson</v-list-tile-title>
+                                <v-list-tile-title>Download Moclia File</v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="markAsReadyForReview()" :disabled="saveVariantDisabled">
-                        <v-list-tile-avatar>
-                            <v-icon>how_to_reg</v-icon>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>Ready for Review</v-list-tile-title>
-                        </v-list-tile-content>
-                    </v-list-tile>
+                        <v-list-tile avatar @click="markAsReadyForReview()" :disabled="saveVariantDisabled" v-if="canProceed('canAnnotate')">
+                            <v-list-tile-avatar>
+                                <v-icon>how_to_reg</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Ready for Review</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile avatar @click="markAsReadyForReport()" :disabled="saveVariantDisabled" v-if="canProceed('canReview')">
+                            <v-list-tile-avatar>
+                                <v-icon>assignment</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Ready for Report</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
 
 
                         <v-list-tile avatar @click="closeSaveDialog()">
@@ -101,28 +111,34 @@ const OpenCase = {
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
-                    <v-btn icon :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator" :loading="saveLoading">
+                    <v-btn icon :disabled="saveVariantDisabled" @click="saveSelection(true)" slot="activator" :loading="saveLoading">
                         <v-icon>save</v-icon>
                     </v-btn>
                     <span>Save Selected Variants</span>
                 </v-tooltip>
                 <v-tooltip bottom>
                     <v-btn icon :disabled="saveVariantDisabled" @click="exportSelectedVariants()" slot="activator" :loading="exportLoading">
-                        <v-icon>file_download</v-icon>
+                        <v-icon>mdi-file-excel</v-icon>
                     </v-btn>
                     <span>Export to Excel</span>
                 </v-tooltip>
                 <v-tooltip bottom>
                     <v-btn icon :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">
-                        <v-icon>send</v-icon>
+                        MDA
                     </v-btn>
-                    <span>Send To MD Anderson</span>
+                    <span>Download Moclia File</span>
                 </v-tooltip>
-                <v-tooltip bottom>
+                <v-tooltip bottom v-if="canProceed('canAnnotate')">
                 <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator">
                     <v-icon>how_to_reg</v-icon>
                 </v-btn>
-                <span>Mark as Ready for Review. Email reviewer(s)</span>
+                <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
+            </v-tooltip>
+            <v-tooltip bottom v-if="canProceed('canReview')">
+                <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator">
+                    <v-icon>assignment</v-icon>
+                </v-btn>
+                <span>Mark as Ready for Report. Save Selected Variants</span>
             </v-tooltip>
                 <v-tooltip bottom>
                     <v-btn icon @click="closeSaveDialog()" slot="activator">
@@ -186,29 +202,35 @@ const OpenCase = {
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
-                    <v-btn color="success" :disabled="saveVariantDisabled" @click="saveSelection()" slot="activator" :loading="saveLoading">Save
+                    <v-btn color="success" :disabled="saveVariantDisabled" @click="saveSelection(true)" slot="activator" :loading="saveLoading">Save
                         <v-icon right dark>save</v-icon>
                     </v-btn>
                     <span>Save Selected Variants</span>
                 </v-tooltip>
                 <v-tooltip top>
                     <v-btn color="primary" :disabled="saveVariantDisabled" @click="exportSelectedVariants()" slot="activator" :loading="exportLoading">Excel
-                        <v-icon right dark>file_download</v-icon>
+                        <v-icon right dark>mdi-file-excel</v-icon>
                     </v-btn>
                     <span>Export to Excel</span>
                 </v-tooltip>
                 <v-tooltip top>
-                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">Send to MDA
-                        <v-icon right dark>send</v-icon>
+                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">Moclia File
                     </v-btn>
-                    <span>Send to MD Anderson</span>
+                    <span>Download Moclia File</span>
                 </v-tooltip>
-                <v-tooltip top>
+                <v-tooltip top v-if="canProceed('canAnnotate')">
                     <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator" >
                         Ready for Review
                     <v-icon right dark>how_to_reg</v-icon>
                     </v-btn>
-                    <span>Mark as Ready for Review. Email reviewer(s)</span>
+                    <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
+                </v-tooltip>
+                <v-tooltip top v-if="canProceed('canReview')">
+                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator" >
+                        Ready for Report
+                    <v-icon right dark>assignment</v-icon>
+                    </v-btn>
+                    <span>Mark as Ready for Report. Save Selected Variants</span>
                 </v-tooltip>
                 <v-btn color="error" @click="closeSaveDialog()" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
@@ -1099,6 +1121,8 @@ const OpenCase = {
             userAnnotations: [],
             snackBarMessage: "",
             snackBarVisible: false,
+            snackBarLink: "",
+            snackBarLinkIcon: "",
             utswAnnotations: [],
             utswAnnotationsFormatted: [],
             mdaAnnotations: "",
@@ -1252,6 +1276,7 @@ const OpenCase = {
                 case "canAnnotate": return permissions.canAnnotate;
                 case "canSelect": return permissions.canSelect;
                 case "canView": return permissions.canView;
+                case "canReview": return permissions.canReview;
                 default: return false;
             }
         },
@@ -1387,7 +1412,7 @@ const OpenCase = {
                 for (var j = 0; j < this.patientTables[i].items.length; j++) {
                     var item = this.patientTables[i].items[j];
                     if (caseName && item.field == "caseName") {
-                        this.caseName = caseName + " (" + item.value + ")"; 
+                        this.caseName = caseName + " (" + item.value + ")";
                     }
                     else if (item.field == "oncotree") {
                         this.patientDetailsOncoTreeDiagnosis = { text: item.value, label: "" };
@@ -2278,7 +2303,7 @@ const OpenCase = {
                     rightGene: "",
                     isLeftSpecific: false,
                     isRightSpecific: false
-                    
+
                 };
                 annotation._id = annotations[i]._id;
                 if (showUser) {
@@ -2352,9 +2377,11 @@ const OpenCase = {
                         if (response.data.message == "true") {
                             this.waitingForGoodies = true;
                             this.snackBarMessage = "Annotation(s) Saved";
+                            this.snackBarLink = "";
                         }
                         else if (response.data.message == "false") {
                             this.snackBarMessage = "No Change Detected";
+                            this.snackBarLink = "";
                         }
                         if (this.isSNP()) {
                             this.getVariantDetails(this.currentRow);
@@ -2410,7 +2437,7 @@ const OpenCase = {
                         //of all the data makes the UI not responsive
                         setTimeout(() => {
                             this.getAjaxData();
-                        }, 3000); 
+                        }, 3000);
                     } else {
                         this.handleDialogs(response.data, this.commitAnnotations.bind(null, userAnnotations));
                     }
@@ -2470,7 +2497,7 @@ const OpenCase = {
         updateRoute() {
             router.push({ query: this.urlQuery });
         },
-        saveSelection() {
+        saveSelection(closeAfter, skipSnackBar) {
             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
             // Use a flag to disable the action in the meantime
             if (this.saveVariantDisabled) {
@@ -2482,7 +2509,9 @@ const OpenCase = {
                 method: 'post',
                 url: webAppRoot + "/saveVariantSelection",
                 params: {
-                    caseId: this.$route.params.id
+                    caseId: this.$route.params.id,
+                    closeAfter: closeAfter, //pass this param along to proceed with closing the dialog
+                    skipSnackBar: skipSnackBar //pass this param along to display snackbar after successful ajax call
                 },
                 data: {
                     selectedSNPVariantIds: selectedIds.selectedSNPVariantIds,
@@ -2491,17 +2520,21 @@ const OpenCase = {
                 }
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
-                    this.saveDialogVisible = false;
-                    this.snackBarMessage = "Variant Selection Saved";
-                    this.snackBarVisible = true;
+                    if (!response.data.skipSnackBar) {
+                        this.snackBarMessage = "Variant Selection Saved";
+                        this.snackBarLink = "";
+                        this.snackBarVisible = true;
+                    }
                     this.getAjaxData();
                     this.variantUnSaved = false;
                     this.saveLoading = false;
-                    this.closeSaveDialog(true);
+                    if (response.data.uiProceed) {
+                        this.closeSaveDialog(true);
+                    }
                 }
                 else {
                     this.saveLoading = false;
-                    this.handleDialogs(response.data, this.saveSelection);
+                    this.handleDialogs(response.data, this.saveSelection.bind(null, closeAfter, skipSnackBar));
                 }
             }).catch(error => {
                 this.saveLoading = false;
@@ -2541,6 +2574,7 @@ const OpenCase = {
                     this.$refs.advancedFilter.currentFilterSet = response.data.savedFilterSet;
                     this.$refs.advancedFilter.saveFilterSetDialogVisible = false;
                     this.snackBarMessage = "Filter Set Saved";
+                    this.snackBarLink = "";
                     this.snackBarVisible = true;
                 }
                 else {
@@ -2567,6 +2601,7 @@ const OpenCase = {
                     this.loadUserFilterSets();
                     this.$refs.advancedFilter.saveFilterSetDialogVisible = false;
                     this.snackBarMessage = "Filter Set Deleted";
+                    this.snackBarLink = "";
                     this.snackBarVisible = true;
                 }
                 else {
@@ -2705,8 +2740,10 @@ const OpenCase = {
             }).then(response => {
                 this.sendToMDALoading = false;
                 if (response.data.isAllowed && response.data.success) {
-                    this.snackBarMessage = "Variants sent to MD Anderson";
-                    this.snackBarVisible = true;
+                    this.createCSVFile(response.data.message);
+                    // this.snackBarMessage = "Variants sent to MD Anderson";
+                    // this.snackBarLink = "";
+                    // this.snackBarVisible = true;
                 }
                 else {
                     this.handleDialogs(response.data, this.sendToMDA);
@@ -2717,6 +2754,16 @@ const OpenCase = {
                 bus.$emit("some-error", [this, error]);
             });
         },
+        createCSVFile(csvContent) {
+            var hiddenElement = document.createElement('a');
+            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvContent);
+            //hiddenElement.target = '_blank';
+            hiddenElement.download = this.$route.params.id + moment().format("_YYYY_MM_DD") + '_moclia.csv';
+            document.body.appendChild(hiddenElement);
+            hiddenElement.click();
+            document.body.removeChild(hiddenElement);
+
+        },
         createExcelFile(content) {
             var url = window.URL.createObjectURL(new Blob([content]));
             var hiddenElement = document.createElement('a');
@@ -2725,16 +2772,6 @@ const OpenCase = {
             document.body.appendChild(hiddenElement);
             hiddenElement.click();
             document.body.removeChild(hiddenElement);
-        },
-        createCSVFile(content) {
-            var hiddenElement = document.createElement('a');
-            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(content);
-            //hiddenElement.target = '_blank';
-            hiddenElement.download = this.$route.params.id + '_data.csv';
-            document.body.appendChild(hiddenElement);
-            hiddenElement.click();
-            document.body.removeChild(hiddenElement);
-
         },
         updateVariantDetails() {
             this.urlQuery.variantId = this.currentVariant._id.$oid;
@@ -2759,6 +2796,7 @@ const OpenCase = {
                 if (response.data.isAllowed) {
                     this.loadCaseAnnotations();
                     this.snackBarMessage = "Annotation Saved";
+                    this.snackBarLink = "";
                     this.snackBarVisible = true;
                     this.caseAnnotationOriginalText = this.caseAnnotation.caseAnnotation; //to reset the isCaseAnnotationUnchanged
                 }
@@ -2946,6 +2984,7 @@ const OpenCase = {
                 if (response.data.isAllowed) {
                     this.revertVariant();
                     this.snackBarMessage = "Variant Saved";
+                    this.snackBarLink = "";
                     this.snackBarVisible = true;
                     this.$refs.variantDetailsPanel.variantDetailsUnSaved = false; //update badge on save button
                 }
@@ -2999,6 +3038,7 @@ const OpenCase = {
                 if (response.data.isAllowed) {
                     this.revertAnnotationSelection();
                     this.snackBarMessage = "Annotation Selection Saved";
+                    this.snackBarLink = "";
                     this.snackBarVisible = true;
                     this.annotationSelectionUnSaved = false;
                 }
@@ -3059,7 +3099,7 @@ const OpenCase = {
                         this.patientDetailsUnSaved = false;
                         this.patientTables = response.data.patientTables;
                         this.extractPatientDetailsInfo();
-                        
+
                     }
                     else {
                         this.handleDialogs(response.data, this.getPatientDetails);
@@ -3085,6 +3125,7 @@ const OpenCase = {
                 if (response.data.isAllowed && response.data.success) {
                     this.getPatientDetails();
                     this.snackBarMessage = "Patient Details Saved";
+                    this.snackBarLink = "";
                     this.snackBarVisible = true;
                 }
                 else {
@@ -3124,7 +3165,7 @@ const OpenCase = {
             }
             else {
                 if (this.urlQuery.edit) {
-                this.editAnnotationVariantDetailsVisible = visible;
+                    this.editAnnotationVariantDetailsVisible = visible;
                 }
                 else {
                     this.annotationVariantDetailsVisible = visible;
@@ -3165,8 +3206,8 @@ const OpenCase = {
                     else {
                         foundCategoryMatch = true;
                     }
-                     // continue search with Breadth
-                     if (this.searchAnnotationBreadth.length > 0) {
+                    // continue search with Breadth
+                    if (this.searchAnnotationBreadth.length > 0) {
                         if (this.searchAnnotationBreadth.includes(this.utswAnnotationsFormatted[i].breadth)) {
                             foundBreadthMatch = true;
                         }
@@ -3255,6 +3296,7 @@ const OpenCase = {
             }
         },
         markAsReadyForReview() {
+            this.saveSelection(false, true);
             axios.get(webAppRoot + "/readyForReview", {
                 params: {
                     caseId: this.$route.params.id
@@ -3263,10 +3305,33 @@ const OpenCase = {
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
                         this.snackBarMessage = "The reviewer has been notified.";
+                        this.snackBarLink = "";
                         this.snackBarVisible = true;
                     }
                     else {
                         this.handleDialogs(response.data, this.markAsReadyForReview);
+                    }
+                })
+                .catch(error => {
+                    alert(error);
+                });
+        },
+        markAsReadyForReport() {
+            this.saveSelection(false, true);
+            axios.get(webAppRoot + "/readyForReport", {
+                params: {
+                    caseId: this.$route.params.id
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        this.snackBarMessage = "View/Edit Report";
+                        this.snackBarLink = webAppRoot + "/openReport/" + this.$route.params.id;
+                        this.snackBarLinkIcon = "assignment";
+                        this.snackBarVisible = true;
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.markAsReadyForReport);
                     }
                 })
                 .catch(error => {
@@ -3321,6 +3386,7 @@ const OpenCase = {
         },
         showSnackBarMessage(message) {
             this.snackBarMessage = message;
+            this.snackBarLink = "";
             this.snackBarVisible = true;
         },
         formatChrom(chrom) { //needed to call the global function from v-text
@@ -3368,7 +3434,8 @@ const OpenCase = {
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",
-            this.snackBarVisible = this.readonly;
+            this.snackBarLink = "";
+        this.snackBarVisible = this.readonly;
         if (this.readonly) {
             setTimeout(() => {
                 bus.$emit("update-status", ["VIEW ONLY MODE"]);
@@ -3380,7 +3447,7 @@ const OpenCase = {
         bus.$emit("clear-item-selected", [this]);
         this.getVariantFilters();
         this.loadCaseAnnotations();
-       
+
         this.$refs.geneVariantDetails.headerOptionsVisible = true;
         this.manageSplashScreen();
     },

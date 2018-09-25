@@ -33,6 +33,7 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 		Header iconFlags = new Header("Flags", "iconFlags");
 		iconFlags.setWidth("100px");
 		iconFlags.setIsFlag(true);
+		iconFlags.setSortable(false);
 		headers.add(iconFlags);
 		
 		Header leftGene = new Header(new String[] {"Left", "Gene"}, "leftGene");

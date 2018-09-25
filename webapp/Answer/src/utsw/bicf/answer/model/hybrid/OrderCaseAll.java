@@ -8,6 +8,7 @@ import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 
 public class OrderCaseAll {
@@ -26,7 +27,7 @@ public class OrderCaseAll {
 	List<Button> buttons = new ArrayList<Button>();
 	FlagValue progressFlags;
 	
-	public OrderCaseAll(OrderCase orderCase, List<User> users, User curentUser) {
+	public OrderCaseAll(OrderCase orderCase, List<User> users, User currentUser) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
 		this.epicOrderDate =orderCase.getEpicOrderDate();
 		this.icd10 = orderCase.getIcd10();
@@ -43,12 +44,21 @@ public class OrderCaseAll {
 			}
 		}
 		this.assignedTo = userNames.stream().collect(Collectors.joining("<br/>"));
-		if (curentUser.getIndividualPermission().getCanAssign()) {
+		if (currentUser.getIndividualPermission().getCanAssign()) {
 			buttons.add(new Button("assignment_ind", "assignToUser", "Assign To", "info"));
 		}
-		if (curentUser.getIndividualPermission().getCanView()) {
+		if (currentUser.getIndividualPermission().getCanView()) {
 			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
+			if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)) {
+				if (currentUser.getIndividualPermission().getCanReview()) {
+					buttons.add(new Button("assignment", "edit-report", "View/Edit Report", "info"));
+				}
+				else {
+					buttons.add(new Button("assignment", "open-report-read-only", "Open Report in View Only Mode", "info"));
+				}
+			}
 		}
+		
 		
 		List<VuetifyIcon> typeIcons = new ArrayList<VuetifyIcon>();
 		String iconName = null;

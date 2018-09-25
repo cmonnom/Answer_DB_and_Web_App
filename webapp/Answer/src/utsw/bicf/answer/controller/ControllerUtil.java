@@ -3,16 +3,20 @@ package utsw.bicf.answer.controller;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.servlet.ServletContext;
 
+import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 
+import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.FileProperties;
 
 public class ControllerUtil {
@@ -85,5 +89,14 @@ public class ControllerUtil {
 		return files;
 	}
 	
+	public static boolean isUserAssignedToCase(RequestUtils utils, String caseId, User user) throws ClientProtocolException, IOException, URISyntaxException {
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		return (caseSummary == null || caseSummary.getAssignedTo().contains(user.getUserId().toString()));
+		
+	}
+	
+	public static boolean isUserAssignedToCase(OrderCase caseSummary, User user) throws ClientProtocolException, IOException, URISyntaxException {
+		return (caseSummary == null || caseSummary.getAssignedTo().contains(user.getUserId().toString()));
+	}
 	
 }

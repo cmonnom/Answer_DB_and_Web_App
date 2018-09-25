@@ -170,7 +170,7 @@ const Home = {
                         this.getWorklists();
                     }
                     else {
-                        this.handleDialogs(response.data, this.assignToUser.bind(null, caseId));
+                        this.handleDialogs(response.data, this.assignToUser.bind(null, this.currentCaseId));
                     }
                 })
                 .catch(error => {
@@ -238,6 +238,8 @@ const Home = {
         bus.$off('assignToUser');
         bus.$off('open');
         bus.$off('open-read-only');
+        bus.$off('edit-report');
+        bus.$off('open-report-read-only');
     },
     created: function () {
         splashDialog = false; //disable splash screen if coming from Home
@@ -266,6 +268,12 @@ const Home = {
         });
         bus.$on('open-read-only', (item) => {
             router.push("./openCaseReadOnly/" + item.caseId);
+        });
+        bus.$on('edit-report', (item) => {
+            router.push("./openReport/" + item.caseId);
+        });
+        bus.$on('open-report-read-only', (item) => {
+            router.push("./openReportReadOnly/" + item.caseId);
         });
     },
     computed: {

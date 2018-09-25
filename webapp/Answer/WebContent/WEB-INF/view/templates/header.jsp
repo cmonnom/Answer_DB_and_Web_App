@@ -5,7 +5,8 @@
         		canView: "${permissions.canView}" === 'true',
         		canAnnotate:  "${permissions.canAnnotate}" === 'true',
         		canSelect:  "${permissions.canSelect}" === 'true',
-        		canAssign:  "${permissions.canAssign}" === 'true',
+                        canAssign:  "${permissions.canAssign}" === 'true',
+                        canReview: "${permissions.canReview}" === 'true',
         		admin: "${permissions.admin}" === 'true'
         };
         const isAdmin = permissions.admin === true;

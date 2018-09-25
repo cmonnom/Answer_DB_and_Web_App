@@ -22,6 +22,7 @@ import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.PermissionUtils;
 
@@ -31,6 +32,7 @@ public class MenuController {
 	
 	static {
 		PermissionUtils.addPermission(MenuController.class.getCanonicalName() + ".getCaseItems", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(MenuController.class.getCanonicalName() + ".getCaseReportItems", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 
@@ -49,11 +51,41 @@ public class MenuController {
 			if (cases != null) {
 				List<OrderCase> assignedCases = new ArrayList<OrderCase>();
 				for (OrderCase c : cases) {
-					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && OpenCaseController.isUserAssignedToCase(utils, c.getCaseId(), user)) {
+					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && ControllerUtil.isUserAssignedToCase(utils, c.getCaseId(), user)) {
 						assignedCases.add(c);
 					}
 				}
 				OrderCaseItems items = new OrderCaseItems(assignedCases);
+				return items.createVuetifyObjectJSON();
+			}
+			return null;
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@RequestMapping("/getCaseReportItems")
+	@ResponseBody
+	public String getCaseReportItems(Model model, HttpSession session) throws ClientProtocolException, URISyntaxException, IOException {
+		try {
+			//send user to Ben's API to retrieve all active cases
+			RequestUtils utils = new RequestUtils(modelDAO);
+			User user = (User) session.getAttribute("user");
+			OrderCase[] cases = utils.getActiveCases(); //TODO limit to cases with reports
+			if (cases != null) {
+				List<OrderCase> casesWithReports = new ArrayList<OrderCase>();
+				for (OrderCase c : cases) {
+//					int step = c.getCaseHistory() != null ? c.getCaseHistory().get(c.getCaseHistory().size() - 1).getStep() : -1;
+					if (CaseHistory.lastStepMatches(c, CaseHistory.STEP_REPORTING)) {
+//					if (step == CaseHistory.STEP_REPORTING) {
+						casesWithReports.add(c);
+					}
+//					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && ControllerUtil.isUserAssignedToCase(utils, c.getCaseId(), user)) {
+//						assignedCases.add(c);
+//					}
+				}
+				OrderCaseItems items = new OrderCaseItems(casesWithReports);
 				return items.createVuetifyObjectJSON();
 			}
 			return null;

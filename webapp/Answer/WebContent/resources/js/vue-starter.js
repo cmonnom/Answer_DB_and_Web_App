@@ -36,6 +36,24 @@ var router = new VueRouter({
 			props: { readonly: true}
 		},
 		{
+			path: webAppRoot + '/openReport/:id',
+			name: 'OpenReport',
+			component: OpenReport,
+			meta: {
+				title: 'OpenReport Id: '
+			},
+			props: { readonly: false}
+		},
+		{
+			path: webAppRoot + '/openReportReadOnly/:id',
+			name: 'OpenReport',
+			component: OpenReport,
+			meta: {
+				title: 'OpenReport Id: '
+			},
+			props: { readonly: true}
+		},
+		{
 			path: webAppRoot + '/annotationBrowser',
 			name: 'AnnotationBrowser',
 			component: AnnotationBrowser,

@@ -82,7 +82,7 @@ public class HomeController {
 			List<OrderCaseForUser> casesForUser = 
 					caseList.stream()
 					.filter(c -> c.getAssignedTo() != null && c.getAssignedTo().contains(user.getUserId().toString()))
-					.map(c -> new OrderCaseForUser(c))
+					.map(c -> new OrderCaseForUser(c, user))
 					.collect(Collectors.toList());
 			
 			List<OrderCaseAll> casesAll = 

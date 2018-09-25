@@ -8,14 +8,18 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.controller.serialization.DataReportGroup;
 import utsw.bicf.answer.controller.serialization.TargetPage;
+import utsw.bicf.answer.controller.serialization.UserCredentials;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.security.FileProperties;
@@ -45,14 +49,15 @@ public class LoginController {
 	@RequestMapping(value = "/validateUser", method = {RequestMethod.POST})
 	@ResponseBody
 	public String validateUser(Model model, HttpSession session, 
-			@RequestParam("username") String usernameOrEmail, 
-			@RequestParam("password") String password) throws JsonProcessingException {
+			@RequestBody String data) throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		UserCredentials credentials = mapper.readValue(data, UserCredentials.class);
 		//check if email or username
-		User user = loginDAO.getUserByUsernameOrEmail(usernameOrEmail);
+		User user = loginDAO.getUserByUsernameOrEmail(credentials.getUsername());
 				
 		boolean proceed = false;
 		if (user != null) {
-			proceed = ldapUtils.isUserValid(user.getUsername(), password);
+			proceed = ldapUtils.isUserValid(user.getUsername(), credentials.getPassword());
 //			if (user.getIndividualPermission().getAdmin()) {
 //				proceed = true;
 //			}

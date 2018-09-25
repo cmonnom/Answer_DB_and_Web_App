@@ -17,6 +17,7 @@ public class OrderCaseAllSummary extends Summary<OrderCaseAll>{
 				|| (user.getIndividualPermission().getCanView())) {
 		Header actions = new Header("Actions", "actions");
 		actions.setButtons(true);
+		actions.setAlign("left");
 		headers.add(actions);
 		
 		}

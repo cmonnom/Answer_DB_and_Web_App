@@ -13,7 +13,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
-import org.apache.http.client.ClientProtocolException;
 import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -38,7 +37,6 @@ import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
 import utsw.bicf.answer.controller.serialization.Utils;
-import utsw.bicf.answer.controller.serialization.zingchart.CNVChartData;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterItems;
@@ -46,6 +44,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListItems;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListSaved;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantRelatedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSummary;
+import utsw.bicf.answer.controller.serialization.zingchart.CNVChartData;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.FilterStringValue;
@@ -58,6 +57,7 @@ import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
+import utsw.bicf.answer.model.extmapping.Moclia;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
@@ -118,6 +118,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".readyForReview",
 				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".readyForReport",
+				IndividualPermission.CAN_REVIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCNVChartData",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".verifyGeneNames",
@@ -129,8 +131,6 @@ public class OpenCaseController {
 	ServletContext servletContext;
 	@Autowired
 	ModelDAO modelDAO;
-	@Autowired
-	FileProperties fileProperties;
 	@Autowired
 	QcAPIAuthentication qcAPI;
 	@Autowired
@@ -151,7 +151,7 @@ public class OpenCaseController {
 		model.addAttribute("urlRedirect", url);
 		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		RequestUtils utils = new RequestUtils(modelDAO);
-		if (user != null && !isUserAssignedToCase(utils, caseId, user)) {
+		if (user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 		}
 		
@@ -539,17 +539,21 @@ public class OpenCaseController {
 	@RequestMapping(value = "/saveVariantSelection")
 	@ResponseBody
 	public String saveVariantSelection(Model model, HttpSession session, @RequestBody String data,
-			@RequestParam String caseId) throws Exception {
+			@RequestParam String caseId, @RequestParam(defaultValue="false") Boolean closeAfter,
+			 @RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
+		response.setSkipSnackBar(skipSnackBar);
+		response.setUiProceed(closeAfter);
 		
 		if (!caseId.equals("")) { //for annotations within a case
 			User user = (User) session.getAttribute("user");
-			if (!isUserAssignedToCase(utils, caseId, user)) {
+			if (!ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
 				// user is not assigned to this case
 				response.setIsAllowed(false);
 				response.setSuccess(false);
 				response.setMessage(user.getFullName() + " is not assigned to this case");
+				response.setUiProceed(closeAfter);
 				return response.createObjectJSON();
 			}
 		}
@@ -573,7 +577,7 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		if (!caseId.equals("")) { //for annotations within a case
-			if (!isUserAssignedToCase(utils, caseId, user)) {
+			if (!ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
 				// user is not assigned to this case
 				response.setIsAllowed(false);
 				response.setSuccess(false);
@@ -723,7 +727,7 @@ public class OpenCaseController {
 			selectedVariantDetails.add(variantDetails);
 		}
 		ExportSelectedVariants export = new ExportSelectedVariants(detailedCase, selectedVariantDetails,
-				fileProperties);
+				fileProps);
 		// response.setIsAllowed(true);
 		// response.setSuccess(true);
 		File excelFile = export.createExcel();
@@ -769,7 +773,12 @@ public class OpenCaseController {
 				return response.createObjectJSON();
 			}
 			response.setIsAllowed(true);
-			utils.sendVariantSelectionToMDA(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds);
+			List<String> rows = utils.getMocliaContent(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds);
+			if (response.getSuccess()) {
+				Moclia moclia = new Moclia(rows);
+				String mocliaContent = moclia.getFullContent();
+				response.setMessage(mocliaContent);
+			}
 			return response.createObjectJSON();
 		}
 		else {
@@ -888,44 +897,7 @@ public class OpenCaseController {
 		return response.createObjectJSON();
 	}
 	
-	/**
-	 * Remove heavy or transient objects from Variant
-	 * to make it lighter or to avoid saving unwanted fields
-	 * For instance we don't want to save the annotations selected
-	 * when saving the variant tier
-	 * @param variant
-	 */
-//	private static void stripVariant(Variant variant) {
-//		variant.setReferenceVariant(null);
-//		variant.setAnnotationIdsForReporting(null);
-//		variant.setVcfAnnotations(null);
-//		variant.setRelatedVariants(null);
-//	}
-//	
-//	private static void stripVariantForAnnotations(Variant variant) {
-//		variant.setReferenceVariant(null);
-//		variant.setTier(null);
-//		variant.setVcfAnnotations(null);
-//		variant.setRelatedVariants(null);
-//	}
-//	
-//	private static void stripVariantForAnnotations(CNV variant) {
-//		variant.setGenes(null);
-//	}
-//	
-//	private static void stripVariantForAnnotations(Translocation variant) {
-//		variant.setReferenceTranslocation(null);
-//	}
-	
-	public static boolean isUserAssignedToCase(RequestUtils utils, String caseId, User user) throws ClientProtocolException, IOException, URISyntaxException {
-		OrderCase caseSummary = utils.getCaseSummary(caseId);
-		return (caseSummary == null || caseSummary.getAssignedTo().contains(user.getUserId().toString()));
-		
-	}
-	
-	public static boolean isUserAssignedToCase(OrderCase caseSummary, User user) throws ClientProtocolException, IOException, URISyntaxException {
-		return (caseSummary == null || caseSummary.getAssignedTo().contains(user.getUserId().toString()));
-	}
+
 	
 	@RequestMapping(value = "/getPatientDetails")
 	@ResponseBody
@@ -951,7 +923,7 @@ public class OpenCaseController {
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		User user = (User) session.getAttribute("user");
-		boolean isAssigned = isUserAssignedToCase(utils, caseId, user);
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(isAssigned);
 		if (isAssigned) {
@@ -987,7 +959,7 @@ public class OpenCaseController {
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		User currentUser = (User) session.getAttribute("user");
-		boolean isAssigned = isUserAssignedToCase(utils, caseId, currentUser);
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(isAssigned);
 		if (isAssigned) {
@@ -996,7 +968,7 @@ public class OpenCaseController {
 				List<User> users = modelDAO.getAllUsers();
 				OrderCase caseSummary = utils.getCaseSummary(caseId);
 				for (User aUser : users) {
-					if (!aUser.equals(currentUser) && isUserAssignedToCase(caseSummary, aUser) && aUser.getIndividualPermission().getCanReview()) {
+					if (!aUser.equals(currentUser) && ControllerUtil.isUserAssignedToCase(caseSummary, aUser) && aUser.getIndividualPermission().getCanReview()) {
 						String subject = "You have a new case: " + caseId;
 						StringBuilder message = new StringBuilder()
 								.append("<p>Dr. ").append(aUser.getLast()).append(",</p><br/>")
@@ -1021,6 +993,25 @@ public class OpenCaseController {
 			}
 			else {
 				response.setMessage("You are not allowed to edit this case");
+			}
+		}
+		return response.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/readyForReport")
+	@ResponseBody
+	public String readyForReport(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User currentUser = (User) session.getAttribute("user");
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(isAssigned);
+		if (isAssigned) {
+			utils.caseReadyForReport(response, caseId);
+			if (!response.getSuccess()) {
+				response.setMessage("You are not allowed to review this case");
 			}
 		}
 		return response.createObjectJSON();

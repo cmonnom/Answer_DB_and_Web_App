@@ -801,11 +801,24 @@ Vue.component('data-table', {
                 if (r.field) { //passable field, transform to extract the actual value
                     r = r.value;
                 }
-                if (s.iconFlags || r.iconFlags) {
+                if (s.iconFlags && s.iconFlags.length > 0) {
                         s = s.iconFlags[0].tooltip;
-                        r = r.iconFlags[0].tooltip;
-                        // return 0; // can't sort icon flags
                 }
+                if (r.iconFlags && r.iconFlags.length > 0) {
+                    r = r.iconFlags[0].tooltip;
+                }
+                //test again if s or r are now null
+                if (null == s) {
+                    if (null == r) {
+                        return 0;
+                    }
+                    return 1;
+                }
+                if (null != s && null == r) {
+                    return -1;
+                }
+                if (null == s && null == r)
+                    return 0;
                 if (!isNaN(s) && !isNaN(r))
                     return s - r;
                 if (s.indexOf(",") > -1 || r.indexOf(",") > -1) { //one of them could be a formatted number

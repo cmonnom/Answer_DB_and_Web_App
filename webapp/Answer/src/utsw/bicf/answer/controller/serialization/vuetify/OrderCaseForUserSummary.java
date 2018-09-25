@@ -26,7 +26,7 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 		headers.add(hiddenType);
 		
 		headers.add(new Header("Patient Name", "patientName"));
-		Header steps = new Header("Progress", "iconFlags");
+		Header steps = new Header("Progress", "progressFlags");
 		steps.setIsFlag(true);
 		steps.setSortable(false);
 		steps.setAlign("left");
@@ -40,6 +40,7 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 		headers.add(new Header(new String[] {"Date", "Received"}, "dateReceived"));
 		Header actions = new Header("Open", "actions");
 		actions.setButtons(true);
+		actions.setAlign("left");
 		headers.add(actions);
 		
 		//keep in the same order

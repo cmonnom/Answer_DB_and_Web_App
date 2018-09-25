@@ -1,8 +1,8 @@
 //Main left side menu. main-template includes this component
 Vue.component('main-menu', {
 	props: {
-		baseUrl: {type: String, default: webAppRoot},
-		width: {type: Number, default: 200}
+		baseUrl: { type: String, default: webAppRoot },
+		width: { type: Number, default: 200 }
 	},
 	template: `<v-navigation-drawer app permanent :width="width" :mini-variant.sync="isMinied">
 	<v-toolbar flat :extended="isMinied ? false : true" style="height:128px">
@@ -46,6 +46,11 @@ Vue.component('main-menu', {
 						 item-value="value" label="Case ID" single-line solo autocomplete></v-select>
 					</v-card>
 
+					<v-card v-if="menuItem.caseReportSearch">
+					<v-select v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name"
+					 item-value="value" label="Case ID" single-line solo autocomplete></v-select>
+				</v-card>
+
 				</v-menu>
 			</v-list-tile-action>
 		</v-list-tile>
@@ -66,15 +71,19 @@ Vue.component('main-menu', {
 			menuItems: [
 				{ title: 'Home', iconBefore: 'home', name: 'Home', regularItem: true },
 				{ title: 'Open Case', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseSearch: true },
+				{ title: 'Open Report', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseReportSearch: true },
 				// { title: 'Annotations', name: 'AnnotationBrowser', regularItem: true }, // NOT READY YET
 				{ title: 'Admin', name: 'Admin', regularItem: true, adminOnly: true, iconBefore: 'settings' },
 				{ title: 'Logout', name: 'LogOut', iconBefore: 'exit_to_app', regularItem: true }
 			],
 			caseItemSelected: null,
+			caseReportItemSelected: null,
 			cases: [],
+			casesWithReport: [],
 			caseUpdateUrl: webAppRoot + "/getCaseItems",
+			caseReportUpdateUrl: webAppRoot + "/getCaseReportItems",
 			isMinied: false,
-			statusVisible:false,
+			statusVisible: false,
 			statusMessage: ""
 		}
 
@@ -96,8 +105,32 @@ Vue.component('main-menu', {
 					alert(error);
 				});
 		},
+		populateCasesWithReport() {
+			axios.get(this.caseReportUpdateUrl, {
+				params: {}
+			})
+				.then(response => {
+					if (response.data.isAllowed) {
+						this.casesWithReport = response.data.items;
+					}
+					else {
+						this.handleDialogs(response);
+					}
+				})
+				.catch(error => {
+					alert(error);
+				});
+		},
 		loadOpenCase() {
 			this.$router.push({ name: "OpenCase", params: { id: this.caseItemSelected } });
+		},
+		loadOpenReport() {
+			if (permissions.canReview) {
+				this.$router.push({ name: "OpenReport", params: { id: this.caseReportItemSelected } });
+			}
+			else {
+				this.$router.push({ name: "OpenReportReadOnly", params: { id: this.caseReportItemSelected } });
+			}
 		},
 		handleDialogs(response) {
 			// alert(response.data.reason);
@@ -127,25 +160,26 @@ Vue.component('main-menu', {
 	},
 	created: function () {
 		this.populateCases();
+		this.populateCasesWithReport();
 		bus.$on('shrink-menu', () => {
 			this.isMinied = true;
 		});
 		bus.$on('expand-menu', () => {
 			this.isMinied = false;
-        });
+		});
 		bus.$on('clear-item-selected', args => {
 			this.caseItemSelected = "";
 		});
 		bus.$on('need-layout-resize', args => {
-			 //resize the main content because it does not happen automatically
-			 this.$nextTick(function() {
-				 document.getElementsByClassName("content")[0].style.paddingLeft = this.width + "px";
-				 var titlebars = document.getElementsByClassName("toolbar toolbar--fixed");
-				 for (var i = 0; i < titlebars.length; i++) {
-					 titlebars[i].style.paddingLeft = this.width + "px";
-				 }
+			//resize the main content because it does not happen automatically
+			this.$nextTick(function () {
+				document.getElementsByClassName("content")[0].style.paddingLeft = this.width + "px";
+				var titlebars = document.getElementsByClassName("toolbar toolbar--fixed");
+				for (var i = 0; i < titlebars.length; i++) {
+					titlebars[i].style.paddingLeft = this.width + "px";
+				}
 
-			 });
+			});
 		});
 		bus.$on('update-status', args => {
 			this.statusVisible = true;
@@ -156,7 +190,7 @@ Vue.component('main-menu', {
 			this.statusMessage = "";
 		});
 	},
-	destroyed: function() {
+	destroyed: function () {
 		bus.$off('shrink-menu');
 		bus.$off('expand-menu');
 		bus.$off('clear-item-selected');

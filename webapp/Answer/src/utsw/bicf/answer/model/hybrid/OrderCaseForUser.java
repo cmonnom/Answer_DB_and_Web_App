@@ -6,6 +6,8 @@ import java.util.List;
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
+import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 
 public class OrderCaseForUser {
@@ -22,7 +24,7 @@ public class OrderCaseForUser {
 	List<Button> buttons = new ArrayList<Button>();
 	FlagValue progressFlags;
 	
-	public OrderCaseForUser(OrderCase orderCase) {
+	public OrderCaseForUser(OrderCase orderCase, User currentUser) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
 		this.epicOrderDate = orderCase.getEpicOrderDate();
 		this.icd10 = orderCase.getIcd10();
@@ -30,6 +32,14 @@ public class OrderCaseForUser {
 		this.dateReceived = orderCase.getReceivedDate();
 		this.patientName = orderCase.getPatientName();
 		buttons.add(new Button("create", "open", "Work on Case", "info"));
+		if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)) {
+			if (currentUser.getIndividualPermission().getCanReview()) {
+				buttons.add(new Button("assignment", "edit-report", "View/Edit Report", "info"));
+			}
+			else {
+				buttons.add(new Button("assignment", "open-report-read-only", "Open Report in View Only Mode", "info"));
+			}
+		}
 		
 		List<VuetifyIcon> typeIcons = new ArrayList<VuetifyIcon>();
 		String iconName = null;

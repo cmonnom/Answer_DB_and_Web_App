@@ -14,6 +14,8 @@ public class AjaxResponse {
 	Boolean isAllowed = true;
 	boolean success;
 	String message;
+	Boolean uiProceed = false;
+	Boolean skipSnackBar = false;
 
 	public Boolean getIsAllowed() {
 		return isAllowed;
@@ -49,5 +51,27 @@ public class AjaxResponse {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(this);
 	}
+
+
+	public Boolean getUiProceed() {
+		return uiProceed;
+	}
+
+
+	public void setUiProceed(Boolean uiProceed) {
+		this.uiProceed = uiProceed;
+	}
+
+
+	public Boolean getSkipSnackBar() {
+		return skipSnackBar;
+	}
+
+
+	public void setSkipSnackBar(Boolean skipSnackBar) {
+		this.skipSnackBar = skipSnackBar;
+	}
+
+
 	
 }

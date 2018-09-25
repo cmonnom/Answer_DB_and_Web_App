@@ -63,6 +63,8 @@ Vue.component('login', {
                     method: 'post',
                     url: webAppRoot + "/validateUser",
                     params: {
+                    },
+                    data: {
                         username: this.username,
                         password: this.password
                     }

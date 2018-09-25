@@ -28,7 +28,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
@@ -497,6 +496,40 @@ public class RequestUtils {
 		}
 		
 	}
+	
+	@SuppressWarnings("unchecked")
+	public List<String> getMocliaContent(AjaxResponse ajaxResponse, String caseId, List<String> selectedSNPVariantIds,
+			List<String> selectedCNVIds, List<String> selectedTranslocationIds) throws URISyntaxException, UnsupportedCharsetException, ClientProtocolException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/moclia");
+		URI uri = new URI(sbUrl.toString());
+
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+//		SelectedVariantIds variantIds = new SelectedVariantIds();
+//		variantIds.setSelectedSNPVariantIds(selectedSNPVariantIds);
+//		variantIds.setSelectedCNVIds(selectedCNVIds);
+//		variantIds.setSelectedTranslocationIds(selectedTranslocationIds);
+//		requestPost.setEntity(new StringEntity(variantIds.createObjectJSON(), ContentType.APPLICATION_JSON));
+
+		HttpResponse response = client.execute(requestGet);
+		List<String> result = null;
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			result = mapper.readValue(response.getEntity().getContent(), List.class);
+			if (result != null && !result.isEmpty()) {
+				ajaxResponse.setSuccess(true);
+			}
+			else {
+				ajaxResponse.setSuccess(false);
+				ajaxResponse.setMessage("Nothing to do. No variant matching MDA requirements were selected.");
+			}
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		return result;
+	}
 
 	public AnnotationSearchResult getGetAnnotationsByGeneAndVariant(String gene, String variant) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
@@ -522,9 +555,29 @@ public class RequestUtils {
 	}
 
 	public void caseReadyForReview(AjaxResponse ajaxResponse, String caseId) throws URISyntaxException, ClientProtocolException, IOException {
-		ObjectMapper mapper = new ObjectMapper();
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/review");
+		URI uri = new URI(sbUrl.toString());
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		
+		HttpResponse response = client.execute(requestPost);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode != HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		else {
+			ajaxResponse.setSuccess(true);
+			ajaxResponse.setIsAllowed(true);
+		}
+		
+	}
+	
+	public void caseReadyForReport(AjaxResponse ajaxResponse, String caseId) throws URISyntaxException, ClientProtocolException, IOException  {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/report");
 		URI uri = new URI(sbUrl.toString());
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
@@ -645,6 +698,8 @@ public class RequestUtils {
 		data.setCnsData(cnsDataList);
 		return data;
 	}
+
+
 
 
 
