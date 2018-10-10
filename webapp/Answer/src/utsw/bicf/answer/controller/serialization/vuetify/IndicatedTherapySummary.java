@@ -7,6 +7,10 @@ import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 
 public class IndicatedTherapySummary extends Summary<IndicatedTherapy> {
 
+	public IndicatedTherapySummary() {
+		super();
+	}
+	
 	public IndicatedTherapySummary(List<IndicatedTherapy> indicatedTherapies, String uniqueIdField) {
 		super(indicatedTherapies, uniqueIdField);
 	}

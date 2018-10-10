@@ -156,6 +156,14 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
     padding: 10px 5px 10px 5px;
 } */
 
+.input-group--text-field.input-group--textarea textarea {
+    font-size: 14px;
+  }
+
+.no-label  > .input-group__input {
+    padding-top: 13px !important;
+}
+
 .row-highlight {
     font-weight: bold !important;
 }
@@ -258,6 +266,10 @@ table.table tbody td {
     word-break: break-word;
 }
 
+.normal-word-break {
+    word-break: normal !important;
+}
+
 /* Used by the nvaigation drawer to display some info */
 .menu-status {
     bottom: 0px;
@@ -297,4 +309,14 @@ table.table tbody td {
 
 .centered {
     text-align: center;
+}
+
+.data-table-row-input {
+    max-width: 100px !important;
+}
+
+.multi-icon {
+    margin-left: -15px;
+    margin-top: 15px;
+    opacity: 0.75;
 }

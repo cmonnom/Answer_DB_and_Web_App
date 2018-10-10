@@ -2,9 +2,12 @@ package utsw.bicf.answer.model.extmapping;
 
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import utsw.bicf.answer.model.hybrid.CNVRow;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CNVReport {
@@ -13,7 +16,7 @@ public class CNVReport {
 	
 	@JsonProperty("_id")
 	MongoDBId mongoDBId;
-	List<String> genes;
+	String genes;
 	String chrom;
 	Integer start;
 	Integer end;
@@ -24,6 +27,19 @@ public class CNVReport {
 	
 	public CNVReport() {
 		
+	}
+
+
+	public CNVReport(String text, CNV c) {
+		this.mongoDBId = c.mongoDBId;
+		this.genes = c.getGenes().stream().collect(Collectors.joining(" "));
+		this.chrom = c.chrom;
+		this.start = c.start;
+		this.end = c.end;
+		this.startFormatted = c.startFormatted;
+		this.endFormatted = c.endFormatted;
+		this.copyNumber = c.copyNumber;
+		this.comment = text;
 	}
 
 
@@ -57,12 +73,12 @@ public class CNVReport {
 	}
 
 
-	public List<String> getGenes() {
+	public String getGenes() {
 		return genes;
 	}
 
 
-	public void setGenes(List<String> genes) {
+	public void setGenes(String genes) {
 		this.genes = genes;
 	}
 

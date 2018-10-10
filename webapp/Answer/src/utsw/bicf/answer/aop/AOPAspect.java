@@ -146,6 +146,7 @@ public class AOPAspect {
 			String sanitized = policy.sanitize(argString)
 					.replaceAll("&#64;", "@")
 					.replaceAll("&gt;", ">")
+					.replaceAll("&amp;", "&")
 					.replaceAll("&#43;", "+"); // emails are ok
 			isValid &= argString.equals(sanitized);
 			return isValid;

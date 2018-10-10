@@ -1,7 +1,5 @@
 package utsw.bicf.answer.model.extmapping;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -14,14 +12,19 @@ public class TranslocationReport {
 	MongoDBId mongoDBId;
 	String leftGene;
 	String rightGene;
-	String leftBreakpoint;
-	String rightBreakpoint;
-	String leftStrand;
-	String rightStrand;
+	String fusionName;
 	String comment;
 	
 	public TranslocationReport() {
 		
+	}
+
+	public TranslocationReport(String text, Translocation t) {
+		mongoDBId = t.getMongoDBId();
+		this.leftGene = t.getLeftGene();
+		this.rightGene = t.getRightGene();
+		this.fusionName = t.getFusionName();
+		this.comment = text;
 	}
 
 	public Boolean getIsAllowed() {
@@ -56,44 +59,20 @@ public class TranslocationReport {
 		this.rightGene = rightGene;
 	}
 
-	public String getLeftBreakpoint() {
-		return leftBreakpoint;
-	}
-
-	public void setLeftBreakpoint(String leftBreakpoint) {
-		this.leftBreakpoint = leftBreakpoint;
-	}
-
-	public String getRightBreakpoint() {
-		return rightBreakpoint;
-	}
-
-	public void setRightBreakpoint(String rightBreakpoint) {
-		this.rightBreakpoint = rightBreakpoint;
-	}
-
-	public String getLeftStrand() {
-		return leftStrand;
-	}
-
-	public void setLeftStrand(String leftStrand) {
-		this.leftStrand = leftStrand;
-	}
-
-	public String getRightStrand() {
-		return rightStrand;
-	}
-
-	public void setRightStrand(String rightStrand) {
-		this.rightStrand = rightStrand;
-	}
-
 	public String getComment() {
 		return comment;
 	}
 
 	public void setComment(String comment) {
 		this.comment = comment;
+	}
+
+	public String getFusionName() {
+		return fusionName;
+	}
+
+	public void setFusionName(String fusionName) {
+		this.fusionName = fusionName;
 	}
 
 

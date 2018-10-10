@@ -25,6 +25,10 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 		hiddenType.setIsHidden(true);
 		headers.add(hiddenType);
 		
+		Header hiddenCaseId = new Header("Case ID", "caseId");
+		hiddenCaseId.setIsHidden(true);
+		headers.add(hiddenCaseId);
+		
 		headers.add(new Header("Patient Name", "patientName"));
 		Header steps = new Header("Progress", "progressFlags");
 		steps.setIsFlag(true);

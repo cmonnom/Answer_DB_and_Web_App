@@ -16,13 +16,15 @@ public class PatientInfo {
 	List<ListTable> patientTables = new ArrayList<ListTable>();
 	Boolean isAllowed = true;
 	
+	public PatientInfo() {
+		
+	}
 	
-	
-	public PatientInfo(OrderCase orderCase, FinalReport finalReport) {
-		this.createPatientTables(orderCase, finalReport);
+	public PatientInfo(OrderCase orderCase) {
+		this.createPatientTables(orderCase);
 	}
 
-	private void createPatientTables(OrderCase orderCase, FinalReport finalReport) {
+	private void createPatientTables(OrderCase orderCase) {
 		ListTable table = new ListTable();
 		List<CellItem> items = new ArrayList<CellItem>();
 		table.setItems(items);
@@ -41,12 +43,12 @@ public class PatientInfo {
 		items.add(new CellItem("Sex", orderCase.getGender()));
 		items.add(new CellItem("Order #", orderCase.getEpicOrderNumber())); 
 		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));
-		if (finalReport != null) {
-			items.add(new CellItem("Report Accession #", finalReport.getVersion().toString()));
-		}
-		else {
-			items.add(new CellItem("Report Accession #", "No report yet"));
-		}
+//		if (finalReport != null) {
+//			items.add(new CellItem("Report Accession #", finalReport.getVersion().toString()));
+//		}
+//		else {
+//			items.add(new CellItem("Report Accession #", "No report yet"));
+//		}
 		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
 		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
 		patientTables.add(table);

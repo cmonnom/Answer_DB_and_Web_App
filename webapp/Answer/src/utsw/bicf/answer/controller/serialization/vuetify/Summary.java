@@ -33,6 +33,9 @@ public abstract class Summary<T> {
 	
 	String csvContent;
 	
+	public Summary() {
+	}
+	
 	public Summary(List<T> items, String uniqueIdField) {
 		this.items = items;
 		this.headers = new ArrayList<Header>();

@@ -22,6 +22,7 @@ Vue.component('data-table', {
         "title-icon": { default: null, type: String },
         "show-left-menu": { default: true, type: Boolean },
         "color": { default: "primary", type: String },
+        "disable-sticky-header": {default: false, type: Boolean},
         highlights: { default: () => {}, type: Object }
 
     },
@@ -109,7 +110,7 @@ Vue.component('data-table', {
         <v-flex xs7 class="text-xs-right" v-show="showPagination">
           <div class="title white--text pr-1 pt-4 mt-1">Rows:</div>
         </v-flex>
-        <v-flex xs3 v-show="showPagination">
+        <v-flex xs3 v-show="showPagination" class="data-table-row-input">
           <v-container>
             <v-text-field solo single-line hide-details light v-model="pagination.rowsPerPage"></v-text-field>
           </v-container>
@@ -743,6 +744,9 @@ Vue.component('data-table', {
             }
         },
         handleScroll(event) {
+            if (this.disableStickyHeader) {
+                return;
+            }
             if (!this.stickyHeader) {
                 this.stickyHeader = $('table').stickyTableHeaders({ fixedOffset: 48 }); //need to use the html element rather than the element id
             }

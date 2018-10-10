@@ -37,17 +37,17 @@ Vue.component('main-menu', {
 			<v-list-tile-action v-if="menuItem.iconAfter">
 				<!-- order search bar -->
 				<v-menu offset-x :close-on-content-click="false">
-					<v-btn flat icon slot="activator" color="blue lighten-2" v-show="!isMinied">
+					<v-btn flat icon slot="activator" color="primary" v-show="!isMinied">
 						<v-icon>{{ menuItem.iconAfter }}</v-icon>
 					</v-btn>
 
 					<v-card v-if="menuItem.caseSearch">
-						<v-select v-on:input="loadOpenCase" v-bind:items="cases" v-model="caseItemSelected" item-text="name"
+						<v-select v-on:input="loadOpenCase" v-bind:items="cases" v-model="caseItemSelected" item-text="name" clearable
 						 item-value="value" label="Case ID" single-line solo autocomplete></v-select>
 					</v-card>
 
 					<v-card v-if="menuItem.caseReportSearch">
-					<v-select v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name"
+					<v-select v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
 					 item-value="value" label="Case ID" single-line solo autocomplete></v-select>
 				</v-card>
 
@@ -122,15 +122,23 @@ Vue.component('main-menu', {
 				});
 		},
 		loadOpenCase() {
-			this.$router.push({ name: "OpenCase", params: { id: this.caseItemSelected } });
+			if (this.caseItemSelected) {
+				this.$router.push({ name: "OpenCase", params: { id: this.caseItemSelected } });
+			}
+			this.caseItemSelected = null;
+			this.caseReportItemSelected = null;
 		},
 		loadOpenReport() {
-			if (permissions.canReview) {
-				this.$router.push({ name: "OpenReport", params: { id: this.caseReportItemSelected } });
+			if (this.caseReportItemSelected) {
+				if (permissions.canReview) {
+					this.$router.push({ name: "OpenReport", params: { id: this.caseReportItemSelected } });
+				}
+				else {
+					this.$router.push({ name: "OpenReportReadOnly", params: { id: this.caseReportItemSelected } });
+				}
 			}
-			else {
-				this.$router.push({ name: "OpenReportReadOnly", params: { id: this.caseReportItemSelected } });
-			}
+			this.caseItemSelected = null;
+			this.caseReportItemSelected = null;
 		},
 		handleDialogs(response) {
 			// alert(response.data.reason);

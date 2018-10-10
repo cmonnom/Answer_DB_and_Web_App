@@ -1,11 +1,17 @@
 package utsw.bicf.answer.model.extmapping;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
+import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Report {
@@ -16,11 +22,12 @@ public class Report {
 	boolean isLive; //if this report is made from the latest changes in the case
 	PatientInfo patientInfo;
 	List<IndicatedTherapy> indicatedTherapies;
-	List<ClinicalTrial> clinicalTrials;
-	List<Variant> snpVariantsStrongClinicalSignificance;
-	List<Variant> snpVariantsUnknownClinicalSignificance;
+	List<BiomarkerTrialsRow> clinicalTrials;
+	Map<String, GeneVariantAndAnnotation> snpVariantsStrongClinicalSignificance;
+	Map<String, GeneVariantAndAnnotation> snpVariantsPossibleClinicalSignificance;
+	Map<String, GeneVariantAndAnnotation> snpVariantsUnknownClinicalSignificance;
 	List<CNVReport> cnvs;
-	List<TranslocationReport> fusion;
+	List<TranslocationReport> translocations;
 	String summary;
 	List<SelectedCitation> selectedCitations;
 	String dateCreated;
@@ -28,8 +35,44 @@ public class Report {
 	Integer createdBy;
 	Integer modifiedBy;
 	String caseId;
+	String caseName;
+	String reportName;
 	
+	public Report() {
+	}
 
+	public Report(ReportSummary reportSummary) {
+		this.mongoDBId = reportSummary.getMongoDBId();
+		this.patientInfo = reportSummary.getPatientInfo();
+		this.caseId = reportSummary.getCaseId();
+		this.caseName = reportSummary.getCaseName();
+		this.reportName = reportSummary.getReportName();
+		this.createdBy = reportSummary.getCreatedBy();
+		this.modifiedBy = reportSummary.getModifiedBy();
+		
+		this.setSummary(reportSummary.getSummary());
+		//update Indicated Therapies
+		if (reportSummary.getIndicatedTherapySummary() != null) {
+			this.setIndicatedTherapies(reportSummary.getIndicatedTherapySummary().getItems());
+		}
+		//update CNV
+		if (reportSummary.getCnvSummary() != null) {
+			this.setCnvs(reportSummary.getCnvSummary().getItems());
+		}
+		//update FTL
+		if (reportSummary.getTranslocationSummary() != null) {
+			this.setTranslocations(reportSummary.getTranslocationSummary().getItems());
+		}
+		//update clinical significance
+		this.setSnpVariantsStrongClinicalSignificance(reportSummary.getSnpVariantsStrongClinicalSignificance());
+		this.setSnpVariantsPossibleClinicalSignificance(reportSummary.getSnpVariantsPossibleClinicalSignificance());
+		this.setSnpVariantsUnknownClinicalSignificance(reportSummary.getSnpVariantsUnknownClinicalSignificance());
+		
+		//update clinical trials
+		if (reportSummary.getClinicalTrialsSummary() != null) {
+			this.setClinicalTrials(reportSummary.getClinicalTrialsSummary().getItems());
+		}
+	}
 	public MongoDBId getMongoDBId() {
 		return mongoDBId;
 	}
@@ -54,23 +97,11 @@ public class Report {
 	public void setIndicatedTherapies(List<IndicatedTherapy> indicatedTherapies) {
 		this.indicatedTherapies = indicatedTherapies;
 	}
-	public List<ClinicalTrial> getClinicalTrials() {
+	public List<BiomarkerTrialsRow> getClinicalTrials() {
 		return clinicalTrials;
 	}
-	public void setClinicalTrials(List<ClinicalTrial> clinicalTrials) {
+	public void setClinicalTrials(List<BiomarkerTrialsRow> clinicalTrials) {
 		this.clinicalTrials = clinicalTrials;
-	}
-	public List<Variant> getSnpVariantsStrongClinicalSignificance() {
-		return snpVariantsStrongClinicalSignificance;
-	}
-	public void setSnpVariantsStrongClinicalSignificance(List<Variant> snpVariantsStrongClinicalSignificance) {
-		this.snpVariantsStrongClinicalSignificance = snpVariantsStrongClinicalSignificance;
-	}
-	public List<Variant> getSnpVariantsUnknownClinicalSignificance() {
-		return snpVariantsUnknownClinicalSignificance;
-	}
-	public void setSnpVariantsUnknownClinicalSignificance(List<Variant> snpVariantsUnknownClinicalSignificance) {
-		this.snpVariantsUnknownClinicalSignificance = snpVariantsUnknownClinicalSignificance;
 	}
 	public String getSummary() {
 		return summary;
@@ -89,12 +120,6 @@ public class Report {
 	}
 	public void setCnvs(List<CNVReport> cnvs) {
 		this.cnvs = cnvs;
-	}
-	public List<TranslocationReport> getFusion() {
-		return fusion;
-	}
-	public void setFusion(List<TranslocationReport> fusion) {
-		this.fusion = fusion;
 	}
 	public String getDateCreated() {
 		return dateCreated;
@@ -125,6 +150,48 @@ public class Report {
 	}
 	public void setCaseId(String caseId) {
 		this.caseId = caseId;
+	}
+	public Map<String, GeneVariantAndAnnotation> getSnpVariantsStrongClinicalSignificance() {
+		return snpVariantsStrongClinicalSignificance;
+	}
+	public void setSnpVariantsStrongClinicalSignificance(Map<String, GeneVariantAndAnnotation> snpVariantsStrongClinicalSignificance) {
+		this.snpVariantsStrongClinicalSignificance = snpVariantsStrongClinicalSignificance;
+	}
+	public Map<String, GeneVariantAndAnnotation> getSnpVariantsUnknownClinicalSignificance() {
+		return snpVariantsUnknownClinicalSignificance;
+	}
+	public void setSnpVariantsUnknownClinicalSignificance(Map<String, GeneVariantAndAnnotation> snpVariantsUnknownClinicalSignificance) {
+		this.snpVariantsUnknownClinicalSignificance = snpVariantsUnknownClinicalSignificance;
+	}
+	public List<TranslocationReport> getTranslocations() {
+		return translocations;
+	}
+	public void setTranslocations(List<TranslocationReport> translocations) {
+		this.translocations = translocations;
+	}
+	public Map<String, GeneVariantAndAnnotation> getSnpVariantsPossibleClinicalSignificance() {
+		return snpVariantsPossibleClinicalSignificance;
+	}
+	public void setSnpVariantsPossibleClinicalSignificance(Map<String, GeneVariantAndAnnotation> snpVariantsPossibleClinicalSignificance) {
+		this.snpVariantsPossibleClinicalSignificance = snpVariantsPossibleClinicalSignificance;
+	}
+	public String getCaseName() {
+		return caseName;
+	}
+	public void setCaseName(String caseName) {
+		this.caseName = caseName;
+	}
+	public String createObjectJSON() throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writeValueAsString(this);
+	}
+
+	public String getReportName() {
+		return reportName;
+	}
+
+	public void setReportName(String reportName) {
+		this.reportName = reportName;
 	}
 	
 	

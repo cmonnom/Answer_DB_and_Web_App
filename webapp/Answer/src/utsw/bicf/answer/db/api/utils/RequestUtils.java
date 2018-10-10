@@ -7,12 +7,16 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -31,6 +35,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.AnswerDBCredentials;
@@ -43,12 +48,20 @@ import utsw.bicf.answer.model.extmapping.CNSData;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CNVPlotDataRaw;
+import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
+import utsw.bicf.answer.model.extmapping.ExistingReports;
+import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.SearchSNPAnnotation;
 import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
 import utsw.bicf.answer.model.extmapping.Translocation;
+import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
+import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.QcAPIAuthentication;
 
 /**
@@ -115,6 +128,23 @@ public class RequestUtils {
 			return cases;
 		}
 		return null;
+	}
+	
+	public void test() throws URISyntaxException, ClientProtocolException, IOException {
+//		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+//		sbUrl.append("cases");
+		URI uri = new URI("https://clinicaltrials.gov/ct2/show/" + "NCT02674568" + "?displayxml=true");
+		requestGet = new HttpGet(uri);
+
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			Object test = mapper.readValue(response.getEntity().getContent(), OrderCase[].class);
+			System.out.println(test);
+		}
 	}
 
 	public AjaxResponse assignCaseToUser(List<User> users, String caseId)
@@ -665,43 +695,272 @@ public class RequestUtils {
 		return null;
 	}
 
-	private CNVPlotData test(String chromFilter) throws IOException {
-		List<String> cnrRows = FileUtils.readLines(new File("/opt/answer/files/cnr2.csv"));
-		List<String> cnsRows = FileUtils.readLines(new File("/opt/answer/files/cns2.csv"));
-		
-		List<CNRData> cnrDataList = new ArrayList<CNRData>();
-		List<CNSData> cnsDataList = new ArrayList<CNSData>();
-		for (String row : cnrRows) {
-			if (row.startsWith("chromosome")) {
-				continue;
-			}
-			String[] items = row.split(",");
-			String cnrChrom = items[0];
-			if (chromFilter == null || cnrChrom.equals(chromFilter)) {
-				cnrDataList.add(new CNRData(cnrChrom, Long.parseLong(items[1]), Long.parseLong(items[2]), items[3], Double.parseDouble(items[4]), Double.parseDouble(items[4])));
-			}
+//	private CNVPlotData test(String chromFilter) throws IOException {
+//		List<String> cnrRows = FileUtils.readLines(new File("/opt/answer/files/cnr2.csv"));
+//		List<String> cnsRows = FileUtils.readLines(new File("/opt/answer/files/cns2.csv"));
+//		
+//		List<CNRData> cnrDataList = new ArrayList<CNRData>();
+//		List<CNSData> cnsDataList = new ArrayList<CNSData>();
+//		for (String row : cnrRows) {
+//			if (row.startsWith("chromosome")) {
+//				continue;
+//			}
+//			String[] items = row.split(",");
+//			String cnrChrom = items[0];
+//			if (chromFilter == null || cnrChrom.equals(chromFilter)) {
+//				cnrDataList.add(new CNRData(cnrChrom, Long.parseLong(items[1]), Long.parseLong(items[2]), items[3], Double.parseDouble(items[4]), Double.parseDouble(items[4])));
+//			}
+//		}
+//		for (String row : cnsRows) {
+//			if (row.startsWith("chromosome")) {
+//				continue;
+//			}
+//			String[] items = row.split(",");
+//			if (items.length >= 5) {
+//				String cnsChrom = items[0];
+//				if (chromFilter == null || cnsChrom.equals(chromFilter)) {
+//					cnsDataList.add(new CNSData(cnsChrom, Long.parseLong(items[1]), Long.parseLong(items[2]), Double.parseDouble(items[3]), Integer.parseInt(items[4])));
+//				}
+//			}
+//		}
+//		CNVPlotData data = new CNVPlotData();
+//		data.setCnrData(cnrDataList);
+//		data.setCnsData(cnsDataList);
+//		return data;
+//	}
+
+	public Report getReportDetails(String reportId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("report/"); 
+		sbUrl.append(reportId);
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			Report report = mapper.readValue(response.getEntity().getContent(), Report.class);
+			return report;
 		}
-		for (String row : cnsRows) {
-			if (row.startsWith("chromosome")) {
-				continue;
-			}
-			String[] items = row.split(",");
-			if (items.length >= 5) {
-				String cnsChrom = items[0];
-				if (chromFilter == null || cnsChrom.equals(chromFilter)) {
-					cnsDataList.add(new CNSData(cnsChrom, Long.parseLong(items[1]), Long.parseLong(items[2]), Double.parseDouble(items[3]), Integer.parseInt(items[4])));
+		return null;
+	}
+
+	//temp method to test displaying the report
+	//while Ben implements the API
+	public Report buildReportManually() throws ClientProtocolException, IOException, URISyntaxException {
+		Report report = new Report();
+		OrderCase caseDetails = getCaseDetails("ORD527", null);
+		report.setCaseId(caseDetails.getCaseId());
+		report.setCaseName(caseDetails.getCaseName());
+		PatientInfo patientInfo = new PatientInfo(caseDetails);
+		report.setPatientInfo(patientInfo);
+		report.setReportName(caseDetails.getCaseName());
+		
+		report.setSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+		
+		File file = new File("/opt/answer/files/AMENDMENT_PODS_ReportID_47412_RequestID_51271.html");
+		if (file.exists()) {
+			MDAReportTemplate mdaEmail = new MDAReportTemplate(file);
+			List<BiomarkerTrialsRow> trials = mdaEmail.getSelectedBiomarkers();
+			trials.addAll(mdaEmail.getSelectedAdditionalBiomarkers());
+			trials.addAll(mdaEmail.getRelevantBiomarkers());
+			trials.addAll(mdaEmail.getRelevantAdditionalBiomarkers());
+			report.setClinicalTrials(trials);
+		}
+		List<CNVReport> cnvReports = new ArrayList<CNVReport>();
+		for (CNV cnv : caseDetails.getCnvs()) {
+			if (cnv.getUtswAnnotated() != null && cnv.getUtswAnnotated()
+					&& cnv.getSelected() != null && cnv.getSelected()
+					) {
+				cnv = getCNVDetails(cnv.getMongoDBId().getOid());
+				if (cnv.getReferenceCnv() != null && cnv.getReferenceCnv().getUtswAnnotations() != null
+						&& !cnv.getReferenceCnv().getUtswAnnotations().isEmpty()) {
+					StringBuilder sb = new StringBuilder();
+					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
+					for (Annotation a : cnv.getReferenceCnv().getUtswAnnotations()) {
+						Annotation.init(a, cnv.getAnnotationIdsForReporting(), modelDAO);
+						if (a.getIsSelected() != null && a.getIsSelected()) { 
+							sb.append(a.getText()).append(" ");
+							atLeastOneSelected = true;
+						}
+					}
+					if (atLeastOneSelected) {
+						cnvReports.add(new CNVReport(sb.toString(), cnv));
+					}
 				}
 			}
 		}
-		CNVPlotData data = new CNVPlotData();
-		data.setCnrData(cnrDataList);
-		data.setCnsData(cnsDataList);
-		return data;
+		report.setCnvs(cnvReports);
+		
+		List<TranslocationReport> translocationReports = new ArrayList<TranslocationReport>();
+		for (Translocation ftl : caseDetails.getTranslocations()) {
+			if (ftl.getUtswAnnotated() != null && ftl.getUtswAnnotated()
+					&& ftl.getSelected() != null && ftl.getSelected()) {
+				ftl = getTranslocationDetails(ftl.getMongoDBId().getOid());
+				if (ftl.getReferenceTranslocation() != null && ftl.getReferenceTranslocation().getUtswAnnotations() != null
+						&& !ftl.getReferenceTranslocation().getUtswAnnotations().isEmpty()) {
+					StringBuilder sb = new StringBuilder();
+					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
+					for (Annotation a : ftl.getReferenceTranslocation().getUtswAnnotations()) {
+						Annotation.init(a, ftl.getAnnotationIdsForReporting(), modelDAO);
+						if (a.getIsSelected() != null && a.getIsSelected()) { 
+							sb.append(a.getText()).append(" ");
+							atLeastOneSelected = true;
+						}
+					}
+					if (atLeastOneSelected) {
+						translocationReports.add(new TranslocationReport(sb.toString(), ftl));
+					}
+				}
+			}
+		}
+		report.setTranslocations(translocationReports);
+		
+		
+		List<IndicatedTherapy> indicatedTherapies = new ArrayList<IndicatedTherapy>();
+		for (Variant v : caseDetails.getVariants()) {
+			if (v.getSelected() != null && v.getSelected()) {
+				v = getVariantDetails(v.getMongoDBId().getOid());
+				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
+				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
+					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
+						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && a.getCategory().equals("Therapy")) {
+							annotations.add(new IndicatedTherapy(a, v));
+						}
+					}
+				}
+				indicatedTherapies.addAll(annotations);
+			}
+		}
+		report.setIndicatedTherapies(indicatedTherapies);
+		
+		report.setModifiedBy(1);
+		report.setCreatedBy(1);
+		report.setDateCreated(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+		report.setDateModified(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+		
+		report.setLive(true);
+		
+		List<Variant> variants = caseDetails.getVariants().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
+		Map<String, GeneVariantAndAnnotation> annotationsStrongByVariant = new HashMap<String, GeneVariantAndAnnotation>();
+		Map<String, GeneVariantAndAnnotation> annotationsPossibleByVariant = new HashMap<String, GeneVariantAndAnnotation>();
+		Map<String, GeneVariantAndAnnotation> annotationsUnknownByVariant = new HashMap<String, GeneVariantAndAnnotation>();
+		List<String> strongTiers = Arrays.asList("1A", "1B");
+		List<String> possibleTiers = Arrays.asList("2C", "2D");
+		List<String> unknownTiers = Arrays.asList("3");
+		
+		for (Variant v : variants) {
+			if (v.getUtswAnnotated() && v.getSelected()) {
+				v = getVariantDetails(v.getMongoDBId().getOid());
+				List<String> strongAnnotations = new ArrayList<String>();
+				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
+					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
+						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && !a.getCategory().equals("Therapy")
+								&& strongTiers.contains(a.getTier())) {
+							strongAnnotations.add(a.getText());
+						}
+					}
+				}
+				List<String> possibleAnnotations = new ArrayList<String>();
+				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
+					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
+						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && !a.getCategory().equals("Therapy")
+								&& possibleTiers.contains(a.getTier())) {
+							possibleAnnotations.add(a.getText());
+						}
+					}
+				}
+				List<String> unknownAnnotations = new ArrayList<String>();
+				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
+					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
+						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && !a.getCategory().equals("Therapy")
+								&& unknownTiers.contains(a.getTier())) {
+							unknownAnnotations.add(a.getText());
+						}
+					}
+				}
+				if (!strongAnnotations.isEmpty()) {
+					annotationsStrongByVariant.put((v.getGeneName() + " " + v.getNotation()).replaceAll("\\.", ""), new GeneVariantAndAnnotation(v.getGeneName() + " " + v.getNotation(), strongAnnotations.stream().collect(Collectors.joining(" "))));
+				}
+				if (!possibleAnnotations.isEmpty()) {
+					annotationsPossibleByVariant.put((v.getGeneName() + " " + v.getNotation()).replaceAll("\\.", ""), new GeneVariantAndAnnotation(v.getGeneName() + " " + v.getNotation(), possibleAnnotations.stream().collect(Collectors.joining(" "))));
+				}
+				if (!unknownAnnotations.isEmpty()) {
+					annotationsUnknownByVariant.put((v.getGeneName() + " " + v.getNotation()).replaceAll("\\.", ""), new GeneVariantAndAnnotation(v.getGeneName() + " " + v.getNotation(), unknownAnnotations.stream().collect(Collectors.joining(" "))));
+				}
+					
+			}
+		}
+		report.setSnpVariantsStrongClinicalSignificance(annotationsStrongByVariant);
+		report.setSnpVariantsPossibleClinicalSignificance(annotationsPossibleByVariant);
+		report.setSnpVariantsUnknownClinicalSignificance(annotationsUnknownByVariant);
+		
+		return report;
 	}
 
+	public void saveReport(AjaxResponse ajaxResponse, Report reportToSave) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		boolean isNewReport = reportToSave.getMongoDBId() == null;
+		sbUrl.append("case/").append(reportToSave.getCaseId()).append("/savereport");
+		URI uri = new URI(sbUrl.toString());
+
+		System.out.println(reportToSave.createObjectJSON());
+		HttpResponse response = null;
+		if (isNewReport) {
+			requestPost = new HttpPost(uri);
+			addAuthenticationHeader(requestPost);
+			requestPost.setEntity(new StringEntity(reportToSave.createObjectJSON(), ContentType.APPLICATION_JSON));
+			response = client.execute(requestPost);
+		}
+		else {
+			requestPut = new HttpPut(uri);
+			addAuthenticationHeader(requestPut);
+			requestPut.setEntity(new StringEntity(reportToSave.createObjectJSON(), ContentType.APPLICATION_JSON));
+			response = client.execute(requestPut);
+		}
 
 
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+			Report savedReport = mapper.readValue(response.getEntity().getContent(), Report.class);
+			ajaxResponse.setMessage(savedReport.getMongoDBId().getOid());
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		
+	}
 
+	public List<Report> getExistingReports(String caseId) throws JsonParseException, JsonMappingException, UnsupportedOperationException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/"); 
+		sbUrl.append(caseId).append("/reports");
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ExistingReports reports = mapper.readValue(response.getEntity().getContent(), ExistingReports.class);
+			return reports.getResult();
+		}
+		return null;
+	}
 
 
 

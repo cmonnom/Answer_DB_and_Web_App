@@ -3,10 +3,15 @@ package utsw.bicf.answer.reporting.parse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -17,6 +22,8 @@ import org.jsoup.select.Elements;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 
 public class MDAReportTemplate {
 
@@ -91,6 +98,11 @@ public class MDAReportTemplate {
 			if (items.size() == headers.size()) { // regular row
 				AnnotationRow values = new AnnotationRow();
 				values.setTestedPanel(items.get(headerMap.get(AnnotationRow.HEADER_TESTED_PANEL)).text());
+				values.setReportDate(items.get(headerMap.get(AnnotationRow.HEADER_REPORT_DATE)).text());
+				if (values.getReportDate() != null) {
+					LocalDate reportDate = LocalDate.parse(values.getReportDate(), TypeUtils.localDateFormatter);
+					values.setCreatedSince(TypeUtils.dateSince(reportDate));
+				}
 				values.setReportNb(items.get(headerMap.get(AnnotationRow.HEADER_REPORT_NB)).text());
 				values.setGene(items.get(headerMap.get(AnnotationRow.HEADER_GENE)).text());
 				values.setAlteration(items.get(headerMap.get(AnnotationRow.HEADER_ALTERATION)).text());

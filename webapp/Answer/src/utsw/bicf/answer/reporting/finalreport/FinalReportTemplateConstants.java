@@ -19,6 +19,7 @@ public class FinalReportTemplateConstants {
 	public static final int ADDRESS_FONT_SIZE = 8;
 	public static final int DEFAULT_TEXT_FONT_SIZE = 12;
 	public static final int SMALLER_TEXT_FONT_SIZE = 11;
+	public static final int TITLE_TEXT_FONT_SIZE = 14;
 //	public static final PDType1Font MAIN_FONT_TYPE = PDType1Font.HELVETICA;
 //	public static final PDType1Font MAIN_FONT_TYPE_BOLD = PDType1Font.HELVETICA_BOLD;
 	public static PDType0Font MAIN_FONT_TYPE;
@@ -36,12 +37,22 @@ public class FinalReportTemplateConstants {
 	public static final Color LINK_BLUE = new Color(77, 144, 206);
 	public static final LineStyle THINLINE_OUTTER = new LineStyle(new Color(204, 204, 204), 1f);
 
-	public static final String NGS_LOGO_PATH = "C:/Users/Guillaume/Documents/Im4.png";
-	public static final String UTSW_LOGO_PATH = "C:/Users/Guillaume/Documents/Im5.png";
+	public static final String NGS_LOGO_PATH = "Im4.png";
+	public static final String UTSW_LOGO_PATH = "Im5.png";
 	public static final List<String> ADDRESS = new ArrayList<String>();
 	public static final String TRIAL_URL = "https://clinicaltrials.gov/ct2/show/";
 
 	public static final List<Header> TREATMENT_OPTIONS_SUMMARY_HEADERS = new ArrayList<Header>();
+	
+	public static final String TITLE = "1425-Gene Pan-Cancer Mutation Test";
+	public static final String PATIENT_DETAILS_TITLE = "Patient Record";
+	public static final String INDICATED_THERAPIES_TITLE = "Indicated Therapies";
+	public static final String CLINICAL_TRIALS_TITLE = "Clinical Trials";
+	public static final String CNV_TITLE = "Copy Number Alterations";
+	public static final String TRANSLOCATION_TITLE = "Gene Fusions";
+	public static final String DISCLAMER_TITLE = "INFORMATION ABOUT THE TEST";
+	
+	
 	static {
 		// widths should add up to 100
 		TREATMENT_OPTIONS_SUMMARY_HEADERS.add(new Header("Gene", 13));

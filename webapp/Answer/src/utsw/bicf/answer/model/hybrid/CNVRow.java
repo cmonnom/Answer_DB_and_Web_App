@@ -47,7 +47,7 @@ public class CNVRow {
 		iconFlags = new FlagValue(icons);
 	}
 
-	private String formatHTMLGenes(List<String> genes) {
+	public static String formatHTMLGenes(List<String> genes) {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < genes.size(); i++) {
 			String gene = genes.get(i);

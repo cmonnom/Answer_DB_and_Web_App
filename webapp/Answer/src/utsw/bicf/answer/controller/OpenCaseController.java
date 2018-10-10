@@ -64,7 +64,9 @@ import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
+import utsw.bicf.answer.reporting.parse.AnnotationRow;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
+import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
@@ -207,7 +209,7 @@ public class OpenCaseController {
 				.sorted()
 				.collect(Collectors.toList());
 		
-		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, qcAPI, detailedCase, null, "oid", user,
+		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, qcAPI, detailedCase, "oid", user,
 				reportGroupsForDisplay);
 		return summary.createVuetifyObjectJSON();
 
@@ -469,6 +471,24 @@ public class OpenCaseController {
 			}
 		};
 		if (variantDetails != null) {
+			//fake MDA annotations ////////////////////////////
+//			File file = new File("/opt/answer/files/AMENDMENT_PODS_ReportID_47412_RequestID_51271.html");
+//			if (file.exists()) {
+//				MDAReportTemplate mdaEmail = new MDAReportTemplate(file);
+//				boolean mdaAnnotated = false;
+//				for (String gene : mdaEmail.getAnnotationRows().keySet()) {
+//					if (gene.startsWith(variantDetails.getGeneName())) {
+//						AnnotationRow row = mdaEmail.getAnnotationRows().get(gene);
+//						if (row.getGene().equals(variantDetails.getGeneName())) {
+//							mdaAnnotated = true;
+//							variantDetails.setMdaAnnotation(row);
+//						}
+//					}
+//				}
+//				variantDetails.setMdaAnnotated(mdaAnnotated);
+//				/////////////////////////////////////
+//			}
+			
 			// populate user info to be used by the UI
 			if (variantDetails.getReferenceVariant() != null
 					&& variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
@@ -791,12 +811,14 @@ public class OpenCaseController {
 	@RequestMapping(value = "/saveVariant")
 	@ResponseBody
 	public String saveVariant(Model model, HttpSession session, @RequestBody String data,
-			@RequestParam String caseId, @RequestParam String variantType) throws Exception {
+			@RequestParam String caseId, @RequestParam String variantType,
+			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
 		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(false);
 		response.setSuccess(false);
+		response.setSkipSnackBar(skipSnackBar);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode nodeData = mapper.readTree(data);
@@ -835,12 +857,15 @@ public class OpenCaseController {
 	@RequestMapping(value = "/saveSelectedAnnotationsForVariant")
 	@ResponseBody
 	public String saveSelectedAnnotationsForVariant(Model model, HttpSession session, @RequestBody String data,
-			@RequestParam String caseId, @RequestParam String variantType) throws Exception {
+			@RequestParam String caseId, @RequestParam String variantType,
+			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
 		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(false);
 		response.setSuccess(false);
+		response.setSkipSnackBar(skipSnackBar);
+		response.setUiProceed(false);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode nodeData = mapper.readTree(data);
@@ -907,7 +932,7 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
 		if (caseSummary != null) {
-			PatientInfo patientInfo = new PatientInfo(caseSummary, null);
+			PatientInfo patientInfo = new PatientInfo(caseSummary);
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(patientInfo);
 		}
@@ -918,7 +943,8 @@ public class OpenCaseController {
 	@RequestMapping(value = "/savePatientDetails")
 	@ResponseBody
 	public String savePatientDetails(Model model, HttpSession session, @RequestParam String oncotreeDiagnosis,
-			@RequestParam String caseId) throws Exception {
+			@RequestParam String caseId,
+			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
@@ -926,6 +952,7 @@ public class OpenCaseController {
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(isAssigned);
+		response.setSkipSnackBar(skipSnackBar);
 		if (isAssigned) {
 			OrderCase caseSummary = utils.getCaseSummary(caseId);
 			if (caseSummary != null) {

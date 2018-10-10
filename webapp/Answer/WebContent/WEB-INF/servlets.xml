@@ -35,6 +35,7 @@
 	<!-- Add support for reading web resources: css, images, js, etc... -->
 	<mvc:resources location="/resources/" mapping="/resources/**" />
 	<mvc:resources location="file:/opt/answer/links/bams/" mapping="/bams/**" />
+	<mvc:resources location="file:/opt/answer/links/pdfs/" mapping="/pdfs/**" />
 
 	<!-- Define Spring MVC view resolver -->
 	<bean	id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
@@ -102,8 +103,12 @@
 		<property name="excelFilesPath" value="${excel.file.location}" />
 		<property name="bamLinksPath" value="${bam.link.location}" />
 		<property name="bamFilesPath" value="${bam.file.location}" />
+		<property name="pdfFontPath" value="${pdf.font.location}" />
 		<property name="productionEnv" value="${production.env}" />
 		<property name="genePanelSearchUrl" value="${gene.panel.search.url}" />
+		<property name="pdfFilesPath" value="${pdf.temp.location}" />
+		<property name="pdfLogoPath" value="${pdf.logo.location}" />
+		<property name="pdfLinksPath" value="${pdf.link.location}" />
 	</bean>
 	
 	<bean id="emailProps" class="utsw.bicf.answer.security.EmailProperties">
@@ -111,6 +116,11 @@
 		<property name="signature" value="${email.signature}" />
 		<property name="rootUrl" value="${email.root.url}" />
 		<property name="doSend" value="${email.do.send}" />
+	</bean>
+	
+		<bean id="otherProps" class="utsw.bicf.answer.security.OtherProperties">
+		<property name="proxyHostname" value="${proxy.hostname}" />
+		<property name="proxyPort" value="${proxy.port}" />
 	</bean>
 	
 

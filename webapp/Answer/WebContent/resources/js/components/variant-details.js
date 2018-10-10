@@ -76,7 +76,7 @@ Vue.component('variant-details', {
   </v-toolbar>
   <v-container grid-list-md fluid>
       <v-layout row wrap>
-          <v-flex :class="[variantType == 'cnv' ? 'md6' : '', widthClass]" v-for="table in variantDataTables" :key="table.name">
+          <v-flex :class="getTableFlexClass(table.name)" v-for="table in variantDataTables" :key="table.name">
               <v-card flat>
                   <v-card-text>
                       <v-list class="dense-tiles">
@@ -112,12 +112,12 @@ Vue.component('variant-details', {
                                               </v-btn>
                                               <span>{{ item.tooltip }}</span>
                                           </v-tooltip>    
-                                          <v-data-table v-if="item.type == 'callSet'" :items="item.value" hide-actions hide-headers>
+                                          <v-data-table v-if="item.type == 'callSet'" :items="item.value" hide-actions hide-headers >
                                               <template slot="items" slot-scope="props">
-                                                  <td>
+                                                  <td class="normal-word-break">
                                                       {{ props.item.label }}
                                                   </td>
-                                                  <td v-for="i in item.columns" :key="i">{{ props.item["caller" + (i - 1)] }}</td>
+                                                  <td v-for="i in item.columns" :key="i" class="normal-word-break">{{ props.item["caller" + (i - 1)] }}</td>
                                               </template>
                                           </v-data-table>
                                           <v-layout v-if="item.type == 'select'" class="full-width">
@@ -251,7 +251,7 @@ Vue.component('variant-details', {
             this.$emit("revert-variant", this);
         },
         saveVariant() {
-            this.$emit("save-variant", this);
+            this.$emit("save-variant", false);
         },
         showPanel() {
             this.$emit("show-panel", this);
@@ -293,6 +293,23 @@ Vue.component('variant-details', {
         //so that it behaves like a regular "label: string" combo
         isRegularVariantDetailsLabel(type) {
             return !type || type == 'chip' || type == 'callSet' || type == 'flag' || type == 'link';
+        },
+        getTableFlexClass(name) {
+            if (this.variantType == "cnv") {
+                return "md6";
+            }
+            if (this.variantType == "snp") {
+                if (name == "infoTable") {
+                    return ['xs4', 'md4', "pt-2", 'mt-1'];
+                }
+                if (name == "depthTable") {
+                    return ['xs4', 'md3', "pt-2", 'mt-1'];
+                }
+                if (name == "dataTable") {
+                    return ['xs4', 'md5'];
+                }
+            }
+            return [this.widthClass];
         },
         openUrl(item) {
             window.open(item.url, "_blank");

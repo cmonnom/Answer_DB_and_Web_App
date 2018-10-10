@@ -15,6 +15,7 @@ public class BiomarkerTrialsRow {
 	
 	String selectedBiomarker;
 	String relevantBiomarker;
+	String biomarker;
 	String drugs;
 	String title;
 	String nctid;
@@ -89,6 +90,12 @@ public class BiomarkerTrialsRow {
 	}
 	public void setAdditionalRequiredBiomarkers(String additionalRequiredBiomarkers) {
 		this.additionalRequiredBiomarkers = additionalRequiredBiomarkers;
+	}
+	public String getBiomarker() {
+		return biomarker;
+	}
+	public void setBiomarker(String biomarker) {
+		this.biomarker = biomarker;
 	}
 
 }

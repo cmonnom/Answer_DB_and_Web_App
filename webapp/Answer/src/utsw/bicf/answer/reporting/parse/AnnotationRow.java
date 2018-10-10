@@ -8,6 +8,7 @@ import utsw.bicf.answer.reporting.finalreport.GeneVariantDetails;
 public class AnnotationRow {
 	
 	public static final String HEADER_TESTED_PANEL = "Tested Panel";
+	public static final String HEADER_REPORT_DATE = "Report Date";
 	public static final String HEADER_REPORT_NB = "Report#";
 	public static final String HEADER_GENE = "Gene";
 	public static final String HEADER_ALTERATION = "Alteration";
@@ -20,6 +21,7 @@ public class AnnotationRow {
 	public static final String HEADER_ACTIONABLE_FOR = "Actionable For";
 
 	String testedPanel;
+	String reportDate;
 	String reportNb;
 	String gene;
 	String alteration;
@@ -35,6 +37,7 @@ public class AnnotationRow {
 	AnnotationCategory alterationFunction;
 	AnnotationCategory implication;
 	AnnotationCategory tumorInfo;
+	String createdSince;
 	
 	public AnnotationRow() {
 	}
@@ -169,6 +172,22 @@ public class AnnotationRow {
 
 	public void setAnnotationCategories(List<AnnotationCategory> annotationCategories) {
 		this.annotationCategories = annotationCategories;
+	}
+
+	public String getReportDate() {
+		return reportDate;
+	}
+
+	public void setReportDate(String reportDate) {
+		this.reportDate = reportDate;
+	}
+
+	public String getCreatedSince() {
+		return createdSince;
+	}
+
+	public void setCreatedSince(String createdSince) {
+		this.createdSince = createdSince;
 	}
 	
 	

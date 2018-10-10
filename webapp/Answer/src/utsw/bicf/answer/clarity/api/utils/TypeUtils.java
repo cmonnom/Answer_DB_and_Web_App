@@ -4,9 +4,14 @@ import java.sql.Date;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.Temporal;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
@@ -122,5 +127,37 @@ public class TypeUtils {
 			}
 		}
 		return formattedChrNb;
+	}
+	
+	public static String dateSince(Temporal date) {
+		Temporal now = OffsetDateTime.now(ZoneOffset.UTC);;
+		if (date instanceof LocalDate) {
+			date = LocalDateTime.of((LocalDate) date, LocalTime.now(ZoneOffset.UTC));
+		}
+		else{
+			now = OffsetDateTime.now(ZoneOffset.UTC);
+		}
+		Duration since = Duration.between(date, now);
+		if (since.toDays() > 365) {
+			return (since.toDays() / 365) + " years ago";
+		}
+		if (since.toDays() > 30) {
+			return (since.toDays() / 30) + " months ago";
+		}
+		else if (since.toDays() > 1) {
+			return since.toDays() + " days ago";
+		}
+		else if (since.toHours() > 1) {
+			return since.toHours() + " hours ago";
+		}
+		else if (since.toMinutes() > 1) {
+			return since.toMinutes() + " minutes ago";
+		}
+		else if (since.toMillis() > 2000) {
+			return since.toMillis() / 1000 + " seconds ago";
+		}
+		else {
+			return "just now";
+		}
 	}
 }

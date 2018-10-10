@@ -1,5 +1,8 @@
 package utsw.bicf.answer.controller.serialization.vuetify;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import utsw.bicf.answer.controller.serialization.ToolTip;
 import utsw.bicf.answer.controller.serialization.Units;
 
@@ -9,6 +12,7 @@ import utsw.bicf.answer.controller.serialization.Units;
  * @author Guillaume
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Header {
 	
 	String value;
@@ -30,6 +34,9 @@ public class Header {
 	Boolean sortable = true;
 	Boolean isLink;
 	Boolean canHighlight; //enable to compare the content of items with an array of values to highlight (eg: gene name filter)
+	
+	public Header() {
+	}
 	
 	public Header(String text, String value, Units unit, ToolTip toolTip, Boolean isPassable) {
 		this.text = text;

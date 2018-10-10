@@ -28,6 +28,30 @@ const OpenCase = {
             </v-card-actions>
         </v-card>
     </v-dialog>
+    <v-dialog v-model="confirmationVariantDialogVisible"  max-width="500px">
+        <v-card>
+            <v-card-text class="pl-2 pr-2 subheading">
+                You have unsaved work
+            </v-card-text>
+            <v-card-actions class="card-actions-bottom">
+                <v-tooltip bottom>
+                <v-btn color="primary" @click="closeVariantDetails()" slot="activator">Close Anyway
+                </v-btn>
+                <span>Close Annotation Panel without saving</span>
+                </v-tooltip>
+                <v-tooltip bottom>
+                <v-btn color="primary" @click="closeAndSaveAllVariantDetailsConfirmationDialog()" slot="activator">Save & Close
+                </v-btn>
+                <span>Close Annotation Panel without saving</span>
+                </v-tooltip>
+                <v-tooltip bottom>
+                <v-btn color="error" @click="confirmationVariantDialogVisible = false" slot="activator">Cancel
+                </v-btn>
+                <span>Close this warning. You work will not be lost.</span>
+                </v-tooltip>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
     <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
         <a :href="snackBarLink"><v-icon dark>{{ snackBarLinkIcon }}</v-icon></a>
@@ -107,7 +131,8 @@ const OpenCase = {
                     <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
                   <span>{{caseType}} case</span>  
                   </v-tooltip>
-              <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
+              <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"
+              @save-all="handleSaveAll()"></save-badge>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -250,7 +275,7 @@ const OpenCase = {
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
             <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType" 
-                :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
+                :width-class="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                 @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                 @save-variant="saveVariant" :color="colors.variantDetails"
                 :variant-type="currentVariantType" cnv-plot-id="cnvPlotEditUnused">
@@ -267,7 +292,7 @@ const OpenCase = {
         :current-variant="currentVariant" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
-                <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()" :type="currentVariantType"
+                <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :width-class="getWidthClassForVariantDetails()" :type="currentVariantType"
                     :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
                     @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
                     ref="cnvVariantDetailsPanel" cnv-plot-id="cnvPlotEdit"
@@ -287,7 +312,7 @@ const OpenCase = {
         :current-variant="currentVariant" @toggle-panel="handlePanelVisibility()">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
-                    <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :widthClass="getWidthClassForVariantDetails()" :type="currentVariantType"
+                    <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :width-class="getWidthClassForVariantDetails()" :type="currentVariantType"
                         :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
                         @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
                         cnv-plot-id="cnvPlotEditUnusedFTL"
@@ -418,7 +443,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="closeVariantDetails(true)">
+                        <v-list-tile avatar @click="closingVariantDetailsConfirmationDialog()">
                             <v-list-tile-avatar>
                                 <v-icon>cancel</v-icon>
                             </v-list-tile-avatar>
@@ -445,7 +470,8 @@ const OpenCase = {
             <span>{{caseType}} case</span>  
             </v-tooltip>
 
-            <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
+            <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"
+            @save-all="handleSaveAll()"></save-badge>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -489,7 +515,7 @@ const OpenCase = {
 
 
                 <v-tooltip bottom>
-                    <v-btn icon @click="closeVariantDetails(true)" slot="activator">
+                    <v-btn icon @click="closingVariantDetailsConfirmationDialog()" slot="activator">
                         <v-icon>close</v-icon>
                     </v-btn>
                     <span>Close Variant</span>
@@ -522,7 +548,7 @@ const OpenCase = {
                             <v-flex xs12 md12 lg12 xl11 v-show="annotationVariantDetailsVisible">
 
                                 <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType"
-                                    :widthClass="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
+                                    :width-class="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                                     @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                                     @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel"
                                     :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails">
@@ -559,7 +585,7 @@ const OpenCase = {
                         <!-- MDA Annotation card -->
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
-                                <v-card>
+                                <v-card class="soft-grey-background">
                                     <v-toolbar class="elevation-0" dense dark :color="colors.variantDetails">
                                         <v-toolbar-title>
                                             <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
@@ -573,11 +599,22 @@ const OpenCase = {
                                             <span>Close</span>
                                         </v-tooltip>
                                     </v-toolbar>
-                                    <v-card-text v-for="(annotationCategory, index) in mdaAnnotations.annotationCategories" :key="index">
+                                    <!-- <v-card-text v-for="(annotationCategory, index) in mdaAnnotations.annotationCategories" :key="index">
                                         <v-card flat v-if="annotationCategory">
                                             <v-card-title class="subheading">{{ annotationCategory.title }}:</v-card-title>
                                             <v-card-text class="pl-2 pr-2">{{ annotationCategory.text }} </v-card-text>
                                         </v-card>
+                                    </v-card-text> -->
+                                    <v-card-text>
+                                        <v-container grid-list-md fluid>
+                                    <v-layout row wrap>
+                                    <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in mdaAnnotationsFormatted" :key="index" v-show="annotation.visible">
+                                        <mda-annotation-card :annotation="annotation" :variant-type="currentVariantType"
+                                        :no-edit="true"
+                                        @annotation-selection-changed="handleAnnotationSelectionChanged()"></mda-annotation-card>
+                                    </v-flex>
+                                    </v-layout>
+                                    </v-container>
                                     </v-card-text>
                                 </v-card>
                             </v-flex>
@@ -609,7 +646,7 @@ const OpenCase = {
                                                     </v-list-tile-content>
                                                 </v-list-tile>
 
-                                                <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="saveAnnotationSelection()" :loading="savingAnnotationSelection">
+                                                <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="saveAnnotationSelection()" :loading="savingAnnotationSelection" :disabled="isAnnotationTierMissing()">
                                                     <v-list-tile-avatar>
                                                         <v-icon>save</v-icon>
                                                     </v-list-tile-avatar>
@@ -654,10 +691,11 @@ const OpenCase = {
                                         <v-badge color="red" v-if="canProceed('canAnnotate') && !readonly" right bottom overlap v-model="annotationSelectionUnSaved" class="mini-badge">
                                             <v-icon slot="badge"></v-icon>
                                             <v-tooltip bottom>
-                                                <v-btn flat icon @click="saveAnnotationSelection()" slot="activator">
+                                                <v-btn flat icon @click="saveAnnotationSelection()" slot="activator" :disabled="isAnnotationTierMissing()">
                                                     <v-icon>save</v-icon>
                                                 </v-btn>
-                                                <span>Save Selection (all variant types)</span>
+                                                <span v-show="!isAnnotationTierMissing()">Save Selection (all variant types)</span>
+                                                <span v-show="isAnnotationTierMissing()">All selected annotations need a tier to be in the report</span>
                                             </v-tooltip>
                                         </v-badge>
                                         <v-tooltip bottom>
@@ -767,7 +805,7 @@ const OpenCase = {
                     </v-btn>
                     <span>Show Next Variant</span>
                 </v-tooltip>
-                <v-btn color="error" @click="closeVariantDetails(true)">Close
+                <v-btn color="error" @click="closingVariantDetailsConfirmationDialog()">Close
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
             </v-card-actions>
@@ -819,7 +857,8 @@ const OpenCase = {
               <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
             <span>{{caseType}} case</span>  
             </v-tooltip>
-        <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"></save-badge>
+        <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"
+        @save-all="handleSaveAll()"></save-badge>
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
@@ -1157,8 +1196,8 @@ const OpenCase = {
                 '2C',
                 '2D',
                 '3',
-                '4',
-                '5'],
+                '4'
+                ],
             annotationCategories: [
                 'Gene Function',
                 'Variant Function',
@@ -1258,7 +1297,12 @@ const OpenCase = {
             oncotree: [],
             waitingForGoodies: false,
             caseType: "",
-            caseTypeIcon: ""
+            caseTypeIcon: "",
+            showNormalSnackBar: true,
+            waitingForAjaxCount: 0, //use this variable to wait for other Ajax calls to return. Each ajax call should decrease the amount by one
+            waitingForAjaxMessage: "",
+            waitingForAjaxActive: false,
+            confirmationVariantDialogVisible: false
         }
     }, methods: {
         createSplashText() {
@@ -1302,9 +1346,10 @@ const OpenCase = {
                 bus.$emit("login-needed", [this, callback])
             }
             else if (response.success === false) {
-                this.splashProgress = 100; //should dismiss the splash dialog
                 bus.$emit("some-error", [this, response.message]);
             }
+            this.splashProgress = 100; //should dismiss the splash dialog
+
         },
         getAjaxData() {
             this.loadingVariantDetails = true;
@@ -1402,7 +1447,7 @@ const OpenCase = {
             ).catch(error => {
                 this.loadingVariantDetails = false;
                 this.$refs.advancedFilter.loading = false;
-                console.log(error);
+                this.handleAxiosError(error);
                 bus.$emit("some-error", [this, error]);
             }
             );
@@ -1584,8 +1629,7 @@ const OpenCase = {
                         this.handleDialogs(response, this.getVariantFilters);
                     }
                 }).catch(error => {
-                    console.log(error);
-                    bus.$emit("some-error", [this, error]);
+                    this.handleAxiosError(error);
                 });
         },
         isAdvancedFilteringVisible() {
@@ -1868,8 +1912,7 @@ const OpenCase = {
                     }
                 }).catch(error => {
                     this.loadingVariantDetails = false;
-                    console.log(error);
-                    bus.$emit("some-error", [this, error]);
+                    this.handleAxiosError(error);
                 });
         },
         getCNVDetails(item, resetSaveFlags) {
@@ -1954,6 +1997,7 @@ const OpenCase = {
                         this.userAnnotations = this.currentVariant.referenceCnv.utswAnnotations.filter(a => a.userId == this.userId);
                         this.$refs.cnvAnnotationDialog.userAnnotations = this.userAnnotations;
                         this.utswAnnotations = this.currentVariant.referenceCnv.utswAnnotations;
+                        this.mdaAnnotations = "";
                         this.reloadPreviousSelectedState();
                         this.formatCNVAnnotations();
                         this.loadingVariantDetails = false;
@@ -1973,8 +2017,7 @@ const OpenCase = {
                     }
                 }).catch(error => {
                     this.loadingVariantDetails = false;
-                    console.log(error);
-                    bus.$emit("some-error", [this, error]);
+                    this.handleAxiosError(error);
                 });
         },
         getTranslocationDetails(item, resetSaveFlags) {
@@ -2048,6 +2091,7 @@ const OpenCase = {
                         this.userAnnotations = this.currentVariant.referenceTranslocation.utswAnnotations.filter(a => a.userId == this.userId);
                         this.$refs.translocationAnnotationDialog.userAnnotations = this.userAnnotations;
                         this.utswAnnotations = this.currentVariant.referenceTranslocation.utswAnnotations;
+                        this.mdaAnnotations = "";
                         this.reloadPreviousSelectedState();
                         this.formatTranslocationAnnotations();
                         this.loadingVariantDetails = false;
@@ -2067,8 +2111,7 @@ const OpenCase = {
                     }
                 }).catch(error => {
                     this.loadingVariantDetails = false;
-                    console.log(error);
-                    bus.$emit("some-error", [this, error]);
+                    this.handleAxiosError(error);
                 });
         },
         reloadPreviousSelectedState() {
@@ -2347,8 +2390,104 @@ const OpenCase = {
         },
         formatAnnotations() {
             this.utswAnnotationsFormatted = this.formatLocalAnnotations(this.utswAnnotations, true);
+            if (this.mdaAnnotations) {
+                this.mdaAnnotationsFormatted = this.formatMDAAnnotations(this.mdaAnnotations);
+            }
             // this.userAnnotationsFormatted = this.formatLocalAnnotations(this.userAnnotations, false);
             this.matchAnnotationFilter();
+        },
+        formatMDAAnnotations(annotations) {
+            var formatted = [];
+            for (var i = 0; i < annotations.annotationCategories.length; i++) {
+                if (!annotations.annotationCategories[i]) {
+                    continue;
+                }
+                var annotation = {
+                    _id: "",
+                    fullName: "Dianren Xia",
+                    text: "",
+                    scopes: [],
+                    scopeLevels: [],
+                    scopeTooltip: "",
+                    tumorSpecific: "",
+                    category: "",
+                    createdDate: "",
+                    createdSince: "",
+                    modifiedDate: "",
+                    modifiedSince: "",
+                    pmids: [],
+                    nctids: [],
+                    tier: "",
+                    classification: "",
+                    visible: true,
+                    isSelected: false
+                };
+                // annotation._id = annotations.annotationCategories[i]._id;
+                // if (showUser) {
+                //     annotation.fullName = annotations.annotationCategories[i].fullName;
+                // }
+                var geneSpecific = true;
+                var variantSpecific =  annotations.annotationCategories[i].title == "Functional Annotation";
+                var tumorSpecific = annotations.annotationCategories[i].title == "Tumor type-specific annotation";
+                annotation.text = annotations.annotationCategories[i].text.replace(/\n/g, "<br/>").replace(/(PMID:)([0-9]*)/g, `<a href='https://www.ncbi.nlm.nih.gov/pubmed/?term=$2' target="_blank">PMID:$2</a>`);
+                annotation.scopes = [geneSpecific ,variantSpecific, tumorSpecific];
+                annotation.scopeLevels = [
+                "Gene " + (geneSpecific ? this.mdaAnnotations.gene : ''),
+                "Variant " + (variantSpecific ? this.currentVariant.notation : ''), "Tumor"];
+                if (annotations.annotationCategories[i].title == "Biomarker Summary") {
+                    annotation.category = "Gene Function";
+                }
+                else if (annotations.annotationCategories[i].title == "Functional Annotation") {
+                    annotation.category = "Variant Function";
+                }
+                else if (annotations.annotationCategories[i].title == "Potential Therapeutic Implications") {
+                    annotation.category = "Therapy";
+                }
+                else if (annotations.annotationCategories[i].title == "Tumor type-specific annotation") {
+                    annotation.category = "Prognosis"; //TODO not sure about that one
+                }
+                //TOOD keep going
+
+                annotation.createdDate = this.mdaAnnotations.reportDate;
+                annotation.createdSince = this.mdaAnnotations.createdSince;
+                // annotation.modifiedDate = annotations[i].modifiedDate;
+                // annotation.modifiedSince = annotations[i].modifiedSince;
+                // annotation.pmids = annotations[i].pmids;
+                // annotation.nctids = annotations[i].nctids;
+                annotation.scopeTooltip = this.createMDALevelInformation(geneSpecific, variantSpecific, tumorSpecific);
+                // annotation.tier = annotations[i].tier;
+                // annotation.classification = annotations[i].classification;
+                annotation.isSelected = annotations.annotationCategories[i].isSelected;
+                formatted.push(annotation);
+            }
+            return formatted;
+        },
+        createMDALevelInformation(geneSpecific, variantSpecific, tumorSpecific) {
+            var text = "This annotation's scope is limited to ";
+            var commaNeeded = false;
+            if (geneSpecific) {
+                if (commaNeeded) {
+                    text = text + ", ";
+                }
+                text = text + "this gene";
+                commaNeeded = true;
+            }
+            if (variantSpecific) {
+                if (commaNeeded) {
+                    text = text + ", ";
+                }
+                text = text + "this variant";
+                commaNeeded = true;
+            }
+            if (tumorSpecific) {
+                if (commaNeeded) {
+                    text = text + ", ";
+                }
+                text = text + "this tumor";
+                commaNeeded = true;
+            }
+            text = text + ".";
+            return text;
         },
         formatCNVAnnotations() {
             this.utswAnnotationsFormatted = this.formatLocalCNVAnnotations(this.utswAnnotations, true);
@@ -2443,8 +2582,7 @@ const OpenCase = {
                     }
                 })
                 .catch(error => {
-                    console.log(error);
-                    bus.$emit("some-error", [this, error]);
+                    this.handleAxiosError(error);
                 });
         },
         selectVariantForReport() {
@@ -2521,11 +2659,10 @@ const OpenCase = {
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
                     if (!response.data.skipSnackBar) {
-                        this.snackBarMessage = "Variant Selection Saved";
-                        this.snackBarLink = "";
-                        this.snackBarVisible = true;
+                        this.showSnackBarMessage("Variant Selection Saved");
                     }
                     this.getAjaxData();
+                    this.waitingForAjaxCount--;
                     this.variantUnSaved = false;
                     this.saveLoading = false;
                     if (response.data.uiProceed) {
@@ -2534,12 +2671,11 @@ const OpenCase = {
                 }
                 else {
                     this.saveLoading = false;
-                    this.handleDialogs(response.data, this.saveSelection.bind(null, closeAfter, skipSnackBar));
+                    this.handleDialogs(response.data, this.saveSelection.bind(null, response.data.uiProceed, response.data.skipSnackBar));
                 }
             }).catch(error => {
                 this.saveLoading = false;
-                console.log(error);
-                bus.$emit("some-error", [this, error]);
+                this.handleAxiosError(error);
             });
         },
         mdaAnnotationsExists() {
@@ -2584,8 +2720,7 @@ const OpenCase = {
             }
             ).catch(error => {
                 this.$refs.advancedFilter.loading = false;
-                console.log(error);
-                bus.$emit("some-error", [this, error]);
+                this.handleAxiosError(error);
             }
             );
         },
@@ -2609,8 +2744,7 @@ const OpenCase = {
                 }
             }
             ).catch(error => {
-                console.log(error);
-                bus.$emit("some-error", [this, error]);
+                this.handleAxiosError(error);
             }
             );
         },
@@ -2630,8 +2764,7 @@ const OpenCase = {
                         this.handleDialogs(response, this.loadUserFilterSets);
                     }
                 }).catch(error => {
-                    console.log(error);
-                    bus.$emit("some-error", [this, error]);
+                    this.handleAxiosError(error);
                 });
         },
         openBamViewerLink() {
@@ -2647,7 +2780,20 @@ const OpenCase = {
             link += "&caseId=" + this.$route.params.id;
             return link;
         },
+        closingVariantDetailsConfirmationDialog() {
+            if ((this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) || this.annotationSelectionUnSaved) {
+                this.confirmationVariantDialogVisible = true;
+            }
+            else {
+                this.closeVariantDetails();
+            }
+        },
+        closeAndSaveAllVariantDetailsConfirmationDialog() {
+            this.handleSaveAll();
+            this.closeVariantDetails();
+        },
         closeVariantDetails() {
+            this.confirmationVariantDialogVisible = false;
             this.variantDetailsVisible = false;
             this.urlQuery.variantId = null;
             this.urlQuery.variantType = null;
@@ -2710,8 +2856,7 @@ const OpenCase = {
                     bus.$emit("login-needed", [this, this.exportSelectedVariants]);
                 }
                 else {
-                    console.log(error);
-                    bus.$emit("some-error", [this, error]);
+                    this.handleAxiosError(error);
                 }
                 this.exportLoading = false;
             }
@@ -2750,8 +2895,7 @@ const OpenCase = {
                 }
             }).catch(error => {
                 this.sendToMDALoading = false;
-                console.log(error);
-                bus.$emit("some-error", [this, error]);
+                this.handleAxiosError(error);
             });
         },
         createCSVFile(csvContent) {
@@ -2804,8 +2948,7 @@ const OpenCase = {
                     this.handleDialogs(response.data, this.saveCaseAnnotations);
                 }
             }).catch(error => {
-                console.log(error);
-                bus.$emit("some-error", [this, error]);
+                this.handleAxiosError(error);
             });
         },
         loadCaseAnnotations() {
@@ -2825,8 +2968,7 @@ const OpenCase = {
                         this.handleDialogs(response, this.saveCaseAnnotations);
                     }
                 }).catch(error => {
-                    console.log(error);
-                    bus.$emit("some-error", [this, error]);
+                    this.handleAxiosError(error);
                 });
         },
         handleSelectionChanged(selectedSize) {
@@ -2960,7 +3102,7 @@ const OpenCase = {
                 }
             }
         },
-        saveVariant() {
+        saveVariant(skipSnackBar) {
             if (!this.canProceed('canAnnotate')) {
                 return;
             }
@@ -2975,6 +3117,7 @@ const OpenCase = {
                 params: {
                     variantType: this.currentVariantType,
                     caseId: this.$route.params.id,
+                    skipSnackBar: skipSnackBar
                 },
                 data: {
                     // filters: this.$refs.advancedFilter.filters,
@@ -2982,20 +3125,20 @@ const OpenCase = {
                 }
             }).then(response => {
                 if (response.data.isAllowed) {
-                    this.revertVariant();
-                    this.snackBarMessage = "Variant Saved";
-                    this.snackBarLink = "";
-                    this.snackBarVisible = true;
+                    this.waitingForAjaxCount--;
+                    if (!response.data.skipSnackBar) {
+                        this.revertVariant();
+                        this.showSnackBarMessage("Variant Saved");
+                    }
                     this.$refs.variantDetailsPanel.variantDetailsUnSaved = false; //update badge on save button
                 }
                 else {
-                    this.handleDialogs(response.data, this.saveVariant);
+                    this.handleDialogs(response.data, this.saveVariant.bind(null, response.data.skipSnackBar));
                 }
                 this.savingVariantDetails = false;
             }).catch(error => {
                 this.savingVariantDetails = false;
-                console.log(error);
-                bus.$emit("some-error", [this, error]);
+                this.handleAxiosError(error);
             });
         },
         revertVariant() {
@@ -3010,7 +3153,7 @@ const OpenCase = {
             }
             this.$refs.variantDetailsPanel.variantDetailsUnSaved = false;  //update badge on save button
         },
-        saveAnnotationSelection() {
+        saveAnnotationSelection(skipSnackBar) {
             if (!this.canProceed('canAnnotate')) {
                 return;
             }
@@ -3020,6 +3163,9 @@ const OpenCase = {
             lightVariant["annotationIdsForReporting"] = [];
             for (var i = 0; i < this.utswAnnotationsFormatted.length; i++) {
                 if (this.utswAnnotationsFormatted[i].isSelected) {
+                    if (!this.utswAnnotationsFormatted[i].tier) {
+                        return; //selected annotation without a tier. Should not happen normally
+                    }
                     lightVariant["annotationIdsForReporting"].push(this.utswAnnotationsFormatted[i]._id);
                 }
             }
@@ -3029,6 +3175,7 @@ const OpenCase = {
                 params: {
                     variantType: this.currentVariantType,
                     caseId: this.$route.params.id,
+                    skipSnackBar: skipSnackBar
                 },
                 data: {
                     // filters: this.$refs.advancedFilter.filters,
@@ -3037,20 +3184,35 @@ const OpenCase = {
             }).then(response => {
                 if (response.data.isAllowed) {
                     this.revertAnnotationSelection();
-                    this.snackBarMessage = "Annotation Selection Saved";
-                    this.snackBarLink = "";
-                    this.snackBarVisible = true;
-                    this.annotationSelectionUnSaved = false;
+                    this.waitingForAjaxCount--;
+                    if (!response.data.skipSnackBar) {
+                        this.snackBarMessage = "Annotation Selection Saved";
+                        this.snackBarLink = "";
+                        this.snackBarVisible = true;
+                        this.annotationSelectionUnSaved = false;
+                    }
                 }
                 else {
-                    this.handleDialogs(response.data, this.saveVasaveAnnotationSelectionriant);
+                    this.handleDialogs(response.data, this.saveVasaveAnnotationSelectionriant.bind(null, response.data.skipSnackBar));
                 }
                 this.savingAnnotationSelection = false;
             }).catch(error => {
                 this.savingAnnotationSelection = false;
-                console.log(error);
-                bus.$emit("some-error", [this, error]);
+                this.handleAxiosError(error);
             });
+        },
+        isAnnotationTierMissing() {
+            for (var i = 0; i < this.utswAnnotationsFormatted.length; i++) {
+                if (this.utswAnnotationsFormatted[i].isSelected && !this.utswAnnotationsFormatted[i].tier) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        handleAxiosError(error) {
+            console.log(error);
+            this.splashProgress = 100;
+            bus.$emit("some-error", [this, error]);
         },
         revertAnnotationSelection() {
             if (this.isSNP()) {
@@ -3105,11 +3267,11 @@ const OpenCase = {
                         this.handleDialogs(response.data, this.getPatientDetails);
                     }
                 }).catch(error => {
-                    console.log(error);
+                    this.handleAxiosError(error);
                     bus.$emit("some-error", [this, error]);
                 });
         },
-        savePatientDetails() {
+        savePatientDetails(skipSnackBar) {
             if (!this.canProceed('canAnnotate')) {
                 return;
             }
@@ -3120,13 +3282,15 @@ const OpenCase = {
                 params: {
                     oncotreeDiagnosis: this.patientDetailsOncoTreeDiagnosis.text,
                     caseId: this.$route.params.id,
+                    skipSnackBar: skipSnackBar
                 }
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
                     this.getPatientDetails();
-                    this.snackBarMessage = "Patient Details Saved";
-                    this.snackBarLink = "";
-                    this.snackBarVisible = true;
+                    this.waitingForAjaxCount--;
+                    if (!this.skipSnackBar) {
+                        this.showSnackBarMessage("Patient Details Saved");
+                    }
                 }
                 else {
                     this.handleDialogs(response.data, this.savePatientDetails);
@@ -3134,7 +3298,7 @@ const OpenCase = {
                 this.savingPatientDetails = false;
             }).catch(error => {
                 this.savingPatientDetails = false;
-                console.log(error);
+                this.handleAxiosError(error);
                 bus.$emit("some-error", [this, error]);
             });
         },
@@ -3400,36 +3564,49 @@ const OpenCase = {
                 }
             }
         },
+        handleSaveAll() {
+            this.waitingForAjaxCount = 0;
+            this.waitingForAjaxMessage = "All Saved";
+            if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
+                this.waitingForAjaxCount++;
+            }
+            if (this.annotationSelectionUnSaved) {
+                this.waitingForAjaxCount++;
+            }
+            if (this.variantUnSaved) {
+                this.waitingForAjaxCount++;
+            }
+            if (this.patientDetailsUnSaved) {
+                this.waitingForAjaxCount++;
+            }
 
+            if (this.waitingForAjaxCount > 0) {
+                this.waitingForAjaxActive = true;
+            }
+
+            if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
+                this.saveVariant(true);
+            }
+            if (this.annotationSelectionUnSaved) {
+                this.saveAnnotationSelection(true);
+            }
+            if (this.variantUnSaved) {
+                this.saveSelection(false, true)
+            }
+            if (this.patientDetailsUnSaved) {
+                this.savePatientDetails(true);
+            }
+
+        },
+        handleWaitingForAjaxCount() {
+            if (this.waitingForAjaxActive && this.waitingForAjaxCount <= 0) {
+                this.waitingForAjaxActive == false;
+                this.showSnackBarMessage(this.waitingForAjaxMessage);
+            }
+        },
         collectOncoTreeDiagnosis() {
             this.oncotree = oncotree;
             this.populateOncotreeLabel();
-            // axios.get(
-            //     "http://oncotree.mskcc.org/api/tumorTypes",
-            //     {
-            //         params: {
-            //         }
-            //     })
-            //     .then(response => {
-            //         this.oncotree = [];
-            //         if (response && response.status == 200) {
-            //             for (var i = 0; i < response.data.length; i++) {
-            //                 this.oncotree.push({text:response.data[i].code, label: response.data[i].name});
-            //             }
-            //             this.populateOncotreeLabel(); //update the label in case this ajax call returned after patientDetails ajax
-            //             this.oncotree.sort(function(a, b) {
-            //                 if (a.text < b.text) return -1;
-            //                 if (a.text > b.text) return 1;
-            //                 return 0;
-            //             });
-            //         }
-            //         else {
-            //             bus.$emit("some-error", [this, "Cannot retrieve OncoTree"]);
-            //         }
-            //     }).catch(error => {
-            //         console.log(error);
-            //         bus.$emit("some-error", [this, error]);
-            //     });
         }
     },
     mounted() {
@@ -3466,7 +3643,8 @@ const OpenCase = {
     watch: {
         '$route': 'handleRouteChanged',
         variantTabActive: "handleTabChanged",
-        splashProgress: "handleSplashVisibility"
+        splashProgress: "handleSplashVisibility",
+        waitingForAjaxCount: "handleWaitingForAjaxCount"
     }
 
 };

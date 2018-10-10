@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.User;
 
@@ -296,42 +297,9 @@ public class Annotation {
 		OffsetDateTime modifiedUTCDatetime = OffsetDateTime.parse(a.getModifiedDate(), DateTimeFormatter.ISO_DATE_TIME);
 //		LocalDateTime modifiedLocalDateTime = modifiedUTCDatetime.toLocalDateTime().atZone(ZoneId.systemDefault()).toLocalDateTime();
 		a.setModifiedLocalDateTime(modifiedUTCDatetime.toLocalDateTime());
-		OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 		
-		
-		Duration createdSince = Duration.between(createdUTCDatetime, now);
-		if (createdSince.toDays() >= 1) {
-			a.setCreatedSince(createdSince.toDays() + " days ago");
-		}
-		else if (createdSince.toHours() >= 1) {
-			a.setCreatedSince(createdSince.toHours() + " hours ago");
-		}
-		else if (createdSince.toMinutes() >= 1) {
-			a.setCreatedSince(createdSince.toMinutes() + " minutes ago");
-		}
-		else if (createdSince.toMillis() >= 1000) {
-			a.setCreatedSince(createdSince.toMillis() / 1000 + " seconds ago");
-		}
-		else {
-			a.setCreatedSince("just now");
-		}
-		
-		Duration modifiedSince = Duration.between(modifiedUTCDatetime, now);
-		if (modifiedSince.toDays() >= 1) {
-			a.setModifiedSince(modifiedSince.toDays() + " days ago");
-		}
-		else if (modifiedSince.toHours() >= 1) {
-			a.setModifiedSince(modifiedSince.toHours() + " hours ago");
-		}
-		else if (modifiedSince.toMinutes() >= 1) {
-			a.setModifiedSince(modifiedSince.toMinutes() + " minutes ago");
-		}
-		else if (modifiedSince.toMillis() >= 1000) {
-			a.setModifiedSince(modifiedSince.toMillis() / 1000 + " seconds ago");
-		}
-		else {
-			a.setModifiedSince("just now");
-		}
+		a.setCreatedSince(TypeUtils.dateSince(createdUTCDatetime));
+		a.setModifiedSince(TypeUtils.dateSince(modifiedUTCDatetime));
 		
 		//the list of selected annotations is not specific to the annotation but to the case/variant
 		if (selectedAnnotationIds != null) {

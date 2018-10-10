@@ -41,11 +41,11 @@ public class OpenCaseSummary {
 	List<String> assignedToIds;
 	String type;
 
-	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, FinalReport finalReport, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
+	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
 		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups);
 		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField);
 		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField);
-		this.patientInfo = new PatientInfo(aCase, finalReport);
+		this.patientInfo = new PatientInfo(aCase);
 		this.caseId = aCase.getCaseId();
 		this.caseName = aCase.getCaseName();
 		this.userId = user.getUserId();
