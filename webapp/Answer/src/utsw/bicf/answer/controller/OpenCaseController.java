@@ -245,12 +245,13 @@ public class OpenCaseController {
 	@RequestMapping(value = "/saveCaseAnnotations")
 	@ResponseBody
 	public String saveCaseAnnotations(Model model, HttpSession session, @RequestBody String caseAnnotation,
-			@RequestParam String caseId) throws Exception {
+			@RequestParam String caseId, @RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
 		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(false);
 		response.setSuccess(false);
+		response.setSkipSnackBar(skipSnackBar);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode annotationNodes = mapper.readTree(caseAnnotation);

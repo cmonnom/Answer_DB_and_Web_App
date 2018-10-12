@@ -2,9 +2,9 @@ Vue.component('variant-details', {
     props: {
         noEdit: { default: true, type: Boolean },
         variantDataTables: { default: [], type: Array },
-        linkTable: { default: [], type: Array },
+        linkTable: { default: () => [], type: Array },
         widthClass: { default: "", type: String },
-        currentVariant: { default: {}, type: Object },
+        currentVariant: { default:() =>  {}, type: Object },
         color: { default: "primary", type: String },
         variantType: { default: "snp", type: String },
         cnvPlotId: { default: "cnvPlot", type: String },
@@ -51,21 +51,6 @@ Vue.component('variant-details', {
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
-      <v-badge color="red" v-if="!noEdit" right bottom overlap v-model="variantDetailsUnSaved" class="mini-badge">
-          <v-icon slot="badge"></v-icon>
-          <v-tooltip bottom>
-              <v-btn flat icon @click="saveVariant()" slot="activator" :loading="savingVariantDetails" :disabled="noEdit">
-                  <v-icon>save</v-icon>
-              </v-btn>
-              <span>Save Variant Details</span>
-          </v-tooltip>
-      </v-badge>
-      <v-tooltip bottom>
-          <v-btn flat icon v-if="!noEdit" @click="revertVariant()" slot="activator">
-              <v-icon>settings_backup_restore</v-icon>
-          </v-btn>
-          <span>Restore Last Saved Variant Details</span>
-      </v-tooltip>
       <v-tooltip bottom>
           <v-btn icon @click="hidePanel()" slot="activator">
               <v-icon>close</v-icon>
