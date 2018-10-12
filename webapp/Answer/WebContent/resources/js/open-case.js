@@ -28,30 +28,6 @@ const OpenCase = {
             </v-card-actions>
         </v-card>
     </v-dialog>
-    <v-dialog v-model="confirmationVariantDialogVisible"  max-width="500px">
-        <v-card>
-            <v-card-text class="pl-2 pr-2 subheading">
-                You have unsaved work
-            </v-card-text>
-            <v-card-actions class="card-actions-bottom">
-                <v-tooltip bottom>
-                <v-btn color="primary" @click="closeVariantDetails()" slot="activator">Close Anyway
-                </v-btn>
-                <span>Close Annotation Panel without saving</span>
-                </v-tooltip>
-                <v-tooltip bottom>
-                <v-btn color="primary" @click="closeAndSaveAllVariantDetailsConfirmationDialog()" slot="activator">Save & Close
-                </v-btn>
-                <span>Close Annotation Panel without saving</span>
-                </v-tooltip>
-                <v-tooltip bottom>
-                <v-btn color="error" @click="confirmationVariantDialogVisible = false" slot="activator">Cancel
-                </v-btn>
-                <span>Close this warning. You work will not be lost.</span>
-                </v-tooltip>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
     <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
         <a :href="snackBarLink"><v-icon dark>{{ snackBarLinkIcon }}</v-icon></a>
@@ -68,24 +44,6 @@ const OpenCase = {
                         <v-icon>more_vert</v-icon>
                     </v-btn>
                     <v-list>
-
-                        <v-list-tile avatar @click="saveSelection(true)" :disabled="saveVariantDisabled || saveLoading">
-                            <v-list-tile-avatar>
-                                <v-icon>save</v-icon>
-                            </v-list-tile-avatar>
-                            <v-list-tile-content>
-                                <v-list-tile-title>Save Selected Variants</v-list-tile-title>
-                            </v-list-tile-content>
-                        </v-list-tile>
-
-                        <v-list-tile avatar @click="exportSelectedVariants()" :disabled="saveVariantDisabled || exportLoading">
-                            <v-list-tile-avatar>
-                                <v-icon>mdi-file-excel</v-icon>
-                            </v-list-tile-avatar>
-                            <v-list-tile-content>
-                                <v-list-tile-title>Export to Excel</v-list-tile-title>
-                            </v-list-tile-content>
-                        </v-list-tile>
 
                         <v-list-tile avatar @click="sendToMDA()" :disabled="saveVariantDisabled || sendToMDALoading">
                             <v-list-tile-avatar>
@@ -114,6 +72,14 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
+                        <v-list-tile avatar @click="handleSaveAll()" :disabled="!isSaveNeededBadgeVisible()">
+                        <v-list-tile-avatar>
+                            <v-icon>save</v-icon>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Save Current Work</v-list-tile-title>
+                        </v-list-tile-content>
+                        </v-list-tile>
 
                         <v-list-tile avatar @click="closeSaveDialog()">
                             <v-list-tile-avatar>
@@ -131,22 +97,8 @@ const OpenCase = {
                     <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
                   <span>{{caseType}} case</span>  
                   </v-tooltip>
-              <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"
-              @save-all="handleSaveAll()"></save-badge>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                    <v-btn icon :disabled="saveVariantDisabled" @click="saveSelection(true)" slot="activator" :loading="saveLoading">
-                        <v-icon>save</v-icon>
-                    </v-btn>
-                    <span>Save Selected Variants</span>
-                </v-tooltip>
-                <v-tooltip bottom>
-                    <v-btn icon :disabled="saveVariantDisabled" @click="exportSelectedVariants()" slot="activator" :loading="exportLoading">
-                        <v-icon>mdi-file-excel</v-icon>
-                    </v-btn>
-                    <span>Export to Excel</span>
-                </v-tooltip>
                 <v-tooltip bottom>
                     <v-btn icon :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">
                         MDA
@@ -165,6 +117,15 @@ const OpenCase = {
                 </v-btn>
                 <span>Mark as Ready for Report. Save Selected Variants</span>
             </v-tooltip>
+            <v-badge color="red" right bottom overlap v-model="isSaveNeededBadgeVisible()" class="mini-badge">
+        <v-icon slot="badge"></v-icon>
+        <v-tooltip bottom offset-overflow nudge-left="100px" min-width="200px">
+            <v-btn flat icon @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive" :disabled="!isSaveNeededBadgeVisible()">
+                <v-icon>save</v-icon>
+            </v-btn>
+            <span v-html="createSaveTooltip()"></span>
+        </v-tooltip>
+        </v-badge>
                 <v-tooltip bottom>
                     <v-btn icon @click="closeSaveDialog()" slot="activator">
                         <v-icon>close</v-icon>
@@ -227,18 +188,6 @@ const OpenCase = {
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
                 <v-tooltip top>
-                    <v-btn color="success" :disabled="saveVariantDisabled" @click="saveSelection(true)" slot="activator" :loading="saveLoading">Save
-                        <v-icon right dark>save</v-icon>
-                    </v-btn>
-                    <span>Save Selected Variants</span>
-                </v-tooltip>
-                <v-tooltip top>
-                    <v-btn color="primary" :disabled="saveVariantDisabled" @click="exportSelectedVariants()" slot="activator" :loading="exportLoading">Excel
-                        <v-icon right dark>mdi-file-excel</v-icon>
-                    </v-btn>
-                    <span>Export to Excel</span>
-                </v-tooltip>
-                <v-tooltip top>
                     <v-btn color="primary" :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">Moclia File
                     </v-btn>
                     <span>Download Moclia File</span>
@@ -257,7 +206,14 @@ const OpenCase = {
                     </v-btn>
                     <span>Mark as Ready for Report. Save Selected Variants</span>
                 </v-tooltip>
-                <v-btn color="error" @click="closeSaveDialog()" slot="activator">Cancel
+                <v-tooltip top>
+                    <v-btn color="success" @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive" :disabled="!isSaveNeededBadgeVisible()">
+                        Save Work
+                    <v-icon right dark>save</v-icon>
+                    </v-btn>
+                    <span>Save Current Work</span>
+                </v-tooltip>
+                <v-btn color="error" @click="closeSaveDialog()" slot="activator">Close
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
             </v-card-actions>
@@ -443,7 +399,16 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="closingVariantDetailsConfirmationDialog()">
+                        <v-list-tile avatar @click="handleSaveAll()" :disabled="!isSaveNeededBadgeVisible()">
+                        <v-list-tile-avatar>
+                            <v-icon>save</v-icon>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Save Current Work</v-list-tile-title>
+                        </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile avatar @click="closeVariantDetails()">
                             <v-list-tile-avatar>
                                 <v-icon>cancel</v-icon>
                             </v-list-tile-avatar>
@@ -470,8 +435,6 @@ const OpenCase = {
             <span>{{caseType}} case</span>  
             </v-tooltip>
 
-            <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"
-            @save-all="handleSaveAll()"></save-badge>
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
@@ -513,12 +476,22 @@ const OpenCase = {
                     <span>Open Bam Viewer in New Tab</span>
                 </v-tooltip>
 
+                <v-badge color="red" right bottom overlap v-model="isSaveNeededBadgeVisible()" class="mini-badge">
+                <v-icon slot="badge"></v-icon>
+                <v-tooltip bottom offset-overflow nudge-left="100px" min-width="200px">
+                <v-btn flat icon @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive" :disabled="!isSaveNeededBadgeVisible()">
+                    <v-icon>save</v-icon>
+                </v-btn>
+                <span v-html="createSaveTooltip()"></span>
+            </v-tooltip>
+            </v-badge>
 
                 <v-tooltip bottom>
-                    <v-btn icon @click="closingVariantDetailsConfirmationDialog()" slot="activator">
+                    <v-btn icon @click="closeVariantDetails()" slot="activator">
                         <v-icon>close</v-icon>
                     </v-btn>
-                    <span>Close Variant</span>
+                    <span v-if="!isSaveNeededBadgeVisible()">Save & Close Variant</span>
+                    <span v-if="isSaveNeededBadgeVisible()">Save & Close Variant</span>
                 </v-tooltip>
 
             </v-toolbar>
@@ -550,7 +523,7 @@ const OpenCase = {
                                 <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType"
                                     :width-class="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                                     @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
-                                    @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel"
+                                    @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel" @variant-details-changed=""
                                     :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails">
                                 </variant-details>
 
@@ -646,24 +619,6 @@ const OpenCase = {
                                                     </v-list-tile-content>
                                                 </v-list-tile>
 
-                                                <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="saveAnnotationSelection()" :loading="savingAnnotationSelection" :disabled="isAnnotationTierMissing()">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>save</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Save Selection (all variant types)</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-
-                                            <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="revertAnnotationSelection()">
-                                                <v-list-tile-avatar>
-                                                    <v-icon>settings_backup_restore</v-icon>
-                                                </v-list-tile-avatar>
-                                                <v-list-tile-content>
-                                                    <v-list-tile-title>Restore Last Saved Selection</v-list-tile-title>
-                                                </v-list-tile-content>
-                                            </v-list-tile>
-
                                                 <v-list-tile avatar @click="utswAnnotationsVisible = false">
                                                     <v-list-tile-avatar>
                                                         <v-icon>mdi-message-bulleted</v-icon>
@@ -688,22 +643,7 @@ const OpenCase = {
                                         </v-btn>
                                         <span>Create/Edit Your Annotations</span>
                                         </v-tooltip>
-                                        <v-badge color="red" v-if="canProceed('canAnnotate') && !readonly" right bottom overlap v-model="annotationSelectionUnSaved" class="mini-badge">
-                                            <v-icon slot="badge"></v-icon>
-                                            <v-tooltip bottom>
-                                                <v-btn flat icon @click="saveAnnotationSelection()" slot="activator" :disabled="isAnnotationTierMissing()">
-                                                    <v-icon>save</v-icon>
-                                                </v-btn>
-                                                <span v-show="!isAnnotationTierMissing()">Save Selection (all variant types)</span>
-                                                <span v-show="isAnnotationTierMissing()">All selected annotations need a tier to be in the report</span>
-                                            </v-tooltip>
-                                        </v-badge>
-                                        <v-tooltip bottom>
-                                            <v-btn flat icon v-if="canProceed('canAnnotate') && !readonly" @click="revertAnnotationSelection()" slot="activator">
-                                                <v-icon>settings_backup_restore</v-icon>
-                                            </v-btn>
-                                            <span>Restore Last Saved Selection</span>
-                                        </v-tooltip>
+
                                         <v-tooltip bottom>
                                             <v-btn icon @click="utswAnnotationsVisible = false" slot="activator">
                                                 <v-icon>close</v-icon>
@@ -805,7 +745,16 @@ const OpenCase = {
                     </v-btn>
                     <span>Show Next Variant</span>
                 </v-tooltip>
-                <v-btn color="error" @click="closingVariantDetailsConfirmationDialog()">Close
+                <v-tooltip top>
+                <v-btn color="success" @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive" :disabled="!isSaveNeededBadgeVisible()">
+                    Save Work
+                <v-icon right dark>save</v-icon>
+                </v-btn>
+                <span>Save Current Work</span>
+            </v-tooltip>
+                <v-btn color="error" @click="closeVariantDetails()">
+                <span v-if="!isSaveNeededBadgeVisible()">Close</span>
+                <span v-if="isSaveNeededBadgeVisible()">Save & Close</span>
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
             </v-card-actions>
@@ -839,7 +788,7 @@ const OpenCase = {
                         </v-list-tile-content>
                     </v-list-tile>
 
-                    <v-list-tile avatar @click="openSaveDialog()">
+                    <v-list-tile avatar @click="openReviewSelectionDialog()">
                         <v-list-tile-avatar>
                             <v-icon>mdi-clipboard-check</v-icon>
                         </v-list-tile-avatar>
@@ -847,6 +796,15 @@ const OpenCase = {
                             <v-list-tile-title>Review Variants Selected</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
+
+                    <v-list-tile avatar @click="handleSaveAll()" :disabled="!isSaveNeededBadgeVisible()">
+                    <v-list-tile-avatar>
+                        <v-icon>save</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Save Current Work</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
                 </v-list>
             </v-menu>
             <span>Case Menu</span>
@@ -857,8 +815,6 @@ const OpenCase = {
               <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
             <span>{{caseType}} case</span>  
             </v-tooltip>
-        <save-badge :show-save-needed-badge="isSaveNeededBadgeVisible()" :tooltip="createSaveTooltip()"
-        @save-all="handleSaveAll()"></save-badge>
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
@@ -882,14 +838,20 @@ const OpenCase = {
             </v-btn>
             <span>Open QC in NuCLIA</span>
         </v-tooltip>
-        <v-badge color="red" right bottom overlap v-model="variantUnSaved" class="mini-badge">
-            <v-icon slot="badge"></v-icon>
             <v-tooltip bottom>
-                <v-btn flat icon @click="openSaveDialog()" slot="activator" :color="saveDialogVisible ? 'amber accent-2' : ''">
+                <v-btn flat icon @click="openReviewSelectionDialog()" slot="activator" :color="saveDialogVisible ? 'amber accent-2' : ''">
                     <v-icon>mdi-clipboard-check</v-icon>
                 </v-btn>
                 <span>Review Variants Selected</span>
             </v-tooltip>
+        <v-badge color="red" right bottom overlap v-model="isSaveNeededBadgeVisible()" class="mini-badge">
+        <v-icon slot="badge"></v-icon>
+        <v-tooltip bottom offset-overflow nudge-left="100px" min-width="200px">
+            <v-btn flat icon @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive" :disabled="!isSaveNeededBadgeVisible()">
+                <v-icon>save</v-icon>
+            </v-btn>
+            <span v-html="createSaveTooltip()"></span>
+        </v-tooltip>
         </v-badge>
         <v-progress-linear class="ml-4 mr-4" :slot="loadingVariantDetails ? 'extension' : ''" v-show="(!caseName || loadingVariantDetails) && !splashDialog"
             :indeterminate="true" color="white"></v-progress-linear>
@@ -914,24 +876,6 @@ const OpenCase = {
                                     <v-icon color="amber accent-2">assignment_ind</v-icon>
                                 </v-btn>
                                 <v-list>
-                                    <v-list-tile avatar @click="savePatientDetails()" :disabled="!canProceed('canAnnotate') || readonly">
-                                        <v-list-tile-avatar>
-                                            <v-icon>save</v-icon>
-                                        </v-list-tile-avatar>
-                                        <v-list-tile-content>
-                                            <v-list-tile-title>Save Patient Details</v-list-tile-title>
-                                        </v-list-tile-content>
-                                    </v-list-tile>
-
-                                    <v-list-tile avatar @click="getPatientDetails()" :disabled="!canProceed('canAnnotate') || readonly">
-                                        <v-list-tile-avatar>
-                                            <v-icon>settings_backup_restore</v-icon>
-                                        </v-list-tile-avatar>
-                                        <v-list-tile-content>
-                                            <v-list-tile-title>Restore From Last Saved</v-list-tile-title>
-                                        </v-list-tile-content>
-                                    </v-list-tile>
-
                                     <v-list-tile avatar @click="patientDetailsVisible = false">
                                         <v-list-tile-avatar>
                                             <v-icon>cancel</v-icon>
@@ -944,21 +888,6 @@ const OpenCase = {
                             </v-menu>
                             <v-toolbar-title>Patient Details</v-toolbar-title>
                             <v-spacer></v-spacer>
-                            <v-badge color="red" right bottom overlap v-model="patientDetailsUnSaved" class="mini-badge">
-                                <v-icon slot="badge"></v-icon>
-                                <v-tooltip bottom>
-                                    <v-btn flat icon @click="savePatientDetails()" slot="activator" :loading="savingPatientDetails" :disabled="!canProceed('canAnnotate')  || readonly">
-                                        <v-icon>save</v-icon>
-                                    </v-btn>
-                                    <span>Save Patient Details</span>
-                                </v-tooltip>
-                            </v-badge>
-                            <v-tooltip bottom>
-                                <v-btn flat icon @click="getPatientDetails()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">
-                                    <v-icon>settings_backup_restore</v-icon>
-                                </v-btn>
-                                <span>Restore Last Saved Patient Details</span>
-                            </v-tooltip>
                             <v-tooltip bottom>
                                 <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
                                     <v-icon>close</v-icon>
@@ -1031,25 +960,9 @@ const OpenCase = {
                     </v-toolbar>
                     <v-card-text>
                         <v-text-field :textarea="true" :readonly="!canProceed('canAnnotate') || readonly" :disabled="!canProceed('canAnnotate') || readonly"
-                            v-model="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
+                            ref="caseNotes" :value="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
                         </v-text-field>
                     </v-card-text>
-                    <v-card-actions class="card-actions-bottom">
-                        <v-tooltip bottom>
-                            <v-btn :disabled="!canProceed('canAnnotate') || loadingVariantDetails || isCaseAnnotationUnchanged() || readonly" slot="activator"
-                                color="success" @click="saveCaseAnnotations()">Save
-                                <v-icon right dark>save</v-icon>
-                            </v-btn>
-                            <span>Save/Update Annotation</span>
-                        </v-tooltip>
-                        <v-tooltip bottom>
-                            <v-btn :disabled="!canProceed('canAnnotate') || loadingVariantDetails || isCaseAnnotationUnchanged() || readonly" slot="activator"
-                                color="error" @click="loadCaseAnnotations()">Discard Changes
-                                <v-icon right dark>cancel</v-icon>
-                            </v-btn>
-                            <span>Revert to previous annotation</span>
-                        </v-tooltip>
-                    </v-card-actions>
                 </v-card>
             </v-flex>
         </v-layout>
@@ -1302,7 +1215,9 @@ const OpenCase = {
             waitingForAjaxCount: 0, //use this variable to wait for other Ajax calls to return. Each ajax call should decrease the amount by one
             waitingForAjaxMessage: "",
             waitingForAjaxActive: false,
-            confirmationVariantDialogVisible: false
+            saveAllNeeded: false,
+            caseNotesChanged: false,
+            autoSaveInterval: null
         }
     }, methods: {
         createSplashText() {
@@ -1349,6 +1264,7 @@ const OpenCase = {
                 bus.$emit("some-error", [this, response.message]);
             }
             this.splashProgress = 100; //should dismiss the splash dialog
+            this.waitingForAjaxMessage = "There were some errors while saving";
 
         },
         getAjaxData() {
@@ -1488,7 +1404,7 @@ const OpenCase = {
                 this.closeSaveDialog();
             }
             if (!this.urlQuery.variantId) { //close variant details
-                this.closeVariantDetails();
+                this.closeVariantDetails(true);
             }
             if (!this.urlQuery.edit) { //close edit annotation
                 this.cancelAnnotations();
@@ -1496,7 +1412,7 @@ const OpenCase = {
 
             //first open save/review dialog
             if (this.urlQuery.showReview === true) {
-                this.$nextTick(this.openSaveDialog());
+                this.$nextTick(this.openReviewSelectionDialog());
 
             }
             if (this.urlQuery.variantType) {
@@ -2620,7 +2536,7 @@ const OpenCase = {
             this.$refs.translocationVariantsSelected.manualDataFiltered(
                 { items: selectedTranslocations, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });
         },
-        openSaveDialog() {
+        openReviewSelectionDialog() {
             this.updateSelectedVariantTable();
             this.saveDialogVisible = true;
             this.urlQuery.showReview = true;
@@ -2780,19 +2696,10 @@ const OpenCase = {
             link += "&caseId=" + this.$route.params.id;
             return link;
         },
-        closingVariantDetailsConfirmationDialog() {
-            if ((this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) || this.annotationSelectionUnSaved) {
-                this.confirmationVariantDialogVisible = true;
+        closeVariantDetails(skipSave) {
+            if (!skipSave) {
+                this.handleSaveAll();
             }
-            else {
-                this.closeVariantDetails();
-            }
-        },
-        closeAndSaveAllVariantDetailsConfirmationDialog() {
-            this.handleSaveAll();
-            this.closeVariantDetails();
-        },
-        closeVariantDetails() {
             this.confirmationVariantDialogVisible = false;
             this.variantDetailsVisible = false;
             this.urlQuery.variantId = null;
@@ -2826,42 +2733,42 @@ const OpenCase = {
                 selectedTranslocationIds: selectedTranslocationIds
             }
         },
-        exportSelectedVariants() {
-            // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
-            // Use a flag to disable the action in the meantime
-            if (this.saveVariantDisabled) {
-                return;
-            }
-            this.exportLoading = true;
-            var selectedIds = this.getSelectedVariantIds();
-            axios({
-                method: 'post',
-                responseType: 'blob',
-                url: webAppRoot + "/exportSelection",
-                params: {
-                    caseId: this.$route.params.id
-                },
-                data: {
-                    filters: [],
-                    selectedSNPVariantIds: selectedIds.selectedSNPVariantIds,
-                    selectedCNVIds: selectedIds.selectedCNVIds,
-                    selectedTranslocationIds: selectedIds.selectedTranslocationIds
-                }
-            }).then(response => {
-                this.createExcelFile(response.data);
-                this.exportLoading = false;
-            }
-            ).catch(error => {
-                if (error.response.status == 403) { //need to relogin
-                    bus.$emit("login-needed", [this, this.exportSelectedVariants]);
-                }
-                else {
-                    this.handleAxiosError(error);
-                }
-                this.exportLoading = false;
-            }
-            );
-        },
+        // exportSelectedVariants() {
+        //     // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
+        //     // Use a flag to disable the action in the meantime
+        //     if (this.saveVariantDisabled) {
+        //         return;
+        //     }
+        //     this.exportLoading = true;
+        //     var selectedIds = this.getSelectedVariantIds();
+        //     axios({
+        //         method: 'post',
+        //         responseType: 'blob',
+        //         url: webAppRoot + "/exportSelection",
+        //         params: {
+        //             caseId: this.$route.params.id
+        //         },
+        //         data: {
+        //             filters: [],
+        //             selectedSNPVariantIds: selectedIds.selectedSNPVariantIds,
+        //             selectedCNVIds: selectedIds.selectedCNVIds,
+        //             selectedTranslocationIds: selectedIds.selectedTranslocationIds
+        //         }
+        //     }).then(response => {
+        //         this.createExcelFile(response.data);
+        //         this.exportLoading = false;
+        //     }
+        //     ).catch(error => {
+        //         if (error.response.status == 403) { //need to relogin
+        //             bus.$emit("login-needed", [this, this.exportSelectedVariants]);
+        //         }
+        //         else {
+        //             this.handleAxiosError(error);
+        //         }
+        //         this.exportLoading = false;
+        //     }
+        //     );
+        // },
         sendToMDA() {
             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
             // Use a flag to disable the action in the meantime
@@ -2908,15 +2815,15 @@ const OpenCase = {
             document.body.removeChild(hiddenElement);
 
         },
-        createExcelFile(content) {
-            var url = window.URL.createObjectURL(new Blob([content]));
-            var hiddenElement = document.createElement('a');
-            hiddenElement.download = this.$route.params.id + '_variants.xlsx';
-            hiddenElement.href = url;
-            document.body.appendChild(hiddenElement);
-            hiddenElement.click();
-            document.body.removeChild(hiddenElement);
-        },
+        // createExcelFile(content) {
+        //     var url = window.URL.createObjectURL(new Blob([content]));
+        //     var hiddenElement = document.createElement('a');
+        //     hiddenElement.download = this.$route.params.id + '_variants.xlsx';
+        //     hiddenElement.href = url;
+        //     document.body.appendChild(hiddenElement);
+        //     hiddenElement.click();
+        //     document.body.removeChild(hiddenElement);
+        // },
         updateVariantDetails() {
             this.urlQuery.variantId = this.currentVariant._id.$oid;
             this.urlQuery.variantType = this.currentVariantType;
@@ -2926,26 +2833,33 @@ const OpenCase = {
             this.urlQuery.edit = visible;
             this.updateRoute();
         },
-        saveCaseAnnotations() {
+        saveCaseAnnotations(skipSnackBar) {
+            if (this.$refs.caseNotes) {
+                this.caseAnnotation.caseAnnotation = this.$refs.caseNotes.inputValue;
+            }
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveCaseAnnotations",
                 params: {
-                    caseId: this.$route.params.id
+                    caseId: this.$route.params.id,
+                    skipSnackBar: skipSnackBar
                 },
                 data: {
                     annotation: [this.caseAnnotation]
                 }
             }).then(response => {
                 if (response.data.isAllowed) {
+                    this.waitingForAjaxCount--;
                     this.loadCaseAnnotations();
-                    this.snackBarMessage = "Annotation Saved";
-                    this.snackBarLink = "";
-                    this.snackBarVisible = true;
-                    this.caseAnnotationOriginalText = this.caseAnnotation.caseAnnotation; //to reset the isCaseAnnotationUnchanged
+                    if (!response.data.skipSnackBar) {
+                        this.showSnackBarMessage("Annotation Saved");
+                    }
+                    this.$refs.caseNotes.inputValue = this.caseAnnotation.caseAnnotation;
+                    this.caseAnnotationOriginalText = this.caseAnnotation.caseAnnotation; //to reset the isCaseAnnotationChanged
+                    this.caseNotesChanged = false;
                 }
                 else {
-                    this.handleDialogs(response.data, this.saveCaseAnnotations);
+                    this.handleDialogs(response.data, this.saveCaseAnnotations.bind(null, response.data.skipSnackBar));
                 }
             }).catch(error => {
                 this.handleAxiosError(error);
@@ -2974,8 +2888,11 @@ const OpenCase = {
         handleSelectionChanged(selectedSize) {
             this.variantUnSaved = true;
         },
-        isCaseAnnotationUnchanged() {
-            return this.caseAnnotation.caseAnnotation == this.caseAnnotationOriginalText;
+        isCaseAnnotationChanged() {
+            if (!this.caseNotesChanged && this.$refs.caseNotes) {
+                this.caseNotesChanged = this.$refs.caseNotes.inputValue != this.caseAnnotationOriginalText;
+            }
+            return this.caseNotesChanged;
         },
         isSNP() {
             return this.currentVariantType == "snp";
@@ -3213,6 +3130,7 @@ const OpenCase = {
             console.log(error);
             this.splashProgress = 100;
             bus.$emit("some-error", [this, error]);
+            this.waitingForAjaxMessage = "There were some errors while saving";
         },
         revertAnnotationSelection() {
             if (this.isSNP()) {
@@ -3286,8 +3204,9 @@ const OpenCase = {
                 }
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
-                    this.getPatientDetails();
                     this.waitingForAjaxCount--;
+                    this.patientDetailsUnSaved = false;
+                    this.getPatientDetails();
                     if (!this.skipSnackBar) {
                         this.showSnackBarMessage("Patient Details Saved");
                     }
@@ -3513,16 +3432,26 @@ const OpenCase = {
             if (this.patientDetailsUnSaved) {
                 tooltip.push("- Patient Details");
             }
+            if (this.isCaseAnnotationChanged()) {
+                tooltip.push("- Case Notes");
+            }
             if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
                 tooltip.push("- Variant Details");
             }
             if (tooltip.length > 1) {
                 return tooltip.join("<br/>");
             }
-            return "";
+            return "Nothing to Save";
         },
         isSaveNeededBadgeVisible() {
-            return this.annotationSelectionUnSaved || this.variantUnSaved || this.patientDetailsUnSaved || (this.$refs.variantDetailsPanel ? this.$refs.variantDetailsPanel.variantDetailsUnSaved : false);
+            if (!this.saveAllNeeded) {
+                this.saveAllNeeded = this.annotationSelectionUnSaved 
+                || this.variantUnSaved 
+                || this.patientDetailsUnSaved 
+                || (this.$refs.variantDetailsPanel ? this.$refs.variantDetailsPanel.variantDetailsUnSaved : false)
+                || this.isCaseAnnotationChanged();
+            }
+            return this.saveAllNeeded;
         },
         buildAberrationTypeHelp() {
             var message = "amplification: High level copy number gain</br>"
@@ -3564,9 +3493,14 @@ const OpenCase = {
                 }
             }
         },
-        handleSaveAll() {
+        handleSaveAll(autoSave) {
+            if (autoSave) {
+                this.waitingForAjaxMessage = "Work auto saved"
+            }
+            else {
+                this.waitingForAjaxMessage = "Work saved";
+            }
             this.waitingForAjaxCount = 0;
-            this.waitingForAjaxMessage = "All Saved";
             if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
                 this.waitingForAjaxCount++;
             }
@@ -3577,36 +3511,50 @@ const OpenCase = {
                 this.waitingForAjaxCount++;
             }
             if (this.patientDetailsUnSaved) {
+                this.waitingForAjaxCount++;
+            }
+            if (this.isCaseAnnotationChanged()) {
                 this.waitingForAjaxCount++;
             }
 
             if (this.waitingForAjaxCount > 0) {
                 this.waitingForAjaxActive = true;
+                if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
+                    this.saveVariant(true);
+                }
+                if (this.annotationSelectionUnSaved) {
+                    this.saveAnnotationSelection(true);
+                }
+                if (this.variantUnSaved) {
+                    this.saveSelection(false, true)
+                }
+                if (this.patientDetailsUnSaved) {
+                    this.savePatientDetails(true);
+                }
+                if (this.isCaseAnnotationChanged()) {
+                    this.saveCaseAnnotations(true);
+                }
             }
 
-            if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
-                this.saveVariant(true);
-            }
-            if (this.annotationSelectionUnSaved) {
-                this.saveAnnotationSelection(true);
-            }
-            if (this.variantUnSaved) {
-                this.saveSelection(false, true)
-            }
-            if (this.patientDetailsUnSaved) {
-                this.savePatientDetails(true);
-            }
 
         },
         handleWaitingForAjaxCount() {
             if (this.waitingForAjaxActive && this.waitingForAjaxCount <= 0) {
-                this.waitingForAjaxActive == false;
+                this.waitingForAjaxActive = false;
+                this.saveAllNeeded = false;
                 this.showSnackBarMessage(this.waitingForAjaxMessage);
+                clearInterval(this.autoSaveInterval);
+                this.createAutoSaveInterval();
             }
         },
         collectOncoTreeDiagnosis() {
             this.oncotree = oncotree;
             this.populateOncotreeLabel();
+        },
+        createAutoSaveInterval() {
+            this.autoSaveInterval = setInterval(() => {
+                this.handleSaveAll(true);
+            }, 120000);
         }
     },
     mounted() {
@@ -3632,6 +3580,7 @@ const OpenCase = {
         bus.$on('bam-viewer-closed', () => {
             this.externalWindowOpen = false;
         });
+        this.createAutoSaveInterval();
     },
     computed: {
     },
@@ -3639,6 +3588,7 @@ const OpenCase = {
         bus.$off('bam-viewer-closed');
         // bus.$off('saving-annotations');
         bus.$emit("update-status-off", this);
+        clearInterval(this.autoSaveInterval);
     },
     watch: {
         '$route': 'handleRouteChanged',
