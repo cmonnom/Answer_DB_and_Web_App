@@ -3080,9 +3080,6 @@ const OpenCase = {
             lightVariant["annotationIdsForReporting"] = [];
             for (var i = 0; i < this.utswAnnotationsFormatted.length; i++) {
                 if (this.utswAnnotationsFormatted[i].isSelected) {
-                    if (!this.utswAnnotationsFormatted[i].tier) {
-                        return; //selected annotation without a tier. Should not happen normally
-                    }
                     lightVariant["annotationIdsForReporting"].push(this.utswAnnotationsFormatted[i]._id);
                 }
             }

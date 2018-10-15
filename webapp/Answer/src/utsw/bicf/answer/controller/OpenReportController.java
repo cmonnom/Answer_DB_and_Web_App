@@ -120,12 +120,13 @@ public class OpenReportController {
 
 	@RequestMapping(value = "/getReportDetails")
 	@ResponseBody
-	public String getReportDetails(Model model, HttpSession session, @RequestParam(defaultValue="", required=false) String reportId) throws Exception {
+	public String getReportDetails(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestParam(defaultValue="", required=false) String reportId) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
 		Report reportDetails = null;
 		if (reportId.equals("")) {
-			reportDetails = utils.buildReportManually();
+			reportDetails = utils.buildReportManually(caseId);
 		}
 		else {
 			reportDetails = utils.getReportDetails(reportId);

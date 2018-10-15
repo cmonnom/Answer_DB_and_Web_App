@@ -90,7 +90,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="reportNotesVisible = !reportNotesVisible" :disabled="patientTables.length == 0">
+                                        <v-list-tile avatar @click="reportNotesVisible = !reportNotesVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>edit</v-icon>
                                             </v-list-tile-avatar>
@@ -181,7 +181,7 @@ const OpenReport = {
         <v-tooltip bottom>
             <v-btn flat icon @click="existingReportsVisible = !existingReportsVisible" slot="activator" :color="existingReportsVisible ? 'amber accent-2' : ''">
                 <v-icon>assignment</v-icon>
-                <v-icon color="amber accent-2" class="multi-icon">assignment</v-icon>
+                <v-icon class="multi-icon">assignment</v-icon>
             </v-btn>
             <span>Show/Hide Existing Reports</span>
         </v-tooltip>
@@ -216,172 +216,25 @@ const OpenReport = {
 
     <!-- Existing Reports -->
     <v-slide-y-transition>
-        <v-layout v-if="existingReportsVisible" row wrap pb-3>
+        <v-layout v-show="existingReportsVisible" row wrap pb-3>
             <v-flex xs12>
-            <v-card class="soft-grey-background">
-            <v-toolbar class="elevation-0" dense dark :color="colors.openReport">
-                <v-menu offset-y offset-x class="ml-0">
-                    <v-btn slot="activator" flat icon dark>
-                        <v-icon color="amber accent-2">assignment</v-icon>
-                        <v-icon color="amber accent-2" class="multi-icon">assignment</v-icon>
-                    </v-btn>
-                    <v-list>
-                        <v-list-tile avatar @click="existingReportsVisible = false">
-                            <v-list-tile-avatar>
-                                <v-icon>cancel</v-icon>
-                            </v-list-tile-avatar>
-                            <v-list-tile-content>
-                                <v-list-tile-title>Close Existing Reports</v-list-tile-title>
-                            </v-list-tile-content>
-                        </v-list-tile>
-                    </v-list>
-                </v-menu>
-                <v-toolbar-title class="ml-0">Existing Reports</v-toolbar-title>
-                <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                    <v-btn flat icon @click="existingReportsVisible = false" slot="activator">
-                        <v-icon>close</v-icon>
-                    </v-btn>
-                    <span>Close Existing Reports</span>
-                </v-tooltip>
-            </v-toolbar>
-            <v-container grid-list-md fluid>
-            <v-layout row wrap>
-            <v-flex xs>
-                <v-btn @click="getReportDetails()">New Report</v-btn>
-            </v-flex>
-            <v-flex xs12 lg4 xl3 v-for="report in existingReports" :key="report.reportName">
-                <v-card>
-                    <v-card-text>
-                    <v-list class="dense-tiles">
-                        <v-list-tile>
-                            <v-list-tile-content class="pb-2">
-                                <v-layout class="full-width" justify-space-between>
-                                    <v-flex class="text-xs-left xs">
-                                        <span class="'selectable'">Report Name:</span>
-                                    </v-flex>
-                                    <v-flex class="text-xs-right blue-grey--text text--lighten-1">
-                                        <span class="selectable">{{ report.reportName }}</span>
-                                    </v-flex>
-                                </v-layout>
-                            </v-list-tile-content>
-                        </v-list-tile>
-                        <v-list-tile>
-                        <v-list-tile-content class="pb-2">
-                            <v-layout class="full-width" justify-space-between>
-                                <v-flex class="text-xs-left xs">
-                                    <span class="selectable">Date Modified:</span>
-                                </v-flex>
-                                <v-flex class="text-xs-right blue-grey--text text--lighten-1">
-                                    <span class="selectable" v-text="parseDate(report)"></span>
-                                </v-flex>
-                            </v-layout>
-                        </v-list-tile-content>
-                        </v-list-tile>
-                        <v-list-tile>
-                        <v-list-tile-content class="pb-2">
-                            <v-layout class="full-width" justify-space-between>
-                                <v-flex class="text-xs-left xs">
-                                    <span class="selectable">Modified By:</span>
-                                </v-flex>
-                                <v-flex class="text-xs-right blue-grey--text text--lighten-1">
-                                    <span class="selectable">{{ report.modifiedByName }}</span>
-                                </v-flex>
-                            </v-layout>
-                        </v-list-tile-content>
-                        </v-list-tile>
-                        <v-list-tile>
-                        <v-list-tile-content class="pb-2">
-                            <v-layout class="full-width" justify-space-between>
-                                <v-flex class="text-xs-left xs">
-                                    <span class="'selectable'">Notes:</span>
-                                </v-flex>
-                                <v-flex class="text-xs-right blue-grey--text text--lighten-1">
-                                <v-tooltip bottom>
-                                    <span slot="activator" class="selectable" v-text="truncatedNotes(report)"></span>
-                                    <span>{{ report.summary }}</span>    
-                                </v-tooltip>
-                                </v-flex>
-                            </v-layout>
-                        </v-list-tile-content>
-                        </v-list-tile>
-                    </v-list>
-                    </v-card-text>
-
-                    <v-card-actions class="card-actions-bottom">
-                        <v-btn @click="getReportDetails(report._id['$oid'])">
-                        Load Report
-                        </v-btn>
-                    </v-card-actions>
-
-                </v-card>
-            </v-flex>
-            </v-layout>
-            </v-container>
-            </v-card>
+            <existing-reports ref="existingReports"
+            @close-existing-reports="existingReportsVisible = false"
+            @get-report-details="getReportDetails"
+            @loading-report-details="updateLoadingReportDetails">
+            </existing-reports>
             </v-flex>
         </v-layout>
     </v-slide-y-transition>
 
     <!-- Patient Details -->
     <v-slide-y-transition>
-        <v-layout v-if="patientDetailsVisible">
+        <v-layout v-show="patientDetailsVisible">
             <v-flex xs12 md12 lg10 xl9>
-                <div class="text-xs-center pb-3">
-                    <v-card>
-                        <v-toolbar class="elevation-0" dense dark :color="colors.openReport">
-                            <v-menu offset-y offset-x class="ml-0">
-                                <v-btn slot="activator" flat icon dark>
-                                    <v-icon color="amber accent-2">assignment_ind</v-icon>
-                                </v-btn>
-                                <v-list>
-                                    <v-list-tile avatar @click="patientDetailsVisible = false">
-                                        <v-list-tile-avatar>
-                                            <v-icon>cancel</v-icon>
-                                        </v-list-tile-avatar>
-                                        <v-list-tile-content>
-                                            <v-list-tile-title>Close Patient Details</v-list-tile-title>
-                                        </v-list-tile-content>
-                                    </v-list-tile>
-                                </v-list>
-                            </v-menu>
-                            <v-toolbar-title class="ml-0">Patient Details</v-toolbar-title>
-                            <v-spacer></v-spacer>
-                            <v-tooltip bottom>
-                                <v-btn flat icon @click="patientDetailsVisible = false" slot="activator">
-                                    <v-icon>close</v-icon>
-                                </v-btn>
-                                <span>Close Details</span>
-                            </v-tooltip>
-                        </v-toolbar>
-                        <v-container grid-list-md fluid>
-                            <v-layout row wrap>
-                                <v-flex xs4 v-for="table in patientTables" :key="table.name">
-                                    <v-card flat>
-                                        <v-card-text>
-                                            <v-list class="dense-tiles">
-                                                <v-list-tile v-for="item in table.items" :key="item.label">
-                                                    <v-list-tile-content class="pb-2">
-                                                        <v-layout class="full-width " justify-space-between>
-                                                            <v-flex class="text-xs-left xs">
-                                                                <span :class="[item.type == 'text' ? 'pt-4' : '', 'selectable']">{{
-                                                                    item.label }}:</span>
-                                                            </v-flex>
-                                                            <v-flex :class="[item.type ? 'xs5' : 'xs','text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
-                                                                <span v-if="item.type == null" class="selectable">{{
-                                                                    item.value }}</span>
-                                                            </v-flex>
-                                                        </v-layout>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-                                            </v-list>
-                                        </v-card-text>
-                                    </v-card>
-                                </v-flex>
-                            </v-layout>
-                        </v-container>
-                    </v-card>
-                </div>
+                <report-patient-details ref="patientDetails"
+                @close-patient-details="patientDetailsVisible = false"
+                @update-case-name="updateCaseName">
+                </report-patient-details>
             </v-flex>
         </v-layout>
     </v-slide-y-transition>
@@ -527,7 +380,6 @@ const OpenReport = {
         return {
             reportUnsaved: false,
             loadingReportDetails: false,
-            patientTables: [],
             patientDetailsVisible: false,
             caseName: "",
             caseType: "",
@@ -561,15 +413,17 @@ const OpenReport = {
             currentEditTextBackup: "",
             savingReport: false,
             originalFullReportSummary: "",
-            existingReports: [],
             existingReportsVisible: true,
             confirmationSaveDialogVisible: false
 
         }
     }, methods: {
+        updateCaseName(fullCaseName) {
+            this.caseName = fullCaseName;
+        },
         handleRouteChanged(newRoute, oldRoute) {
             if (newRoute.path != oldRoute.path) { //prevent reloading data if only changing the query router.push({query: {test:"hello3"}})
-                // this.getAjaxData();
+                this.$refs.existingReports.getExistingReports();
             }
             else { //look at the query
                 // console.log(newRoute.query, oldRoute.query);
@@ -616,13 +470,17 @@ const OpenReport = {
         isSaveDisabled() {
             return !this.canProceed('canReview') || this.readonly || this.savingReport || !this.fullReport.reportName;
         },
+        updateLoadingReportDetails(isLoading) {
+            this.loadingReportDetails = isLoading;
+        },
         getReportDetails(reportId) {
             this.loadingReportDetails = true;
             axios.get(
                 webAppRoot + "/getReportDetails",
                 {
                     params: {
-                        reportId: reportId
+                        reportId: reportId,
+                        caseId: this.$route.params.id
                     }
                 })
                 .then(response => {
@@ -637,8 +495,8 @@ const OpenReport = {
                         this.fullReport = response.data;
                         console.log(this.fullReport);
                         this.originalFullReportSummary = this.fullReport.summary;
-                        this.patientTables = this.fullReport.patientInfo.patientTables;
-                        this.extractPatientDetailsInfo(this.fullReport.caseName);
+                        this.$refs.patientDetails.patientTables = this.fullReport.patientInfo.patientTables;
+                        this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
                         this.$refs.indicatedTherapies.manualDataFiltered(this.fullReport.indicatedTherapySummary);
                         if (this.canProceed("canReview") && !this.readonly) {
                             this.addIndicatedTherapyHeaderAction(this.fullReport.indicatedTherapySummary.headers);
@@ -722,44 +580,9 @@ const OpenReport = {
                     this.loadingReportDetails = false;
                 });
         },
-        getExistingReports() {
-            axios.get(
-                webAppRoot + "/getExistingReports",
-                {
-                    params: {
-                        caseId: this.$route.params.id
-                    }
-                })
-                .then(response => {
-                    if (response.data.isAllowed && response.data.success) {
-                        console.log(response.data);
-                        this.existingReports = response.data.reports;
-                        if (this.existingReports.length == 0) {
-                            this.getReportDetails();
-                        }
-                    }
-                    else {
-                        this.handleDialogs(response, this.getExistingReports);
-                        this.loadingReportDetails = false;
-                    }
-                }).catch(error => {
-                    this.handleAxiosError(error);
-                    this.loadingReportDetails = false;
-                });
-        },
         handleAxiosError(error) {
             console.log(error);
             bus.$emit("some-error", [this, error]);
-        },
-        extractPatientDetailsInfo(caseName) {
-            for (var i = 0; i < this.patientTables.length; i++) {
-                for (var j = 0; j < this.patientTables[i].items.length; j++) {
-                    var item = this.patientTables[i].items[j];
-                    if (caseName && item.field == "caseName") {
-                        this.caseName = caseName + " (" + item.value + ")";
-                    }
-                }
-            }
         },
         canProceed(field) {
             if (isAdmin) {
@@ -904,7 +727,7 @@ const OpenReport = {
                     if (response.data.isAllowed && response.data.success) {
                         snackBarMessage = "Report Saved";
                         snackBarVisible = true;
-                        this.getExistingReports();
+                        this.$refs.existingReports.getExistingReports();
                         this.getReportDetails(response.data.message);
                         this.confirmationSaveDialogVisible = false;
                     } else {
@@ -920,9 +743,11 @@ const OpenReport = {
                 });
         },
         saveOrUpdateButtonName() {
-            for (var i = 0; i < this.existingReports.length; i++) {
-                if (this.fullReport.reportName == this.existingReports[i].reportName) {
-                    return "Update";
+            if (this.$refs.existingReports) {
+                for (var i = 0; i < this.$refs.existingReports.existingReports.length; i++) {
+                    if (this.fullReport.reportName == this.$refs.existingReports.existingReports[i].reportName) {
+                        return "Update";
+                    }
                 }
             }
             return "Save";
@@ -988,12 +813,6 @@ const OpenReport = {
                 return report.modifiedSince + " (" + report.dateModified.split("T")[0] + ")";
             }
         },
-        truncatedNotes(report) {
-            if (report.summary && report.summary.length > 50) {
-                return report.summary.substring(0, 50) + "...";
-            }
-            return report.summary;
-        }
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",
@@ -1003,7 +822,8 @@ const OpenReport = {
                 bus.$emit("update-status", ["VIEW ONLY MODE"]);
             }, 4200); //show after snackbar is dismissed
         }
-        this.getExistingReports();
+        this.$refs.existingReports.getExistingReports();
+        splashDialog = false; //prevent splash dialog when user navigate to open case for the 1st time
     },
     created() {
     },

@@ -750,9 +750,9 @@ public class RequestUtils {
 
 	//temp method to test displaying the report
 	//while Ben implements the API
-	public Report buildReportManually() throws ClientProtocolException, IOException, URISyntaxException {
+	public Report buildReportManually(String caseId) throws ClientProtocolException, IOException, URISyntaxException {
 		Report report = new Report();
-		OrderCase caseDetails = getCaseDetails("ORD527", null);
+		OrderCase caseDetails = getCaseDetails(caseId, null);
 		report.setCaseId(caseDetails.getCaseId());
 		report.setCaseName(caseDetails.getCaseName());
 		PatientInfo patientInfo = new PatientInfo(caseDetails);
@@ -760,6 +760,11 @@ public class RequestUtils {
 		report.setReportName(caseDetails.getCaseName());
 		
 		report.setSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+		
+		List<String> strongTiers = Arrays.asList("1A", "1B");
+		List<String> possibleTiers = Arrays.asList("2C", "2D");
+		List<String> unknownTiers = Arrays.asList("3");
+		
 		
 		File file = new File("/opt/answer/files/AMENDMENT_PODS_ReportID_47412_RequestID_51271.html");
 		if (file.exists()) {
@@ -782,7 +787,8 @@ public class RequestUtils {
 					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
 					for (Annotation a : cnv.getReferenceCnv().getUtswAnnotations()) {
 						Annotation.init(a, cnv.getAnnotationIdsForReporting(), modelDAO);
-						if (a.getIsSelected() != null && a.getIsSelected()) { 
+						if (a.getIsSelected() != null && a.getIsSelected()
+								&& a.getBreadth() != null && a.getBreadth().equals("Chromosomal")) { 
 							sb.append(a.getText()).append(" ");
 							atLeastOneSelected = true;
 						}
@@ -795,29 +801,30 @@ public class RequestUtils {
 		}
 		report.setCnvs(cnvReports);
 		
-		List<TranslocationReport> translocationReports = new ArrayList<TranslocationReport>();
-		for (Translocation ftl : caseDetails.getTranslocations()) {
-			if (ftl.getUtswAnnotated() != null && ftl.getUtswAnnotated()
-					&& ftl.getSelected() != null && ftl.getSelected()) {
-				ftl = getTranslocationDetails(ftl.getMongoDBId().getOid());
-				if (ftl.getReferenceTranslocation() != null && ftl.getReferenceTranslocation().getUtswAnnotations() != null
-						&& !ftl.getReferenceTranslocation().getUtswAnnotations().isEmpty()) {
-					StringBuilder sb = new StringBuilder();
-					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
-					for (Annotation a : ftl.getReferenceTranslocation().getUtswAnnotations()) {
-						Annotation.init(a, ftl.getAnnotationIdsForReporting(), modelDAO);
-						if (a.getIsSelected() != null && a.getIsSelected()) { 
-							sb.append(a.getText()).append(" ");
-							atLeastOneSelected = true;
-						}
-					}
-					if (atLeastOneSelected) {
-						translocationReports.add(new TranslocationReport(sb.toString(), ftl));
-					}
-				}
-			}
-		}
-		report.setTranslocations(translocationReports);
+//		List<TranslocationReport> translocationReports = new ArrayList<TranslocationReport>();
+//		for (Translocation ftl : caseDetails.getTranslocations()) {
+//			if (ftl.getUtswAnnotated() != null && ftl.getUtswAnnotated()
+//					&& ftl.getSelected() != null && ftl.getSelected()) {
+//				ftl = getTranslocationDetails(ftl.getMongoDBId().getOid());
+//				if (ftl.getReferenceTranslocation() != null && ftl.getReferenceTranslocation().getUtswAnnotations() != null
+//						&& !ftl.getReferenceTranslocation().getUtswAnnotations().isEmpty()) {
+//					StringBuilder sb = new StringBuilder();
+//					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
+//					for (Annotation a : ftl.getReferenceTranslocation().getUtswAnnotations()) {
+//						Annotation.init(a, ftl.getAnnotationIdsForReporting(), modelDAO);
+//						if (a.getIsSelected() != null && a.getIsSelected()
+//								&& ) { 
+//							sb.append(a.getText()).append(" ");
+//							atLeastOneSelected = true;
+//						}
+//					}
+//					if (atLeastOneSelected) {
+//						translocationReports.add(new TranslocationReport(sb.toString(), ftl));
+//					}
+//				}
+//			}
+//		}
+//		report.setTranslocations(translocationReports);
 		
 		
 		List<IndicatedTherapy> indicatedTherapies = new ArrayList<IndicatedTherapy>();
@@ -825,7 +832,8 @@ public class RequestUtils {
 			if (v.getSelected() != null && v.getSelected()) {
 				v = getVariantDetails(v.getMongoDBId().getOid());
 				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
-				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
+				if (v.getReferenceVariant() != null && 
+						v.getReferenceVariant().getUtswAnnotations() != null) {
 					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
 						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
 						if (a != null && a.getIsSelected() != null && a.getIsSelected()
@@ -847,68 +855,175 @@ public class RequestUtils {
 		report.setLive(true);
 		
 		List<Variant> variants = caseDetails.getVariants().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
+		List<CNV> cnvVariants = caseDetails.getCnvs().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
+		List<Translocation> ftlVariants = caseDetails.getTranslocations().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
 		Map<String, GeneVariantAndAnnotation> annotationsStrongByVariant = new HashMap<String, GeneVariantAndAnnotation>();
 		Map<String, GeneVariantAndAnnotation> annotationsPossibleByVariant = new HashMap<String, GeneVariantAndAnnotation>();
 		Map<String, GeneVariantAndAnnotation> annotationsUnknownByVariant = new HashMap<String, GeneVariantAndAnnotation>();
-		List<String> strongTiers = Arrays.asList("1A", "1B");
-		List<String> possibleTiers = Arrays.asList("2C", "2D");
-		List<String> unknownTiers = Arrays.asList("3");
+		
 		
 		for (Variant v : variants) {
 			if (v.getUtswAnnotated() && v.getSelected()) {
 				v = getVariantDetails(v.getMongoDBId().getOid());
+				List<Annotation> selectedAnnotationsForVariant = new ArrayList<Annotation>();
+				List<String> tiers = new ArrayList<String>(); //to determine the highest tier for this variant
+				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
+					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
+						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && !a.getCategory().equals("Therapy")) {
+							selectedAnnotationsForVariant.add(a);
+							tiers.add(a.getTier());
+						}
+					}
+				}
 				List<String> strongAnnotations = new ArrayList<String>();
-				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
-					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
-						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && !a.getCategory().equals("Therapy")
-								&& strongTiers.contains(a.getTier())) {
-							strongAnnotations.add(a.getText());
-						}
-					}
-				}
 				List<String> possibleAnnotations = new ArrayList<String>();
-				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
-					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
-						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && !a.getCategory().equals("Therapy")
-								&& possibleTiers.contains(a.getTier())) {
-							possibleAnnotations.add(a.getText());
-						}
-					}
-				}
 				List<String> unknownAnnotations = new ArrayList<String>();
-				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
-					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
-						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && !a.getCategory().equals("Therapy")
-								&& unknownTiers.contains(a.getTier())) {
-							unknownAnnotations.add(a.getText());
-						}
+				String highestTierForVariant = null;
+				tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
+				if (!tiers.isEmpty()) {
+					highestTierForVariant = tiers.get(0);
+					if (strongTiers.contains(highestTierForVariant)) {
+						strongAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
+					}
+					else if (possibleTiers.contains(highestTierForVariant)) {
+						possibleAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
+					}
+					else if (unknownTiers.contains(highestTierForVariant)) {
+						unknownAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
 					}
 				}
+				
+				String name = "SNP: " + v.getGeneName() + " " + v.getNotation();
 				if (!strongAnnotations.isEmpty()) {
-					annotationsStrongByVariant.put((v.getGeneName() + " " + v.getNotation()).replaceAll("\\.", ""), new GeneVariantAndAnnotation(v.getGeneName() + " " + v.getNotation(), strongAnnotations.stream().collect(Collectors.joining(" "))));
+					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
 				}
 				if (!possibleAnnotations.isEmpty()) {
-					annotationsPossibleByVariant.put((v.getGeneName() + " " + v.getNotation()).replaceAll("\\.", ""), new GeneVariantAndAnnotation(v.getGeneName() + " " + v.getNotation(), possibleAnnotations.stream().collect(Collectors.joining(" "))));
+					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
 				}
 				if (!unknownAnnotations.isEmpty()) {
-					annotationsUnknownByVariant.put((v.getGeneName() + " " + v.getNotation()).replaceAll("\\.", ""), new GeneVariantAndAnnotation(v.getGeneName() + " " + v.getNotation(), unknownAnnotations.stream().collect(Collectors.joining(" "))));
+					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
 				}
 					
 			}
 		}
+		
+		for (CNV v : cnvVariants) {
+			if (v.getUtswAnnotated() && v.getSelected()) {
+				v = getCNVDetails(v.getMongoDBId().getOid());
+				Map<String, List<Annotation>> selectedAnnotationsForVariant = new HashMap<String, List<Annotation>>();
+				Map<String, List<String>> tiersByGenes = new HashMap<String, List<String>>(); //to determine the highest tier for this variant
+				if (v.getReferenceCnv() != null && v.getReferenceCnv().getUtswAnnotations() != null) {
+					for (Annotation a : v.getReferenceCnv().getUtswAnnotations()) {
+						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+								&& a.getBreadth() != null && a.getBreadth().equals("Focal")) {
+							String key = a.getCnvGenes().stream().collect(Collectors.joining(" "));
+							List<Annotation> annotations = selectedAnnotationsForVariant.get(key);
+							if (annotations == null) {
+								annotations = new ArrayList<Annotation>();
+							}
+							annotations.add(a);
+							selectedAnnotationsForVariant.put(key, annotations);
+							List<String> tiers = tiersByGenes.get(key);
+							if (tiers == null) {
+								tiers = new ArrayList<String>();
+							}
+							tiers.add(a.getTier());
+							tiersByGenes.put(key, tiers);
+						}
+					}
+				}
+				for (String genes : selectedAnnotationsForVariant.keySet()) {
+					List<Annotation> annotations = selectedAnnotationsForVariant.get(genes);
+					List<String> tiers = tiersByGenes.get(genes);
+					List<String> strongAnnotations = new ArrayList<String>();
+					List<String> possibleAnnotations = new ArrayList<String>();
+					List<String> unknownAnnotations = new ArrayList<String>();
+					String highestTierForVariant = null;
+					tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
+					if (!tiers.isEmpty()) {
+						highestTierForVariant = tiers.get(0);
+						if (strongTiers.contains(highestTierForVariant)) {
+							strongAnnotations.addAll(annotations.stream().map(a -> a.getText()).collect(Collectors.toList()));
+						}
+						else if (possibleTiers.contains(highestTierForVariant)) {
+							possibleAnnotations.addAll(annotations.stream().map(a -> a.getText()).collect(Collectors.toList()));
+						}
+						else if (unknownTiers.contains(highestTierForVariant)) {
+							unknownAnnotations.addAll(annotations.stream().map(a -> a.getText()).collect(Collectors.toList()));
+						}
+					}
+					
+					String name = "CNV: " + genes;
+					if (!strongAnnotations.isEmpty()) {
+						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
+					}
+					if (!possibleAnnotations.isEmpty()) {
+						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
+					}
+					if (!unknownAnnotations.isEmpty()) {
+						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
+					}
+				}
+					
+			}
+		}
+		
+		for (Translocation v : ftlVariants) {
+			if (v.getUtswAnnotated() && v.getSelected()) {
+				v = getTranslocationDetails(v.getMongoDBId().getOid());
+				List<Annotation> selectedAnnotationsForVariant = new ArrayList<Annotation>();
+				List<String> tiers = new ArrayList<String>(); //to determine the highest tier for this variant
+				if (v.getReferenceTranslocation() != null && v.getReferenceTranslocation().getUtswAnnotations() != null) {
+					for (Annotation a : v.getReferenceTranslocation().getUtswAnnotations()) {
+						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+						if (a != null && a.getIsSelected() != null && a.getIsSelected()) {
+							selectedAnnotationsForVariant.add(a);
+							tiers.add(a.getTier());
+						}
+					}
+				}
+				List<String> strongAnnotations = new ArrayList<String>();
+				List<String> possibleAnnotations = new ArrayList<String>();
+				List<String> unknownAnnotations = new ArrayList<String>();
+				String highestTierForVariant = null;
+				tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
+				if (!tiers.isEmpty()) {
+					highestTierForVariant = tiers.get(0);
+					if (strongTiers.contains(highestTierForVariant)) {
+						strongAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
+					}
+					else if (possibleTiers.contains(highestTierForVariant)) {
+						possibleAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
+					}
+					else if (unknownTiers.contains(highestTierForVariant)) {
+						unknownAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
+					}
+				}
+				
+				String name = "Fusion: " + v.getFusionName();
+				if (!strongAnnotations.isEmpty()) {
+					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
+				}
+				if (!possibleAnnotations.isEmpty()) {
+					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
+				}
+				if (!unknownAnnotations.isEmpty()) {
+					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
+				}
+					
+			}
+		}
+		
 		report.setSnpVariantsStrongClinicalSignificance(annotationsStrongByVariant);
 		report.setSnpVariantsPossibleClinicalSignificance(annotationsPossibleByVariant);
 		report.setSnpVariantsUnknownClinicalSignificance(annotationsUnknownByVariant);
 		
 		return report;
 	}
-
+	
 	public void saveReport(AjaxResponse ajaxResponse, Report reportToSave) throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		boolean isNewReport = reportToSave.getMongoDBId() == null;
