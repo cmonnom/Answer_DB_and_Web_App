@@ -41,6 +41,7 @@ public class ReportClinicalTrialsSummary extends Summary<BiomarkerTrialsRow> {
 		
 		Header title = new Header("Title", "title");
 		title.setWidth("300px");
+		title.setAlign("left");
 		headers.add(title);
 		
 		Header nctid = new Header("NCTID", "nctid");
@@ -61,6 +62,7 @@ public class ReportClinicalTrialsSummary extends Summary<BiomarkerTrialsRow> {
 		
 		Header dept = new Header("Department", "dept");
 		dept.setWidth("100px");
+		dept.setAlign("left");
 		headers.add(dept);
 		
 		headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());

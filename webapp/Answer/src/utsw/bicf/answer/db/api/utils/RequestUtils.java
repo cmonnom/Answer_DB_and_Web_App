@@ -39,10 +39,12 @@ import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.AnswerDBCredentials;
+import utsw.bicf.answer.model.MDAEmail;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.AnnotationSearchResult;
+import utsw.bicf.answer.model.extmapping.BiomarkerTrials;
 import utsw.bicf.answer.model.extmapping.CNRData;
 import utsw.bicf.answer.model.extmapping.CNSData;
 import utsw.bicf.answer.model.extmapping.CNV;
@@ -747,6 +749,26 @@ public class RequestUtils {
 		}
 		return null;
 	}
+	
+	public MDAReportTemplate getMDATrials(String caseId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/"); 
+		sbUrl.append(caseId);
+		sbUrl.append("/trials");
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			MDAReportTemplate mdaEmail = mapper.readValue(response.getEntity().getContent(), MDAReportTemplate.class);
+			return mdaEmail;
+		}
+		return null;
+	}
 
 	//temp method to test displaying the report
 	//while Ben implements the API
@@ -766,15 +788,18 @@ public class RequestUtils {
 		List<String> unknownTiers = Arrays.asList("3");
 		
 		
-		File file = new File("/opt/answer/files/AMENDMENT_PODS_ReportID_47412_RequestID_51271.html");
-		if (file.exists()) {
-			MDAReportTemplate mdaEmail = new MDAReportTemplate(file);
+//		File file = new File("/opt/answer/files/AMENDMENT_PODS_ReportID_47412_RequestID_51271.html");
+//		if (file.exists()) {
+		MDAReportTemplate mdaEmail = this.getMDATrials(caseId);
+		if (mdaEmail != null) {
 			List<BiomarkerTrialsRow> trials = mdaEmail.getSelectedBiomarkers();
 			trials.addAll(mdaEmail.getSelectedAdditionalBiomarkers());
 			trials.addAll(mdaEmail.getRelevantBiomarkers());
 			trials.addAll(mdaEmail.getRelevantAdditionalBiomarkers());
 			report.setClinicalTrials(trials);
+
 		}
+//		}
 		List<CNVReport> cnvReports = new ArrayList<CNVReport>();
 		for (CNV cnv : caseDetails.getCnvs()) {
 			if (cnv.getUtswAnnotated() != null && cnv.getUtswAnnotated()
@@ -801,30 +826,30 @@ public class RequestUtils {
 		}
 		report.setCnvs(cnvReports);
 		
-//		List<TranslocationReport> translocationReports = new ArrayList<TranslocationReport>();
-//		for (Translocation ftl : caseDetails.getTranslocations()) {
-//			if (ftl.getUtswAnnotated() != null && ftl.getUtswAnnotated()
-//					&& ftl.getSelected() != null && ftl.getSelected()) {
-//				ftl = getTranslocationDetails(ftl.getMongoDBId().getOid());
-//				if (ftl.getReferenceTranslocation() != null && ftl.getReferenceTranslocation().getUtswAnnotations() != null
-//						&& !ftl.getReferenceTranslocation().getUtswAnnotations().isEmpty()) {
-//					StringBuilder sb = new StringBuilder();
-//					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
-//					for (Annotation a : ftl.getReferenceTranslocation().getUtswAnnotations()) {
-//						Annotation.init(a, ftl.getAnnotationIdsForReporting(), modelDAO);
-//						if (a.getIsSelected() != null && a.getIsSelected()
-//								&& ) { 
-//							sb.append(a.getText()).append(" ");
-//							atLeastOneSelected = true;
-//						}
-//					}
-//					if (atLeastOneSelected) {
-//						translocationReports.add(new TranslocationReport(sb.toString(), ftl));
-//					}
-//				}
-//			}
-//		}
-//		report.setTranslocations(translocationReports);
+		List<TranslocationReport> translocationReports = new ArrayList<TranslocationReport>();
+		for (Translocation ftl : caseDetails.getTranslocations()) {
+			if (ftl.getUtswAnnotated() != null && ftl.getUtswAnnotated()
+					&& ftl.getSelected() != null && ftl.getSelected()) {
+				ftl = getTranslocationDetails(ftl.getMongoDBId().getOid());
+				if (ftl.getReferenceTranslocation() != null && ftl.getReferenceTranslocation().getUtswAnnotations() != null
+						&& !ftl.getReferenceTranslocation().getUtswAnnotations().isEmpty()) {
+					StringBuilder sb = new StringBuilder();
+					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
+					for (Annotation a : ftl.getReferenceTranslocation().getUtswAnnotations()) {
+						Annotation.init(a, ftl.getAnnotationIdsForReporting(), modelDAO);
+						if (a.getIsSelected() != null && a.getIsSelected()
+								&& !"Therapy".equals(a.getCategory())) { 
+							sb.append(a.getText()).append(" ");
+							atLeastOneSelected = true;
+						}
+					}
+					if (atLeastOneSelected) {
+						translocationReports.add(new TranslocationReport(sb.toString(), ftl));
+					}
+				}
+			}
+		}
+		report.setTranslocations(translocationReports);
 		
 		
 		List<IndicatedTherapy> indicatedTherapies = new ArrayList<IndicatedTherapy>();
@@ -835,6 +860,23 @@ public class RequestUtils {
 				if (v.getReferenceVariant() != null && 
 						v.getReferenceVariant().getUtswAnnotations() != null) {
 					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
+						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && a.getCategory().equals("Therapy")) {
+							annotations.add(new IndicatedTherapy(a, v));
+						}
+					}
+				}
+				indicatedTherapies.addAll(annotations);
+			}
+		}
+		for (Translocation v : caseDetails.getTranslocations()) {
+			if (v.getSelected() != null && v.getSelected()) {
+				v = getTranslocationDetails(v.getMongoDBId().getOid());
+				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
+				if (v.getReferenceTranslocation() != null && 
+						v.getReferenceTranslocation().getUtswAnnotations() != null) {
+					for (Annotation a : v.getReferenceTranslocation().getUtswAnnotations()) {
 						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
 						if (a != null && a.getIsSelected() != null && a.getIsSelected()
 								&& a.getCategory() != null && a.getCategory().equals("Therapy")) {
@@ -856,7 +898,6 @@ public class RequestUtils {
 		
 		List<Variant> variants = caseDetails.getVariants().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
 		List<CNV> cnvVariants = caseDetails.getCnvs().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
-		List<Translocation> ftlVariants = caseDetails.getTranslocations().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
 		Map<String, GeneVariantAndAnnotation> annotationsStrongByVariant = new HashMap<String, GeneVariantAndAnnotation>();
 		Map<String, GeneVariantAndAnnotation> annotationsPossibleByVariant = new HashMap<String, GeneVariantAndAnnotation>();
 		Map<String, GeneVariantAndAnnotation> annotationsUnknownByVariant = new HashMap<String, GeneVariantAndAnnotation>();
@@ -895,7 +936,7 @@ public class RequestUtils {
 					}
 				}
 				
-				String name = "SNP: " + v.getGeneName() + " " + v.getNotation();
+				String name = v.getGeneName() + " " + v.getNotation();
 				if (!strongAnnotations.isEmpty()) {
 					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
 				}
@@ -956,7 +997,7 @@ public class RequestUtils {
 						}
 					}
 					
-					String name = "CNV: " + genes;
+					String name = genes;
 					if (!strongAnnotations.isEmpty()) {
 						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
 					}
@@ -966,52 +1007,6 @@ public class RequestUtils {
 					if (!unknownAnnotations.isEmpty()) {
 						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
 					}
-				}
-					
-			}
-		}
-		
-		for (Translocation v : ftlVariants) {
-			if (v.getUtswAnnotated() && v.getSelected()) {
-				v = getTranslocationDetails(v.getMongoDBId().getOid());
-				List<Annotation> selectedAnnotationsForVariant = new ArrayList<Annotation>();
-				List<String> tiers = new ArrayList<String>(); //to determine the highest tier for this variant
-				if (v.getReferenceTranslocation() != null && v.getReferenceTranslocation().getUtswAnnotations() != null) {
-					for (Annotation a : v.getReferenceTranslocation().getUtswAnnotations()) {
-						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (a != null && a.getIsSelected() != null && a.getIsSelected()) {
-							selectedAnnotationsForVariant.add(a);
-							tiers.add(a.getTier());
-						}
-					}
-				}
-				List<String> strongAnnotations = new ArrayList<String>();
-				List<String> possibleAnnotations = new ArrayList<String>();
-				List<String> unknownAnnotations = new ArrayList<String>();
-				String highestTierForVariant = null;
-				tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
-				if (!tiers.isEmpty()) {
-					highestTierForVariant = tiers.get(0);
-					if (strongTiers.contains(highestTierForVariant)) {
-						strongAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
-					}
-					else if (possibleTiers.contains(highestTierForVariant)) {
-						possibleAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
-					}
-					else if (unknownTiers.contains(highestTierForVariant)) {
-						unknownAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
-					}
-				}
-				
-				String name = "Fusion: " + v.getFusionName();
-				if (!strongAnnotations.isEmpty()) {
-					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
-				}
-				if (!possibleAnnotations.isEmpty()) {
-					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
-				}
-				if (!unknownAnnotations.isEmpty()) {
-					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
 				}
 					
 			}

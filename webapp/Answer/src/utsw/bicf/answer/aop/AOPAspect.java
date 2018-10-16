@@ -147,7 +147,8 @@ public class AOPAspect {
 					.replaceAll("&#64;", "@")
 					.replaceAll("&gt;", ">")
 					.replaceAll("&amp;", "&")
-					.replaceAll("&#43;", "+"); // emails are ok
+					.replaceAll("&#43;", "+")
+					.replaceAll("&#39;", "'");
 			isValid &= argString.equals(sanitized);
 			return isValid;
 		} else if (tree.isNumber()) {

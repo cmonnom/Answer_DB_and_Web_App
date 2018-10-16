@@ -38,6 +38,7 @@ public class TranslocationReportSummary extends Summary<TranslocationReport> {
 		headers.add(firstExon);
 		
 		Header comment = new Header("Comment", "comment");
+		comment.setAlign("left");
 		headers.add(comment);		
 		
 		headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());

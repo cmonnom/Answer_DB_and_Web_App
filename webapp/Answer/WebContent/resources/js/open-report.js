@@ -221,7 +221,8 @@ const OpenReport = {
             <existing-reports ref="existingReports"
             @close-existing-reports="existingReportsVisible = false"
             @get-report-details="getReportDetails"
-            @loading-report-details="updateLoadingReportDetails">
+            @loading-report-details="updateLoadingReportDetails"
+            :current-report-id="currentReportId">
             </existing-reports>
             </v-flex>
         </v-layout>
@@ -414,7 +415,8 @@ const OpenReport = {
             savingReport: false,
             originalFullReportSummary: "",
             existingReportsVisible: true,
-            confirmationSaveDialogVisible: false
+            confirmationSaveDialogVisible: false,
+            currentReportId: ""
 
         }
     }, methods: {
@@ -494,6 +496,7 @@ const OpenReport = {
                         this.originalUnknownClinicalSignificance = [];
                         this.fullReport = response.data;
                         console.log(this.fullReport);
+                        this.currentReportId = this.fullReport._id ? this.fullReport._id.$oid : "";
                         this.originalFullReportSummary = this.fullReport.summary;
                         this.$refs.patientDetails.patientTables = this.fullReport.patientInfo.patientTables;
                         this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);

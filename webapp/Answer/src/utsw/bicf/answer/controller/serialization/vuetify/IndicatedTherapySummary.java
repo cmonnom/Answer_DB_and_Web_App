@@ -17,13 +17,14 @@ public class IndicatedTherapySummary extends Summary<IndicatedTherapy> {
 
 	@Override
 	public void initializeHeaders() {
-		Header gene = new Header("Gene", "gene");
-		headers.add(gene);
 		Header variant = new Header("Variant", "variant");
+		variant.setWidth("150px");
 		headers.add(variant);
 		Header level = new Header("Level", "level");
+		level.setWidth("150px");
 		headers.add(level);
 		Header indication = new Header("Indication", "indication");
+		indication.setAlign("left");
 		headers.add(indication);
 
 		// keep in the same order

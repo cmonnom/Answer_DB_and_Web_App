@@ -24,8 +24,16 @@ public class CronController {
 
 	@Scheduled(cron = "*/10 * * * * *") //run every 10min, every day
 	public void cleanBamLinks() {
-		long now = System.currentTimeMillis();
 		File linkDir = fileProps.getBamLinksDir();
+		deleteLinks(linkDir);
+		linkDir = fileProps.getPdfLinksDir();
+		deleteLinks(linkDir);
+		linkDir = fileProps.getPdfFilesDir();
+		deleteLinks(linkDir);
+	}
+	
+	private void deleteLinks(File linkDir) {
+		long now = System.currentTimeMillis();
 		if (linkDir.exists()) {
 			Stream<Path> stream = null;
 			try {
@@ -44,5 +52,4 @@ public class CronController {
 			}
 		}
 	}
-	
 }

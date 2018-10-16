@@ -25,6 +25,8 @@ public class Translocation {
 	Boolean selected;
 	Boolean utswAnnotated;
 	String type;
+	String firstExon;
+	String lastExon;
 	
 	List<MongoDBId> annotationIdsForReporting;
 	
@@ -164,6 +166,22 @@ public class Translocation {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getFirstExon() {
+		return firstExon;
+	}
+
+	public void setFirstExon(String firstExon) {
+		this.firstExon = firstExon;
+	}
+
+	public String getLastExon() {
+		return lastExon;
+	}
+
+	public void setLastExon(String lastExon) {
+		this.lastExon = lastExon;
 	}
 
 

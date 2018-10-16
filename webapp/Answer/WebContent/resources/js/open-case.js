@@ -1113,16 +1113,16 @@ const OpenCase = {
                 ],
             annotationCategories: [
                 'Gene Function',
+                'Epidemiology',
                 'Variant Function',
-                'Therapy',
-                'Epidemiology',
                 'Prognosis',
-                'Diagnosis'],
+                'Diagnosis',
+                'Therapy'],
             annotationCategoriesCNV: [
-                'Therapy',
                 'Epidemiology',
                 'Prognosis',
-                'Diagnosis'],
+                'Diagnosis',
+                'Therapy'],
             annotationBreadth: [
                 'Chromosomal',
                 'Focal'],

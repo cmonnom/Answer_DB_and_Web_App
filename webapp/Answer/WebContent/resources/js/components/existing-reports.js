@@ -2,7 +2,7 @@
 
 Vue.component('existing-reports', {
     props: {
-
+        currentReportId: {default: "", type: String}
     },
     template: ` <v-card class="soft-grey-background">
     <v-toolbar class="elevation-0" dense dark color="primary">
@@ -37,16 +37,16 @@ Vue.component('existing-reports', {
         <v-btn @click="getReportDetails()">New Report</v-btn>
     </v-flex>
     <v-flex xs12 lg4 xl3 v-for="report in existingReports" :key="report.reportName">
-        <v-card>
-            <v-card-text>
-            <v-list class="dense-tiles">
+        <v-card :color="isReportSelected(report) ? 'amber accent-2' : ''">
+            <v-card-text >
+            <v-list :class="['dense-tiles', isReportSelected(report) ? 'amber accent-2' : '']" :color="isReportSelected(report) ? 'amber accent-2' : ''">
                 <v-list-tile>
                     <v-list-tile-content class="pb-2">
                         <v-layout class="full-width" justify-space-between>
                             <v-flex class="text-xs-left xs">
                                 <span class="'selectable'">Report Name:</span>
                             </v-flex>
-                            <v-flex class="text-xs-right blue-grey--text text--lighten-1">
+                            <v-flex class="blue-grey--text text--lighten-1 text-xs-right">
                                 <span class="selectable">{{ report.reportName }}</span>
                             </v-flex>
                         </v-layout>
@@ -145,6 +145,9 @@ Vue.component('existing-reports', {
                     this.handleAxiosError(error);
                     this.handleLoadingReportDetails(false);
                 });
+        },
+        isReportSelected(report) {
+            return report && report._id.$oid == this.currentReportId;
         },
         truncatedNotes(report) {
             if (report.summary && report.summary.length > 50) {

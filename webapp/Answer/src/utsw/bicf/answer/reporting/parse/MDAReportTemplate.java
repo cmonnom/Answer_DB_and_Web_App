@@ -36,6 +36,10 @@ public class MDAReportTemplate {
 	List<BiomarkerTrialsRow> relevantBiomarkers = null;
 	List<BiomarkerTrialsRow> selectedAdditionalBiomarkers = null;
 	List<BiomarkerTrialsRow> relevantAdditionalBiomarkers = null;
+	
+	public MDAReportTemplate() {
+		
+	}
 
 	public MDAReportTemplate(File sourceHTML) throws IOException {
 		this.sourceHTML = sourceHTML;

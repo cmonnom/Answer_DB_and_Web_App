@@ -14,11 +14,12 @@ import be.quodlibet.boxable.line.LineStyle;
 
 public class FinalReportTemplateConstants {
 
-	public static final int MARGINTOP = 36, MARGINLEFT = 28, MARGINBOTTOM = 36, MARGINRIGHT = 28, LOGO_MARGIN_TOP = 2;
+	public static final int MARGINTOP = 36, MARGINLEFT = 36, MARGINBOTTOM = 36, MARGINRIGHT = 36, LOGO_MARGIN_TOP = 36;
 	public static final int PARAGRAPH_PADDING_BOTTOM = 20;
 	public static final int ADDRESS_FONT_SIZE = 8;
 	public static final int DEFAULT_TEXT_FONT_SIZE = 12;
 	public static final int SMALLER_TEXT_FONT_SIZE = 11;
+	public static final int SMALLEST_TEXT_FONT_SIZE = 10;
 	public static final int TITLE_TEXT_FONT_SIZE = 14;
 //	public static final PDType1Font MAIN_FONT_TYPE = PDType1Font.HELVETICA;
 //	public static final PDType1Font MAIN_FONT_TYPE_BOLD = PDType1Font.HELVETICA_BOLD;
@@ -33,10 +34,24 @@ public class FinalReportTemplateConstants {
 	public static final Color GENE_TEXT_BLUE = new Color(26, 73, 132);
 	public static final Color LIGHT_GRAY = new Color(128, 128, 128);
 	public static final Color GRAY = new Color(178, 178, 178);
-	public static final Color BACKGROUND_GRAY = new Color(238, 238, 238);
+	public static final Color BACKGROUND_GRAY = new Color(245, 245, 245);
+	public static final Color BACKGROUND_LIGHT_GRAY = new Color(250, 250, 250);
 	public static final Color LINK_BLUE = new Color(77, 144, 206);
+	public static final Color LINK_ANSWER_GREEN = new Color(77, 182, 172);
 	public static final LineStyle THINLINE_OUTTER = new LineStyle(new Color(204, 204, 204), 1f);
+	public static final LineStyle THINLINE_OUTTER_ANSWER_GREEN = new LineStyle(new Color(77, 182, 172), 1f);
 
+	public static final LineStyle NO_BORDER = new LineStyle(Color.WHITE, 2f);
+	public static final LineStyle NO_BORDER_THIN = new LineStyle(Color.WHITE, 1.5f);
+	public static final LineStyle LIGHT_GRAY_BORDER_THIN = new LineStyle(BACKGROUND_LIGHT_GRAY, 1.5f);
+
+	public static final Color THERAPY_COLOR = new Color(77, 182, 172);
+	public static final Color TRIAL_COLOR = new Color(97, 184, 101);
+	public static final Color CLIN_SIGNIFICANCE_COLOR = new Color(51, 121, 199);
+	public static final Color CNV_COLOR = new Color(255, 200, 36);
+	public static final Color FTL_COLOR = new Color(59, 162, 244);
+	
+	
 	public static final String NGS_LOGO_PATH = "Im4.png";
 	public static final String UTSW_LOGO_PATH = "Im5.png";
 	public static final List<String> ADDRESS = new ArrayList<String>();
@@ -44,13 +59,21 @@ public class FinalReportTemplateConstants {
 
 	public static final List<Header> TREATMENT_OPTIONS_SUMMARY_HEADERS = new ArrayList<Header>();
 	
+	//_NAV titles are meant to be slightly different than the regular title
+	//This will allow a unique "link" search term when adding links
 	public static final String TITLE = "1425-Gene Pan-Cancer Mutation Test";
-	public static final String PATIENT_DETAILS_TITLE = "Patient Record";
-	public static final String INDICATED_THERAPIES_TITLE = "Indicated Therapies";
-	public static final String CLINICAL_TRIALS_TITLE = "Clinical Trials";
-	public static final String CNV_TITLE = "Copy Number Alterations";
-	public static final String TRANSLOCATION_TITLE = "Gene Fusions";
+	public static final String PATIENT_DETAILS_TITLE = "PATIENT RECORD";
+	public static final String INDICATED_THERAPIES_TITLE = "INDICATED THERAPIES";
+	public static final String INDICATED_THERAPIES_TITLE_NAV = " INDICATED THERAPIES ";
+	public static final String CLINICAL_TRIALS_TITLE = "CLINICAL TRIALS";
+	public static final String CLINICAL_TRIALS_TITLE_NAV = " CLINICAL TRIALS ";
+	public static final String CNV_TITLE = "COPY NUMBER ALTERATIONS";
+	public static final String CNV_TITLE_SHORT = "CNVs";
+	public static final String TRANSLOCATION_TITLE = "GENE FUSIONS";
+	public static final String TRANSLOCATION_TITLE_SHORT = "FUSIONS";
 	public static final String DISCLAMER_TITLE = "INFORMATION ABOUT THE TEST";
+	public static final String CLINICAL_SIGNIFICANCE = "CLINICAL SIGNIFICANCE";
+	public static final String CLINICAL_SIGNIFICANCE_NAV = " CLINICAL SIGNIFICANCE ";
 	
 	
 	static {

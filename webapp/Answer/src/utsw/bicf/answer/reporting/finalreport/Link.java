@@ -1,14 +1,22 @@
 package utsw.bicf.answer.reporting.finalreport;
 
+import org.apache.pdfbox.pdmodel.PDPage;
+
 public class Link {
 
 	String urlLabel;
 	String url;
+	Integer destinationPageNb;
 	
 	public Link(String urlLabel, String url) {
 		super();
 		this.urlLabel = urlLabel;
 		this.url = url;
+	}
+	public Link(String urlLabel, Integer destinationPageNb) {
+		super();
+		this.urlLabel = urlLabel;
+		this.destinationPageNb = destinationPageNb;
 	}
 	public String getUrlLabel() {
 		return urlLabel;
@@ -35,6 +43,12 @@ public class Link {
 	@Override
 	public String toString() {
 		return url;
+	}
+	public Integer getDestinationPageNb() {
+		return destinationPageNb;
+	}
+	public void setDestinationPageNb(Integer destinationPageNb) {
+		this.destinationPageNb = destinationPageNb;
 	}
 	
 }

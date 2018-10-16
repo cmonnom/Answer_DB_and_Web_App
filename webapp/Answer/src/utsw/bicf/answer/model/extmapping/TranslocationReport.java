@@ -14,6 +14,8 @@ public class TranslocationReport {
 	String rightGene;
 	String fusionName;
 	String comment;
+	String firstExon;
+	String lastExon;
 	
 	public TranslocationReport() {
 		
@@ -24,6 +26,8 @@ public class TranslocationReport {
 		this.leftGene = t.getLeftGene();
 		this.rightGene = t.getRightGene();
 		this.fusionName = t.getFusionName();
+		this.firstExon = t.getFirstExon();
+		this.lastExon = t.getLastExon();
 		this.comment = text;
 	}
 
@@ -73,6 +77,22 @@ public class TranslocationReport {
 
 	public void setFusionName(String fusionName) {
 		this.fusionName = fusionName;
+	}
+
+	public String getFirstExon() {
+		return firstExon;
+	}
+
+	public void setFirstExon(String firstExon) {
+		this.firstExon = firstExon;
+	}
+
+	public String getLastExon() {
+		return lastExon;
+	}
+
+	public void setLastExon(String lastExon) {
+		this.lastExon = lastExon;
 	}
 
 

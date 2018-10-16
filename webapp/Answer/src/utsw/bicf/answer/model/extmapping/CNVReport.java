@@ -24,6 +24,7 @@ public class CNVReport {
 	String endFormatted;
 	Integer copyNumber;
 	String comment;
+	String loci;
 	
 	public CNVReport() {
 		
@@ -40,6 +41,7 @@ public class CNVReport {
 		this.endFormatted = c.endFormatted;
 		this.copyNumber = c.copyNumber;
 		this.comment = text;
+		this.loci = this.chrom + ":" + this.start + "-" + this.end;
 	}
 
 
@@ -150,6 +152,16 @@ public class CNVReport {
 
 	public void setComment(String comment) {
 		this.comment = comment;
+	}
+
+
+	public String getLoci() {
+		return loci;
+	}
+
+
+	public void setLoci(String loci) {
+		this.loci = loci;
 	}
 
 
