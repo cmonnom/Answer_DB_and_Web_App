@@ -3,6 +3,8 @@ package utsw.bicf.answer.controller.serialization.vuetify;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -13,8 +15,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.Report;
+import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 
 public class ReportSummary {
@@ -53,6 +57,9 @@ public class ReportSummary {
 	Map<String, GeneVariantAndAnnotation> snpVariantsUnknownClinicalSignificance;
 	
 	String reportName;
+	
+	List<Variant> missingTierVariants = new ArrayList<Variant>();
+	List<CNV> missingTierCNVs = new ArrayList<CNV>();
 	
 	public ReportSummary() {
 		
@@ -93,7 +100,9 @@ public class ReportSummary {
 			
 			this.clinicalTrialsSummary = reportDetails.getClinicalTrials() != null ? new ReportClinicalTrialsSummary(reportDetails.getClinicalTrials(), "nctid") : null;
 		}
-		
+	
+		this.missingTierVariants = reportDetails.getMissingTierVariants();
+		this.missingTierCNVs = reportDetails.getMissingTierCNVs();
 	}
 	
 	public String createObjectJSON() throws JsonProcessingException {
@@ -280,6 +289,22 @@ public class ReportSummary {
 
 	public String getDateModified() {
 		return dateModified;
+	}
+
+	public List<Variant> getMissingTierVariants() {
+		return missingTierVariants;
+	}
+
+	public void setMissingTierVariants(List<Variant> missingTierVariants) {
+		this.missingTierVariants = missingTierVariants;
+	}
+
+	public List<CNV> getMissingTierCNVs() {
+		return missingTierCNVs;
+	}
+
+	public void setMissingTierCNVs(List<CNV> missingTierCNVs) {
+		this.missingTierCNVs = missingTierCNVs;
 	}
 
 	

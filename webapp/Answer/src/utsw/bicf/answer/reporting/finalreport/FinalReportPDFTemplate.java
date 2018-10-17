@@ -26,7 +26,6 @@ import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitRectangleDestination;
 
 import be.quodlibet.boxable.BaseTable;
@@ -49,7 +48,7 @@ import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
 
 public class FinalReportPDFTemplate {
-	
+
 	Report report;
 	PDDocument mainDocument;
 	float pageWidthMinusMargins;
@@ -60,7 +59,7 @@ public class FinalReportPDFTemplate {
 	File tempFile;
 	OtherProperties otherProps;
 	List<Link> links = new ArrayList<Link>();
-	
+
 	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps) {
 		this.otherProps = otherProps;
 		this.report = report;
@@ -78,7 +77,7 @@ public class FinalReportPDFTemplate {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void init() throws IOException, URISyntaxException {
 		this.mainDocument = new PDDocument();
 		PDPage page = new PDPage(PDRectangle.LETTER);
@@ -86,7 +85,7 @@ public class FinalReportPDFTemplate {
 		this.pageWidthMinusMargins = page.getMediaBox().getWidth() - FinalReportTemplateConstants.MARGINLEFT
 				- FinalReportTemplateConstants.MARGINRIGHT;
 		this.pageHeight = page.getMediaBox().getHeight();
-		
+
 		this.addAddress();
 		this.addNGSImageElement();
 		this.addUTSWImageElement();
@@ -99,12 +98,12 @@ public class FinalReportPDFTemplate {
 		this.createClinicalSignificanceTables();
 		this.createCNVTable();
 		this.createTranslocationTable();
-//		this.addInformationAboutTheTest();
-		
+		//		this.addInformationAboutTheTest();
+
 		this.addFooters();
 		this.addLinks();
 	}
-	
+
 	private void addAddress() throws IOException {
 		FinalReportTemplateConstants.MAIN_FONT_TYPE = PDType0Font.load(mainDocument,
 				fileProps.getPdfFontFile());
@@ -162,7 +161,7 @@ public class FinalReportPDFTemplate {
 		latestYPosition = latestYPosition - 30; // position of the patient table title
 		contentStream.close();
 	}
-	
+
 	private void addNotes() throws IOException {
 		// Title
 		float tableWidth = pageWidthMinusMargins;
@@ -184,12 +183,12 @@ public class FinalReportPDFTemplate {
 		cell.setBottomPadding(10);
 		latestYPosition = table.draw();
 	}
-	
+
 	private void createPatientTable() throws IOException {
 		PatientInfo patientDetails = report.getPatientInfo();
-		
+
 		PDPage firstPage = mainDocument.getPage(0);
-		
+
 		PDPageContentStream contentStream = new PDPageContentStream(mainDocument, firstPage,
 				PDPageContentStream.AppendMode.APPEND, true);
 		PDStreamUtils.write(contentStream, FinalReportTemplateConstants.PATIENT_DETAILS_TITLE, FinalReportTemplateConstants.MAIN_FONT_TYPE,
@@ -197,12 +196,12 @@ public class FinalReportPDFTemplate {
 				FinalReportTemplateConstants.MARGINLEFT + 5, latestYPosition, Color.BLACK);
 		latestYPosition = latestYPosition - 20; // position of the patient table
 		contentStream.close();
-		
+
 		float tableWidth = pageWidthMinusMargins / 3;
 
 		boolean cellBorder = false;
 		float defaultFont = FinalReportTemplateConstants.SMALLEST_TEXT_FONT_SIZE;
-		
+
 		BaseTable leftTable = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
 				FinalReportTemplateConstants.MARGINLEFT, mainDocument, firstPage, cellBorder, true);
 		List<CellItem> leftTableItems = patientDetails.getPatientTables().get(0).getItems();
@@ -220,7 +219,7 @@ public class FinalReportPDFTemplate {
 			this.createRow(middleTable, item.getLabel(), item.getValue(), defaultFont);
 		}
 		middleTable.draw();
-		
+
 		maxTableHeight = Math.max(maxTableHeight, middleTable.getHeaderAndDataHeight());
 
 		BaseTable rightTable = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
@@ -254,16 +253,16 @@ public class FinalReportPDFTemplate {
 
 		latestYPosition -= maxTableHeight + 10;
 	}
-	
+
 	private void applyPatientRecordTableBorderFormatting(Cell<PDPage> cell) {
 		cell.setTopBorderStyle(FinalReportTemplateConstants.THINLINE_OUTTER_ANSWER_GREEN);
 		cell.setBottomBorderStyle(FinalReportTemplateConstants.THINLINE_OUTTER_ANSWER_GREEN);
 		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER);
 		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER);
 	}
-	
+
 	private void updatePotentialNewPagePosition() {
-		if (latestYPosition <= FinalReportTemplateConstants.MARGINBOTTOM * 2) { //start on a new page if to low on the page
+		if (latestYPosition <= FinalReportTemplateConstants.MARGINBOTTOM * 3) { //start on a new page if to low on the page
 			mainDocument.addPage(new PDPage(PDRectangle.LETTER));
 			latestYPosition = pageHeight - FinalReportTemplateConstants.MARGINTOP;
 		}
@@ -271,28 +270,28 @@ public class FinalReportPDFTemplate {
 			latestYPosition -= 20;
 		}
 	}
-	
+
 	private void createNavigationTable() throws IOException {
 		this.updatePotentialNewPagePosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		BaseTable table = createNewTable(currentPage);
-//		//Title
-//		Row<PDPage> row = table.createRow(12); 
-//		table.addHeaderRow(row);
-//		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE);
-//		this.applyTitleHeaderFormatting(cellHeader);
-		
+		//		//Title
+		//		Row<PDPage> row = table.createRow(12); 
+		//		table.addHeaderRow(row);
+		//		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE);
+		//		this.applyTitleHeaderFormatting(cellHeader);
+
 		//Headers
-//		row = table.createRow(12); 
-//		table.addHeaderRow(row);
-//		cellHeader = row.createCell(25, "VARIANT");
-//		this.applyHeaderFormatting(cellHeader, defaultFont);
-//		cellHeader = row.createCell(20, "LEVEL");
-//		this.applyHeaderFormatting(cellHeader, defaultFont);
-//		cellHeader = row.createCell(55, "INDICATION");
-//		this.applyHeaderFormatting(cellHeader, defaultFont);
-		
-		
+		//		row = table.createRow(12); 
+		//		table.addHeaderRow(row);
+		//		cellHeader = row.createCell(25, "VARIANT");
+		//		this.applyHeaderFormatting(cellHeader, defaultFont);
+		//		cellHeader = row.createCell(20, "LEVEL");
+		//		this.applyHeaderFormatting(cellHeader, defaultFont);
+		//		cellHeader = row.createCell(55, "INDICATION");
+		//		this.applyHeaderFormatting(cellHeader, defaultFont);
+
+
 		Row<PDPage> row = table.createRow(12);
 		Cell<PDPage> cell = row.createCell(25, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.THERAPY_COLOR);
@@ -307,20 +306,20 @@ public class FinalReportPDFTemplate {
 
 		latestYPosition = table.draw() - 20;
 	}
-	
+
 	private BaseTable createNewTable(PDPage currentPage) throws IOException {
 		return new BaseTable(latestYPosition, pageHeight - FinalReportTemplateConstants.MARGINTOP, FinalReportTemplateConstants.MARGINBOTTOM, pageWidthMinusMargins,
 				FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, true, true);
 	}
-	
+
 	private void createIndicatedTherapiesTable() throws IOException {
 		this.updatePotentialNewPagePosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
-		
+
 		BaseTable table = createNewTable(currentPage);
 		List<IndicatedTherapy> items = report.getIndicatedTherapies();
-		
+
 		//Title
 		Row<PDPage> row = table.createRow(12); 
 		table.addHeaderRow(row);
@@ -328,7 +327,7 @@ public class FinalReportPDFTemplate {
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.THERAPY_COLOR);
 		links.add(new Link(FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1));
-		
+
 		//Headers
 		row = table.createRow(12); 
 		table.addHeaderRow(row);
@@ -338,7 +337,7 @@ public class FinalReportPDFTemplate {
 		this.applyHeaderFormatting(cellHeader, defaultFont);
 		cellHeader = row.createCell(55, "INDICATION");
 		this.applyHeaderFormatting(cellHeader, defaultFont);
-		
+
 		boolean greyBackground = false;
 		for (IndicatedTherapy item : items) {
 			Color color = Color.WHITE;
@@ -356,7 +355,7 @@ public class FinalReportPDFTemplate {
 		}
 		latestYPosition = table.draw() - 20;
 	}
-	
+
 	private void createClinicalTrialsTable() throws IOException, URISyntaxException {
 		if (report.getClinicalTrials() == null) {
 			return;
@@ -364,9 +363,9 @@ public class FinalReportPDFTemplate {
 		this.updatePotentialNewPagePosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
-		
+
 		BaseTable table = createNewTable(currentPage);
-		
+
 		//Title
 		Row<PDPage> row = table.createRow(12); 
 		table.addHeaderRow(row);
@@ -374,47 +373,63 @@ public class FinalReportPDFTemplate {
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.TRIAL_COLOR);
 		links.add(new Link(FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1));
+
+		boolean trialsSelected = false;
+		for (BiomarkerTrialsRow item : report.getClinicalTrials()) {
+			if (item.getIsSelected() != null && item.getIsSelected()) {
+				trialsSelected = true;
+				break;
+			}
+		}
 		
-		
-		//Headers
-		row = table.createRow(12); 
-		table.addHeaderRow(row);
-		cellHeader = row.createCell(25, "TITLE");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(10, "PHASE");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(20, "TARGETS");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(25, "LOCATIONS");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(20, "NCT ID");
-		
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		
+		if (trialsSelected) {
+			//Headers
+			row = table.createRow(12); 
+			table.addHeaderRow(row);
+			cellHeader = row.createCell(25, "TITLE");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(10, "PHASE");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(20, "TARGETS");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(25, "LOCATIONS");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(20, "NCT ID");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			
+		}
+
 		boolean greyBackground = false;
 		for (BiomarkerTrialsRow item : report.getClinicalTrials()) {
-			Color color = Color.WHITE;
-			if (greyBackground) {
-				color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+			if (item.getIsSelected() != null && item.getIsSelected()) {
+				Color color = Color.WHITE;
+				if (greyBackground) {
+					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+				}
+				row = table.createRow(12);
+				Cell<PDPage> cell = row.createCell(25, item.getTitle());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(10, item.getPhase());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(20, item.getBiomarker());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(25, item.getPi() + "<br/>" + item.getDept());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(25, item.getNctid());
+				links.add(new Link(item.getNctid(), "https://clinicaltrials.gov/ct2/show/" + item.getNctid()));
+				this.applyCellFormatting(cell, defaultFont, color);
+				this.applyLinkCellFormatting(cell);
+				greyBackground = !greyBackground;
 			}
+		}
+		if (!trialsSelected) {
 			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(25, item.getTitle());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(10, item.getPhase());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(20, item.getBiomarker());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(25, item.getPi() + "<br/>" + item.getDept());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(25, item.getNctid());
-			links.add(new Link(item.getNctid(), "https://clinicaltrials.gov/ct2/show/" + item.getNctid()));
-			this.applyCellFormatting(cell, defaultFont, color);
-			this.applyLinkCellFormatting(cell);
-			greyBackground = !greyBackground;
+			Cell<PDPage> cell = row.createCell(100, "No trial selected for this report.");
+			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
 		latestYPosition = table.draw() - 20;
 	}
-	
+
 	private void applyHeaderFormatting(Cell<PDPage> cell, float defaultFont) {
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE_BOLD);
 		cell.setAlign(HorizontalAlignment.LEFT);
@@ -427,7 +442,7 @@ public class FinalReportPDFTemplate {
 		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
 		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
 	}
-	
+
 	private void applyTitleHeaderFormatting(Cell<PDPage> cell) {
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
 		cell.setFontBold(FinalReportTemplateConstants.MAIN_FONT_TYPE);
@@ -440,7 +455,7 @@ public class FinalReportPDFTemplate {
 		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
 		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
 	}
-	
+
 	private void applyCellFormatting(Cell<PDPage> cell, float defaultFont, Color color) {
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
 		cell.setAlign(HorizontalAlignment.LEFT);
@@ -462,7 +477,7 @@ public class FinalReportPDFTemplate {
 		}
 		cell.setFillColor(color);
 	}
-	
+
 	private void applyNavigationCellFormatting(Cell<PDPage> cell, Color fillColor) {
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
 		cell.setAlign(HorizontalAlignment.CENTER);
@@ -475,61 +490,52 @@ public class FinalReportPDFTemplate {
 		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
 		cell.setFillColor(fillColor);
 	}
-	
+
 	private void applyLinkCellFormatting(Cell<PDPage> cell) {
 		cell.setTextColor(FinalReportTemplateConstants.LINK_ANSWER_GREEN);
 	}
-	
+
 	private void createClinicalSignificanceTables() throws IOException {
 		List<Map<String, GeneVariantAndAnnotation>> clinicalSignifanceTables = new ArrayList<Map<String, GeneVariantAndAnnotation>>();
 		clinicalSignifanceTables.add(report.getSnpVariantsStrongClinicalSignificance());
 		clinicalSignifanceTables.add(report.getSnpVariantsPossibleClinicalSignificance());
 		clinicalSignifanceTables.add(report.getSnpVariantsUnknownClinicalSignificance());
-		
+
 		String[] tableTitles = new String[] {"VARIANTS OF STRONG CLINICAL SIGNIFICANCE",
-		                                  "VARIANTS OF POSSIBLE CLINICAL SIGNIFICANCE",
-		                                  "VARIANTS OF UNKNOWN CLINICAL SIGNIFICANCE"};
+				"VARIANTS OF POSSIBLE CLINICAL SIGNIFICANCE",
+		"VARIANTS OF UNKNOWN CLINICAL SIGNIFICANCE"};
 		int counter = 0;
 		for (Map<String, GeneVariantAndAnnotation> table : clinicalSignifanceTables) {
-			
-//			PDPageContentStream contentStream = new PDPageContentStream(mainDocument, currentPage,
-//					PDPageContentStream.AppendMode.APPEND, true);
-//			PDStreamUtils.write(contentStream, tableTitles[counter], FinalReportTemplateConstants.MAIN_FONT_TYPE,
-//					FinalReportTemplateConstants.TITLE_TEXT_FONT_SIZE,
-//					FinalReportTemplateConstants.MARGINLEFT + 5, latestYPosition, Color.BLACK);
-//			contentStream.close();
-//			latestYPosition -= 20;
 			boolean addLink = counter == 0;
 			this.createAClinicalSignificanceTable(table, tableTitles[counter], addLink);
 			counter++;
-			
-			
+
+
 		}
 	}
-	
-	
+
+
 	private void createAClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems, String tableTitle, boolean addLink) throws IOException{
 		this.updatePotentialNewPagePosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		if (addLink) {
 			links.add(new Link(FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV, this.mainDocument.getNumberOfPages() - 1));
 		}
-		
+
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
-		
+
 		BaseTable table = createNewTable(currentPage);
-		List<CNVReport> items = report.getCnvs();
-		
+
 		//Title
 		Row<PDPage> row = table.createRow(12); 
 		table.addHeaderRow(row);
 		Cell<PDPage> cellHeader = row.createCell(100, tableTitle);
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
-		
-		if (items == null) {
+
+		if (tableItems == null || tableItems.isEmpty()) {
 			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(100, "No data for this level");
+			Cell<PDPage> cell = row.createCell(100, "No variant to report at this level");
 			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
 		else {
@@ -540,7 +546,7 @@ public class FinalReportPDFTemplate {
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			cellHeader = row.createCell(70, "COMMENT");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
-			
+
 			boolean greyBackground = false;
 			Color color = Color.WHITE;
 			if (greyBackground) {
@@ -558,17 +564,17 @@ public class FinalReportPDFTemplate {
 		}
 
 		latestYPosition = table.draw() - 20;
-		
+
 	}
-	
+
 	private void createCNVTable() throws IOException {
 		this.updatePotentialNewPagePosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
-		
+
 		BaseTable table = createNewTable(currentPage);
 		List<CNVReport> items = report.getCnvs();
-		
+
 		//Title
 		Row<PDPage> row = table.createRow(12); 
 		table.addHeaderRow(row);
@@ -576,25 +582,25 @@ public class FinalReportPDFTemplate {
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.CNV_COLOR);
 		links.add(new Link(FinalReportTemplateConstants.CNV_TITLE_SHORT, this.mainDocument.getNumberOfPages() - 1));
-		
-		//Headers
-		row = table.createRow(12); 
-		table.addHeaderRow(row);
-		cellHeader = row.createCell(25, "CHR:START-END");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(10, "COPY NB.");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(30, "GENES");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(35, "COMMENT");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		
-		if (items == null) {
+
+
+		if (items == null || items.isEmpty()) {
 			row = table.createRow(12);
 			Cell<PDPage> cell = row.createCell(100, "No additional CNV");
 			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
 		else {
+			//Headers
+			row = table.createRow(12); 
+			table.addHeaderRow(row);
+			cellHeader = row.createCell(25, "CHR:START-END");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(10, "COPY NB.");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(30, "GENES");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(35, "COMMENT");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
 			boolean greyBackground = false;
 			Color color = Color.WHITE;
 			if (greyBackground) {
@@ -617,15 +623,15 @@ public class FinalReportPDFTemplate {
 
 		latestYPosition = table.draw() - 20;
 	}
-	
+
 	private void createTranslocationTable() throws IOException {
 		this.updatePotentialNewPagePosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
-		
+
 		BaseTable table = createNewTable(currentPage);
 		List<TranslocationReport> items = report.getTranslocations();
-		
+
 		//Title
 		Row<PDPage> row = table.createRow(12); 
 		table.addHeaderRow(row);
@@ -633,51 +639,56 @@ public class FinalReportPDFTemplate {
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.FTL_COLOR);
 		links.add(new Link(FinalReportTemplateConstants.TRANSLOCATION_TITLE_SHORT, this.mainDocument.getNumberOfPages() - 1));
-		
-		
-		//Headers
-		row = table.createRow(12); 
-		table.addHeaderRow(row);
-		cellHeader = row.createCell(20, "FUSION NAME");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(10, "GENE1");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(10, "LAST EXON");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(10, "GENE2");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(10, "FIRST EXON");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(40, "COMMENT");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		
-		boolean greyBackground = false;
-		Color color = Color.WHITE;
-		if (greyBackground) {
-			color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
-		}
-		for (TranslocationReport item : items) {
-			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(20, item.getFusionName());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(10, item.getLeftGene());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(10, "0");
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
-			cell = row.createCell(10, item.getRightGene());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(10, "0");
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
-			cell = row.createCell(40, item.getComment());
-			this.applyCellFormatting(cell, defaultFont, color);
-			greyBackground = !greyBackground;
-		}
 
+		if (items == null || items.isEmpty()) {
+			row = table.createRow(12);
+			Cell<PDPage> cell = row.createCell(100, "No additional CNV");
+			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
+		}
+		else {
+			//Headers
+			row = table.createRow(12); 
+			table.addHeaderRow(row);
+			cellHeader = row.createCell(20, "FUSION NAME");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(10, "GENE1");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(10, "LAST EXON");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(10, "GENE2");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(10, "FIRST EXON");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(40, "COMMENT");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+
+			boolean greyBackground = false;
+			Color color = Color.WHITE;
+			if (greyBackground) {
+				color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+			}
+			for (TranslocationReport item : items) {
+				row = table.createRow(12);
+				Cell<PDPage> cell = row.createCell(20, item.getFusionName());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(10, item.getLeftGene());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(10, "0");
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
+				cell = row.createCell(10, item.getRightGene());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(10, "0");
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
+				cell = row.createCell(40, item.getComment());
+				this.applyCellFormatting(cell, defaultFont, color);
+				greyBackground = !greyBackground;
+			}
+		}
 		latestYPosition = table.draw() - 20;
 	}
-	
+
 	private Row<PDPage> createRow(BaseTable table, String title, String value, float fontSize) throws IOException {
 		return createRow(table, title, value, fontSize, FinalReportTemplateConstants.MAIN_FONT_TYPE);
 	}
@@ -710,7 +721,7 @@ public class FinalReportPDFTemplate {
 		cell.setFontSize(fontSize);
 		return row;
 	}
-	
+
 	private Cell<PDPage> createFooterCell(Row<PDPage> row, String text, HorizontalAlignment align, float widthPct) {
 		Cell<PDPage> cell = row.createCell(widthPct, text);
 		cell.setBorderStyle(null);
@@ -720,7 +731,7 @@ public class FinalReportPDFTemplate {
 		cell.setTextColor(FinalReportTemplateConstants.LIGHT_GRAY);
 		return cell;
 	}
-	
+
 	private void addFooters() throws IOException {
 		int pageTotal = this.mainDocument.getNumberOfPages();
 		float tableYPos = FinalReportTemplateConstants.MARGINBOTTOM;
@@ -736,7 +747,7 @@ public class FinalReportPDFTemplate {
 			table.draw();
 		}
 	}
-	
+
 	private void addInformationAboutTheTest() throws IOException {
 		// Title
 		this.updatePotentialNewPagePosition();
@@ -761,12 +772,12 @@ public class FinalReportPDFTemplate {
 		}
 		latestYPosition = table.draw();
 	}
-	
+
 	public void saveTemp() throws IOException {
 		mainDocument.save(tempFile);
 		mainDocument.close();
 	}
-	
+
 	public String createPDFLink(FileProperties fileProps) throws IOException {
 		File target = new File(fileProps.getPdfFilesDir(), tempFile.getName());
 		if (!target.exists()) {
@@ -779,7 +790,7 @@ public class FinalReportPDFTemplate {
 
 		return linkName;
 	}
-	
+
 	public void addLinks() throws IOException {
 		this.saveTemp(); // save and close to a temp file
 		mainDocument = PDDocument.load(tempFile);
@@ -816,21 +827,28 @@ public class FinalReportPDFTemplate {
 		for (LinkCoordinates coords : linker.getLinkCoords()) {
 			PDAnnotationLink annotation = new PDAnnotationLink();
 			annotation.setBorderStyle(borderULine);
-			
+
 			List<PDAnnotation> annotations = mainDocument.getPage(coords.getCurrentPageNb()).getAnnotations();
 			annotations.add(annotation);
-			
+
 			PDRectangle position = new PDRectangle();
 			position.setLowerLeftX(coords.getLowerLeftX());
 			position.setLowerLeftY(this.pageHeight - coords.getLowerLeftY());
 			position.setUpperRightX(coords.getUpperRightX());
 			position.setUpperRightY(this.pageHeight - coords.getUpperRightY());
 			annotation.setRectangle(position);
-			
+
 			if (link.getUrl() != null) {
 				PDActionURI action = new PDActionURI();
 				action.setURI(link.getUrl());
 				annotation.setAction(action);
+
+				//				PDActionJavaScript javascriptAction = 
+				//						new PDActionJavaScript("app.launchURL('" + link.getUrl() + ", true);");
+				////				PDAnnotationAdditionalActions actions = new PDAnnotationAdditionalActions();
+				////				actions.setU(javascriptAction);
+				//				annotation.setAction(javascriptAction);
+
 			}
 			else if (link.getDestinationPageNb() != null) {
 				PDActionGoTo gotoAction = new PDActionGoTo();
@@ -839,10 +857,10 @@ public class FinalReportPDFTemplate {
 				gotoAction.setDestination(dest);
 				annotation.setAction(gotoAction);
 			}
-			
-			
+
+
 		}
-		
+
 
 	}
 }

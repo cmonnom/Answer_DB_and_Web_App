@@ -1,5 +1,6 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,8 @@ public class Report {
 	String caseId;
 	String caseName;
 	String reportName;
+	List<Variant> missingTierVariants = new ArrayList<Variant>();
+	List<CNV> missingTierCNVs = new ArrayList<CNV>();
 	
 	public Report() {
 	}
@@ -192,6 +195,22 @@ public class Report {
 
 	public void setReportName(String reportName) {
 		this.reportName = reportName;
+	}
+
+	public List<Variant> getMissingTierVariants() {
+		return missingTierVariants;
+	}
+
+	public void setMissingTierVariants(List<Variant> missingTierVariants) {
+		this.missingTierVariants = missingTierVariants;
+	}
+
+	public List<CNV> getMissingTierCNVs() {
+		return missingTierCNVs;
+	}
+
+	public void setMissingTierCNVs(List<CNV> missingTierCNVs) {
+		this.missingTierCNVs = missingTierCNVs;
 	}
 	
 	

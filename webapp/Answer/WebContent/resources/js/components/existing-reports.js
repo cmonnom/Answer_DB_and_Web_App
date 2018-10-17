@@ -133,9 +133,7 @@ Vue.component('existing-reports', {
                     if (response.data.isAllowed && response.data.success) {
                         console.log(response.data);
                         this.existingReports = response.data.reports;
-                        if (this.existingReports.length == 0) {
-                            this.getReportDetails();
-                        }
+                        this.getReportDetails(this.$route.query.reportId);
                     }
                     else {
                         this.handleDialogs(response, this.getExistingReports);

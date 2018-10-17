@@ -404,9 +404,21 @@ Vue.component('edit-annotations', {
             for (var i = 0; i < this.userAnnotations.length; i++) {
                 //make a hard copy of the annotation
                 var tempAnnotation = JSON.parse(JSON.stringify(this.userAnnotations[i]));
-                //need to convert pmid arrays into strings
-                tempAnnotation.pmids = tempAnnotation.pmids ? tempAnnotation.pmids.join(",") : null;
-                tempAnnotation.nctids = tempAnnotation.nctids ? tempAnnotation.nctids.join(",") : null;
+                //need to convert pmid arrays into strings and remove possible dups
+                var tempSet = new Set();
+                if (tempAnnotation.pmids) {
+                    for (var s = 0; s < tempAnnotation.pmids.length; s++) {
+                        tempSet.add(tempAnnotation.pmids[s]);
+                    }
+                }
+                tempAnnotation.pmids = tempSet.size != 0 ? Array.from(tempSet).join(',') : null;
+                tempSet = new Set();
+                if (tempAnnotation.nctids) {
+                    for (var s = 0; s < tempAnnotation.nctids.length; s++) {
+                        tempSet.add(tempAnnotation.nctids[s]);
+                    }
+                }
+                tempAnnotation.nctids = tempSet.size != 0 ? Array.from(tempSet).join(',') : null;
                 tempAnnotation.isVisible = true;
                 this.userEditingAnnotations.push(tempAnnotation);
             }
@@ -462,8 +474,23 @@ Vue.component('edit-annotations', {
             this.userAnnotations = [];
             for (var i = 0; i < this.userEditingAnnotations.length; i++) {
                 var annotation = JSON.parse(JSON.stringify(this.userEditingAnnotations[i]));
-                annotation.pmids = annotation.pmids ? annotation.pmids.split(",") : null;
-                annotation.nctids = annotation.nctids ? annotation.nctids.split(",") : null;
+                //make sure ids are unique
+                var tempSet = new Set();
+                if (annotation.pmids) {
+                    var pmidsArray = annotation.pmids.split(",");
+                    for (var s = 0; s < pmidsArray.length; s++) {
+                        tempSet.add(pmidsArray[s]);
+                    }
+                }
+                annotation.pmids = tempSet.size != 0 ? Array.from(tempSet) : null;
+                tempSet = new Set();
+                if (annotation.nctids) {
+                    var nctidsArray = annotation.nctids.split(",");
+                    for (var s = 0; s < nctidsArray.length; s++) {
+                        tempSet.add(nctidsArray[s]);
+                    }
+                }
+                annotation.nctids = tempSet.size != 0 ? Array.from(tempSet) : null;
                 if (annotation.breadth == 'Chromosomal') {
                     annotation.cnvGenes = [];
                 }

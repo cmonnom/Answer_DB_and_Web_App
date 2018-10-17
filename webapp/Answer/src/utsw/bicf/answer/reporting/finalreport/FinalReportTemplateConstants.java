@@ -73,7 +73,7 @@ public class FinalReportTemplateConstants {
 	public static final String TRANSLOCATION_TITLE_SHORT = "FUSIONS";
 	public static final String DISCLAMER_TITLE = "INFORMATION ABOUT THE TEST";
 	public static final String CLINICAL_SIGNIFICANCE = "CLINICAL SIGNIFICANCE";
-	public static final String CLINICAL_SIGNIFICANCE_NAV = " CLINICAL SIGNIFICANCE ";
+	public static final String CLINICAL_SIGNIFICANCE_NAV = "VARIANT DETAILS";
 	
 	
 	static {

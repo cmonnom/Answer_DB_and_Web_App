@@ -26,7 +26,7 @@ const OpenReport = {
         </v-card>
     </v-dialog>
 
-    <v-dialog v-model="confirmationSaveDialogVisible" max-width="500px">
+    <v-dialog v-model="confirmationSaveDialogVisible" max-width="500px" >
         <v-toolbar dense dark :color="colors.openReport">
             <v-toolbar-title>
                 Save Current Report
@@ -53,6 +53,11 @@ const OpenReport = {
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
+
+    <report-tier-warning
+    :variants-missing-tier="variantsMissingTier"
+    @get-report-details="getReportDetails">
+    </report-tier-warning>
 
     <v-toolbar dense dark :color="colors.openReport" fixed app :extended="loadingReportDetails">
         <v-tooltip class="ml-0" bottom>
@@ -312,7 +317,9 @@ const OpenReport = {
             <div>
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
                     initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
-                    :color="colors.openReport" :disable-sticky-header="true">
+                    :color="colors.openReport" :disable-sticky-header="true"
+                    :enable-selection="canProceed('canReview') && !readonly"
+                    @datatable-selection-changed="handleSelectionChanged">
                 </data-table>
             </div>
         </v-flex>
@@ -416,7 +423,11 @@ const OpenReport = {
             originalFullReportSummary: "",
             existingReportsVisible: true,
             confirmationSaveDialogVisible: false,
-            currentReportId: ""
+            currentReportId: "",
+            variantsMissingTier: [],
+            urlQuery: {
+                reportId: null
+            }
 
         }
     }, methods: {
@@ -449,7 +460,7 @@ const OpenReport = {
         proceedWithConfirmation() {
             this.confirmationDialogVisible = false;
             var hasChanged = this.currentEditTextBackup != this.currentEdit[this.currentEditField];
-            this.reportUnsaved = this.reportUnsaved || hasChanged;
+            this.reportUnsaved = (this.reportUnsaved || hasChanged) && !this.isSaveDisabled();
         },
         cancelConfirmation() {
             this.currentEdit[this.currentEditField] = this.currentEditTextBackup;
@@ -497,6 +508,27 @@ const OpenReport = {
                         this.fullReport = response.data;
                         console.log(this.fullReport);
                         this.currentReportId = this.fullReport._id ? this.fullReport._id.$oid : "";
+                        this.urlQuery.reportId = this.currentReportId;
+                        this.updateRoute();
+                        this.variantsMissingTier = [];
+                        for (var i = 0; i < this.fullReport.missingTierVariants.length; i++) {
+                            var variant = this.fullReport.missingTierVariants[i];
+                            this.variantsMissingTier.push({
+                                id: variant._id.$oid,
+                                type: variant.type.toUpperCase(),
+                                chrom: formatChrom(variant.chrom),
+                                notation: variant.notation,
+                                name: variant.geneName
+                            });
+                        }
+                        for (var i = 0; i < this.fullReport.missingTierCNVs.length; i++) {
+                            var variant = this.fullReport.missingTierCNVs[i];
+                            this.variantsMissingTier.push({
+                                id: variant._id.$oid,
+                                type: variant.type.toUpperCase(),
+                                chrom: formatChrom(variant.chrom),
+                            });
+                        }
                         this.originalFullReportSummary = this.fullReport.summary;
                         this.$refs.patientDetails.patientTables = this.fullReport.patientInfo.patientTables;
                         this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
@@ -582,6 +614,9 @@ const OpenReport = {
                     this.handleAxiosError(error);
                     this.loadingReportDetails = false;
                 });
+        },
+        handleSelectionChanged(selectedSize) {
+            this.reportNeedsSaving();
         },
         handleAxiosError(error) {
             console.log(error);
@@ -681,7 +716,10 @@ const OpenReport = {
             this.fullReport.summary = this.originalFullReportSummary;
         },
         reportNeedsSaving() {
-            this.reportUnsaved = true;
+            this.reportUnsaved = !this.isSaveDisabled();
+        },
+        updateRoute() {
+            router.push({ query: this.urlQuery });
         },
         updateFullReport() {
             var strongLabels = Object.keys(this.fullReport.snpVariantsStrongClinicalSignificance);

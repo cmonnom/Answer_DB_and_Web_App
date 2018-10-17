@@ -156,12 +156,12 @@ public class OpenReportController {
 		User currentUser = (User) session.getAttribute("user");
 		JsonNode nodeData = mapper.readTree(data);
 		ReportSummary reportSummary =  mapper.readValue(nodeData.get("report").toString(), ReportSummary.class);
-		
+
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportSummary.getCaseId(), currentUser);
 		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
 		response.setIsAllowed(canProceed);
 		if (canProceed) {
-			//TODO handle 1st time save when no reportId
+			//handle 1st time save when no reportId
 			String reportId = null;
 			if(reportSummary.getMongoDBId() != null) {
 				reportId = reportSummary.getMongoDBId().getOid();
@@ -226,7 +226,7 @@ public class OpenReportController {
 			Report reportToPreview = new Report(reportSummary);
 			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportToPreview, fileProps, caseSummary, otherProps);
 			pdfReport.saveTemp();
-			
+
 			String linkName = pdfReport.createPDFLink(fileProps);
 			response.setSuccess(true);
 			response.setMessage(linkName);

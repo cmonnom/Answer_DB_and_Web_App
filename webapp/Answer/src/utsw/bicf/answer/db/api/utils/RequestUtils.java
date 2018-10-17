@@ -788,8 +788,6 @@ public class RequestUtils {
 		List<String> unknownTiers = Arrays.asList("3");
 		
 		
-//		File file = new File("/opt/answer/files/AMENDMENT_PODS_ReportID_47412_RequestID_51271.html");
-//		if (file.exists()) {
 		MDAReportTemplate mdaEmail = this.getMDATrials(caseId);
 		if (mdaEmail != null) {
 			List<BiomarkerTrialsRow> trials = mdaEmail.getSelectedBiomarkers();
@@ -799,7 +797,6 @@ public class RequestUtils {
 			report.setClinicalTrials(trials);
 
 		}
-//		}
 		List<CNVReport> cnvReports = new ArrayList<CNVReport>();
 		for (CNV cnv : caseDetails.getCnvs()) {
 			if (cnv.getUtswAnnotated() != null && cnv.getUtswAnnotated()
@@ -935,6 +932,10 @@ public class RequestUtils {
 						unknownAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
 					}
 				}
+				else {
+					//TODO inform user that no tier was selected
+					report.getMissingTierVariants().add(v);
+				}
 				
 				String name = v.getGeneName() + " " + v.getNotation();
 				if (!strongAnnotations.isEmpty()) {
@@ -952,6 +953,7 @@ public class RequestUtils {
 		
 		for (CNV v : cnvVariants) {
 			if (v.getUtswAnnotated() && v.getSelected()) {
+				boolean hasTiers = false;
 				v = getCNVDetails(v.getMongoDBId().getOid());
 				Map<String, List<Annotation>> selectedAnnotationsForVariant = new HashMap<String, List<Annotation>>();
 				Map<String, List<String>> tiersByGenes = new HashMap<String, List<String>>(); //to determine the highest tier for this variant
@@ -985,6 +987,7 @@ public class RequestUtils {
 					String highestTierForVariant = null;
 					tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
 					if (!tiers.isEmpty()) {
+						hasTiers = true;
 						highestTierForVariant = tiers.get(0);
 						if (strongTiers.contains(highestTierForVariant)) {
 							strongAnnotations.addAll(annotations.stream().map(a -> a.getText()).collect(Collectors.toList()));
@@ -996,7 +999,6 @@ public class RequestUtils {
 							unknownAnnotations.addAll(annotations.stream().map(a -> a.getText()).collect(Collectors.toList()));
 						}
 					}
-					
 					String name = genes;
 					if (!strongAnnotations.isEmpty()) {
 						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
@@ -1008,7 +1010,10 @@ public class RequestUtils {
 						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
 					}
 				}
-					
+				if (!hasTiers) {
+					v.setType("cnv"); //somehow, the type is not set on CNV
+					report.getMissingTierCNVs().add(v);
+				}
 			}
 		}
 		

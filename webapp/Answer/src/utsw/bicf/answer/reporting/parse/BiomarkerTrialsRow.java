@@ -1,5 +1,8 @@
 package utsw.bicf.answer.reporting.parse;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BiomarkerTrialsRow {
 	
 	public static final String HEADER_SELECTED_BIOMARKER = "Selected Biomarker(s)*";
@@ -24,6 +27,7 @@ public class BiomarkerTrialsRow {
 	String pi;
 	String dept;
 	String additionalRequiredBiomarkers;
+	Boolean isSelected;
 	
 	public String getSelectedBiomarker() {
 		return selectedBiomarker;
@@ -96,6 +100,12 @@ public class BiomarkerTrialsRow {
 	}
 	public void setBiomarker(String biomarker) {
 		this.biomarker = biomarker;
+	}
+	public Boolean getIsSelected() {
+		return isSelected;
+	}
+	public void setIsSelected(Boolean isSelected) {
+		this.isSelected = isSelected;
 	}
 
 }

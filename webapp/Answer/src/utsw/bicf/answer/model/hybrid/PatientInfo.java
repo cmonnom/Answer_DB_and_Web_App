@@ -69,7 +69,21 @@ public class PatientInfo {
 		else {
 			orderedBy = "";
 		}
+		String authorizedBy = null;
+		if (orderCase.getAuthorizingPhysician() != null) {
+			int separator = orderCase.getAuthorizingPhysician().indexOf(" ");
+			if (separator > -1) {
+				authorizedBy = orderCase.getAuthorizingPhysician().substring(separator, orderCase.getAuthorizingPhysician().length() - 1);
+			}
+			else {
+				authorizedBy = orderCase.getAuthorizingPhysician();
+			}
+		}
+		else {
+			authorizedBy = "";
+		}
 		items.add(new CellItem("Ordered by", orderedBy));
+		items.add(new CellItem("Authorized by", authorizedBy));
 		items.add(new CellItem("Institution", orderCase.getInstitution()));
 		items.add(new CellItem("Tumor Tissue", orderCase.getTumorTissueType()));
 		items.add(new CellItem("Germline Tissue", orderCase.getNormalTissueType()));
