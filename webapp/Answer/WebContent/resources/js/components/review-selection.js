@@ -2,204 +2,202 @@
 
 Vue.component('review-selection', {
     props: {
-        caseName: {default: "", type: String},
-        readonly: {default: true, type: Boolean},
-        isSaveNeededBadgeVisible: {default: false, type: Boolean},
         breadcrumbs: {default: () => [], type: Array},
-
+        selectedIds: {default: () => {}, type: Object},
+        isSaveBadgeVisible: {default: false, type: Boolean},
+        saveVariantDisabled: {default: false, type: Boolean},
+        waitingForAjaxActive: {default: false, type: Boolean},
+        caseName: {default: "", type: String},
+        caseType: {default: "", type: String},
+        caseTypeIcon: {default: "", type: String},
+        saveTooltip: {default: "", type: String},
     },
-    template: `
-    <v-card class="soft-grey-background">
-        <v-toolbar dense dark :color="primary">
-            <v-menu offset-y offset-x class="ml-0">
-                <v-btn slot="activator" flat icon dark>
-                    <v-icon>more_vert</v-icon>
-                </v-btn>
-                <v-list>
+    template: `<v-card class="soft-grey-background">
+    <v-toolbar dense dark color="primary">
+        <v-menu offset-y offset-x class="ml-0">
+            <v-btn slot="activator" flat icon dark>
+                <v-icon>more_vert</v-icon>
+            </v-btn>
+            <v-list>
 
-                    <v-list-tile avatar @click="sendToMDA()" :disabled="saveVariantDisabled || sendToMDALoading">
-                        <v-list-tile-avatar>
-                            MDA
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>Download Moclia File</v-list-tile-title>
-                        </v-list-tile-content>
-                    </v-list-tile>
-
-                    <v-list-tile avatar @click="markAsReadyForReview()" :disabled="saveVariantDisabled" v-if="canProceed('canAnnotate')">
-                        <v-list-tile-avatar>
-                            <v-icon>how_to_reg</v-icon>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>Ready for Review</v-list-tile-title>
-                        </v-list-tile-content>
-                    </v-list-tile>
-
-                    <v-list-tile avatar @click="markAsReadyForReport()" :disabled="saveVariantDisabled" v-if="canProceed('canReview')">
-                        <v-list-tile-avatar>
-                            <v-icon>assignment</v-icon>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>Ready for Report</v-list-tile-title>
-                        </v-list-tile-content>
-                    </v-list-tile>
-
-                    <v-list-tile avatar @click="handleSaveAll()" :disabled="!isSaveNeededBadgeVisible">
+                <v-list-tile avatar @click="sendToMDA()" :disabled="saveVariantDisabled || sendToMDALoading">
                     <v-list-tile-avatar>
-                        <v-icon>save</v-icon>
+                        MDA
                     </v-list-tile-avatar>
                     <v-list-tile-content>
-                        <v-list-tile-title>Save Current Work</v-list-tile-title>
+                        <v-list-tile-title>Download Moclia File</v-list-tile-title>
                     </v-list-tile-content>
                 </v-list-tile>
 
+                <v-list-tile avatar @click="markAsReadyForReview()" :disabled="saveVariantDisabled" v-if="canProceed('canAnnotate')">
+                    <v-list-tile-avatar>
+                        <v-icon>how_to_reg</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Ready for Review</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
 
-                    <v-list-tile avatar @click="closeReviewSelectionDialog()">
-                        <v-list-tile-avatar>
-                            <v-icon>close</v-icon>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>Close</v-list-tile-title>
-                        </v-list-tile-content>
-                    </v-list-tile>
-                </v-list>
-            </v-menu>
-            <v-toolbar-title class="ml-0">
-                Review Selected Variants for {{ caseName }} 
-                <v-tooltip bottom>
-                <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
-              <span>{{caseType}} case</span>  
-              </v-tooltip>
-            </v-toolbar-title>
-            <v-spacer></v-spacer>
+                <v-list-tile avatar @click="markAsReadyForReport()" :disabled="saveVariantDisabled" v-if="canProceed('canReview')">
+                    <v-list-tile-avatar>
+                        <v-icon>assignment</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Ready for Report</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
+
+                <v-list-tile avatar @click="handleSaveAll()" :disabled="!isSaveBadgeVisible">
+                <v-list-tile-avatar>
+                    <v-icon>save</v-icon>
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                    <v-list-tile-title>Save Current Work</v-list-tile-title>
+                </v-list-tile-content>
+                </v-list-tile>
+
+                <v-list-tile avatar @click="closeReviewDialog()">
+                    <v-list-tile-avatar>
+                        <v-icon>close</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Close</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
+            </v-list>
+        </v-menu>
+        <v-toolbar-title class="ml-0">
+            Review Selected Variants for {{ caseName }} 
             <v-tooltip bottom>
-                <v-btn icon :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">
-                    MDA
-                </v-btn>
-                <span>Download Moclia File</span>
-            </v-tooltip>
-            <v-tooltip bottom v-if="canProceed('canAnnotate')">
-            <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator">
-                <v-icon>how_to_reg</v-icon>
-            </v-btn>
-            <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
-        </v-tooltip>
-        <v-tooltip bottom v-if="canProceed('canReview')">
-            <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator">
-                <v-icon>assignment</v-icon>
-            </v-btn>
-            <span>Mark as Ready for Report. Save Selected Variants</span>
-        </v-tooltip>
-        <v-badge color="red" right bottom overlap v-model="isSaveNeededBadgeVisible" class="mini-badge">
-        <v-icon slot="badge"></v-icon>
-        <v-tooltip bottom offset-overflow>
-            <v-btn flat icon @click="handleSaveAll()" slot="activator" :disabled="!isSaveNeededBadgeVisible"
-            :loading="waitingForAjaxActive">
-                <v-icon>save</v-icon>
-            </v-btn>
-            <span v-html="createSaveTooltip()"></span>
-        </v-tooltip>
-        </v-badge>
+            <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
+          <span>{{caseType}} case</span>  
+          </v-tooltip>
+        </v-toolbar-title>
+        <v-spacer></v-spacer>
         <v-tooltip bottom>
-            <v-btn icon @click="closeSaveDialog()" slot="activator">
+            <v-btn icon :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">
+                MDA
+            </v-btn>
+            <span>Download Moclia File</span>
+        </v-tooltip>
+        <v-tooltip bottom v-if="canProceed('canAnnotate')">
+        <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator">
+            <v-icon>how_to_reg</v-icon>
+        </v-btn>
+        <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
+    </v-tooltip>
+    <v-tooltip bottom v-if="canProceed('canReview')">
+        <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator">
+            <v-icon>assignment</v-icon>
+        </v-btn>
+        <span>Mark as Ready for Report. Save Selected Variants</span>
+    </v-tooltip>
+    <v-badge color="red" right bottom overlap v-model="isSaveBadgeVisible" class="mini-badge">
+<v-icon slot="badge"></v-icon>
+<v-tooltip bottom offset-overflow nudge-left="100px" min-width="200px">
+    <v-btn flat icon @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive" :disabled="!isSaveBadgeVisible">
+        <v-icon>save</v-icon>
+    </v-btn>
+    <span v-html="saveTooltip"></span>
+</v-tooltip>
+</v-badge>
+        <v-tooltip bottom>
+            <v-btn icon @click="closeReviewDialog()" slot="activator">
                 <v-icon>close</v-icon>
             </v-btn>
             <span>Close</span>
         </v-tooltip>
-        </v-toolbar>
-        <v-card-text :style="getDialogMaxHeight(120)" class="pl-3 pr-3">
+    </v-toolbar>
+    <v-card-text :style="getDialogMaxHeight(120)" class="pl-3 pr-3">
 
-            <v-breadcrumbs class="pt-2">
-                <v-icon slot="divider">forward</v-icon>
-                <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"
-                    @click.native="breadcrumbNavigation(index)">
-                    {{ item.text }}
-                </v-breadcrumbs-item>
-            </v-breadcrumbs>
+        <v-breadcrumbs class="pt-2">
+            <v-icon slot="divider">forward</v-icon>
+            <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"
+                @click.native="breadcrumbNavigation(index)">
+                {{ item.text }}
+            </v-breadcrumbs-item>
+        </v-breadcrumbs>
 
-            <v-card v-show="!areReportableGeneSelected()" class="mt-2 mb-2">
-                <v-card-text>
-                    The following genes should be included in the report if pathogenic or likely pathogenic :
-                    <v-tooltip bottom v-for="(reportGroup, index1) in requiredReportGroups" :key="index1">
-                        <v-menu slot="activator" max-width="500px" offset-x>
-                            <v-btn slot="activator">
-                                {{ reportGroup.groupName}}
-                            </v-btn>
-                            <v-card>
-                                <v-card-title>
-                                    <div class="subheading">
-                                        {{ reportGroup.description }}
-                                        <v-tooltip bottom>
-                                            <v-btn slot="activator" flat icon @click="openLink(reportGroup.link)" color="primary">
-                                                <v-icon>open_in_new</v-icon>
-                                            </v-btn>
-                                            <span>Open Link in New Tab</span>
-                                        </v-tooltip>
-                                    </div>
-                                </v-card-title>
-                                <v-card-text>
-                                    <v-chip :color="isReportableGeneSelected(gene) ? 'primary' : ''" disabled v-for="(gene, index2) in reportGroup.genesToReport"
-                                        :key="index2">
-                                        {{ gene }}
-                                    </v-chip>
-                                </v-card-text>
-                            </v-card>
-                        </v-menu>
-                        <span>{{ reportGroup.description }}</span>
-                    </v-tooltip>
+        <v-card v-show="!areReportableGeneSelected()" class="mt-2 mb-2">
+            <v-card-text>
+                The following genes should be included in the report if pathogenic or likely pathogenic :
+                <v-tooltip bottom v-for="(reportGroup, index1) in requiredReportGroups" :key="index1">
+                    <v-menu slot="activator" max-width="500px" offset-x>
+                        <v-btn slot="activator">
+                            {{ reportGroup.groupName}}
+                        </v-btn>
+                        <v-card>
+                            <v-card-title>
+                                <div class="subheading">
+                                    {{ reportGroup.description }}
+                                    <v-tooltip bottom>
+                                        <v-btn slot="activator" flat icon @click="openLink(reportGroup.link)" color="primary">
+                                            <v-icon>open_in_new</v-icon>
+                                        </v-btn>
+                                        <span>Open Link in New Tab</span>
+                                    </v-tooltip>
+                                </div>
+                            </v-card-title>
+                            <v-card-text>
+                                <v-chip :color="isReportableGeneSelected(gene) ? 'primary' : ''" disabled v-for="(gene, index2) in reportGroup.genesToReport"
+                                    :key="index2">
+                                    {{ gene }}
+                                </v-chip>
+                            </v-card-text>
+                        </v-card>
+                    </v-menu>
+                    <span>{{ reportGroup.description }}</span>
+                </v-tooltip>
 
-                </v-card-text>
-            </v-card>
-            <data-table ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected SNP/Indel Variants"
-                initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" :color="colors.saveReview">
-            </data-table>
-            <data-table ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected CNVs" initial-sort="chrom"
-                no-data-text="No Data" :show-row-count="true" class="pb-3" :color="colors.saveReview">
-            </data-table>
-            <data-table ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected Translocations"
-                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" :color="colors.saveReview">
-            </data-table>
-        </v-card-text>
-        <v-card-actions class="card-actions-bottom">
-            <v-tooltip top>
-                <v-btn color="success" :disabled="!isSaveNeededBadgeVisible" @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive">Save Work
-                    <v-icon right dark>save</v-icon>
-                </v-btn>
-                <span>Save Current Work</span>
-            </v-tooltip>
-            <v-tooltip top>
-                <v-btn color="primary" :disabled="saveVariantDisabled" @click="exportSelectedVariants()" slot="activator" :loading="exportLoading">Excel
-                    <v-icon right dark>mdi-file-excel</v-icon>
-                </v-btn>
-                <span>Export to Excel</span>
-            </v-tooltip>
-            <v-tooltip top>
-                <v-btn color="primary" :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">Moclia File
-                </v-btn>
-                <span>Download Moclia File</span>
-            </v-tooltip>
-            <v-tooltip top v-if="canProceed('canAnnotate')">
-                <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator" >
-                    Ready for Review
-                <v-icon right dark>how_to_reg</v-icon>
-                </v-btn>
-                <span>Mark as Ready for Review. Save Current Work and Email reviewer(s)</span>
-            </v-tooltip>
-            <v-tooltip top v-if="canProceed('canReview')">
-                <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator" >
-                    Ready for Report
-                <v-icon right dark>assignment</v-icon>
-                </v-btn>
-                <span>Mark as Ready for Report. Save Current Work</span>
-            </v-tooltip>
-            <v-btn color="error" @click="closeSaveDialog()" slot="activator">Cancel
-                <v-icon right dark>cancel</v-icon>
+            </v-card-text>
+        </v-card>
+        <data-table ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected SNP/Indel Variants"
+            initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary">
+        </data-table>
+        <data-table ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected CNVs" initial-sort="chrom"
+            no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary">
+        </data-table>
+        <data-table ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected Translocations"
+            initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary">
+        </data-table>
+    </v-card-text>
+    <v-card-actions class="card-actions-bottom">
+        <v-tooltip top>
+            <v-btn color="primary" :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">Moclia File
             </v-btn>
-        </v-card-actions>
-    </v-card>`,
+            <span>Download Moclia File</span>
+        </v-tooltip>
+        <v-tooltip top v-if="canProceed('canAnnotate')">
+            <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator" >
+                Ready for Review
+            <v-icon right dark>how_to_reg</v-icon>
+            </v-btn>
+            <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
+        </v-tooltip>
+        <v-tooltip top v-if="canProceed('canReview')">
+            <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator" >
+                Ready for Report
+            <v-icon right dark>assignment</v-icon>
+            </v-btn>
+            <span>Mark as Ready for Report. Save Selected Variants</span>
+        </v-tooltip>
+        <v-tooltip top>
+            <v-btn color="success" @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive" :disabled="!isSaveBadgeVisible">
+                Save Work
+            <v-icon right dark>save</v-icon>
+            </v-btn>
+            <span>Save Current Work</span>
+        </v-tooltip>
+        <v-btn color="error" @click="closeReviewDialog()" slot="activator">Close
+            <v-icon right dark>cancel</v-icon>
+        </v-btn>
+    </v-card-actions>
+</v-card>
+   `,
     data() {
         return {
-            saveVariantDisabled: false
+            sendToMDALoading: false,
+            requiredReportGroups: [],
         }
     },
     methods: {
@@ -232,44 +230,12 @@ Vue.component('review-selection', {
             this.splashProgress = 100; //should dismiss the splash dialog
 
         },
-        sendToMDA() {
-            this.$emit("send-to-mda");
+        handleAxiosError(error) {
+            console.log(error);
+            bus.$emit("some-error", [this, error]);
         },
-        markAsReadyForReview() {
-            this.$emit("mark-as-ready-for-review");
-        },
-        markAsReadyForReport() {
-            this.$emit("mark-as-ready-for-report");
-        },
-        handleSaveAll() {
-            this.$emit("save-all");
-        },
-        closeReviewSelectionDialog() {
-            this.$emit("close-review-selection-dialog");
-        },
-        handleSaveAll() {
-            this.$emit("save-all");
-        },
-        updateSelectedVariantTable() {
-            var selectedSNPVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected);
-            var selectedCNVs = this.$refs.cnvDetails.items.filter(item => item.isSelected);
-            var selectedTranslocations = this.$refs.translocationDetails.items.filter(item => item.isSelected);
-            this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
-
-            var snpHeaders = this.$refs.geneVariantDetails.headers;
-            var snpHeaderOrder = this.$refs.geneVariantDetails.headerOrder;
-            this.$refs.snpVariantsSelected.manualDataFiltered(
-                { items: selectedSNPVariants, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });
-
-            var cnvHeaders = this.$refs.cnvDetails.headers;
-            var cnvHeaderOrder = this.$refs.cnvDetails.headerOrder;
-            this.$refs.cnvVariantsSelected.manualDataFiltered(
-                { items: selectedCNVs, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrder });
-
-            var snpHeaders = this.$refs.translocationDetails.headers;
-            var snpHeaderOrder = this.$refs.translocationDetails.headerOrder;
-            this.$refs.translocationVariantsSelected.manualDataFiltered(
-                { items: selectedTranslocations, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });
+        breadcrumbNavigation(index) {
+            this.$emit("breadcrumb-navigation", index);
         },
         sendToMDA() {
             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
@@ -278,7 +244,6 @@ Vue.component('review-selection', {
                 return;
             }
             this.sendToMDALoading = true;
-            var selectedIds = this.getSelectedVariantIds();
             axios({
                 method: 'post',
                 url: webAppRoot + "/sendToMDA",
@@ -287,17 +252,14 @@ Vue.component('review-selection', {
                 },
                 data: {
                     filters: [],
-                    selectedSNPVariantIds: selectedIds.selectedSNPVariantIds,
-                    selectedCNVIds: selectedIds.selectedCNVIds,
-                    selectedTranslocationIds: selectedIds.selectedTranslocationIds
+                    selectedSNPVariantIds: this.selectedIds.selectedSNPVariantIds,
+                    selectedCNVIds: this.selectedIds.selectedCNVIds,
+                    selectedTranslocationIds: this.selectedIds.selectedTranslocationIds
                 }
             }).then(response => {
                 this.sendToMDALoading = false;
                 if (response.data.isAllowed && response.data.success) {
                     this.createCSVFile(response.data.message);
-                    // this.snackBarMessage = "Variants sent to MD Anderson";
-                    // this.snackBarLink = "";
-                    // this.snackBarVisible = true;
                 }
                 else {
                     this.handleDialogs(response.data, this.sendToMDA);
@@ -318,8 +280,7 @@ Vue.component('review-selection', {
 
         },
         markAsReadyForReview() {
-            // this.saveSelection(false, true);
-            this.handleSaveAll();
+            this.saveSelection(false, true);
             axios.get(webAppRoot + "/readyForReview", {
                 params: {
                     caseId: this.$route.params.id
@@ -336,12 +297,11 @@ Vue.component('review-selection', {
                     }
                 })
                 .catch(error => {
-                    this.handleAxiosError(error);
+                    alert(error);
                 });
         },
         markAsReadyForReport() {
-            // this.saveSelection(false, true);
-            this.handleSaveAll();
+            this.saveSelection(false, true);
             axios.get(webAppRoot + "/readyForReport", {
                 params: {
                     caseId: this.$route.params.id
@@ -359,16 +319,82 @@ Vue.component('review-selection', {
                     }
                 })
                 .catch(error => {
-                    this.handleAxiosError(error);
+                    alert(error);
                 });
         },
-        handleAxiosError(error) {
-            console.log(error);
-            bus.$emit("some-error", [this, error]);
+        saveSelection(closeAfter, skipSnackBar) {
+            this.$emit("save-selection", closeAfter, skipSnackBar);
         },
-        breadcrumbNavigation(index) {
-            this.$emit("breadcrumb-navigation", index);
-        }
+        handleSaveAll() {
+            this.$emit("save-all");
+        },
+        closeReviewDialog() {
+            this.$emit("close-review-dialog");
+        } ,
+        //to show hide the warning in the review dialog
+        areReportableGeneSelected() {
+            if (!this.$refs.snpVariantsSelected || !this.reportGroups) {
+                return false;
+            }
+            var selectedGenes = [];
+            for (var i = 0; i < this.$refs.snpVariantsSelected.items.length; i++) {
+                var item = this.$refs.snpVariantsSelected.items[i];
+                selectedGenes.push(item.geneName);
+            }
+            var geneNamesToReport = [];
+            for (var i = 0; i < this.reportGroups.length; i++) {
+                if (this.reportGroups[i].required) {
+                    var genesToReport = this.reportGroups[i].genesToReport;
+                    for (var j = 0; j < genesToReport.length; j++) {
+                        geneNamesToReport.push(genesToReport[j]);
+                    }
+                }
+            }
+            for (var i = 0; i < geneNamesToReport.length; i++) {
+                var geneNameToReport = geneNamesToReport[i];
+                if (!selectedGenes.includes(geneNameToReport)) {
+                    return false;
+                }
+            }
+            return true;
+        },
+        //to color the reportGroup gene if already selected
+        isReportableGeneSelected(gene) {
+            for (var i = 0; i < this.$refs.snpVariantsSelected.items.length; i++) {
+                var item = this.$refs.snpVariantsSelected.items[i].geneName;
+                if (item == gene) {
+                    return true;
+                }
+            }
+            return false; pat
+        },
+        disableBreadCrumbItem(item, index) {
+            return (item.disabled || index == this.breadcrumbs.length - 1);
+        },
+        getDialogMaxHeight(offset) {
+            getDialogMaxHeight(offset);
+        },
+        updateSelectedVariantTable(selectedSNPVariants, snpHeaders, snpHeaderOrder, 
+            selectedCNVs, cnvHeaders, cnvHeaderOrder, 
+            selectedTranslocations, ftlHeaders, ftlHeaderOrder) {
+            this.$refs.snpVariantsSelected.manualDataFiltered(
+                { items: selectedSNPVariants, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });
+
+            this.$refs.cnvVariantsSelected.manualDataFiltered(
+                { items: selectedCNVs, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrder });
+
+            this.$refs.translocationVariantsSelected.manualDataFiltered(
+                { items: selectedTranslocations, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrder });
+        },
+        getSnpTable() {
+            return this.$refs.snpVariantsSelected;
+        },
+        getCnvTable() {
+            return this.$refs.cnvVariantsSelected;
+        },
+        getFtlTable() {
+            return this.$refs.translocationVariantsSelected;
+        },
     },
     computed: {
 
