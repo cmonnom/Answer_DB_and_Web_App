@@ -17,7 +17,7 @@ Vue.component('utsw-annotation-card', {
                 </v-flex>
                 <v-flex xs1>
                 <v-tooltip bottom>
-                    <v-switch slot="activator" class="no-height" :disabled="noEdit"
+                    <v-switch color="primary" slot="activator" class="no-height" :disabled="noEdit"
                     v-model="annotation.isSelected" @change="annotationSelectionChanged"></v-switch>
                     <span>Select/Unselect for Report</span>
                     </v-tooltip>

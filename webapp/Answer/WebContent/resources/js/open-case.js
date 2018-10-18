@@ -583,8 +583,9 @@ const OpenCase = {
                                     <v-layout row wrap>
                                     <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in mdaAnnotationsFormatted" :key="index" v-show="annotation.visible">
                                         <mda-annotation-card :annotation="annotation" :variant-type="currentVariantType"
-                                        :no-edit="true"
-                                        @annotation-selection-changed="handleAnnotationSelectionChanged()"></mda-annotation-card>
+                                        :no-edit="!canProceed('canAnnotate') || readonly"
+                                        @copy-mda-annotation="copyMDAAnnotation"
+                                        ></mda-annotation-card>
                                     </v-flex>
                                     </v-layout>
                                     </v-container>
@@ -2325,7 +2326,7 @@ const OpenCase = {
                     scopes: [],
                     scopeLevels: [],
                     scopeTooltip: "",
-                    tumorSpecific: "",
+                    tumorSpecific: false,
                     category: "",
                     createdDate: "",
                     createdSince: "",
@@ -2336,7 +2337,10 @@ const OpenCase = {
                     tier: "",
                     classification: "",
                     visible: true,
-                    isSelected: false
+                    isSelected: false,
+                    variantSpecific: false,
+                    geneSpecific: false,
+                    tempId: i //to retrieve the unformatted annotation later
                 };
                 // annotation._id = annotations.annotationCategories[i]._id;
                 // if (showUser) {
@@ -2345,6 +2349,9 @@ const OpenCase = {
                 var geneSpecific = true;
                 var variantSpecific =  annotations.annotationCategories[i].title == "Functional Annotation";
                 var tumorSpecific = annotations.annotationCategories[i].title == "Tumor type-specific annotation";
+                annotation.geneSpecific = geneSpecific;
+                annotation.variantSpecific = variantSpecific;
+                annotation.tumorSpecific = tumorSpecific;
                 annotation.text = annotations.annotationCategories[i].text.replace(/\n/g, "<br/>").replace(/(PMID:)([0-9]*)/g, `<a href='https://www.ncbi.nlm.nih.gov/pubmed/?term=$2' target="_blank">PMID:$2</a>`);
                 annotation.scopes = [geneSpecific ,variantSpecific, tumorSpecific];
                 annotation.scopeLevels = [
@@ -3552,6 +3559,57 @@ const OpenCase = {
             this.autoSaveInterval = setInterval(() => {
                 this.handleSaveAll(true);
             }, 120000);
+        },
+        copyMDAAnnotation(mdaAnnotation) {
+            if (!this.canProceed('canAnnotate') || this.readonly) {
+                return;
+            }
+            console.log(mdaAnnotation);
+            var regex = /(PMID:)([0-9]*)/g;
+            var text = this.mdaAnnotations.annotationCategories[mdaAnnotation.tempId].text;
+            var match = regex.exec(text);
+            var pmids = [];
+            while (match != null) {
+                pmids.push(match[2]);
+                match = regex.exec(text);
+            }
+            var tempSet = new Set();
+            for (var s = 0; s < pmids.length; s++) {
+                tempSet.add(pmids[s]);
+            }
+            pmids = tempSet.size != 0 ? Array.from(tempSet) : null;
+            var variantId = null;
+            if (mdaAnnotation.variantSpecific) {
+                variantId = this.currentVariant._id.$oid;
+            }
+            var utswAnnotation = {
+                origin: "UTSW",
+                text: text,
+                markedForDeletion: false,
+                isVisible: true,
+                geneId: this.currentVariant.geneName,
+                caseId: null,
+                pmids: pmids,
+                nctids: null,
+                isTumorSpecific: mdaAnnotation.tumorSpecific,
+                userId: null,
+                variantId: variantId,
+                isGeneSpecific: true,
+                isVariantSpecific: mdaAnnotation.variantSpecific,
+                isCaseSpecific: false,
+                isLeftSpecific: false,
+                isRightSpecific: false,
+                category: mdaAnnotation.category,
+                createdDate: null,
+                modifiedDate: null,
+                _id: null,
+                classification: null,
+                tier: null,
+                type: "snp",
+            }
+            console.log(utswAnnotation);
+            this.userAnnotations.push(utswAnnotation);
+            this.commitAnnotations(this.userAnnotations);
         }
     },
     mounted() {

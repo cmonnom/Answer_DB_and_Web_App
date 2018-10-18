@@ -17,9 +17,11 @@ Vue.component('mda-annotation-card', {
                 </v-flex>
                 <v-flex xs1>
                 <v-tooltip bottom>
-                    <v-switch slot="activator" class="no-height" :disabled="noEdit"
-                    v-model="annotation.isSelected" @change="annotationSelectionChanged"></v-switch>
-                    <span>Select/Unselect for Report</span>
+                <v-btn color="primary" slot="activator" @click="copyMDAAnnotation()" flat icon
+                :disabled="noEdit">
+                <v-icon>mdi-content-copy</v-icon>
+                </v-btn>
+                    <span>Create a UTSW annotation from this card</span>
                     </v-tooltip>
                 </v-flex>
                 <v-flex xs12>
@@ -71,8 +73,8 @@ Vue.component('mda-annotation-card', {
         isTranslocation() {
             return this.variantType == "translocation";
         },
-        annotationSelectionChanged() {
-            this.$emit("annotation-selection-changed");
+        copyMDAAnnotation() {
+            this.$emit("copy-mda-annotation", this.annotation);
         }
     },
     computed: {
