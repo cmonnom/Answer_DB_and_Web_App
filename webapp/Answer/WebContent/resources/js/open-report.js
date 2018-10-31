@@ -176,7 +176,9 @@ const OpenReport = {
             <span>Case Menu</span>
         </v-tooltip>
         <v-toolbar-title class="white--text ml-0">
-            Creating Report for case: {{ caseName }}
+            <span v-show="currentReportId">Modifying</span>
+            <span v-show="!currentReportId">Creating</span>
+             Report for case: {{ caseName }}
             <v-tooltip bottom>
                 <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
                 <span>{{caseType}} case</span>
@@ -227,7 +229,10 @@ const OpenReport = {
             @close-existing-reports="existingReportsVisible = false"
             @get-report-details="getReportDetails"
             @loading-report-details="updateLoadingReportDetails"
-            :current-report-id="currentReportId">
+            :current-report-id="currentReportId"
+            :readonly="readonly"
+            :report-unsaved="reportUnsaved"
+           >
             </existing-reports>
             </v-flex>
         </v-layout>
@@ -427,7 +432,8 @@ const OpenReport = {
             variantsMissingTier: [],
             urlQuery: {
                 reportId: null
-            }
+            },
+            finalizeReportExists: false
 
         }
     }, methods: {
@@ -506,7 +512,6 @@ const OpenReport = {
                         this.originalPossibleClinicalSignificance = [];
                         this.originalUnknownClinicalSignificance = [];
                         this.fullReport = response.data;
-                        console.log(this.fullReport);
                         this.currentReportId = this.fullReport._id ? this.fullReport._id.$oid : "";
                         this.urlQuery.reportId = this.currentReportId;
                         this.updateRoute();
@@ -607,7 +612,7 @@ const OpenReport = {
                         this.geneFusionVisible = true;
                     }
                     else {
-                        this.handleDialogs(response, this.getReportDetails.bind(null, reportId));
+                        this.handleDialogs(response.data, this.getReportDetails.bind(null, reportId));
                         this.loadingReportDetails = false;
                     }
                 }).catch(error => {
@@ -754,7 +759,6 @@ const OpenReport = {
             this.savingReport = true;
             this.updateFullReport();
 
-            console.log(this.fullReport);
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveReport",
@@ -768,6 +772,8 @@ const OpenReport = {
                     if (response.data.isAllowed && response.data.success) {
                         snackBarMessage = "Report Saved";
                         snackBarVisible = true;
+                        this.urlQuery.reportId = response.data.message;
+                        this.updateRoute();
                         this.$refs.existingReports.getExistingReports();
                         this.getReportDetails(response.data.message);
                         this.confirmationSaveDialogVisible = false;
@@ -816,11 +822,6 @@ const OpenReport = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        // snackBarMessage = "Report Saved";
-                        // snackBarVisible = true;
-                        // this.getReportDetails();
-                        console.log("done with preview"); //TODO
-                        console.log(webAppRoot + "/pdfs/" + response.data.message);
                         window.open(webAppRoot + "/pdfs/" + response.data.message, "_blank");
                     } else {
                         this.handleDialogs(response.data, this.previewReport);
@@ -853,7 +854,8 @@ const OpenReport = {
             if (report.dateModified) {
                 return report.modifiedSince + " (" + report.dateModified.split("T")[0] + ")";
             }
-        },
+        }
+      
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",

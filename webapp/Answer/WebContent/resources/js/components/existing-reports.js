@@ -2,9 +2,38 @@
 
 Vue.component('existing-reports', {
     props: {
-        currentReportId: {default: "", type: String}
+        currentReportId: {default: "", type: String},
+        readonly: {default: true, type: Boolean},
+        reportUnsaved: {default: true, type: Boolean},
     },
-    template: ` <v-card class="soft-grey-background">
+    template: `<div>
+    
+    <v-dialog v-model="finalizeConfirmationVisible" max-width="700px">
+    <v-toolbar dense dark color="primary">
+        <v-toolbar-title>
+            Finalize Report
+        </v-toolbar-title>
+    </v-toolbar>
+    <v-card>
+        <v-card-text class="pl-2 pr-2 subheading">
+            Finalizing a report is <b>permanent</b>. No other report can be finalized.<br/>
+            Only amendments and addenda will be allowed after this step.<br/>
+            <br/>
+            Please type your full name to confirm:
+            <v-text-field
+                v-model="fullNameField" class="mr-2 no-height" label="Full Name">
+            </v-text-field>
+        </v-card-text>
+        <v-card-actions class="card-actions-bottom">
+            <v-btn color="warning" @click="finalizeReport()" slot="activator" :disabled="!readyToFinalize()" :loading="finalizingReport">Finalize
+            </v-btn>
+            <v-btn color="error" @click="cancelFinalizeReport()" slot="activator" :disable="finalizingReport">Cancel
+            </v-btn>
+        </v-card-actions>
+    </v-card>
+</v-dialog>
+
+    <v-card class="soft-grey-background">
     <v-toolbar class="elevation-0" dense dark color="primary">
         <v-menu offset-y offset-x class="ml-0">
             <v-btn slot="activator" flat icon dark>
@@ -36,10 +65,20 @@ Vue.component('existing-reports', {
     <v-flex xs12>
         <v-btn @click="getReportDetails()">New Report</v-btn>
     </v-flex>
-    <v-flex xs12 lg4 xl3 v-for="report in existingReports" :key="report.reportName">
+    <v-flex xs12 lg4 xl3 v-for="report in existingReports" :key="report._id['$oid']">
         <v-card :color="isReportSelected(report) ? 'amber accent-2' : ''">
-            <v-card-text >
+            <v-card-text>
             <v-list :class="['dense-tiles', isReportSelected(report) ? 'amber accent-2' : '']" :color="isReportSelected(report) ? 'amber accent-2' : ''">
+            <v-list-tile v-if="report.finalized">
+            <v-list-tile-content class="pb-2">
+                <v-layout class="full-width" justify-space-between>
+                    <v-flex class="text-xs-left xs">
+                    <span class="'selectable'"><b>Finalized</b></span>
+                    <v-icon color="primary" class="pb-1">check</v-icon>
+                    </v-flex>
+                </v-layout>
+            </v-list-tile-content>
+            </v-list-tile>
                 <v-list-tile>
                     <v-list-tile-content class="pb-2">
                         <v-layout class="full-width" justify-space-between>
@@ -98,6 +137,14 @@ Vue.component('existing-reports', {
                 <v-btn @click="getReportDetails(report._id['$oid'])">
                 Load Report
                 </v-btn>
+                <v-tooltip bottom>
+                <v-btn slot="activator" @click="openFinalizeConfirmationDialog(report._id['$oid'])"
+                :disabled="finalizeButtonDisabled(report)">
+                Finalize
+                </v-btn>
+                <span v-show="finalizeButtonDisabled(report)">Load the report first. All edits must be saved.</span>
+                <span v-show="!finalizeButtonDisabled(report)">Finalize the report. NO OTHER REPORT CAN BE FINALIZED AFTER THIS ONE</span>
+                </v-tooltip>
             </v-card-actions>
 
         </v-card>
@@ -105,10 +152,17 @@ Vue.component('existing-reports', {
     </v-layout>
     </v-container>
     </v-card>
+    </div>
     `,
     data() {
         return {
-            existingReports: []
+            existingReports: [],
+            finalizeConfirmationVisible: false,
+            reportIdToFinalize: null,
+            fullNameField: "",
+            canFinalize: false,
+            finalizingReport: false
+
         }
     },
     methods: {
@@ -131,8 +185,9 @@ Vue.component('existing-reports', {
                 })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        console.log(response.data);
                         this.existingReports = response.data.reports;
+                        this.existingReports.forEach((r) => {console.log(r._id['$oid'])});
+                        this.canFinalize = !this.finalizeReportExists();
                         this.getReportDetails(this.$route.query.reportId);
                     }
                     else {
@@ -177,6 +232,67 @@ Vue.component('existing-reports', {
             console.log(error);
             bus.$emit("some-error", [this, error]);
         },
+        readyToFinalize() {
+            var nameMatch = this.getCurrentUserFullName().toUpperCase() == this.fullNameField.toUpperCase();
+            return this.reportIdToFinalize && !this.readonly && nameMatch;
+        },
+        cancelFinalizeReport() {
+            this.finalizeConfirmationVisible = false;
+            this.fullNameField = "";
+            this.reportIdToFinalize = null;
+        },
+        finalizeReport() {
+            // return; //TODO remove after testing
+            if (!this.readyToFinalize()) {
+                return;
+            }
+            this.finalizingReport = true;
+            axios({
+                method: 'post',
+                url: webAppRoot + "/finalizeReport",
+                params: {
+                    reportId: this.reportIdToFinalize,
+                },
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        snackBarMessage = "Report Finalized";
+                        snackBarVisible = true;
+                        this.getExistingReports();
+                        this.confirmationSaveDialogVisible = false;
+                    } else {
+                        this.handleDialogs(response.data, this.finalizeReport);
+                        this.finalizeConfirmationVisible = false;
+                    }
+                    this.finalizingReport = false;
+                })
+                .catch(error => {
+                    this.finalizingReport = false;
+                    this.finalizeConfirmationVisible = false;
+                    this.handleAxiosError(error);
+                });
+        },
+        openFinalizeConfirmationDialog(reportId) {
+            this.reportIdToFinalize = reportId;
+            this.fullNameField = "";
+            this.finalizeConfirmationVisible = true;
+        },
+        finalizeReportExists() {
+            for (var i = 0; i < this.existingReports.length; i++) {
+                var r = this.existingReports[i];
+                if (r.finalized) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        finalizeButtonDisabled(report) {
+            return !this.canFinalize || (report._id['$oid'] != this.currentReportId) || this.reportUnsaved;
+        },
+        getCurrentUserFullName() {
+            return userFullName; //global variable
+        }
+
     },
     computed: {
 

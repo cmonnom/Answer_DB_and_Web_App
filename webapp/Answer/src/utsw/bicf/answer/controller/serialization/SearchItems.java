@@ -20,7 +20,7 @@ import utsw.bicf.answer.controller.serialization.SearchItem;
  * @author Guillaume
  *
  */
-public abstract class SearchItems {
+public abstract class SearchItems{
 	
 	protected List<SearchItem> items;
 	Boolean isAllowed = true;

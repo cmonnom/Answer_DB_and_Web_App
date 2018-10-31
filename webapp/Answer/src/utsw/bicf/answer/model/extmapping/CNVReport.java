@@ -25,6 +25,7 @@ public class CNVReport {
 	Integer copyNumber;
 	String comment;
 	String loci;
+	String cytoband;
 	
 	public CNVReport() {
 		
@@ -42,6 +43,7 @@ public class CNVReport {
 		this.copyNumber = c.copyNumber;
 		this.comment = text;
 		this.loci = this.chrom + ":" + this.start + "-" + this.end;
+		this.cytoband = c.getCytoband();
 	}
 
 
@@ -162,6 +164,16 @@ public class CNVReport {
 
 	public void setLoci(String loci) {
 		this.loci = loci;
+	}
+
+
+	public String getCytoband() {
+		return cytoband;
+	}
+
+
+	public void setCytoband(String cytoband) {
+		this.cytoband = cytoband;
 	}
 
 

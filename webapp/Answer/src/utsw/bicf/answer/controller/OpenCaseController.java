@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
@@ -36,7 +37,10 @@ import utsw.bicf.answer.controller.serialization.DataFilterList;
 import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
+import utsw.bicf.answer.controller.serialization.SearchItems;
 import utsw.bicf.answer.controller.serialization.Utils;
+import utsw.bicf.answer.controller.serialization.vuetify.CNVChromosomeItems;
+import utsw.bicf.answer.controller.serialization.vuetify.GenesInPanelItems;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterItems;
@@ -64,9 +68,7 @@ import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
-import utsw.bicf.answer.reporting.parse.AnnotationRow;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
-import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
@@ -126,6 +128,12 @@ public class OpenCaseController {
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".verifyGeneNames",
 				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCNVChromList",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getGenesInPanel",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCNV",
+				IndividualPermission.CAN_ANNOTATE);
 		
 	}
 
@@ -537,7 +545,29 @@ public class OpenCaseController {
 		return null;
 
 	}
+	
+	@RequestMapping(value = "/getCNVChromList")
+	@ResponseBody
+	public String getCNVChromList(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		Set<String> selectItems = utils.getCNVChromomosomes(caseId);
+		if (selectItems != null) {
+			CNVChromosomeItems items = new CNVChromosomeItems(selectItems);
+			return items.createVuetifyObjectJSON();
+		}
+		return null;
+	}
+
+	@RequestMapping(value = "/getGenesInPanel")
+	@ResponseBody
+	public String getGenesInPanel(Model model, HttpSession session) throws Exception {
+		List<String> genesFound = modelDAO.getAllGenesInPanels();
+		GenesInPanelItems genes = new GenesInPanelItems(genesFound);
+		return genes.createVuetifyObjectJSON();		
+	}
+	
 	@RequestMapping(value = "/getTranslocationDetails")
 	@ResponseBody
 	public String getTranslocationDetails(Model model, HttpSession session, @RequestParam String variantId)
@@ -1108,6 +1138,33 @@ public class OpenCaseController {
 
 		return response.createObjectJSON();
 
+	}
+	
+	@RequestMapping(value = "/saveCNV")
+	@ResponseBody
+	public String saveCNV(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestBody String data) throws Exception {
+
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
+		AjaxResponse response = new AjaxResponse();
+		if (!isAssigned) {
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+		}
+		else {
+			ObjectMapper mapper = new ObjectMapper();
+			CNV cnv = mapper.readValue(data, CNV.class);
+			if (cnv != null) {
+				cnv.setType("cnv");
+				utils.saveCNV(response, cnv, caseId);
+			}
+			else {
+				response.setMessage("Nothing to save");
+			}
+		}
+		return response.createObjectJSON();
 	}
 	
 }

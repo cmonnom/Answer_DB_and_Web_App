@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CNV {
@@ -26,6 +28,7 @@ public class CNV {
 	Boolean utswAnnotated;
 	Boolean selected;
 	String type;
+	String cytoband;
 	
 	List<MongoDBId> annotationIdsForReporting;
 	
@@ -206,6 +209,19 @@ public class CNV {
 	}
 
 
+	public String getCytoband() {
+		return cytoband;
+	}
+
+
+	public void setCytoband(String cytoband) {
+		this.cytoband = cytoband;
+	}
+
+	public String createObjectJSON() throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writeValueAsString(this);
+	}
 
 
 }

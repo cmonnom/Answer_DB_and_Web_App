@@ -55,6 +55,7 @@ public class OrderCase {
 	String type; //Clinical or Research
 	String clinicalStage;
 	String treatmentStatus;
+	String labTestName;
 	
 	public OrderCase() {
 		
@@ -409,6 +410,16 @@ public class OrderCase {
 
 	public void setTreatmentStatus(String treatmentStatus) {
 		this.treatmentStatus = treatmentStatus;
+	}
+
+
+	public String getLabTestName() {
+		return labTestName;
+	}
+
+
+	public void setLabTestName(String labTestName) {
+		this.labTestName = labTestName;
 	}
 
 

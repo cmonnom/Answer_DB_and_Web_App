@@ -32,6 +32,7 @@ public class ControllerUtil {
 		initJSFiles(model, servletContext);
 		if (user != null) {
 			model.addAttribute("permissions", user.getIndividualPermission());
+			model.addAttribute("userFullName", user.getFullName());
 		}
 		model.addAttribute("timestamp", timestamp);
 		return "main-template";

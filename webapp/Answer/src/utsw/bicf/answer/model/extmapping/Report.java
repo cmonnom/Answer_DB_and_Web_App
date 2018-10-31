@@ -1,8 +1,11 @@
 package utsw.bicf.answer.model.extmapping;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,6 +44,14 @@ public class Report {
 	String reportName;
 	List<Variant> missingTierVariants = new ArrayList<Variant>();
 	List<CNV> missingTierCNVs = new ArrayList<CNV>();
+	Boolean finalized;
+	String labTestName;
+	
+	Set<String> snpIds = new HashSet<String>();
+	Set<String> cnvIds = new HashSet<String>();
+	Set<String> ftlIds = new HashSet<String>();
+	
+	Map<String, ReportNavigationRow> navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
 	
 	public Report() {
 	}
@@ -49,6 +61,7 @@ public class Report {
 		this.patientInfo = reportSummary.getPatientInfo();
 		this.caseId = reportSummary.getCaseId();
 		this.caseName = reportSummary.getCaseName();
+		this.labTestName = reportSummary.getLabTestName();
 		this.reportName = reportSummary.getReportName();
 		this.createdBy = reportSummary.getCreatedBy();
 		this.modifiedBy = reportSummary.getModifiedBy();
@@ -75,6 +88,13 @@ public class Report {
 		if (reportSummary.getClinicalTrialsSummary() != null) {
 			this.setClinicalTrials(reportSummary.getClinicalTrialsSummary().getItems());
 		}
+		this.finalized = reportSummary.getFinalized();
+		
+		this.snpIds = reportSummary.getSnpIds();
+		this.cnvIds = reportSummary.getCnvIds();
+		this.ftlIds = reportSummary.getFtlIds();
+		
+		this.navigationRowsPerGene = reportSummary.getNavigationRowsPerGene();
 	}
 	public MongoDBId getMongoDBId() {
 		return mongoDBId;
@@ -211,6 +231,125 @@ public class Report {
 
 	public void setMissingTierCNVs(List<CNV> missingTierCNVs) {
 		this.missingTierCNVs = missingTierCNVs;
+	}
+
+	public Boolean getFinalized() {
+		return finalized;
+	}
+
+	public void setFinalized(Boolean finalized) {
+		this.finalized = finalized;
+	}
+
+	public String getLabTestName() {
+		return labTestName;
+	}
+
+	public void setLabTestName(String labTestName) {
+		this.labTestName = labTestName;
+	}
+
+	public Set<String> getSnpIds() {
+		return snpIds;
+	}
+
+	public void setSnpIds(Set<String> snpIds) {
+		this.snpIds = snpIds;
+	}
+
+	public Set<String> getCnvIds() {
+		return cnvIds;
+	}
+
+	public void setCnvIds(Set<String> cnvIds) {
+		this.cnvIds = cnvIds;
+	}
+
+	public Set<String> getFtlIds() {
+		return ftlIds;
+	}
+
+	public void setFtlIds(Set<String> ftlIds) {
+		this.ftlIds = ftlIds;
+	}
+
+//	public void incrementCnvCount(String cytoband) {
+//		ReportNavigationRow row = this.navigationRowsPerGene.get(cytoband);
+//		if (row == null) {
+//			row = new ReportNavigationRow();
+//		}
+//		row.setCnvCount(row.getCnvCount() + 1);
+//		this.navigationRowsPerGene.put(cytoband, row);
+//	}
+	
+	public void incrementFusionCount(String fusionName) {
+		ReportNavigationRow row = this.navigationRowsPerGene.get(fusionName);
+		if (row == null) {
+			row = new ReportNavigationRow();
+		}
+		row.setFusionCount(row.getFusionCount() + 1);
+		this.navigationRowsPerGene.put(fusionName, row);
+	}
+	
+	public void incrementIndicatedTherapyCount(String geneName) {
+		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
+		if (row == null) {
+			row = new ReportNavigationRow();
+		}
+		row.setIndicatedTherapyCount(row.getIndicatedTherapyCount() + 1);
+		this.navigationRowsPerGene.put(geneName, row);
+	}
+	
+	public void incrementStrongClinicalSignificanceCount(String geneName) {
+		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
+		if (row == null) {
+			row = new ReportNavigationRow();
+		}
+		row.setStrongClinicalSignificanceCount(row.getStrongClinicalSignificanceCount() + 1);
+		this.navigationRowsPerGene.put(geneName, row);
+	}
+	
+	public void incrementPossibleClinicalSignificanceCount(String geneName) {
+		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
+		if (row == null) {
+			row = new ReportNavigationRow();
+		}
+		row.setPossibleClinicalSignificanceCount(row.getPossibleClinicalSignificanceCount() + 1);
+		this.navigationRowsPerGene.put(geneName, row);
+	}
+	
+	public void incrementUnknownClinicalSignificanceCount(String geneName) {
+		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
+		if (row == null) {
+			row = new ReportNavigationRow();
+		}
+		row.setUnknownClinicalSignificanceCount(row.getUnknownClinicalSignificanceCount() + 1);
+		this.navigationRowsPerGene.put(geneName, row);
+	}
+	
+	public void incrementClinicalTrialCount(String geneName) {
+		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
+		if (row == null) {
+			row = new ReportNavigationRow();
+		}
+		row.setClinicalTrialCount(row.getClinicalTrialCount() + 1);
+		this.navigationRowsPerGene.put(geneName, row);
+	}
+	
+	public void updateClinicalTrialCount() {
+		for (BiomarkerTrialsRow item : clinicalTrials) {
+			if (item.getIsSelected() != null && item.getIsSelected()) {
+				this.incrementClinicalTrialCount(item.getBiomarker().split(" ")[0]);
+			}
+		}
+	}
+
+	public Map<String, ReportNavigationRow> getNavigationRowsPerGene() {
+		return navigationRowsPerGene;
+	}
+
+	public void setNavigationRowsPerGene(Map<String, ReportNavigationRow> navigationRowsPerGene) {
+		this.navigationRowsPerGene = navigationRowsPerGene;
 	}
 	
 	

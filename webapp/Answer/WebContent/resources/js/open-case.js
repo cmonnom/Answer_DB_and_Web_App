@@ -14,6 +14,15 @@ const OpenCase = {
   </v-layout>
   </div>
 
+  <!-- add CNV dialog -->
+  <v-dialog v-model="addCNVDialogVisible" max-width="500px">
+    <add-cnv  @hide-add-cnv-panel="closeAddCNVDialog"
+    :no-edit="!canProceed('canAnnotate') || readonly"
+  :aberration-types="aberrationTypes"
+  :cnv-chrom-list="cnvChromList"
+  @refresh-cnv-table="getAjaxData"></add-cnv>
+  </v-dialog>
+
     <div>
     <v-dialog v-model="confirmationDialogVisible" max-width="300px">
         <v-card>
@@ -77,7 +86,7 @@ const OpenCase = {
                 <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :width-class="getWidthClassForVariantDetails()" :type="currentVariantType"
                     :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
                     @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
-                    ref="cnvVariantDetailsPanel" cnv-plot-id="cnvPlotEdit"
+                    ref="cnvVariantDetailsPanel" cnv-plot-id="cnvPlotEdit" :cnv-chrom-list="cnvChromList"
                     :variant-type="currentVariantType">
 
                 </variant-details>
@@ -350,7 +359,7 @@ const OpenCase = {
                                     :width-class="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                                     @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                                     @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel" @variant-details-changed=""
-                                    :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails">
+                                    :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails" :cnv-chrom-list="cnvChromList">
                                 </variant-details>
 
                             </v-flex>
@@ -845,6 +854,14 @@ const OpenCase = {
                                 <span>Advanced Filtering</span>
                             </v-tooltip>
                         </v-fade-transition>
+                        <v-fade-transition slot="action2">
+                            <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
+                                <v-btn slot="activator" flat icon @click="openAddCNVDialog()" :color="addCNVDialogVisible ? 'amber accent-2' : 'white'">
+                                    <v-icon>playlist_add</v-icon>
+                                </v-btn>
+                                <span>Add a new CNV</span>
+                            </v-tooltip>
+                        </v-fade-transition>
                         <v-list-tile avatar @click="toggleFilters('cnv')" slot="action1MenuItem">
                             <v-list-tile-avatar>
                                 <v-icon>filter_list</v-icon>
@@ -853,6 +870,14 @@ const OpenCase = {
                                 <v-list-tile-title>Advanced Filtering</v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
+                        <v-list-tile avatar @click="openAddCNVDialog()" slot="action2MenuItem">
+                        <v-list-tile-avatar>
+                            <v-icon>playlist_add</v-icon>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Add a new CNV</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
@@ -1043,7 +1068,9 @@ const OpenCase = {
             waitingForAjaxActive: false,
             saveAllNeeded: false,
             caseNotesChanged: false,
-            autoSaveInterval: null
+            autoSaveInterval: null,
+            cnvChromList: [],
+            addCNVDialogVisible: false
         }
     }, methods: {
         createSplashText() {
@@ -1064,6 +1091,12 @@ const OpenCase = {
                 case "canReview": return permissions.canReview;
                 default: return false;
             }
+        },
+        openAddCNVDialog() {
+            this.addCNVDialogVisible = true;
+        },
+        closeAddCNVDialog() {
+            this.addCNVDialogVisible = false;
         },
         toggleGeneVariantDetailsButtons(doShow) {
             this.geneVariantDetailsTableHovering = doShow;
@@ -1190,7 +1223,6 @@ const OpenCase = {
                 this.loadingVariantDetails = false;
                 this.$refs.advancedFilter.loading = false;
                 this.handleAxiosError(error);
-                bus.$emit("some-error", [this, error]);
             }
             );
         },
@@ -1692,7 +1724,17 @@ const OpenCase = {
                                 selected: false
                             })
                         }
-                        this.currentVariant.geneChips = geneChips.sort();
+                        this.currentVariant.geneChips = geneChips.sort((a, b) => {
+                        	const nameA = a.name.toUpperCase();
+                        	const nameB = b.name.toUpperCase();
+                        	if (nameA > nameB) {
+                        		return 1;
+                        	}
+                        	else if (nameA < nameB) {
+                        		return -1;
+                        	}
+                        	return 0;
+                        });
                         var infoTable = {
                             name: "infoTable",
                             items: [
@@ -1759,6 +1801,25 @@ const OpenCase = {
                     }
                 }).catch(error => {
                     this.loadingVariantDetails = false;
+                    this.handleAxiosError(error);
+                });
+        },
+        getCNVChromList() {
+            axios.get(
+                webAppRoot + "/getCNVChromList",
+                {
+                    params: {
+                        caseId: this.$route.params.id
+
+                    }
+                }).then(response => {
+                    if (response.data.isAllowed) {
+                        this.cnvChromList = response.data.items;
+
+                    } else {
+                        this.handleDialogs(response.data, this.getCNVChromList);
+                    }
+                }).catch(error => {
                     this.handleAxiosError(error);
                 });
         },
@@ -2939,7 +3000,6 @@ const OpenCase = {
                     }
                 }).catch(error => {
                     this.handleAxiosError(error);
-                    bus.$emit("some-error", [this, error]);
                 });
         },
         savePatientDetails(skipSnackBar) {
@@ -2971,7 +3031,6 @@ const OpenCase = {
             }).catch(error => {
                 this.savingPatientDetails = false;
                 this.handleAxiosError(error);
-                bus.$emit("some-error", [this, error]);
             });
         },
         openOncoTree() {
@@ -3270,7 +3329,6 @@ const OpenCase = {
             if (!this.canProceed('canAnnotate') || this.readonly) {
                 return;
             }
-            console.log(mdaAnnotation);
             var regex = /(PMID:)([0-9]*)/g;
             var text = this.mdaAnnotations.annotationCategories[mdaAnnotation.tempId].text;
             var match = regex.exec(text);
@@ -3313,7 +3371,6 @@ const OpenCase = {
                 tier: null,
                 type: "snp",
             }
-            console.log(utswAnnotation);
             this.userAnnotations.push(utswAnnotation);
             this.commitAnnotations(this.userAnnotations);
         }
@@ -3336,6 +3393,7 @@ const OpenCase = {
 
         this.$refs.geneVariantDetails.headerOptionsVisible = true;
         this.manageSplashScreen();
+        this.getCNVChromList();
     },
     created() {
         bus.$on('bam-viewer-closed', () => {

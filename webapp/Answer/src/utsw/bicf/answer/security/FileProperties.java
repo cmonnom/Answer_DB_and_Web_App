@@ -22,6 +22,8 @@ public class FileProperties {
 	File pdfLogoDir;
 	String pdfLinksPath;
 	File pdfLinksDir;
+	String pdfNGSLogoName;
+	String pdfUTSWLogoName;
 	
 	public String getMdaFilesPath() {
 		return mdaFilesPath;
@@ -178,6 +180,18 @@ public class FileProperties {
 	}
 	public void setPdfLinksDir(File pdfLinksDir) {
 		this.pdfLinksDir = pdfLinksDir;
+	}
+	public String getPdfNGSLogoName() {
+		return pdfNGSLogoName;
+	}
+	public void setPdfNGSLogoName(String pdfNGSLogoName) {
+		this.pdfNGSLogoName = pdfNGSLogoName;
+	}
+	public String getPdfUTSWLogoName() {
+		return pdfUTSWLogoName;
+	}
+	public void setPdfUTSWLogoName(String pdfUTSWLogoName) {
+		this.pdfUTSWLogoName = pdfUTSWLogoName;
 	}
 	
 	

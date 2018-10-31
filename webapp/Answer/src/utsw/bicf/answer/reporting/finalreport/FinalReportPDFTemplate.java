@@ -26,7 +26,7 @@ import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitRectangleDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitDestination;
 
 import be.quodlibet.boxable.BaseTable;
 import be.quodlibet.boxable.Cell;
@@ -43,6 +43,7 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
@@ -133,10 +134,11 @@ public class FinalReportPDFTemplate {
 		PDPageContentStream contentStream = new PDPageContentStream(mainDocument, firstPage,
 				PDPageContentStream.AppendMode.APPEND, true);
 		float yPos = pageHeight - FinalReportTemplateConstants.LOGO_MARGIN_TOP;
-		File ngsLogoFile = new File(fileProps.getPdfLogoDir(), FinalReportTemplateConstants.NGS_LOGO_PATH);
+		File ngsLogoFile = new File(fileProps.getPdfLogoDir(), fileProps.getPdfNGSLogoName());
 		Image ngsImage = new Image(ImageIO.read(ngsLogoFile));
-		ngsImage = ngsImage.scaleByWidth(118);
-		ngsImage.draw(mainDocument, contentStream, 247, yPos);
+		ngsImage = ngsImage.scaleByWidth(100);
+		float xPos = firstPage.getMediaBox().getWidth() - FinalReportTemplateConstants.MARGINRIGHT - ngsImage.getWidth();
+		ngsImage.draw(mainDocument, contentStream, xPos, yPos);
 		contentStream.close();
 	}
 
@@ -145,9 +147,10 @@ public class FinalReportPDFTemplate {
 		PDPageContentStream contentStream = new PDPageContentStream(mainDocument, firstPage,
 				PDPageContentStream.AppendMode.APPEND, true);
 		float yPos = pageHeight - FinalReportTemplateConstants.LOGO_MARGIN_TOP;
-		Image ngsImage = new Image(ImageIO.read(new File(fileProps.getPdfLogoDir(), FinalReportTemplateConstants.UTSW_LOGO_PATH)));
-		ngsImage = ngsImage.scaleByWidth(182);
-		ngsImage.draw(mainDocument, contentStream, 400, yPos);
+		Image ngsImage = new Image(ImageIO.read(new File(fileProps.getPdfLogoDir(), fileProps.getPdfUTSWLogoName())));
+		ngsImage = ngsImage.scaleByWidth(100);
+		float xPos = firstPage.getMediaBox().getWidth() - FinalReportTemplateConstants.MARGINRIGHT - ngsImage.getWidth();
+		ngsImage.draw(mainDocument, contentStream, xPos, yPos - ngsImage.getHeight() - 10);
 		contentStream.close();
 	}
 
@@ -156,7 +159,11 @@ public class FinalReportPDFTemplate {
 		PDPage firstPage = mainDocument.getPage(0);
 		PDPageContentStream contentStream = new PDPageContentStream(mainDocument, firstPage,
 				PDPageContentStream.AppendMode.APPEND, true);
-		PDStreamUtils.write(contentStream, FinalReportTemplateConstants.TITLE, FinalReportTemplateConstants.MAIN_FONT_TYPE, 16,
+		String testName = FinalReportTemplateConstants.TITLE;
+		if (report.getLabTestName() != null) {
+			testName = report.getLabTestName();
+		}
+		PDStreamUtils.write(contentStream, testName, FinalReportTemplateConstants.MAIN_FONT_TYPE, 16,
 				FinalReportTemplateConstants.MARGINLEFT, latestYPosition, Color.BLACK);
 		latestYPosition = latestYPosition - 30; // position of the patient table title
 		contentStream.close();
@@ -275,38 +282,59 @@ public class FinalReportPDFTemplate {
 		this.updatePotentialNewPagePosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		BaseTable table = createNewTable(currentPage);
-		//		//Title
-		//		Row<PDPage> row = table.createRow(12); 
-		//		table.addHeaderRow(row);
-		//		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE);
-		//		this.applyTitleHeaderFormatting(cellHeader);
-
-		//Headers
-		//		row = table.createRow(12); 
-		//		table.addHeaderRow(row);
-		//		cellHeader = row.createCell(25, "VARIANT");
-		//		this.applyHeaderFormatting(cellHeader, defaultFont);
-		//		cellHeader = row.createCell(20, "LEVEL");
-		//		this.applyHeaderFormatting(cellHeader, defaultFont);
-		//		cellHeader = row.createCell(55, "INDICATION");
-		//		this.applyHeaderFormatting(cellHeader, defaultFont);
-
+		
 
 		Row<PDPage> row = table.createRow(12);
-		Cell<PDPage> cell = row.createCell(25, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV);
+		Cell<PDPage> cell = row.createCell(20, FinalReportTemplateConstants.GENE_TITLE);
+		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.GENE_COLOR);
+		cell = row.createCell(20, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.THERAPY_COLOR);
-		cell = row.createCell(25, FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE_NAV);
+		cell = row.createCell(20, FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE_NAV);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.TRIAL_COLOR);
-		cell = row.createCell(25, FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV);
+		cell = row.createCell(20, FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
 		cell = row.createCell(10, FinalReportTemplateConstants.CNV_TITLE_SHORT);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.CNV_COLOR);
-		cell = row.createCell(15, FinalReportTemplateConstants.TRANSLOCATION_TITLE_SHORT);
+		cell = row.createCell(10, FinalReportTemplateConstants.TRANSLOCATION_TITLE_SHORT);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.FTL_COLOR);
+		
+		
+		report.updateClinicalTrialCount(); //update now in case the trial selection changed
+		boolean grayBackground = false;
+		for (String gene : report.getNavigationRowsPerGene().keySet()) {
+			Color defaultColor = Color.WHITE;
+			if (grayBackground) {
+				defaultColor = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+			}
+			ReportNavigationRow navigationRow = report.getNavigationRowsPerGene().get(gene);
+			row = table.createRow(12);
+			cell = row.createCell(20, gene);
+			this.applyNavigationCountCellFormatting(cell, defaultColor);
+			cell.setAlign(HorizontalAlignment.LEFT);
+			cell = row.createCell(20, navigationRow.getIndicatedTherapyCount() + "");
+			this.applyNavigationCountCellFormatting(cell, defaultColor);
+			cell = row.createCell(20, navigationRow.getClinicalTrialCount() + "");
+			this.applyNavigationCountCellFormatting(cell, defaultColor);
+			cell = row.createCell(20, navigationRow.getStrongClinicalSignificanceCount() + " / " + navigationRow.getPossibleClinicalSignificanceCount() + " / " + navigationRow.getUnknownClinicalSignificanceCount());
+			this.applyNavigationCountCellFormatting(cell, defaultColor);
+			cell = row.createCell(10, navigationRow.getCnvCount() + "");
+			this.applyNavigationCountCellFormatting(cell, defaultColor);
+			cell = row.createCell(10, navigationRow.getFusionCount() + "");
+			this.applyNavigationCountCellFormatting(cell, defaultColor);
+			grayBackground = !grayBackground;
+		}
+		
 
 		latestYPosition = table.draw() - 20;
 	}
 
+	private void applyNavigationCountCellFormatting(Cell<PDPage> cell, Color color) {
+		this.applyCellFormatting(cell, FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE, color);
+		cell.setAlign(HorizontalAlignment.CENTER);
+		cell.setValign(VerticalAlignment.MIDDLE);
+		cell.setBottomPadding(0);
+	}
+	
 	private BaseTable createNewTable(PDPage currentPage) throws IOException {
 		return new BaseTable(latestYPosition, pageHeight - FinalReportTemplateConstants.MARGINTOP, FinalReportTemplateConstants.MARGINBOTTOM, pageWidthMinusMargins,
 				FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, true, true);
@@ -326,7 +354,6 @@ public class FinalReportPDFTemplate {
 		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE);
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.THERAPY_COLOR);
-		links.add(new Link(FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1));
 
 		//Headers
 		row = table.createRow(12); 
@@ -354,6 +381,7 @@ public class FinalReportPDFTemplate {
 			greyBackground = !greyBackground;
 		}
 		latestYPosition = table.draw() - 20;
+		links.add(new Link(FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition));
 	}
 
 	private void createClinicalTrialsTable() throws IOException, URISyntaxException {
@@ -372,7 +400,7 @@ public class FinalReportPDFTemplate {
 		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE);
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.TRIAL_COLOR);
-		links.add(new Link(FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1));
+		links.add(new Link(FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition));
 
 		boolean trialsSelected = false;
 		for (BiomarkerTrialsRow item : report.getClinicalTrials()) {
@@ -519,7 +547,7 @@ public class FinalReportPDFTemplate {
 		this.updatePotentialNewPagePosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		if (addLink) {
-			links.add(new Link(FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV, this.mainDocument.getNumberOfPages() - 1));
+			links.add(new Link(FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition));
 		}
 
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
@@ -581,7 +609,7 @@ public class FinalReportPDFTemplate {
 		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.CNV_TITLE);
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.CNV_COLOR);
-		links.add(new Link(FinalReportTemplateConstants.CNV_TITLE_SHORT, this.mainDocument.getNumberOfPages() - 1));
+		links.add(new Link(FinalReportTemplateConstants.CNV_TITLE_SHORT, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition));
 
 
 		if (items == null || items.isEmpty()) {
@@ -597,9 +625,9 @@ public class FinalReportPDFTemplate {
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			cellHeader = row.createCell(10, "COPY NB.");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
-			cellHeader = row.createCell(30, "GENES");
+			cellHeader = row.createCell(20, "CYTOBAND");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
-			cellHeader = row.createCell(35, "COMMENT");
+			cellHeader = row.createCell(45, "COMMENT");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			boolean greyBackground = false;
 			Color color = Color.WHITE;
@@ -613,9 +641,9 @@ public class FinalReportPDFTemplate {
 				cell = row.createCell(10, item.getCopyNumber() + "");
 				this.applyCellFormatting(cell, defaultFont, color);
 				cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
-				cell = row.createCell(30, item.getGenes());
+				cell = row.createCell(20, item.getCytoband());
 				this.applyCellFormatting(cell, defaultFont, color);
-				cell = row.createCell(35, item.getComment());
+				cell = row.createCell(45, item.getComment());
 				this.applyCellFormatting(cell, defaultFont, color);
 				greyBackground = !greyBackground;
 			}
@@ -638,7 +666,7 @@ public class FinalReportPDFTemplate {
 		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.TRANSLOCATION_TITLE);
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.FTL_COLOR);
-		links.add(new Link(FinalReportTemplateConstants.TRANSLOCATION_TITLE_SHORT, this.mainDocument.getNumberOfPages() - 1));
+		links.add(new Link(FinalReportTemplateConstants.TRANSLOCATION_TITLE_SHORT, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition));
 
 		if (items == null || items.isEmpty()) {
 			row = table.createRow(12);
@@ -852,8 +880,9 @@ public class FinalReportPDFTemplate {
 			}
 			else if (link.getDestinationPageNb() != null) {
 				PDActionGoTo gotoAction = new PDActionGoTo();
-				PDPageFitRectangleDestination dest = new PDPageFitRectangleDestination();
+				PDPageFitDestination dest = new PDPageFitDestination();
 				dest.setPage(mainDocument.getPage(link.getDestinationPageNb()));
+//				dest.setBottom(link.getTop());
 				gotoAction.setDestination(dest);
 				annotation.setAction(gotoAction);
 			}

@@ -1433,7 +1433,9 @@ Vue.component('annotation-details', {
                                 selected: false
                             })
                         }
-                        this.currentVariant.geneChips = geneChips.sort();
+                        this.currentVariant.geneChips = geneChips.sort((a, b) => {
+                        	return a.name - b.name;
+                        });
                         var infoTable = {
                             name: "infoTable",
                             items: [

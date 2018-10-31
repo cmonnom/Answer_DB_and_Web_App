@@ -4,8 +4,11 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,6 +23,7 @@ import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
 
 public class ReportSummary {
 	
@@ -60,6 +64,15 @@ public class ReportSummary {
 	
 	List<Variant> missingTierVariants = new ArrayList<Variant>();
 	List<CNV> missingTierCNVs = new ArrayList<CNV>();
+	Boolean finalized;
+	
+	String labTestName;
+	
+	Set<String> snpIds = new HashSet<String>();
+	Set<String> cnvIds = new HashSet<String>();
+	Set<String> ftlIds = new HashSet<String>();
+	
+	Map<String, ReportNavigationRow> navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
 	
 	public ReportSummary() {
 		
@@ -84,6 +97,7 @@ public class ReportSummary {
 		this.modifiedBy = reportDetails.getModifiedBy();
 		this.caseId = reportDetails.getCaseId();
 		this.caseName = reportDetails.getCaseName();
+		this.labTestName = reportDetails.getLabTestName();
 		this.summary = reportDetails.getSummary();
 		this.reportName = reportDetails.getReportName();
 		this.createdByName = createdByUser.getFullName();
@@ -103,6 +117,13 @@ public class ReportSummary {
 	
 		this.missingTierVariants = reportDetails.getMissingTierVariants();
 		this.missingTierCNVs = reportDetails.getMissingTierCNVs();
+		this.finalized = reportDetails.getFinalized();
+		
+		this.snpIds = reportDetails.getSnpIds();
+		this.cnvIds = reportDetails.getCnvIds();
+		this.ftlIds = reportDetails.getFtlIds();
+		
+		this.navigationRowsPerGene = reportDetails.getNavigationRowsPerGene();
 	}
 	
 	public String createObjectJSON() throws JsonProcessingException {
@@ -306,6 +327,55 @@ public class ReportSummary {
 	public void setMissingTierCNVs(List<CNV> missingTierCNVs) {
 		this.missingTierCNVs = missingTierCNVs;
 	}
+
+	public Boolean getFinalized() {
+		return finalized;
+	}
+
+	public void setFinalized(Boolean finalized) {
+		this.finalized = finalized;
+	}
+
+	public String getLabTestName() {
+		return labTestName;
+	}
+
+	public void setLabTestName(String labTestName) {
+		this.labTestName = labTestName;
+	}
+
+	public Set<String> getSnpIds() {
+		return snpIds;
+	}
+
+	public void setSnpIds(Set<String> snpIds) {
+		this.snpIds = snpIds;
+	}
+
+	public Set<String> getCnvIds() {
+		return cnvIds;
+	}
+
+	public void setCnvIds(Set<String> cnvIds) {
+		this.cnvIds = cnvIds;
+	}
+
+	public Set<String> getFtlIds() {
+		return ftlIds;
+	}
+
+	public void setFtlIds(Set<String> ftlIds) {
+		this.ftlIds = ftlIds;
+	}
+
+	public Map<String, ReportNavigationRow> getNavigationRowsPerGene() {
+		return navigationRowsPerGene;
+	}
+
+	public void setNavigationRowsPerGene(Map<String, ReportNavigationRow> navigationRowsPerGene) {
+		this.navigationRowsPerGene = navigationRowsPerGene;
+	}
+
 
 	
 }

@@ -109,6 +109,9 @@
 		<property name="pdfFilesPath" value="${pdf.temp.location}" />
 		<property name="pdfLogoPath" value="${pdf.logo.location}" />
 		<property name="pdfLinksPath" value="${pdf.link.location}" />
+		<property name="pdfNGSLogoName" value="${pdf.ngs.logo.name}" />
+		<property name="pdfUTSWLogoName" value="${pdf.utsw.logo.name}" />
+		
 	</bean>
 	
 	<bean id="emailProps" class="utsw.bicf.answer.security.EmailProperties">

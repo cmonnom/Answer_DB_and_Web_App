@@ -51,6 +51,8 @@ public class OpenReportController {
 				IndividualPermission.CAN_REVIEW);
 		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".previewReport",
 				IndividualPermission.CAN_REVIEW);
+		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".finalizeReport",
+				IndividualPermission.CAN_REVIEW);
 		
 	}
 
@@ -126,7 +128,8 @@ public class OpenReportController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		Report reportDetails = null;
 		if (reportId.equals("")) {
-			reportDetails = utils.buildReportManually(caseId);
+			User user = (User) session.getAttribute("user");
+			reportDetails = utils.buildReportManually(caseId, user);
 		}
 		else {
 			reportDetails = utils.getReportDetails(reportId);
@@ -197,7 +200,13 @@ public class OpenReportController {
 			else {
 				reportToSave = new Report(reportSummary);
 			}
-			utils.saveReport(response, reportToSave);
+			if (reportToSave.getFinalized() == null || !reportToSave.getFinalized()) {
+				utils.saveReport(response, reportToSave); //can still save if not finalized
+			}
+			else {
+				response.setSuccess(false);
+				response.setMessage("You cannot modified a finalized report. Use an amendment or an addendum");
+			}
 		}
 		return response.createObjectJSON();
 	}
@@ -230,6 +239,61 @@ public class OpenReportController {
 			String linkName = pdfReport.createPDFLink(fileProps);
 			response.setSuccess(true);
 			response.setMessage(linkName);
+		}
+		return response.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/finalizeReport")
+	@ResponseBody
+	public String finalizeReport(Model model, HttpSession session,
+			@RequestParam String reportId) throws Exception {
+
+		RequestUtils utils = new RequestUtils(modelDAO);
+		Report reportDetails = null;
+		AjaxResponse response = new AjaxResponse();
+		if (reportId.equals("")) {
+			response.setSuccess(false);
+			response.setIsAllowed(false);
+			response.setMessage("No report id provided");
+		}
+		else {
+			reportDetails = utils.getReportDetails(reportId);
+			if (reportDetails == null) {
+				response.setSuccess(false);
+				response.setIsAllowed(false);
+				response.setMessage("Invalid report id: " + reportId);
+			}
+			else {
+				//make sure the report is not finalized already
+				if (reportDetails.getFinalized() != null && reportDetails.getFinalized()) {
+					response.setSuccess(false);
+					response.setMessage("This report has already been finalized.");
+				}
+				else{
+					//make sure no other report was finalized for this case
+					List<Report> existingReports = utils.getExistingReports(reportDetails.getCaseId());
+					boolean alreadyFinalized = false; 
+					for (Report r: existingReports) {
+						if (r.getFinalized() != null 
+								&& r.getFinalized() 
+								&& r.getMongoDBId().getOid().equals(reportDetails.getMongoDBId().getOid())) {
+							//another report is already finalized
+							alreadyFinalized = true;
+							break;
+						}
+					}
+					if (alreadyFinalized) {
+						response.setSuccess(false);
+						response.setIsAllowed(false);
+						response.setMessage("Another report is already finalized. You can only have one report finalized per case.");
+					}
+					else {
+						utils.finalizeReport(response, reportDetails);
+					}
+					
+				}
+				
+			}
 		}
 		return response.createObjectJSON();
 	}

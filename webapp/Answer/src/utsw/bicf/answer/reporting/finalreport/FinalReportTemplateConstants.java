@@ -45,6 +45,7 @@ public class FinalReportTemplateConstants {
 	public static final LineStyle NO_BORDER_THIN = new LineStyle(Color.WHITE, 1.5f);
 	public static final LineStyle LIGHT_GRAY_BORDER_THIN = new LineStyle(BACKGROUND_LIGHT_GRAY, 1.5f);
 
+	public static final Color GENE_COLOR = new Color(255, 171, 64);
 	public static final Color THERAPY_COLOR = new Color(77, 182, 172);
 	public static final Color TRIAL_COLOR = new Color(97, 184, 101);
 	public static final Color CLIN_SIGNIFICANCE_COLOR = new Color(51, 121, 199);
@@ -52,8 +53,6 @@ public class FinalReportTemplateConstants {
 	public static final Color FTL_COLOR = new Color(59, 162, 244);
 	
 	
-	public static final String NGS_LOGO_PATH = "Im4.png";
-	public static final String UTSW_LOGO_PATH = "Im5.png";
 	public static final List<String> ADDRESS = new ArrayList<String>();
 	public static final String TRIAL_URL = "https://clinicaltrials.gov/ct2/show/";
 
@@ -61,8 +60,10 @@ public class FinalReportTemplateConstants {
 	
 	//_NAV titles are meant to be slightly different than the regular title
 	//This will allow a unique "link" search term when adding links
-	public static final String TITLE = "1425-Gene Pan-Cancer Mutation Test";
+	public static final String TITLE = "1385-Gene Pan-Cancer Mutation Test";
 	public static final String PATIENT_DETAILS_TITLE = "PATIENT RECORD";
+	
+	public static final String GENE_TITLE = "GENE";
 	public static final String INDICATED_THERAPIES_TITLE = "INDICATED THERAPIES";
 	public static final String INDICATED_THERAPIES_TITLE_NAV = " INDICATED THERAPIES ";
 	public static final String CLINICAL_TRIALS_TITLE = "CLINICAL TRIALS";

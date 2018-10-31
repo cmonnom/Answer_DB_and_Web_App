@@ -11,8 +11,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
@@ -35,6 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
+import utsw.bicf.answer.controller.serialization.SearchItemString;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.AnswerDBCredentials;
@@ -59,6 +62,7 @@ import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.QcAPIAuthentication;
@@ -624,6 +628,40 @@ public class RequestUtils {
 		}
 		
 	}
+	
+	public Set<String> getCNVChromomosomes(String caseId) throws URISyntaxException, ClientProtocolException, IOException{
+		List<String> toSkip = new ArrayList<String>();
+		toSkip.add("chrX");
+		toSkip.add("chrY");
+		toSkip.add("chr22_KI270879v1_alt");
+		
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/cnvplot");
+		URI uri = new URI(sbUrl.toString());
+
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+		
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			Set<String> uniqItems = new HashSet<String>();
+			CNVPlotDataRaw plotDataRaw = mapper.readValue(response.getEntity().getContent(), CNVPlotDataRaw.class);
+			for (List<String> items : plotDataRaw.getCnr()) {
+				if (items.get(0).equals("Gene")) {
+					continue; //skip the 1st row
+				}
+				String cnrChrom = items.get(1);
+				if (!toSkip.contains(cnrChrom)) { //skip chromosomes in the toSkip list
+					uniqItems.add(cnrChrom);
+				}
+				
+			}
+			return uniqItems;
+		}
+		return null;
+	}
 
 	public CNVPlotData getCnvPlotData(String caseId, String chrom) throws URISyntaxException, ClientProtocolException, IOException {
 		List<String> toSkip = new ArrayList<String>();
@@ -769,11 +807,12 @@ public class RequestUtils {
 
 	//temp method to test displaying the report
 	//while Ben implements the API
-	public Report buildReportManually(String caseId) throws ClientProtocolException, IOException, URISyntaxException {
+	public Report buildReportManually(String caseId, User user) throws ClientProtocolException, IOException, URISyntaxException {
 		Report report = new Report();
 		OrderCase caseDetails = getCaseDetails(caseId, null);
 		report.setCaseId(caseDetails.getCaseId());
 		report.setCaseName(caseDetails.getCaseName());
+		report.setLabTestName(caseDetails.getLabTestName());
 		PatientInfo patientInfo = new PatientInfo(caseDetails);
 		report.setPatientInfo(patientInfo);
 		report.setReportName(caseDetails.getCaseName());
@@ -814,6 +853,8 @@ public class RequestUtils {
 					}
 					if (atLeastOneSelected) {
 						cnvReports.add(new CNVReport(sb.toString(), cnv));
+						report.getCnvIds().add(cnv.getMongoDBId().getOid());
+//						report.incrementCnvCount(cnv.getCytoband()); //don't count CNVs at this stage
 					}
 				}
 			}
@@ -839,6 +880,8 @@ public class RequestUtils {
 					}
 					if (atLeastOneSelected) {
 						translocationReports.add(new TranslocationReport(sb.toString(), ftl));
+						report.getFtlIds().add(ftl.getMongoDBId().getOid());
+						report.incrementFusionCount(ftl.getFusionName());
 					}
 				}
 			}
@@ -858,6 +901,8 @@ public class RequestUtils {
 						if (a != null && a.getIsSelected() != null && a.getIsSelected()
 								&& a.getCategory() != null && a.getCategory().equals("Therapy")) {
 							annotations.add(new IndicatedTherapy(a, v));
+							report.getSnpIds().add(v.getMongoDBId().getOid());
+							report.incrementIndicatedTherapyCount(v.getGeneName());
 						}
 					}
 				}
@@ -875,6 +920,8 @@ public class RequestUtils {
 						if (a != null && a.getIsSelected() != null && a.getIsSelected()
 								&& a.getCategory() != null && a.getCategory().equals("Therapy")) {
 							annotations.add(new IndicatedTherapy(a, v));
+							report.getFtlIds().add(v.getMongoDBId().getOid());
+							report.incrementIndicatedTherapyCount(v.getFusionName());
 						}
 					}
 				}
@@ -883,8 +930,8 @@ public class RequestUtils {
 		}
 		report.setIndicatedTherapies(indicatedTherapies);
 		
-		report.setModifiedBy(1);
-		report.setCreatedBy(1);
+		report.setModifiedBy(user.getUserId());
+		report.setCreatedBy(user.getUserId());
 		report.setDateCreated(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 		report.setDateModified(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 		
@@ -936,13 +983,19 @@ public class RequestUtils {
 				
 				String name = v.getGeneName() + " " + v.getNotation();
 				if (!strongAnnotations.isEmpty()) {
+					report.getSnpIds().add(v.getMongoDBId().getOid());
 					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
+					report.incrementStrongClinicalSignificanceCount(v.getGeneName());
 				}
 				if (!possibleAnnotations.isEmpty()) {
+					report.getSnpIds().add(v.getMongoDBId().getOid());
 					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
+					report.incrementPossibleClinicalSignificanceCount(v.getGeneName());
 				}
 				if (!unknownAnnotations.isEmpty()) {
+					report.getSnpIds().add(v.getMongoDBId().getOid());
 					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
+					report.incrementUnknownClinicalSignificanceCount(v.getGeneName());
 				}
 					
 			}
@@ -998,13 +1051,19 @@ public class RequestUtils {
 					}
 					String name = genes;
 					if (!strongAnnotations.isEmpty()) {
+						report.getCnvIds().add(v.getMongoDBId().getOid());
 						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
+						report.incrementStrongClinicalSignificanceCount(name.replaceAll("\\.", ""));
 					}
 					if (!possibleAnnotations.isEmpty()) {
+						report.getCnvIds().add(v.getMongoDBId().getOid());
 						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
+						report.incrementPossibleClinicalSignificanceCount(name.replaceAll("\\.", ""));
 					}
 					if (!unknownAnnotations.isEmpty()) {
+						report.getCnvIds().add(v.getMongoDBId().getOid());
 						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
+						report.incrementUnknownClinicalSignificanceCount(name.replaceAll("\\.", ""));
 					}
 				}
 				if (!hasTiers) {
@@ -1054,6 +1113,28 @@ public class RequestUtils {
 		}
 		
 	}
+	
+	public void saveCNV(AjaxResponse ajaxResponse, CNV cnvToSave, String caseId) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/cnv");
+		URI uri = new URI(sbUrl.toString());
+
+		System.out.println(cnvToSave.createObjectJSON());
+		HttpResponse response = null;
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		requestPost.setEntity(new StringEntity(cnvToSave.createObjectJSON(), ContentType.APPLICATION_JSON));
+		response = client.execute(requestPost);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		
+	}
 
 	public List<Report> getExistingReports(String caseId) throws JsonParseException, JsonMappingException, UnsupportedOperationException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
@@ -1072,6 +1153,28 @@ public class RequestUtils {
 			return reports.getResult();
 		}
 		return null;
+	}
+
+	public void finalizeReport(AjaxResponse ajaxResponse, Report reportDetails) throws URISyntaxException, ClientProtocolException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("report/"); 
+		sbUrl.append(reportDetails.getMongoDBId().getOid());
+		sbUrl.append("/finalize");
+		URI uri = new URI(sbUrl.toString());
+		requestPut = new HttpPut(uri);
+
+		addAuthenticationHeader(requestPut);
+
+		HttpResponse response = client.execute(requestPut);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+		}
+		else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
 	}
 
 

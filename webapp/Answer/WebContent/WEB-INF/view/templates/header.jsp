@@ -15,6 +15,8 @@
         const csrf = { paramName: "${_csrf.parameterName}",
         value: "${_csrf.token}",
         csrf:"${_csrf}" }
+
+        const userFullName = "${userFullName}";
 </script>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700">
