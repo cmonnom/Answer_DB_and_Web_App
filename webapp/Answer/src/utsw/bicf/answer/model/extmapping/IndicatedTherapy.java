@@ -10,6 +10,7 @@ public class IndicatedTherapy {
 	String variant;
 	String level;
 	String indication;
+	String tier;
 	
 	public IndicatedTherapy() {
 	}
@@ -21,7 +22,8 @@ public class IndicatedTherapy {
 			case "1A": this.level = "FDA-Approved"; break;
 			case "1B": this.level = "Strong Evidence"; break;
 			case "2C": this.level = "Weak Evidence"; break;
-		}
+			}
+			this.tier = a.getTier();
 		}
 		this.indication = a.getText();
 	}
@@ -33,17 +35,18 @@ public class IndicatedTherapy {
 			case "1B": this.level = "Strong Evidence"; break;
 			case "2C": this.level = "Weak Evidence"; break;
 			}
+			this.tier = a.getTier();
 		}
 		this.indication = a.getText();
 	}
-	public IndicatedTherapy(AnnotationCategory cat, Variant v) {
-		this.variant = v.getGeneName() + " " + v.getNotation();
-		this.indication = cat.getText();
-	}
-	public IndicatedTherapy(AnnotationCategory cat, Translocation v) {
-		this.variant = v.getLeftGene() + "-" + v.getRightGene();
-		this.indication = cat.getText();
-	}
+//	public IndicatedTherapy(AnnotationCategory cat, Variant v) {
+//		this.variant = v.getGeneName() + " " + v.getNotation();
+//		this.indication = cat.getText();
+//	}
+//	public IndicatedTherapy(AnnotationCategory cat, Translocation v) {
+//		this.variant = v.getLeftGene() + "-" + v.getRightGene();
+//		this.indication = cat.getText();
+//	}
 
 
 	public String getVariant() {
@@ -63,6 +66,14 @@ public class IndicatedTherapy {
 	}
 	public void setIndication(String indication) {
 		this.indication = indication;
+	}
+
+	public String getTier() {
+		return tier;
+	}
+
+	public void setTier(String tier) {
+		this.tier = tier;
 	}
 	
 	

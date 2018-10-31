@@ -9,8 +9,10 @@ import java.io.Writer;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -301,7 +303,8 @@ public class FinalReportPDFTemplate {
 		
 		report.updateClinicalTrialCount(); //update now in case the trial selection changed
 		boolean grayBackground = false;
-		for (String gene : report.getNavigationRowsPerGene().keySet()) {
+		List<String> sortedKeys = report.getNavigationRowsPerGene().keySet().stream().sorted().collect(Collectors.toList());
+		for (String gene : sortedKeys) {
 			Color defaultColor = Color.WHITE;
 			if (grayBackground) {
 				defaultColor = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
@@ -311,15 +314,15 @@ public class FinalReportPDFTemplate {
 			cell = row.createCell(20, gene);
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
 			cell.setAlign(HorizontalAlignment.LEFT);
-			cell = row.createCell(20, navigationRow.getIndicatedTherapyCount() + "");
+			cell = row.createCell(20, navigationRow.getIndicatedTherapyCount() == 0 ? "" : navigationRow.getIndicatedTherapyCount() + "");
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
-			cell = row.createCell(20, navigationRow.getClinicalTrialCount() + "");
+			cell = row.createCell(20, navigationRow.getClinicalTrialCount() == 0 ? "" :  navigationRow.getClinicalTrialCount() + "");
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
 			cell = row.createCell(20, navigationRow.getStrongClinicalSignificanceCount() + " / " + navigationRow.getPossibleClinicalSignificanceCount() + " / " + navigationRow.getUnknownClinicalSignificanceCount());
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
-			cell = row.createCell(10, navigationRow.getCnvCount() + "");
+			cell = row.createCell(10, navigationRow.getCnvCount() == 0 ? "" : navigationRow.getCnvCount() + "");
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
-			cell = row.createCell(10, navigationRow.getFusionCount() + "");
+			cell = row.createCell(10, navigationRow.getFusionCount() == 0 ? "" : navigationRow.getFusionCount() + "");
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
 			grayBackground = !grayBackground;
 		}
@@ -366,7 +369,13 @@ public class FinalReportPDFTemplate {
 		this.applyHeaderFormatting(cellHeader, defaultFont);
 
 		boolean greyBackground = false;
-		for (IndicatedTherapy item : items) {
+		List<IndicatedTherapy> sortedItems = items.stream().sorted(new Comparator<IndicatedTherapy>() {
+			@Override
+			public int compare(IndicatedTherapy o1, IndicatedTherapy o2) {
+				return o1.getTier().compareTo(o2.getTier());
+			}
+		}).collect(Collectors.toList());
+		for (IndicatedTherapy item : sortedItems) {
 			Color color = Color.WHITE;
 			if (greyBackground) {
 				color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;

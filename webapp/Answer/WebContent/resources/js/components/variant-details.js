@@ -405,7 +405,7 @@ Vue.component('variant-details', {
                                     exact: false,
                                     smartSampling: true,
                                     maxNodes: 0,
-                                    maxTrackers: this.cnvPlotLoadingAllChrom ? response.data.dataPointCount + 100 : 0, //need amount bigger than nb of data points
+                                    maxTrackers: response.data.dataPointCount + 100, //need amount bigger than nb of data points
                                     lineWidth: 4,
                                     shadow: false,
                                     marker: {
@@ -571,7 +571,7 @@ Vue.component('variant-details', {
         },
         createCnvPlotTitle() {
             var title = 'CNV Plot for ';
-            if (!this.cnvPlotLoadingAllChrom) {
+            if (this.cnvPlotLoadingAllChrom) {
                 title += 'all Chromosomes (CN=<b>2</b> VS Others)';
             }
             else if (this.genesSelected.length > 0) {
@@ -611,11 +611,13 @@ Vue.component('variant-details', {
             this.updateCNVPlot(this.currentVariant.chrom);
         },
         handleCNVCurrentChromPlot() {
+            // this.currentCNVPlotType = "CURRENT";
             this.cnvPlotLoadingCurrentChrom = true;
             this.selectedCNVChrom = null;
             this.updateCNVPlot(this.currentVariant.chrom);
         },
         handleCNVAllChromPlot() {
+            // this.currentCNVPlotType = "ALL";
             this.cnvPlotLoadingAllChrom = true;
             this.selectedCNVChrom = null;
             this.updateCNVPlot();
@@ -648,6 +650,7 @@ Vue.component('variant-details', {
         },
         otherCNVChromChanged() {
             if (this.selectedCNVChrom) {
+                this.currentCNVPlotType = "OTHER";
                 this.cnvPlotLoadingOtherChrom = true;
                 this.updateCNVPlot(this.selectedCNVChrom);
             }
