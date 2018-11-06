@@ -2,8 +2,6 @@ package utsw.bicf.answer.model.extmapping;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import utsw.bicf.answer.reporting.parse.AnnotationCategory;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IndicatedTherapy {
 
@@ -11,6 +9,9 @@ public class IndicatedTherapy {
 	String level;
 	String indication;
 	String tier;
+	String type; //used to keep track of where the variant came from
+	String oid; //used to keep counts of variants used
+	boolean readonly;
 	
 	public IndicatedTherapy() {
 	}
@@ -26,6 +27,8 @@ public class IndicatedTherapy {
 			this.tier = a.getTier();
 		}
 		this.indication = a.getText();
+		this.type = v.getType();
+		this.oid = v.getMongoDBId().getOid();
 	}
 	public IndicatedTherapy(Annotation a, Translocation v) {
 		this.variant = a.getLeftGene() + "-" + a.getRightGene();
@@ -38,6 +41,8 @@ public class IndicatedTherapy {
 			this.tier = a.getTier();
 		}
 		this.indication = a.getText();
+		this.type = v.getType();
+		this.oid = v.getMongoDBId().getOid();
 	}
 //	public IndicatedTherapy(AnnotationCategory cat, Variant v) {
 //		this.variant = v.getGeneName() + " " + v.getNotation();
@@ -74,6 +79,30 @@ public class IndicatedTherapy {
 
 	public void setTier(String tier) {
 		this.tier = tier;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getOid() {
+		return oid;
+	}
+
+	public void setOid(String oid) {
+		this.oid = oid;
+	}
+
+	public boolean isReadonly() {
+		return readonly;
+	}
+
+	public void setReadonly(boolean readonly) {
+		this.readonly = readonly;
 	}
 	
 	

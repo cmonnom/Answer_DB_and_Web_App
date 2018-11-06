@@ -63,7 +63,7 @@ public class FinalReportTemplateConstants {
 	public static final String TITLE = "1385-Gene Pan-Cancer Mutation Test";
 	public static final String PATIENT_DETAILS_TITLE = "PATIENT RECORD";
 	
-	public static final String GENE_TITLE = "GENE";
+	public static final String GENE_TITLE = "GENES";
 	public static final String INDICATED_THERAPIES_TITLE = "INDICATED THERAPIES";
 	public static final String INDICATED_THERAPIES_TITLE_NAV = " INDICATED THERAPIES ";
 	public static final String CLINICAL_TRIALS_TITLE = "CLINICAL TRIALS";

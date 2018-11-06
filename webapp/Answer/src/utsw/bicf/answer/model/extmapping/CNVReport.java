@@ -26,6 +26,7 @@ public class CNVReport {
 	String comment;
 	String loci;
 	String cytoband;
+	boolean readonly;
 	
 	public CNVReport() {
 		
@@ -174,6 +175,16 @@ public class CNVReport {
 
 	public void setCytoband(String cytoband) {
 		this.cytoband = cytoband;
+	}
+
+
+	public boolean isReadonly() {
+		return readonly;
+	}
+
+
+	public void setReadonly(boolean readonly) {
+		this.readonly = readonly;
 	}
 
 

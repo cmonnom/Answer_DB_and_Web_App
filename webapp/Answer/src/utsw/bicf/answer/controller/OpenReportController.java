@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
@@ -21,15 +24,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.controller.serialization.vuetify.ExistingReportsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.CNVReport;
+import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
+import utsw.bicf.answer.model.extmapping.Translocation;
+import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
+import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
@@ -52,6 +61,10 @@ public class OpenReportController {
 		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".previewReport",
 				IndividualPermission.CAN_REVIEW);
 		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".finalizeReport",
+				IndividualPermission.CAN_REVIEW);
+		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".amendReport",
+				IndividualPermission.CAN_REVIEW);
+		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".addendReport",
 				IndividualPermission.CAN_REVIEW);
 		
 	}
@@ -101,12 +114,12 @@ public class OpenReportController {
 		if (allReports != null) {
 			List<ReportSummary> summaries = new ArrayList<ReportSummary>();
 			for (Report r : allReports) {
-				if (r.getCreatedBy() == null) {
-					r.setCreatedBy(1);
-				}
-				if (r.getModifiedBy() == null) {
-					r.setModifiedBy(1);
-				}
+//				if (r.getCreatedBy() == null) {
+//					r.setCreatedBy(1);
+//				}
+//				if (r.getModifiedBy() == null) {
+//					r.setModifiedBy(1);
+//				}
 				User createdBy = modelDAO.getUserByUserId(r.getCreatedBy());
 				User modifiedBy = modelDAO.getUserByUserId(r.getModifiedBy());
 				summaries.add(new ReportSummary(r, false, createdBy, modifiedBy));
@@ -169,6 +182,16 @@ public class OpenReportController {
 			if(reportSummary.getMongoDBId() != null) {
 				reportId = reportSummary.getMongoDBId().getOid();
 			}
+			List<Report> existingReports = utils.getExistingReports(reportSummary.getCaseId());
+			 //check that the new report doesn't have the same name as an existing one
+			if (existingReports != null && reportId == null) {
+				List<String> reportNames = existingReports.stream().map(r -> r.getReportName()).collect(Collectors.toList());
+				if (reportNames.contains(reportSummary.getReportName())) {
+					response.setSuccess(false);
+					response.setMessage("You cannot name a new report after an existing one.");
+					return response.createObjectJSON();
+				}
+			}
 			Report reportToSave = null;
 			if (reportId != null) {
 				reportToSave = utils.getReportDetails(reportId);
@@ -181,31 +204,98 @@ public class OpenReportController {
 					reportToSave = new Report(reportSummary); //names are different, create a new report
 				}
 				else {
-					//update Notes
-					reportToSave.setSummary(reportSummary.getSummary());
-					//update Indicated Therapies
-					reportToSave.setIndicatedTherapies(reportSummary.getIndicatedTherapySummary() != null ? reportSummary.getIndicatedTherapySummary().getItems() : null);
-					//update CNV
-					reportToSave.setCnvs(reportSummary.getCnvSummary() != null ? reportSummary.getCnvSummary().getItems() : null);
-					//update FTL
-					reportToSave.setTranslocations(reportSummary.getTranslocationSummary() != null ? reportSummary.getTranslocationSummary().getItems() : null);
-					//update clinical significance
-					reportToSave.setSnpVariantsStrongClinicalSignificance(reportSummary.getSnpVariantsStrongClinicalSignificance());
-					reportToSave.setSnpVariantsPossibleClinicalSignificance(reportSummary.getSnpVariantsPossibleClinicalSignificance());
-					reportToSave.setSnpVariantsUnknownClinicalSignificance(reportSummary.getSnpVariantsUnknownClinicalSignificance());
-					//update clinical trials
-					reportToSave.setClinicalTrials(reportSummary.getClinicalTrialsSummary() != null ? reportSummary.getClinicalTrialsSummary().getItems() : null);
+					if (reportToSave.getAddendum() == null || reportToSave.getAddendum()) {
+						//nothing special, just update all fields
+						//update Notes
+						reportToSave.setSummary(reportSummary.getSummary());
+						//update Indicated Therapies
+						reportToSave.setIndicatedTherapies(reportSummary.getIndicatedTherapySummary() != null ? reportSummary.getIndicatedTherapySummary().getItems() : null);
+						//update CNV
+						reportToSave.setCnvs(reportSummary.getCnvSummary() != null ? reportSummary.getCnvSummary().getItems() : null);
+						//update FTL
+						reportToSave.setTranslocations(reportSummary.getTranslocationSummary() != null ? reportSummary.getTranslocationSummary().getItems() : null);
+						//update clinical significance
+						reportToSave.setSnpVariantsStrongClinicalSignificance(reportSummary.getSnpVariantsStrongClinicalSignificance());
+						reportToSave.setSnpVariantsPossibleClinicalSignificance(reportSummary.getSnpVariantsPossibleClinicalSignificance());
+						reportToSave.setSnpVariantsUnknownClinicalSignificance(reportSummary.getSnpVariantsUnknownClinicalSignificance());
+						//update clinical trials
+						reportToSave.setClinicalTrials(reportSummary.getClinicalTrialsSummary() != null ? reportSummary.getClinicalTrialsSummary().getItems() : null);
+					}
+					else { //the report was addended. Skip existing fields
+						//update Indicated Therapies
+						if (reportSummary.getIndicatedTherapySummary() != null) {
+							for (IndicatedTherapy t : reportSummary.getIndicatedTherapySummary().getItems()) {
+								List<IndicatedTherapy> existingTherapies = reportToSave.getIndicatedTherapies().stream().filter(i -> i.getOid().equals(i.getOid()) && !i.isReadonly()).collect(Collectors.toList());
+								if (existingTherapies.size() == 1) {
+									existingTherapies.get(0).setIndication(t.getIndication());
+								}
+							}
+						}
+						//update CNVs
+						if (reportSummary.getCnvSummary() != null) {
+							for (CNVReport c : reportSummary.getCnvSummary().getItems()) {
+								List<CNVReport> existingCNVs = reportToSave.getCnvs().stream().filter(cnv -> cnv.getMongoDBId().getOid().equals(c.getMongoDBId().getOid()) && !cnv.isReadonly()).collect(Collectors.toList());
+								if (existingCNVs.size() == 1) {
+									existingCNVs.get(0).setComment(c.getComment());
+								}
+							}
+						}
+						//update FTLs
+						if (reportSummary.getTranslocationSummary() != null) {
+							for (TranslocationReport t : reportSummary.getTranslocationSummary().getItems()) {
+								List<TranslocationReport> existingFTLs = reportToSave.getTranslocations().stream().filter(ftl -> ftl.getMongoDBId().getOid().equals(t.getMongoDBId().getOid()) && !ftl.isReadonly()).collect(Collectors.toList());
+								if (existingFTLs.size() == 1) {
+									existingFTLs.get(0).setComment(t.getComment());
+								}
+							}
+						}
+						//update clinical significance
+						if (reportSummary.getSnpVariantsStrongClinicalSignificance() != null) {
+							for (String variant : reportSummary.getSnpVariantsStrongClinicalSignificance().keySet()) {
+								GeneVariantAndAnnotation gva = reportToSave.getSnpVariantsStrongClinicalSignificance().get(variant);
+								if (gva != null && !gva.isReadonly()) {
+									reportToSave.getSnpVariantsStrongClinicalSignificance().put(variant, gva);
+								}
+							}
+						}
+						if (reportSummary.getSnpVariantsPossibleClinicalSignificance() != null) {
+							for (String variant : reportSummary.getSnpVariantsPossibleClinicalSignificance().keySet()) {
+								GeneVariantAndAnnotation gva = reportToSave.getSnpVariantsPossibleClinicalSignificance().get(variant);
+								if (gva != null && !gva.isReadonly()) {
+									reportToSave.getSnpVariantsPossibleClinicalSignificance().put(variant, gva);
+								}
+							}
+						}
+						if (reportSummary.getSnpVariantsUnknownClinicalSignificance() != null) {
+							for (String variant : reportSummary.getSnpVariantsUnknownClinicalSignificance().keySet()) {
+								GeneVariantAndAnnotation gva = reportToSave.getSnpVariantsUnknownClinicalSignificance().get(variant);
+								if (gva != null && !gva.isReadonly()) {
+									reportToSave.getSnpVariantsUnknownClinicalSignificance().put(variant, gva);
+								}
+							}
+						}
+						if (reportSummary.getClinicalTrialsSummary() != null) {
+							for (BiomarkerTrialsRow row : reportSummary.getClinicalTrialsSummary().getItems()) {
+								List<BiomarkerTrialsRow> existingRows = reportToSave.getClinicalTrials().stream().filter(t -> t.getNctid().equals(row.getNctid()) && !t.isReadonly()).collect(Collectors.toList());
+								if (existingRows.size() == 1) {
+									existingRows.get(0).setIsSelected(row.getIsSelected());
+								}
+							}
+						}
+						
+					}
 				}
 			}
 			else {
 				reportToSave = new Report(reportSummary);
 			}
-			if (reportToSave.getFinalized() == null || !reportToSave.getFinalized()) {
-				utils.saveReport(response, reportToSave); //can still save if not finalized
+			if ((reportToSave.getFinalized() == null || !reportToSave.getFinalized()) &&
+					(reportToSave.getAmended() == null || !reportToSave.getAmended())) {
+				utils.saveReport(response, reportToSave); //can still save if not finalized and not amended
 			}
 			else {
 				response.setSuccess(false);
-				response.setMessage("You cannot modified a finalized report. Use an amendment or an addendum");
+				response.setMessage("You cannot modify a finalized report. Use an amendment or an addendum");
 			}
 		}
 		return response.createObjectJSON();
@@ -275,7 +365,7 @@ public class OpenReportController {
 					boolean alreadyFinalized = false; 
 					for (Report r: existingReports) {
 						if (r.getFinalized() != null 
-								&& r.getFinalized() 
+								&& r.getFinalized() && (r.getAmended() == null || !r.getAmended()) //finalized report but not amended
 								&& r.getMongoDBId().getOid().equals(reportDetails.getMongoDBId().getOid())) {
 							//another report is already finalized
 							alreadyFinalized = true;
@@ -289,6 +379,17 @@ public class OpenReportController {
 					}
 					else {
 						utils.finalizeReport(response, reportDetails);
+						if (response.getSuccess()) {
+							reportDetails = utils.getReportDetails(reportDetails.getMongoDBId().getOid());
+							reportDetails.getIndicatedTherapies().stream().forEach(t -> t.setReadonly(true));
+							reportDetails.getClinicalTrials().stream().forEach(t -> t.setReadonly(true));
+							reportDetails.getSnpVariantsStrongClinicalSignificance().values().stream().forEach(v -> v.setReadonly(true));
+							reportDetails.getSnpVariantsPossibleClinicalSignificance().values().stream().forEach(v -> v.setReadonly(true));
+							reportDetails.getSnpVariantsUnknownClinicalSignificance().values().stream().forEach(v -> v.setReadonly(true));
+							reportDetails.getCnvs().stream().forEach(c -> c.setReadonly(true));
+							reportDetails.getTranslocations().stream().forEach(t -> t.setReadonly(true));
+							utils.saveReport(response, reportDetails);
+						}
 					}
 					
 				}
@@ -298,4 +399,175 @@ public class OpenReportController {
 		return response.createObjectJSON();
 	}
 	
+	@RequestMapping(value = "/amendReport")
+	@ResponseBody
+	public String amendReport(Model model, HttpSession session, @RequestParam String reportId, 
+			@RequestBody String reason) throws Exception {
+
+		AjaxResponse response = new AjaxResponse();
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User currentUser = (User) session.getAttribute("user");
+		
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportId, currentUser);
+		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
+		response.setIsAllowed(canProceed);
+		if (canProceed) {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode nodeData = mapper.readTree(reason);
+			String reasonString =  nodeData.get("reason").textValue();
+			Report reportToSave = null;
+			if (reportId != null) {
+				reportToSave = utils.getReportDetails(reportId);
+				if (reportToSave == null) {
+					response.setSuccess(false);
+					response.setMessage("Invalid Report");
+				}
+				else if (reportToSave.getFinalized() == null || !reportToSave.getFinalized()) {
+					response.setSuccess(false);
+					response.setMessage("You can only amend finalized reports.");
+				}
+				else if (reportToSave.getAmended() != null && reportToSave.getAmended()) {
+					response.setSuccess(false);
+					response.setMessage("This report as already been amended.");
+				}
+				else if (reason == null || reason.equals("")) {
+					response.setSuccess(false);
+					response.setMessage("Please provide a reason for the amendment.");
+				}
+				else {
+					reportToSave.setAmended(true);
+					reportToSave.setAmendmentReason(reasonString);
+					utils.saveReport(response, reportToSave);
+				}
+					
+			}
+		}
+		return response.createObjectJSON();
+	}
+
+	@RequestMapping(value = "/addendReport")
+	@ResponseBody
+	public String addendReport(Model model, HttpSession session, @RequestParam String reportId) throws Exception {
+
+		AjaxResponse response = new AjaxResponse();
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User currentUser = (User) session.getAttribute("user");
+
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportId, currentUser);
+		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
+		response.setIsAllowed(canProceed);
+		if (canProceed) {
+			Report reportToSave = null;
+			if (reportId != null) {
+				reportToSave = utils.getReportDetails(reportId);
+				if (reportToSave == null) {
+					response.setSuccess(false);
+					response.setMessage("Invalid Report");
+				}
+				else if (reportToSave.getFinalized() == null || !reportToSave.getFinalized()) {
+					response.setSuccess(false);
+					response.setMessage("You can only addend finalized reports.");
+				}
+				else {
+					reportToSave.setMongoDBId(null); //this will create a new report
+					reportToSave.setFinalized(false);
+					reportToSave.setDateFinalized(null);
+					reportToSave.setAddendum(true);
+					Report newReport = utils.buildReportManually(reportToSave.getCaseId(), currentUser);
+					List<BiomarkerTrialsRow> existingTrials = reportToSave.getClinicalTrials();
+					existingTrials.stream().forEach(t -> t.setReadonly(true));
+					List<String> existingNCTIDs = existingTrials.stream().map(t -> t.getNctid()).collect(Collectors.toList());
+					for (BiomarkerTrialsRow trial : newReport.getClinicalTrials()) {
+						if (!existingNCTIDs.contains(trial.getNctid())) {
+							existingTrials.add(trial);
+						}
+					}
+					//TODO go through the other tables and update the variant ids
+//					IndicatedTherapy
+					List<IndicatedTherapy> existingTherapies = reportToSave.getIndicatedTherapies();
+					existingTherapies.stream().forEach(t -> t.setReadonly(true));
+					List<String> existingTherapyVariants = existingTherapies.stream().map(t -> t.getVariant()).collect(Collectors.toList());
+					for (IndicatedTherapy therapy : newReport.getIndicatedTherapies()) {
+						if (!existingTherapyVariants.contains(therapy.getVariant())) {
+							existingTherapies.add(therapy);
+							reportToSave.incrementIndicatedTherapyCount(therapy.getVariant());
+							if (therapy.getType().equals("snp")) {
+								reportToSave.getSnpIds().add(therapy.getOid());
+							}
+							else if (therapy.getType().equals("cnv")) {
+								reportToSave.getCnvIds().add(therapy.getOid());
+							}
+							else if (therapy.getType().equals("translocation")) {
+								reportToSave.getFtlIds().add(therapy.getOid());
+							}
+						}
+					}
+//					Strong significance
+					Map<String, GeneVariantAndAnnotation> existingStrongByVariant = reportToSave.getSnpVariantsStrongClinicalSignificance();
+					existingStrongByVariant.values().stream().forEach(t -> t.setReadonly(true));
+					Set<String> existingStrongVariants = existingStrongByVariant.keySet();
+					for (String strong : newReport.getSnpVariantsStrongClinicalSignificance().keySet()) {
+						if (!existingStrongVariants.contains(strong)) {
+							GeneVariantAndAnnotation v = newReport.getSnpVariantsStrongClinicalSignificance().get(strong);
+							existingStrongByVariant.put(strong, v);
+							reportToSave.incrementStrongClinicalSignificanceCount(v.getGene());
+							reportToSave.getSnpIds().add(v.getOid());
+						}
+					}
+//					Possible significance
+					Map<String, GeneVariantAndAnnotation> existingPossibleByVariant = reportToSave.getSnpVariantsPossibleClinicalSignificance();
+					existingPossibleByVariant.values().stream().forEach(t -> t.setReadonly(true));
+					Set<String> existingPossibleVariants = existingPossibleByVariant.keySet();
+					for (String possible : newReport.getSnpVariantsPossibleClinicalSignificance().keySet()) {
+						if (!existingPossibleVariants.contains(possible)) {
+							GeneVariantAndAnnotation v = newReport.getSnpVariantsPossibleClinicalSignificance().get(possible);
+							existingPossibleByVariant.put(possible, v);
+							reportToSave.incrementPossibleClinicalSignificanceCount(v.getGene());
+							reportToSave.getSnpIds().add(v.getOid());
+						}
+					}					
+//					Unknown significance
+					Map<String, GeneVariantAndAnnotation> existingUnknownByVariant = reportToSave.getSnpVariantsUnknownClinicalSignificance();
+					existingUnknownByVariant.values().stream().forEach(t -> t.setReadonly(true));
+					Set<String> existingUnknownVariants = existingUnknownByVariant.keySet();
+					for (String unknown : newReport.getSnpVariantsUnknownClinicalSignificance().keySet()) {
+						if (!existingUnknownVariants.contains(unknown)) {
+							GeneVariantAndAnnotation v = newReport.getSnpVariantsUnknownClinicalSignificance().get(unknown);
+							existingUnknownByVariant.put(unknown, v);
+							reportToSave.incrementUnknownClinicalSignificanceCount(v.getGene());
+							reportToSave.getSnpIds().add(v.getOid());
+						}
+					}
+					
+					//CNV
+					List<CNVReport> existingCNVs = reportToSave.getCnvs();
+					existingCNVs.stream().forEach(t -> t.setReadonly(true));
+					List<String> existingCNVVariants = existingCNVs.stream().map(c -> c.getMongoDBId().getOid()).collect(Collectors.toList());
+					for (CNVReport cnv : newReport.getCnvs()) {
+						if (!existingCNVVariants.contains(cnv.getMongoDBId().getOid())) {
+							existingCNVs.add(cnv);
+							reportToSave.getCnvIds().add(cnv.getMongoDBId().getOid());
+						}
+					}
+					
+					//FTL
+					List<TranslocationReport> existingFTLs = reportToSave.getTranslocations();
+					existingFTLs.stream().forEach(t -> t.setReadonly(true));
+					List<String> existingFTLVariants = existingFTLs.stream().map(c -> c.getMongoDBId().getOid()).collect(Collectors.toList());
+					for (TranslocationReport ftl : newReport.getTranslocations()) {
+						if (!existingFTLVariants.contains(ftl.getMongoDBId().getOid())) {
+							existingFTLs.add(ftl);
+							reportToSave.getFtlIds().add(ftl.getMongoDBId().getOid());
+						}
+					}
+					
+					utils.saveReport(response, reportToSave);
+				}
+
+			}
+		}
+		return response.createObjectJSON();
+	}
 }

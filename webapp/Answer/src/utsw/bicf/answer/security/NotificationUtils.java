@@ -53,8 +53,14 @@ public class NotificationUtils {
 				.append(NotificationUtils.HEAD)
 				.append("<body>")
 				.append("<img src='")
-				.append(emailProps.getRootUrl())
-				.append("/resources/images/answer-logo-small-alpha.png'")
+				.append(emailProps.getRootUrl());
+		if (emailProps.getRootUrl().endsWith("/")) {
+			fullMessage.append("resources/"); //to make sure there is no double //
+		}
+		else {
+			fullMessage.append("/resources/");
+		}
+		fullMessage.append("images/answer-logo-small-alpha.png'")
 				.append(" width='150px' />")
 //				.append("<p>Dr. ").append(toName).append(",</p><br/>")
 //				.append("<b>")

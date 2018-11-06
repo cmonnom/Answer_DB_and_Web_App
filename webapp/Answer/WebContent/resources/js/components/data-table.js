@@ -341,7 +341,7 @@ Vue.component('data-table', {
       <tr :active="props.selected">
         <td v-if="enableSelection" style="width:50px" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
           <v-checkbox :color="color" hide-details :input-value="props.selected" @click="handleSelectionChange(props)" v-model="props.item.isSelected"
-            :ripple="false"></v-checkbox>
+            :ripple="false" :disabled="props.item.readonly"></v-checkbox>
         </td>
         <td v-if="expandedDataUrl" class="pl-0 pr-0" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']" @click="expandRow(props.item[uniqueIdField], props)">
           <v-btn flat icon small>
@@ -377,7 +377,7 @@ Vue.component('data-table', {
           <!-- <v-icon color="green" v-if="header.isActionable === true && props.item[header.value] && props.item[header.value].pass">check_circle</v-icon> -->
 
           <!-- action button in after  cell content  -->
-          <v-tooltip bottom v-if="header.itemAction">
+          <v-tooltip bottom v-if="header.itemAction && !props.item.readonly">
             <v-btn :ripple="false" slot="activator" flat small icon @click="header['itemAction'](props.item)">
               <v-icon v-if="!header.actionIcon">keyboard_arrow_right</v-icon>
               <v-icon v-if="header.actionIcon"> {{ header.actionIcon }}</v-icon>

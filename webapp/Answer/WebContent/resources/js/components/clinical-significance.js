@@ -35,23 +35,6 @@ Vue.component('clinical-significance', {
                 </v-toolbar>
                 <v-card-text>
                 <v-container grid-list-md fluid>
-                <!--
-                <v-layout row wrap>
-                <v-flex :class="flexClass()" v-for="item in clinicalSignificance" :key="item.label">
-                    <v-layout row wrap>
-                        <v-flex xs12 pb-0>
-                            <span class="subheading"> {{ item.label }}: </span>     
-                        </v-flex>                                               
-                        <v-flex xs12 pt-0 class="caption">
-                            <v-text-field :textarea="true" v-model="item.text" class="mr-2 no-height pt-1 no-label" hide-details
-                            @input="handleInputChanged"
-                            :disabled="disabled">
-                            </v-text-field>
-                        </v-flex>
-                    </v-layout>  
-                </v-flex>
-                </v-layout> 
-                -->
                 <v-layout row wrap>
                 <v-flex xs12 v-for="item in clinicalSignificance" :key="item.label">
                     <v-layout row wrap>
@@ -62,7 +45,9 @@ Vue.component('clinical-significance', {
                             </v-flex> 
                             <v-flex xs12>
                             <v-tooltip bottom>
-                            <v-btn slot="activator" icon flat color="primary" @click="resetTextField(item)">
+                            <v-btn slot="activator" icon flat color="primary"
+                             @click="resetTextField(item)"
+                             :disabled="item.readonly">
                                 <v-icon>settings_backup_restore</v-icon>
                             </v-btn>
                             <span>Cancel Changes</span>
@@ -73,7 +58,7 @@ Vue.component('clinical-significance', {
                         <v-flex xs8 pt-0 class="caption">
                             <v-text-field :textarea="true" v-model="item.text" class="mr-2 no-height pt-1 no-label" hide-details
                             @input="handleInputChanged"
-                            :disabled="disabled">
+                            :readonly="item.readonly">
                             </v-text-field>
                         </v-flex>
                     </v-layout>  

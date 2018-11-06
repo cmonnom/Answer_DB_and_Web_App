@@ -817,7 +817,7 @@ public class RequestUtils {
 		report.setPatientInfo(patientInfo);
 		report.setReportName(caseDetails.getCaseName());
 		
-		report.setSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+//		report.setSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
 		
 		List<String> strongTiers = Arrays.asList("1A", "1B");
 		List<String> possibleTiers = Arrays.asList("2C", "2D");
@@ -984,17 +984,17 @@ public class RequestUtils {
 				String name = v.getGeneName() + " " + v.getNotation();
 				if (!strongAnnotations.isEmpty()) {
 					report.getSnpIds().add(v.getMongoDBId().getOid());
-					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
+					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, strongAnnotations.stream().collect(Collectors.joining(" "))));
 					report.incrementStrongClinicalSignificanceCount(v.getGeneName());
 				}
 				if (!possibleAnnotations.isEmpty()) {
 					report.getSnpIds().add(v.getMongoDBId().getOid());
-					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
+					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, possibleAnnotations.stream().collect(Collectors.joining(" "))));
 					report.incrementPossibleClinicalSignificanceCount(v.getGeneName());
 				}
 				if (!unknownAnnotations.isEmpty()) {
 					report.getSnpIds().add(v.getMongoDBId().getOid());
-					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
+					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, unknownAnnotations.stream().collect(Collectors.joining(" "))));
 					report.incrementUnknownClinicalSignificanceCount(v.getGeneName());
 				}
 					
@@ -1052,17 +1052,17 @@ public class RequestUtils {
 					String name = genes;
 					if (!strongAnnotations.isEmpty()) {
 						report.getCnvIds().add(v.getMongoDBId().getOid());
-						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, strongAnnotations.stream().collect(Collectors.joining(" "))));
+						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, strongAnnotations.stream().collect(Collectors.joining(" "))));
 						report.incrementStrongClinicalSignificanceCount(name.replaceAll("\\.", ""));
 					}
 					if (!possibleAnnotations.isEmpty()) {
 						report.getCnvIds().add(v.getMongoDBId().getOid());
-						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
+						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
 						report.incrementPossibleClinicalSignificanceCount(name.replaceAll("\\.", ""));
 					}
 					if (!unknownAnnotations.isEmpty()) {
 						report.getCnvIds().add(v.getMongoDBId().getOid());
-						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
+						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
 						report.incrementUnknownClinicalSignificanceCount(name.replaceAll("\\.", ""));
 					}
 				}

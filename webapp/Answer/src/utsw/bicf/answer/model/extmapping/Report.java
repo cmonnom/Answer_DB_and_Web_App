@@ -52,6 +52,10 @@ public class Report {
 	Set<String> ftlIds = new HashSet<String>();
 	
 	Map<String, ReportNavigationRow> navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
+	Boolean amended;
+	String amendmentReason;
+	Boolean addendum;
+	String dateFinalized;
 	
 	public Report() {
 	}
@@ -95,6 +99,10 @@ public class Report {
 		this.ftlIds = reportSummary.getFtlIds();
 		
 		this.navigationRowsPerGene = reportSummary.getNavigationRowsPerGene();
+		this.amended = reportSummary.getAmended();
+		this.amendmentReason = reportSummary.getAmendmentReason();
+		this.addendum = reportSummary.getAddendum();
+		this.dateFinalized = reportSummary.getDateFinalized();
 	}
 	public MongoDBId getMongoDBId() {
 		return mongoDBId;
@@ -350,6 +358,38 @@ public class Report {
 
 	public void setNavigationRowsPerGene(Map<String, ReportNavigationRow> navigationRowsPerGene) {
 		this.navigationRowsPerGene = navigationRowsPerGene;
+	}
+
+	public Boolean getAmended() {
+		return amended;
+	}
+
+	public void setAmended(Boolean amended) {
+		this.amended = amended;
+	}
+
+	public String getAmendmentReason() {
+		return amendmentReason;
+	}
+
+	public void setAmendmentReason(String amendmentReason) {
+		this.amendmentReason = amendmentReason;
+	}
+
+	public Boolean getAddendum() {
+		return addendum;
+	}
+
+	public void setAddendum(Boolean addendum) {
+		this.addendum = addendum;
+	}
+
+	public String getDateFinalized() {
+		return dateFinalized;
+	}
+
+	public void setDateFinalized(String dateFinalized) {
+		this.dateFinalized = dateFinalized;
 	}
 	
 	

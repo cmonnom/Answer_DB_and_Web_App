@@ -372,7 +372,16 @@ public class FinalReportPDFTemplate {
 		List<IndicatedTherapy> sortedItems = items.stream().sorted(new Comparator<IndicatedTherapy>() {
 			@Override
 			public int compare(IndicatedTherapy o1, IndicatedTherapy o2) {
-				return o1.getTier().compareTo(o2.getTier());
+				if (o1.getTier() != null && o2.getTier() != null) {
+					return o1.getTier().compareTo(o2.getTier());
+				}
+				if (o1.getTier() == null && o2.getTier() != null) {
+					return 1;
+				}
+				if (o1.getTier() != null && o2.getTier() == null) {
+					return -1;
+				}
+				return 0; //both null
 			}
 		}).collect(Collectors.toList());
 		for (IndicatedTherapy item : sortedItems) {
@@ -778,9 +787,13 @@ public class FinalReportPDFTemplate {
 			BaseTable table = new BaseTable(tableYPos, tableYPos, 0, tableWidth,
 					FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, false, true);
 			Row<PDPage> row = table.createRow(12);
-			this.createFooterCell(row, "BICF Custom", HorizontalAlignment.LEFT, 20);
-			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 60);
-			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 20);
+			String testName = FinalReportTemplateConstants.TITLE;
+			if (report.getLabTestName() != null) {
+				testName = report.getLabTestName();
+			}
+			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 33.3f);
+			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 33.3f);
+			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 33.3f);
 			table.draw();
 		}
 	}

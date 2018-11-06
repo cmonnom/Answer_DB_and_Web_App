@@ -28,6 +28,7 @@ public class BiomarkerTrialsRow {
 	String dept;
 	String additionalRequiredBiomarkers;
 	Boolean isSelected;
+	boolean readonly;
 	
 	public String getSelectedBiomarker() {
 		return selectedBiomarker;
@@ -106,6 +107,12 @@ public class BiomarkerTrialsRow {
 	}
 	public void setIsSelected(Boolean isSelected) {
 		this.isSelected = isSelected;
+	}
+	public boolean isReadonly() {
+		return readonly;
+	}
+	public void setReadonly(boolean readonly) {
+		this.readonly = readonly;
 	}
 
 }

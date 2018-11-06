@@ -34,9 +34,9 @@ const OpenReport = {
         </v-toolbar>
         <v-card>
             <v-card-text class="pl-2 pr-2 subheading">
-                <span class="subheading">Choose a name for this report. If the name already exists, the report will be updated.</span>
+                <span class="subheading">Choose a name for this report. Change the name to create a new report.</span>
                 <v-text-field
-                    v-model="fullReport.reportName" class="mr-2 no-height" label="Report Name">
+                    v-model="currentReportName" class="mr-2 no-height" label="Report Name">
                 </v-text-field>
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
@@ -154,7 +154,7 @@ const OpenReport = {
                         </v-list-tile-content>
                     </v-list-tile>
 
-                    <v-list-tile avatar @click="previewReport()"  :disabled="isSaveDisabled()" :loading="savingReport">
+                    <v-list-tile avatar @click="previewReport()"  :disabled="isPreviewDisabled()" :loading="savingReport">
                     <v-list-tile-avatar>
                         <v-icon>picture_as_pdf</v-icon>
                     </v-list-tile-avatar>
@@ -201,7 +201,7 @@ const OpenReport = {
     </v-tooltip>
 
         <v-tooltip bottom>
-        <v-btn flat icon @click="previewReport" slot="activator" :disabled="isSaveDisabled()" :loading="savingReport">
+        <v-btn flat icon @click="previewReport" slot="activator" :disabled="isPreviewDisabled()" :loading="savingReport">
             <v-icon>picture_as_pdf</v-icon>
         </v-btn>
         <span>Preview Report as PDF</span>
@@ -213,7 +213,8 @@ const OpenReport = {
         <v-btn flat icon @click="openSaveConfirmation" slot="activator" :disabled="isSaveDisabled()">
             <v-icon>save</v-icon>
         </v-btn>
-        <span>Save Report</span>
+        <span v-if="!isSaveDisabled()">Save Report</span>
+        <span v-if="isSaveDisabled()">You cannot make changes to this report.<br/>It's probably finalized.</span>
        </v-tooltip>
        </v-badge>
  
@@ -232,6 +233,8 @@ const OpenReport = {
             :current-report-id="currentReportId"
             :readonly="readonly"
             :report-unsaved="reportUnsaved"
+            @amend-report="amendReport"
+            @addend-report="addendReport"
            >
             </existing-reports>
             </v-flex>
@@ -261,7 +264,7 @@ const OpenReport = {
                             <v-icon color="amber accent-2">edit</v-icon>
                         </v-btn>
                         <v-list>
-                            <v-list-tile avatar @click="resetReportNotes()" :disabled="!canProceed('canReview') || readonly">
+                            <v-list-tile avatar @click="resetReportNotes()" :disabled="!canProceed('canReview') || readonly || fullReport.finalized">
                                 <v-list-tile-avatar>
                                     <v-icon>settings_backup_restore</v-icon>
                                 </v-list-tile-avatar>
@@ -284,7 +287,7 @@ const OpenReport = {
                         <v-toolbar-title  class="ml-0">Report Notes</v-toolbar-title>
                         <v-spacer></v-spacer>
                         <v-tooltip bottom>
-                            <v-btn flat icon @click="resetReportNotes()" slot="activator" :disabled="!canProceed('canReview') || readonly">
+                            <v-btn flat icon @click="resetReportNotes()" slot="activator" :disabled="!canProceed('canReview') || readonly || fullReport.finalized">
                                 <v-icon>settings_backup_restore</v-icon>
                             </v-btn>
                             <span>Restore Last Saved Report Notes</span>
@@ -297,7 +300,7 @@ const OpenReport = {
                         </v-tooltip>
                     </v-toolbar>
                     <v-card-text>
-                        <v-text-field :textarea="true" :readonly="!canProceed('canReview') || readonly" :disabled="!canProceed('canReview') || readonly"
+                        <v-text-field :textarea="true" :readonly="!canProceed('canReview') || readonly || fullReport.finalized || fullReport.addendum"
                             v-model="fullReport.summary" class="mr-2 no-height" label="Write your comments here" @input="reportNeedsSaving()">
                         </v-text-field>
                     </v-card-text>
@@ -337,7 +340,7 @@ const OpenReport = {
                     <clinical-significance title="Variants of Strong Clinical Significance" :clinical-significance="strongClinicalSignificance"
                     @clinical-significance-changed="reportNeedsSaving"
                     :original-clinical-significance="originalStrongClinicalSignificance"
-                        :disabled="!canProceed('canReview')" @close-panel="strongClinicalSignificanceVisible = false">
+                        :disabled="!canProceed('canReview') || readonly || fullReport.addendum" @close-panel="strongClinicalSignificanceVisible = false">
                     </clinical-significance>
                 </v-flex>
             </v-slide-y-transition>
@@ -433,7 +436,8 @@ const OpenReport = {
             urlQuery: {
                 reportId: null
             },
-            finalizeReportExists: false
+            finalizeReportExists: false,
+            currentReportName: ""
 
         }
     }, methods: {
@@ -487,7 +491,17 @@ const OpenReport = {
             window.open(link, "_blank");
         },
         isSaveDisabled() {
-            return !this.canProceed('canReview') || this.readonly || this.savingReport || !this.fullReport.reportName;
+            return !this.canProceed('canReview') 
+            || this.readonly 
+            || this.savingReport 
+            || !this.fullReport.reportName
+            || this.fullReport.amended
+            || this.fullReport.finalized;
+        },
+        isPreviewDisabled() {
+            return this.savingReport 
+            || !this.fullReport.reportName
+            ;
         },
         updateLoadingReportDetails(isLoading) {
             this.loadingReportDetails = isLoading;
@@ -514,6 +528,7 @@ const OpenReport = {
                         this.fullReport = response.data;
                         this.currentReportId = this.fullReport._id ? this.fullReport._id.$oid : "";
                         this.urlQuery.reportId = this.currentReportId;
+                        this.currentReportName = this.fullReport.reportName;
                         this.updateRoute();
                         this.variantsMissingTier = [];
                         for (var i = 0; i < this.fullReport.missingTierVariants.length; i++) {
@@ -564,39 +579,48 @@ const OpenReport = {
                         var strongLabels = Object.keys(this.fullReport.snpVariantsStrongClinicalSignificance);
                         if (strongLabels) {
                             for (var i = 0; i < strongLabels.length; i++) {
+                                var item = this.fullReport.snpVariantsStrongClinicalSignificance[strongLabels[i]];
                                 this.strongClinicalSignificance.push({
-                                    label: this.fullReport.snpVariantsStrongClinicalSignificance[strongLabels[i]].geneVariant,
-                                    text: this.fullReport.snpVariantsStrongClinicalSignificance[strongLabels[i]].annotation
+                                    label: item.geneVariant,
+                                    text: item.annotation,
+                                    readonly: item.readonly
                                 });
                                 this.originalStrongClinicalSignificance.push({
-                                    label: this.fullReport.snpVariantsStrongClinicalSignificance[strongLabels[i]].geneVariant,
-                                    text: this.fullReport.snpVariantsStrongClinicalSignificance[strongLabels[i]].annotation
+                                    label: item.geneVariant,
+                                    text: item.annotation,
+                                    readonly: item.readonly
                                 });
                             }
                         }
                         var possibleLabels = Object.keys(this.fullReport.snpVariantsPossibleClinicalSignificance);
                         if (possibleLabels) {
                             for (var i = 0; i < possibleLabels.length; i++) {
+                                var item = this.fullReport.snpVariantsPossibleClinicalSignificance[possibleLabels[i]];
                                 this.possibleClinicalSignificance.push({
-                                    label: this.fullReport.snpVariantsPossibleClinicalSignificance[possibleLabels[i]].geneVariant,
-                                    text: this.fullReport.snpVariantsPossibleClinicalSignificance[possibleLabels[i]].annotation
+                                    label: item.geneVariant,
+                                    text: item.annotation,
+                                    readonly: item.readonly
                                 });
                                 this.originalPossibleClinicalSignificance.push({
-                                    label: this.fullReport.snpVariantsPossibleClinicalSignificance[possibleLabels[i]].geneVariant,
-                                    text: this.fullReport.snpVariantsPossibleClinicalSignificance[possibleLabels[i]].annotation
+                                    label: item.geneVariant,
+                                    text: item.annotation,
+                                    readonly: item.readonly
                                 });
                             }
                         }
                         var unknownLabels = Object.keys(this.fullReport.snpVariantsUnknownClinicalSignificance);
                         if (unknownLabels) {
                             for (var i = 0; i < unknownLabels.length; i++) {
+                                var item = this.fullReport.snpVariantsUnknownClinicalSignificance[unknownLabels[i]];
                                 this.unknownClinicalSignificance.push({
-                                    label: this.fullReport.snpVariantsUnknownClinicalSignificance[unknownLabels[i]].geneVariant,
-                                    text: this.fullReport.snpVariantsUnknownClinicalSignificance[unknownLabels[i]].annotation
+                                    label: item.geneVariant,
+                                    text: item.annotation,
+                                    readonly: item.readonly
                                 });
                                 this.originalUnknownClinicalSignificance.push({
-                                    label: this.fullReport.snpVariantsUnknownClinicalSignificance[unknownLabels[i]].geneVariant,
-                                    text: this.fullReport.snpVariantsUnknownClinicalSignificance[unknownLabels[i]].annotation
+                                    label: item.geneVariant,
+                                    text: item.annotation,
+                                    readonly: item.readonly
                                 });
                             }
                         }
@@ -658,6 +682,9 @@ const OpenReport = {
             }
         },
         addIndicatedTherapyHeaderAction(headers) {
+            if (!this.canProceed("canReview") || this.readonly || this.fullReport.addendum) {
+                return;
+            }
             for (var i = 0; i < headers.length; i++) {
                 if (headers[i].value == "indication") {
                     headers[i].itemAction = this.editIndicatedTherapy;
@@ -668,7 +695,7 @@ const OpenReport = {
             }
         },
         editIndicatedTherapy(item) {
-            if (!this.canProceed("canReview") || this.readonly) {
+            if (!this.canProceed("canReview") || this.readonly || this.fullReport.addendum) {
                 return;
             }
             this.currentEdit = item;
@@ -678,6 +705,9 @@ const OpenReport = {
             this.confirmationDialogVisible = true;
         },
         addCNVHeaderAction(headers) {
+            if (!this.canProceed("canReview") || this.readonly || this.fullReport.addendum) {
+                return;
+            }
             for (var i = 0; i < headers.length; i++) {
                 if (headers[i].value == "comment") {
                     headers[i].itemAction = this.editCNVTherapy;
@@ -688,7 +718,7 @@ const OpenReport = {
             }
         },
         editCNVTherapy(item) {
-            if (!this.canProceed("canReview") || this.readonly) {
+            if (!this.canProceed("canReview") || this.readonly || this.fullReport.addendum) {
                 return;
             }
             this.currentEdit = item;
@@ -698,6 +728,9 @@ const OpenReport = {
             this.confirmationDialogVisible = true;
         },
         addTranslocationHeaderAction(headers) {
+            if (!this.canProceed("canReview") || this.readonly || this.fullReport.addendum) {
+                return;
+            }
             for (var i = 0; i < headers.length; i++) {
                 if (headers[i].value == "comment") {
                     headers[i].itemAction = this.editTranslocationTherapy;
@@ -708,7 +741,7 @@ const OpenReport = {
             }
         },
         editTranslocationTherapy(item) {
-            if (!this.canProceed("canReview") || this.readonly) {
+            if (!this.canProceed("canReview") || this.readonly || this.fullReport.addendum) {
                 return;
             }
             this.currentEdit = item;
@@ -726,6 +759,7 @@ const OpenReport = {
         updateRoute() {
             router.push({ query: this.urlQuery });
         },
+        //populate all the fields from various parts of the form
         updateFullReport() {
             var strongLabels = Object.keys(this.fullReport.snpVariantsStrongClinicalSignificance);
             for (var i = 0; i < strongLabels.length; i++) {
@@ -751,6 +785,7 @@ const OpenReport = {
                     }
                 }
             }
+            this.fullReport.reportName = this.currentReportName;
         },
         saveReport() {
             if (this.isSaveDisabled()) {
@@ -770,8 +805,8 @@ const OpenReport = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        snackBarMessage = "Report Saved";
-                        snackBarVisible = true;
+                        this.snackBarMessage = "Report Saved";
+                        this.snackBarVisible = true;
                         this.urlQuery.reportId = response.data.message;
                         this.updateRoute();
                         this.$refs.existingReports.getExistingReports();
@@ -790,14 +825,17 @@ const OpenReport = {
                 });
         },
         saveOrUpdateButtonName() {
-            if (this.$refs.existingReports) {
-                for (var i = 0; i < this.$refs.existingReports.existingReports.length; i++) {
-                    if (this.fullReport.reportName == this.$refs.existingReports.existingReports[i].reportName) {
-                        return "Update";
-                    }
-                }
+            // if (this.$refs.existingReports) {
+            //     for (var i = 0; i < this.$refs.existingReports.existingReports.length; i++) {
+            //         if (this.fullReport.reportName == this.$refs.existingReports.existingReports[i].reportName) {
+            //             return "Update";
+            //         }
+            //     }
+            // }
+            if (this.fullReport.reportName == this.currentReportName) {
+                return "  Save  ";
             }
-            return "Save";
+            return "Save New";
         },
         openSaveConfirmation() {
             this.confirmationSaveDialogVisible = true;
@@ -806,7 +844,7 @@ const OpenReport = {
             this.confirmationSaveDialogVisible = false;
         },
         previewReport() {
-            if (this.isSaveDisabled()) {
+            if (this.isPreviewDisabled()) {
                 return;
             }
             this.savingReport = true;
@@ -854,7 +892,75 @@ const OpenReport = {
             if (report.dateModified) {
                 return report.modifiedSince + " (" + report.dateModified.split("T")[0] + ")";
             }
-        }
+        },
+        amendReport(reportId) {
+            if (this.readonly) {
+                return;
+            }
+            console.log("Amending Report") + reportId;
+            this.$refs.existingReports.amendingReportLoading = true;
+            axios({
+                method: 'post',
+                url: webAppRoot + "/amendReport",
+                params: {
+                    reportId: reportId,
+                },
+                data: {
+                    reason: this.$refs.existingReports.amendmentReason
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        this.snackBarMessage = "Report amended.";
+                        this.snackBarVisible = true;
+                        this.urlQuery.reportId = "";
+                        this.updateRoute();
+                        this.$refs.existingReports.getExistingReports();
+                        this.$refs.existingReports.amendmentDialogVisible = false;
+                    } else {
+                        this.handleDialogs(response.data, this.amendReport.bind(this, reportId));
+                    }
+                    this.$refs.existingReports.amendingReportLoading = false;
+                })
+                .catch(error => {
+                    this.$refs.existingReports.amendingReportLoading = false;
+                    this.handleAxiosError(error);
+                });
+            this.getReportDetails();
+        },
+        addendReport(reportId) {
+            //TODO
+            if (this.readonly) {
+                return;
+            }
+            console.log("Addending Report") + reportId;
+            this.$refs.existingReports.addendingReportLoading = true;
+            axios({
+                method: 'post',
+                url: webAppRoot + "/addendReport",
+                params: {
+                    reportId: reportId,
+                },
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        this.snackBarMessage = "Report addended.";
+                        this.snackBarVisible = true;
+                        this.urlQuery.reportId = response.data.message;
+                        this.updateRoute();
+                        this.$refs.existingReports.getExistingReports();
+                        this.$refs.existingReports.addendumDialogVisible = false;
+                    } else {
+                        this.handleDialogs(response.data, this.addendReport.bind(this, reportId));
+                    }
+                    this.$refs.existingReports.addendingReportLoading = false;
+                })
+                .catch(error => {
+                    this.$refs.existingReports.addendingReportLoading = false;
+                    this.handleAxiosError(error);
+                });
+            this.getReportDetails();
+        },
       
     },
     mounted() {

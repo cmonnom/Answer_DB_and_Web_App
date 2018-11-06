@@ -16,6 +16,7 @@ public class TranslocationReport {
 	String comment;
 	String firstExon;
 	String lastExon;
+	boolean readonly;
 	
 	public TranslocationReport() {
 		
@@ -93,6 +94,14 @@ public class TranslocationReport {
 
 	public void setLastExon(String lastExon) {
 		this.lastExon = lastExon;
+	}
+
+	public boolean isReadonly() {
+		return readonly;
+	}
+
+	public void setReadonly(boolean readonly) {
+		this.readonly = readonly;
 	}
 
 

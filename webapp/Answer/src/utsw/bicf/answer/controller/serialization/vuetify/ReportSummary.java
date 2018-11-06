@@ -73,6 +73,12 @@ public class ReportSummary {
 	Set<String> ftlIds = new HashSet<String>();
 	
 	Map<String, ReportNavigationRow> navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
+	Boolean amended;
+	String amendmentReason;
+	Boolean addendum;
+	String dateFinalized;
+	String finalizedSince;
+	
 	
 	public ReportSummary() {
 		
@@ -124,6 +130,14 @@ public class ReportSummary {
 		this.ftlIds = reportDetails.getFtlIds();
 		
 		this.navigationRowsPerGene = reportDetails.getNavigationRowsPerGene();
+		this.amended = reportDetails.getAmended();
+		this.amendmentReason = reportDetails.getAmendmentReason();
+		this.addendum = reportDetails.getAddendum();
+		this.dateFinalized = reportDetails.getDateFinalized();
+		if (reportDetails.getDateFinalized() != null) {
+			OffsetDateTime finalizedUTCDatetime = OffsetDateTime.parse(reportDetails.getDateFinalized(), DateTimeFormatter.ISO_DATE_TIME);
+			this.finalizedSince = TypeUtils.dateSince(finalizedUTCDatetime);
+		}
 	}
 	
 	public String createObjectJSON() throws JsonProcessingException {
@@ -374,6 +388,46 @@ public class ReportSummary {
 
 	public void setNavigationRowsPerGene(Map<String, ReportNavigationRow> navigationRowsPerGene) {
 		this.navigationRowsPerGene = navigationRowsPerGene;
+	}
+
+	public Boolean getAmended() {
+		return amended;
+	}
+
+	public void setAmended(Boolean amended) {
+		this.amended = amended;
+	}
+
+	public String getAmendmentReason() {
+		return amendmentReason;
+	}
+
+	public void setAmendmentReason(String amendmentReason) {
+		this.amendmentReason = amendmentReason;
+	}
+
+	public Boolean getAddendum() {
+		return addendum;
+	}
+
+	public void setAddendum(Boolean addendum) {
+		this.addendum = addendum;
+	}
+
+	public String getDateFinalized() {
+		return dateFinalized;
+	}
+
+	public void setDateFinalized(String dateFinalized) {
+		this.dateFinalized = dateFinalized;
+	}
+
+	public String getFinalizedSince() {
+		return finalizedSince;
+	}
+
+	public void setFinalizedSince(String finalizedSince) {
+		this.finalizedSince = finalizedSince;
 	}
 
 

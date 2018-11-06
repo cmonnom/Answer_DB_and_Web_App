@@ -12,7 +12,9 @@ Vue.component('report-tier-warning', {
 </v-toolbar>
     <v-card  class="pl-2 pt-2 pr-2 pb-2 mb-3" >
     <v-card-text class="subheading">
-       The following variants have been selected for this report but none of their annotation cards have tiers.<br/>
+       The following variants have been selected for this report but none of their annotation cards have tiers<br/>
+       Check if all annotations have been selected for this variant.
+       Check if the variant has more than just a Therapy card.<br/>
        <v-layout row wrap>
        <v-flex xs12 v-for="variant in variantsMissingTier" :key="variant.id">
        <v-icon color="error" class="pb-2">warning</v-icon>
