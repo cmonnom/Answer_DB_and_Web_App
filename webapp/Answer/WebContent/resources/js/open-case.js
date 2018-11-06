@@ -1160,12 +1160,38 @@ const OpenCase = {
                     // step = new Date() - start;
                     // console.log(2, step); 
                     this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+                    //when the items are repopulated, we break the link with currentRow
+                    //use the for loop to reset currentRow to the proper reference
+                    if (this.currentRow && this.currentRow.type == "snp") {
+                        for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
+                            if (this.$refs.geneVariantDetails.items[i].oid == this.currentRow.oid) {
+                                this.currentRow = this.$refs.geneVariantDetails.items[i];
+                                break;
+                            }
+                        }
+                    }
                     // step = new Date() - start;
                     // console.log(3, step); 
                     this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
+                    if (this.currentRow && this.currentRow.type == "cnv") {
+                        for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
+                            if (this.$refs.cnvDetails.items[i].oid == this.currentRow.oid) {
+                                this.currentRow = this.$refs.cnvDetails.items[i];
+                                break;
+                            }
+                        }
+                    }
                     // step = new Date() - start;
                     // console.log(4, step); 
                     this.$refs.translocationDetails.manualDataFiltered(response.data.translocationSummary);
+                    if (this.currentRow && this.currentRow.type == "translocation") {
+                        for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
+                            if (this.$refs.translocationDetails.items[i].oid == this.currentRow.oid) {
+                                this.currentRow = this.$refs.translocationDetails.items[i];
+                                break;
+                            }
+                        }
+                    }
                     // step = new Date() - start;
                     // console.log(5, step); 
                     this.$refs.advancedFilter.effects = response.data.effects;

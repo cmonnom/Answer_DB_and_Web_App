@@ -966,38 +966,45 @@ Vue.component('data-table', {
             //if previous rows had been selected, the props.selected is out of sync
             //with props.item.isSelected.
             //Make sure to record which rows are unselected
-            if ((props.item.isSelected === true && props.selected === undefined)
-                || props.selected === true) {
-                //check if already exist
-                var found = false;
-                for (var i = 0; i < this.toUnselect.length; i++) {
-                    if (this.toUnselect[i].uniqueIdField == props.item.uniqueIdField) {
-                        found = true
-                        break;
-                    }
-                }
-                if (!found) {
-                    this.toUnselect.push(props.item);
-                }
-            }
-            else if (props.item.isSelected === false) {//about to be selected. Remove from unselected list
-                //remove from unselected
-                var indexToRemove = -1;
-                for (var i = 0; i < this.toUnselect.length; i++) {
-                    if (this.toUnselect[i].uniqueIdField == props.item.uniqueIdField) {
-                        indexToRemove = i;
-                        break;
-                    }
-                }
-                if (indexToRemove > -1) {
-                    this.toUnselect.splice(indexToRemove, 1);
-                }
-            }
+            // if ((props.item.isSelected === true && props.selected === undefined)
+            //     || props.selected === true) {
+            //     //check if already exist
+            //     var found = false;
+            //     for (var i = 0; i < this.toUnselect.length; i++) {
+            //         if (this.toUnselect[i].uniqueIdField == props.item.uniqueIdField) {
+            //             found = true
+            //             break;
+            //         }
+            //     }
+            //     if (!found) {
+            //         this.toUnselect.push(props.item);
+            //     }
+            // }
+            // else if (props.item.isSelected === false) {//about to be selected. Remove from unselected list
+            //     //remove from unselected
+            //     var indexToRemove = -1;
+            //     for (var i = 0; i < this.toUnselect.length; i++) {
+            //         if (this.toUnselect[i].uniqueIdField == props.item.uniqueIdField) {
+            //             indexToRemove = i;
+            //             break;
+            //         }
+            //     }
+            //     if (indexToRemove > -1) {
+            //         this.toUnselect.splice(indexToRemove, 1);
+            //     }
+            // }
             props.item.isSelected = !props.item.isSelected;
             props.selected = props.item.isSelected;
         },
         addToSelection(item) {
             // item.isSelected = true;
+            // var rowItem = null;
+            // for (var i = 0; i < this.items.length; i++) {
+            //     if (this.items[i].oid == item.oid) {
+            //         rowItem = this.items[i];
+            //         break;
+            //     }
+            // }
             this.handleSelectionChange({ item: item });
         },
         removeFromSelection(item) {
