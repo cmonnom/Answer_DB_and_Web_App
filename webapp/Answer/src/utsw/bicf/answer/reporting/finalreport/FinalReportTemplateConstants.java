@@ -52,6 +52,13 @@ public class FinalReportTemplateConstants {
 	public static final Color CNV_COLOR = new Color(255, 200, 36);
 	public static final Color FTL_COLOR = new Color(59, 162, 244);
 	
+	public static final LineStyle BORDER_GENE_COLOR = new LineStyle(new Color(255, 171, 64), 1.5f);
+	public static final LineStyle BORDER_THERAPY_COLOR = new LineStyle(new Color(77, 182, 172), 1.5f);
+	public static final LineStyle BORDER_TRIAL_COLOR = new LineStyle(new Color(97, 184, 101), 1.5f);
+	public static final LineStyle BORDER_CLIN_SIGNIFICANCE_COLOR = new LineStyle(new Color(51, 121, 199), 1.5f);
+	public static final LineStyle BORDER_CNV_COLOR = new LineStyle(new Color(255, 200, 36), 1.5f);
+	public static final LineStyle BORDER_FTL_COLOR = new LineStyle(new Color(59, 162, 244), 1.5f);
+	
 	
 	public static final List<String> ADDRESS = new ArrayList<String>();
 	public static final String TRIAL_URL = "https://clinicaltrials.gov/ct2/show/";

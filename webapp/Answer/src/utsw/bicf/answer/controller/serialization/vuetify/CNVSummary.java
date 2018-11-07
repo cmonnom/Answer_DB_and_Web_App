@@ -34,6 +34,11 @@ public class CNVSummary extends Summary<CNVRow> {
 		gene.setAlign("left");
 		gene.setCanHighlight(true);
 		headers.add(gene);
+		Header cytoband = new Header("Cytoband", "cytoband");
+		cytoband.setWidth("100px");
+		cytoband.setAlign("left");
+//		cytoband.setCanHighlight(true);
+		headers.add(cytoband);
 		Header iconFlags = new Header("Flags", "iconFlags");
 		iconFlags.setWidth("50px");
 		iconFlags.setIsFlag(true);

@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,6 +37,7 @@ import be.quodlibet.boxable.HorizontalAlignment;
 import be.quodlibet.boxable.Row;
 import be.quodlibet.boxable.VerticalAlignment;
 import be.quodlibet.boxable.image.Image;
+import be.quodlibet.boxable.line.LineStyle;
 import be.quodlibet.boxable.utils.PDStreamUtils;
 import utsw.bicf.answer.controller.serialization.CellItem;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
@@ -62,6 +64,7 @@ public class FinalReportPDFTemplate {
 	File tempFile;
 	OtherProperties otherProps;
 	List<Link> links = new ArrayList<Link>();
+	Map<Integer, List<Object>> colorPerPage = new HashMap<Integer, List<Object>>();
 
 	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps) {
 		this.otherProps = otherProps;
@@ -279,11 +282,20 @@ public class FinalReportPDFTemplate {
 			latestYPosition -= 20;
 		}
 	}
+	
+	private void updatePageBreakPosition() {
+		mainDocument.addPage(new PDPage(PDRectangle.LETTER));
+		latestYPosition = pageHeight - FinalReportTemplateConstants.MARGINTOP;
+	}
 
 	private void createNavigationTable() throws IOException {
 		this.updatePotentialNewPagePosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		BaseTable table = createNewTable(currentPage);
+		List<Object> colors = new ArrayList<Object>();
+		colors.add(Color.WHITE);
+		colors.add(FinalReportTemplateConstants.NO_BORDER_THIN);
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		
 
 		Row<PDPage> row = table.createRow(12);
@@ -344,16 +356,22 @@ public class FinalReportPDFTemplate {
 	}
 
 	private void createIndicatedTherapiesTable() throws IOException {
-		this.updatePotentialNewPagePosition();
+//		this.updatePotentialNewPagePosition();
+		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+		List<Object> colors = new ArrayList<Object>();
+		colors.add(FinalReportTemplateConstants.THERAPY_COLOR);
+		colors.add(FinalReportTemplateConstants.BORDER_THERAPY_COLOR);
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
 		BaseTable table = createNewTable(currentPage);
 		List<IndicatedTherapy> items = report.getIndicatedTherapies();
 
+		
 		//Title
 		Row<PDPage> row = table.createRow(12); 
-		table.addHeaderRow(row);
+//		table.addHeaderRow(row);
 		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE);
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.THERAPY_COLOR);
@@ -406,17 +424,23 @@ public class FinalReportPDFTemplate {
 		if (report.getClinicalTrials() == null) {
 			return;
 		}
-		this.updatePotentialNewPagePosition();
+//		this.updatePotentialNewPagePosition();
+		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+		List<Object> colors = new ArrayList<Object>();
+		colors.add(FinalReportTemplateConstants.TRIAL_COLOR);
+		colors.add(FinalReportTemplateConstants.BORDER_TRIAL_COLOR);
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
 		BaseTable table = createNewTable(currentPage);
 
 		//Title
 		Row<PDPage> row = table.createRow(12); 
-		table.addHeaderRow(row);
+//		table.addHeaderRow(row);
 		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE);
 		this.applyTitleHeaderFormatting(cellHeader);
+		
 		cellHeader.setFillColor(FinalReportTemplateConstants.TRIAL_COLOR);
 		links.add(new Link(FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition));
 
@@ -562,8 +586,13 @@ public class FinalReportPDFTemplate {
 
 
 	private void createAClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems, String tableTitle, boolean addLink) throws IOException{
-		this.updatePotentialNewPagePosition();
+//		this.updatePotentialNewPagePosition();
+		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+		List<Object> colors = new ArrayList<Object>();
+		colors.add(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
+		colors.add(FinalReportTemplateConstants.BORDER_CLIN_SIGNIFICANCE_COLOR);
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		if (addLink) {
 			links.add(new Link(FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition));
 		}
@@ -574,7 +603,7 @@ public class FinalReportPDFTemplate {
 
 		//Title
 		Row<PDPage> row = table.createRow(12); 
-		table.addHeaderRow(row);
+//		table.addHeaderRow(row);
 		Cell<PDPage> cellHeader = row.createCell(100, tableTitle);
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
@@ -594,11 +623,11 @@ public class FinalReportPDFTemplate {
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 
 			boolean greyBackground = false;
-			Color color = Color.WHITE;
-			if (greyBackground) {
-				color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
-			}
 			for (String variant : tableItems.keySet()) {
+				Color color = Color.WHITE;
+				if (greyBackground) {
+					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+				}
 				GeneVariantAndAnnotation item = tableItems.get(variant);
 				row = table.createRow(12);
 				Cell<PDPage> cell = row.createCell(30, item.getGeneVariant());
@@ -614,8 +643,13 @@ public class FinalReportPDFTemplate {
 	}
 
 	private void createCNVTable() throws IOException {
-		this.updatePotentialNewPagePosition();
+//		this.updatePotentialNewPagePosition();
+		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+		List<Object> colors = new ArrayList<Object>();
+		colors.add(FinalReportTemplateConstants.CNV_COLOR);
+		colors.add(FinalReportTemplateConstants.BORDER_CNV_COLOR);
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
 		BaseTable table = createNewTable(currentPage);
@@ -623,7 +657,7 @@ public class FinalReportPDFTemplate {
 
 		//Title
 		Row<PDPage> row = table.createRow(12); 
-		table.addHeaderRow(row);
+//		table.addHeaderRow(row);
 		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.CNV_TITLE);
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.CNV_COLOR);
@@ -671,8 +705,13 @@ public class FinalReportPDFTemplate {
 	}
 
 	private void createTranslocationTable() throws IOException {
-		this.updatePotentialNewPagePosition();
+//		this.updatePotentialNewPagePosition();
+		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+		List<Object> colors = new ArrayList<Object>();
+		colors.add(FinalReportTemplateConstants.FTL_COLOR);
+		colors.add(FinalReportTemplateConstants.BORDER_FTL_COLOR);
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
 		BaseTable table = createNewTable(currentPage);
@@ -680,7 +719,7 @@ public class FinalReportPDFTemplate {
 
 		//Title
 		Row<PDPage> row = table.createRow(12); 
-		table.addHeaderRow(row);
+//		table.addHeaderRow(row);
 		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.TRANSLOCATION_TITLE);
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.FTL_COLOR);
@@ -775,6 +814,20 @@ public class FinalReportPDFTemplate {
 		cell.setFontSize(FinalReportTemplateConstants.ADDRESS_FONT_SIZE);
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
 		cell.setTextColor(FinalReportTemplateConstants.LIGHT_GRAY);
+		cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+		cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+		return cell;
+	}
+	
+	private Cell<PDPage> createFooterCellColor(Row<PDPage> row, String text, HorizontalAlignment align, float widthPct, Color color, LineStyle border) {
+		Cell<PDPage> cell = createFooterCell(row, text, align, widthPct);
+		cell.setFillColor(color);
+		cell.setTopBorderStyle(border);
+		cell.setBottomBorderStyle(border);
+		cell.setLeftBorderStyle(border);
+		cell.setRightBorderStyle(border);
 		return cell;
 	}
 
@@ -785,15 +838,36 @@ public class FinalReportPDFTemplate {
 		for (int i = 0; i < pageTotal; i++) {
 			PDPage currentPage = this.mainDocument.getPage(i);
 			BaseTable table = new BaseTable(tableYPos, tableYPos, 0, tableWidth,
-					FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, false, true);
-			Row<PDPage> row = table.createRow(12);
+					FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, true, true);
+			Row<PDPage> row = table.createRow(6);
 			String testName = FinalReportTemplateConstants.TITLE;
 			if (report.getLabTestName() != null) {
 				testName = report.getLabTestName();
 			}
-			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 33.3f);
-			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 33.3f);
-			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 33.3f);
+			
+			Color fillColor = Color.WHITE;
+			LineStyle borderColor = FinalReportTemplateConstants.NO_BORDER_THIN;
+			List<Object> colors = colorPerPage.get(i);
+			if (colors != null) { //don't change color until the next page has an entry
+				fillColor = (Color) colors.get(0); 
+				borderColor = (LineStyle) colors.get(1);
+			}
+			
+			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);
+			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 32f);
+			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 32f);
+			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 32f);
+			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);
+//			//draw color cell
+//			row = table.createRow(1);
+//			Cell<PDPage> cell = row.createCell(100, " ");
+//			cell.setFontSize(1);
+//			cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+//			cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+//			cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+//			cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+//			cell.setFillColor(FinalReportTemplateConstants.CNV_COLOR);
+//			cell.set
 			table.draw();
 		}
 	}
@@ -803,6 +877,10 @@ public class FinalReportPDFTemplate {
 		this.updatePotentialNewPagePosition();
 		float tableWidth = pageWidthMinusMargins;
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+		List<Object> colors = new ArrayList<Object>();
+		colors.add(Color.WHITE);
+		colors.add(FinalReportTemplateConstants.NO_BORDER_THIN);
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		BaseTable table = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, FinalReportTemplateConstants.MARGINBOTTOM,
 				tableWidth, FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, false, true);
 		Cell<PDPage> cell = table.createRow(12).createCell(100, FinalReportTemplateConstants.DISCLAMER_TITLE);

@@ -23,6 +23,7 @@ public class CNVRow {
 	Boolean utswAnnotated;
 	FlagValue iconFlags;
 	Boolean isSelected;
+	String cytoband;
 	
 	public CNVRow(CNV cnv) {
 		this.oid = cnv.getMongoDBId().getOid();
@@ -36,6 +37,7 @@ public class CNVRow {
 		this.score = cnv.getScore();
 		this.utswAnnotated = cnv.getUtswAnnotated();
 		this.isSelected = cnv.getSelected();
+		this.cytoband = cnv.getCytoband();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		if (utswAnnotated) {
@@ -111,6 +113,10 @@ public class CNVRow {
 
 	public Boolean getIsSelected() {
 		return isSelected;
+	}
+
+	public String getCytoband() {
+		return cytoband;
 	}
 
 

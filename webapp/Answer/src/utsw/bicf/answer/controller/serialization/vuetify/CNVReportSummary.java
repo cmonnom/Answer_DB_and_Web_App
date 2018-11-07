@@ -37,11 +37,11 @@ public class CNVReportSummary extends Summary<CNVReport> {
 		gene.setAlign("left");
 		gene.setCanHighlight(true);
 		headers.add(gene);
-//		Header cytoband = new Header("Cytoband", "cytoband");
-//		cytoband.setWidth("200px");
-//		cytoband.setAlign("left");
+		Header cytoband = new Header("Cytoband", "cytoband");
+		cytoband.setWidth("100px");
+		cytoband.setAlign("left");
 //		cytoband.setCanHighlight(true);
-//		headers.add(cytoband);
+		headers.add(cytoband);
 		Header comment = new Header("Comment", "comment");
 		comment.setAlign("left");
 		headers.add(comment);
