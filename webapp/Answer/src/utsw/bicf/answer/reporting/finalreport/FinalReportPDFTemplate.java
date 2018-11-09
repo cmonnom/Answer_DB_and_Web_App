@@ -47,6 +47,7 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.security.FileProperties;
@@ -104,6 +105,7 @@ public class FinalReportPDFTemplate {
 		this.createClinicalSignificanceTables();
 		this.createCNVTable();
 		this.createTranslocationTable();
+		this.createPubmedTable();
 		//		this.addInformationAboutTheTest();
 
 		this.addFooters();
@@ -727,7 +729,7 @@ public class FinalReportPDFTemplate {
 
 		if (items == null || items.isEmpty()) {
 			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(100, "No additional CNV");
+			Cell<PDPage> cell = row.createCell(100, "No additional fusion");
 			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
 		else {
@@ -748,11 +750,11 @@ public class FinalReportPDFTemplate {
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 
 			boolean greyBackground = false;
-			Color color = Color.WHITE;
-			if (greyBackground) {
-				color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
-			}
 			for (TranslocationReport item : items) {
+				Color color = Color.WHITE;
+				if (greyBackground) {
+					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+				}
 				row = table.createRow(12);
 				Cell<PDPage> cell = row.createCell(20, item.getFusionName());
 				this.applyCellFormatting(cell, defaultFont, color);
@@ -767,6 +769,68 @@ public class FinalReportPDFTemplate {
 				this.applyCellFormatting(cell, defaultFont, color);
 				cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
 				cell = row.createCell(40, item.getComment());
+				this.applyCellFormatting(cell, defaultFont, color);
+				greyBackground = !greyBackground;
+			}
+		}
+		latestYPosition = table.draw() - 20;
+	}
+	
+	private void createPubmedTable() throws IOException {
+//		this.updatePotentialNewPagePosition();
+		updatePageBreakPosition();
+		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+		List<Object> colors = new ArrayList<Object>();
+		colors.add(FinalReportTemplateConstants.PUBMED_COLOR);
+		colors.add(FinalReportTemplateConstants.BORDER_PUBMED_COLOR);
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
+		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
+
+		BaseTable table = createNewTable(currentPage);
+		List<PubMed> items = report.getPubmeds();
+
+		//Title
+		Row<PDPage> row = table.createRow(12); 
+//		table.addHeaderRow(row);
+		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.PUBMED_REFERENCE_TITLE);
+		this.applyTitleHeaderFormatting(cellHeader);
+		cellHeader.setFillColor(FinalReportTemplateConstants.PUBMED_COLOR);
+
+		if (items == null || items.isEmpty()) {
+			row = table.createRow(12);
+			Cell<PDPage> cell = row.createCell(100, "No Pubmed references.");
+			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
+		}
+		else {
+			//Headers
+//			row = table.createRow(12); 
+//			table.addHeaderRow(row);
+//			cellHeader = row.createCell(20, "FUSION NAME");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(10, "GENE1");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(10, "LAST EXON");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(10, "GENE2");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(10, "FIRST EXON");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(40, "COMMENT");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+
+			boolean greyBackground = false;
+			for (PubMed item : items) {
+				Color color = Color.WHITE;
+				if (greyBackground) {
+					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+				}
+				row = table.createRow(12);
+				StringBuilder sb = new StringBuilder();
+				sb.append("<b>").append(item.getTitle()).append("</b>").append("<br/>");
+				sb.append(item.getDescription()).append("<br/>");
+				sb.append("PMID: ").append(item.getPmid());
+				links.add(new Link("PMID: " + item.getPmid(), FinalReportTemplateConstants.PUBMED_URL + item.getPmid()));
+				Cell<PDPage> cell = row.createCell(100, sb.toString());
 				this.applyCellFormatting(cell, defaultFont, color);
 				greyBackground = !greyBackground;
 			}

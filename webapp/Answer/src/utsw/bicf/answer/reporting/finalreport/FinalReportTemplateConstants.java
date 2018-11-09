@@ -51,6 +51,7 @@ public class FinalReportTemplateConstants {
 	public static final Color CLIN_SIGNIFICANCE_COLOR = new Color(51, 121, 199);
 	public static final Color CNV_COLOR = new Color(255, 200, 36);
 	public static final Color FTL_COLOR = new Color(59, 162, 244);
+	public static final Color PUBMED_COLOR = new Color(51, 102, 153);
 	
 	public static final LineStyle BORDER_GENE_COLOR = new LineStyle(new Color(255, 171, 64), 1.5f);
 	public static final LineStyle BORDER_THERAPY_COLOR = new LineStyle(new Color(77, 182, 172), 1.5f);
@@ -58,10 +59,12 @@ public class FinalReportTemplateConstants {
 	public static final LineStyle BORDER_CLIN_SIGNIFICANCE_COLOR = new LineStyle(new Color(51, 121, 199), 1.5f);
 	public static final LineStyle BORDER_CNV_COLOR = new LineStyle(new Color(255, 200, 36), 1.5f);
 	public static final LineStyle BORDER_FTL_COLOR = new LineStyle(new Color(59, 162, 244), 1.5f);
+	public static final LineStyle BORDER_PUBMED_COLOR = new LineStyle(new Color(51, 102, 153), 1.5f);
 	
 	
 	public static final List<String> ADDRESS = new ArrayList<String>();
 	public static final String TRIAL_URL = "https://clinicaltrials.gov/ct2/show/";
+	public static final String PUBMED_URL = "https://www.ncbi.nlm.nih.gov/pubmed/?term=";
 
 	public static final List<Header> TREATMENT_OPTIONS_SUMMARY_HEADERS = new ArrayList<Header>();
 	
@@ -82,6 +85,7 @@ public class FinalReportTemplateConstants {
 	public static final String DISCLAMER_TITLE = "INFORMATION ABOUT THE TEST";
 	public static final String CLINICAL_SIGNIFICANCE = "CLINICAL SIGNIFICANCE";
 	public static final String CLINICAL_SIGNIFICANCE_NAV = "VARIANT DETAILS";
+	public static final String PUBMED_REFERENCE_TITLE = "PUBMED REFERENCES";
 	
 	
 	static {
