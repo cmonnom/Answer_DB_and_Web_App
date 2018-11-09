@@ -97,7 +97,10 @@ Vue.component('variant-details', {
                                                 <v-icon>open_in_new</v-icon>
                                               </v-btn>
                                               <span>{{ item.tooltip }}</span>
-                                          </v-tooltip>    
+                                          </v-tooltip>  
+                                          <span v-if="item.type == 'array'" class="selectable text-xs-right grow blue-grey--text text--lighten-1">
+                                            <span v-for="v in item.value" :key="v">{{ v }}<br/></span>
+                                          </span>  
                                           <v-data-table v-if="item.type == 'callSet'" :items="item.value" hide-actions hide-headers >
                                               <template slot="items" slot-scope="props">
                                                   <td class="normal-word-break">
@@ -301,7 +304,7 @@ Vue.component('variant-details', {
         //like Gene, Notation Nb.Cases Seen etc.
         //so that it behaves like a regular "label: string" combo
         isRegularVariantDetailsLabel(type) {
-            return !type || type == 'chip' || type == 'callSet' || type == 'flag' || type == 'link';
+            return !type || type == 'chip' || type == 'callSet' || type == 'flag' || type == 'link' || type == 'array';
         },
         getTableFlexClass(name) {
             if (this.variantType == "cnv") {

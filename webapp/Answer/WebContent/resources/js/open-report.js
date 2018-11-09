@@ -148,6 +148,33 @@ const OpenReport = {
                                                 <v-list-tile-title>Unknown Clinical Significance</v-list-tile-title>
                                             </v-list-tile-content>
                                         </v-list-tile>
+
+                                        <v-list-tile avatar @click="copyNumberAlterationsVisible = !copyNumberAlterationsVisible">
+                                            <v-list-tile-avatar>
+                                                <v-icon>assignment</v-icon>
+                                            </v-list-tile-avatar>
+                                            <v-list-tile-content>
+                                                <v-list-tile-title>Copy Number Alterations</v-list-tile-title>
+                                            </v-list-tile-content>
+                                        </v-list-tile>
+
+                                        <v-list-tile avatar @click="geneFusionVisible = !geneFusionVisible">
+                                            <v-list-tile-avatar>
+                                                <v-icon>assignment</v-icon>
+                                            </v-list-tile-avatar>
+                                            <v-list-tile-content>
+                                                <v-list-tile-title>Gene Fusions</v-list-tile-title>
+                                            </v-list-tile-content>
+                                        </v-list-tile>
+
+                                        <v-list-tile avatar @click="pmidPanelVisible = !pmidPanelVisible">
+                                        <v-list-tile-avatar>
+                                            <v-icon>mdi-book-open-page-variant</v-icon>
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>Pubmed References</v-list-tile-title>
+                                        </v-list-tile-content>
+                                    </v-list-tile>
                                     </v-list>
                                 </v-menu>
                             </v-list-tile-title>
@@ -391,6 +418,14 @@ const OpenReport = {
         </v-flex>
     </v-slide-y-transition>
 
+    <v-slide-y-transition>
+    <v-flex xs12 xl9 v-show="pmidPanelVisible" pt-3>
+        <report-pubmed-ids
+        :pubmeds="fullReport.pubmeds"
+        @close-pmid-panel="pmidPanelVisible = false"></report-pubmed-ids>
+    </v-flex>
+</v-slide-y-transition>
+
 </div>`,
     data() {
         return {
@@ -437,7 +472,8 @@ const OpenReport = {
                 reportId: null
             },
             finalizeReportExists: false,
-            currentReportName: ""
+            currentReportName: "",
+            pmidPanelVisible: false
 
         }
     }, methods: {
@@ -634,6 +670,7 @@ const OpenReport = {
                         this.unknownClinicalSignificanceVisible = true;
                         this.copyNumberAlterationsVisible = true;
                         this.geneFusionVisible = true;
+                        this.pmidPanelVisible = true;
                     }
                     else {
                         this.handleDialogs(response.data, this.getReportDetails.bind(null, reportId));

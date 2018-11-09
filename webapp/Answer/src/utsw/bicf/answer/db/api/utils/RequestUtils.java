@@ -5,7 +5,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
-import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -16,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
@@ -30,6 +32,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -37,7 +40,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
-import utsw.bicf.answer.controller.serialization.SearchItemString;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.AnswerDBCredentials;
@@ -62,9 +64,11 @@ import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
-import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
+import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
+import utsw.bicf.answer.security.NCBIProperties;
+import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.QcAPIAuthentication;
 
 /**
@@ -89,7 +93,6 @@ public class RequestUtils {
 		this.qcAPI = qcAPI;
 	}
 
-	public final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 	private HttpGet requestGet = null;
 	private HttpPost requestPost = null;
 	private HttpPut requestPut = null;
@@ -807,7 +810,7 @@ public class RequestUtils {
 
 	//temp method to test displaying the report
 	//while Ben implements the API
-	public Report buildReportManually(String caseId, User user) throws ClientProtocolException, IOException, URISyntaxException {
+	public Report buildReportManually(String caseId, User user, OtherProperties otherProps, NCBIProperties ncbiProps) throws ClientProtocolException, IOException, URISyntaxException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
 		Report report = new Report();
 		OrderCase caseDetails = getCaseDetails(caseId, null);
 		report.setCaseId(caseDetails.getCaseId());
@@ -833,6 +836,7 @@ public class RequestUtils {
 			report.setClinicalTrials(trials);
 
 		}
+		Set<String> pmIds = new HashSet<String>();
 		List<CNVReport> cnvReports = new ArrayList<CNVReport>();
 		for (CNV cnv : caseDetails.getCnvs()) {
 			if (cnv.getUtswAnnotated() != null && cnv.getUtswAnnotated()
@@ -849,6 +853,9 @@ public class RequestUtils {
 								&& a.getBreadth() != null && a.getBreadth().equals("Chromosomal")) { 
 							sb.append(a.getText()).append(" ");
 							atLeastOneSelected = true;
+							if (a.getPmids() != null) {
+								pmIds.addAll(this.trimPmIds(a.getPmids()));
+							}
 						}
 					}
 					if (atLeastOneSelected) {
@@ -876,6 +883,9 @@ public class RequestUtils {
 								&& !"Therapy".equals(a.getCategory())) { 
 							sb.append(a.getText()).append(" ");
 							atLeastOneSelected = true;
+							if (a.getPmids() != null) {
+								pmIds.addAll(this.trimPmIds(a.getPmids()));
+							}
 						}
 					}
 					if (atLeastOneSelected) {
@@ -903,6 +913,9 @@ public class RequestUtils {
 							annotations.add(new IndicatedTherapy(a, v));
 							report.getSnpIds().add(v.getMongoDBId().getOid());
 							report.incrementIndicatedTherapyCount(v.getGeneName());
+							if (a.getPmids() != null) {
+								pmIds.addAll(this.trimPmIds(a.getPmids()));
+							}
 						}
 					}
 				}
@@ -922,6 +935,9 @@ public class RequestUtils {
 							annotations.add(new IndicatedTherapy(a, v));
 							report.getFtlIds().add(v.getMongoDBId().getOid());
 							report.incrementIndicatedTherapyCount(v.getFusionName());
+							if (a.getPmids() != null) {
+								pmIds.addAll(this.trimPmIds(a.getPmids()));
+							}
 						}
 					}
 				}
@@ -956,6 +972,9 @@ public class RequestUtils {
 								&& a.getCategory() != null && !a.getCategory().equals("Therapy")) {
 							selectedAnnotationsForVariant.add(a);
 							tiers.add(a.getTier());
+							if (a.getPmids() != null) {
+								pmIds.addAll(this.trimPmIds(a.getPmids()));
+							}
 						}
 					}
 				}
@@ -1025,6 +1044,9 @@ public class RequestUtils {
 							}
 							tiers.add(a.getTier());
 							tiersByGenes.put(key, tiers);
+							if (a.getPmids() != null) {
+								pmIds.addAll(this.trimPmIds(a.getPmids()));
+							}
 						}
 					}
 				}
@@ -1077,7 +1099,15 @@ public class RequestUtils {
 		report.setSnpVariantsPossibleClinicalSignificance(annotationsPossibleByVariant);
 		report.setSnpVariantsUnknownClinicalSignificance(annotationsUnknownByVariant);
 		
+		//convert pmids to PubMed objects
+		NCBIRequestUtils utils = new NCBIRequestUtils(ncbiProps, otherProps);
+		List<PubMed> pubmeds = utils.getPubmedDetails(pmIds);
+		report.setPubmeds(pubmeds);
+		
 		return report;
+	}
+	private List<String> trimPmIds(List<String> pmIds) {
+		return pmIds.stream().map(p -> p.trim()).collect(Collectors.toList());
 	}
 	
 	public void saveReport(AjaxResponse ajaxResponse, Report reportToSave) throws ClientProtocolException, IOException, URISyntaxException {

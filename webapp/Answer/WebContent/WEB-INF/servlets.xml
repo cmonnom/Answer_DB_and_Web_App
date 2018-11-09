@@ -126,7 +126,15 @@
 		<property name="proxyPort" value="${proxy.port}" />
 	</bean>
 	
-
+	<bean id="ncbiProps" class="utsw.bicf.answer.security.NCBIProperties">
+		<property name="url" value="${ncbi.pubmed.url}" />
+		<property name="epost" value="${ncbi.pubmed.epost.servlet}" />
+		<property name="esummary" value="${ncbi.pubmed.esummary.servlet}" />
+		<property name="queryKey" value="${ncbi.pubmed.esummary.querykey}" />
+		<property name="webEnv" value="${ncbi.pubmed.esummary.webenv}" />
+		<property name="email" value="${ncbi.api.email}" />
+		<property name="tool" value="${ncbi.api.tool}" />
+	</bean>
 	
 	<!-- Setup Hibernate transaction manager -->
 	<bean id="transactionManager"

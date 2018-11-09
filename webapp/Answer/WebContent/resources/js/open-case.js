@@ -1551,6 +1551,11 @@ const OpenCase = {
                                     tooltip: "Open Genome Browser"
                                 },
                                 {
+                                    label: "Previous Builds",
+                                    type: "array",
+                                    value: this.createOldBuildList(this.currentVariant.oldBuilds),
+                                },
+                                {
                                     label: "Gene",
                                     value: this.currentVariant.geneName
                                 },
@@ -1848,6 +1853,13 @@ const OpenCase = {
                 }).catch(error => {
                     this.handleAxiosError(error);
                 });
+        },
+        createOldBuildList(buildMap) {
+            var builds = [];
+            for (var key in this.currentVariant.oldBuilds) {
+                builds.push(this.currentVariant.oldBuilds[key].chrom + ":" + this.currentVariant.oldBuilds[key].pos + " (" + key + ")");
+            }
+            return builds;
         },
         getTranslocationDetails(item, resetSaveFlags) {
             this.currentVariantType = "translocation";

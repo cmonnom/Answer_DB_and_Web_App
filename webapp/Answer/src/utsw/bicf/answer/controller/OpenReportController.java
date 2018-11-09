@@ -35,11 +35,11 @@ import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
-import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.security.FileProperties;
+import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
 
@@ -66,6 +66,8 @@ public class OpenReportController {
 				IndividualPermission.CAN_REVIEW);
 		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".addendReport",
 				IndividualPermission.CAN_REVIEW);
+//		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".getPubmedDetails",
+//				IndividualPermission.CAN_VIEW);
 		
 	}
 
@@ -77,6 +79,8 @@ public class OpenReportController {
 	FileProperties fileProps;
 	@Autowired
 	OtherProperties otherProps;
+	@Autowired
+	NCBIProperties ncbiProps;
 
 	@RequestMapping("/openReport/{caseId}")
 	public String openReport(Model model, HttpSession session, @PathVariable String caseId,
@@ -142,7 +146,7 @@ public class OpenReportController {
 		Report reportDetails = null;
 		if (reportId.equals("")) {
 			User user = (User) session.getAttribute("user");
-			reportDetails = utils.buildReportManually(caseId, user);
+			reportDetails = utils.buildReportManually(caseId, user, otherProps, ncbiProps);
 		}
 		else {
 			reportDetails = utils.getReportDetails(reportId);
@@ -475,7 +479,7 @@ public class OpenReportController {
 					reportToSave.setFinalized(false);
 					reportToSave.setDateFinalized(null);
 					reportToSave.setAddendum(true);
-					Report newReport = utils.buildReportManually(reportToSave.getCaseId(), currentUser);
+					Report newReport = utils.buildReportManually(reportToSave.getCaseId(), currentUser, otherProps, ncbiProps);
 					List<BiomarkerTrialsRow> existingTrials = reportToSave.getClinicalTrials();
 					existingTrials.stream().forEach(t -> t.setReadonly(true));
 					List<String> existingNCTIDs = existingTrials.stream().map(t -> t.getNctid()).collect(Collectors.toList());
@@ -570,4 +574,23 @@ public class OpenReportController {
 		}
 		return response.createObjectJSON();
 	}
+	
+//	@SuppressWarnings("unchecked")
+//	@RequestMapping(value = "/getPubmedDetails")
+//	@ResponseBody
+//	public String getPubmedDetails(Model model, HttpSession session, @RequestBody String data) throws Exception {
+//		ObjectMapper mapper = new ObjectMapper();
+//		JsonNode nodeData = mapper.readTree(data);
+//		List<String> pmids =  mapper.readValue(nodeData.get("pmids").toString(), List.class);
+//		NCBIRequestUtils utils = new NCBIRequestUtils(ncbiProps, otherProps);
+//		List<PubMed> pubmeds = utils.getPubmedDetails(pmids);
+////		List<PubMed> pubmeds = new ArrayList<PubMed>();
+////		for (String pmId : pmids) {
+////			PubmedArticle pubmedArticle = utils.getPubmedDetails(pmId);
+////			pubmeds.add(new PubMed(pubmedArticle, pmId));
+////		}
+//		PubmedSummary summary = new PubmedSummary(pubmeds);
+//		return summary.createObjectJSON();
+//	}
+
 }

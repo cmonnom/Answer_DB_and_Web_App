@@ -853,8 +853,8 @@ public class FinalReportPDFTemplate {
 				borderColor = (LineStyle) colors.get(1);
 			}
 			
-			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);
-			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 32f);
+//			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);
+			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 34f);
 			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 32f);
 			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 32f);
 			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);

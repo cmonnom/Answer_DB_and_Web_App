@@ -390,6 +390,7 @@ Vue.component('edit-annotations', {
             nctRules: [(v) => { return this.isNCTNumberList(v) || 'Must start with NCT + number. If more than one, use a comma' }],
            
             cnvGeneItems: [],
+            saving: false
         }
 
     },
@@ -470,6 +471,7 @@ Vue.component('edit-annotations', {
             if (this.saveIsDisabled()) {
                 return;
             }
+            this.saving = true;
             // this.annotationDialogVisible = false;
             this.userAnnotations = [];
             for (var i = 0; i < this.userEditingAnnotations.length; i++) {
@@ -499,6 +501,7 @@ Vue.component('edit-annotations', {
             this.$emit("saving-annotations", this.userAnnotations);
         },
         cancelAnnotations() {
+            this.saving = false;
             this.annotationDialogVisible = false;
         },
         isNumberList(v) {
@@ -535,7 +538,7 @@ Vue.component('edit-annotations', {
                 var annotation = this.userEditingAnnotations[i];
                 scopeSelected = scopeSelected && !this.noLevelSelected(annotation);
             }
-            return !scopeSelected || this.userEditingAnnotations.length == 0;
+            return !scopeSelected || this.userEditingAnnotations.length == 0 || this.saving;
         },
         //at least one level needs to be selected
         //can't only be case specific: needs either gene or variant

@@ -762,7 +762,4 @@ public class Variant {
 	}
 
 
-
-
-
 }

@@ -23,6 +23,7 @@ import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
 
 public class ReportSummary {
@@ -78,6 +79,8 @@ public class ReportSummary {
 	Boolean addendum;
 	String dateFinalized;
 	String finalizedSince;
+	
+	List<PubMed> pubmeds = new ArrayList<PubMed>();	
 	
 	
 	public ReportSummary() {
@@ -138,6 +141,7 @@ public class ReportSummary {
 			OffsetDateTime finalizedUTCDatetime = OffsetDateTime.parse(reportDetails.getDateFinalized(), DateTimeFormatter.ISO_DATE_TIME);
 			this.finalizedSince = TypeUtils.dateSince(finalizedUTCDatetime);
 		}
+		this.pubmeds = reportDetails.getPubmeds();
 	}
 	
 	public String createObjectJSON() throws JsonProcessingException {
@@ -428,6 +432,14 @@ public class ReportSummary {
 
 	public void setFinalizedSince(String finalizedSince) {
 		this.finalizedSince = finalizedSince;
+	}
+
+	public List<PubMed> getPubmeds() {
+		return pubmeds;
+	}
+
+	public void setPubmeds(List<PubMed> pubmeds) {
+		this.pubmeds = pubmeds;
 	}
 
 

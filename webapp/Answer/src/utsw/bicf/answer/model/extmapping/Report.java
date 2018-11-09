@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
+import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 
@@ -56,6 +57,8 @@ public class Report {
 	String amendmentReason;
 	Boolean addendum;
 	String dateFinalized;
+	
+	List<PubMed> pubmeds = new ArrayList<PubMed>();	
 	
 	public Report() {
 	}
@@ -103,6 +106,7 @@ public class Report {
 		this.amendmentReason = reportSummary.getAmendmentReason();
 		this.addendum = reportSummary.getAddendum();
 		this.dateFinalized = reportSummary.getDateFinalized();
+		this.pubmeds = reportSummary.getPubmeds();
 	}
 	public MongoDBId getMongoDBId() {
 		return mongoDBId;
@@ -390,6 +394,14 @@ public class Report {
 
 	public void setDateFinalized(String dateFinalized) {
 		this.dateFinalized = dateFinalized;
+	}
+
+	public List<PubMed> getPubmeds() {
+		return pubmeds;
+	}
+
+	public void setPubmeds(List<PubMed> pubmeds) {
+		this.pubmeds = pubmeds;
 	}
 	
 	
