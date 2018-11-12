@@ -831,6 +831,9 @@ Vue.component('data-table', {
                     if (!isNaN(sNb) && !isNaN(rNb))
                         return parseInt(sNb) - parseInt(rNb);
                 }
+                if (s.indexOf("/") > -1 && r.indexOf("/") > -1) { //tallys like count/total
+                    return parseInt(s.split("/")[0]) - parseInt(r.split("/")[0]);
+                }
                 if (dateRegex.test(s) && dateRegex.test(r)) {
                     var sDateArray = s.split("/");
                     var rDateArray = r.split("/");
