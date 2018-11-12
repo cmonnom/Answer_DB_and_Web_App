@@ -720,7 +720,7 @@ Vue.component('advanced-filter', {
                 filterToPopulate.value = loadedFilter.value;
             }
             filterToPopulate.minValue = loadedFilter.minValue != null ? (loadedFilter.minValue * multiplier).toFixed(5) : null;
-            filterToPopulate.maxValue = loadedFilter.maxValue != null ? (loadedFilter.minValue * multiplier).toFixed(5) : null;
+            filterToPopulate.maxValue = loadedFilter.maxValue != null ? (loadedFilter.maxValue * multiplier).toFixed(5) : null;
             filterToPopulate.minDateValue = null;
             filterToPopulate.maxDateValue = null;
             filterToPopulate.valueTrue = loadedFilter.valueTrue;

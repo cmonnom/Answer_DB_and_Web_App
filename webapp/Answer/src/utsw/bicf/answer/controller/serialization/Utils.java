@@ -143,8 +143,10 @@ public class Utils {
 						vf.getStringValues().add(new FilterStringValue(item.trim()));
 					}
 				}
-				vf.setValue(stringValue);
-				activeFilters.add(vf);
+				if (stringValue != null && !stringValue.equals("")) {
+					vf.setValue(stringValue);
+					activeFilters.add(vf);
+				}
 			}
 			else if (filter.isString() != null && filter.isString()) {
 				VariantFilter vf = new VariantFilter(filter.getFieldName());
@@ -162,8 +164,11 @@ public class Utils {
 					for (String item : items) {
 						vf.getStringValues().add(new FilterStringValue(item.trim()));
 					}
-					vf.setValue(items.stream().collect(Collectors.joining(",")));
-					activeFilters.add(vf);
+					String value = items.stream().collect(Collectors.joining(","));
+					if (value != null && !value.equals("")) {
+						vf.setValue(value);
+						activeFilters.add(vf);
+					}
 				}
 			}
 				
