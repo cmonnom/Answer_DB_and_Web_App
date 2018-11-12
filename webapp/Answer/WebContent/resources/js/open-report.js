@@ -291,7 +291,7 @@ const OpenReport = {
                             <v-icon color="amber accent-2">edit</v-icon>
                         </v-btn>
                         <v-list>
-                            <v-list-tile avatar @click="resetReportNotes()" :disabled="!canProceed('canReview') || readonly || fullReport.finalized">
+                            <v-list-tile avatar @click="resetReportNotes()" :disabled="readOnlyReportNotes()">
                                 <v-list-tile-avatar>
                                     <v-icon>settings_backup_restore</v-icon>
                                 </v-list-tile-avatar>
@@ -314,7 +314,7 @@ const OpenReport = {
                         <v-toolbar-title  class="ml-0">Report Notes</v-toolbar-title>
                         <v-spacer></v-spacer>
                         <v-tooltip bottom>
-                            <v-btn flat icon @click="resetReportNotes()" slot="activator" :disabled="!canProceed('canReview') || readonly || fullReport.finalized">
+                            <v-btn flat icon @click="resetReportNotes()" slot="activator" :disabled="readOnlyReportNotes()">
                                 <v-icon>settings_backup_restore</v-icon>
                             </v-btn>
                             <span>Restore Last Saved Report Notes</span>
@@ -327,9 +327,10 @@ const OpenReport = {
                         </v-tooltip>
                     </v-toolbar>
                     <v-card-text>
-                        <v-text-field :textarea="true" :readonly="!canProceed('canReview') || readonly || fullReport.finalized || fullReport.addendum"
+                        <v-text-field :textarea="true" v-if="!readOnlyReportNotes()"
                             v-model="fullReport.summary" class="mr-2 no-height" label="Write your comments here" @input="reportNeedsSaving()">
                         </v-text-field>
+                        <div v-if="readOnlyReportNotes()">{{ fullReport.summary }}</div>
                     </v-card-text>
                 </v-card>
             </v-flex>
@@ -477,6 +478,9 @@ const OpenReport = {
 
         }
     }, methods: {
+        readOnlyReportNotes() {
+            return !this.canProceed('canReview') || this.readonly || this.fullReport.finalized || this.fullReport.addendum;
+        },
         updateCaseName(fullCaseName) {
             this.caseName = fullCaseName;
         },

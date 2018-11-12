@@ -321,3 +321,7 @@ table.table tbody td {
     opacity: 0.75;
 }
 
+.readonly-clin-sign {
+    text-align: left;
+    background: #ECEFF1;
+}
