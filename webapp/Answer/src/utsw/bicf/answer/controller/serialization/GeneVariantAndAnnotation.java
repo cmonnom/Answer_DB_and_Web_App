@@ -1,34 +1,42 @@
 package utsw.bicf.answer.controller.serialization;
 
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.ReportAnnotation;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GeneVariantAndAnnotation {
 	
 	String geneVariant;
-	String annotation;
+//	String annotation;
 	String gene;
 	String variant;
 	String oid;
 	boolean readonly;
+	Map<String, String> annotationsByCategory;
 	
 	public GeneVariantAndAnnotation() {
 	}
 	
-	public GeneVariantAndAnnotation(Variant v, String annotation) {
+	public GeneVariantAndAnnotation(Variant v, Map<String, String> annotationsByCategory) {
 		this.geneVariant = v.getGeneName() + " " + v.getNotation();
 		this.gene = v.getGeneName();
 		this.variant = v.getNotation();
 		this.oid = v.getMongoDBId().getOid();
-		this.annotation = annotation;
+		this.annotationsByCategory = annotationsByCategory;
 	}
 	
-	public GeneVariantAndAnnotation(CNV v, String genes, String annotation) {
+	public GeneVariantAndAnnotation(CNV v, String genes, Map<String, String> annotationsByCategory) {
 		this.geneVariant = genes;
 		this.gene = genes;
 		this.variant = genes;
 		this.oid = v.getMongoDBId().getOid();
-		this.annotation = annotation;
+		this.annotationsByCategory = annotationsByCategory;
 	}
 
 	public String getGeneVariant() {
@@ -37,14 +45,6 @@ public class GeneVariantAndAnnotation {
 
 	public void setGeneVariant(String geneVariant) {
 		this.geneVariant = geneVariant;
-	}
-
-	public String getAnnotation() {
-		return annotation;
-	}
-
-	public void setAnnotation(String annotation) {
-		this.annotation = annotation;
 	}
 
 	public String getGene() {
@@ -78,6 +78,15 @@ public class GeneVariantAndAnnotation {
 	public void setReadonly(boolean readonly) {
 		this.readonly = readonly;
 	}
+
+	public Map<String, String> getAnnotationsByCategory() {
+		return annotationsByCategory;
+	}
+
+	public void setAnnotationsByCategory(Map<String, String> annotationsByCategory) {
+		this.annotationsByCategory = annotationsByCategory;
+	}
+
 	
 
 

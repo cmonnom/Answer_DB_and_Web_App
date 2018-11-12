@@ -13,7 +13,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
+import utsw.bicf.answer.controller.serialization.vuetify.ClinicalSignificanceSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
+import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
@@ -87,6 +89,11 @@ public class Report {
 			this.setTranslocations(reportSummary.getTranslocationSummary().getItems());
 		}
 		//update clinical significance
+		ClinicalSignificanceSummary strongSummary = reportSummary.getSnpVariantsStrongClinicalSignificanceSummary();
+		Map<String, GeneVariantAndAnnotation> gvaByVariant = new HashMap<String, GeneVariantAndAnnotation>();
+		for (ClinicalSignificance cs : strongSummary.getItems()) {
+			
+		}
 		this.setSnpVariantsStrongClinicalSignificance(reportSummary.getSnpVariantsStrongClinicalSignificance());
 		this.setSnpVariantsPossibleClinicalSignificance(reportSummary.getSnpVariantsPossibleClinicalSignificance());
 		this.setSnpVariantsUnknownClinicalSignificance(reportSummary.getSnpVariantsUnknownClinicalSignificance());

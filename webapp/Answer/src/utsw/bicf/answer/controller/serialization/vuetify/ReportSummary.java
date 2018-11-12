@@ -22,6 +22,7 @@ import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
@@ -35,6 +36,9 @@ public class ReportSummary {
 	IndicatedTherapySummary indicatedTherapySummary;
 	CNVReportSummary cnvSummary;
 	TranslocationReportSummary translocationSummary;
+	ClinicalSignificanceSummary snpVariantsStrongClinicalSignificanceSummary;
+	ClinicalSignificanceSummary snpVariantsPossibleClinicalSignificanceSummary;
+	ClinicalSignificanceSummary snpVariantsUnknownClinicalSignificanceSummary;
 	
 	String dateCreated;
 	String dateModified;
@@ -116,6 +120,52 @@ public class ReportSummary {
 			this.indicatedTherapySummary = reportDetails.getIndicatedTherapies() != null ? new IndicatedTherapySummary(reportDetails.getIndicatedTherapies(), "chrom") : null;
 			this.cnvSummary = reportDetails.getCnvs() != null ? new CNVReportSummary(reportDetails.getCnvs(), "gene") : null;
 			this.translocationSummary = reportDetails.getTranslocations() != null ? new TranslocationReportSummary(reportDetails.getTranslocations(), "fusionName") : null;
+			
+			List<ClinicalSignificance> strongCS = new ArrayList<ClinicalSignificance>();
+			if (reportDetails.getSnpVariantsStrongClinicalSignificance() != null) {
+				for (GeneVariantAndAnnotation gva : reportDetails.getSnpVariantsStrongClinicalSignificance().values()) {
+					if (gva.getAnnotationsByCategory() != null) {
+						for (String category : gva.getAnnotationsByCategory().keySet()) {
+							ClinicalSignificance cs = 
+									new ClinicalSignificance(
+											gva.getGeneVariant(), 
+											category, 
+											gva.getAnnotationsByCategory().get(category),
+											gva.isReadonly());
+							strongCS.add(cs);
+						}
+					}
+				}
+			}
+			this.snpVariantsStrongClinicalSignificanceSummary = new ClinicalSignificanceSummary(strongCS, "geneVariant");
+			
+			List<ClinicalSignificance> possibleCS = new ArrayList<ClinicalSignificance>();
+			if (reportDetails.getSnpVariantsPossibleClinicalSignificance() != null) {
+				for (GeneVariantAndAnnotation gva : reportDetails.getSnpVariantsPossibleClinicalSignificance().values()) {
+					if (gva.getAnnotationsByCategory() != null) {
+						for (String category : gva.getAnnotationsByCategory().keySet()) {
+							ClinicalSignificance cs = new ClinicalSignificance(gva.getGeneVariant(), category, gva.getAnnotationsByCategory().get(category),
+									gva.isReadonly());
+							possibleCS.add(cs);
+						}
+					}
+				}
+			}
+			this.snpVariantsPossibleClinicalSignificanceSummary = new ClinicalSignificanceSummary(possibleCS, "geneVariant");
+			
+			List<ClinicalSignificance> unknownCS = new ArrayList<ClinicalSignificance>();
+			if (reportDetails.getSnpVariantsUnknownClinicalSignificance() != null) {
+				for (GeneVariantAndAnnotation gva : reportDetails.getSnpVariantsUnknownClinicalSignificance().values()) {
+					if (gva.getAnnotationsByCategory() != null) {
+						for (String category : gva.getAnnotationsByCategory().keySet()) {
+							ClinicalSignificance cs = new ClinicalSignificance(gva.getGeneVariant(), category, gva.getAnnotationsByCategory().get(category),
+									gva.isReadonly());
+							unknownCS.add(cs);
+						}
+					}
+				}
+			}
+			this.snpVariantsUnknownClinicalSignificanceSummary = new ClinicalSignificanceSummary(unknownCS, "geneVariant");
 			
 			this.snpVariantsStrongClinicalSignificance = reportDetails.getSnpVariantsStrongClinicalSignificance();
 			this.snpVariantsPossibleClinicalSignificance = reportDetails.getSnpVariantsPossibleClinicalSignificance();
@@ -210,21 +260,6 @@ public class ReportSummary {
 		this.translocationSummary = translocationSummary;
 	}
 
-	public Map<String, GeneVariantAndAnnotation> getSnpVariantsStrongClinicalSignificance() {
-		return snpVariantsStrongClinicalSignificance;
-	}
-
-	public void setSnpVariantsStrongClinicalSignificance(Map<String, GeneVariantAndAnnotation> snpVariantsStrongClinicalSignificance) {
-		this.snpVariantsStrongClinicalSignificance = snpVariantsStrongClinicalSignificance;
-	}
-
-	public Map<String, GeneVariantAndAnnotation> getSnpVariantsUnknownClinicalSignificance() {
-		return snpVariantsUnknownClinicalSignificance;
-	}
-
-	public void setSnpVariantsUnknownClinicalSignificance(Map<String, GeneVariantAndAnnotation> snpVariantsUnknownClinicalSignificance) {
-		this.snpVariantsUnknownClinicalSignificance = snpVariantsUnknownClinicalSignificance;
-	}
 
 	public ReportClinicalTrialsSummary getClinicalTrialsSummary() {
 		return clinicalTrialsSummary;
@@ -232,14 +267,6 @@ public class ReportSummary {
 
 	public void setClinicalTrialsSummary(ReportClinicalTrialsSummary clinicalTrialsSummary) {
 		this.clinicalTrialsSummary = clinicalTrialsSummary;
-	}
-
-	public Map<String, GeneVariantAndAnnotation> getSnpVariantsPossibleClinicalSignificance() {
-		return snpVariantsPossibleClinicalSignificance;
-	}
-
-	public void setSnpVariantsPossibleClinicalSignificance(Map<String, GeneVariantAndAnnotation> snpVariantsPossibleClinicalSignificance) {
-		this.snpVariantsPossibleClinicalSignificance = snpVariantsPossibleClinicalSignificance;
 	}
 
 	public String getCaseName() {
@@ -440,6 +467,60 @@ public class ReportSummary {
 
 	public void setPubmeds(List<PubMed> pubmeds) {
 		this.pubmeds = pubmeds;
+	}
+
+	public ClinicalSignificanceSummary getSnpVariantsStrongClinicalSignificanceSummary() {
+		return snpVariantsStrongClinicalSignificanceSummary;
+	}
+
+	public void setSnpVariantsStrongClinicalSignificanceSummary(
+			ClinicalSignificanceSummary snpVariantsStrongClinicalSignificanceSummary) {
+		this.snpVariantsStrongClinicalSignificanceSummary = snpVariantsStrongClinicalSignificanceSummary;
+	}
+
+	public ClinicalSignificanceSummary getSnpVariantsPossibleClinicalSignificanceSummary() {
+		return snpVariantsPossibleClinicalSignificanceSummary;
+	}
+
+	public void setSnpVariantsPossibleClinicalSignificanceSummary(
+			ClinicalSignificanceSummary snpVariantsPossibleClinicalSignificanceSummary) {
+		this.snpVariantsPossibleClinicalSignificanceSummary = snpVariantsPossibleClinicalSignificanceSummary;
+	}
+
+	public ClinicalSignificanceSummary getSnpVariantsUnknownClinicalSignificanceSummary() {
+		return snpVariantsUnknownClinicalSignificanceSummary;
+	}
+
+	public void setSnpVariantsUnknownClinicalSignificanceSummary(
+			ClinicalSignificanceSummary snpVariantsUnknownClinicalSignificanceSummary) {
+		this.snpVariantsUnknownClinicalSignificanceSummary = snpVariantsUnknownClinicalSignificanceSummary;
+	}
+
+	public Map<String, GeneVariantAndAnnotation> getSnpVariantsStrongClinicalSignificance() {
+		return snpVariantsStrongClinicalSignificance;
+	}
+
+	public void setSnpVariantsStrongClinicalSignificance(
+			Map<String, GeneVariantAndAnnotation> snpVariantsStrongClinicalSignificance) {
+		this.snpVariantsStrongClinicalSignificance = snpVariantsStrongClinicalSignificance;
+	}
+
+	public Map<String, GeneVariantAndAnnotation> getSnpVariantsPossibleClinicalSignificance() {
+		return snpVariantsPossibleClinicalSignificance;
+	}
+
+	public void setSnpVariantsPossibleClinicalSignificance(
+			Map<String, GeneVariantAndAnnotation> snpVariantsPossibleClinicalSignificance) {
+		this.snpVariantsPossibleClinicalSignificance = snpVariantsPossibleClinicalSignificance;
+	}
+
+	public Map<String, GeneVariantAndAnnotation> getSnpVariantsUnknownClinicalSignificance() {
+		return snpVariantsUnknownClinicalSignificance;
+	}
+
+	public void setSnpVariantsUnknownClinicalSignificance(
+			Map<String, GeneVariantAndAnnotation> snpVariantsUnknownClinicalSignificance) {
+		this.snpVariantsUnknownClinicalSignificance = snpVariantsUnknownClinicalSignificance;
 	}
 
 

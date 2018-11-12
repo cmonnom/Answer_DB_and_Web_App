@@ -13,7 +13,8 @@ const OpenReport = {
         <v-card>
             <v-card-text class="pl-2 pr-2 subheading">
                 <v-text-field :textarea="true" :readonly="!canProceed('canReview') || readonly" :disabled="!canProceed('canReview') || readonly"
-                    v-model="currentEdit[currentEditField]" class="mr-2 no-height">
+                    :label="currentEditLabel"
+                    v-model="currentEdit[currentEditField]">
                 </v-text-field>
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
@@ -361,41 +362,38 @@ const OpenReport = {
         </v-flex>
     </v-slide-y-transition>
 
-    <v-container class="pt-3" grid-list-md fluid>
-        <v-layout row wrap>
-            <v-slide-y-transition>
-                <v-flex :class="getClinicalSignificanceFlex()" v-show="strongClinicalSignificanceVisible">
-                    <clinical-significance title="Variants of Strong Clinical Significance" :clinical-significance="strongClinicalSignificance"
-                    @clinical-significance-changed="reportNeedsSaving"
-                    :original-clinical-significance="originalStrongClinicalSignificance"
-                        :disabled="!canProceed('canReview') || readonly || fullReport.addendum" @close-panel="strongClinicalSignificanceVisible = false">
-                    </clinical-significance>
-                </v-flex>
-            </v-slide-y-transition>
+    <v-slide-y-transition>
+    <v-flex xs12 xl9 v-show="strongClinicalSignificanceVisible" pb-3>
+        <div>
+            <data-table ref="strongCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Strong Clinical Significance"
+                initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" color="primary"
+                :disable-sticky-header="true">
+            </data-table>
+        </div>
+    </v-flex>
+</v-slide-y-transition>
 
-            <v-slide-y-transition>
-                <v-flex :class="getClinicalSignificanceFlex()" v-show="possibleClinicalSignificanceVisible">
-                    <clinical-significance title="Variants of Possible Clinical Significance" :clinical-significance="possibleClinicalSignificance"
-                    @clinical-significance-changed="reportNeedsSaving"
-                    :original-clinical-significance="originalPossibleClinicalSignificance"
-                        :disabled="!canProceed('canReview')" @close-panel="possibleClinicalSignificanceVisible = false">
-                    </clinical-significance>
-                </v-flex>
-            </v-slide-y-transition>
+<v-slide-y-transition>
+<v-flex xs12 xl9 v-show="possibleClinicalSignificanceVisible" pb-3>
+    <div>
+        <data-table ref="possibleCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Possible Clinical Significance"
+            initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" color="primary"
+            :disable-sticky-header="true">
+        </data-table>
+    </div>
+</v-flex>
+</v-slide-y-transition>
 
-            <v-slide-y-transition>
-                <v-flex :class="getClinicalSignificanceFlex()" v-show="unknownClinicalSignificanceVisible">
-                    <clinical-significance title="Variants of Unknown Clinical Significance" :clinical-significance="unknownClinicalSignificance"
-                    @clinical-significance-changed="reportNeedsSaving"
-                    :original-clinical-significance="originalUnknownClinicalSignificance"
-                        :disabled="!canProceed('canReview')" @close-panel="unknownClinicalSignificanceVisible = false">
-                    </clinical-significance>
-                </v-flex>
-            </v-slide-y-transition>
-
-        </v-layout>
-
-    </v-container>
+<v-slide-y-transition>
+<v-flex xs12 xl9 v-show="unknownClinicalSignificanceVisible" pb-3>
+    <div>
+        <data-table ref="unknownCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Unknown Clinical Significance"
+            initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" color="primary"
+            :disable-sticky-header="true">
+        </data-table>
+    </div>
+</v-flex>
+</v-slide-y-transition>
 
     <v-slide-y-transition>
         <v-flex xs12 xl9 v-show="copyNumberAlterationsVisible" pt-3>
@@ -462,6 +460,7 @@ const OpenReport = {
             currentEdit: {},
             currentEditField: "",
             currentEditTitle: "",
+            currentEditLabel: "",
             currentEditTextBackup: "",
             savingReport: false,
             originalFullReportSummary: "",
@@ -616,54 +615,27 @@ const OpenReport = {
                             }
                         }
 
-                        var strongLabels = Object.keys(this.fullReport.snpVariantsStrongClinicalSignificance);
-                        if (strongLabels) {
-                            for (var i = 0; i < strongLabels.length; i++) {
-                                var item = this.fullReport.snpVariantsStrongClinicalSignificance[strongLabels[i]];
-                                this.strongClinicalSignificance.push({
-                                    label: item.geneVariant,
-                                    text: item.annotation,
-                                    readonly: item.readonly
-                                });
-                                this.originalStrongClinicalSignificance.push({
-                                    label: item.geneVariant,
-                                    text: item.annotation,
-                                    readonly: item.readonly
-                                });
+                        if (this.fullReport.snpVariantsStrongClinicalSignificanceSummary) {
+                            this.$refs.strongCS.manualDataFiltered(this.fullReport.snpVariantsStrongClinicalSignificanceSummary);
+                            if (this.canProceed("canReview") && !this.readonly) {
+                                this.addCSHeaderAction(this.fullReport.snpVariantsStrongClinicalSignificanceSummary.headers);
                             }
                         }
-                        var possibleLabels = Object.keys(this.fullReport.snpVariantsPossibleClinicalSignificance);
-                        if (possibleLabels) {
-                            for (var i = 0; i < possibleLabels.length; i++) {
-                                var item = this.fullReport.snpVariantsPossibleClinicalSignificance[possibleLabels[i]];
-                                this.possibleClinicalSignificance.push({
-                                    label: item.geneVariant,
-                                    text: item.annotation,
-                                    readonly: item.readonly
-                                });
-                                this.originalPossibleClinicalSignificance.push({
-                                    label: item.geneVariant,
-                                    text: item.annotation,
-                                    readonly: item.readonly
-                                });
+
+                        if (this.fullReport.snpVariantsPossibleClinicalSignificanceSummary) {
+                            this.$refs.possibleCS.manualDataFiltered(this.fullReport.snpVariantsPossibleClinicalSignificanceSummary);
+                            if (this.canProceed("canReview") && !this.readonly) {
+                                this.addCSHeaderAction(this.fullReport.snpVariantsPossibleClinicalSignificanceSummary.headers);
                             }
                         }
-                        var unknownLabels = Object.keys(this.fullReport.snpVariantsUnknownClinicalSignificance);
-                        if (unknownLabels) {
-                            for (var i = 0; i < unknownLabels.length; i++) {
-                                var item = this.fullReport.snpVariantsUnknownClinicalSignificance[unknownLabels[i]];
-                                this.unknownClinicalSignificance.push({
-                                    label: item.geneVariant,
-                                    text: item.annotation,
-                                    readonly: item.readonly
-                                });
-                                this.originalUnknownClinicalSignificance.push({
-                                    label: item.geneVariant,
-                                    text: item.annotation,
-                                    readonly: item.readonly
-                                });
+
+                        if (this.fullReport.snpVariantsUnknownClinicalSignificanceSummary) {
+                            this.$refs.unknownCS.manualDataFiltered(this.fullReport.snpVariantsUnknownClinicalSignificanceSummary);
+                            if (this.canProceed("canReview") && !this.readonly) {
+                                this.addCSHeaderAction(this.fullReport.snpVariantsUnknownClinicalSignificanceSummary.headers);
                             }
                         }
+
                         this.loadingReportDetails = false;
                         this.patientDetailsVisible = true;
                         this.reportNotesVisible = true;
@@ -742,6 +714,7 @@ const OpenReport = {
             this.currentEdit = item;
             this.currentEditField = "indication";
             this.currentEditTitle = "Edit Indication for " + this.currentEdit.gene + " " + this.currentEdit.variant;
+            this.currentEditLabel = "";
             this.currentEditTextBackup = this.currentEdit[this.currentEditField];
             this.confirmationDialogVisible = true;
         },
@@ -765,6 +738,7 @@ const OpenReport = {
             this.currentEdit = item;
             this.currentEditField = "comment";
             this.currentEditTitle = "Edit Comment for " + this.currentEdit.chrom;
+            this.currentEditLabel = "";
             this.currentEditTextBackup = this.currentEdit[this.currentEditField];
             this.confirmationDialogVisible = true;
         },
@@ -788,6 +762,31 @@ const OpenReport = {
             this.currentEdit = item;
             this.currentEditField = "comment";
             this.currentEditTitle = "Edit Comment for " + this.currentEdit.fusionName;
+            this.currentEditLabel = "";
+            this.currentEditTextBackup = this.currentEdit[this.currentEditField];
+            this.confirmationDialogVisible = true;
+        },
+        addCSHeaderAction(headers) {
+            if (!this.canProceed("canReview") || this.readonly || this.fullReport.addendum) {
+                return;
+            }
+            for (var i = 0; i < headers.length; i++) {
+                if (headers[i].value == "annotation") {
+                    headers[i].itemAction = this.editCS;
+                    headers[i].actionIcon = "edit";
+                    headers[i].actionTooltip = "Edit Annotation";
+                    break;
+                }
+            }
+        },
+        editCS(item) {
+            if (!this.canProceed("canReview") || this.readonly || this.fullReport.addendum) {
+                return;
+            }
+            this.currentEdit = item;
+            this.currentEditField = "annotation";
+            this.currentEditTitle = "Edit Annotation for " + this.currentEdit.geneVariant;
+            this.currentEditLabel = this.currentEdit.category;
             this.currentEditTextBackup = this.currentEdit[this.currentEditField];
             this.confirmationDialogVisible = true;
         },
@@ -802,30 +801,30 @@ const OpenReport = {
         },
         //populate all the fields from various parts of the form
         updateFullReport() {
-            var strongLabels = Object.keys(this.fullReport.snpVariantsStrongClinicalSignificance);
-            for (var i = 0; i < strongLabels.length; i++) {
-                for (var j = 0; j < this.strongClinicalSignificance.length; j++) {
-                    if (this.strongClinicalSignificance[j].label.replace(".", "") == strongLabels[i]) {
-                        this.fullReport.snpVariantsStrongClinicalSignificance[strongLabels[i]].annotation = this.strongClinicalSignificance[j].text;
-                    }
-                }
-            }
-            var possibleLabels = Object.keys(this.fullReport.snpVariantsPossibleClinicalSignificance);
-            for (var i = 0; i < possibleLabels.length; i++) {
-                for (var j = 0; j < this.possibleClinicalSignificance.length; j++) {
-                    if (this.possibleClinicalSignificance[j].label.replace(".", "") == possibleLabels[i]) {
-                        this.fullReport.snpVariantsPossibleClinicalSignificance[possibleLabels[i]].annotation = this.possibleClinicalSignificance[j].text;
-                    }
-                }
-            }
-            var unknownLabels = Object.keys(this.fullReport.snpVariantsUnknownClinicalSignificance);
-            for (var i = 0; i < unknownLabels.length; i++) {
-                for (var j = 0; j < this.unknownClinicalSignificance.length; j++) {
-                    if (this.unknownClinicalSignificance[j].label.replace(".", "") == unknownLabels[i]) {
-                        this.fullReport.snpVariantsUnknownClinicalSignificance[unknownLabels[i]].annotation = this.unknownClinicalSignificance[j].text;
-                    }
-                }
-            }
+            // var strongLabels = Object.keys(this.fullReport.snpVariantsStrongClinicalSignificance);
+            // for (var i = 0; i < strongLabels.length; i++) {
+            //     for (var j = 0; j < this.strongClinicalSignificance.length; j++) {
+            //         if (this.strongClinicalSignificance[j].label.replace(".", "") == strongLabels[i]) {
+            //             this.fullReport.snpVariantsStrongClinicalSignificance[strongLabels[i]].annotation = this.strongClinicalSignificance[j].text;
+            //         }
+            //     }
+            // }
+            // var possibleLabels = Object.keys(this.fullReport.snpVariantsPossibleClinicalSignificance);
+            // for (var i = 0; i < possibleLabels.length; i++) {
+            //     for (var j = 0; j < this.possibleClinicalSignificance.length; j++) {
+            //         if (this.possibleClinicalSignificance[j].label.replace(".", "") == possibleLabels[i]) {
+            //             this.fullReport.snpVariantsPossibleClinicalSignificance[possibleLabels[i]].annotation = this.possibleClinicalSignificance[j].text;
+            //         }
+            //     }
+            // }
+            // var unknownLabels = Object.keys(this.fullReport.snpVariantsUnknownClinicalSignificance);
+            // for (var i = 0; i < unknownLabels.length; i++) {
+            //     for (var j = 0; j < this.unknownClinicalSignificance.length; j++) {
+            //         if (this.unknownClinicalSignificance[j].label.replace(".", "") == unknownLabels[i]) {
+            //             this.fullReport.snpVariantsUnknownClinicalSignificance[unknownLabels[i]].annotation = this.unknownClinicalSignificance[j].text;
+            //         }
+            //     }
+            // }
             this.fullReport.reportName = this.currentReportName;
         },
         saveReport() {

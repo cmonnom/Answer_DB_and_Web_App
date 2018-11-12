@@ -978,21 +978,45 @@ public class RequestUtils {
 						}
 					}
 				}
-				List<String> strongAnnotations = new ArrayList<String>();
-				List<String> possibleAnnotations = new ArrayList<String>();
-				List<String> unknownAnnotations = new ArrayList<String>();
+				Map<String, List<String>> strongAnnotations = new HashMap<String, List<String>>();
+				Map<String, List<String>> possibleAnnotations = new HashMap<String, List<String>>();
+				Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
 				String highestTierForVariant = null;
 				tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
 				if (!tiers.isEmpty()) {
 					highestTierForVariant = tiers.get(0);
 					if (strongTiers.contains(highestTierForVariant)) {
-						strongAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
+						for (Annotation a : selectedAnnotationsForVariant) {
+							String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+							List<String> annotations = strongAnnotations.get(category);
+							if (annotations == null) {
+								annotations = new ArrayList<String>();
+							}
+							annotations.add(a.getText());
+							strongAnnotations.put(category, annotations);
+						}
 					}
 					else if (possibleTiers.contains(highestTierForVariant)) {
-						possibleAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
+						for (Annotation a : selectedAnnotationsForVariant) {
+							String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+							List<String> annotations = possibleAnnotations.get(category);
+							if (annotations == null) {
+								annotations = new ArrayList<String>();
+							}
+							annotations.add(a.getText());
+							possibleAnnotations.put(category, annotations);
+						}
 					}
 					else if (unknownTiers.contains(highestTierForVariant)) {
-						unknownAnnotations.addAll(selectedAnnotationsForVariant.stream().map(a -> a.getText()).collect(Collectors.toList()));
+						for (Annotation a : selectedAnnotationsForVariant) {
+							String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+							List<String> annotations = unknownAnnotations.get(category);
+							if (annotations == null) {
+								annotations = new ArrayList<String>();
+							}
+							annotations.add(a.getText());
+							unknownAnnotations.put(category, annotations);
+						}
 					}
 				}
 				else {
@@ -1003,17 +1027,29 @@ public class RequestUtils {
 				String name = v.getGeneName() + " " + v.getNotation();
 				if (!strongAnnotations.isEmpty()) {
 					report.getSnpIds().add(v.getMongoDBId().getOid());
-					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, strongAnnotations.stream().collect(Collectors.joining(" "))));
+					Map<String, String> strongAnnotationsConcat = new HashMap<String, String>();
+					for (String cat : strongAnnotations.keySet()) {
+						strongAnnotationsConcat.put(cat, strongAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+					}
+					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, strongAnnotationsConcat));
 					report.incrementStrongClinicalSignificanceCount(v.getGeneName());
 				}
 				if (!possibleAnnotations.isEmpty()) {
 					report.getSnpIds().add(v.getMongoDBId().getOid());
-					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, possibleAnnotations.stream().collect(Collectors.joining(" "))));
+					Map<String, String> possibleAnnotationsConcat = new HashMap<String, String>();
+					for (String cat : possibleAnnotations.keySet()) {
+						possibleAnnotationsConcat.put(cat, possibleAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+					}
+					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, possibleAnnotationsConcat));
 					report.incrementPossibleClinicalSignificanceCount(v.getGeneName());
 				}
 				if (!unknownAnnotations.isEmpty()) {
 					report.getSnpIds().add(v.getMongoDBId().getOid());
-					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, unknownAnnotations.stream().collect(Collectors.joining(" "))));
+					Map<String, String> unknownAnnotationsConcat = new HashMap<String, String>();
+					for (String cat : unknownAnnotations.keySet()) {
+						unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+					}
+					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, unknownAnnotationsConcat));
 					report.incrementUnknownClinicalSignificanceCount(v.getGeneName());
 				}
 					
@@ -1053,38 +1089,74 @@ public class RequestUtils {
 				for (String genes : selectedAnnotationsForVariant.keySet()) {
 					List<Annotation> annotations = selectedAnnotationsForVariant.get(genes);
 					List<String> tiers = tiersByGenes.get(genes);
-					List<String> strongAnnotations = new ArrayList<String>();
-					List<String> possibleAnnotations = new ArrayList<String>();
-					List<String> unknownAnnotations = new ArrayList<String>();
+					Map<String, List<String>> strongAnnotations = new HashMap<String, List<String>>();
+					Map<String, List<String>> possibleAnnotations = new HashMap<String, List<String>>();
+					Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
 					String highestTierForVariant = null;
 					tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
 					if (!tiers.isEmpty()) {
 						hasTiers = true;
 						highestTierForVariant = tiers.get(0);
 						if (strongTiers.contains(highestTierForVariant)) {
-							strongAnnotations.addAll(annotations.stream().map(a -> a.getText()).collect(Collectors.toList()));
+							for (Annotation a : annotations) {
+								String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+								List<String> annotationsFormatted = strongAnnotations.get(category);
+								if (annotationsFormatted == null) {
+									annotationsFormatted = new ArrayList<String>();
+								}
+								annotationsFormatted.add(a.getText());
+								strongAnnotations.put(category, annotationsFormatted);
+							}
 						}
 						else if (possibleTiers.contains(highestTierForVariant)) {
-							possibleAnnotations.addAll(annotations.stream().map(a -> a.getText()).collect(Collectors.toList()));
+							for (Annotation a : annotations) {
+								String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+								List<String> annotationsFormatted = possibleAnnotations.get(category);
+								if (annotationsFormatted == null) {
+									annotationsFormatted = new ArrayList<String>();
+								}
+								annotationsFormatted.add(a.getText());
+								possibleAnnotations.put(category, annotationsFormatted);
+							}
 						}
 						else if (unknownTiers.contains(highestTierForVariant)) {
-							unknownAnnotations.addAll(annotations.stream().map(a -> a.getText()).collect(Collectors.toList()));
+							for (Annotation a : annotations) {
+								String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+								List<String> annotationsFormatted = unknownAnnotations.get(category);
+								if (annotationsFormatted == null) {
+									annotationsFormatted = new ArrayList<String>();
+								}
+								annotationsFormatted.add(a.getText());
+								unknownAnnotations.put(category, annotationsFormatted);
+							}
 						}
 					}
 					String name = genes;
 					if (!strongAnnotations.isEmpty()) {
 						report.getCnvIds().add(v.getMongoDBId().getOid());
-						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, strongAnnotations.stream().collect(Collectors.joining(" "))));
+						Map<String, String> strongAnnotationsConcat = new HashMap<String, String>();
+						for (String cat : strongAnnotations.keySet()) {
+							strongAnnotationsConcat.put(cat, strongAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+						}
+						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, strongAnnotationsConcat));
 						report.incrementStrongClinicalSignificanceCount(name.replaceAll("\\.", ""));
 					}
 					if (!possibleAnnotations.isEmpty()) {
 						report.getCnvIds().add(v.getMongoDBId().getOid());
-						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, possibleAnnotations.stream().collect(Collectors.joining(" "))));
+						Map<String, String> possibleAnnotationsConcat = new HashMap<String, String>();
+						for (String cat : possibleAnnotations.keySet()) {
+							possibleAnnotationsConcat.put(cat, possibleAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+						}
+						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, possibleAnnotationsConcat));
 						report.incrementPossibleClinicalSignificanceCount(name.replaceAll("\\.", ""));
 					}
 					if (!unknownAnnotations.isEmpty()) {
 						report.getCnvIds().add(v.getMongoDBId().getOid());
-						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, unknownAnnotations.stream().collect(Collectors.joining(" "))));
+						Map<String, String> unknownAnnotationsConcat = new HashMap<String, String>();
+						for (String cat : unknownAnnotations.keySet()) {
+							unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+						}
+						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, unknownAnnotationsConcat));
 						report.incrementUnknownClinicalSignificanceCount(name.replaceAll("\\.", ""));
 					}
 				}

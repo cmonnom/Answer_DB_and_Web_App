@@ -571,19 +571,16 @@ public class FinalReportPDFTemplate {
 		List<Map<String, GeneVariantAndAnnotation>> clinicalSignifanceTables = new ArrayList<Map<String, GeneVariantAndAnnotation>>();
 		clinicalSignifanceTables.add(report.getSnpVariantsStrongClinicalSignificance());
 		clinicalSignifanceTables.add(report.getSnpVariantsPossibleClinicalSignificance());
-		clinicalSignifanceTables.add(report.getSnpVariantsUnknownClinicalSignificance());
 
 		String[] tableTitles = new String[] {"VARIANTS OF STRONG CLINICAL SIGNIFICANCE",
-				"VARIANTS OF POSSIBLE CLINICAL SIGNIFICANCE",
-		"VARIANTS OF UNKNOWN CLINICAL SIGNIFICANCE"};
+				"VARIANTS OF POSSIBLE CLINICAL SIGNIFICANCE"};
 		int counter = 0;
 		for (Map<String, GeneVariantAndAnnotation> table : clinicalSignifanceTables) {
 			boolean addLink = counter == 0;
 			this.createAClinicalSignificanceTable(table, tableTitles[counter], addLink);
 			counter++;
-
-
 		}
+		this.createAnUnkwnownClinicalSignificanceTable(report.getSnpVariantsUnknownClinicalSignificance());
 	}
 
 
@@ -634,7 +631,65 @@ public class FinalReportPDFTemplate {
 				row = table.createRow(12);
 				Cell<PDPage> cell = row.createCell(30, item.getGeneVariant());
 				this.applyCellFormatting(cell, defaultFont, color);
-				cell = row.createCell(70, item.getAnnotation());
+				cell = row.createCell(70, this.createAnnotationText(item.getAnnotationsByCategory()));
+				this.applyCellFormatting(cell, defaultFont, color);
+				greyBackground = !greyBackground;
+			}
+		}
+
+		latestYPosition = table.draw() - 20;
+
+	}
+	
+	private String createAnnotationText(Map<String, String> annotationsByCategory) {
+		StringBuilder sb = new StringBuilder();
+		List<String> sortedCategories = annotationsByCategory.keySet().stream().sorted().collect(Collectors.toList());
+		for (String cat : sortedCategories) {
+			sb.append("<b>").append(cat).append(":</b> ").append(annotationsByCategory.get(cat));
+			sb.append("<br/>");
+		}
+		return sb.toString();
+	}
+	
+	private void createAnUnkwnownClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems) throws IOException{
+//		this.updatePotentialNewPagePosition();
+		updatePageBreakPosition();
+		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+		List<Object> colors = new ArrayList<Object>();
+		colors.add(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
+		colors.add(FinalReportTemplateConstants.BORDER_CLIN_SIGNIFICANCE_COLOR);
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
+
+		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
+
+		BaseTable table = createNewTable(currentPage);
+
+		//Title
+		Row<PDPage> row = table.createRow(12); 
+		Cell<PDPage> cellHeader = row.createCell(100, "VARIANTS OF UNKNOWN CLINICAL SIGNIFICANCE");
+		this.applyTitleHeaderFormatting(cellHeader);
+		cellHeader.setFillColor(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
+
+		if (tableItems == null || tableItems.isEmpty()) {
+			row = table.createRow(12);
+			Cell<PDPage> cell = row.createCell(100, "No variant to report at this level");
+			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
+		}
+		else {
+//			String variants = tableItems.keySet().stream().collect(Collectors.joining(", "));
+//			row = table.createRow(12);
+//			Color color = Color.WHITE;
+//			Cell<PDPage> cell = row.createCell(100, variants);
+//			this.applyCellFormatting(cell, defaultFont, color);
+			boolean greyBackground = false;
+			for (String variant : tableItems.keySet()) {
+				Color color = Color.WHITE;
+				if (greyBackground) {
+					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+				}
+				GeneVariantAndAnnotation item = tableItems.get(variant);
+				row = table.createRow(12);
+				Cell<PDPage> cell = row.createCell(100, item.getGeneVariant());
 				this.applyCellFormatting(cell, defaultFont, color);
 				greyBackground = !greyBackground;
 			}

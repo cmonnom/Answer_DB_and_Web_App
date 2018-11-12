@@ -36,6 +36,7 @@ import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
+import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.security.FileProperties;
@@ -219,9 +220,24 @@ public class OpenReportController {
 						//update FTL
 						reportToSave.setTranslocations(reportSummary.getTranslocationSummary() != null ? reportSummary.getTranslocationSummary().getItems() : null);
 						//update clinical significance
-						reportToSave.setSnpVariantsStrongClinicalSignificance(reportSummary.getSnpVariantsStrongClinicalSignificance());
-						reportToSave.setSnpVariantsPossibleClinicalSignificance(reportSummary.getSnpVariantsPossibleClinicalSignificance());
-						reportToSave.setSnpVariantsUnknownClinicalSignificance(reportSummary.getSnpVariantsUnknownClinicalSignificance());
+						if (reportSummary.getSnpVariantsStrongClinicalSignificanceSummary() != null) {
+							for (ClinicalSignificance cs : reportSummary.getSnpVariantsStrongClinicalSignificanceSummary().getItems()) {
+								reportSummary.getSnpVariantsStrongClinicalSignificance().get(cs.getGeneVariantAsKey()).getAnnotationsByCategory().put(cs.getCategory(), cs.getAnnotation());
+							}
+							reportToSave.setSnpVariantsStrongClinicalSignificance(reportSummary.getSnpVariantsStrongClinicalSignificance());
+						}
+						if (reportSummary.getSnpVariantsPossibleClinicalSignificanceSummary() != null) {
+							for (ClinicalSignificance cs : reportSummary.getSnpVariantsPossibleClinicalSignificanceSummary().getItems()) {
+								reportSummary.getSnpVariantsPossibleClinicalSignificance().get(cs.getGeneVariantAsKey()).getAnnotationsByCategory().put(cs.getCategory(), cs.getAnnotation());
+							}
+							reportToSave.setSnpVariantsPossibleClinicalSignificance(reportSummary.getSnpVariantsPossibleClinicalSignificance());
+						}
+						if (reportSummary.getSnpVariantsUnknownClinicalSignificanceSummary() != null) {
+							for (ClinicalSignificance cs : reportSummary.getSnpVariantsUnknownClinicalSignificanceSummary().getItems()) {
+								reportSummary.getSnpVariantsUnknownClinicalSignificance().get(cs.getGeneVariantAsKey()).getAnnotationsByCategory().put(cs.getCategory(), cs.getAnnotation());
+							}
+							reportToSave.setSnpVariantsUnknownClinicalSignificance(reportSummary.getSnpVariantsUnknownClinicalSignificance());
+						}
 						//update clinical trials
 						reportToSave.setClinicalTrials(reportSummary.getClinicalTrialsSummary() != null ? reportSummary.getClinicalTrialsSummary().getItems() : null);
 					}
