@@ -11,13 +11,11 @@ import java.util.List;
 import javax.servlet.ServletContext;
 
 import org.apache.http.client.ClientProtocolException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
-import utsw.bicf.answer.security.FileProperties;
 
 public class ControllerUtil {
 	
@@ -82,8 +80,10 @@ public class ControllerUtil {
 //				.map(file -> file.getName())
 //				.collect(Collectors.toList());
 		for (File file : root.listFiles()) {
-			if (!file.isDirectory() && !file.getName().equals("vue-starter.js")
-						&& !file.getName().equals("bam-viewer.js")) {
+			if (!file.isDirectory() 
+					&& file.getName().endsWith(".js")
+					&& !file.getName().equals("vue-starter.js")
+					&& !file.getName().equals("bam-viewer.js")) {
 				files.add(file.getName());
 			}
 		}

@@ -158,6 +158,7 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 
 .input-group--text-field.input-group--textarea textarea {
     font-size: 14px;
+    padding-right: 12px;
   }
 
 .no-label  > .input-group__input {

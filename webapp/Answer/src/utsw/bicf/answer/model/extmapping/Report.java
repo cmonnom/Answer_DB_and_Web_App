@@ -358,7 +358,7 @@ public class Report {
 	public void updateClinicalTrialCount() {
 		for (BiomarkerTrialsRow item : clinicalTrials) {
 			if (item.getIsSelected() != null && item.getIsSelected()) {
-				this.incrementClinicalTrialCount(item.getBiomarker().split(" ")[0]);
+				this.incrementClinicalTrialCount(item.getBiomarker().split("[ _]")[0]);
 			}
 		}
 	}
