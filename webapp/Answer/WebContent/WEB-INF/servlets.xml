@@ -124,6 +124,7 @@
 		<bean id="otherProps" class="utsw.bicf.answer.security.OtherProperties">
 		<property name="proxyHostname" value="${proxy.hostname}" />
 		<property name="proxyPort" value="${proxy.port}" />
+		<property name="oncoKBGeniePortalUrl" value="${oncokb.url}" />
 	</bean>
 	
 	<bean id="ncbiProps" class="utsw.bicf.answer.security.NCBIProperties">

@@ -94,7 +94,7 @@ Vue.component('variant-details', {
                                           </span>
                                           <v-tooltip bottom v-if="item.type == 'link'">
                                               <v-btn slot="activator" color="primary" icon flat @click="openUrl(item)" class="mt-0 mb-0">
-                                                <v-icon>open_in_new</v-icon>
+                                                <v-icon>{{ item.linkIcon }}</v-icon>
                                               </v-btn>
                                               <span>{{ item.tooltip }}</span>
                                           </v-tooltip>  

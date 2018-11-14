@@ -2,10 +2,11 @@
 
 Vue.component('report-pubmed-ids', {
     props: {
-        pubmeds: {default: () => [], type: Array}
+        pubmeds: {default: () => [], type: Array},
+        color: {default: "primary", type: String}
     },
     template: `<v-card>
-    <v-toolbar class="elevation-0" dense dark color="primary">
+    <v-toolbar class="elevation-0" dense dark :color="color">
         <v-menu offset-y offset-x class="ml-0">
             <v-btn slot="activator" flat icon dark>
                 <v-icon color="amber accent-2">mdi-book-open-page-variant</v-icon>
@@ -39,7 +40,7 @@ Vue.component('report-pubmed-ids', {
         <div>{{ item.description }}</div>
         <div>PMID: {{ item.pmid }} 
         <v-tooltip bottom>
-        <v-btn small slot="activator" icon flat @click="openPMIDLink(item.pmid)" color="primary" class="mt-0 ml-0 mb-0 mr-0">
+        <v-btn small slot="activator" icon flat @click="openPMIDLink(item.pmid)" :color="color" class="mt-0 ml-0 mb-0 mr-0">
         <v-icon>open_in_new</v-icon>
         </v-btn>
         <span>Open in New Tab</span>

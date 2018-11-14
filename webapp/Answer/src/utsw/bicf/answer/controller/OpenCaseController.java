@@ -37,7 +37,6 @@ import utsw.bicf.answer.controller.serialization.DataFilterList;
 import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
-import utsw.bicf.answer.controller.serialization.SearchItems;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVChromosomeItems;
 import utsw.bicf.answer.controller.serialization.vuetify.GenesInPanelItems;
@@ -72,6 +71,7 @@ import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
+import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
 import utsw.bicf.answer.security.QcAPIAuthentication;
 
@@ -147,6 +147,8 @@ public class OpenCaseController {
 	EmailProperties emailProps;
 	@Autowired
 	FileProperties fileProps;
+	@Autowired
+	OtherProperties otherProps;
 
 	@RequestMapping("/openCase/{caseId}")
 	public String openCase(Model model, HttpSession session, @PathVariable String caseId,
@@ -160,6 +162,7 @@ public class OpenCaseController {
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
 		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		model.addAttribute("oncoKBGeniePortalUrl", otherProps.getOncoKBGeniePortalUrl());
 		RequestUtils utils = new RequestUtils(modelDAO);
 		if (user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
@@ -180,6 +183,7 @@ public class OpenCaseController {
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
 		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		model.addAttribute("oncoKBGeniePortalUrl", otherProps.getOncoKBGeniePortalUrl());
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
 	

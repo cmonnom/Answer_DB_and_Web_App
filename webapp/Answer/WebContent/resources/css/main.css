@@ -271,9 +271,15 @@ table.table tbody td {
     word-break: normal !important;
 }
 
-/* Used by the nvaigation drawer to display some info */
+/* Used by the navigation drawer to display some info */
 .menu-status {
     bottom: 0px;
+    position: fixed;
+}
+
+/* Used by the navigation drawer to display leaderboard info */
+.menu-status-above {
+    bottom: 30px;
     position: fixed;
 }
 

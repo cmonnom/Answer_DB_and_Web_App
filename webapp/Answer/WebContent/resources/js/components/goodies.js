@@ -12,6 +12,11 @@ Vue.component('goodies', {
       currentGoodie: {},
       goodiesImgs: [
         {
+          name: 'fireworks.gif',
+          width: 300,
+          timeout: 3000
+        },
+        {
         name: 'nyancat.gif',
         width: 175,
         timeout: 3000

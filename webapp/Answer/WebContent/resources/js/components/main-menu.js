@@ -55,6 +55,18 @@ Vue.component('main-menu', {
 			</v-list-tile-action>
 		</v-list-tile>
 		<v-slide-x-transition>
+		<v-list-tile :class="[statusVisible ? 'menu-status-above' : 'menu-status', 'grey--text']" v-if="userRankVisible">
+		<v-list-tile-action>
+				<v-icon :color="badgeColors[userLeaderBoardInfo.level]">mdi-medal</v-icon>
+			</v-list-tile-action>
+		<v-list-tile-content>
+			<v-list-tile-title class="subheading">
+				{{ userLeaderBoardInfo.title }}
+			</v-list-tile-title>
+		</v-list-tile-content>
+		</v-list-tile>
+		</v-slide-x-transition>
+		<v-slide-x-transition>
 		<v-list-tile class="menu-status grey--text" v-if="statusVisible">
 		<v-list-tile-content>
 			<v-list-tile-title class="subheading">
@@ -74,7 +86,7 @@ Vue.component('main-menu', {
 				{ title: 'Open Report', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseReportSearch: true },
 				// { title: 'Annotations', name: 'AnnotationBrowser', regularItem: true }, // NOT READY YET
 				{ title: 'Admin', name: 'Admin', regularItem: true, adminOnly: true, iconBefore: 'settings' },
-				{ title: 'Logout', name: 'LogOut', iconBefore: 'exit_to_app', regularItem: true }
+				{ title: 'Logout', name: 'LogOut', iconBefore: 'mdi-logout', regularItem: true }
 			],
 			caseItemSelected: null,
 			caseReportItemSelected: null,
@@ -84,7 +96,13 @@ Vue.component('main-menu', {
 			caseReportUpdateUrl: webAppRoot + "/getCaseReportItems",
 			isMinied: false,
 			statusVisible: false,
-			statusMessage: ""
+			statusMessage: "",
+			userLeaderBoardInfo: {
+				title: "Noob annotator",
+				level: 0
+			},
+			userRankVisible: false,
+			badgeColors: ["orange darken-1", "blue-grey lighten-4", "yellow"]
 		}
 
 	},
@@ -164,7 +182,29 @@ Vue.component('main-menu', {
 			else {
 				bus.$emit('menu-expanded', [this, null]);
 			}
-		}
+		},
+		getUserLeaderBoardInfo(reportId) {
+            axios.get(
+                webAppRoot + "/getUserLeaderBoardInfo",
+                {
+                    params: {
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed) {
+						this.userLeaderBoardInfo = response.data.leaderBoard;
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.getUserLeaderBoardInfo);
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                });
+		},
+		handleAxiosError(error) {
+            console.log(error);
+            bus.$emit("some-error", [this, error]);
+		},
 	},
 	created: function () {
 		this.populateCases();

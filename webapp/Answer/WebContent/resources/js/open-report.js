@@ -354,7 +354,7 @@ const OpenReport = {
             <div>
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
                     initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
-                    :color="colors.openReport" :disable-sticky-header="true"
+                    :color="colors.trials" :disable-sticky-header="true"
                     :enable-selection="canProceed('canReview') && !readonly"
                     @datatable-selection-changed="handleSelectionChanged">
                 </data-table>
@@ -366,7 +366,7 @@ const OpenReport = {
     <v-flex xs12 xl9 v-show="strongClinicalSignificanceVisible" pb-3>
         <div>
             <data-table ref="strongCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Strong Clinical Significance"
-                initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" color="primary"
+                initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
                 :disable-sticky-header="true">
             </data-table>
         </div>
@@ -377,7 +377,7 @@ const OpenReport = {
 <v-flex xs12 xl9 v-show="possibleClinicalSignificanceVisible" pb-3>
     <div>
         <data-table ref="possibleCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Possible Clinical Significance"
-            initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" color="primary"
+            initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
             :disable-sticky-header="true">
         </data-table>
     </div>
@@ -388,7 +388,7 @@ const OpenReport = {
 <v-flex xs12 xl9 v-show="unknownClinicalSignificanceVisible" pb-3>
     <div>
         <data-table ref="unknownCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Unknown Clinical Significance"
-            initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" color="primary"
+            initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
             :disable-sticky-header="true">
         </data-table>
     </div>
@@ -399,7 +399,7 @@ const OpenReport = {
         <v-flex xs12 xl9 v-show="copyNumberAlterationsVisible" pt-3>
             <div>
                 <data-table ref="copyNumberAlterations" :fixed="false" :fetch-on-created="false" table-title="Copy Number Alterations"
-                    initial-sort="gene" no-data-text="No Data" :show-pagination="true" title-icon="assignment" :color="colors.openReport"
+                    initial-sort="gene" no-data-text="No Data" :show-pagination="true" title-icon="assignment" :color="colors.cnvs"
                     :disable-sticky-header="true">
                 </data-table>
             </div>
@@ -411,7 +411,7 @@ const OpenReport = {
             <div>
                 <data-table ref="geneFusions" :fixed="false" :fetch-on-created="false" table-title="Gene Fusions"
                     initial-sort="fusionName" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
-                    :color="colors.openReport" :disable-sticky-header="true">
+                    :color="colors.fusions" :disable-sticky-header="true">
                 </data-table>
             </div>
         </v-flex>
@@ -419,7 +419,7 @@ const OpenReport = {
 
     <v-slide-y-transition>
     <v-flex xs12 xl9 v-show="pmidPanelVisible" pt-3>
-        <report-pubmed-ids
+        <report-pubmed-ids :color="colors.pubmeds"
         :pubmeds="fullReport.pubmeds"
         @close-pmid-panel="pmidPanelVisible = false"></report-pubmed-ids>
     </v-flex>
@@ -435,7 +435,12 @@ const OpenReport = {
             caseType: "",
             caseTypeIcon: "",
             colors: {
-                openReport: "primary"
+                openReport: "primary",
+                trials: "green",
+                variants: "indigo",
+                cnvs: "warning",
+                fusions: "blue",
+                pubmeds: "indigo darken-2"
             },
             snackBarMessage: "",
             snackBarVisible: false,

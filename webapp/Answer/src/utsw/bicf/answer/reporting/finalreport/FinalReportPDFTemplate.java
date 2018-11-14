@@ -954,6 +954,8 @@ public class FinalReportPDFTemplate {
 		int pageTotal = this.mainDocument.getNumberOfPages();
 		float tableYPos = FinalReportTemplateConstants.MARGINBOTTOM;
 		float tableWidth = pageWidthMinusMargins;
+		Color fillColor = Color.WHITE;
+		LineStyle borderColor = FinalReportTemplateConstants.NO_BORDER_THIN;
 		for (int i = 0; i < pageTotal; i++) {
 			PDPage currentPage = this.mainDocument.getPage(i);
 			BaseTable table = new BaseTable(tableYPos, tableYPos, 0, tableWidth,
@@ -964,8 +966,6 @@ public class FinalReportPDFTemplate {
 				testName = report.getLabTestName();
 			}
 			
-			Color fillColor = Color.WHITE;
-			LineStyle borderColor = FinalReportTemplateConstants.NO_BORDER_THIN;
 			List<Object> colors = colorPerPage.get(i);
 			if (colors != null) { //don't change color until the next page has an entry
 				fillColor = (Color) colors.get(0); 

@@ -4,6 +4,7 @@ public class OtherProperties {
 	
 	String proxyHostname;
 	int proxyPort;
+	String oncoKBGeniePortalUrl;
 
 
 	public int getProxyPort() {
@@ -20,6 +21,14 @@ public class OtherProperties {
 
 	public void setProxyHostname(String proxyHostname) {
 		this.proxyHostname = proxyHostname;
+	}
+
+	public String getOncoKBGeniePortalUrl() {
+		return oncoKBGeniePortalUrl;
+	}
+
+	public void setOncoKBGeniePortalUrl(String oncoKBGeniePortalUrl) {
+		this.oncoKBGeniePortalUrl = oncoKBGeniePortalUrl;
 	}
 
 }

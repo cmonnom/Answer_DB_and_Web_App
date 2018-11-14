@@ -23,7 +23,7 @@ public class CronController {
 	
 
 	@Scheduled(cron = "*/10 * * * * *") //run every 10min, every day
-	public void cleanBamLinks() {
+	public void cleanBamPdfLinks() {
 		File linkDir = fileProps.getBamLinksDir();
 		deleteLinks(linkDir);
 		linkDir = fileProps.getPdfLinksDir();

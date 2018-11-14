@@ -17,6 +17,8 @@
         csrf:"${_csrf}" }
 
         const userFullName = "${userFullName}";
+
+        const oncoKBGeniePortalUrl = "${oncoKBGeniePortalUrl}";
 </script>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700">

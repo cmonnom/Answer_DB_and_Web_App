@@ -703,7 +703,7 @@ const OpenCase = {
 
     <v-slide-y-transition>
         <v-layout v-if="patientDetailsVisible">
-            <v-flex xs12 md12 lg10 xl9>
+            <v-flex xs12 md12 lg12 xl10>
                 <div class="text-xs-center pb-3">
                     <v-card>
                         <v-toolbar class="elevation-0" dense dark :color="colors.openCase">
@@ -753,13 +753,19 @@ const OpenCase = {
                                                                 <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
                                                                 </v-tooltip>
                                                             </v-flex>
-                                                            <v-flex xs2 v-if="item.type == 'text' && item.field == 'oncotree'">
+                                                            <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'">
                                                                 <v-tooltip bottom>
-                                                                    <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator">
+                                                                    <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator" class="mr-0 ml-0 mt-0 mb-0">
                                                                         <v-icon> open_in_new</v-icon>
                                                                     </v-btn>
                                                                     <span>Open OncoTree in New Tab</span>
                                                                 </v-tooltip>
+                                                                <v-tooltip bottom>
+                                                                <v-btn flat color="primary" icon @click="openOncoKBGeniePortalCancer()" slot="activator" class="mr-0 ml-0 mt-0 mb-0">
+                                                                    <v-icon>mdi-dna</v-icon>
+                                                                </v-btn>
+                                                                <span>Open OncoKB Genie Portal in New Tab</span>
+                                                            </v-tooltip>
                                                             </v-flex>
                                                         </v-layout>
                                                     </v-list-tile-content>
@@ -1141,6 +1147,14 @@ const OpenCase = {
                 }
             }).then(response => {
                 if (response.data.isAllowed) {
+                        setTimeout(() => {
+                            if (this.readonly) {
+                                bus.$emit("update-status", ["VIEW ONLY MODE"]);
+                            }
+                            else {
+                                bus.$emit("update-status-off");
+                            }
+                        }, 4200); //show after snackbar is dismissed
                     // var start = new Date();
                     this.patientTables = response.data.patientInfo.patientTables;
                     this.caseAssignedTo = response.data.assignedToIds;
@@ -1547,6 +1561,7 @@ const OpenCase = {
                                     value: this.currentVariant.chrom + ":"
                                         + this.currentVariant.pos,
                                     type: "link",
+                                    linkIcon: "open_in_new",
                                     url: this.createUCSCLink(),
                                     tooltip: "Open Genome Browser"
                                 },
@@ -1557,11 +1572,19 @@ const OpenCase = {
                                 },
                                 {
                                     label: "Gene",
-                                    value: this.currentVariant.geneName
+                                    type: "link",
+                                    linkIcon: "mdi-dna",
+                                    url: this.createOncoKBGeniePortalGene(),
+                                    value: this.currentVariant.geneName,
+                                    tooltip: "Open OncoKB Genie Portal (Gene) in new tab"
                                 },
                                 {
                                     label: "Notation",
-                                    value: this.currentVariant.notation
+                                    type: "link",
+                                    linkIcon: "mdi-dna",
+                                    url: this.createOncoKBGeniePortalVariant(),
+                                    value: this.currentVariant.notation,
+                                    tooltip: "Open OncoKB Genie Portal (Variant) in new tab"
                                 },
                                 {
                                     label: "Reference Allele(s)",
@@ -1801,6 +1824,14 @@ const OpenCase = {
                                 },
                                 {
                                     label: "Score", value: this.currentVariant.score ? this.currentVariant.score + "" : ""
+                                },
+                                {
+                                    label: "Open OncoKB Genie Portal (CNV)",
+                                    type: "link",
+                                    linkIcon: "mdi-dna",
+                                    url: this.createOncoKBGeniePortalCNV(),
+                                    value: "",
+                                    tooltip: "Open OncoKB Genie Portal (CNV) in new tab"
                                 }
                             ]
                         };
@@ -1923,6 +1954,14 @@ const OpenCase = {
                             },
                             {
                                 label: "DNA Reads", value: this.currentVariant.dnaReads ? this.currentVariant.dnaReads + "" : ""
+                            },
+                            {
+                                label: "Open OncoKB Genie Portal (Fusion)",
+                                type: "link",
+                                linkIcon: "mdi-dna",
+                                url: this.createOncoKBGeniePortalFusion(),
+                                value: "",
+                                tooltip: "Open OncoKB Genie Portal (Fusion) in new tab"
                             }]
                         };
                         this.variantDataTables.push(infoTable2);
@@ -3074,6 +3113,32 @@ const OpenCase = {
         openOncoTree() {
             window.open("http://oncotree.mskcc.org", "_blank");
         },
+        openOncoKBGeniePortalCancer() {
+            var url = oncoKBGeniePortalUrl + "Cancer/?Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
+            window.open(url, "_blank");
+        },
+        createOncoKBGeniePortalGene() {
+            return oncoKBGeniePortalUrl + "Gene/?gene_name=" + this.currentVariant.geneName;
+        },
+        createOncoKBGeniePortalVariant() {
+            return oncoKBGeniePortalUrl + "Variant/?gene_name=" + this.currentVariant.geneName
+            + "&variant=" + this.currentVariant.notation + "&Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
+        },
+        createOncoKBGeniePortalCNV() {
+            var ampDel = "";
+            if (this.currentVariant.aberrationType == "amplification") {
+                ampDel = "Amplification";
+            }
+            else if (this.currentVariant.aberrationType == "homozygous loss" ) {
+                ampDel = "Deletion";
+            }
+            return oncoKBGeniePortalUrl + "CNA/?gene_name=&Amp_Del="
+            + ampDel + "&Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
+        },
+        createOncoKBGeniePortalFusion() {
+            return oncoKBGeniePortalUrl + "Fusion/?gene1=" + this.currentVariant.leftGene
+            + "&gene2=" + this.currentVariant.rightGene + "&Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
+        },
         handleRouteChanged(newRoute, oldRoute) {
             if (newRoute.path != oldRoute.path) { //prevent reloading data if only changing the query router.push({query: {test:"hello3"}})
                 this.getAjaxData();
@@ -3417,11 +3482,7 @@ const OpenCase = {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",
             this.snackBarLink = "";
         this.snackBarVisible = this.readonly;
-        if (this.readonly) {
-            setTimeout(() => {
-                bus.$emit("update-status", ["VIEW ONLY MODE"]);
-            }, 4200); //show after snackbar is dismissed
-        }
+        
         this.collectOncoTreeDiagnosis();
         this.getAjaxData();
         this.loadUserFilterSets();
