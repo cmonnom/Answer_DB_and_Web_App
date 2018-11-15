@@ -34,14 +34,17 @@ public class NotificationUtils {
 			.append("\n' | sendmail -t\n");
 			System.out.println("Sending this email:");
 			System.out.println(emailCommand.toString());
-			File script = new File("/tmp/email.sh");
+			long time = System.currentTimeMillis() + Math.round(Math.random() * 100);
+			File script = new File("/tmp/email_" + time + ".sh");
 			if (script.exists()) {
 				script.delete();
 			}
 			FileUtils.write(script, emailCommand.toString(), Charset.defaultCharset());
 			process = Runtime.getRuntime().exec("sh " + script.getAbsolutePath());
 			int exitCode = process.waitFor();
-			
+			if (script.exists()) {
+				script.delete();
+			}
 			return exitCode == 0;
 		}
 		return false;

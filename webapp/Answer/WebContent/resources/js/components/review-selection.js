@@ -81,13 +81,13 @@ Vue.component('review-selection', {
             <span>Download Moclia File</span>
         </v-tooltip>
         <v-tooltip bottom v-if="canProceed('canAnnotate')">
-        <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator">
+        <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator" :loading="markingForReview">
             <v-icon>how_to_reg</v-icon>
         </v-btn>
         <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
     </v-tooltip>
     <v-tooltip bottom v-if="canProceed('canReview')">
-        <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator">
+        <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator" :loading="markingForReport">
             <v-icon>assignment</v-icon>
         </v-btn>
         <span>Mark as Ready for Report. Save Selected Variants</span>
@@ -168,14 +168,14 @@ Vue.component('review-selection', {
             <span>Download Moclia File</span>
         </v-tooltip>
         <v-tooltip top v-if="canProceed('canAnnotate')">
-            <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator" >
+            <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator"  :loading="markingForReview">
                 Ready for Review
             <v-icon right dark>how_to_reg</v-icon>
             </v-btn>
             <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
         </v-tooltip>
         <v-tooltip top v-if="canProceed('canReview')">
-            <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator" >
+            <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator"  :loading="markingForReport">
                 Ready for Report
             <v-icon right dark>assignment</v-icon>
             </v-btn>
@@ -198,6 +198,8 @@ Vue.component('review-selection', {
         return {
             sendToMDALoading: false,
             requiredReportGroups: [],
+            markingForReview: false,
+            markingForReport: false,
         }
     },
     methods: {
@@ -280,6 +282,7 @@ Vue.component('review-selection', {
 
         },
         markAsReadyForReview() {
+            this.markingForReview = true;
             this.saveSelection(false, true);
             axios.get(webAppRoot + "/readyForReview", {
                 params: {
@@ -288,19 +291,22 @@ Vue.component('review-selection', {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        this.snackBarMessage = "The reviewer has been notified.";
-                        this.snackBarLink = "";
-                        this.snackBarVisible = true;
+                        var snackBarMessage = "The reviewer(s) have been notified.";
+                        var snackBarLink = "";
+                        this.$emit("show-snackbar", snackBarMessage, snackBarLink);
                     }
                     else {
                         this.handleDialogs(response.data, this.markAsReadyForReview);
                     }
+                    this.markingForReview = false;
                 })
                 .catch(error => {
                     alert(error);
+                    this.markingForReview = false;
                 });
         },
         markAsReadyForReport() {
+            this.markingForReport = true;
             this.saveSelection(false, true);
             axios.get(webAppRoot + "/readyForReport", {
                 params: {
@@ -309,17 +315,19 @@ Vue.component('review-selection', {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        this.snackBarMessage = "View/Edit Report";
-                        this.snackBarLink = webAppRoot + "/openReport/" + this.$route.params.id;
-                        this.snackBarLinkIcon = "assignment";
-                        this.snackBarVisible = true;
+                        var snackBarMessage = "View/Edit Report";
+                        var snackBarLink = webAppRoot + "/openReport/" + this.$route.params.id;
+                        var snackBarLinkIcon = "assignment";
+                        this.$emit("show-snackbar", snackBarMessage, snackBarLink, snackBarLinkIcon);
                     }
                     else {
                         this.handleDialogs(response.data, this.markAsReadyForReport);
                     }
+                    this.markingForReport = false;
                 })
                 .catch(error => {
                     alert(error);
+                    this.markingForReport = false;
                 });
         },
         saveSelection(closeAfter, skipSnackBar) {

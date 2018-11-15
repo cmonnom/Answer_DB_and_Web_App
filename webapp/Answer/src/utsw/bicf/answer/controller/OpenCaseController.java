@@ -1017,7 +1017,7 @@ public class OpenCaseController {
 	@RequestMapping(value = "/readyForReview")
 	@ResponseBody
 	public String readyForReview(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
-
+		
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		User currentUser = (User) session.getAttribute("user");

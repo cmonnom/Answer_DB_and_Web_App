@@ -51,7 +51,7 @@ const OpenCase = {
         :selected-ids="getSelectedVariantIds()"
         @save-selection="saveSelection" @close-review-dialog="closeReviewDialog"
         :is-save-badge-visible="isSaveNeededBadgeVisible()" :save-variant-disabled="saveVariantDisabled"
-        @save-all="handleSaveAll" :waiting-for-ajax-active="waitingForAjaxActive"
+        @save-all="handleSaveAll" :waiting-for-ajax-active="waitingForAjaxActive" @show-snackbar="showSnackBarMessageWithParams"
         :save-tooltip="createSaveTooltip()"></review-selection>
     </v-dialog>
 
@@ -3352,6 +3352,12 @@ const OpenCase = {
         showSnackBarMessage(message) {
             this.snackBarMessage = message;
             this.snackBarLink = "";
+            this.snackBarVisible = true;
+        },
+        showSnackBarMessageWithParams(snackBarMessage, snackBarLink, snackBarLinkIcon) {
+            this.snackBarMessage = snackBarMessage;
+            this.snackBarLink = snackBarLink;
+            this.snackBarLinkIcon = snackBarLinkIcon;
             this.snackBarVisible = true;
         },
         formatChrom(chrom) { //needed to call the global function from v-text
