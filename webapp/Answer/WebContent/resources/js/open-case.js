@@ -4,9 +4,19 @@ const OpenCase = {
 
     },
     template: `<div>
+    <!-- goodies panel dialog -->
+    <v-dialog v-model="showGoodiesPanel" content-class="no-transition" full-width hide-overlay fullscreen>
+    <v-layout row wrap fill-height text-xs-center>
+    <v-flex xs12>
+    <goodies2 ref="goodiesPanel" @end-goodies="showGoodiesPanel = false"></goodies2>
+    </v-flex>
+    <v-flex xs12>
+    <span class="display-1">Enjoy a quick break...</span><br/>
+    <v-btn large color="warning" @click="showGoodiesPanel = false">Back to work</v-btn>
+    </v-flex>
+    </v-layout>
+    </v-dialog>
 
-    <goodies></goodies>
-    
     <!-- splash screen dialog -->
     <div class="splash-screen" v-if="splashDialog">
     <v-layout align-center justify-center row fill-height class="splash-screen-item">
@@ -1076,7 +1086,8 @@ const OpenCase = {
             caseNotesChanged: false,
             autoSaveInterval: null,
             cnvChromList: [],
-            addCNVDialogVisible: false
+            addCNVDialogVisible: false,
+            showGoodiesPanel: false
         }
     }, methods: {
         createSplashText() {
@@ -2420,11 +2431,12 @@ const OpenCase = {
                         this.$nextTick(() => {
                             this.cancelAnnotations();
                             this.snackBarVisible = true;
-                            if (this.waitingForGoodies) { //TODO test this
+                            if (this.waitingForGoodies) {
                                 this.waitingForGoodies = false;
                                 setTimeout(() => {
-                                    bus.$emit("show-goodies");
-                                }, 1000); //1sec might help with having the proper top/left calculated
+                                    this.showGoodiesPanel = true;
+                                    this.$refs.goodiesPanel.activateGoodies();
+                                }, 4000); //2sec might help with having the proper top/left calculated
                             }
                         });
 

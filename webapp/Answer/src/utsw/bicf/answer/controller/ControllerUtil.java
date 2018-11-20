@@ -22,6 +22,7 @@ public class ControllerUtil {
 	private static long timestamp = new Date().getTime();
 	
 	private static void initJSFiles(Model model, ServletContext servletContext) throws IOException {
+		model.addAttribute("goodiesFiles", ControllerUtil.getAllGoodies(servletContext));
 		model.addAttribute("componentFiles", ControllerUtil.getAllComponents(servletContext));
 		model.addAttribute("jsFiles", ControllerUtil.getAllJSFiles(servletContext));
 	}
@@ -63,6 +64,11 @@ public class ControllerUtil {
 	
 	private static List<String> getAllComponents(ServletContext servletContext) throws IOException {
 		File resourcesJs = new File( servletContext.getRealPath("/resources/js/components") );
+		return buildFileNameList(resourcesJs);
+	}
+	
+	private static List<String> getAllGoodies(ServletContext servletContext) throws IOException {
+		File resourcesJs = new File( servletContext.getRealPath("/resources/js/goodies") );
 		return buildFileNameList(resourcesJs);
 	}
 	

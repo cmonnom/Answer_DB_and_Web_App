@@ -14,6 +14,7 @@ import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.UserRank;
 import utsw.bicf.answer.model.VariantFilterList;
 
 @Repository
@@ -235,6 +236,14 @@ public class ModelDAO {
 		String sql = "SELECT distinct(gene_name) FROM gene_to_report order by gene_name";
 		return session.createNativeQuery(sql)
 				.list();
+	}
+
+	@Transactional
+	public UserRank getFirstRank() {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "SELECT * FROM user_rank order by level";
+		return session.createNativeQuery(sql, UserRank.class)
+				.list().get(0);
 	}
 
 //	@Transactional

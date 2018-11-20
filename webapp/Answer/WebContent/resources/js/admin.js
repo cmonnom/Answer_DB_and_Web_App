@@ -207,7 +207,6 @@ const Admin = {
       editAdd: "Add",
       snackBarVisible: false,
       snackBarMessage: "",
-
       editGeneSetDialogVisible: false,
       currentEditGeneSetGroupName: "",
       currentEditGeneSetReportGroupId: null,

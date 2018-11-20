@@ -28,7 +28,7 @@
 <link href="https://unpkg.com/vuetify@1.0.19/dist/vuetify.min.css" rel="stylesheet">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/main.css?timestamp=${timestamp}">
-
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/goodies.css?timestamp=${timestamp}">
 
 <!-- <link rel="shortcut icon" type="image/x-icon" href="https://www.utsouthwestern.net/favicon.ico" /> -->
 <link rel="shortcut icon" type="image/x-icon" href="${pageContext.request.contextPath}/resources/images/answer-logo-icon-xsmall.png" />
@@ -68,6 +68,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" /> -->
 
+<c:forEach var = "goodieFile" items="${goodiesFiles}">
+		<script src="${pageContext.request.contextPath}/resources/js/goodies/${goodieFile}?timestamp=${timestamp}"></script>
+</c:forEach>
 <c:forEach var = "componentFile" items="${componentFiles}">
 		<script src="${pageContext.request.contextPath}/resources/js/components/${componentFile}?timestamp=${timestamp}"></script>
 </c:forEach>

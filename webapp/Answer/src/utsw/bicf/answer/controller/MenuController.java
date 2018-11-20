@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseItems;
+import utsw.bicf.answer.controller.serialization.vuetify.UserLeaderBoardInfo;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
@@ -33,6 +34,7 @@ public class MenuController {
 	static {
 		PermissionUtils.addPermission(MenuController.class.getCanonicalName() + ".getCaseItems", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(MenuController.class.getCanonicalName() + ".getCaseReportItems", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(MenuController.class.getCanonicalName() + ".getUserLeaderBoardInfo", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 
@@ -93,5 +95,28 @@ public class MenuController {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	/**
+	 * Some attempt at building a leaderboard. For now the idea doesn't seem
+	 * constructive enough. Don't use this method for now.
+	 * @param model
+	 * @param session
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
+	@RequestMapping("/getUserLeaderBoardInfo")
+	@ResponseBody
+	public String getUserLeaderBoardInfo(Model model, HttpSession session) throws ClientProtocolException, URISyntaxException, IOException {
+		//send user to Ben's API to retrieve all active cases
+//		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = (User) session.getAttribute("user");
+		if (user != null) {
+			UserLeaderBoardInfo lb = new UserLeaderBoardInfo(user, modelDAO);
+			return lb.createObjectJSON();
+		}
+		return null;
 	}
 }

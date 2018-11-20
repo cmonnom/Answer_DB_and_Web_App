@@ -69,7 +69,18 @@
 		</copy>
 	</target>
 
-	
+	<!-- Minify js files (testing for now) but does not support ES6 -->
+	<target name="js-minify">
+	    <apply executable="java" parallel="false">
+	        <fileset dir="${webcontent.dir}/resources/js" includes="admin.js" excludes="vue-sticky.js, *-min.js, *.min.js"/>
+	        <arg line="-jar"/>
+	        <arg path="${web.dir}/WEB-INF/lib/yuicompressor-2.4.2.jar"/>
+	        <srcfile/>
+	        <arg line="-o"/>
+	        <mapper type="glob" from="*.js" to="${web.dir}/resources/js/*-min.js"/>
+	        <targetfile/>
+	    </apply>
+	</target>
 	
 	<!-- Create the final WAR file for deployment -->
 		<target name="package" depends="clean, compile, copy-resources" description="create a war file">

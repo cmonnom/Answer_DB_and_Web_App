@@ -1,13 +1,11 @@
 package utsw.bicf.answer.controller.serialization;
 
-import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.Variant;
-import utsw.bicf.answer.model.hybrid.ReportAnnotation;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GeneVariantAndAnnotation {

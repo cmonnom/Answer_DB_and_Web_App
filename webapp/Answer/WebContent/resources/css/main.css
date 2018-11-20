@@ -332,3 +332,7 @@ table.table tbody td {
     text-align: left;
     background: #ECEFF1;
 }
+
+.no-transition {
+    transition: none !important;
+}

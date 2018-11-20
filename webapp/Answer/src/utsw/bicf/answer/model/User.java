@@ -50,6 +50,16 @@ public class User {
 	@JoinColumn(name="individual_permission_id", unique=true)
 	IndividualPermission individualPermission;
 	
+	/**
+	  * Some attempt at building a leaderboard. For now the idea doesn't seem
+	  * constructive enough.
+	  * This class is not currently used.
+	 */
+	@ManyToOne(cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+	@JoinColumn(name="user_rank_id")
+	UserRank userRank;
+	
+	
 	public Integer getUserId() {
 		return userId;
 	}
@@ -127,6 +137,14 @@ public class User {
 	@Override
 	public int hashCode() {
 		return super.hashCode();
+	}
+
+	public UserRank getUserRank() {
+		return userRank;
+	}
+
+	public void setUserRank(UserRank userRank) {
+		this.userRank = userRank;
 	}
 
 }

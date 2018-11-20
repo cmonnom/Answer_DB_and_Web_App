@@ -1,0 +1,19 @@
+.goodies-screen {
+    height:500px;
+    width: 600px;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    /* background: antiquewhite; */
+    opacity: 1;
+}
+
+#goodies-canvas {
+    height:500px;
+    width: 600px;
+}
+
+.fade-out {
+    transition: opacity 2s ease-in-out;
+    opacity: 0;
+}
