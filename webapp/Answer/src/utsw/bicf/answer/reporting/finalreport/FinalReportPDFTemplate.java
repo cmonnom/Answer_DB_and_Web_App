@@ -65,7 +65,7 @@ public class FinalReportPDFTemplate {
 	File tempFile;
 	OtherProperties otherProps;
 	List<Link> links = new ArrayList<Link>();
-	Map<Integer, List<Object>> colorPerPage = new HashMap<Integer, List<Object>>();
+	Map<Integer, List<FooterColor>> colorPerPage = new HashMap<Integer, List<FooterColor>>();
 
 	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps) {
 		this.otherProps = otherProps;
@@ -144,7 +144,7 @@ public class FinalReportPDFTemplate {
 		File ngsLogoFile = new File(fileProps.getPdfLogoDir(), fileProps.getPdfNGSLogoName());
 		Image ngsImage = new Image(ImageIO.read(ngsLogoFile));
 		ngsImage = ngsImage.scaleByWidth(100);
-		float xPos = firstPage.getMediaBox().getWidth() - FinalReportTemplateConstants.MARGINRIGHT - ngsImage.getWidth();
+		float xPos = (firstPage.getMediaBox().getWidth() - ngsImage.getWidth()) / 2 ;
 		ngsImage.draw(mainDocument, contentStream, xPos, yPos);
 		contentStream.close();
 	}
@@ -153,11 +153,11 @@ public class FinalReportPDFTemplate {
 		PDPage firstPage = mainDocument.getPage(0);
 		PDPageContentStream contentStream = new PDPageContentStream(mainDocument, firstPage,
 				PDPageContentStream.AppendMode.APPEND, true);
-		float yPos = pageHeight - FinalReportTemplateConstants.LOGO_MARGIN_TOP;
+		float yPos = pageHeight - FinalReportTemplateConstants.LOGO_MARGIN_TOP - 2;
 		Image ngsImage = new Image(ImageIO.read(new File(fileProps.getPdfLogoDir(), fileProps.getPdfUTSWLogoName())));
 		ngsImage = ngsImage.scaleByWidth(100);
 		float xPos = firstPage.getMediaBox().getWidth() - FinalReportTemplateConstants.MARGINRIGHT - ngsImage.getWidth();
-		ngsImage.draw(mainDocument, contentStream, xPos, yPos - ngsImage.getHeight() - 10);
+		ngsImage.draw(mainDocument, contentStream, xPos, yPos);
 		contentStream.close();
 	}
 
@@ -275,8 +275,9 @@ public class FinalReportPDFTemplate {
 		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER);
 	}
 
-	private void updatePotentialNewPagePosition() {
-		if (latestYPosition <= FinalReportTemplateConstants.MARGINBOTTOM * 3) { //start on a new page if to low on the page
+	private void updatePotentialNewPagePosition(long rows) {
+		if ((latestYPosition <= pageHeight / 2 && rows > 2) //passed half the page and table has more than 2 rows
+				|| rows > 5) { // too many rows
 			mainDocument.addPage(new PDPage(PDRectangle.LETTER));
 			latestYPosition = pageHeight - FinalReportTemplateConstants.MARGINTOP;
 		}
@@ -291,12 +292,14 @@ public class FinalReportPDFTemplate {
 	}
 
 	private void createNavigationTable() throws IOException {
-		this.updatePotentialNewPagePosition();
+		this.updatePotentialNewPagePosition(0);
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		BaseTable table = createNewTable(currentPage);
-		List<Object> colors = new ArrayList<Object>();
-		colors.add(Color.WHITE);
-		colors.add(FinalReportTemplateConstants.NO_BORDER_THIN);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(Color.WHITE, FinalReportTemplateConstants.NO_BORDER_THIN);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		
 
@@ -309,9 +312,9 @@ public class FinalReportPDFTemplate {
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.TRIAL_COLOR);
 		cell = row.createCell(20, FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
-		cell = row.createCell(10, FinalReportTemplateConstants.CNV_TITLE_SHORT);
+		cell = row.createCell(9, FinalReportTemplateConstants.CNV_TITLE_SHORT);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.CNV_COLOR);
-		cell = row.createCell(10, FinalReportTemplateConstants.TRANSLOCATION_TITLE_SHORT);
+		cell = row.createCell(11, FinalReportTemplateConstants.TRANSLOCATION_TITLE_SHORT);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.FTL_COLOR);
 		
 		
@@ -361,9 +364,11 @@ public class FinalReportPDFTemplate {
 //		this.updatePotentialNewPagePosition();
 		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
-		List<Object> colors = new ArrayList<Object>();
-		colors.add(FinalReportTemplateConstants.THERAPY_COLOR);
-		colors.add(FinalReportTemplateConstants.BORDER_THERAPY_COLOR);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.THERAPY_COLOR, FinalReportTemplateConstants.BORDER_THERAPY_COLOR);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
@@ -426,12 +431,17 @@ public class FinalReportPDFTemplate {
 		if (report.getClinicalTrials() == null) {
 			return;
 		}
-//		this.updatePotentialNewPagePosition();
-		updatePageBreakPosition();
+		long rows = report.getClinicalTrials()
+		.stream().filter(item -> item.getIsSelected() != null && item.getIsSelected())
+		.collect(Collectors.counting());
+		this.updatePotentialNewPagePosition(rows);
+//		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
-		List<Object> colors = new ArrayList<Object>();
-		colors.add(FinalReportTemplateConstants.TRIAL_COLOR);
-		colors.add(FinalReportTemplateConstants.BORDER_TRIAL_COLOR);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.TRIAL_COLOR, FinalReportTemplateConstants.BORDER_TRIAL_COLOR);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
@@ -470,7 +480,6 @@ public class FinalReportPDFTemplate {
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			
 		}
-
 		boolean greyBackground = false;
 		for (BiomarkerTrialsRow item : report.getClinicalTrials()) {
 			if (item.getIsSelected() != null && item.getIsSelected()) {
@@ -504,7 +513,7 @@ public class FinalReportPDFTemplate {
 
 	private void applyHeaderFormatting(Cell<PDPage> cell, float defaultFont) {
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE_BOLD);
-		cell.setAlign(HorizontalAlignment.LEFT);
+		cell.setAlign(HorizontalAlignment.CENTER);
 		cell.setValign(VerticalAlignment.MIDDLE);
 		cell.setFontSize(defaultFont);
 		cell.setTextColor(Color.BLACK);
@@ -585,12 +594,14 @@ public class FinalReportPDFTemplate {
 
 
 	private void createAClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems, String tableTitle, boolean addLink) throws IOException{
-//		this.updatePotentialNewPagePosition();
-		updatePageBreakPosition();
+		this.updatePotentialNewPagePosition(tableItems.size());
+//		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
-		List<Object> colors = new ArrayList<Object>();
-		colors.add(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
-		colors.add(FinalReportTemplateConstants.BORDER_CLIN_SIGNIFICANCE_COLOR);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR, FinalReportTemplateConstants.BORDER_CLIN_SIGNIFICANCE_COLOR);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		if (addLink) {
 			links.add(new Link(FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition));
@@ -652,12 +663,14 @@ public class FinalReportPDFTemplate {
 	}
 	
 	private void createAnUnkwnownClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems) throws IOException{
-//		this.updatePotentialNewPagePosition();
-		updatePageBreakPosition();
+		this.updatePotentialNewPagePosition(tableItems.size());
+//		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
-		List<Object> colors = new ArrayList<Object>();
-		colors.add(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
-		colors.add(FinalReportTemplateConstants.BORDER_CLIN_SIGNIFICANCE_COLOR);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR, FinalReportTemplateConstants.BORDER_CLIN_SIGNIFICANCE_COLOR);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
@@ -700,17 +713,20 @@ public class FinalReportPDFTemplate {
 	}
 
 	private void createCNVTable() throws IOException {
-//		this.updatePotentialNewPagePosition();
-		updatePageBreakPosition();
+		List<CNVReport> items = report.getCnvs();
+		this.updatePotentialNewPagePosition(items.size());
+//		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
-		List<Object> colors = new ArrayList<Object>();
-		colors.add(FinalReportTemplateConstants.CNV_COLOR);
-		colors.add(FinalReportTemplateConstants.BORDER_CNV_COLOR);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.CNV_COLOR, FinalReportTemplateConstants.BORDER_CNV_COLOR);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
 		BaseTable table = createNewTable(currentPage);
-		List<CNVReport> items = report.getCnvs();
+		
 
 		//Title
 		Row<PDPage> row = table.createRow(12); 
@@ -732,7 +748,7 @@ public class FinalReportPDFTemplate {
 			table.addHeaderRow(row);
 			cellHeader = row.createCell(25, "CHR:START-END");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
-			cellHeader = row.createCell(10, "COPY NB.");
+			cellHeader = row.createCell(10, "COPY #");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			cellHeader = row.createCell(20, "CYTOBAND");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
@@ -761,18 +777,29 @@ public class FinalReportPDFTemplate {
 		latestYPosition = table.draw() - 20;
 	}
 
+	private List<FooterColor> getExistingColorsForCurrentPage() {
+		List<FooterColor> colors = colorPerPage.get(this.mainDocument.getNumberOfPages() - 1);
+		if (colors == null) {
+			colors = new ArrayList<FooterColor>();
+		}
+		return colors;
+	}
+	
 	private void createTranslocationTable() throws IOException {
-//		this.updatePotentialNewPagePosition();
-		updatePageBreakPosition();
+		List<TranslocationReport> items = report.getTranslocations();
+		this.updatePotentialNewPagePosition(items.size());
+//		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
-		List<Object> colors = new ArrayList<Object>();
-		colors.add(FinalReportTemplateConstants.FTL_COLOR);
-		colors.add(FinalReportTemplateConstants.BORDER_FTL_COLOR);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.FTL_COLOR, FinalReportTemplateConstants.BORDER_FTL_COLOR);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
 		BaseTable table = createNewTable(currentPage);
-		List<TranslocationReport> items = report.getTranslocations();
+		
 
 		//Title
 		Row<PDPage> row = table.createRow(12); 
@@ -791,7 +818,7 @@ public class FinalReportPDFTemplate {
 			//Headers
 			row = table.createRow(12); 
 			table.addHeaderRow(row);
-			cellHeader = row.createCell(20, "FUSION NAME");
+			cellHeader = row.createCell(20, "FUSION");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			cellHeader = row.createCell(10, "GENE1");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
@@ -835,9 +862,11 @@ public class FinalReportPDFTemplate {
 //		this.updatePotentialNewPagePosition();
 		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
-		List<Object> colors = new ArrayList<Object>();
-		colors.add(FinalReportTemplateConstants.PUBMED_COLOR);
-		colors.add(FinalReportTemplateConstants.BORDER_PUBMED_COLOR);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.PUBMED_COLOR, FinalReportTemplateConstants.BORDER_PUBMED_COLOR);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
@@ -849,6 +878,7 @@ public class FinalReportPDFTemplate {
 //		table.addHeaderRow(row);
 		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.PUBMED_REFERENCE_TITLE);
 		this.applyTitleHeaderFormatting(cellHeader);
+		cellHeader.setTextColor(Color.WHITE);
 		cellHeader.setFillColor(FinalReportTemplateConstants.PUBMED_COLOR);
 
 		if (items == null || items.isEmpty()) {
@@ -882,11 +912,20 @@ public class FinalReportPDFTemplate {
 				row = table.createRow(12);
 				StringBuilder sb = new StringBuilder();
 				sb.append("<b>").append(item.getTitle()).append("</b>").append("<br/>");
-				sb.append(item.getDescription()).append("<br/>");
+				sb.append(item.getDescription());
+				Cell<PDPage> cell = row.createCell(100, sb.toString());
+				cell.setBottomPadding(0);
+				this.applyCellFormatting(cell, defaultFont, color);
+				
+				//PMID link
+				row = table.createRow(12);
+				sb = new StringBuilder();
 				sb.append("PMID: ").append(item.getPmid());
 				links.add(new Link("PMID: " + item.getPmid(), FinalReportTemplateConstants.PUBMED_URL + item.getPmid()));
-				Cell<PDPage> cell = row.createCell(100, sb.toString());
+				cell = row.createCell(100, sb.toString());
 				this.applyCellFormatting(cell, defaultFont, color);
+				cell.setTextColor(FinalReportTemplateConstants.LINK_ANSWER_GREEN);
+				cell.setTopPadding(-10);
 				greyBackground = !greyBackground;
 			}
 		}
@@ -966,17 +1005,25 @@ public class FinalReportPDFTemplate {
 				testName = report.getLabTestName();
 			}
 			
-			List<Object> colors = colorPerPage.get(i);
-			if (colors != null) { //don't change color until the next page has an entry
-				fillColor = (Color) colors.get(0); 
-				borderColor = (LineStyle) colors.get(1);
+			List<FooterColor> colors = colorPerPage.get(i);
+			if (colors == null) { //don't change color until the next page has an entry
+				colors = colorPerPage.get(i - 1);
 			}
 			
 //			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);
 			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 34f);
 			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 32f);
-			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 32f);
-			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);
+			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 30f);
+			float width = 2f;
+			if (colors.size() > 1) {
+				width = 4f / colors.size();
+			}
+			for (FooterColor fColor : colors) {
+				this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, width, fColor.getColor(), fColor.getLineStyle());
+			}
+			if (colors.size() == 1) {
+				this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, width, fillColor, borderColor);
+			}
 //			//draw color cell
 //			row = table.createRow(1);
 //			Cell<PDPage> cell = row.createCell(100, " ");
@@ -993,12 +1040,14 @@ public class FinalReportPDFTemplate {
 
 	private void addInformationAboutTheTest() throws IOException {
 		// Title
-		this.updatePotentialNewPagePosition();
+		this.updatePageBreakPosition();
 		float tableWidth = pageWidthMinusMargins;
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
-		List<Object> colors = new ArrayList<Object>();
-		colors.add(Color.WHITE);
-		colors.add(FinalReportTemplateConstants.NO_BORDER_THIN);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(Color.WHITE, FinalReportTemplateConstants.NO_BORDER_THIN);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		BaseTable table = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, FinalReportTemplateConstants.MARGINBOTTOM,
 				tableWidth, FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, false, true);

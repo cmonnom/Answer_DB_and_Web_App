@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.CellItem;
@@ -23,6 +24,11 @@ public class PatientInfo {
 	public PatientInfo(OrderCase orderCase) {
 		this.createPatientTables(orderCase);
 	}
+	
+	//tables are slightly different in the PDF report
+//	public PatientInfo(PatientInfo patientInfo) {
+//		this.createPatientTablesForPDF(patientInfo);
+//	}
 
 	private void createPatientTables(OrderCase orderCase) {
 		ListTable table = new ListTable();
@@ -43,14 +49,7 @@ public class PatientInfo {
 		items.add(new CellItem("Sex", orderCase.getGender()));
 		items.add(new CellItem("Order #", orderCase.getEpicOrderNumber())); 
 		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));
-//		if (finalReport != null) {
-//			items.add(new CellItem("Report Accession #", finalReport.getVersion().toString()));
-//		}
-//		else {
-//			items.add(new CellItem("Report Accession #", "No report yet"));
-//		}
-		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
-		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
+		
 		patientTables.add(table);
 		
 		table = new ListTable();
@@ -88,10 +87,10 @@ public class PatientInfo {
 		items.add(new CellItem("Tumor Tissue", orderCase.getTumorTissueType()));
 		items.add(new CellItem("Germline Tissue", orderCase.getNormalTissueType()));
 		items.add(new CellItem("ICD10", orderCase.getIcd10()));
-		CellItem clinicalStage = new CellItem("Clinical Stage", orderCase.getClinicalStage());
-		items.add(clinicalStage);//TODO
-		CellItem treatmentStatus = new CellItem("Treatment Status", orderCase.getTreatmentStatus());
-		items.add(treatmentStatus);//TODO
+//		CellItem clinicalStage = new CellItem("Clinical Stage", orderCase.getClinicalStage());
+//		items.add(clinicalStage);//TODO
+//		CellItem treatmentStatus = new CellItem("Treatment Status", orderCase.getTreatmentStatus());
+//		items.add(treatmentStatus);//TODO
 		patientTables.add(table);
 		
 		table = new ListTable();
@@ -104,9 +103,46 @@ public class PatientInfo {
 		items.add(new CellItem("Order Date", orderCase.getEpicOrderDate()));
 		items.add(new CellItem("Tumor Collection Date", orderCase.getTumorCollectionDate()));
 		items.add(new CellItem("Lab Received Date", orderCase.getReceivedDate()));
+		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
+		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
 		patientTables.add(table);
 		
 	}
+	
+//	private void createPatientTablesForPDF(PatientInfo patientInfo) {
+//		ListTable table0 = patientInfo.getPatientTables().get(0);
+//		CellItem tumorSpecimen = table0.getItems()
+//				.stream()
+//				.filter(i -> i.getLabel().equals("Tumor Specimen #"))
+//				.collect(Collectors.toList()).get(0);
+//		CellItem germlineSpecimen = table0.getItems()
+//				.stream()
+//				.filter(i -> i.getLabel().equals("Germline Specimen #"))
+//				.collect(Collectors.toList()).get(0);
+//		table0.setItems(table0.getItems()
+//		.stream()
+//		.filter(i -> !i.getLabel().equals("Tumor Specimen #")
+//				&& !i.getLabel().equals("Germline Specimen #"))
+//		.collect(Collectors.toList()));
+//		
+//		ListTable table1 = patientInfo.getPatientTables().get(1);
+//		table1.setItems(table1.getItems()
+//				.stream()
+//				.filter(i -> !i.getLabel().equals("Clinical Stage")
+//						&& !i.getLabel().equals("Treatment Status"))
+//				.collect(Collectors.toList()));
+//		
+//		ListTable table2 = patientInfo.getPatientTables().get(2);
+//		table2.getItems().add(tumorSpecimen);
+//		table2.getItems().add(germlineSpecimen);
+//		
+//		this.patientTables = new ArrayList<ListTable>();
+//		patientTables.add(table0);
+//		patientTables.add(table1);
+//		patientTables.add(table2);
+//		
+//	}
+
 
 	public List<ListTable> getPatientTables() {
 		return patientTables;

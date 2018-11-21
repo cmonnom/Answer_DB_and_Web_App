@@ -47,19 +47,19 @@ public class FinalReportTemplateConstants {
 
 	public static final Color GENE_COLOR = new Color(255, 171, 64);
 	public static final Color THERAPY_COLOR = new Color(77, 182, 172);
-	public static final Color TRIAL_COLOR = new Color(97, 184, 101);
-	public static final Color CLIN_SIGNIFICANCE_COLOR = new Color(51, 121, 199);
-	public static final Color CNV_COLOR = new Color(255, 200, 36);
-	public static final Color FTL_COLOR = new Color(59, 162, 244);
+	public static final Color CNV_COLOR = new Color(97, 184, 101);
+	public static final Color CLIN_SIGNIFICANCE_COLOR = new Color(244, 143, 177); //new Color(51, 121, 199);
+	public static final Color TRIAL_COLOR = new Color(255, 200, 36);
+	public static final Color FTL_COLOR = new Color(206, 147, 216); //new Color(59, 162, 244);
 	public static final Color PUBMED_COLOR = new Color(51, 102, 153);
 	
-	public static final LineStyle BORDER_GENE_COLOR = new LineStyle(new Color(255, 171, 64), 1.5f);
-	public static final LineStyle BORDER_THERAPY_COLOR = new LineStyle(new Color(77, 182, 172), 1.5f);
-	public static final LineStyle BORDER_TRIAL_COLOR = new LineStyle(new Color(97, 184, 101), 1.5f);
-	public static final LineStyle BORDER_CLIN_SIGNIFICANCE_COLOR = new LineStyle(new Color(51, 121, 199), 1.5f);
-	public static final LineStyle BORDER_CNV_COLOR = new LineStyle(new Color(255, 200, 36), 1.5f);
-	public static final LineStyle BORDER_FTL_COLOR = new LineStyle(new Color(59, 162, 244), 1.5f);
-	public static final LineStyle BORDER_PUBMED_COLOR = new LineStyle(new Color(51, 102, 153), 1.5f);
+	public static final LineStyle BORDER_GENE_COLOR = new LineStyle(GENE_COLOR, 1.5f);
+	public static final LineStyle BORDER_THERAPY_COLOR = new LineStyle(THERAPY_COLOR, 1.5f);
+	public static final LineStyle BORDER_TRIAL_COLOR = new LineStyle(TRIAL_COLOR, 1.5f);
+	public static final LineStyle BORDER_CLIN_SIGNIFICANCE_COLOR = new LineStyle(CLIN_SIGNIFICANCE_COLOR, 1.5f);
+	public static final LineStyle BORDER_CNV_COLOR = new LineStyle(CNV_COLOR, 1.5f);
+	public static final LineStyle BORDER_FTL_COLOR = new LineStyle(FTL_COLOR, 1.5f);
+	public static final LineStyle BORDER_PUBMED_COLOR = new LineStyle(PUBMED_COLOR, 1.5f);
 	
 	
 	public static final List<String> ADDRESS = new ArrayList<String>();
@@ -81,7 +81,7 @@ public class FinalReportTemplateConstants {
 	public static final String CNV_TITLE = "COPY NUMBER ALTERATIONS";
 	public static final String CNV_TITLE_SHORT = "CNVs";
 	public static final String TRANSLOCATION_TITLE = "GENE FUSIONS";
-	public static final String TRANSLOCATION_TITLE_SHORT = "FUSIONS";
+	public static final String TRANSLOCATION_TITLE_SHORT = " FUSIONS ";
 	public static final String DISCLAMER_TITLE = "INFORMATION ABOUT THE TEST";
 	public static final String CLINICAL_SIGNIFICANCE = "CLINICAL SIGNIFICANCE";
 	public static final String CLINICAL_SIGNIFICANCE_NAV = "VARIANT DETAILS";

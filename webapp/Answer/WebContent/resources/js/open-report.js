@@ -436,10 +436,12 @@ const OpenReport = {
             caseTypeIcon: "",
             colors: {
                 openReport: "primary",
-                trials: "green",
-                variants: "indigo",
-                cnvs: "warning",
-                fusions: "blue",
+                cnvs: "green",
+                // variants: "indigo",
+                variants: "pink lighten-3",
+                trials: "warning",
+                // fusions: "blue",
+                fusions: "purple lighten-3",
                 pubmeds: "indigo darken-2"
             },
             snackBarMessage: "",
