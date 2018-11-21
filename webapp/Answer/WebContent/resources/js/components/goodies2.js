@@ -20,6 +20,11 @@ Vue.component('goodies2', {
         start: this.createTentacles,
         end: this.clearTentacles,
         endDelay: 2000
+      },
+      {
+        start: this.createBubbles,
+        end: this.clearBubbles,
+        endDelay: 2000
       }],
       lastIndex: -1,
       opacityTransition: false,
@@ -33,7 +38,7 @@ Vue.component('goodies2', {
     //randomly select an effect here
     activateGoodies() {
       var index = this.pickIndex();
-      while(index == this.lastIndex) {
+      while (index == this.lastIndex) {
         index = this.pickIndex();
       }
       this.lastIndex = index;
@@ -85,7 +90,7 @@ Vue.component('goodies2', {
         particle.color = random(this.colors);
         particle.drag = random(0.9, 0.99);
 
-        theta = random(TWO_PI);
+        theta = random(2 * Math.PI);
         force = random(2, 8);
 
         particle.vx = sin(theta) * force;
@@ -94,7 +99,7 @@ Vue.component('goodies2', {
         particles.push(particle);
       }
 
-      this.demo.update = function () {
+      this.demo.update = () => {
 
         var i, particle;
 
@@ -137,7 +142,7 @@ Vue.component('goodies2', {
       this.demo = Sketch.create({
         retina: 'auto',
         container: document.getElementById(this.containerId),
-        setup: function () {
+        setup: () => {
 
           center.x = this.width / 2;
           center.y = this.height / 2;
@@ -158,7 +163,7 @@ Vue.component('goodies2', {
           }
         },
 
-        update: function () {
+        update: () => {
           var t, cx, cy, pulse;
           t = this.millis * 0.001;
           if (tentacleSettings.pulse) {
@@ -177,7 +182,7 @@ Vue.component('goodies2', {
             center.y = cy + sin(t * 0.003) * tan(sin(t * 0.0003) * 1.15) * cy * 0.4;
           }
           var px, py, theta, tentacle;
-          var step = TWO_PI / tentacleSettings.tentacles;
+          var step = 2 * Math.PI / tentacleSettings.tentacles;
           for (var i = 0, n = tentacleSettings.tentacles; i < n; i++) {
             tentacle = tentacles[i];
             theta = i * step;
@@ -188,14 +193,14 @@ Vue.component('goodies2', {
           }
         },
 
-        draw: function () {
+        draw: () => {
           var h = tentacleSettings.colour.h * 0.95;
           var s = tentacleSettings.colour.s * 100 * 0.95;
           var v = tentacleSettings.colour.v * 100 * 0.95;
           var w = v + (tentacleSettings.darkTheme ? -10 : 10);
 
           this.beginPath();
-          this.arc(center.x, center.y, radius + tentacleSettings.thickness, 0, TWO_PI);
+          this.arc(center.x, center.y, radius + tentacleSettings.thickness, 0, 2 * Math.PI);
           this.lineWidth = tentacleSettings.headRadius * 0.3;
           this.globalAlpha = 0.2;
           this.strokeStyle = 'hsl(' + h + ',' + s + '%,' + w + '%)';
@@ -208,31 +213,129 @@ Vue.component('goodies2', {
           }
 
           this.beginPath();
-          this.arc(center.x, center.y, radius + tentacleSettings.thickness, 0, TWO_PI);
+          this.arc(center.x, center.y, radius + tentacleSettings.thickness, 0, 2 * Math.PI);
           this.fillStyle = 'hsl(' + h + ',' + s + '%,' + v + '%)';
           this.fill();
         },
-
-        // mousedown: function() {
-
-        //   if ( demo ) {
-
-        //     demo = false;
-        //     tentacleSettings.interactive = true;
-        //     interactiveGUI.updateDisplay();
-
-        //     if ( !modified ) {
-        //       tentacleSettings.length = 60;
-        //       tentacleSettings.gravity = 0.1;
-        //       tentacleSettings.wind = 0.0;
-        //     }
-        //   }
-        // },
-
-        export: function () {
-          window.open(this.canvas.toDataURL(), 'tentacles', "top=20,left=20,width=" + this.width + ",height=" + this.height);
-        }
       });
+    },
+    createBubbles() {
+      // General Variables
+      var Particle, particleCount, particles, sketch, z;
+
+      sketch = Sketch.create({
+        container: document.getElementById(this.containerId)
+      }
+      );
+      this.demo = sketch;
+
+      particles = [];
+
+      particleCount = 750;
+
+      sketch.mouse.x = sketch.width / 2;
+
+      sketch.mouse.y = sketch.height / 2;
+
+      sketch.strokeStyle = 'hsla(200, 50%, 50%, .4)';
+
+      sketch.globalCompositeOperation = 'lighter';
+
+
+      // Particle Constructor
+      Particle = function () {
+        this.x = random(sketch.width);
+        this.y = random(sketch.height, sketch.height * 2);
+        this.vx = 0;
+        this.vy = -random(1, 10) / 5;
+        this.radius = this.baseRadius = 2;
+        this.maxRadius = 50;
+        this.threshold = 150;
+        return this.hue = random(180, 240);
+      };
+
+      // Particle Prototype
+      Particle.prototype = {
+        update: function () {
+          var dist, distx, disty, radius;
+          // Determine Distance From Mouse
+          distx = this.x - sketch.mouse.x;
+          disty = this.y - sketch.mouse.y;
+          dist = sqrt(distx * distx + disty * disty);
+
+          // Set Radius
+          if (dist < this.threshold) {
+            radius = this.baseRadius + ((this.threshold - dist) / this.threshold) * this.maxRadius;
+            this.radius = radius > this.maxRadius ? this.maxRadius : radius;
+          } else {
+            this.radius = this.baseRadius;
+          }
+
+          // Adjust Velocity
+          this.vx += (random(100) - 50) / 1000;
+          this.vy -= random(1, 20) / 10000;
+
+          // Apply Velocity
+          this.x += this.vx;
+          this.y += this.vy;
+
+          // Check Bounds   
+          if (this.x < -this.maxRadius || this.x > sketch.width + this.maxRadius || this.y < -this.maxRadius) {
+            this.x = random(sketch.width);
+            this.y = random(sketch.height + this.maxRadius, sketch.height * 2);
+            this.vx = 0;
+            return this.vy = -random(1, 10) / 5;
+          }
+        },
+        render: function () {
+          sketch.beginPath();
+          sketch.arc(this.x, this.y, this.radius, 0, TWO_PI);
+          sketch.closePath();
+          sketch.fillStyle = 'hsla(' + this.hue + ', 60%, 40%, .35)';
+          sketch.fill();
+          return sketch.stroke();
+        }
+      };
+
+      // Create Particles
+      z = particleCount;
+
+      while (z--) {
+        particles.push(new Particle());
+      }
+
+      // Sketch Clear
+      sketch.clear = function () {
+        return sketch.clearRect(0, 0, sketch.width, sketch.height);
+      };
+
+
+      // Sketch Update
+      sketch.update = function () {
+        var i, results;
+        i = particles.length;
+        results = [];
+        while (i--) {
+          results.push(particles[i].update());
+        }
+        return results;
+      };
+
+      // Sketch Draw
+      sketch.draw = function () {
+        var i, results;
+        i = particles.length;
+        results = [];
+        while (i--) {
+          results.push(particles[i].render());
+        }
+        return results;
+      };
+
+      // sketch.stroke();
+    },
+    clearBubbles() {
+      this.opacityTransition = true;
     }
   },
   mounted: function () {
