@@ -336,3 +336,7 @@ table.table tbody td {
 .no-transition {
     transition: none !important;
 }
+
+.cursor-pointer {
+    cursor: pointer;
+}

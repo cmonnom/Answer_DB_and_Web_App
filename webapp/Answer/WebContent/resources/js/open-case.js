@@ -47,7 +47,7 @@ const OpenCase = {
             </v-card-actions>
         </v-card>
     </v-dialog>
-    <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
+    <v-snackbar :timeout="snackBarTimeout" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
         <a :href="snackBarLink"><v-icon dark>{{ snackBarLinkIcon }}</v-icon></a>
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
@@ -943,6 +943,7 @@ const OpenCase = {
             snackBarVisible: false,
             snackBarLink: "",
             snackBarLinkIcon: "",
+            snackBarTimeout: 4000,
             utswAnnotations: [],
             utswAnnotationsFormatted: [],
             mdaAnnotations: "",
@@ -2436,7 +2437,7 @@ const OpenCase = {
                                 setTimeout(() => {
                                     this.showGoodiesPanel = true;
                                     this.$refs.goodiesPanel.activateGoodies();
-                                }, 4000); //2sec might help with having the proper top/left calculated
+                                }, this.snackBarTimeout); //4sec might help with having the proper top/left calculated
                             }
                         });
 

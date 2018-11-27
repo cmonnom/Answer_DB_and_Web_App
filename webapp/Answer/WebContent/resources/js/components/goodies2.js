@@ -2,7 +2,7 @@ Vue.component('goodies2', {
   props: {
   },
   template: `
-  <div class="goodies-screen" :id="containerId" :class="[opacityTransition ? 'fade-out' : '']">
+  <div class="goodies-screen" :id="containerId" :class="[opacityTransition ? 'fade-out' : '', canClick ? 'cursor-pointer' : '']">
   </div>
   `,
   data() {
@@ -11,23 +11,42 @@ Vue.component('goodies2', {
       maxParticules: 280,
       colors: ['#69D2E7', '#A7DBD8', '#E0E4CC', '#F38630', '#FA6900', '#FF4E50', '#F9D423'],
       demo: {},
-      choices: [{
-        start: this.createParticules, //starts the animation
-        end: this.clearParticules, //smooth out the ending (instead of direct destroy)
-        endDelay: 1000 //how long before calling destroy
-      },
-      {
-        start: this.createTentacles,
-        end: this.clearTentacles,
-        endDelay: 2000
-      },
-      {
-        start: this.createBubbles,
-        end: this.clearBubbles,
-        endDelay: 2000
-      }],
+      choices: [
+        //   {
+        //   start: this.createParticules, //starts the animation
+        //   end: this.clearParticules, //smooth out the ending (instead of direct destroy)
+        //   endDelay: 1000 //how long before calling destroy
+        // },
+        // {
+        //   start: this.createTentacles,
+        //   end: this.clearTentacles,
+        //   endDelay: 2000
+        // },
+        // {
+        //   start: this.createBubbles,
+        //   end: this.clearBubbles,
+        //   endDelay: 2000
+        // },
+        // {
+        //   start: this.createSnowParticles,
+        //   end: this.clearSnowParticles,
+        //   endDelay: 3000
+        // },
+        {
+          start: this.createFireworks,
+          end: this.clearFireworks,
+          endDelay: 2000
+        }
+      ],
       lastIndex: -1,
       opacityTransition: false,
+      maxSnowParticles: 1000,
+      stopSnowProduction: false,
+      currentInterval: -1,
+      snowParticles: [],
+      snowOriginColor: "#AAA",
+      fireworks: [],
+      canClick: false
     }
 
   },
@@ -38,8 +57,10 @@ Vue.component('goodies2', {
     //randomly select an effect here
     activateGoodies() {
       var index = this.pickIndex();
-      while (index == this.lastIndex) {
+      var counter = 0; //in case the random function always returns the same number
+      while (index == this.lastIndex && counter < 5) {
         index = this.pickIndex();
+        counter++;
       }
       this.lastIndex = index;
       var choice = this.choices[index];
@@ -58,7 +79,13 @@ Vue.component('goodies2', {
     },
     endGoodies() {
       this.demo.destroy();
+      this.canClick = false;
       this.$emit("end-goodies");
+      this.opacityTransition = false;
+      this.stopSnowProduction = false;
+      this.snowParticles = [];
+      this.fireworks = [];
+      this.demo = null;
     },
     createParticules() {
       var particles = [];
@@ -138,86 +165,90 @@ Vue.component('goodies2', {
       var radius = tentacleSettings.headRadius;
       var tentacles = [];
       var center = { x: 0, y: 0 };
-      var scale = window.devicePixelRatio || 1;
+      // var scale = window.devicePixelRatio || 1;
       this.demo = Sketch.create({
         retina: 'auto',
-        container: document.getElementById(this.containerId),
-        setup: () => {
-
-          center.x = this.width / 2;
-          center.y = this.height / 2;
-
-          var tentacle;
-
-          for (var i = 0; i < 100; i++) {
-
-            tentacle = new Tentacle({
-              length: random(10, 20),
-              radius: random(0.05, 1.0),
-              spacing: random(0.2, 1.0),
-              friction: random(0.7, 0.88)
-            });
-
-            tentacle.move(center.x, center.y, true);
-            tentacles.push(tentacle);
-          }
-        },
-
-        update: () => {
-          var t, cx, cy, pulse;
-          t = this.millis * 0.001;
-          if (tentacleSettings.pulse) {
-            pulse = pow(sin(t * PI), 18);
-            radius = tentacleSettings.headRadius * 0.5 + tentacleSettings.headRadius * 0.5 * pulse;
-          }
-          if (tentacleSettings.interactive) {
-            ease += (0.7 - ease) * 0.05;
-            center.x += (this.mouse.x / scale - center.x) * ease;
-            center.y += (this.mouse.y / scale - center.y) * ease;
-          } else {
-            t = this.millis;
-            cx = this.width * 0.5;
-            cy = this.height * 0.5;
-            center.x = cx + sin(t * 0.002) * cos(t * 0.00005) * cx * 0.5;
-            center.y = cy + sin(t * 0.003) * tan(sin(t * 0.0003) * 1.15) * cy * 0.4;
-          }
-          var px, py, theta, tentacle;
-          var step = 2 * Math.PI / tentacleSettings.tentacles;
-          for (var i = 0, n = tentacleSettings.tentacles; i < n; i++) {
-            tentacle = tentacles[i];
-            theta = i * step;
-            px = cos(theta) * radius;
-            py = sin(theta) * radius;
-            tentacle.move(center.x + px, center.y + py);
-            tentacle.update();
-          }
-        },
-
-        draw: () => {
-          var h = tentacleSettings.colour.h * 0.95;
-          var s = tentacleSettings.colour.s * 100 * 0.95;
-          var v = tentacleSettings.colour.v * 100 * 0.95;
-          var w = v + (tentacleSettings.darkTheme ? -10 : 10);
-
-          this.beginPath();
-          this.arc(center.x, center.y, radius + tentacleSettings.thickness, 0, 2 * Math.PI);
-          this.lineWidth = tentacleSettings.headRadius * 0.3;
-          this.globalAlpha = 0.2;
-          this.strokeStyle = 'hsl(' + h + ',' + s + '%,' + w + '%)';
-          this.stroke();
-
-          this.globalAlpha = 1.0;
-
-          for (var i = 0, n = tentacleSettings.tentacles; i < n; i++) {
-            tentacles[i].draw(this);
-          }
-
-          this.beginPath();
-          this.arc(center.x, center.y, radius + tentacleSettings.thickness, 0, 2 * Math.PI);
-          this.fillStyle = 'hsl(' + h + ',' + s + '%,' + v + '%)';
-          this.fill();
-        },
+        container: document.getElementById(this.containerId)
       });
+      this.demo.setup = () => {
+
+        center.x = this.demo.width / 2;
+        center.y = this.demo.height / 2;
+
+        var tentacle;
+
+        for (var i = 0; i < 100; i++) {
+
+          tentacle = new Tentacle({
+            length: random(10, 20),
+            radius: random(0.05, 1.0),
+            spacing: random(0.2, 1.0),
+            friction: random(0.7, 0.88)
+          });
+
+          tentacle.move(center.x, center.y, true);
+          tentacles.push(tentacle);
+        }
+      };
+
+      this.demo.update = () => {
+        var t, cx, cy, pulse;
+        t = this.millis * 0.001;
+        if (tentacleSettings.pulse) {
+          pulse = pow(sin(t * PI), 18);
+          radius = tentacleSettings.headRadius * 0.5 + tentacleSettings.headRadius * 0.5 * pulse;
+        }
+        if (tentacleSettings.interactive) {
+          // ease += (0.7 - ease) * 0.05;
+          // center.x += (this.demo.mouse.x / scale - center.x) * ease;
+          // center.y += (this.demo.mouse.y / scale - center.y) * ease;
+          center.x += (this.demo.mouse.x - center.x);
+          center.y += (this.demo.mouse.y - center.y);
+          // console.log(this.demo.mouse.x, this.demo.mouse.y, scale, ease, center);
+        } else {
+          t = this.demo.millis;
+          cx = this.demo.width * 0.5;
+          cy = this.demo.height * 0.5;
+          center.x = cx + sin(t * 0.002) * cos(t * 0.00005) * cx * 0.5;
+          center.y = cy + sin(t * 0.003) * tan(sin(t * 0.0003) * 1.15) * cy * 0.4;
+        }
+        var px, py, theta, tentacle;
+        var step = 2 * Math.PI / tentacleSettings.tentacles;
+        for (var i = 0, n = tentacleSettings.tentacles; i < n; i++) {
+          tentacle = tentacles[i];
+          theta = i * step;
+          px = cos(theta) * radius;
+          py = sin(theta) * radius;
+          tentacle.move(center.x + px, center.y + py);
+          tentacle.update();
+        }
+      }
+
+
+      this.demo.draw = () => {
+        var h = tentacleSettings.colour.h * 0.95;
+        var s = tentacleSettings.colour.s * 100 * 0.95;
+        var v = tentacleSettings.colour.v * 100 * 0.95;
+        var w = v + (tentacleSettings.darkTheme ? -10 : 10);
+
+        this.demo.beginPath();
+        this.demo.arc(center.x, center.y, radius + tentacleSettings.thickness, 0, 2 * Math.PI);
+        this.demo.lineWidth = tentacleSettings.headRadius * 0.3;
+        this.demo.globalAlpha = 0.2;
+        this.demo.strokeStyle = 'hsl(' + h + ',' + s + '%,' + w + '%)';
+        this.demo.stroke();
+
+        this.demo.globalAlpha = 1.0;
+
+        for (var i = 0, n = tentacleSettings.tentacles; i < n; i++) {
+          tentacles[i].draw(this.demo);
+        }
+
+        this.demo.beginPath();
+        this.demo.arc(center.x, center.y, radius + tentacleSettings.thickness, 0, 2 * Math.PI);
+        this.demo.fillStyle = 'hsl(' + h + ',' + s + '%,' + v + '%)';
+        this.demo.fill();
+      }
     },
     createBubbles() {
       // General Variables
@@ -336,7 +367,98 @@ Vue.component('goodies2', {
     },
     clearBubbles() {
       this.opacityTransition = true;
+    },
+    createSnowParticles() {
+      this.demo = Sketch.create({
+        container: document.getElementById(this.containerId)
+      });
+
+      this.demo.update = () => {
+        var i, particle;
+        for ( i = this.snowParticles.length - 1; i >= 0; i-- ) {
+
+            particle = this.snowParticles[i];
+
+            if ( particle.alive ) {
+                particle.move(this.demo);
+            }
+            else {
+               this.snowParticles.splice( i, 1 );
+            }
+        }
+    };
+
+      this.demo.draw = () => {
+        // this.demo.globalCompositeOperation = 'lighter';
+        for (var i = this.snowParticles.length - 1; i >= 0; i--) {
+          this.snowParticles[i].draw(this.demo);
+        }
+      };
+
+      this.currentInterval = setInterval(this.createRandomSnowParticle, 5);
+    },
+    createRandomSnowParticle() {
+      if (this.stopSnowProduction) {
+        clearInterval(this.currentInterval);
+        return;
+      }
+      if (this.snowParticles.length > this.maxSnowParticles) {
+          return;
+      }
+      var x = random( 0, this.demo.width );
+      var y = 0;
+      var speed = random(4,8);
+      var radius = random(0.2, 5);
+      this.snowParticles.push(new SnowFlake(x, y, radius, speed, this.demo, this.colors, this.snowOriginColor));
+    },
+    clearSnowParticles() {
+      this.stopSnowProduction = true;
+    },
+    createFireworks() {
+      this.canClick = true;
+      this.demo = Sketch.create({
+        container: document.getElementById( this.containerId ),
+        retina: 'auto'
+    });
+
+    this.demo.update = () => {
+        for (var i = 0; i < this.fireworks.length; i++ ) {
+            this.fireworks[i].move();
+        }
+    };
+
+    this.demo.mousedown = () => {
+       this.createAFirework();
     }
+
+    this.demo.draw = () => {
+        this.fireworks = this.fireworks.filter((f) => f.alive);
+        for ( var i = this.fireworks.length - 1; i >= 0; i-- ) {
+            this.fireworks[i].draw( this.demo );
+            this.fireworks[i].move();
+        }
+    };
+    this.currentInterval = setInterval(this.createAFirework, 2000);
+    },
+    createAFirework() {
+      var particuleCount = random(20,30);
+      var particles = [];
+      var particuleSize = 2;
+      var fireworkSize = 3;
+      var verticalDuration = random(500, 1000);
+     for (var i = 0; i < particuleCount; i++) {
+         var speed = random(1, 4);
+         var duration = random(2000, 3000);
+          particles.push(new FireworkParticle(this.demo.mouse.x, this.demo.mouse.y, particuleSize, speed, duration));
+     }
+     var speed = random(2, 3);
+     this.fireworks.push(new Fireworks(particles, this.demo.mouse.x, this.demo.mouse.y, fireworkSize, speed, verticalDuration));
+    },
+    clearFireworks() {
+      clearInterval(this.currentInterval);
+      this.opacityTransition = true;
+    }
+
   },
   mounted: function () {
   },

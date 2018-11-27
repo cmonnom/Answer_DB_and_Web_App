@@ -89,11 +89,11 @@ public class Report {
 			this.setTranslocations(reportSummary.getTranslocationSummary().getItems());
 		}
 		//update clinical significance
-		ClinicalSignificanceSummary strongSummary = reportSummary.getSnpVariantsStrongClinicalSignificanceSummary();
-		Map<String, GeneVariantAndAnnotation> gvaByVariant = new HashMap<String, GeneVariantAndAnnotation>();
-		for (ClinicalSignificance cs : strongSummary.getItems()) {
-			
-		}
+//		ClinicalSignificanceSummary strongSummary = reportSummary.getSnpVariantsStrongClinicalSignificanceSummary();
+//		Map<String, GeneVariantAndAnnotation> gvaByVariant = new HashMap<String, GeneVariantAndAnnotation>();
+//		for (ClinicalSignificance cs : strongSummary.getItems()) {
+//			
+//		}
 		this.setSnpVariantsStrongClinicalSignificance(reportSummary.getSnpVariantsStrongClinicalSignificance());
 		this.setSnpVariantsPossibleClinicalSignificance(reportSummary.getSnpVariantsPossibleClinicalSignificance());
 		this.setSnpVariantsUnknownClinicalSignificance(reportSummary.getSnpVariantsUnknownClinicalSignificance());

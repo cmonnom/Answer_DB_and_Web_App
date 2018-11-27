@@ -52,6 +52,7 @@ public class FinalReportTemplateConstants {
 	public static final Color TRIAL_COLOR = new Color(255, 200, 36);
 	public static final Color FTL_COLOR = new Color(206, 147, 216); //new Color(59, 162, 244);
 	public static final Color PUBMED_COLOR = new Color(51, 102, 153);
+	public static final Color ABOUT_THE_TEST_COLOR = new Color(178, 235, 242);
 	
 	public static final LineStyle BORDER_GENE_COLOR = new LineStyle(GENE_COLOR, 1.5f);
 	public static final LineStyle BORDER_THERAPY_COLOR = new LineStyle(THERAPY_COLOR, 1.5f);
@@ -60,6 +61,7 @@ public class FinalReportTemplateConstants {
 	public static final LineStyle BORDER_CNV_COLOR = new LineStyle(CNV_COLOR, 1.5f);
 	public static final LineStyle BORDER_FTL_COLOR = new LineStyle(FTL_COLOR, 1.5f);
 	public static final LineStyle BORDER_PUBMED_COLOR = new LineStyle(PUBMED_COLOR, 1.5f);
+	public static final LineStyle BORDER_ABOUT_THE_TEST_COLOR = new LineStyle(ABOUT_THE_TEST_COLOR, 1.5f);
 	
 	
 	public static final List<String> ADDRESS = new ArrayList<String>();
@@ -72,6 +74,7 @@ public class FinalReportTemplateConstants {
 	//This will allow a unique "link" search term when adding links
 	public static final String TITLE = "1385-Gene Pan-Cancer Mutation Test";
 	public static final String PATIENT_DETAILS_TITLE = "PATIENT RECORD";
+	public static final String CASE_SUMMARY_TITLE = "CASE SUMMARY";
 	
 	public static final String GENE_TITLE = "GENES";
 	public static final String INDICATED_THERAPIES_TITLE = "INDICATED THERAPIES";
@@ -84,7 +87,7 @@ public class FinalReportTemplateConstants {
 	public static final String TRANSLOCATION_TITLE_SHORT = " FUSIONS ";
 	public static final String DISCLAMER_TITLE = "INFORMATION ABOUT THE TEST";
 	public static final String CLINICAL_SIGNIFICANCE = "CLINICAL SIGNIFICANCE";
-	public static final String CLINICAL_SIGNIFICANCE_NAV = "VARIANT DETAILS";
+	public static final String CLINICAL_SIGNIFICANCE_NAV = "VARIANT TIERS";
 	public static final String PUBMED_REFERENCE_TITLE = "PUBMED REFERENCES";
 	
 	
@@ -105,40 +108,29 @@ public class FinalReportTemplateConstants {
 		ADDRESS.add("CLIA ID 45D0861764");
 		ADDRESS.add("Director: Ravi Sarode, MD");
 	}
+	public static final String ABOUT_THE_TEST_LINK = "http://www.utsouthwestern.edu/sites/genomics-molecular-pathology/";
 
-	public static final String[] ABOUT_THE_TEST = new String[] { "Test Characteristics and Performance:"
-			+ " DNA and RNA are isolated from fresh or formalin-fixed, paraffin-embedded tissues. Sequencing libraries are "
-			+ "generated using Kapa Biosystems and Illumina chemistry. A custom panel of DNA probes is used to produce an"
-			+ "enriched library containing all exons from over 1.385 cancer-related genes, which are sequenced on Illumina "
-			+ "HiSeq 4000, NextSeq 550 or MiSeq instruments. DNA and RNA sequence analyses are done using custom "
-			+ "germline, somatic and mRNA bioinformatics pipelines run on the UTSW Bio-High Performance Computer "
-			+ "cluster and optimized for detection of single nucleotide variants, indels and known gene fusions. Reports are "
-			+ "generated in the Philips IntelliSpace Genomics system (Philips Healthcare, 2 Canal Park, Cambridge, MA)."
-			+ "Median target exon coverage for the assay is 900X with 94% of exons at >100X. The minor allele frequency "
-			+ "limit of detection is 5% for single nucleotide variants and 10% for indels and known gene fusions. The assay is "
-			+ "not informative for mutations outside the 1.385 cancer-related genes or for those regions for which the assay "
-			+ "achieves limited coverage. Full details of the genes tested, exon coverage and the bioinformatics pipeline are "
-			+ "available at http://www.utsouthwestern.edu/sites/genomics-molecular-pathology/.", "Disclaimer:",
-			"This is a laboratory developed test, and its performance characteristics have been determined by the Next "
-					+ "Generation Sequencing Clinical Lab, Department of Pathology, UTSW.  It has not been cleared or approved by "
+	public static final String[] ABOUT_THE_TEST = new String[] { "Test Characteristics and Performance:",
+			"DNA and RNA are isolated from peripheral blood, bone marrow aspirate or formalin-fixed, paraffin-embedded tissues. Sequencing libraries "
+					+ "are generated using Kapa Biosystems and Illumina chemistry. A custom panel of DNA probes is used to produce an enriched library containing "
+					+ "all exons from over 1,425 cancer-related genes, which are sequenced on Illumina NextSeq 550 or MiSeq instruments. DNA and RNA sequence "
+					+ "analyses are done using custom germline, somatic and mRNA bioinformatics pipelines run on the UTSW Bio-High Performance Computer "
+					+ "cluster and optimized for detection of single nucleotide variants, indels and known gene fusions.",
+			"Reports are generated in Answer, which was developed at UTSW. Annotations are written either by a PhD variant curation scientist, UTSW "
+					+ "residents and fellows, or MD medical directors. Interpretations can be revaluated upon request.",
+			"Median target exon coverage for the assay is 900X with 94% of exons at >100X. The minor allele frequency "
+					+ "limit of detection is 5% for single nucleotide variants and 10% for indels and known gene fusions. The assay is "
+					+ "not informative for mutations outside the 1,425 cancer-related genes or for those regions for which the assay "
+					+ "achieves limited coverage. Full details of the genes tested, exon coverage and the bioinformatics pipeline are "
+					+ "available at ",
+			ABOUT_THE_TEST_LINK + ".",		
+			"Disclaimer:<br/>"
+			+ "This is a laboratory developed test, and its performance characteristics have been determined by the Next "
+					+ "Generation Sequencing Clinical Lab, Department of Pathology, UTSW. It has not been cleared or approved by "
 					+ "the U.S. Food and Drug Administration. The U.S. Food and Drug Administration does not require this test to go "
-					+ "through premarket review. This test is used for clinical purposes. It should not be regarded as investigational or"
+					+ "through premarket review. This test is used for clinical purposes. It should not be regarded as investigational or "
 					+ "for research. This laboratory is certified under the Clinical Laboratory Improvement Amendments (1988) as "
-					+ "qualified to perform high complexity testing.",
-			"N-of-One has provided Philips with the research, analysis, and interpretation on a patient specific basis, of "
-					+ "peer-reviewed studies and publically available databases. N-of-One does not provide medical services, nor is "
-					+ "any N-of-One employee engaged in the practice of medicine for or on behalf of N-of-One. Some tests, drugs "
-					+ "and biomarkers identified in this report may not be approved by the FDA for a particular use or validated for "
-					+ "that use. The Content is compiled from sources believed to be reliable. Extensive efforts have been made to "
-					+ "make the Content as accurate and as up-to-date as possible. The Content may contain typographical errors "
-					+ "and omissions. The Content is for research, professional medical and scientific use only. Copyright N-of-One, "
-					+ "Inc. 2011-2017: Not for Distribution, Publication or Re-publication.",
-			"Builds and Versions", 
-			"Ensembl-vep: v.89.4", 
-			"UCSC: v.20130630", 
-			"dbNSFP: v.3.2a", 
-			"COSMIC: v81",
-			"CLINVAR: v.20161201", "VARDB: v.20170901", "COSMIC_FUSION: v81", "THERAPY_AVAILABILITY: v.20170614"
-			};
+					+ "qualified to perform high complexity testing. " };
+	
 
 }

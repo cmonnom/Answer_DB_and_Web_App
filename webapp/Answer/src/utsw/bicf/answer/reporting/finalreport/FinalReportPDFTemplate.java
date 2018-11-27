@@ -106,7 +106,7 @@ public class FinalReportPDFTemplate {
 		this.createCNVTable();
 		this.createTranslocationTable();
 		this.createPubmedTable();
-		//		this.addInformationAboutTheTest();
+		this.addInformationAboutTheTest();
 
 		this.addFooters();
 		this.addLinks();
@@ -182,7 +182,7 @@ public class FinalReportPDFTemplate {
 		PDPage currentPage = this.mainDocument.getPage(0);
 		BaseTable table = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, FinalReportTemplateConstants.MARGINBOTTOM,
 				tableWidth, FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, false, true);
-		Cell<PDPage> cell = table.createRow(FinalReportTemplateConstants.DEFAULT_TEXT_FONT_SIZE).createCell(100, "Case Summary");
+		Cell<PDPage> cell = table.createRow(FinalReportTemplateConstants.DEFAULT_TEXT_FONT_SIZE).createCell(100, FinalReportTemplateConstants.CASE_SUMMARY_TITLE);
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
 		cell.setAlign(HorizontalAlignment.LEFT);
 		cell.setFontSize(FinalReportTemplateConstants.TITLE_TEXT_FONT_SIZE);
@@ -335,7 +335,17 @@ public class FinalReportPDFTemplate {
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
 			cell = row.createCell(20, navigationRow.getClinicalTrialCount() == 0 ? "" :  navigationRow.getClinicalTrialCount() + "");
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
-			cell = row.createCell(20, navigationRow.getStrongClinicalSignificanceCount() + " / " + navigationRow.getPossibleClinicalSignificanceCount() + " / " + navigationRow.getUnknownClinicalSignificanceCount());
+			List<String> csList = new ArrayList<String>();
+			if (navigationRow.getStrongClinicalSignificanceCount() > 0) {
+				csList.add("Tier 1");
+			}
+			if (navigationRow.getPossibleClinicalSignificanceCount() > 0) {
+				csList.add("Tier 2");
+			}
+			if (navigationRow.getUnknownClinicalSignificanceCount() > 0) {
+				csList.add("Tier 3");
+			}
+			cell = row.createCell(20, csList.stream().collect(Collectors.joining(", ")));
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
 			cell = row.createCell(10, navigationRow.getCnvCount() == 0 ? "" : navigationRow.getCnvCount() + "");
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
@@ -581,8 +591,8 @@ public class FinalReportPDFTemplate {
 		clinicalSignifanceTables.add(report.getSnpVariantsStrongClinicalSignificance());
 		clinicalSignifanceTables.add(report.getSnpVariantsPossibleClinicalSignificance());
 
-		String[] tableTitles = new String[] {"VARIANTS OF STRONG CLINICAL SIGNIFICANCE",
-				"VARIANTS OF POSSIBLE CLINICAL SIGNIFICANCE"};
+		String[] tableTitles = new String[] {"TIER 1 - VARIANTS OF STRONG CLINICAL SIGNIFICANCE",
+				"TIER 2 - VARIANTS OF POSSIBLE CLINICAL SIGNIFICANCE"};
 		int counter = 0;
 		for (Map<String, GeneVariantAndAnnotation> table : clinicalSignifanceTables) {
 			boolean addLink = counter == 0;
@@ -679,7 +689,7 @@ public class FinalReportPDFTemplate {
 
 		//Title
 		Row<PDPage> row = table.createRow(12); 
-		Cell<PDPage> cellHeader = row.createCell(100, "VARIANTS OF UNKNOWN CLINICAL SIGNIFICANCE");
+		Cell<PDPage> cellHeader = row.createCell(100, "TIER 3 - VARIANTS OF UNKNOWN CLINICAL SIGNIFICANCE");
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
 
@@ -1044,29 +1054,37 @@ public class FinalReportPDFTemplate {
 		float tableWidth = pageWidthMinusMargins;
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
-		FooterColor fColor = new FooterColor(Color.WHITE, FinalReportTemplateConstants.NO_BORDER_THIN);
+		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.ABOUT_THE_TEST_COLOR, FinalReportTemplateConstants.BORDER_ABOUT_THE_TEST_COLOR);
 		if (!colors.contains(fColor)) {
 			colors.add(fColor);
 		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		BaseTable table = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, FinalReportTemplateConstants.MARGINBOTTOM,
-				tableWidth, FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, false, true);
-		Cell<PDPage> cell = table.createRow(12).createCell(100, FinalReportTemplateConstants.DISCLAMER_TITLE);
-		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
-		cell.setAlign(HorizontalAlignment.LEFT);
-		cell.setFontSize(FinalReportTemplateConstants.DEFAULT_TEXT_FONT_SIZE);
+				tableWidth, FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, true, true);
+		Cell<PDPage> cellHeader = table.createRow(12).createCell(100, FinalReportTemplateConstants.DISCLAMER_TITLE);
+//		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
+//		cell.setFontSize(FinalReportTemplateConstants.TITLE_TEXT_FONT_SIZE);
+//		cell.setAlign(HorizontalAlignment.LEFT);
+		applyTitleHeaderFormatting(cellHeader);
+		cellHeader.setFillColor(FinalReportTemplateConstants.ABOUT_THE_TEST_COLOR);
 
 		// Content
 		for (String info : FinalReportTemplateConstants.ABOUT_THE_TEST) {
 			Row<PDPage> row = table.createRow(12);
-			cell = row.createCell(100, info);
-			cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
-			cell.setAlign(HorizontalAlignment.LEFT);
-			cell.setFontSize(FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE);
-			cell.setTextColor(Color.BLACK);
-			cell.setBottomPadding(10);
+			Cell<PDPage> cell = row.createCell(100, info);
+			applyCellFormatting(cell, FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE, Color.WHITE);
+//			cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
+//			cell.setAlign(HorizontalAlignment.LEFT);
+//			cell.setFontSize(FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE);
+			cell.setTextColor(FinalReportTemplateConstants.LIGHT_GRAY);
+//			cell.setBottomPadding(10);
+			if (info.startsWith("http")) {
+				cell.setTopPadding(-10);
+				cell.setTextColor(FinalReportTemplateConstants.LINK_ANSWER_GREEN);
+			}
 		}
 		latestYPosition = table.draw();
+		this.addLink(new Link(FinalReportTemplateConstants.ABOUT_THE_TEST_LINK, FinalReportTemplateConstants.ABOUT_THE_TEST_LINK));
 	}
 
 	public void saveTemp() throws IOException {
