@@ -271,7 +271,11 @@ const OpenCase = {
           <span v-if="isCNV()">CNV</span>
           <span v-if="isTranslocation()">FTL</span>
           Variant:
-              <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
+              <v-tooltip bottom v-if="variantNameIsTooLong() && isSNP()">
+              <span slot="activator" v-text="createVariantName()"></span>
+              <span>{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
+              </v-tooltip>  
+              <span v-if="!variantNameIsTooLong() && isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
               <span v-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
               <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
               <span> -- {{ caseName }} -- </span> 
@@ -3091,6 +3095,16 @@ const OpenCase = {
                 }).catch(error => {
                     this.handleAxiosError(error);
                 });
+        },
+        createVariantName() {
+            var text = this.currentVariant.geneName + " " + this.currentVariant.notation;
+            if (text.length > 18) {
+                return text.substring(0, 18) + "...";
+            } 
+        },
+        variantNameIsTooLong() {
+            var text = this.currentVariant.geneName + " " + this.currentVariant.notation;
+            return text.length > 18;
         },
         savePatientDetails(skipSnackBar) {
             if (!this.canProceed('canAnnotate')) {

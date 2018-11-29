@@ -52,7 +52,7 @@ public class FinalReportTemplateConstants {
 	public static final Color TRIAL_COLOR = new Color(255, 200, 36);
 	public static final Color FTL_COLOR = new Color(206, 147, 216); //new Color(59, 162, 244);
 	public static final Color PUBMED_COLOR = new Color(51, 102, 153);
-	public static final Color ABOUT_THE_TEST_COLOR = new Color(178, 235, 242);
+	public static final Color ABOUT_THE_TEST_COLOR = new Color(200, 200, 200);
 	
 	public static final LineStyle BORDER_GENE_COLOR = new LineStyle(GENE_COLOR, 1.5f);
 	public static final LineStyle BORDER_THERAPY_COLOR = new LineStyle(THERAPY_COLOR, 1.5f);
@@ -100,7 +100,7 @@ public class FinalReportTemplateConstants {
 		TREATMENT_OPTIONS_SUMMARY_HEADERS.add(new Header("FDA approved outside of indication", 20));
 		TREATMENT_OPTIONS_SUMMARY_HEADERS.add(new Header("Clinical Trials", 14));
 		
-		ADDRESS.add("UTSW NGS Clinical Laboratory");
+		ADDRESS.add("UTSW Clinical NGS Laboratory");
 		ADDRESS.add("Room EB3.302");
 		ADDRESS.add("BioCenter At Southwestern Medical District");
 		ADDRESS.add("2330 Inwood Road");

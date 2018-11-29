@@ -24,6 +24,7 @@ public class FileProperties {
 	File pdfLinksDir;
 	String pdfNGSLogoName;
 	String pdfUTSWLogoName;
+	String pdfDraftWatermarkName;
 	
 	public String getMdaFilesPath() {
 		return mdaFilesPath;
@@ -192,6 +193,12 @@ public class FileProperties {
 	}
 	public void setPdfUTSWLogoName(String pdfUTSWLogoName) {
 		this.pdfUTSWLogoName = pdfUTSWLogoName;
+	}
+	public String getPdfDraftWatermarkName() {
+		return pdfDraftWatermarkName;
+	}
+	public void setPdfDraftWatermarkName(String pdfDraftWatermarkName) {
+		this.pdfDraftWatermarkName = pdfDraftWatermarkName;
 	}
 	
 	

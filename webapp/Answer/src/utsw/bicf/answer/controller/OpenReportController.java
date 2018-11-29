@@ -343,7 +343,8 @@ public class OpenReportController {
 		if (canProceed) {
 			OrderCase caseSummary = utils.getCaseSummary(reportSummary.getCaseId());
 			Report reportToPreview = new Report(reportSummary);
-			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportToPreview, fileProps, caseSummary, otherProps);
+			User signedBy = modelDAO.getUserByUserId(reportToPreview.getModifiedBy());
+			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportToPreview, fileProps, caseSummary, otherProps, signedBy);
 			pdfReport.saveTemp();
 
 			String linkName = pdfReport.createPDFLink(fileProps);

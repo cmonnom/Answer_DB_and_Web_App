@@ -1,6 +1,6 @@
 package utsw.bicf.answer.model.hybrid;
 
-public class ReportNavigationRow {
+public class ReportNavigationRow implements Comparable<ReportNavigationRow> {
 
 	String gene;
 	int indicatedTherapyCount;
@@ -12,6 +12,10 @@ public class ReportNavigationRow {
 	int fusionCount;
 	
 	public ReportNavigationRow() {
+	}
+	
+	public ReportNavigationRow(String geneName) {
+		this.gene = geneName;
 	}
 	
 	public String getGene() {
@@ -61,5 +65,39 @@ public class ReportNavigationRow {
 	}
 	public void setFusionCount(int fusionCount) {
 		this.fusionCount = fusionCount;
+	}
+
+	@Override
+	public int compareTo(ReportNavigationRow o) {
+		int thisTotal = 0;
+		int oTotal = 0;
+		if (strongClinicalSignificanceCount > 0) {
+			thisTotal += 7;
+		}
+		if (possibleClinicalSignificanceCount > 0) {
+			thisTotal += 3;
+		}
+		if (unknownClinicalSignificanceCount > 0) {
+			thisTotal += 1;
+		}
+		if (o.strongClinicalSignificanceCount > 0) {
+			oTotal += 7;
+		}
+		if (o.possibleClinicalSignificanceCount > 0) {
+			oTotal += 3;
+		}
+		if (o.unknownClinicalSignificanceCount > 0) {
+			oTotal += 1;
+		}
+		if (thisTotal < oTotal) {
+			return 1;
+		}
+		if (thisTotal > oTotal) {
+			return -1;
+		}
+		if (thisTotal == oTotal) {
+			return gene.compareTo(o.gene);
+		}
+		return 0;
 	}
 }

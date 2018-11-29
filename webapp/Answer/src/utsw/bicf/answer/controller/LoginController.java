@@ -87,4 +87,23 @@ public class LoginController {
 		return (Boolean) model.asMap().get("isAllowed");
 	}
 	
+	/**
+	 * Only use this method on login-full-page to see if the user
+	 * is already logged in and redirect to urlRedirect or home (if no urlRedirect)
+	 * @param model
+	 * @param session
+	 * @return
+	 * @throws JsonProcessingException
+	 */
+	@RequestMapping("/checkAlreadyLoggedIn")
+	@ResponseBody
+	public String checkAlreadyLoggedIn(Model model, HttpSession session) throws JsonProcessingException {
+		User user = (User) session.getAttribute("user");
+		if (user != null) {
+			return new TargetPage(true, "already logged in", "home", true).toJSONString();
+		}
+		return new TargetPage(false, "not logged in", "home", true).toJSONString();
+	}
+
+	
 }

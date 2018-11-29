@@ -111,6 +111,7 @@
 		<property name="pdfLinksPath" value="${pdf.link.location}" />
 		<property name="pdfNGSLogoName" value="${pdf.ngs.logo.name}" />
 		<property name="pdfUTSWLogoName" value="${pdf.utsw.logo.name}" />
+		<property name="pdfDraftWatermarkName" value="${pdf.draft.watermark.name}" />
 		
 	</bean>
 	

@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -29,7 +30,8 @@ import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitWidthDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageXYZDestination;
 
 import be.quodlibet.boxable.BaseTable;
 import be.quodlibet.boxable.Cell;
@@ -39,8 +41,10 @@ import be.quodlibet.boxable.VerticalAlignment;
 import be.quodlibet.boxable.image.Image;
 import be.quodlibet.boxable.line.LineStyle;
 import be.quodlibet.boxable.utils.PDStreamUtils;
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.CellItem;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
+import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -66,12 +70,14 @@ public class FinalReportPDFTemplate {
 	OtherProperties otherProps;
 	List<Link> links = new ArrayList<Link>();
 	Map<Integer, List<FooterColor>> colorPerPage = new HashMap<Integer, List<FooterColor>>();
+	User signedBy;
 
-	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps) {
+	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps, User signedBy) {
 		this.otherProps = otherProps;
 		this.report = report;
 		this.fileProps = fileProps;
 		this.caseSummary = caseSummary;
+		this.signedBy = signedBy;
 		try {
 			this.tempFile = new File(fileProps.getPdfFilesDir(), System.currentTimeMillis() + "_temp.pdf");
 			if (tempFile.exists()) {
@@ -107,8 +113,11 @@ public class FinalReportPDFTemplate {
 		this.createTranslocationTable();
 		this.createPubmedTable();
 		this.addInformationAboutTheTest();
-
 		this.addFooters();
+		if (report.getFinalized() == null || !report.getFinalized()) {
+			this.addWatermark();
+		}
+		
 		this.addLinks();
 	}
 
@@ -229,6 +238,11 @@ public class FinalReportPDFTemplate {
 				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth(), mainDocument, firstPage, cellBorder,
 				true);
 		List<CellItem> middleTableItems = patientDetails.getPatientTables().get(1).getItems();
+		String dateModified = report.getDateModified();
+		if (dateModified == null || dateModified.equals("")) {
+			dateModified = LocalDate.now().format(TypeUtils.monthFormatter);
+		}
+		middleTableItems.add(new CellItem("Report Date", dateModified));
 		for (CellItem item : middleTableItems) {
 			this.createRow(middleTable, item.getLabel(), item.getValue(), defaultFont);
 		}
@@ -240,6 +254,11 @@ public class FinalReportPDFTemplate {
 				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth() + middleTable.getWidth(),
 				mainDocument, firstPage, cellBorder, true);
 		List<CellItem> rightTableItems = patientDetails.getPatientTables().get(2).getItems();
+		String signedByName = signedBy.getFullName();
+		if (report.getFinalized() == null || !report.getFinalized()) {
+			signedByName = "NOT SIGNED";
+		}
+		rightTableItems.add(new CellItem("Report Electronically Signed By", signedByName));
 		for (CellItem item : rightTableItems) {
 			this.createRow(rightTable, item.getLabel(), item.getValue(), defaultFont);
 		}
@@ -320,13 +339,15 @@ public class FinalReportPDFTemplate {
 		
 		report.updateClinicalTrialCount(); //update now in case the trial selection changed
 		boolean grayBackground = false;
-		List<String> sortedKeys = report.getNavigationRowsPerGene().keySet().stream().sorted().collect(Collectors.toList());
-		for (String gene : sortedKeys) {
+//		List<String> sortedKeys = report.getNavigationRowsPerGene().keySet().stream().sorted().collect(Collectors.toList());
+		List<ReportNavigationRow> sortedValues = report.getNavigationRowsPerGene().values().stream().sorted().collect(Collectors.toList());
+		
+		for (ReportNavigationRow navigationRow : sortedValues) {
+			String gene = navigationRow.getGene();
 			Color defaultColor = Color.WHITE;
 			if (grayBackground) {
 				defaultColor = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
 			}
-			ReportNavigationRow navigationRow = report.getNavigationRowsPerGene().get(gene);
 			row = table.createRow(12);
 			cell = row.createCell(20, gene);
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
@@ -433,8 +454,8 @@ public class FinalReportPDFTemplate {
 			this.applyCellFormatting(cell, defaultFont, color);
 			greyBackground = !greyBackground;
 		}
+		links.add(new Link(FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition - 20));
 		latestYPosition = table.draw() - 20;
-		links.add(new Link(FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition));
 	}
 
 	private void createClinicalTrialsTable() throws IOException, URISyntaxException {
@@ -705,16 +726,30 @@ public class FinalReportPDFTemplate {
 //			Cell<PDPage> cell = row.createCell(100, variants);
 //			this.applyCellFormatting(cell, defaultFont, color);
 			boolean greyBackground = false;
+			int counter = 0;
 			for (String variant : tableItems.keySet()) {
+				if (counter % 3 == 0) { //new row every 3 VUS
+					row = table.createRow(12);
+				}
+				counter++;
 				Color color = Color.WHITE;
 				if (greyBackground) {
 					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
 				}
 				GeneVariantAndAnnotation item = tableItems.get(variant);
-				row = table.createRow(12);
-				Cell<PDPage> cell = row.createCell(100, item.getGeneVariant());
+				Cell<PDPage> cell = row.createCell(33.33f, item.getGeneVariant());
 				this.applyCellFormatting(cell, defaultFont, color);
 				greyBackground = !greyBackground;
+			}
+			while(counter % 3 != 0) {
+				Color color = Color.WHITE;
+				if (greyBackground) {
+					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+				}
+				Cell<PDPage> cell = row.createCell(33.33f, "");
+				this.applyCellFormatting(cell, defaultFont, color);
+				greyBackground = !greyBackground;
+				counter++;
 			}
 		}
 
@@ -1084,7 +1119,7 @@ public class FinalReportPDFTemplate {
 			}
 		}
 		latestYPosition = table.draw();
-		this.addLink(new Link(FinalReportTemplateConstants.ABOUT_THE_TEST_LINK, FinalReportTemplateConstants.ABOUT_THE_TEST_LINK));
+		this.links.add(new Link(FinalReportTemplateConstants.ABOUT_THE_TEST_LINK, FinalReportTemplateConstants.ABOUT_THE_TEST_LINK));
 	}
 
 	public void saveTemp() throws IOException {
@@ -1127,7 +1162,7 @@ public class FinalReportPDFTemplate {
 
 		PDBorderStyleDictionary borderULine = new PDBorderStyleDictionary();
 		borderULine.setStyle(PDBorderStyleDictionary.STYLE_UNDERLINE);
-		borderULine.setWidth(1);
+		borderULine.setWidth(0);
 
 		HyperLinkReplacer linker = new HyperLinkReplacer(link, link.getUrlLabel());
 		// for now, scan all pages
@@ -1157,25 +1192,33 @@ public class FinalReportPDFTemplate {
 				action.setURI(link.getUrl());
 				annotation.setAction(action);
 
-				//				PDActionJavaScript javascriptAction = 
-				//						new PDActionJavaScript("app.launchURL('" + link.getUrl() + ", true);");
-				////				PDAnnotationAdditionalActions actions = new PDAnnotationAdditionalActions();
-				////				actions.setU(javascriptAction);
-				//				annotation.setAction(javascriptAction);
-
 			}
 			else if (link.getDestinationPageNb() != null) {
 				PDActionGoTo gotoAction = new PDActionGoTo();
-				PDPageFitDestination dest = new PDPageFitDestination();
+				PDPageXYZDestination dest = new PDPageXYZDestination();
 				dest.setPage(mainDocument.getPage(link.getDestinationPageNb()));
-//				dest.setBottom(link.getTop());
+				dest.setTop(link.getTop() + 20);
+				dest.setZoom(0);
+				dest.setLeft(0);
 				gotoAction.setDestination(dest);
 				annotation.setAction(gotoAction);
 			}
-
-
 		}
-
-
+	}
+	
+	private void addWatermark() throws IOException {
+		File watermark = new File(fileProps.getPdfLogoDir(), fileProps.getPdfDraftWatermarkName());
+		Image watermarkImage = new Image(ImageIO.read(watermark));
+		watermarkImage = watermarkImage.scaleByWidth(mainDocument.getPage(0).getMediaBox().getWidth() - FinalReportTemplateConstants.MARGINLEFT - FinalReportTemplateConstants.MARGINRIGHT - 10);
+		for (int i = 0; i < mainDocument.getNumberOfPages(); i++) {
+			PDPage page = mainDocument.getPage(i);
+			PDPageContentStream contentStream = new PDPageContentStream(mainDocument, page,
+					PDPageContentStream.AppendMode.APPEND, true);
+			float yPos = pageHeight - FinalReportTemplateConstants.MARGINTOP * 3;
+			float xPos = FinalReportTemplateConstants.MARGINLEFT + 5;
+			watermarkImage.draw(mainDocument, contentStream, xPos, yPos);
+			contentStream.close();
+			
+		}
 	}
 }

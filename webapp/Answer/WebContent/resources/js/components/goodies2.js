@@ -12,26 +12,26 @@ Vue.component('goodies2', {
       colors: ['#69D2E7', '#A7DBD8', '#E0E4CC', '#F38630', '#FA6900', '#FF4E50', '#F9D423'],
       demo: {},
       choices: [
-        //   {
-        //   start: this.createParticules, //starts the animation
-        //   end: this.clearParticules, //smooth out the ending (instead of direct destroy)
-        //   endDelay: 1000 //how long before calling destroy
-        // },
-        // {
-        //   start: this.createTentacles,
-        //   end: this.clearTentacles,
-        //   endDelay: 2000
-        // },
-        // {
-        //   start: this.createBubbles,
-        //   end: this.clearBubbles,
-        //   endDelay: 2000
-        // },
-        // {
-        //   start: this.createSnowParticles,
-        //   end: this.clearSnowParticles,
-        //   endDelay: 3000
-        // },
+          {
+          start: this.createParticules, //starts the animation
+          end: this.clearParticules, //smooth out the ending (instead of direct destroy)
+          endDelay: 1000 //how long before calling destroy
+        },
+        {
+          start: this.createTentacles,
+          end: this.clearTentacles,
+          endDelay: 2000
+        },
+        {
+          start: this.createBubbles,
+          end: this.clearBubbles,
+          endDelay: 2000
+        },
+        {
+          start: this.createSnowParticles,
+          end: this.clearSnowParticles,
+          endDelay: 3000
+        },
         {
           start: this.createFireworks,
           end: this.clearFireworks,
@@ -375,18 +375,18 @@ Vue.component('goodies2', {
 
       this.demo.update = () => {
         var i, particle;
-        for ( i = this.snowParticles.length - 1; i >= 0; i-- ) {
+        for (i = this.snowParticles.length - 1; i >= 0; i--) {
 
-            particle = this.snowParticles[i];
+          particle = this.snowParticles[i];
 
-            if ( particle.alive ) {
-                particle.move(this.demo);
-            }
-            else {
-               this.snowParticles.splice( i, 1 );
-            }
+          if (particle.alive) {
+            particle.move(this.demo);
+          }
+          else {
+            this.snowParticles.splice(i, 1);
+          }
         }
-    };
+      };
 
       this.demo.draw = () => {
         // this.demo.globalCompositeOperation = 'lighter';
@@ -403,11 +403,11 @@ Vue.component('goodies2', {
         return;
       }
       if (this.snowParticles.length > this.maxSnowParticles) {
-          return;
+        return;
       }
-      var x = random( 0, this.demo.width );
+      var x = random(0, this.demo.width);
       var y = 0;
-      var speed = random(4,8);
+      var speed = random(4, 8);
       var radius = random(0.2, 5);
       this.snowParticles.push(new SnowFlake(x, y, radius, speed, this.demo, this.colors, this.snowOriginColor));
     },
@@ -417,42 +417,50 @@ Vue.component('goodies2', {
     createFireworks() {
       this.canClick = true;
       this.demo = Sketch.create({
-        container: document.getElementById( this.containerId ),
+        container: document.getElementById(this.containerId),
         retina: 'auto'
-    });
+      });
 
-    this.demo.update = () => {
-        for (var i = 0; i < this.fireworks.length; i++ ) {
-            this.fireworks[i].move();
+      this.demo.update = () => {
+        for (var i = 0; i < this.fireworks.length; i++) {
+          this.fireworks[i].move();
         }
-    };
+      };
 
-    this.demo.mousedown = () => {
-       this.createAFirework();
-    }
+      this.demo.mousedown = () => {
+        this.createAFirework(true);
+      }
 
-    this.demo.draw = () => {
+      this.demo.draw = () => {
         this.fireworks = this.fireworks.filter((f) => f.alive);
-        for ( var i = this.fireworks.length - 1; i >= 0; i-- ) {
-            this.fireworks[i].draw( this.demo );
-            this.fireworks[i].move();
+        for (var i = this.fireworks.length - 1; i >= 0; i--) {
+          this.fireworks[i].draw(this.demo);
+          this.fireworks[i].move();
         }
-    };
-    this.currentInterval = setInterval(this.createAFirework, 2000);
+      };
+      this.currentInterval = setInterval(this.createAFirework, 500);
     },
-    createAFirework() {
-      var particuleCount = random(20,30);
+    createAFirework(manual) {
+      var particuleCount = random(20, 30);
       var particles = [];
       var particuleSize = 2;
       var fireworkSize = 3;
       var verticalDuration = random(500, 1000);
-     for (var i = 0; i < particuleCount; i++) {
-         var speed = random(1, 4);
-         var duration = random(2000, 3000);
-          particles.push(new FireworkParticle(this.demo.mouse.x, this.demo.mouse.y, particuleSize, speed, duration));
-     }
-     var speed = random(2, 3);
-     this.fireworks.push(new Fireworks(particles, this.demo.mouse.x, this.demo.mouse.y, fireworkSize, speed, verticalDuration));
+      var x = this.demo.mouse.x;
+      var y = this.demo.mouse.y;
+      if (!manual) {
+        x = random(100, this.demo.width - 100);
+        y = random(100, this.demo.height - 100);
+      }
+      var hueMin = random(0, 360);
+      for (var i = 0; i < particuleCount; i++) {
+        var speed = random(1, 4);
+        var duration = random(2000, 3000);
+        var hue = random(hueMin, hueMin + 50);
+        particles.push(new FireworkParticle(x, y, particuleSize, speed, duration, hue));
+      }
+      var speed = random(2, 3);
+      this.fireworks.push(new Fireworks(particles, x, y, fireworkSize, speed, verticalDuration));
     },
     clearFireworks() {
       clearInterval(this.currentInterval);

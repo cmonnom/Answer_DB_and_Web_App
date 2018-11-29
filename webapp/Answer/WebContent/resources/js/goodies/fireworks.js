@@ -26,9 +26,14 @@ Fireworks.prototype = {
         var duration = Date.now() - this.startedTime;
         if (duration < this.verticalDuration) { //vertical launch
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, TWO_PI);
+            // ctx.arc( this.x, this.y, this.size, 0, TWO_PI );
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x, this.y + 10);
             ctx.fillStyle = this.color;
-            ctx.fill();
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = this.size;
+            ctx.stroke();
+            // ctx.fill();
         }
         else { //explosion
             this.particles = this.particles.filter((p) => p.alive);
@@ -71,20 +76,20 @@ Fireworks.prototype = {
 };
 
 
-function FireworkParticle(x, y, radius, speed, duration) {
-    this.init(x, y, radius, speed, duration);
+function FireworkParticle(x, y, radius, speed, duration, hue) {
+    this.init(x, y, radius, speed, duration, hue);
 }
 
 FireworkParticle.prototype = {
 
-    init: function (x, y, radius, speed, duration) {
+    init: function (x, y, radius, speed, duration, hue) {
 
         this.alive = true;
 
         this.radius = radius || 10;
         this.angle = random(0, TWO_PI);
         this.drag = 0.985;
-        var hue = random(0, 360);
+        // var hue = random(0, 360);
         this.color = "hsl(" + hue + ", 100%, 50%)";
 
         this.x = x || 0.0;
@@ -106,7 +111,7 @@ FireworkParticle.prototype = {
             this.x += x;
         }
         this.y -= sin(this.angle) * this.speed;
-        this.updateColor();
+        // this.updateColor();
         // this.alive = Date.now() - this.startedTime <= this.duration;
         this.alive = this.speed > 0.25;
     },

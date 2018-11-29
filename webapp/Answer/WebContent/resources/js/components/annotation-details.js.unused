@@ -181,7 +181,7 @@ Vue.component('annotation-details', {
           <span v-if="isCNV()">CNV</span>
           <span v-if="isTranslocation()">FTL</span>
           Variant:
-              <span v-if="isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
+              <span v-if="isSNP()" v-text="createvariantName()"></span>
               <span v-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
               <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
               <span> -- {{ caseName }} -- </span> 
@@ -660,6 +660,12 @@ Vue.component('annotation-details', {
             else {
                 return "&nbsp;" + id + "&nbsp;";
             }
+        },
+        createvariantName() {
+            var text = this.currentVariant.geneName + " " + this.currentVariant.notation;
+            if (text.length > 20) {
+                return text.substring(0, 20) + "...";
+            } 
         },
         getVariantDetails(item, resetSaveFlags) {
             this.currentVariantType = "snp";

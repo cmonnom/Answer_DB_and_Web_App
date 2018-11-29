@@ -304,7 +304,7 @@ public class Report {
 	public void incrementFusionCount(String fusionName) {
 		ReportNavigationRow row = this.navigationRowsPerGene.get(fusionName);
 		if (row == null) {
-			row = new ReportNavigationRow();
+			row = new ReportNavigationRow(fusionName);
 		}
 		row.setFusionCount(row.getFusionCount() + 1);
 		this.navigationRowsPerGene.put(fusionName, row);
@@ -313,7 +313,7 @@ public class Report {
 	public void incrementIndicatedTherapyCount(String geneName) {
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow();
+			row = new ReportNavigationRow(geneName);
 		}
 		row.setIndicatedTherapyCount(row.getIndicatedTherapyCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);
@@ -322,7 +322,7 @@ public class Report {
 	public void incrementStrongClinicalSignificanceCount(String geneName) {
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow();
+			row = new ReportNavigationRow(geneName);
 		}
 		row.setStrongClinicalSignificanceCount(row.getStrongClinicalSignificanceCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);
@@ -331,7 +331,7 @@ public class Report {
 	public void incrementPossibleClinicalSignificanceCount(String geneName) {
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow();
+			row = new ReportNavigationRow(geneName);
 		}
 		row.setPossibleClinicalSignificanceCount(row.getPossibleClinicalSignificanceCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);
@@ -340,7 +340,7 @@ public class Report {
 	public void incrementUnknownClinicalSignificanceCount(String geneName) {
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow();
+			row = new ReportNavigationRow(geneName);
 		}
 		row.setUnknownClinicalSignificanceCount(row.getUnknownClinicalSignificanceCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);
@@ -349,7 +349,7 @@ public class Report {
 	public void incrementClinicalTrialCount(String geneName) {
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow();
+			row = new ReportNavigationRow(geneName);
 		}
 		row.setClinicalTrialCount(row.getClinicalTrialCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);

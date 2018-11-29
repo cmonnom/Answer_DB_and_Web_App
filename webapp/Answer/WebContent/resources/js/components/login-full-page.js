@@ -29,14 +29,39 @@ Vue.component('login-full-page', {
         }
     },
     methods: {
-        
+        checkAlreadyLoggedIn() {
+            axios.get(
+                webAppRoot + "/checkAlreadyLoggedIn",
+                {
+                    params: {
+                    }
+                })
+                .then(response => {
+                    if (response.data.success) {
+                        console.log(response.data.reason);
+                        if (this.$route.query.urlRedirect) {
+                            window.location = this.$route.query.urlRedirect;
+                        }
+                        else {
+                            window.location = response.data.urlRedirect;
+                        }
+                    }
+                    else {
+                        console.log(response.data.reason);
+                    }
+                }).catch(error => {
+                });
+        }
 
+    },
+    mounted: function () {
+       
     },
     computed: {
 
     },
     created: function () {
-
+        this.checkAlreadyLoggedIn();
     }
 
 

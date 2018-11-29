@@ -18,6 +18,7 @@ public class Link {
 		super();
 		this.urlLabel = urlLabel;
 		this.destinationPageNb = destinationPageNb;
+		this.top = top;
 	}
 	public String getUrlLabel() {
 		return urlLabel;
