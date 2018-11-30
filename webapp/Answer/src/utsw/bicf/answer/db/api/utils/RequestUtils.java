@@ -830,9 +830,18 @@ public class RequestUtils {
 		MDAReportTemplate mdaEmail = this.getMDATrials(caseId);
 		if (mdaEmail != null) {
 			List<BiomarkerTrialsRow> trials = mdaEmail.getSelectedBiomarkers();
-			trials.addAll(mdaEmail.getSelectedAdditionalBiomarkers());
-			trials.addAll(mdaEmail.getRelevantBiomarkers());
-			trials.addAll(mdaEmail.getRelevantAdditionalBiomarkers());
+			if (trials != null) {
+				if (mdaEmail.getSelectedAdditionalBiomarkers() != null)
+					trials.addAll(mdaEmail.getSelectedAdditionalBiomarkers());
+				if (mdaEmail.getRelevantBiomarkers() != null)
+					trials.addAll(mdaEmail.getRelevantBiomarkers());
+				if (mdaEmail.getRelevantAdditionalBiomarkers() != null)
+					trials.addAll(mdaEmail.getRelevantAdditionalBiomarkers());
+
+			}
+			else {
+				trials = new ArrayList<BiomarkerTrialsRow>();
+			}
 			report.setClinicalTrials(trials);
 
 		}
@@ -969,7 +978,7 @@ public class RequestUtils {
 					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
 						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
 						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && !a.getCategory().equals("Therapy")) {
+								&& a.getCategory() != null ) {
 							selectedAnnotationsForVariant.add(a);
 							tiers.add(a.getTier());
 							if (a.getPmids() != null) {
