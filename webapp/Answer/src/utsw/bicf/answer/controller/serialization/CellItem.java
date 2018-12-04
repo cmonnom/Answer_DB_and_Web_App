@@ -3,6 +3,7 @@ package utsw.bicf.answer.controller.serialization;
 public class CellItem {
 	
 	public static final String TYPE_TEXT = "text";
+	public static final String TYPE_TEXT_FIELD = "text-field";
 	
 	String label;
 	String value;

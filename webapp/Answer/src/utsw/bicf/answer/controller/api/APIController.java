@@ -32,6 +32,7 @@ public class APIController {
 	@ResponseBody
 	public String parseMDAEmail(Model model, @RequestParam String token,
 			@RequestParam String emailPath, HttpSession httpSession) {
+		httpSession.setAttribute("user", "API User from parseMDAEmail");
 		// check that token is valid
 		Token theToken = modelDAO.getParseMDAToken(token);
 		if (theToken == null) {

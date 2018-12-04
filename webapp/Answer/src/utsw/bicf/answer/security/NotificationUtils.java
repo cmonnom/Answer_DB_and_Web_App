@@ -63,7 +63,7 @@ public class NotificationUtils {
 		else {
 			fullMessage.append("/resources/");
 		}
-		fullMessage.append("images/answer-logo-small-alpha.png'")
+		fullMessage.append("images/answer-logo-small-beta.png'")
 				.append(" width='150px' />")
 //				.append("<p>Dr. ").append(toName).append(",</p><br/>")
 //				.append("<b>")

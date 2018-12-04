@@ -337,8 +337,10 @@ public class OpenReportController {
 		User currentUser = (User) session.getAttribute("user");
 		JsonNode nodeData = mapper.readTree(data);
 		ReportSummary reportSummary =  mapper.readValue(nodeData.get("report").toString(), ReportSummary.class);
-		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportSummary.getCaseId(), currentUser);
-		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
+		//we might not want to restrict by assigned user
+		//		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportSummary.getCaseId(), currentUser);
+//		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
+		boolean canProceed = currentUser.getIndividualPermission().getCanReview();
 		response.setIsAllowed(canProceed);
 		if (canProceed) {
 			OrderCase caseSummary = utils.getCaseSummary(reportSummary.getCaseId());

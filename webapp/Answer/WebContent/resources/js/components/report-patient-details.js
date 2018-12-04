@@ -41,11 +41,11 @@ Vue.component('report-patient-details', {
                                     <v-list-tile-content class="pb-2">
                                         <v-layout class="full-width " justify-space-between>
                                             <v-flex class="text-xs-left xs">
-                                                <span :class="[item.type == 'text' ? 'pt-4' : '', 'selectable']">{{
+                                                <span :class="['selectable']">{{
                                                     item.label }}:</span>
                                             </v-flex>
-                                            <v-flex :class="[item.type ? 'xs5' : 'xs','text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
-                                                <span v-if="item.type == null" class="selectable">{{
+                                            <v-flex :class="['xs','text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
+                                                <span class="selectable">{{
                                                     item.value }}</span>
                                             </v-flex>
                                         </v-layout>
@@ -75,6 +75,9 @@ Vue.component('report-patient-details', {
                     var item = this.patientTables[i].items[j];
                     if (caseName && item.field == "caseName") {
                         this.updateCaseName(caseName + " (" + item.value + ")")
+                    }
+                    else if (item.field == "dedupPctOver100X") {
+                        item.value = (Math.round(parseFloat(item.value * 100)) / 100) + "%";
                     }
                 }
             }

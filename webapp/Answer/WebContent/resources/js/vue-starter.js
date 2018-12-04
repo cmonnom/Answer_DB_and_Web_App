@@ -70,6 +70,14 @@ var router = new VueRouter({
 			}
 		},
 		{
+			path: webAppRoot + '/userPrefs',
+			name: 'UserPrefs',
+			component: UserPrefs,
+			meta: {
+				title: 'User Preferences'
+			}
+		},
+		{
 			path: webAppRoot + '/logout',
 			name: 'LogOut',
 			component: LogOut,

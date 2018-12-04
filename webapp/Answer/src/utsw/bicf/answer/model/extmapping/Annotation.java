@@ -50,13 +50,14 @@ public class Annotation {
 	String fullName;
 	String classification;
 	String tier;
-	List<String> nctids;
+//	List<String> nctids;
 	String type;
 	List<String> cnvGenes;
 	Boolean isSelected;
 	String breadth;
 	String leftGene;
 	String rightGene;
+	Trial trial;
 	
 	public Annotation() {
 		
@@ -223,13 +224,13 @@ public class Annotation {
 		this.tier = tier;
 	}
 
-	public List<String> getNctids() {
-		return nctids;
-	}
-
-	public void setNctids(List<String> nctids) {
-		this.nctids = nctids;
-	}
+//	public List<String> getNctids() {
+//		return nctids;
+//	}
+//
+//	public void setNctids(List<String> nctids) {
+//		this.nctids = nctids;
+//	}
 
 	public String getType() {
 		return type;
@@ -356,6 +357,14 @@ public class Annotation {
 
 	public void setRightGene(String rightGene) {
 		this.rightGene = rightGene;
+	}
+
+	public Trial getTrial() {
+		return trial;
+	}
+
+	public void setTrial(Trial trial) {
+		this.trial = trial;
 	}
 
 

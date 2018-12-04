@@ -48,19 +48,19 @@ public class ReportClinicalTrialsSummary extends Summary<BiomarkerTrialsRow> {
 		nctid.setWidth("200px");
 		headers.add(nctid);
 		
-		Header mdaccProtocol = new Header(new String[] {"MDACC", "Protocol ID"}, "mdaddProtocolId");
-		mdaccProtocol.setWidth("100px");
-		headers.add(mdaccProtocol);
+//		Header mdaccProtocol = new Header(new String[] {"MDACC", "Protocol ID"}, "mdaddProtocolId");
+//		mdaccProtocol.setWidth("100px");
+//		headers.add(mdaccProtocol);
 		
 		Header phase = new Header("Phase", "phase");
 		phase.setWidth("100px");
 		headers.add(phase);
 		
-		Header pi = new Header("PI", "pi");
+		Header pi = new Header("Contact", "pi");
 		pi.setWidth("100px");
 		headers.add(pi);
 		
-		Header dept = new Header("Department", "dept");
+		Header dept = new Header("Location", "dept");
 		dept.setWidth("100px");
 		dept.setAlign("left");
 		headers.add(dept);

@@ -33,26 +33,44 @@ Vue.component('utsw-annotation-card', {
                         <span v-html="annotation.scopeTooltip"> </span>
                     </v-tooltip>
                 </v-flex>
-                <v-flex xs12>
-                    <span v-if="annotation.category" class="pr-1">
+                <v-flex xs12 v-if="annotation.category" >
+                    <span class="pr-1">
                         <b>{{ annotation.category }}:</b>
                     </span>
                     <span v-html="annotation.text"></span>
                 </v-flex>
-                <v-flex xs12>
-                    <span v-if="annotation.classification" class="pr-1">
+                <v-flex xs12 v-if="annotation.classification">
+                    <span  class="pr-1">
                         <b>Classification:</b>
                     </span>
                     <span v-html="annotation.classification"></span>
                 </v-flex>
-                <v-flex xs12>
-                    <span v-if="annotation.tier" class="pr-1">
+                <v-flex xs12 v-if="annotation.tier" >
+                    <span class="pr-1">
                         <b>Tier:</b>
                     </span>
                     <span v-html="annotation.tier"></span>
                 </v-flex>
                 <v-flex xs12 v-if="isCNV() && annotation.cnvGenes" class="pr-1">
                     Applies to genes: {{ annotation.cnvGenes }}
+                </v-flex>
+                <v-flex xs12 v-if="annotation.trial" class="pr-1">
+                    <span class="pr-1">
+                        <b>Phase:</b>
+                    </span>
+                    <span v-html="annotation.trial.phase"></span>
+                </v-flex>
+                <v-flex xs12 v-if="annotation.trial" class="pr-1">
+                    <span class="pr-1">
+                        <b>Biomarker(s):</b>
+                    </span>
+                    <span v-html="annotation.trial.biomarker"></span>
+                </v-flex>
+                <v-flex xs12 v-if="annotation.category == 'Clinical Trial'" class="pr-1">
+                    <span class="pr-1">
+                        <b>Title:</b>
+                    </span>
+                    <span v-html="annotation.trial.title"></span>
                 </v-flex>
                 <v-flex xs12>
                     <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>
@@ -62,10 +80,10 @@ Vue.component('utsw-annotation-card', {
                         </v-btn>
                         <span>Open in new tab</span>
                     </v-tooltip>
-                    <span v-if="annotation.nctids" class="selectable pl-2">Clinical Trials:</span>
-                    <v-tooltip v-if="id" bottom v-for="id in annotation.nctids" :key="id">
-                        <v-btn @click="handleNCTIdLink(id)" slot="activator">
-                            {{ id }}
+                    <span v-if="annotation.trial && annotation.trial.nctId" class="selectable">Open Trial:</span>
+                    <v-tooltip v-if="annotation.trial" bottom>
+                        <v-btn @click="handleNCTIdLink(annotation.trial.nctId)" slot="activator">
+                            {{ annotation.trial.nctId }}
                         </v-btn>
                         <span>Open in new tab</span>
                     </v-tooltip>

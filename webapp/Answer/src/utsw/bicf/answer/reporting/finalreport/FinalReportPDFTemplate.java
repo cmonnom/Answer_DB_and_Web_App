@@ -229,6 +229,9 @@ public class FinalReportPDFTemplate {
 				FinalReportTemplateConstants.MARGINLEFT, mainDocument, firstPage, cellBorder, true);
 		List<CellItem> leftTableItems = patientDetails.getPatientTables().get(0).getItems();
 		for (CellItem item : leftTableItems) {
+			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
+				item.setValue(item.getValue() + "%");
+			}
 			this.createRow(leftTable, item.getLabel(), item.getValue(), defaultFont);
 		}
 		leftTable.draw();
@@ -244,6 +247,9 @@ public class FinalReportPDFTemplate {
 		}
 		middleTableItems.add(new CellItem("Report Date", dateModified));
 		for (CellItem item : middleTableItems) {
+			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
+				item.setValue(item.getValue() + "%");
+			}
 			this.createRow(middleTable, item.getLabel(), item.getValue(), defaultFont);
 		}
 		middleTable.draw();
@@ -254,12 +260,15 @@ public class FinalReportPDFTemplate {
 				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth() + middleTable.getWidth(),
 				mainDocument, firstPage, cellBorder, true);
 		List<CellItem> rightTableItems = patientDetails.getPatientTables().get(2).getItems();
-		String signedByName = signedBy.getFullName();
+		String signedByName = "Dr. " + signedBy.getFullName();
 		if (report.getFinalized() == null || !report.getFinalized()) {
 			signedByName = "NOT SIGNED";
 		}
 		rightTableItems.add(new CellItem("Report Electronically Signed By", signedByName));
 		for (CellItem item : rightTableItems) {
+			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
+				item.setValue(item.getValue() + "%");
+			}
 			this.createRow(rightTable, item.getLabel(), item.getValue(), defaultFont);
 		}
 		rightTable.draw();
@@ -671,7 +680,21 @@ public class FinalReportPDFTemplate {
 				}
 				GeneVariantAndAnnotation item = tableItems.get(variant);
 				row = table.createRow(12);
-				Cell<PDPage> cell = row.createCell(30, item.getGeneVariant());
+				StringBuilder cellContent = new StringBuilder();
+				cellContent.append("<b>").append(item.getGeneVariant()).append("</b><br/>")
+				.append("<b>Pos: </b>").append(item.getPosition()).append("<br/>");
+				if (item.getType().equals("snp")) {
+					cellContent.append("<b>ENST: </b>").append(item.getTranscript()).append("<br/>")
+					.append("<b>VAF: </b>").append(item.getTaf()).append("<br/>")
+					.append("<b>Depth: </b>").append(item.gettDepth()).append("<br/>");
+				}
+				else if (item.getType().equals("cnv")) {
+					cellContent.append("<b>Copy Number: </b>").append(item.getCopyNumber()).append("<br/>")
+					.append("<b>Aberration Type: </b>").append(item.getAberrationType()).append("<br/>");
+				}
+				
+				
+				Cell<PDPage> cell = row.createCell(30, cellContent.toString());
 				this.applyCellFormatting(cell, defaultFont, color);
 				cell = row.createCell(70, this.createAnnotationText(item.getAnnotationsByCategory()));
 				this.applyCellFormatting(cell, defaultFont, color);

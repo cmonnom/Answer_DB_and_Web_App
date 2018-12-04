@@ -63,6 +63,7 @@ import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.Moclia;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
+import utsw.bicf.answer.model.extmapping.Trial;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
@@ -133,6 +134,8 @@ public class OpenCaseController {
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getGenesInPanel",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCNV",
+				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".fetchNCTData",
 				IndividualPermission.CAN_ANNOTATE);
 		
 	}
@@ -640,7 +643,6 @@ public class OpenCaseController {
 				return response.createObjectJSON();
 			}
 		}
-//	}
 		
 		response.setIsAllowed(true);
 
@@ -659,11 +661,27 @@ public class OpenCaseController {
 			if (userAnnotation.getIsVariantSpecific()) {
 				userAnnotation.setVariantId(variantId);
 			}
+			if (userAnnotation.getTrial() != null) {
+				Trial trial = userAnnotation.getTrial();
+				boolean isValidTrial = trial.getNctId() != null && !trial.getNctId().equals("");
+				isValidTrial &= trial.getTitle() != null && !trial.getTitle().equals("");
+				isValidTrial &= trial.getPhase() != null && !trial.getPhase().equals("");
+				isValidTrial &= trial.getBiomarker() != null && !trial.getBiomarker().equals("");
+				isValidTrial &= trial.getDrugs() != null && !trial.getDrugs().equals("");
+				isValidTrial &= trial.getContact() != null && !trial.getContact().equals("");
+				isValidTrial &= trial.getLocation() != null && !trial.getLocation().equals("");
+				if (!isValidTrial) {
+					response.setSuccess(false);
+					response.setMessage("One or more clinical trial is missing information.");
+					return response.createObjectJSON();
+				}
+			}
 			userAnnotations.add(userAnnotation);
 		}
 		boolean didChange = utils.commitAnnotation(response, caseId, variantId, userAnnotations);
 		if (response.getSuccess()) {
 			response.setMessage(didChange + ""); //ajax should check the message in commitAnnotation
+			response.setUserPrefs(user.getUserPref());
 		}
 		return response.createObjectJSON();
 
@@ -978,6 +996,8 @@ public class OpenCaseController {
 	@RequestMapping(value = "/savePatientDetails")
 	@ResponseBody
 	public String savePatientDetails(Model model, HttpSession session, @RequestParam String oncotreeDiagnosis,
+			@RequestParam String dedupAvgDepth,
+			@RequestParam String dedupPctOver100X,
 			@RequestParam String caseId,
 			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
@@ -992,6 +1012,24 @@ public class OpenCaseController {
 			OrderCase caseSummary = utils.getCaseSummary(caseId);
 			if (caseSummary != null) {
 				caseSummary.setOncotreeDiagnosis(oncotreeDiagnosis);
+				if (dedupAvgDepth != "") {
+					try {
+						int dedupAvgDepthInt = Integer.parseInt(dedupAvgDepth);
+						caseSummary.setDedupAvgDepth(dedupAvgDepthInt);
+					} catch (Exception e) {
+						response.setSuccess(false);
+						response.setMessage("Dedup Avg. Depth is not a valid integer: " + dedupAvgDepth);
+					}
+				}
+				if (dedupPctOver100X != "") {
+					try {
+						double dedupPctOver100XDouble = Double.parseDouble(dedupPctOver100X);
+						caseSummary.setDedupPctOver100X(dedupPctOver100XDouble);
+					} catch (Exception e) {
+						response.setSuccess(false);
+						response.setMessage("Dedup Pct. Over 100X is not a valid number: " + dedupPctOver100X);
+					}
+				}
 				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);
 				if (savedCaseSummary != null) {
 					response.setSuccess(true);
@@ -1169,6 +1207,25 @@ public class OpenCaseController {
 			}
 		}
 		return response.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/fetchNCTData")
+	@ResponseBody
+	public String fetchNCTData(Model model, HttpSession session, @RequestParam String nctId)
+			throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		AjaxResponse response = new AjaxResponse();
+		Trial trial = utils.getNCTData(response, nctId);
+		if (trial != null) {
+			trial.setSuccess(true);
+			trial.setIsAllowed(true);
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.writeValueAsString(trial);
+		}
+		return response.createObjectJSON();
+
 	}
 	
 }

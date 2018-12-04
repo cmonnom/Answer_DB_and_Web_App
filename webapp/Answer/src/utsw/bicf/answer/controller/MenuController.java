@@ -78,14 +78,10 @@ public class MenuController {
 			if (cases != null) {
 				List<OrderCase> casesWithReports = new ArrayList<OrderCase>();
 				for (OrderCase c : cases) {
-//					int step = c.getCaseHistory() != null ? c.getCaseHistory().get(c.getCaseHistory().size() - 1).getStep() : -1;
-					if (CaseHistory.lastStepMatches(c, CaseHistory.STEP_REPORTING)) {
-//					if (step == CaseHistory.STEP_REPORTING) {
+					if (CaseHistory.lastStepMatches(c, CaseHistory.STEP_REPORTING)
+							&& ControllerUtil.isUserAssignedToCase(c, user)) {
 						casesWithReports.add(c);
 					}
-//					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && ControllerUtil.isUserAssignedToCase(utils, c.getCaseId(), user)) {
-//						assignedCases.add(c);
-//					}
 				}
 				OrderCaseItems items = new OrderCaseItems(casesWithReports);
 				return items.createVuetifyObjectJSON();

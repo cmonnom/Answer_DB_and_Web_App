@@ -49,7 +49,7 @@ public class ExportSelectedVariants {
 		HEADERS.add("Tier");
 		HEADERS.add("Comments");
 		HEADERS.add("Drugs");
-		HEADERS.add("Clinical trials");
+//		HEADERS.add("Clinical trials");
 		HEADERS.add("PMID");
 		HEADERS.add("gnomAD (MAF %, hom)");
 		HEADERS.add("ExAC (MAF %, hom)");
@@ -107,9 +107,9 @@ public class ExportSelectedVariants {
 					items.add(a.getTier());
 					items.add(a.getCategory() + ": " + a.getText());
 					items.add(""); //drugs
-					items.add(a.getNctids() != null ? a.getNctids().stream()
-							.map(id -> "https://clinicaltrials.gov/ct2/show/" + id)
-							.collect(Collectors.joining(";")) : "");
+//					items.add(a.getNctids() != null ? a.getNctids().stream()
+//							.map(id -> "https://clinicaltrials.gov/ct2/show/" + id)
+//							.collect(Collectors.joining(";")) : "");
 					items.add(a.getPmids() != null ? a.getPmids().stream()
 							.map(id -> "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id)
 							.collect(Collectors.joining(";")) : "");
@@ -186,11 +186,11 @@ public class ExportSelectedVariants {
 									? a.getPmids().stream().map(id -> "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id)
 											.collect(Collectors.joining(";"))
 									: "");
-					items.add(
-							a.getNctids() != null
-									? a.getNctids().stream().map(id -> "https://clinicaltrials.gov/ct2/show/" + id)
-											.collect(Collectors.joining(";"))
-									: "");
+//					items.add(
+//							a.getNctids() != null
+//									? a.getNctids().stream().map(id -> "https://clinicaltrials.gov/ct2/show/" + id)
+//											.collect(Collectors.joining(";"))
+//									: "");
 					items.addAll(createVariantItemsAfterAnnotation(v));
 					// write the row
 					csvContent.append(createCSVRow(items)).append("\n");

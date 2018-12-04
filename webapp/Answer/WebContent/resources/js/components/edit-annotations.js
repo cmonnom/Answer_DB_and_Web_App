@@ -14,6 +14,7 @@ Vue.component('edit-annotations', {
         annotationClassifications: {default:() => [], type: Array},
         annotationTiers: {default: () => [], type: Array},
         annotationCategoriesCNV: {default: () => [], type: Array},
+        annotationPhases: {default: () => [], type: Array},
         currentVariant: {default: () => {}, type: Object},
         annotationVariantDetailsVisible: {default: true, type: Boolean},
         backColor: {default: "orange lighten-4", type: String},
@@ -48,6 +49,15 @@ Vue.component('edit-annotations', {
                                     <v-list-tile-title>Create a New Annotation</v-list-tile-title>
                                 </v-list-tile-content>
                             </v-list-tile>
+
+                            <v-list-tile avatar @click="addCustomTrial()">
+                            <v-list-tile-avatar>
+                                <v-icon>assignment</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Add a New Trial</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
 
                             <v-list-tile avatar @click="saveAnnotations()" :disabled="saveIsDisabled()">
                                 <v-list-tile-avatar>
@@ -113,7 +123,7 @@ Vue.component('edit-annotations', {
                 <v-card v-if="userEditingAnnotations.length == 0">
                     <v-card-text>
                         Click on
-                        <v-btn color="primary" @click="addCustomAnnotation()">Add
+                        <v-btn color="primary" @click="addCustomAnnotation()">Add Annotation
                             <v-icon right dark>playlist_add</v-icon>
                         </v-btn> to create a new annotation.
                     </v-card-text>
@@ -122,7 +132,7 @@ Vue.component('edit-annotations', {
                 <!-- variant details information -->
                 <slot name="variantDetails"></slot>
 
-                <v-card class="mb-4" v-if="userEditingAnnotations.length > 0" v-for="(annotation, index) in userEditingAnnotations" :key="index"
+                <v-card class="mb-4 soft-grey-background" v-if="userEditingAnnotations.length > 0" v-for="(annotation, index) in userEditingAnnotations" :key="index"
                     :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
                     <v-toolbar class="elevation-0" dense dark :color="color">
                         <v-tooltip bottom>
@@ -225,7 +235,7 @@ Vue.component('edit-annotations', {
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
                                                         <!-- SNP  or fusion-->
-                                                        <v-card-text v-if="isSNP() || isTranslocation()" class="card__text_default subheading">
+                                                        <v-card-text v-if="(isSNP() || isTranslocation()) && annotation.category != 'Clinical Trial'" class="card__text_default subheading">
                                                             <v-layout row wrap>
                                                                 <v-flex xs5 class="mt-1">
                                                                     Annotation Category:
@@ -256,7 +266,7 @@ Vue.component('edit-annotations', {
                                                             </v-layout>
                                                         </v-card-text>
                                                         <!-- CNV -->
-                                                        <v-card-text v-if="isCNV()" class="card__text_default subheading">
+                                                        <v-card-text v-if="isCNV() && annotation.category != 'Clinical Trial'" class="card__text_default subheading">
                                                             <v-layout row wrap>
                                                                 <v-flex xs5 class="mt-1">
                                                                     Annotation Category:
@@ -306,6 +316,44 @@ Vue.component('edit-annotations', {
                                                                 </v-flex>
                                                             </v-layout>
                                                         </v-card-text>
+                                                        <!-- Clincal Trial-->
+                                                        <v-card-text v-if="annotation.category == 'Clinical Trial'" class="card__text_default subheading">
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5 class="mt-1">
+                                                                    NCT ID:
+                                                                </v-flex>
+                                                                <v-flex xs5>
+                                                                    <v-text-field v-model="annotation.trial.nctId" label="eg. NCT123456" single-line  :rules="nctRules"
+                                                                    class="no-top-text-field"></v-text-field>
+                                                                </v-flex>
+                                                                <v-flex xs2>
+                                                                <v-tooltip bottom>
+                                                                    <v-btn color="primary" slot="activator" flat icon @click="fetchNCTData(annotation)" 
+                                                                    :disabled="annotation.trial.nctId && !isNCTNumberList(annotation.trial.nctId)"
+                                                                    :lodaing="loadingNCTData">
+                                                                        <v-icon>cloud_download</v-icon>
+                                                                    </v-btn>
+                                                                    <span>Auto populate Clinical Trial from NCT ID</span>
+                                                                </v-tooltip>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5 class="mt-1">
+                                                                    Biomarker(s):
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <v-text-field v-model="annotation.trial.biomarker" label="Biomarker(s)" single-line hide-details class="no-top-text-field"></v-text-field>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                            <v-layout row wrap>
+                                                                <v-flex xs5>
+                                                                    Phase:
+                                                                </v-flex>
+                                                                <v-flex xs7>
+                                                                    <span class="blue-grey--text text--lighten-1">{{ annotation.trial.phase }} </span>
+                                                                </v-flex>
+                                                            </v-layout>
+                                                        </v-card-text>
                                                     </v-card>
                                                 </v-flex>
                                                 <v-flex xs12 sm6 md4>
@@ -327,23 +375,58 @@ Vue.component('edit-annotations', {
                                                         </v-card-text>
                                                     </v-card>
                                                 </v-flex>
-                                                <v-flex xs12 class="pt-2">
+                                                <v-flex xs12 class="pt-2" v-if="annotation.category != 'Clinical Trial'">
                                                     <v-text-field v-show="annotation.isVisible" ref="editAnnotation" :textarea="true" v-model="annotation.text" class="mr-2 no-height"
                                                         :disabled="annotation.markedForDeletion" label="Write your comments here">
                                                     </v-text-field>
                                                 </v-flex>
-                                                <v-flex xs12 v-if="isSNP()">
+                                                <v-flex xs12 v-if="isSNP() && (annotation.category != 'Clinical Trial')">
                                                     <v-layout>
                                                         <v-flex class="mt-4 subheading">PubMed Ids:</v-flex>
                                                         <v-flex xs4>
                                                             <v-text-field :disabled="annotation.markedForDeletion" label="(comma separated)" v-model="annotation.pmids" :rules="numberRules"></v-text-field>
                                                         </v-flex>
-                                                        <v-flex class="mt-4 subheading">NCT Ids:</v-flex>
-                                                        <v-flex xs4>
-                                                            <v-text-field :disabled="annotation.markedForDeletion" label="Clinical Trials (eg. NCT123456, comma separated)" v-model="annotation.nctids"
-                                                                :rules="nctRules"></v-text-field>
-                                                        </v-flex>
+                                                       
                                                     </v-layout>
+                                                </v-flex>
+                                                <v-flex xs12 sm12 md8 v-if="annotation.category == 'Clinical Trial'">
+                                                <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
+                                                    <v-card-text class="card__text_default subheading">
+                                                        <v-layout row wrap>
+                                                            <v-flex xs2 class="subheading">Title:</v-flex>
+                                                            <v-flex xs10>
+                                                                <span class="blue-grey--text text--lighten-1">{{ annotation.trial.title }} </span>
+                                                            </v-flex>
+                                                        </v-layout>
+                                                        <v-layout row wrap>
+                                                            <v-flex xs2 class="subheading pt-2">Drugs:</v-flex>
+                                                            <v-flex xs10>
+                                                                <v-text-field single-line :disabled="annotation.markedForDeletion" label="Drugs" v-model="annotation.trial.drugs"
+                                                                class="no-top-text-field"
+                                                                    ></v-text-field>
+                                                            </v-flex>
+                                                        </v-layout>
+                                                    </v-card-text>
+                                                </v-card>
+                                                </v-flex>
+                                                <v-flex xs12 sm8 md4 v-if="annotation.category == 'Clinical Trial'">
+                                                <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
+                                                    <v-card-text class="card__text_default subheading">
+                                                        <v-layout row wrap>
+                                                            <v-flex class="subheading">Contact:</v-flex>
+                                                            <v-flex xs10>
+                                                            <span class="blue-grey--text text--lighten-1" v-html="annotation.trial.contact"></span>
+                                                            </v-flex>
+                                                        </v-layout>
+                                                        <v-layout row wrap>
+                                                            <v-flex class="subheading mt-1">Location:</v-flex>
+                                                            <v-flex xs10>
+                                                            <v-text-field single-line class="no-top-text-field" :disabled="annotation.markedForDeletion" label="City, State" v-model="annotation.trial.location"
+                                                            ></v-text-field>
+                                                            </v-flex>
+                                                        </v-layout>
+                                                    </v-card-text>
+                                                </v-card>
                                                 </v-flex>
                                             </v-layout>
                                         </v-container>
@@ -356,11 +439,17 @@ Vue.component('edit-annotations', {
             </v-card-text>
             <v-card-actions :class="['card-actions-bottom', backColor]">
                 <v-tooltip top>
-                    <v-btn slot="activator" color="primary" @click="addCustomAnnotation()">Add
+                    <v-btn slot="activator" color="primary" @click="addCustomAnnotation()">Add Annotation
                         <v-icon right dark>playlist_add</v-icon>
                     </v-btn>
                     <span>Create a new annotation</span>
                 </v-tooltip>
+                <v-tooltip top>
+                <v-btn slot="activator" color="primary" @click="addCustomTrial()">Add Trial
+                    <v-icon right dark>assignment</v-icon>
+                </v-btn>
+                <span>Create a new annotation</span>
+            </v-tooltip>
                 <v-tooltip top>
                     <v-btn slot="activator" color="success" @click="saveAnnotations()" :disabled="saveIsDisabled()">Save / Update
                         <v-icon right dark>save</v-icon>
@@ -390,7 +479,8 @@ Vue.component('edit-annotations', {
             nctRules: [(v) => { return this.isNCTNumberList(v) || 'Must start with NCT + number. If more than one, use a comma' }],
            
             cnvGeneItems: [],
-            saving: false
+            saving: false,
+            loadingNCTData: false
         }
 
     },
@@ -413,13 +503,13 @@ Vue.component('edit-annotations', {
                     }
                 }
                 tempAnnotation.pmids = tempSet.size != 0 ? Array.from(tempSet).join(',') : null;
-                tempSet = new Set();
-                if (tempAnnotation.nctids) {
-                    for (var s = 0; s < tempAnnotation.nctids.length; s++) {
-                        tempSet.add(tempAnnotation.nctids[s]);
-                    }
-                }
-                tempAnnotation.nctids = tempSet.size != 0 ? Array.from(tempSet).join(',') : null;
+                // tempSet = new Set();
+                // if (tempAnnotation.nctIds) {
+                //     for (var s = 0; s < tempAnnotation.nctIds.length; s++) {
+                //         tempSet.add(tempAnnotation.nctIds[s]);
+                //     }
+                // }
+                // tempAnnotation.nctIds = tempSet.size != 0 ? Array.from(tempSet).join(',') : null;
                 tempAnnotation.isVisible = true;
                 this.userEditingAnnotations.push(tempAnnotation);
             }
@@ -458,12 +548,28 @@ Vue.component('edit-annotations', {
                 _id: null,
                 classification: null,
                 tier: null,
-                nctids: "",
+                // nctIds: "",
                 type: this.type,
                 cnvGenes: [],
                 leftGene: this.currentVariant.leftGene,
-                rightGene: this.currentVariant.rightGene
+                rightGene: this.currentVariant.rightGene,
+                trial: {
+                    nctId: "",
+                    title: "",
+                    phase: "",
+                    biomarker: "",
+                    drugs: "",
+                    contact: "",
+                    location: ""
+                }
             });
+        },
+        addCustomTrial() {
+            this.addCustomAnnotation();
+            var trial = this.userEditingAnnotations[this.userEditingAnnotations.length - 1];
+            trial.category = "Clinical Trial";
+            trial.isGeneSpecific = true;
+
         },
         saveAnnotations() {
              // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
@@ -485,16 +591,19 @@ Vue.component('edit-annotations', {
                     }
                 }
                 annotation.pmids = tempSet.size != 0 ? Array.from(tempSet) : null;
-                tempSet = new Set();
-                if (annotation.nctids) {
-                    var nctidsArray = annotation.nctids.split(",");
-                    for (var s = 0; s < nctidsArray.length; s++) {
-                        tempSet.add(nctidsArray[s]);
-                    }
-                }
-                annotation.nctids = tempSet.size != 0 ? Array.from(tempSet) : null;
-                if (annotation.breadth == 'Chromosomal') {
-                    annotation.cnvGenes = [];
+                // tempSet = new Set();
+                // if (annotation.nctIds) {
+                //     var nctIdsArray = annotation.nctIds.split(",");
+                //     for (var s = 0; s < nctIdsArray.length; s++) {
+                //         tempSet.add(nctIdsArray[s]);
+                //     }
+                // }
+                // annotation.nctIds = tempSet.size != 0 ? Array.from(tempSet) : null;
+                // if (annotation.breadth == 'Chromosomal') {
+                //     annotation.cnvGenes = [];
+                // }
+                if (annotation.category == "Clinical Trial") {
+                    annotation.text = annotation.trial.nctId;
                 }
                 this.userAnnotations.push(annotation);
             }
@@ -538,7 +647,33 @@ Vue.component('edit-annotations', {
                 var annotation = this.userEditingAnnotations[i];
                 scopeSelected = scopeSelected && !this.noLevelSelected(annotation);
             }
-            return !scopeSelected || this.userEditingAnnotations.length == 0 || this.saving;
+            var trialsHaveNCTID = true;
+            for (var i = 0; i < this.userEditingAnnotations.length; i++) {
+                if (this.userEditingAnnotations[i].trial) {
+                    if (!this.userEditingAnnotations[i].trial.nctId || !this.isNCTNumberList(this.userEditingAnnotations[i].trial.nctId)) {
+                        trialsHaveNCTID = false;
+                    }
+                    else if (!this.userEditingAnnotations[i].trial.phase) {
+                        trialsHaveNCTID = false;
+                    }
+                    else if (!this.userEditingAnnotations[i].trial.biomarker) {
+                        trialsHaveNCTID = false;
+                    }
+                    else if (!this.userEditingAnnotations[i].trial.title) {
+                        trialsHaveNCTID = false;
+                    }
+                    else if (!this.userEditingAnnotations[i].trial.drugs) {
+                        trialsHaveNCTID = false;
+                    }
+                    else if (!this.userEditingAnnotations[i].trial.contact) {
+                        trialsHaveNCTID = false;
+                    }
+                    else if (!this.userEditingAnnotations[i].trial.location) {
+                        trialsHaveNCTID = false;
+                    }
+                }
+            }
+            return !scopeSelected || this.userEditingAnnotations.length == 0 || this.saving || !trialsHaveNCTID;
         },
         //at least one level needs to be selected
         //can't only be case specific: needs either gene or variant
@@ -584,6 +719,69 @@ Vue.component('edit-annotations', {
             text = text + ".";
             return text;
         },
+        fetchNCTData(annotation) {
+            this.loadingNCTData = true;
+            axios.get(
+                webAppRoot + "/fetchNCTData",
+                {
+                    params: {
+                        nctId: annotation.trial.nctId,
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        var trial = response.data;
+                        for (var i = 0; i < this.userEditingAnnotations.length; i++) {
+                            var an = this.userEditingAnnotations[i];
+                            if (an.trial && an.trial.nctId == trial.nctId) {
+                                an.trial.phase = trial.phase;
+                                an.trial.title = trial.title;
+                                an.trial.contact = trial.contact;
+                                var biomarker = "";
+                                if (this.isSNP()) {
+                                    biomarker = this.currentVariant.geneName;
+                                    if (an.isVariantSpecific) {
+                                        biomarker += " " + this.currentVariant.notation;
+                                    }
+                                }
+                                else if (this.isCNV()) {
+                                    biomarker = this.currentVariant.chrom;
+                                }
+                                else {
+                                    biomarker = this.currentVariant.leftGene + " " + this.currentVariant.rightGene;
+                                }
+                                an.trial.biomarker = biomarker;
+                            }
+                        }
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.fetchNCTData.bind(this, annotation));
+                    }
+                    this.loadingNCTData = false;
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                    this.loadingNCTData = false;
+                });
+        },
+        handleDialogs(response, callback) {
+            if (response == "not-allowed") {
+                bus.$emit("not-allowed", [this.response]);
+            }
+            if (response.isXss) {
+                bus.$emit("xss-error",
+                    [this, response.reason]);
+            }
+            else if (response.isLogin) {
+                bus.$emit("login-needed", [this, callback])
+            }
+            else if (response.success === false) {
+                bus.$emit("some-error", [this, response.message]);
+            }
+        },
+        handleAxiosError(error) {
+            console.log(error);
+            bus.$emit("some-error", [this, error]);
+        },
         selectBreadth(annotation, breadth) {
             if (breadth && !annotation.selectedBreadth) {
                 annotation.selectedBreadth = this.annotationCategories.filter(item => item == breadth)[0];
@@ -607,6 +805,9 @@ Vue.component('edit-annotations', {
             if (!annotation.text) {
                 if (annotation.modifiedDate) {
                     return "Saved on " + this.parseDate(annotation.modifiedDate);
+                }
+                if (annotation.category == "Clinical Trial") {
+                    return "New Clinical Trial";
                 }
                 return "New Annotation";
             }

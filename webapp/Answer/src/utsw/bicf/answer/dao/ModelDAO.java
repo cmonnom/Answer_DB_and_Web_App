@@ -246,6 +246,15 @@ public class ModelDAO {
 				.list().get(0);
 	}
 
+	@Transactional
+	public List<User> getAdmins() {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "SELECT u.* FROM answer_user u, individual_permission i" 
+		+" where u.individual_permission_id = i.individual_permission_id "
+				+ " and i.admin is true";
+		return session.createNativeQuery(sql, User.class).list();
+	}
+
 //	@Transactional
 //	public OrderCase getOrderCaseByEpicOrderNumber(Integer epicOrderNumber) {
 //		Session session = sessionFactory.getCurrentSession();

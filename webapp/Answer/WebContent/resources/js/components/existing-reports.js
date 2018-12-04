@@ -19,7 +19,7 @@ Vue.component('existing-reports', {
             Finalizing a report is <b>permanent</b>. No other report can be finalized.<br/>
             Only amendments and addenda will be allowed after this step.<br/>
             <br/>
-            Please type your full name to confirm:
+            Please type <b><span v-text="getCurrentUserFullName()"></span></b> to confirm:
             <v-text-field
                 v-model="fullNameField" class="mr-2 no-height" label="Full Name">
             </v-text-field>
@@ -400,12 +400,12 @@ Vue.component('existing-reports', {
             this.finalizeConfirmationVisible = true;
         },
         finalizeReportExists() {
-            for (var i = 0; i < this.existingReports.length; i++) {
-                var r = this.existingReports[i];
-                if (r.finalized && r.amended) {
-                    return true;
-                }
-            }
+            // for (var i = 0; i < this.existingReports.length; i++) {
+            //     var r = this.existingReports[i];
+            //     if (r.finalized && !r.amended) {
+            //         return true;
+            //     }
+            // }
             return false;
         },
         finalizeButtonDisabled(report) {

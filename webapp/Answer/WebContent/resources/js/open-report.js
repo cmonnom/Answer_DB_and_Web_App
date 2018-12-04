@@ -350,7 +350,7 @@ const OpenReport = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-flex xs12 xl10 v-show="clinicalTrialsVisible">
+        <v-flex xs12 xl10 v-show="clinicalTrialsVisible" pb-3>
             <div>
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
                     initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
@@ -833,6 +833,15 @@ const OpenReport = {
             //     }
             // }
             this.fullReport.reportName = this.currentReportName;
+            for (var i = 0; i < this.fullReport.patientInfo.patientTables.length; i++) {
+                for (var j = 0; j < this.fullReport.patientInfo.patientTables[i].items.length; j++) {
+                    var item = this.fullReport.patientInfo.patientTables[i].items[j];
+                    if (item.field == "dedupPctOver100X") {
+                        item.value = parseFloat(item.value.replace("%", ""));
+                    }
+                } 
+
+            }
         },
         saveReport() {
             if (this.isSaveDisabled()) {

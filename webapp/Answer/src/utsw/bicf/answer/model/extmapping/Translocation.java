@@ -25,8 +25,12 @@ public class Translocation {
 	Boolean selected;
 	Boolean utswAnnotated;
 	String type;
+	@JsonProperty("leftExons")
 	String firstExon;
+	@JsonProperty("rightExons")
 	String lastExon;
+	String fusionType;
+	String annot;
 	
 	List<MongoDBId> annotationIdsForReporting;
 	
@@ -182,6 +186,26 @@ public class Translocation {
 
 	public void setLastExon(String lastExon) {
 		this.lastExon = lastExon;
+	}
+
+	public String getFusionType() {
+		return fusionType;
+	}
+
+	public void setFusionType(String fusionType) {
+		this.fusionType = fusionType;
+	}
+
+	public String getAnnot() {
+		return annot;
+	}
+
+	public void setAnnot(String annot) {
+		this.annot = annot;
+	}
+
+	public void setAnnotationIdsForReporting(List<MongoDBId> annotationIdsForReporting) {
+		this.annotationIdsForReporting = annotationIdsForReporting;
 	}
 
 

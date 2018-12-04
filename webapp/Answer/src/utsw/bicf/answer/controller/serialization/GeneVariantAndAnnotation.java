@@ -1,5 +1,7 @@
 package utsw.bicf.answer.controller.serialization;
 
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -17,6 +19,13 @@ public class GeneVariantAndAnnotation {
 	String oid;
 	boolean readonly;
 	Map<String, String> annotationsByCategory;
+	String position;
+	String transcript;
+	String taf;
+	String tDepth;
+	String copyNumber;
+	String aberrationType;
+	String type;
 	
 	public GeneVariantAndAnnotation() {
 	}
@@ -27,6 +36,12 @@ public class GeneVariantAndAnnotation {
 		this.variant = v.getNotation();
 		this.oid = v.getMongoDBId().getOid();
 		this.annotationsByCategory = annotationsByCategory;
+		this.position = v.getChrom() + ":" + v.getPos();
+		this.transcript = v.getVcfAnnotations().get(0).getFeatureId();
+		v.getTumorAltFrequency(); //just to set the formatted TAF
+		this.taf = v.getTumorAltFrequencyFormatted() + "%";
+		this.tDepth = v.getTumorTotalDepth() + "";
+		this.type = "snp";
 	}
 	
 	public GeneVariantAndAnnotation(CNV v, String genes, Map<String, String> annotationsByCategory) {
@@ -35,6 +50,10 @@ public class GeneVariantAndAnnotation {
 		this.variant = genes;
 		this.oid = v.getMongoDBId().getOid();
 		this.annotationsByCategory = annotationsByCategory;
+		this.position = v.getChrom() + ":" + v.getStart() + "-" + v.getEnd();
+		this.copyNumber = v.getCopyNumber() + "";
+		this.aberrationType = v.getAberrationType();
+		this.type = "cnv";
 	}
 
 	public String getGeneVariant() {
@@ -83,6 +102,62 @@ public class GeneVariantAndAnnotation {
 
 	public void setAnnotationsByCategory(Map<String, String> annotationsByCategory) {
 		this.annotationsByCategory = annotationsByCategory;
+	}
+
+	public String getPosition() {
+		return position;
+	}
+
+	public void setPosition(String position) {
+		this.position = position;
+	}
+
+	public String getTranscript() {
+		return transcript;
+	}
+
+	public void setTranscript(String transcript) {
+		this.transcript = transcript;
+	}
+
+	public String getTaf() {
+		return taf;
+	}
+
+	public void setTaf(String taf) {
+		this.taf = taf;
+	}
+
+	public String gettDepth() {
+		return tDepth;
+	}
+
+	public void settDepth(String tDepth) {
+		this.tDepth = tDepth;
+	}
+
+	public String getCopyNumber() {
+		return copyNumber;
+	}
+
+	public void setCopyNumber(String copyNumber) {
+		this.copyNumber = copyNumber;
+	}
+
+	public String getAberrationType() {
+		return aberrationType;
+	}
+
+	public void setAberrationType(String aberrationType) {
+		this.aberrationType = aberrationType;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 
 	

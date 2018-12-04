@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderCase {
@@ -56,6 +57,13 @@ public class OrderCase {
 	String clinicalStage;
 	String treatmentStatus;
 	String labTestName;
+	Integer rawAvgDepth;
+	Double rawPctOver100X;
+	Integer dedupAvgDepth;
+	Double dedupPctOver100X;
+	@JsonProperty("tmb")
+	Double tumorMutationBurden;
+	
 	
 	public OrderCase() {
 		
@@ -420,6 +428,56 @@ public class OrderCase {
 
 	public void setLabTestName(String labTestName) {
 		this.labTestName = labTestName;
+	}
+
+
+	public Integer getRawAvgDepth() {
+		return rawAvgDepth;
+	}
+
+
+	public void setRawAvgDepth(Integer rawAvgDepth) {
+		this.rawAvgDepth = rawAvgDepth;
+	}
+
+
+	public Double getRawPctOver100X() {
+		return rawPctOver100X;
+	}
+
+
+	public void setRawPctOver100X(Double rawPctOver100X) {
+		this.rawPctOver100X = rawPctOver100X;
+	}
+
+
+	public Double getTumorMutationBurden() {
+		return tumorMutationBurden;
+	}
+
+
+	public void setTumorMutationBurden(Double tumorMutationBurden) {
+		this.tumorMutationBurden = tumorMutationBurden;
+	}
+
+
+	public Integer getDedupAvgDepth() {
+		return dedupAvgDepth;
+	}
+
+
+	public void setDedupAvgDepth(Integer dedupAvgDepth) {
+		this.dedupAvgDepth = dedupAvgDepth;
+	}
+
+
+	public Double getDedupPctOver100X() {
+		return dedupPctOver100X;
+	}
+
+
+	public void setDedupPctOver100X(Double dedupPctOver100X) {
+		this.dedupPctOver100X = dedupPctOver100X;
 	}
 
 

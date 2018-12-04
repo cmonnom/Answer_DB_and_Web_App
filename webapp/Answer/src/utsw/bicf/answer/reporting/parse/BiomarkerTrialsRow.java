@@ -2,6 +2,8 @@ package utsw.bicf.answer.reporting.parse;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import utsw.bicf.answer.model.extmapping.Trial;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BiomarkerTrialsRow {
 	
@@ -30,6 +32,20 @@ public class BiomarkerTrialsRow {
 	Boolean isSelected;
 	boolean readonly;
 	
+	public BiomarkerTrialsRow() {
+	}
+	
+	public BiomarkerTrialsRow(Trial trial) {
+		this.biomarker = trial.getBiomarker();
+		this.drugs = trial.getDrugs();
+		this.title = trial.getTitle();
+		this.nctid = trial.getNctId();
+		this.phase = trial.getPhase();
+		this.pi = trial.getContact();
+		this.dept = trial.getLocation();
+		
+	}
+
 	public String getSelectedBiomarker() {
 		return selectedBiomarker;
 	}

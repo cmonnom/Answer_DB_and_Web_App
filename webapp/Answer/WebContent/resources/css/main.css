@@ -340,3 +340,8 @@ table.table tbody td {
 .cursor-pointer {
     cursor: pointer;
 }
+
+/* remove the padding over text-field (use with single-line)*/
+.no-top-text-field {
+    margin-top: -18px !important;
+}

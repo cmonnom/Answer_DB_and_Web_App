@@ -10,7 +10,7 @@ const OpenCase = {
     <v-flex xs12>
     <goodies2 ref="goodiesPanel" @end-goodies="showGoodiesPanel = false"></goodies2>
     </v-flex>
-    <v-flex xs12>
+    <v-flex xs12 >
     <span class="display-1">Enjoy a quick break...</span><br/>
     <v-btn large color="warning" @click="showGoodiesPanel = false">Back to work</v-btn>
     </v-flex>
@@ -70,6 +70,7 @@ const OpenCase = {
         :color="colors.editAnnotation" ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"
         :caseIcon="caseTypeIcon" :caseType="caseType"
         :breadcrumbs="breadcrumbs" :annotation-categories="annotationCategories" :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
+        :annotation-phases="annotationPhases"
         @toggle-panel="handlePanelVisibility()" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
         @breadcrumb-navigation="breadcrumbNavigation"
         :current-variant="currentVariant">
@@ -89,6 +90,7 @@ const OpenCase = {
         :color="colors.editAnnotation" ref="cnvAnnotationDialog" :title="formatChrom(currentVariant.chrom)  + ' -- ' + caseName + ' --'" 
         :caseIcon="caseTypeIcon" :caseType="caseType" @toggle-panel="handlePanelVisibility()"
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories-c-n-v="annotationCategoriesCNV" :annotation-breadth="annotationBreadth"
+        :annotation-phases="annotationPhases"
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
         :current-variant="currentVariant" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible">
         <v-slide-y-transition slot="variantDetails">
@@ -110,6 +112,7 @@ const OpenCase = {
         :caseIcon="caseTypeIcon" :caseType="caseType"
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories="annotationCategories"
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
+        :annotation-phases="annotationPhases"
         :current-variant="currentVariant" @toggle-panel="handlePanelVisibility()">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
@@ -766,6 +769,12 @@ const OpenCase = {
                                                                 </v-select>
                                                                 <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
                                                                 </v-tooltip>
+                                                                <v-text-field class="no-top-text-field" v-if="item.type == 'text-field' && item.field == 'dedupPctOver100X'" v-model="patientDetailsDedupPctOver100X"
+                                                                label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true">
+                                                                </v-text-field>
+                                                                <v-text-field class="no-top-text-field" v-if="item.type == 'text-field' && item.field == 'dedupAvgDepth'" v-model="patientDetailsDedupAvgDepth"
+                                                                label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true">
+                                                                </v-text-field>
                                                             </v-flex>
                                                             <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'">
                                                                 <v-tooltip bottom>
@@ -779,7 +788,7 @@ const OpenCase = {
                                                                     <v-icon>mdi-dna</v-icon>
                                                                 </v-btn>
                                                                 <span>Open OncoKB Genie Portal in New Tab</span>
-                                                            </v-tooltip>
+                                                                </v-tooltip>
                                                             </v-flex>
                                                         </v-layout>
                                                     </v-list-tile-content>
@@ -1004,6 +1013,7 @@ const OpenCase = {
                 'Likely benign',
                 'Likely pathogenic',
                 'Pathogenic'],
+            annotationPhases: ["Phase 1", "Phase 2", "Phase 3", "Phase 4"],
             scopesSNP: [
                 'Case', 'Gene', 'Variant', 'Tumor'
             ],
@@ -1092,7 +1102,10 @@ const OpenCase = {
             autoSaveInterval: null,
             cnvChromList: [],
             addCNVDialogVisible: false,
-            showGoodiesPanel: false
+            showGoodiesPanel: false,
+            patientDetailsDedupPctOver100X: "",
+            patientDetailsDedupAvgDepth: "",
+            numberRules: [(v) => { return !isNaN(v) || 'Invalid value' }],
         }
     }, methods: {
         createSplashText() {
@@ -1291,6 +1304,12 @@ const OpenCase = {
                     }
                     else if (item.field == "oncotree") {
                         this.patientDetailsOncoTreeDiagnosis = { text: item.value, label: "" };
+                    }
+                    else if (item.field == "dedupPctOver100X") {
+                        this.patientDetailsDedupPctOver100X = item.value;
+                    }
+                    else if (item.field == "dedupAvgDepth") {
+                        this.patientDetailsDedupAvgDepth = item.value;
                     }
                 }
             }
@@ -2140,11 +2159,12 @@ const OpenCase = {
                     modifiedDate: "",
                     modifiedSince: "",
                     pmids: [],
-                    nctids: [],
+                    // nctIds: [],
                     tier: "",
                     classification: "",
                     visible: true,
-                    isSelected: false
+                    isSelected: false,
+                    trial: null
                 };
                 annotation._id = annotations[i]._id;
                 if (showUser) {
@@ -2162,11 +2182,12 @@ const OpenCase = {
                 annotation.modifiedDate = annotations[i].modifiedDate;
                 annotation.modifiedSince = annotations[i].modifiedSince;
                 annotation.pmids = annotations[i].pmids;
-                annotation.nctids = annotations[i].nctids;
+                // annotation.nctIds = annotations[i].nctIds;
                 annotation.scopeTooltip = this.$refs.annotationDialog.createLevelInformation(annotations[i]);
                 annotation.tier = annotations[i].tier;
                 annotation.classification = annotations[i].classification;
                 annotation.isSelected = annotations[i].isSelected;
+                annotation.trial = annotations[i].trial;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2312,7 +2333,7 @@ const OpenCase = {
                     modifiedDate: "",
                     modifiedSince: "",
                     pmids: [],
-                    nctids: [],
+                    // nctIds: [],
                     tier: "",
                     classification: "",
                     visible: true,
@@ -2355,7 +2376,7 @@ const OpenCase = {
                 // annotation.modifiedDate = annotations[i].modifiedDate;
                 // annotation.modifiedSince = annotations[i].modifiedSince;
                 // annotation.pmids = annotations[i].pmids;
-                // annotation.nctids = annotations[i].nctids;
+                // annotation.nctIds = annotations[i].nctIds;
                 annotation.scopeTooltip = this.createMDALevelInformation(geneSpecific, variantSpecific, tumorSpecific);
                 // annotation.tier = annotations[i].tier;
                 // annotation.classification = annotations[i].classification;
@@ -2416,7 +2437,9 @@ const OpenCase = {
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
                         if (response.data.message == "true") {
-                            this.waitingForGoodies = true;
+                            if (response.data.userPrefs && response.data.userPrefs.showGoodies) {
+                                this.waitingForGoodies = true;
+                            }
                             this.snackBarMessage = "Annotation(s) Saved";
                             this.snackBarLink = "";
                         }
@@ -3116,6 +3139,8 @@ const OpenCase = {
                 url: webAppRoot + "/savePatientDetails",
                 params: {
                     oncotreeDiagnosis: this.patientDetailsOncoTreeDiagnosis.text,
+                    dedupAvgDepth: this.patientDetailsDedupAvgDepth,
+                    dedupPctOver100X: this.patientDetailsDedupPctOver100X,
                     caseId: this.$route.params.id,
                     skipSnackBar: skipSnackBar
                 }
@@ -3404,6 +3429,8 @@ const OpenCase = {
             }
             else {
                 this.waitingForAjaxMessage = "Work saved";
+                clearInterval(this.autoSaveInterval);
+                this.createAutoSaveInterval();
             }
             this.waitingForAjaxCount = 0;
             if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
@@ -3458,7 +3485,9 @@ const OpenCase = {
         },
         createAutoSaveInterval() {
             this.autoSaveInterval = setInterval(() => {
-                this.handleSaveAll(true);
+                if (!this.waitingForAjaxActive) {
+                    this.handleSaveAll(true);
+                }
             }, 120000);
         },
         copyMDAAnnotation(mdaAnnotation) {
@@ -3490,7 +3519,7 @@ const OpenCase = {
                 geneId: this.currentVariant.geneName,
                 caseId: null,
                 pmids: pmids,
-                nctids: null,
+                // nctIds: null,
                 isTumorSpecific: mdaAnnotation.tumorSpecific,
                 userId: null,
                 variantId: variantId,
@@ -3506,6 +3535,7 @@ const OpenCase = {
                 classification: null,
                 tier: null,
                 type: "snp",
+                trial: null
             }
             this.userAnnotations.push(utswAnnotation);
             this.commitAnnotations(this.userAnnotations);

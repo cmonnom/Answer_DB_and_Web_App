@@ -62,6 +62,7 @@ import utsw.bicf.answer.model.extmapping.SearchSNPAnnotation;
 import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
+import utsw.bicf.answer.model.extmapping.Trial;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
@@ -828,8 +829,9 @@ public class RequestUtils {
 		
 		
 		MDAReportTemplate mdaEmail = this.getMDATrials(caseId);
+		List<BiomarkerTrialsRow> trials = null;
 		if (mdaEmail != null) {
-			List<BiomarkerTrialsRow> trials = mdaEmail.getSelectedBiomarkers();
+			trials = mdaEmail.getSelectedBiomarkers();
 			if (trials != null) {
 				if (mdaEmail.getSelectedAdditionalBiomarkers() != null)
 					trials.addAll(mdaEmail.getSelectedAdditionalBiomarkers());
@@ -842,7 +844,7 @@ public class RequestUtils {
 			else {
 				trials = new ArrayList<BiomarkerTrialsRow>();
 			}
-			report.setClinicalTrials(trials);
+
 
 		}
 		Set<String> pmIds = new HashSet<String>();
@@ -859,11 +861,16 @@ public class RequestUtils {
 					for (Annotation a : cnv.getReferenceCnv().getUtswAnnotations()) {
 						Annotation.init(a, cnv.getAnnotationIdsForReporting(), modelDAO);
 						if (a.getIsSelected() != null && a.getIsSelected()
-								&& a.getBreadth() != null && a.getBreadth().equals("Chromosomal")) { 
-							sb.append(a.getText()).append(" ");
-							atLeastOneSelected = true;
-							if (a.getPmids() != null) {
-								pmIds.addAll(this.trimPmIds(a.getPmids()));
+								&& a.getBreadth() != null && a.getBreadth().equals("Chromosomal")) {
+							if (a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
+								trials.add(new BiomarkerTrialsRow(a.getTrial()));
+							}
+							else {
+								sb.append(a.getText()).append(" ");
+								atLeastOneSelected = true;
+								if (a.getPmids() != null) {
+									pmIds.addAll(this.trimPmIds(a.getPmids()));
+								}
 							}
 						}
 					}
@@ -890,10 +897,15 @@ public class RequestUtils {
 						Annotation.init(a, ftl.getAnnotationIdsForReporting(), modelDAO);
 						if (a.getIsSelected() != null && a.getIsSelected()
 								&& !"Therapy".equals(a.getCategory())) { 
-							sb.append(a.getText()).append(" ");
-							atLeastOneSelected = true;
-							if (a.getPmids() != null) {
-								pmIds.addAll(this.trimPmIds(a.getPmids()));
+							if (a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
+								trials.add(new BiomarkerTrialsRow(a.getTrial()));
+							}
+							else {
+								sb.append(a.getText()).append(" ");
+								atLeastOneSelected = true;
+								if (a.getPmids() != null) {
+									pmIds.addAll(this.trimPmIds(a.getPmids()));
+								}
 							}
 						}
 					}
@@ -926,6 +938,10 @@ public class RequestUtils {
 								pmIds.addAll(this.trimPmIds(a.getPmids()));
 							}
 						}
+						else if (a != null && a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
+							trials.add(new BiomarkerTrialsRow(a.getTrial()));
+						}
 					}
 				}
 				indicatedTherapies.addAll(annotations);
@@ -953,6 +969,9 @@ public class RequestUtils {
 				indicatedTherapies.addAll(annotations);
 			}
 		}
+		
+		report.setClinicalTrials(trials); //after adding all the UTSW trials
+		
 		report.setIndicatedTherapies(indicatedTherapies);
 		
 		report.setModifiedBy(user.getUserId());
@@ -1028,7 +1047,7 @@ public class RequestUtils {
 						}
 					}
 				}
-				else {
+				else if (v.getType().equals("snp")){
 					//TODO inform user that no tier was selected
 					report.getMissingTierVariants().add(v);
 				}
@@ -1285,6 +1304,36 @@ public class RequestUtils {
 		else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
+		}
+	}
+
+	public Trial getNCTData(AjaxResponse ajaxResponse, String nctId) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("trials/").append(nctId);
+		URI uri = new URI(sbUrl.toString());
+
+		HttpResponse response = null;
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+		response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			Trial trial = mapper.readValue(response.getEntity().getContent(), Trial.class);
+			String[] items = trial.getContact().split("\n");
+			List<String> itemsLineReturns = new ArrayList<String>();
+			for (String item : items) {
+				if (item != null && !item.equals("")) {
+					itemsLineReturns.add(item);
+				}
+			}
+			trial.setContact(itemsLineReturns.stream().collect(Collectors.joining("<br/>")));
+			trial.setNctId(nctId);
+			return trial;
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+			return null;
 		}
 	}
 

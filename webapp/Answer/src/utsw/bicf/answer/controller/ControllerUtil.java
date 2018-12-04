@@ -13,6 +13,8 @@ import javax.servlet.ServletContext;
 import org.apache.http.client.ClientProtocolException;
 import org.springframework.ui.Model;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -32,6 +34,8 @@ public class ControllerUtil {
 		if (user != null) {
 			model.addAttribute("permissions", user.getIndividualPermission());
 			model.addAttribute("userFullName", user.getFullName());
+			ObjectMapper mapper = new ObjectMapper();
+			model.addAttribute("prefs", mapper.writeValueAsString(user.getUserPref()));
 		}
 		model.addAttribute("timestamp", timestamp);
 		return "main-template";

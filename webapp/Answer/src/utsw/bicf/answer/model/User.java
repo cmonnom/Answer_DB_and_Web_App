@@ -59,6 +59,11 @@ public class User {
 	@JoinColumn(name="user_rank_id")
 	UserRank userRank;
 	
+	@JsonIgnore
+	@OneToOne
+	@JoinColumn(name="user_pref_id", unique=true)
+	UserPref userPref;
+	
 	
 	public Integer getUserId() {
 		return userId;
@@ -147,4 +152,16 @@ public class User {
 		this.userRank = userRank;
 	}
 
+	public UserPref getUserPref() {
+		return userPref;
+	}
+
+	public void setUserPref(UserPref userPref) {
+		this.userPref = userPref;
+	}
+
+	@Override
+	public String toString() {
+		return this.getFullName();
+	}
 }

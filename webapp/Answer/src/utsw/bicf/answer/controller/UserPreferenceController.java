@@ -1,0 +1,125 @@
+package utsw.bicf.answer.controller;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.IndividualPermission;
+import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.UserPref;
+import utsw.bicf.answer.security.FileProperties;
+import utsw.bicf.answer.security.NCBIProperties;
+import utsw.bicf.answer.security.OtherProperties;
+import utsw.bicf.answer.security.PermissionUtils;
+
+@Controller
+@RequestMapping("/")
+public class UserPreferenceController {
+
+	static {
+		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".userPrefs",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".getUserPrefs",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".saveUserPrefs",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".getAdmins",
+				IndividualPermission.CAN_VIEW);
+	}
+
+	@Autowired
+	ServletContext servletContext;
+	@Autowired
+	ModelDAO modelDAO;
+	@Autowired
+	FileProperties fileProps;
+	@Autowired
+	OtherProperties otherProps;
+	@Autowired
+	NCBIProperties ncbiProps;
+
+	@RequestMapping("/userPrefs")
+	public String userPrefs(Model model, HttpSession session) throws IOException, UnsupportedOperationException, URISyntaxException {
+		String url = "userPrefs";
+		User user = (User) session.getAttribute("user");
+		model.addAttribute("urlRedirect", url);
+		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		
+		return ControllerUtil.initializeModel(model, servletContext, user);
+	}
+	
+	@RequestMapping(value = "/getUserPrefs")
+	@ResponseBody
+	public String getUserPrefs(Model model, HttpSession session) throws Exception {
+		// send user to Ben's API
+		User user = (User) session.getAttribute("user");
+		UserPref userPref = user.getUserPref();
+		if (userPref == null) {
+			userPref = new UserPref();
+			modelDAO.saveObject(userPref);
+			user.setUserPref(userPref);
+			modelDAO.saveObject(user);
+		}
+		userPref.setIsAllowed(true);
+		userPref.setSuccess(true);
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writeValueAsString(userPref);
+	}
+	
+	@RequestMapping(value = "/getAdmins")
+	@ResponseBody
+	public String getAdmins(Model model, HttpSession session) throws Exception {
+		// send user to Ben's API
+		List<User> adminUsers = modelDAO.getAdmins();
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		String message = adminUsers.stream().map(u -> u.getFullName()).collect(Collectors.joining(" or "));
+		response.setMessage(message);
+		return response.createObjectJSON();
+	}
+
+
+	@RequestMapping(value = "/saveUserPrefs")
+	@ResponseBody
+	public String saveUserPrefs(Model model, HttpSession session,
+			@RequestBody String data) throws Exception {
+		// send user to Ben's API
+		User user = (User) session.getAttribute("user");
+		UserPref userPref = user.getUserPref();
+		if (userPref == null) {
+			userPref = new UserPref();
+			modelDAO.saveObject(userPref);
+			user.setUserPref(userPref);
+			modelDAO.saveObject(user);
+			userPref.setIsAllowed(true);
+			userPref.setSuccess(true);
+		}
+		ObjectMapper mapper = new ObjectMapper();
+		UserPref newUserPref = mapper.readValue(data, UserPref.class);
+		if (newUserPref != null) {
+			userPref.setShowGoodies(newUserPref.getShowGoodies() == null ? false : newUserPref.getShowGoodies());
+		}
+		modelDAO.saveObject(userPref);
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		
+		return mapper.writeValueAsString(response);
+	}
+}

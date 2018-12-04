@@ -3,6 +3,8 @@ package utsw.bicf.answer.controller.serialization;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.model.UserPref;
+
 /**
  * Helper class to return an ajax response
  * and allow errors or successes not due to login or xss issue
@@ -16,7 +18,10 @@ public class AjaxResponse {
 	String message;
 	Boolean uiProceed = false;
 	Boolean skipSnackBar = false;
-
+	//you can pass user preferences to the Ajax response this way 
+	//so it's up to date with the latest changes
+	UserPref userPrefs; 
+	
 	public Boolean getIsAllowed() {
 		return isAllowed;
 	}
@@ -70,6 +75,16 @@ public class AjaxResponse {
 
 	public void setSkipSnackBar(Boolean skipSnackBar) {
 		this.skipSnackBar = skipSnackBar;
+	}
+
+
+	public UserPref getUserPrefs() {
+		return userPrefs;
+	}
+
+
+	public void setUserPrefs(UserPref userPrefs) {
+		this.userPrefs = userPrefs;
 	}
 
 

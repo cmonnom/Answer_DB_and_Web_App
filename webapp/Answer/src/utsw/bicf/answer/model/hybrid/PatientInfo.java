@@ -4,12 +4,13 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.WordUtils;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.CellItem;
 import utsw.bicf.answer.controller.serialization.ListTable;
-import utsw.bicf.answer.model.FinalReport;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 
 public class PatientInfo {
@@ -49,6 +50,7 @@ public class PatientInfo {
 		items.add(new CellItem("Sex", orderCase.getGender()));
 		items.add(new CellItem("Order #", orderCase.getEpicOrderNumber())); 
 		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));
+		items.add(new CellItem("Tumor Mutation Burden", orderCase.getTumorMutationBurden() + ""));
 		
 		patientTables.add(table);
 		
@@ -58,12 +60,14 @@ public class PatientInfo {
 		String orderedBy = null;
 		if (orderCase.getOrderingPhysician() != null) {
 			int separator = orderCase.getOrderingPhysician().indexOf(" ");
+			String rawValue = null;
 			if (separator > -1) {
-				orderedBy = orderCase.getOrderingPhysician().substring(separator, orderCase.getOrderingPhysician().length() - 1);
+				rawValue = orderCase.getOrderingPhysician().substring(separator, orderCase.getOrderingPhysician().length() - 1);
 			}
 			else {
-				orderedBy = orderCase.getOrderingPhysician();
+				rawValue = orderCase.getOrderingPhysician();
 			}
+			orderedBy = "Dr. "  + WordUtils.capitalize(rawValue.toLowerCase(), ' ', ',');
 		}
 		else {
 			orderedBy = "";
@@ -71,22 +75,28 @@ public class PatientInfo {
 		String authorizedBy = null;
 		if (orderCase.getAuthorizingPhysician() != null) {
 			int separator = orderCase.getAuthorizingPhysician().indexOf(" ");
+			String rawValue = null;
 			if (separator > -1) {
-				authorizedBy = orderCase.getAuthorizingPhysician().substring(separator, orderCase.getAuthorizingPhysician().length() - 1);
+				rawValue = orderCase.getAuthorizingPhysician().substring(separator, orderCase.getAuthorizingPhysician().length() - 1);
 			}
 			else {
-				authorizedBy = orderCase.getAuthorizingPhysician();
+				rawValue = orderCase.getAuthorizingPhysician();
 			}
+			authorizedBy = "Dr. "  + WordUtils.capitalize(rawValue.toLowerCase(), ' ', ',');
 		}
 		else {
 			authorizedBy = "";
 		}
-		items.add(new CellItem("Ordered by", orderedBy));
-		items.add(new CellItem("Authorized by", authorizedBy));
+		items.add(new CellItem("Ordered By", orderedBy));
+		items.add(new CellItem("Authorized By", authorizedBy));
 		items.add(new CellItem("Institution", orderCase.getInstitution()));
 		items.add(new CellItem("Tumor Tissue", orderCase.getTumorTissueType()));
 		items.add(new CellItem("Germline Tissue", orderCase.getNormalTissueType()));
 		items.add(new CellItem("ICD10", orderCase.getIcd10()));
+		CellItem dedupAvgDepthItem = new CellItem("Dedup Avg. Depth", orderCase.getDedupAvgDepth()  != null ? orderCase.getDedupAvgDepth() + "" : "");
+		dedupAvgDepthItem.setField("dedupAvgDepth");
+		dedupAvgDepthItem.setType(CellItem.TYPE_TEXT_FIELD);
+		items.add(dedupAvgDepthItem);
 //		CellItem clinicalStage = new CellItem("Clinical Stage", orderCase.getClinicalStage());
 //		items.add(clinicalStage);//TODO
 //		CellItem treatmentStatus = new CellItem("Treatment Status", orderCase.getTreatmentStatus());
@@ -105,6 +115,11 @@ public class PatientInfo {
 		items.add(new CellItem("Lab Received Date", orderCase.getReceivedDate()));
 		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
 		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
+		CellItem dedupPctOver100XItem = new CellItem("Dedup Pct. Over 100X", orderCase.getDedupPctOver100X()  != null ? orderCase.getDedupPctOver100X() + "" : "");
+		dedupPctOver100XItem.setField("dedupPctOver100X");
+		dedupPctOver100XItem.setType(CellItem.TYPE_TEXT_FIELD);
+		items.add(dedupPctOver100XItem);
+		
 		patientTables.add(table);
 		
 	}
