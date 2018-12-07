@@ -25,12 +25,13 @@ const OpenCase = {
   </div>
 
   <!-- add CNV dialog -->
-  <v-dialog v-model="addCNVDialogVisible" max-width="500px">
+  <v-dialog v-model="addCNVDialogVisible" max-width="500px" scrollable>
     <add-cnv  @hide-add-cnv-panel="closeAddCNVDialog"
     :no-edit="!canProceed('canAnnotate') || readonly"
   :aberration-types="aberrationTypes"
   :cnv-chrom-list="cnvChromList"
-  @refresh-cnv-table="getAjaxData"></add-cnv>
+  @refresh-cnv-table="getAjaxData"
+  :current-gene-list="currentListOfCNVVisibleGenes"></add-cnv>
   </v-dialog>
 
     <div>
@@ -1111,6 +1112,7 @@ const OpenCase = {
             patientDetailsDedupPctOver100X: "",
             patientDetailsDedupAvgDepth: "",
             numberRules: [(v) => { return !isNaN(v) || 'Invalid value' }],
+            currentListOfCNVVisibleGenes: []
         }
     }, methods: {
         createSplashText() {
@@ -1132,7 +1134,8 @@ const OpenCase = {
                 default: return false;
             }
         },
-        openAddCNVDialog() {
+        openAddCNVDialog(currentListOfCNVVisibleGenes) {
+            this.currentListOfCNVVisibleGenes = currentListOfCNVVisibleGenes;
             this.addCNVDialogVisible = true;
         },
         closeAddCNVDialog() {
@@ -3557,10 +3560,13 @@ const OpenCase = {
             this.commitAnnotations(this.userAnnotations);
         },
         setDefaultTranscript(item) {
-            axios.get(webAppRoot + "/setDefaultTranscript", {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/setDefaultTranscript",
                 params: {
-                    featureId: item.featureId,
-                }
+                    variantId: this.currentVariant._id["$oid"],
+                },
+                data: item
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
@@ -3591,6 +3597,7 @@ const OpenCase = {
                                 }
                             }
                         }
+                        this.showSnackBarMessageWithParams(response.data.message, null, null, 4000);
                     }
                     else {
                         this.handleDialogs(response.data, this.setDefaultTranscript.bind(null, item));
@@ -3625,6 +3632,12 @@ const OpenCase = {
         bus.$on('setDefaultTranscript', (item) => {
             this.setDefaultTranscript(item);
         });
+        bus.$on('create-new-cnv', (genes) => {
+            this.openAddCNVDialog(genes);
+        });
+        bus.$on('show-snackbar', (message, timeout) => {
+            this.showSnackBarMessageWithParams(message, null, null, timeout);
+        });
     },
     computed: {
     },
@@ -3634,6 +3647,8 @@ const OpenCase = {
         bus.$emit("update-status-off", this);
         clearInterval(this.autoSaveInterval);
         bus.$off('setDefaultTranscript');
+        bus.$off('create-new-cnv');
+        bus.$off('show-snackbar');
     },
     watch: {
         '$route': 'handleRouteChanged',

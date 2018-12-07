@@ -1,7 +1,7 @@
 const Home = {
     template:
         `<div>
-  <v-dialog v-model="assignDialogVisible" max-width="50%">
+  <v-dialog v-model="assignDialogVisible" max-width="50%" scrollable>
     <v-card>
       <v-toolbar dense dark color="primary">
         <v-toolbar-title class="white--text">Assign case: {{ currentEpicOrderNumber }}</v-toolbar-title>

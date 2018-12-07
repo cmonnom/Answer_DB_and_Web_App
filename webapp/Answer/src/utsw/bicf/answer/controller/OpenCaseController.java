@@ -1251,13 +1251,13 @@ public class OpenCaseController {
 	
 	@RequestMapping(value = "/setDefaultTranscript", produces= "application/json; charset=utf-8") 
 	@ResponseBody
-	public String setDefaultTranscript(Model model, HttpSession session, @RequestParam String featureId)
+	public String setDefaultTranscript(Model model, @RequestParam String variantId, @RequestBody String data)
 			throws Exception {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
-		utils.setDefaultTranscript(response, featureId);
+		utils.setDefaultTranscript(response, data, variantId);
 		return response.createObjectJSON();
 
 	}

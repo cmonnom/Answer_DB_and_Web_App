@@ -3,6 +3,7 @@ Vue.component('add-cnv', {
         noEdit: { default: true, type: Boolean },
         aberrationTypes: { default: () => [], type: Array},
         cnvChromList: { default: () => [], type: Array},
+        currentGeneList: { default: () => [], type: Array},
     },
     template: `<v-card>
     <v-toolbar class="elevation-0" dense dark color="primary">
@@ -27,16 +28,9 @@ Vue.component('add-cnv', {
                 <v-flex xs12>
                     
                     <v-layout row wrap>
-                        <v-flex pt-3 xs3>
-                            <v-tooltip bottom>
-                            <span slot="activator">Gene:<br/>(Gene Symbol)</span>
-                            <span>Select a Gene <b>OR</b> a Range</span>
-                            </v-tooltip>
-                        </v-flex>
-                        <v-flex xs12 md9>
-                            <v-select :items="genesInPanel" label="Select a Gene for this CNV" v-model="genes"
-                            chips deletable-chips :disabled="noEdit" autocomplete
-                            item-value="value" item-text="name"></v-select>
+                        <v-flex pt-3 xs12>
+                            <span>Genes:</span>
+                            <span v-text="getGeneList()" class="blue-grey--text text--lighten-1"></span>
                         </v-flex>
                     </v-layout>
 
@@ -85,7 +79,7 @@ Vue.component('add-cnv', {
     data() {
         return {
             numberRules: [(v) => { return !isNaN(v) || 'Only one number' }],
-            chrom: null,
+            // chrom: null,
             genes: "",
             aberrationType: null,
             copyNumber: null,
@@ -110,14 +104,15 @@ Vue.component('add-cnv', {
                     caseId: this.$route.params.id,
                 },
                 data: {
-                    chrom: this.chrom,
-                    genes: [this.genes], //should be an array but we only select one gene, so it's a string instead
+                    // chrom: this.chrom,
+                    genes: this.currentGeneList, //should be an array but we only select one gene, so it's a string instead
                     aberrationType: this.aberrationType,
                     copyNumber: this.copyNumber
                 }
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
                     this.hidePanel();
+                    bus.$emit("show-snackbar", "CNV Created Successfuly", 4000);
                     this.$emit("refresh-cnv-table");
                 }
                 else {
@@ -132,7 +127,7 @@ Vue.component('add-cnv', {
             );
         },
         isDisabled() {
-            var valid = this.genes && this.aberrationType && this.copyNumber && !isNaN(this.copyNumber);
+            var valid = this.aberrationType && this.copyNumber && !isNaN(this.copyNumber);
             // if (this.genes) { 
             //     valid &= !this.start && !this.end & !this.chrom; //if genes is set, range should not
             // }
@@ -167,6 +162,9 @@ Vue.component('add-cnv', {
                     this.handleAxiosError(error);
                 });
         },
+        getGeneList() {
+            return this.currentGeneList.join(" ,");
+        },
         handleAxiosError(error) {
             console.log(error);
             bus.$emit("some-error", [this, error]);
@@ -190,7 +188,7 @@ Vue.component('add-cnv', {
     computed: {
     },
     created() {
-        this.getGenesInPanel();
+        // this.getGenesInPanel();
     },
     watch: {
         

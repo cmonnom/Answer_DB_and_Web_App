@@ -1357,22 +1357,28 @@ public class RequestUtils {
 		}
 	}
 
-	public void setDefaultTranscript(AjaxResponse ajaxResponse, String featureId) throws ClientProtocolException, IOException, URISyntaxException {
+	public void setDefaultTranscript(AjaxResponse ajaxResponse, String row, String variantId) throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("xxxxx/").append(featureId);
+		sbUrl.append("variant/").append(variantId);
 		URI uri = new URI(sbUrl.toString());
 
 		HttpResponse response = null;
-		requestGet = new HttpGet(uri);
-		addAuthenticationHeader(requestGet);
-		response = client.execute(requestGet);
+		requestPut = new HttpPut(uri);
+		System.out.println(row);
+
+		addAuthenticationHeader(requestPut);
+		requestPut.setEntity(new StringEntity(row, ContentType.APPLICATION_JSON));
+
+		response = client.execute(requestPut);
 
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
-			ajaxResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			ajaxResponse.setSuccess(mongoDBResponse.getSuccess());
+			ajaxResponse.setMessage(mongoDBResponse.getMessage());
 		} else {
 			ajaxResponse.setSuccess(false);
-			ajaxResponse.setMessage("Someting went wrong");
+			ajaxResponse.setMessage("Something went wrong");
 		}
 	}
 	

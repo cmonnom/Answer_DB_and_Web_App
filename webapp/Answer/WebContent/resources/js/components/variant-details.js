@@ -193,6 +193,24 @@ Vue.component('variant-details', {
                                           
                                           </v-layout>
 
+                                          <v-layout row wrap v-if="visibleGenesCN2 || visibleGenesOther" class="subheading">
+                                          <v-flex xs12><b>Genes Visible on this chart:</b></v-flex>
+                                          <v-flex xs7 md6 lg5 >
+                                                CN=2: 
+                                                <span class="blue-grey--text text--lighten-1">{{ visibleGenesCN2 }}</span><br/>
+                                                Others: 
+                                                <span class="blue-grey--text text--lighten-1">{{ visibleGenesOther }}</span>
+                                          </v-flex>
+                                          <v-flex xs >
+                                                <v-tooltip bottom>
+                                                <v-btn slot="activator" @click="openNewCNVForm">
+                                                    Create New CNV
+                                                </v-btn>
+                                                <span>Create a new CNV from genes visible on the chart</span>
+                                                </v-tooltip>
+                                          </v-flex>
+                                          </v-layout>
+
                                           <div :style="cnvPlotDataConfig ? fullSizeChart : ''">
                                           <div :id="cnvPlotId" style="height: 100%"></div>
                                             </div>
@@ -254,7 +272,10 @@ Vue.component('variant-details', {
             genesSelected: [],
             cnvPlotNeedsReload: false,
             toggleAllLoading: false,
-            selectedCNVChrom: null
+            selectedCNVChrom: null,
+            visibleGenesCN2: "",
+            visibleGenesOther: "",
+            currentListOfVisibleGenes: []
         }
 
     },
@@ -362,6 +383,9 @@ Vue.component('variant-details', {
         },
         updateCNVPlot(chrom) {
             var genesParam = [];
+            this.visibleGenesCN2 = "Zoom in to see the genes visible";
+            this.visibleGenesOther = "Zoom in to see the genes visible";
+            this.currentListOfVisibleGenes = []
             for (var i = 0; i < this.genesSelected.length; i++) {
                 genesParam.push(this.currentVariant.geneChips[this.genesSelected[i]].name);
             }
@@ -504,6 +528,9 @@ Vue.component('variant-details', {
                                 height: "90%",
                                 output: 'canvas'
                             });
+
+                            zingchart.zoom = this.handleChartZoom;
+
                             this.cnvPlotLoadingCurrentChrom = false;
                             this.cnvPlotLoadingAllChrom = false;
                             this.cnvPlotLoadingOtherChrom = false;
@@ -512,6 +539,11 @@ Vue.component('variant-details', {
                             console.log((timeDiff / 1000) + "s");
                             this.cnvPlotNeedsReload = false;
                             this.toggleAllLoading = false;
+                            var kmax = zingchart.exec(this.cnvPlotId, 'getobjectinfo', {
+                                object : 'scale',
+                                name : 'scale-x'
+                            }).maxValue;
+                            this.handleChartZoom({kmin: 0, kmax});
                         });
                     }
                     else {
@@ -530,6 +562,62 @@ Vue.component('variant-details', {
                     this.cnvPlotLoadingOtherChrom = false;
                     this.toggleAllLoading = false;
                 });
+        },
+        handleChartZoom(p) {
+            this.currentListOfVisibleGenes = [];
+            var kmin = p.kmin;
+            var kmax = p.kmax;
+            if (!kmin && !kmax) {
+                kmin = 0;
+                kmax = zingchart.exec(this.cnvPlotId, 'getobjectinfo', {
+                    object : 'scale',
+                    name : 'scale-x'
+                }).maxValue;
+            }
+
+            var seriesCN2 = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[0];
+            var labelsCN2 = zingchart.exec(this.cnvPlotId, 'getseriesdata')[0]["data-labels"]; //just item 0 for testing for now
+            var seriesOther = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[1];
+            var labelsOther = zingchart.exec(this.cnvPlotId, 'getseriesdata')[1]["data-labels"]; //just item 0 for testing for now
+            var visibleGenesCN2 = this.getUniqueLabelsFromSeries(kmin, kmax, seriesCN2, labelsCN2);
+            var visibleGenesOther = this.getUniqueLabelsFromSeries(kmin, kmax, seriesOther, labelsOther);
+            for (var i = 0; i < visibleGenesCN2.length; i++) {
+                this.currentListOfVisibleGenes.push(visibleGenesCN2[i]);
+            }
+            for (var i = 0; i < visibleGenesOther.length; i++) {
+                this.currentListOfVisibleGenes.push(visibleGenesOther[i]);
+            }
+            this.visibleGenesCN2 = this.getVisibleGeneStringFromUniqueList(visibleGenesCN2);
+            this.visibleGenesOther = this.getVisibleGeneStringFromUniqueList(visibleGenesOther);
+            
+        },
+        getUniqueLabelsFromSeries(kmin, kmax, series, labels) {
+            var visibleGenes = [];
+            for (var i = 0; i < series.length; i++) {
+                var value = series[i][0];
+                if (value >= kmin && value <= kmax) {
+                    var regex = /(Gene: )(.*)( Log2: [0-9.-]*)/g;
+                    var match = regex.exec(labels[i]);
+                    visibleGenes.push(match[2]);
+                }
+            }
+            var tempSet = new Set();
+            for (var i = 0; i < visibleGenes.length; i++) {
+                tempSet.add(visibleGenes[i]);
+            }
+            visibleGenes = tempSet.size != 0 ? Array.from(tempSet) : [];
+            return visibleGenes.sort();
+        },
+        getVisibleGeneStringFromUniqueList(visibleGenes) {
+            if (visibleGenes.length == 0) {
+                return "No gene visible for that category";
+            }
+            // else if (visibleGenes.length >= 30) {
+            //     return visibleGenes.length + " genes visible in that category";
+            // }
+            else {
+                return visibleGenes.join(", ");
+            }
         },
         cnvPlotReady() {
             return !this.cnvPlotLoadingCurentChrom && !this.cnvPlotLoadingAllChrom && !this.cnvPlotDataConfig && !this.cnvPlotLoadingOtherChrom;
@@ -657,6 +745,9 @@ Vue.component('variant-details', {
                 this.cnvPlotLoadingOtherChrom = true;
                 this.updateCNVPlot(this.selectedCNVChrom);
             }
+        },
+        openNewCNVForm() {
+            bus.$emit("create-new-cnv", this.currentListOfVisibleGenes);
         }
     },
     mounted: function () {
