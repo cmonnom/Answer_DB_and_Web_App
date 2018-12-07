@@ -49,7 +49,10 @@ const OpenCase = {
     </v-dialog>
     <v-snackbar :timeout="snackBarTimeout" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
-        <a :href="snackBarLink"><v-icon dark>{{ snackBarLinkIcon }}</v-icon></a>
+        <v-tooltip top>
+        <a slot="activator" :href="snackBarLink"><v-icon dark>{{ snackBarLinkIcon }}</v-icon></a>
+        <span>Open Link</span>
+        </v-tooltip>
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
     <advanced-filter ref="advancedFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"
@@ -883,6 +886,7 @@ const OpenCase = {
                                 <span>Advanced Filtering</span>
                             </v-tooltip>
                         </v-fade-transition>
+                        <!--
                         <v-fade-transition slot="action2">
                             <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
                                 <v-btn slot="activator" flat icon @click="openAddCNVDialog()" :color="addCNVDialogVisible ? 'amber accent-2' : 'white'">
@@ -890,7 +894,7 @@ const OpenCase = {
                                 </v-btn>
                                 <span>Add a new CNV</span>
                             </v-tooltip>
-                        </v-fade-transition>
+                        </v-fade-transition>  -->
                         <v-list-tile avatar @click="toggleFilters('cnv')" slot="action1MenuItem">
                             <v-list-tile-avatar>
                                 <v-icon>filter_list</v-icon>
@@ -899,6 +903,7 @@ const OpenCase = {
                                 <v-list-tile-title>Advanced Filtering</v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
+                        <!--
                         <v-list-tile avatar @click="openAddCNVDialog()" slot="action2MenuItem">
                         <v-list-tile-avatar>
                             <v-icon>playlist_add</v-icon>
@@ -906,7 +911,7 @@ const OpenCase = {
                         <v-list-tile-content>
                             <v-list-tile-title>Add a new CNV</v-list-tile-title>
                         </v-list-tile-content>
-                    </v-list-tile>
+                        </v-list-tile>  -->
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
@@ -947,7 +952,7 @@ const OpenCase = {
             annotationVariantDetailsVisible: true,
             annotationVariantRelatedVisible: true,
             annotationVariantCanonicalVisible: true,
-            annotationVariantOtherVisible: false,
+            annotationVariantOtherVisible: true,
             saveVariantDisabled: false,
             variantUnSaved: false,
             // annotationDialogVisible: false,
@@ -1861,13 +1866,17 @@ const OpenCase = {
                                     label: "Score", value: this.currentVariant.score ? this.currentVariant.score + "" : ""
                                 },
                                 {
+                                    label: "Cytoband", value: this.currentVariant.cytoband
+                                },
+                                {
                                     label: "Open OncoKB Genie Portal (CNV)",
                                     type: "link",
                                     linkIcon: "mdi-dna",
                                     url: this.createOncoKBGeniePortalCNV(),
                                     value: "",
                                     tooltip: "Open OncoKB Genie Portal (CNV) in new tab"
-                                }
+                                },
+                               
                             ]
                         };
                         this.variantDataTables.push(infoTable);
@@ -2214,6 +2223,7 @@ const OpenCase = {
                     visible: true,
                     isSelected: false,
                     breadth: "",
+                    trial: null
                 };
                 annotation._id = annotations[i]._id;
                 if (showUser) {
@@ -2235,6 +2245,7 @@ const OpenCase = {
                 annotation.tier = annotations[i].tier;
                 annotation.classification = annotations[i].classification;
                 annotation.isSelected = annotations[i].isSelected;
+                annotation.trial = annotations[i].trial;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2262,7 +2273,8 @@ const OpenCase = {
                     leftGene: "",
                     rightGene: "",
                     isLeftSpecific: false,
-                    isRightSpecific: false
+                    isRightSpecific: false,
+                    trial: null
 
                 };
                 annotation._id = annotations[i]._id;
@@ -2285,6 +2297,7 @@ const OpenCase = {
                 annotation.leftGene = annotations[i].leftGene;
                 annotation.rightGene = annotations[i].rightGene;
                 annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
+                annotation.trial = annotations[i].trial;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2461,6 +2474,7 @@ const OpenCase = {
                             this.snackBarVisible = true;
                             if (this.waitingForGoodies) {
                                 this.waitingForGoodies = false;
+                                this.snackBarTimeout = 4000;
                                 setTimeout(() => {
                                     this.showGoodiesPanel = true;
                                     this.$refs.goodiesPanel.activateGoodies();
@@ -3406,10 +3420,11 @@ const OpenCase = {
             this.snackBarLink = "";
             this.snackBarVisible = true;
         },
-        showSnackBarMessageWithParams(snackBarMessage, snackBarLink, snackBarLinkIcon) {
+        showSnackBarMessageWithParams(snackBarMessage, snackBarLink, snackBarLinkIcon, snackBarTimeout) {
             this.snackBarMessage = snackBarMessage;
             this.snackBarLink = snackBarLink;
             this.snackBarLinkIcon = snackBarLinkIcon;
+            this.snackBarTimeout = snackBarTimeout != null ? snackBarTimeout : 4000;
             this.snackBarVisible = true;
         },
         formatChrom(chrom) { //needed to call the global function from v-text
@@ -3485,7 +3500,8 @@ const OpenCase = {
         },
         createAutoSaveInterval() {
             this.autoSaveInterval = setInterval(() => {
-                if (!this.waitingForAjaxActive) {
+                var editing = this.$route.query.edit === true || this.$route.query.edit === "true";
+                if (!this.waitingForAjaxActive && !editing) {
                     this.handleSaveAll(true);
                 }
             }, 120000);
@@ -3539,6 +3555,50 @@ const OpenCase = {
             }
             this.userAnnotations.push(utswAnnotation);
             this.commitAnnotations(this.userAnnotations);
+        },
+        setDefaultTranscript(item) {
+            axios.get(webAppRoot + "/setDefaultTranscript", {
+                params: {
+                    featureId: item.featureId,
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        //reload the variant
+                        console.log("success");
+                        var variantId = this.currentVariant._id["$oid"];
+                        if (this.isSNP()) {
+                            for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
+                                if (this.$refs.geneVariantDetails.items[i].oid == variantId) {
+                                        this.$nextTick(this.getVariantDetails(this.$refs.geneVariantDetails.items[i]));
+                                        break;
+                                }
+                            }
+                        }
+                        else if (this.isCNV()) {
+                            for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
+                                if (this.$refs.cnvDetails.items[i].oid == variantId) {
+                                        this.$nextTick(this.getCNVDetails(this.$refs.cnvDetails.items[i]));
+                                        break;
+                                }
+                            }
+                        }
+                        else if (this.isTranslocation()) {
+                            for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
+                                if (this.$refs.translocationDetails.items[i].oid == variantId) {
+                                        this.$nextTick(this.getTranslocationDetails(this.$refs.translocationDetails.items[i]));
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.setDefaultTranscript.bind(null, item));
+                    }
+                })
+                .catch(error => {
+                    alert(error);
+                });
         }
     },
     mounted() {
@@ -3562,6 +3622,9 @@ const OpenCase = {
             this.externalWindowOpen = false;
         });
         this.createAutoSaveInterval();
+        bus.$on('setDefaultTranscript', (item) => {
+            this.setDefaultTranscript(item);
+        });
     },
     computed: {
     },
@@ -3570,6 +3633,7 @@ const OpenCase = {
         // bus.$off('saving-annotations');
         bus.$emit("update-status-off", this);
         clearInterval(this.autoSaveInterval);
+        bus.$off('setDefaultTranscript');
     },
     watch: {
         '$route': 'handleRouteChanged',

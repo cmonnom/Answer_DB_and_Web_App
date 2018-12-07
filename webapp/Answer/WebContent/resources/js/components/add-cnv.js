@@ -25,20 +25,11 @@ Vue.component('add-cnv', {
                     <b>Fill all information below to add a new CNV:</b>
                 </v-flex>
                 <v-flex xs12>
-                    <v-layout row wrap>
-                        <v-flex pt-2 xs3>
-                            Chromosome:
-                        </v-flex>
-                        <v-flex xs9>
-                            <v-select clearable :items="cnvChromList" v-model="chrom" single-line hide-details class="no-height-select"
-                                :disabled="noEdit"
-                                item-value="value" item-text="name"></v-select>
-                        </v-flex>
-                    </v-layout>
+                    
                     <v-layout row wrap>
                         <v-flex pt-3 xs3>
                             <v-tooltip bottom>
-                            <span slot="activator">Gene:</span>
+                            <span slot="activator">Gene:<br/>(Gene Symbol)</span>
                             <span>Select a Gene <b>OR</b> a Range</span>
                             </v-tooltip>
                         </v-flex>
@@ -48,24 +39,7 @@ Vue.component('add-cnv', {
                             item-value="value" item-text="name"></v-select>
                         </v-flex>
                     </v-layout>
-                    <v-layout row wrap>
-                        <v-flex xs3>
-                        <v-tooltip bottom>
-                        <span slot="activator">or<br/>Range:</span>
-                        <span>Select a Range <b>OR</b> a Gene</span>
-                        </v-tooltip>
-                        </v-flex>
-                        <v-flex xs4>
-                            <v-text-field v-model="start"  label="Start"
-                            :rules="numberRules">
-                            </v-text-field>
-                        </v-flex>
-                        <v-flex xs4>
-                            <v-text-field v-model="end" label="End"
-                            :rules="numberRules">
-                        </v-text-field>
-                    </v-flex>
-                    </v-layout>
+
                     <v-layout row wrap>
                         <v-flex pt-2 xs3>
                             Aberration Type:
@@ -76,11 +50,11 @@ Vue.component('add-cnv', {
                         </v-flex>
                     </v-layout>
                     <v-layout row wrap>
-                        <v-flex pt-4 xs3>
+                        <v-flex xs3>
                             Copy Number:
                         </v-flex>
                         <v-flex xs9>
-                            <v-text-field v-model="copyNumber" :rules="numberRules">
+                            <v-text-field v-model="copyNumber" :rules="numberRules" class="no-top-text-field">
                             </v-text-field>
                         </v-flex>
                     </v-layout>
@@ -128,6 +102,7 @@ Vue.component('add-cnv', {
         },
         saveCNV() {
             this.savingCNV = true;
+            
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveCNV",
@@ -136,12 +111,12 @@ Vue.component('add-cnv', {
                 },
                 data: {
                     chrom: this.chrom,
-                    genes: this.genes,
+                    genes: [this.genes], //should be an array but we only select one gene, so it's a string instead
                     aberrationType: this.aberrationType,
                     copyNumber: this.copyNumber
                 }
             }).then(response => {
-                if (response.data.isAllowed) {
+                if (response.data.isAllowed && response.data.success) {
                     this.hidePanel();
                     this.$emit("refresh-cnv-table");
                 }
@@ -157,19 +132,19 @@ Vue.component('add-cnv', {
             );
         },
         isDisabled() {
-            var valid = this.chrom && this.aberrationType && this.copyNumber && !isNaN(this.copyNumber);
-            if (this.genes) { 
-                valid &= !this.start && !this.end; //if genes is set, range should not
-            }
-            else if (this.start && this.end) { //if genes is not set, range should
-                valid &= !isNaN(this.start) && !isNaN(this.end);
-            }
-            else {
-                valid = false;
-            }
-            if (!this.genes && !this.start && !this.end) { //none of them is set
-                valid = false;
-            }
+            var valid = this.genes && this.aberrationType && this.copyNumber && !isNaN(this.copyNumber);
+            // if (this.genes) { 
+            //     valid &= !this.start && !this.end & !this.chrom; //if genes is set, range should not
+            // }
+            // else if (this.start && this.end && this.chrom) { //if genes is not set, range should
+            //     valid &= !isNaN(this.start) && !isNaN(this.end);
+            // }
+            // else {
+            //     valid = false;
+            // }
+            // if (!this.genes && !this.start && !this.end && !this.chrom) { //none of them is set
+            //     valid = false;
+            // }
             return !valid;
 
         },

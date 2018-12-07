@@ -58,6 +58,7 @@ public class Annotation {
 	String leftGene;
 	String rightGene;
 	Trial trial;
+	String oncotreeDiagnosis;
 	
 	public Annotation() {
 		
@@ -365,6 +366,14 @@ public class Annotation {
 
 	public void setTrial(Trial trial) {
 		this.trial = trial;
+	}
+
+	public String getOncotreeDiagnosis() {
+		return oncotreeDiagnosis;
+	}
+
+	public void setOncotreeDiagnosis(String oncotreeDiagnosis) {
+		this.oncotreeDiagnosis = oncotreeDiagnosis;
 	}
 
 

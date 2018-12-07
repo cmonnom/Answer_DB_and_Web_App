@@ -227,7 +227,8 @@ const Home = {
         createUserLabel(user) {
             var title = user.canReview ? "(Reviewer)" : "";
             return user.name + " " + title;
-        }
+        },
+        
 
     },
     mounted: function () {
@@ -240,6 +241,7 @@ const Home = {
         bus.$off('open-read-only');
         bus.$off('edit-report');
         bus.$off('open-report-read-only');
+       
     },
     created: function () {
         splashDialog = false; //disable splash screen if coming from Home
@@ -275,6 +277,7 @@ const Home = {
         bus.$on('open-report-read-only', (item) => {
             router.push("./openReportReadOnly/" + item.caseId);
         });
+      
     },
     computed: {
     },

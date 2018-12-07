@@ -33,6 +33,8 @@ public abstract class Summary<T> {
 	
 	String csvContent;
 	
+	boolean actionable;
+	
 	public Summary() {
 	}
 	
@@ -42,6 +44,16 @@ public abstract class Summary<T> {
 		this.headerOrder = new ArrayList<String>();
 		this.uniqueIdField = uniqueIdField;
 		this.isAllowed = true;
+		initializeHeaders();
+	}
+	
+	public Summary(List<T> items, String uniqueIdField, boolean actionable) {
+		this.items = items;
+		this.headers = new ArrayList<Header>();
+		this.headerOrder = new ArrayList<String>();
+		this.uniqueIdField = uniqueIdField;
+		this.isAllowed = true;
+		this.actionable = actionable;
 		initializeHeaders();
 	}
 	
@@ -136,5 +148,13 @@ public abstract class Summary<T> {
 			}
 		}
 		this.setCsvContent(csvContent.toString());
+	}
+
+	public boolean isActionable() {
+		return actionable;
+	}
+
+	public void setActionable(boolean actionable) {
+		this.actionable = actionable;
 	}
 }

@@ -847,6 +847,7 @@ public class RequestUtils {
 
 
 		}
+		
 		Set<String> pmIds = new HashSet<String>();
 		List<CNVReport> cnvReports = new ArrayList<CNVReport>();
 		for (CNV cnv : caseDetails.getCnvs()) {
@@ -861,17 +862,18 @@ public class RequestUtils {
 					for (Annotation a : cnv.getReferenceCnv().getUtswAnnotations()) {
 						Annotation.init(a, cnv.getAnnotationIdsForReporting(), modelDAO);
 						if (a.getIsSelected() != null && a.getIsSelected()
-								&& a.getBreadth() != null && a.getBreadth().equals("Chromosomal")) {
-							if (a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
-								trials.add(new BiomarkerTrialsRow(a.getTrial()));
+								&& a.getBreadth() != null && a.getBreadth().equals("Chromosomal")
+								&& !"Clinical Trial".equals(a.getCategory())) {
+							sb.append(a.getText()).append(" ");
+							atLeastOneSelected = true;
+							if (a.getPmids() != null) {
+								pmIds.addAll(this.trimPmIds(a.getPmids()));
 							}
-							else {
-								sb.append(a.getText()).append(" ");
-								atLeastOneSelected = true;
-								if (a.getPmids() != null) {
-									pmIds.addAll(this.trimPmIds(a.getPmids()));
-								}
-							}
+						}
+						//get the trials
+						if (a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
+							trials.add(new BiomarkerTrialsRow(a.getTrial()));
 						}
 					}
 					if (atLeastOneSelected) {
@@ -896,17 +898,18 @@ public class RequestUtils {
 					for (Annotation a : ftl.getReferenceTranslocation().getUtswAnnotations()) {
 						Annotation.init(a, ftl.getAnnotationIdsForReporting(), modelDAO);
 						if (a.getIsSelected() != null && a.getIsSelected()
-								&& !"Therapy".equals(a.getCategory())) { 
-							if (a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
-								trials.add(new BiomarkerTrialsRow(a.getTrial()));
-							}
-							else {
+								&& !"Therapy".equals(a.getCategory())
+								&& !"Clinical Trial".equals(a.getCategory())) { 
 								sb.append(a.getText()).append(" ");
 								atLeastOneSelected = true;
 								if (a.getPmids() != null) {
 									pmIds.addAll(this.trimPmIds(a.getPmids()));
 								}
-							}
+						}
+						//get the trials
+						if (a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
+							trials.add(new BiomarkerTrialsRow(a.getTrial()));
 						}
 					}
 					if (atLeastOneSelected) {
@@ -930,7 +933,8 @@ public class RequestUtils {
 					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
 						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
 						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && a.getCategory().equals("Therapy")) {
+								&& a.getCategory() != null && a.getCategory().equals("Therapy")
+								&& !"Clinical Trial".equals(a.getCategory())) {
 							annotations.add(new IndicatedTherapy(a, v));
 							report.getSnpIds().add(v.getMongoDBId().getOid());
 							report.incrementIndicatedTherapyCount(v.getGeneName());
@@ -938,7 +942,8 @@ public class RequestUtils {
 								pmIds.addAll(this.trimPmIds(a.getPmids()));
 							}
 						}
-						else if (a != null && a.getIsSelected() != null && a.getIsSelected()
+						//get the trials
+						if (a.getIsSelected() != null && a.getIsSelected()
 								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
 							trials.add(new BiomarkerTrialsRow(a.getTrial()));
 						}
@@ -1258,7 +1263,14 @@ public class RequestUtils {
 
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
-			ajaxResponse.setSuccess(true);
+			AjaxResponse dbResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			if (dbResponse.getSuccess()) {
+				ajaxResponse.setSuccess(true);
+			}
+			else {
+				ajaxResponse.setSuccess(false);
+				ajaxResponse.setMessage(dbResponse.getMessage());
+			}
 		} else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
@@ -1319,23 +1331,51 @@ public class RequestUtils {
 
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
-			Trial trial = mapper.readValue(response.getEntity().getContent(), Trial.class);
-			String[] items = trial.getContact().split("\n");
-			List<String> itemsLineReturns = new ArrayList<String>();
-			for (String item : items) {
-				if (item != null && !item.equals("")) {
-					itemsLineReturns.add(item);
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			ajaxResponse.setSuccess(mongoDBResponse.getSuccess());
+			ajaxResponse.setMessage(mongoDBResponse.getMessage());
+			if (ajaxResponse.getSuccess()) {
+				Trial trial = mapper.convertValue(mongoDBResponse.getPayload(), Trial.class);
+				String[] items = trial.getContact().split("\n");
+				List<String> itemsLineReturns = new ArrayList<String>();
+				for (String item : items) {
+					if (item != null && !item.equals("")) {
+						itemsLineReturns.add(item);
+					}
 				}
+				trial.setContact(itemsLineReturns.stream().collect(Collectors.joining("<br/>")));
+				trial.setNctId(nctId);
+				return trial;
 			}
-			trial.setContact(itemsLineReturns.stream().collect(Collectors.joining("<br/>")));
-			trial.setNctId(nctId);
-			return trial;
+			else {
+				return null;
+			}
 		} else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 			return null;
 		}
 	}
+
+	public void setDefaultTranscript(AjaxResponse ajaxResponse, String featureId) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("xxxxx/").append(featureId);
+		URI uri = new URI(sbUrl.toString());
+
+		HttpResponse response = null;
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+		response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Someting went wrong");
+		}
+	}
+	
 
 
 

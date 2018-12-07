@@ -33,8 +33,8 @@ Vue.component('utsw-annotation-card', {
                         <span v-html="annotation.scopeTooltip"> </span>
                     </v-tooltip>
                 </v-flex>
-                <v-flex xs12 v-if="annotation.category" >
-                    <span class="pr-1">
+                <v-flex xs12>
+                    <span class="pr-1" v-if="annotation.category">
                         <b>{{ annotation.category }}:</b>
                     </span>
                     <span v-html="annotation.text"></span>

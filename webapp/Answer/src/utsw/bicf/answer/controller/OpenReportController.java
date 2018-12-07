@@ -109,7 +109,7 @@ public class OpenReportController {
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
 	
-	@RequestMapping(value = "/getExistingReports")
+	@RequestMapping(value = "/getExistingReports", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getExistingReports(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 
@@ -138,7 +138,7 @@ public class OpenReportController {
 		return response.createObjectJSON();
 	}
 
-	@RequestMapping(value = "/getReportDetails")
+	@RequestMapping(value = "/getReportDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getReportDetails(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestParam(defaultValue="", required=false) String reportId) throws Exception {
@@ -161,7 +161,7 @@ public class OpenReportController {
 		return null;
 	}
 	
-	@RequestMapping(value = "/saveReport")
+	@RequestMapping(value = "/saveReport", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String saveReport(Model model, HttpSession session, @RequestBody String data) throws Exception {
 
@@ -321,7 +321,7 @@ public class OpenReportController {
 		return response.createObjectJSON();
 	}
 	
-	@RequestMapping(value = "/previewReport")
+	@RequestMapping(value = "/previewReport", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String previewReport(Model model, HttpSession session, @RequestBody String data) throws Exception {
 
@@ -356,7 +356,7 @@ public class OpenReportController {
 		return response.createObjectJSON();
 	}
 	
-	@RequestMapping(value = "/finalizeReport")
+	@RequestMapping(value = "/finalizeReport", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String finalizeReport(Model model, HttpSession session,
 			@RequestParam String reportId) throws Exception {
@@ -469,7 +469,7 @@ public class OpenReportController {
 		return response.createObjectJSON();
 	}
 
-	@RequestMapping(value = "/addendReport")
+	@RequestMapping(value = "/addendReport", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String addendReport(Model model, HttpSession session, @RequestParam String reportId) throws Exception {
 

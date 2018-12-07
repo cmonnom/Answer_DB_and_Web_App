@@ -68,6 +68,7 @@ import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
+import utsw.bicf.answer.model.hybrid.VCFAnnotationRow;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
@@ -137,6 +138,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".fetchNCTData",
 				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".setDefaultTranscript",
+				IndividualPermission.CAN_ANNOTATE);
 		
 	}
 
@@ -192,7 +195,7 @@ public class OpenCaseController {
 	
 	
 
-	@RequestMapping(value = "/getCaseDetails")
+	@RequestMapping(value = "/getCaseDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getCaseDetails(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String filters) throws Exception {
@@ -230,7 +233,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/loadCaseAnnotations")
+	@RequestMapping(value = "/loadCaseAnnotations", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String loadCaseAnnotations(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 
@@ -257,7 +260,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/saveCaseAnnotations")
+	@RequestMapping(value = "/saveCaseAnnotations", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String saveCaseAnnotations(Model model, HttpSession session, @RequestBody String caseAnnotation,
 			@RequestParam String caseId, @RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
@@ -302,7 +305,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/getVariantFilters")
+	@RequestMapping(value = "/getVariantFilters", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getVariantFilters(Model model, HttpSession session) throws Exception {
 		List<DataTableFilter> filters = new ArrayList<DataTableFilter>();
@@ -468,7 +471,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/getVariantDetails")
+	@RequestMapping(value = "/getVariantDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getVariantDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
 
@@ -520,13 +523,13 @@ public class OpenCaseController {
 			}
 			List<VCFAnnotation> vcfAnnotations = variantDetails.getVcfAnnotations();
 			if (!vcfAnnotations.isEmpty()) {
-				List<VCFAnnotation> canonicalAnnotation = new ArrayList<VCFAnnotation>();
-				canonicalAnnotation.add(vcfAnnotations.get(0));
-				List<VCFAnnotation> otherAnnotations = new ArrayList<VCFAnnotation>();
-				otherAnnotations.addAll(vcfAnnotations);
+				List<VCFAnnotationRow> canonicalAnnotation = new ArrayList<VCFAnnotationRow>();
+				canonicalAnnotation.add(new VCFAnnotationRow(vcfAnnotations.get(0), false));
+				List<VCFAnnotationRow> otherAnnotations = new ArrayList<VCFAnnotationRow>();
+				otherAnnotations.addAll(vcfAnnotations.stream().map(a -> new VCFAnnotationRow(a, true)).collect(Collectors.toList()));
 				otherAnnotations.remove(0);
-				summaryCanonical = new VariantVcfAnnotationSummary(canonicalAnnotation, "proteinPosition");
-				summaryOthers = new VariantVcfAnnotationSummary(otherAnnotations, "proteinPosition");
+				summaryCanonical = new VariantVcfAnnotationSummary(canonicalAnnotation, "proteinPosition", false);
+				summaryOthers = new VariantVcfAnnotationSummary(otherAnnotations, "proteinPosition", true);
 				summary = new VariantDetailsSummary(variantDetails, summaryRelated, summaryCanonical, summaryOthers);
 			}
 			return summary.createVuetifyObjectJSON();
@@ -535,7 +538,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/getCNVDetails")
+	@RequestMapping(value = "/getCNVDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getCNVDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
 
@@ -553,7 +556,7 @@ public class OpenCaseController {
 
 	}
 	
-	@RequestMapping(value = "/getCNVChromList")
+	@RequestMapping(value = "/getCNVChromList", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getCNVChromList(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 
@@ -567,7 +570,7 @@ public class OpenCaseController {
 		return null;
 	}
 
-	@RequestMapping(value = "/getGenesInPanel")
+	@RequestMapping(value = "/getGenesInPanel", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getGenesInPanel(Model model, HttpSession session) throws Exception {
 		List<String> genesFound = modelDAO.getAllGenesInPanels();
@@ -575,7 +578,7 @@ public class OpenCaseController {
 		return genes.createVuetifyObjectJSON();		
 	}
 	
-	@RequestMapping(value = "/getTranslocationDetails")
+	@RequestMapping(value = "/getTranslocationDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getTranslocationDetails(Model model, HttpSession session, @RequestParam String variantId)
 			throws Exception {
@@ -594,7 +597,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/saveVariantSelection")
+	@RequestMapping(value = "/saveVariantSelection", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String saveVariantSelection(Model model, HttpSession session, @RequestBody String data,
 			@RequestParam String caseId, @RequestParam(defaultValue="false") Boolean closeAfter,
@@ -627,7 +630,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/commitAnnotations")
+	@RequestMapping(value = "/commitAnnotations", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String commitAnnotations(Model model, HttpSession session, @RequestBody String annotations,
 			@RequestParam String caseId, @RequestParam String geneId, @RequestParam String variantId) throws Exception {
@@ -661,6 +664,24 @@ public class OpenCaseController {
 			if (userAnnotation.getIsVariantSpecific()) {
 				userAnnotation.setVariantId(variantId);
 			}
+			if (userAnnotation.getIsTumorSpecific()) {
+				OrderCase caseSummary = utils.getCaseSummary(caseId);
+				if (caseSummary != null) {
+					if (caseSummary.getOncotreeDiagnosis() != null && !caseSummary.getOncotreeDiagnosis().equals("")) {
+						userAnnotation.setOncotreeDiagnosis(caseSummary.getOncotreeDiagnosis());
+					}
+					else {
+						response.setSuccess(false);
+						response.setMessage("You need to set an Oncotree Diagnosis in Patient Details");
+						return response.createObjectJSON();
+					}
+				}
+				else {
+					response.setSuccess(false);
+					response.setMessage("No Case with id: " + caseId);
+					return response.createObjectJSON();
+				}
+			}
 			if (userAnnotation.getTrial() != null) {
 				Trial trial = userAnnotation.getTrial();
 				boolean isValidTrial = trial.getNctId() != null && !trial.getNctId().equals("");
@@ -687,7 +708,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/saveCurrentFilters")
+	@RequestMapping(value = "/saveCurrentFilters", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	@Transactional
 	public String saveCurrentFilters(Model model, HttpSession session, @RequestBody String filters,
@@ -750,7 +771,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/deleteFilterSet")
+	@RequestMapping(value = "/deleteFilterSet", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	@Transactional
 	public String deleteFilterSet(Model model, HttpSession session, @RequestParam Integer filterSetId)
@@ -821,7 +842,7 @@ public class OpenCaseController {
 
 	}
 	
-	@RequestMapping(value = "/sendToMDA")
+	@RequestMapping(value = "/sendToMDA", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String sendToMDA(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String data) throws Exception {
@@ -861,7 +882,7 @@ public class OpenCaseController {
 	}
 
 
-	@RequestMapping(value = "/saveVariant")
+	@RequestMapping(value = "/saveVariant", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String saveVariant(Model model, HttpSession session, @RequestBody String data,
 			@RequestParam String caseId, @RequestParam String variantType,
@@ -907,7 +928,7 @@ public class OpenCaseController {
 		}
 	}
 	
-	@RequestMapping(value = "/saveSelectedAnnotationsForVariant")
+	@RequestMapping(value = "/saveSelectedAnnotationsForVariant", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String saveSelectedAnnotationsForVariant(Model model, HttpSession session, @RequestBody String data,
 			@RequestParam String caseId, @RequestParam String variantType,
@@ -977,7 +998,7 @@ public class OpenCaseController {
 	
 
 	
-	@RequestMapping(value = "/getPatientDetails")
+	@RequestMapping(value = "/getPatientDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getPatientDetails(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 
@@ -993,7 +1014,7 @@ public class OpenCaseController {
 
 	}
 	
-	@RequestMapping(value = "/savePatientDetails")
+	@RequestMapping(value = "/savePatientDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String savePatientDetails(Model model, HttpSession session, @RequestParam String oncotreeDiagnosis,
 			@RequestParam String dedupAvgDepth,
@@ -1052,7 +1073,7 @@ public class OpenCaseController {
 	}
 	
 	
-	@RequestMapping(value = "/readyForReview")
+	@RequestMapping(value = "/readyForReview", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String readyForReview(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 		
@@ -1098,7 +1119,7 @@ public class OpenCaseController {
 		return response.createObjectJSON();
 	}
 	
-	@RequestMapping(value = "/readyForReport")
+	@RequestMapping(value = "/readyForReport", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String readyForReport(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 
@@ -1117,7 +1138,7 @@ public class OpenCaseController {
 		return response.createObjectJSON();
 	}
 	
-	@RequestMapping(value = "/getCNVChartData")
+	@RequestMapping(value = "/getCNVChartData", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getCNVChartData(Model model, HttpSession session, @RequestParam String caseId, @RequestParam(defaultValue="all", required=false) String chrom,
 			@RequestParam(defaultValue="", required=false) String genesParam) throws Exception {
@@ -1148,7 +1169,7 @@ public class OpenCaseController {
 
 	}
 	
-	@RequestMapping(value = "/verifyGeneNames")
+	@RequestMapping(value = "/verifyGeneNames", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String verifyGeneNames(Model model, HttpSession session, @RequestParam String type, @RequestParam String genesParam) throws Exception {
 
@@ -1182,7 +1203,7 @@ public class OpenCaseController {
 
 	}
 	
-	@RequestMapping(value = "/saveCNV")
+	@RequestMapping(value = "/saveCNV", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String saveCNV(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String data) throws Exception {
@@ -1209,7 +1230,7 @@ public class OpenCaseController {
 		return response.createObjectJSON();
 	}
 	
-	@RequestMapping(value = "/fetchNCTData")
+	@RequestMapping(value = "/fetchNCTData", produces= "application/json; charset=utf-8") 
 	@ResponseBody
 	public String fetchNCTData(Model model, HttpSession session, @RequestParam String nctId)
 			throws Exception {
@@ -1224,6 +1245,19 @@ public class OpenCaseController {
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(trial);
 		}
+		return response.createObjectJSON();
+
+	}
+	
+	@RequestMapping(value = "/setDefaultTranscript", produces= "application/json; charset=utf-8") 
+	@ResponseBody
+	public String setDefaultTranscript(Model model, HttpSession session, @RequestParam String featureId)
+			throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		AjaxResponse response = new AjaxResponse();
+		utils.setDefaultTranscript(response, featureId);
 		return response.createObjectJSON();
 
 	}

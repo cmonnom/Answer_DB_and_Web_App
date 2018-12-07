@@ -315,10 +315,10 @@ Vue.component('review-selection', {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        var snackBarMessage = "View/Edit Report";
+                        var snackBarMessage = "View/Edit Report:";
                         var snackBarLink = webAppRoot + "/openReport/" + this.$route.params.id;
                         var snackBarLinkIcon = "assignment";
-                        this.$emit("show-snackbar", snackBarMessage, snackBarLink, snackBarLinkIcon);
+                        this.$emit("show-snackbar", snackBarMessage, snackBarLink, snackBarLinkIcon, 0);
                     }
                     else {
                         this.handleDialogs(response.data, this.markAsReadyForReport);

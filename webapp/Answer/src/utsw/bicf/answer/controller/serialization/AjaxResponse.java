@@ -21,6 +21,7 @@ public class AjaxResponse {
 	//you can pass user preferences to the Ajax response this way 
 	//so it's up to date with the latest changes
 	UserPref userPrefs; 
+	Object payload; //any object that could be returned by MongoDB
 	
 	public Boolean getIsAllowed() {
 		return isAllowed;
@@ -85,6 +86,16 @@ public class AjaxResponse {
 
 	public void setUserPrefs(UserPref userPrefs) {
 		this.userPrefs = userPrefs;
+	}
+
+
+	public Object getPayload() {
+		return payload;
+	}
+
+
+	public void setPayload(Object payload) {
+		this.payload = payload;
 	}
 
 

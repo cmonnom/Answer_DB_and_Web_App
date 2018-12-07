@@ -4,15 +4,24 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
+import utsw.bicf.answer.model.hybrid.VCFAnnotationRow;
 
-public class VariantVcfAnnotationSummary extends Summary<VCFAnnotation> {
+public class VariantVcfAnnotationSummary extends Summary<VCFAnnotationRow> {
+	
 
-	public VariantVcfAnnotationSummary(List<VCFAnnotation> vcfAnnotations, String uniqueIdField) {
-		super(vcfAnnotations, uniqueIdField);
+	public VariantVcfAnnotationSummary(List<VCFAnnotationRow> vcfAnnotations, String uniqueIdField, boolean actionable) {
+		super(vcfAnnotations, uniqueIdField, actionable);
+		
 	}
 
 	@Override
 	public void initializeHeaders() {
+		if (this.actionable) {
+			Header actions = new Header("Change", "actions");
+			actions.setButtons(true);
+			actions.setAlign("center");
+			headers.add(actions);
+		}
 		Header allele = new Header("Allele", "allele");
 		headers.add(allele);
 		Header effects = new Header("Effects", "effects");

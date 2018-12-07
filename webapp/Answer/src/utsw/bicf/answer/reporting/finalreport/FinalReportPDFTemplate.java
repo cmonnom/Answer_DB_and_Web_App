@@ -206,7 +206,7 @@ public class FinalReportPDFTemplate {
 		cell.setBottomPadding(10);
 		latestYPosition = table.draw();
 	}
-
+	
 	private void createPatientTable() throws IOException {
 		PatientInfo patientDetails = report.getPatientInfo();
 

@@ -104,7 +104,8 @@ Vue.component('edit-annotations', {
                     <v-btn icon slot="activator" @click="saveAnnotations()" :disabled="saveIsDisabled()">
                         <v-icon>save</v-icon>
                     </v-btn>
-                    <span>Save/Update Annotations</span>
+                    <span v-if="!saveIsDisabled()">Save/Update Annotations</span>
+                    <span v-if="saveIsDisabled()" v-html="saveDisabledReasons"></span>
                 </v-tooltip>
                 <v-tooltip bottom >
                     <v-btn icon @click="cancelAnnotations()" slot="activator">
@@ -120,7 +121,7 @@ Vue.component('edit-annotations', {
                     {{ item.text }}
                     </v-breadcrumbs-item>
                  </v-breadcrumbs>
-                <v-card v-if="userEditingAnnotations.length == 0">
+                <v-card v-if="userEditingAnnotations.length == 0" class="mb-3">
                     <v-card-text>
                         Click on
                         <v-btn color="primary" @click="addCustomAnnotation()">Add Annotation
@@ -190,7 +191,7 @@ Vue.component('edit-annotations', {
                                                                     @change="selectBreadth(annotation, 'Variant Function')"></v-switch>
                                                                 <span>Select either Gene or Variant Specific or both</span>
                                                             </v-tooltip>
-                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Diagnosis Specific" v-model="annotation.isTumorSpecific"></v-switch>
                                                         </v-card-text>
                                                         <!-- CNV -->
                                                         <v-card-text class="card__text_default" v-if="isCNV()  && !hideScope">
@@ -204,7 +205,7 @@ Vue.component('edit-annotations', {
                                                                     v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
                                                                 <span>Select if this annotation applies to this case only</span>
                                                             </v-tooltip>
-                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Diagnosis Specific" v-model="annotation.isTumorSpecific"></v-switch>
                                                         </v-card-text>
                                                         <!-- Translocation -->
                                                         <v-card-text class="card__text_default" v-if="isTranslocation()  && !hideScope">
@@ -218,7 +219,7 @@ Vue.component('edit-annotations', {
                                                                 v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
                                                             <span>Select if this annotation applies to this case only</span>
                                                         </v-tooltip>
-                                                        <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Tumor Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                        <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Diagnosis Specific" v-model="annotation.isTumorSpecific"></v-switch>
                                                         <v-tooltip bottom>
                                                             <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" :label="'Left Gene Specific: ' + annotation.leftGene"
                                                                 v-model="annotation.isLeftSpecific"></v-switch>
@@ -380,7 +381,7 @@ Vue.component('edit-annotations', {
                                                         :disabled="annotation.markedForDeletion" label="Write your comments here">
                                                     </v-text-field>
                                                 </v-flex>
-                                                <v-flex xs12 v-if="isSNP() && (annotation.category != 'Clinical Trial')">
+                                                <v-flex xs12>
                                                     <v-layout>
                                                         <v-flex class="mt-4 subheading">PubMed Ids:</v-flex>
                                                         <v-flex xs4>
@@ -450,11 +451,12 @@ Vue.component('edit-annotations', {
                 </v-btn>
                 <span>Create a new annotation</span>
             </v-tooltip>
-                <v-tooltip top>
+                <v-tooltip top >
                     <v-btn slot="activator" color="success" @click="saveAnnotations()" :disabled="saveIsDisabled()">Save / Update
                         <v-icon right dark>save</v-icon>
                     </v-btn>
-                    <span>Save/Update Annotations</span>
+                    <span v-if="!saveIsDisabled()">Save/Update Annotations</span>
+                    <span v-if="saveIsDisabled()" v-html="saveDisabledReasons"></span>
                 </v-tooltip>
                 <v-tooltip top>
                     <v-btn slot="activator" color="error" @click="cancelAnnotations()">Cancel
@@ -480,7 +482,8 @@ Vue.component('edit-annotations', {
            
             cnvGeneItems: [],
             saving: false,
-            loadingNCTData: false
+            loadingNCTData: false,
+            saveDisabledReasons: ""
         }
 
     },
@@ -513,9 +516,9 @@ Vue.component('edit-annotations', {
                 tempAnnotation.isVisible = true;
                 this.userEditingAnnotations.push(tempAnnotation);
             }
-            if (this.userEditingAnnotations.length == 0) {
-                this.addCustomAnnotation();
-            }
+            // if (this.userEditingAnnotations.length == 0) {
+            //     this.addCustomAnnotation();
+            // }
             this.annotationDialogVisible = true;
         },
         addCustomAnnotation() {
@@ -553,7 +556,22 @@ Vue.component('edit-annotations', {
                 cnvGenes: [],
                 leftGene: this.currentVariant.leftGene,
                 rightGene: this.currentVariant.rightGene,
-                trial: {
+                trial: null
+                // trial: {
+                //     // nctId: "",
+                //     // title: "",
+                //     // phase: "",
+                //     // biomarker: "",
+                //     // drugs: "",
+                //     // contact: "",
+                //     // location: ""
+                // }
+            });
+        },
+        addCustomTrial() {
+            this.addCustomAnnotation();
+            var annotation = this.userEditingAnnotations[this.userEditingAnnotations.length - 1];
+            annotation.trial = {
                     nctId: "",
                     title: "",
                     phase: "",
@@ -562,13 +580,8 @@ Vue.component('edit-annotations', {
                     contact: "",
                     location: ""
                 }
-            });
-        },
-        addCustomTrial() {
-            this.addCustomAnnotation();
-            var trial = this.userEditingAnnotations[this.userEditingAnnotations.length - 1];
-            trial.category = "Clinical Trial";
-            trial.isGeneSpecific = true;
+                annotation.category = "Clinical Trial";
+                annotation.isGeneSpecific = this.isSNP(); //not gene specific for 
 
         },
         saveAnnotations() {
@@ -648,7 +661,8 @@ Vue.component('edit-annotations', {
                 scopeSelected = scopeSelected && !this.noLevelSelected(annotation);
             }
             var trialsHaveNCTID = true;
-            for (var i = 0; i < this.userEditingAnnotations.length; i++) {
+            var length = this.userEditingAnnotations.length;
+            for (var i = 0; i < length; i++) {
                 if (this.userEditingAnnotations[i].trial) {
                     if (!this.userEditingAnnotations[i].trial.nctId || !this.isNCTNumberList(this.userEditingAnnotations[i].trial.nctId)) {
                         trialsHaveNCTID = false;
@@ -673,7 +687,21 @@ Vue.component('edit-annotations', {
                     }
                 }
             }
-            return !scopeSelected || this.userEditingAnnotations.length == 0 || this.saving || !trialsHaveNCTID;
+            var saveDisabledReasons = [];
+            if (!scopeSelected) {
+                saveDisabledReasons.push("Some annotations don't have a scope");
+            }
+            if (length == 0) {
+                saveDisabledReasons.push("No annotations to edit or save");
+            }
+            if (this.saving) {
+                saveDisabledReasons.push("Currently saving. Please wait");
+            }
+            if (!trialsHaveNCTID) {
+                saveDisabledReasons.push("Some Clinical Trials are incomplete (all fields are required)");
+            }
+            this.saveDisabledReasons = saveDisabledReasons.join("<br/>");
+            return !scopeSelected || length == 0 || this.saving || !trialsHaveNCTID;
         },
         //at least one level needs to be selected
         //can't only be case specific: needs either gene or variant
