@@ -2,6 +2,7 @@ package utsw.bicf.answer.controller;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,10 +19,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.controller.serialization.vuetify.HeaderConfigSummaries;
+import utsw.bicf.answer.controller.serialization.vuetify.HeaderConfigSummary;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.UserPref;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.OtherProperties;
@@ -39,6 +44,8 @@ public class UserPreferenceController {
 		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".saveUserPrefs",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".getAdmins",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".getHeaderPrefs",
 				IndividualPermission.CAN_VIEW);
 	}
 
@@ -120,6 +127,27 @@ public class UserPreferenceController {
 		response.setIsAllowed(true);
 		response.setSuccess(true);
 		
-		return mapper.writeValueAsString(response);
+		return response.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/getHeaderPrefs")
+	@ResponseBody
+	public String getHeaderPrefs(Model model, HttpSession session)
+			throws Exception {
+		User user = (User) session.getAttribute("user");
+		List<HeaderConfig> headerConfigs = modelDAO.getAllHeaderConfigForUser(user);
+		ObjectMapper mapper = new ObjectMapper();
+		List<HeaderConfigSummary> summaries = new ArrayList<HeaderConfigSummary>();
+		for (HeaderConfig header : headerConfigs) {
+			List<HeaderOrder> headerOrders = new ArrayList<HeaderOrder>();
+			HeaderOrder[] headerOrdersArray = mapper.readValue(header.getHeaderOrder(), HeaderOrder[].class);
+			for (HeaderOrder h : headerOrdersArray) {
+				headerOrders.add(h);
+			}
+			HeaderConfigSummary summary = new HeaderConfigSummary(headerOrders, header.getTableTitle());
+			summaries.add(summary);
+		}
+		
+		return new HeaderConfigSummaries(summaries).createVuetifyObjectJSON();
 	}
 }

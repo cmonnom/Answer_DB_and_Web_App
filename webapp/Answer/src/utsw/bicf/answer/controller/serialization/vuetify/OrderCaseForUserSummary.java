@@ -4,12 +4,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import utsw.bicf.answer.controller.serialization.ToolTip;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
 
 public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 //	
-	public OrderCaseForUserSummary(List<OrderCaseForUser> casesForUser) {
-		super(casesForUser, "epicOrderNumber");
+	public OrderCaseForUserSummary(List<OrderCaseForUser> casesForUser, List<HeaderOrder> headerOrders) {
+		super(casesForUser, "epicOrderNumber", headerOrders);
 	}
 	
 	

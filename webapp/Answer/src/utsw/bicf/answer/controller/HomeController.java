@@ -21,12 +21,14 @@ import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.AllOrderCasesSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseAllSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseForUserSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.Summary;
 import utsw.bicf.answer.controller.serialization.vuetify.UserSearchItems;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.OrderCaseAll;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
 import utsw.bicf.answer.security.EmailProperties;
@@ -89,9 +91,10 @@ public class HomeController {
 					caseList.stream()
 					.map(c -> new OrderCaseAll(c, modelDAO.getAllUsers(), user))
 					.collect(Collectors.toList());
-			
-			OrderCaseAllSummary allSummary = new OrderCaseAllSummary(casesAll, user);
-			OrderCaseForUserSummary forUserSummary = new OrderCaseForUserSummary(casesForUser);
+			List<HeaderOrder> headerOrdersAll = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "All Cases");
+			OrderCaseAllSummary allSummary = new OrderCaseAllSummary(casesAll, user, headerOrdersAll);
+			List<HeaderOrder> headerOrdersUser = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "My Cases");
+			OrderCaseForUserSummary forUserSummary = new OrderCaseForUserSummary(casesForUser, headerOrdersUser);
 			
 			AllOrderCasesSummary summary = new AllOrderCasesSummary(allSummary, forUserSummary);
 			summary.setSuccess(true);

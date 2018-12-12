@@ -5,12 +5,13 @@ import java.util.stream.Collectors;
 
 import utsw.bicf.answer.controller.serialization.ToolTip;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.OrderCaseAll;
 
 public class OrderCaseAllSummary extends Summary<OrderCaseAll>{
 //	
-	public OrderCaseAllSummary(List<OrderCaseAll> orderCases, User user) {
-		super(orderCases, "epicOrderNumber");
+	public OrderCaseAllSummary(List<OrderCaseAll> orderCases, User user, List<HeaderOrder> headerOrders) {
+		super(orderCases, "epicOrderNumber", headerOrders);
 		
 		//only allow to assign if user can edit
 		if (user.getIndividualPermission().getAdmin() 

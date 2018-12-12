@@ -7,12 +7,13 @@ import java.util.stream.Collectors;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.TranslocationRow;
 
 public class TranslocationSummary extends Summary<TranslocationRow> {
 	
-	public TranslocationSummary(ModelDAO modelDAO, OrderCase aCase, String uniqueIdField) {
-		super(createRows(modelDAO, aCase), uniqueIdField);
+	public TranslocationSummary(ModelDAO modelDAO, OrderCase aCase, String uniqueIdField, List<HeaderOrder> ftlOrders) {
+		super(createRows(modelDAO, aCase), uniqueIdField, ftlOrders);
 	}
 
 	private static List<TranslocationRow> createRows(ModelDAO modelDAO, OrderCase aCase) {
@@ -67,10 +68,6 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 		Header dnaReads = new Header(new String[] {"DNA", "Reads"}, "dnaReads");
 		dnaReads.setWidth("100px");
 		headers.add(dnaReads);
-		
-		
-		headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());
-		
 		
 	}
 	

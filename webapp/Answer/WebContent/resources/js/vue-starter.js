@@ -22,7 +22,7 @@ var router = new VueRouter({
 			name: 'OpenCase',
 			component: OpenCase,
 			meta: {
-				title: 'OpenCase Id: '
+				title: 'Open Case '
 			},
 			props: { readonly: false}
 		},
@@ -31,7 +31,7 @@ var router = new VueRouter({
 			name: 'OpenCase',
 			component: OpenCase,
 			meta: {
-				title: 'OpenCase Id: '
+				title: 'Open Case '
 			},
 			props: { readonly: true}
 		},
@@ -40,7 +40,7 @@ var router = new VueRouter({
 			name: 'OpenReport',
 			component: OpenReport,
 			meta: {
-				title: 'OpenReport Id: '
+				title: 'Open Report '
 			},
 			props: { readonly: false}
 		},
@@ -49,7 +49,7 @@ var router = new VueRouter({
 			name: 'OpenReport',
 			component: OpenReport,
 			meta: {
-				title: 'OpenReport Id: '
+				title: 'Open Report '
 			},
 			props: { readonly: true}
 		},

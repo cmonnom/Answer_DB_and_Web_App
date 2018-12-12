@@ -6,12 +6,13 @@ import java.util.stream.Collectors;
 
 import utsw.bicf.answer.controller.serialization.ToolTip;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.UserTableRow;
 
 public class UserTableSummary extends Summary<UserTableRow>{
 //	
-	public UserTableSummary(List<User> users) {
-		super(createUserTableRows(users), "userName");
+	public UserTableSummary(List<User> users, List<HeaderOrder> headerOrders) {
+		super(createUserTableRows(users), "userName", headerOrders);
 	}
 	
 	
@@ -37,9 +38,6 @@ public class UserTableSummary extends Summary<UserTableRow>{
 		Header actions = new Header("Edit User", "actions");
 		actions.setButtons(true);
 		headers.add(actions);
-		
-		//keep in the same order
-		headerOrder = headers.stream().map(header -> header.getValue()).collect(Collectors.toList());
 		
 	}
 }

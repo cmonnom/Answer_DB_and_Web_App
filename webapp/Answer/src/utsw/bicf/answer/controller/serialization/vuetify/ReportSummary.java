@@ -137,7 +137,7 @@ public class ReportSummary {
 					}
 				}
 			}
-			this.snpVariantsStrongClinicalSignificanceSummary = new ClinicalSignificanceSummary(strongCS, "geneVariant");
+			this.snpVariantsStrongClinicalSignificanceSummary = new ClinicalSignificanceSummary(strongCS, "geneVariant", null);
 			
 			List<ClinicalSignificance> possibleCS = new ArrayList<ClinicalSignificance>();
 			if (reportDetails.getSnpVariantsPossibleClinicalSignificance() != null) {
@@ -151,7 +151,7 @@ public class ReportSummary {
 					}
 				}
 			}
-			this.snpVariantsPossibleClinicalSignificanceSummary = new ClinicalSignificanceSummary(possibleCS, "geneVariant");
+			this.snpVariantsPossibleClinicalSignificanceSummary = new ClinicalSignificanceSummary(possibleCS, "geneVariant", null);
 			
 			List<ClinicalSignificance> unknownCS = new ArrayList<ClinicalSignificance>();
 			if (reportDetails.getSnpVariantsUnknownClinicalSignificance() != null) {
@@ -165,7 +165,7 @@ public class ReportSummary {
 					}
 				}
 			}
-			this.snpVariantsUnknownClinicalSignificanceSummary = new ClinicalSignificanceSummary(unknownCS, "geneVariant");
+			this.snpVariantsUnknownClinicalSignificanceSummary = new ClinicalSignificanceSummary(unknownCS, "geneVariant", null);
 			
 			this.snpVariantsStrongClinicalSignificance = reportDetails.getSnpVariantsStrongClinicalSignificance();
 			this.snpVariantsPossibleClinicalSignificance = reportDetails.getSnpVariantsPossibleClinicalSignificance();

@@ -8,20 +8,22 @@ import utsw.bicf.answer.controller.serialization.Units;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.model.hybrid.SNPIndelVariantRow;
 
 public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 	
-	public SNPIndelVariantSummary(ModelDAO modelDAO, OrderCase aCase, String uniqueIdField, List<ReportGroupForDisplay> reportGroups) {
-		super(createRows(modelDAO, aCase, reportGroups), uniqueIdField);
+	public SNPIndelVariantSummary(ModelDAO modelDAO, OrderCase aCase, String uniqueIdField
+			, List<ReportGroupForDisplay> reportGroups, List<HeaderOrder> headerOrders) {
+		super(createRows(modelDAO, aCase, reportGroups, headerOrders), uniqueIdField, headerOrders);
 	}
 
-	private static List<SNPIndelVariantRow> createRows(ModelDAO modelDAO, OrderCase aCase, List<ReportGroupForDisplay> reportGroups) {
+	private static List<SNPIndelVariantRow> createRows(ModelDAO modelDAO, OrderCase aCase, 
+			List<ReportGroupForDisplay> reportGroups, List<HeaderOrder> headerOrders) {
 		List<SNPIndelVariantRow> rows = new ArrayList<SNPIndelVariantRow>();
 		for (Variant variant : aCase.getVariants()) {
 			rows.add(new SNPIndelVariantRow(variant, reportGroups, aCase.getTotalCases()));
-			
 		}
 		return rows;
 	}
@@ -91,9 +93,6 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		
 //		Header rnaAltDepth = new Header(new String[] {"RNA","Depth"}, "rnaAltDepth", Units.NB);
 //		headers.add(rnaAltDepth);
-		//keep in the same order
-		headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());
-		
 		
 	}
 	

@@ -12,6 +12,33 @@ Vue.component('variant-details', {
         cnvChromList: { default: () => [], type: Array}
     },
     template: ` <v-card>
+
+    <v-dialog ref="chartHelpDialog" v-model="chartHelpVisible" hide-overlay max-width="600px" persistent content-class="top-right-dialog">
+    <v-card class="subheading">
+    <v-toolbar dense dark color="warning">
+        <v-toolbar-title>
+            CNV Chart Help
+        </v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon @click="chartHelpVisible = false">
+            <v-icon>close</v-icon>
+        </v-btn>
+        
+    </v-toolbar>
+    <v-card-text class="pl-2 pr-2 pt-2 pb-2">
+    <span >
+    - Darker points are a likely copy number change (copy number equals 2)<br/>
+    &nbsp;&nbsp;or represent selected genes<br/>
+    - Click and Drag the mouse to zoom in.<br/>
+    - Right-Click on the chart to display more actions<br/>
+    - Click on the legend to show/hide series<br/>
+    - Mouse over a data point to get more information (tooltip)<br/>
+    - The chart with ALL chromosomes doesn't have tooltips for faster loading.<br/>
+    - You can highlight specific genes by clicking on the list in the CNV Variant Details panel.</span>
+    </v-card-text>
+    </v-card>
+    </v-dialog>
+
   <v-toolbar class="elevation-0" dense dark :color="color">
       <v-menu offset-y offset-x class="ml-0">
           <v-btn slot="activator" flat icon dark>
@@ -141,75 +168,81 @@ Vue.component('variant-details', {
                                       </v-card>
                                       </v-flex>
                                       <v-flex xs12 md12 lg12 xl10 v-if="variantType == 'cnv'">
-                                      <v-layout>
-                                        <v-flex xs>
-                                        <span class="subheading">Load CNV Plot: </span>
-                                        <v-tooltip bottom>
-                                          <v-btn slot="activator" @click="handleCNVCurrentChromPlot()" :loading="cnvPlotLoadingCurrentChrom" :disabled="cnvPlotLoadingCurrentChrom"
-                                          :class="[cnvPlotNeedsReload ? 'amber accent-2' : '']"
-                                          ><span v-text="formatChrom(currentVariant.chrom)"></span>
-                                          <v-icon right dark>refresh</v-icon>
-                                          </v-btn>
-                                          <span>Plot only <span v-text="formatChrom(currentVariant.chrom)"></span> (faster)</span>
-                                        </v-tooltip>
-                                        </v-flex>
-
-                                        <v-flex xs2 pt-3>
-                                        <v-tooltip right>
-                                        <v-select slot="activator" :items="cnvChromList" v-model="selectedCNVChrom" :disabled="cnvPlotLoadingOtherChrom"
-                                            :loading="cnvPlotLoadingOtherChrom"
-                                            label="Other CHR" single-line hide-details
-                                            item-text="name" clearable item-value="value"
-                                            class="no-height-select" @input="otherCNVChromChanged()"
-                                            ></v-select>
-                                            <span>Display Another Chromosome</span>
-                                        </v-tooltip>
-                                        </v-flex>
-
-                                        <v-flex xs>
-                                        <v-tooltip bottom>
-                                          <v-btn slot="activator" @click="handleCNVAllChromPlot()" :loading="cnvPlotLoadingAllChrom" :disabled="cnvPlotLoadingAllChrom">All</v-btn>
-                                          <span>Plot all chromosomes (slower)</span>
-                                        </v-tooltip>
-                                        <v-tooltip bottom>
-                                          <v-btn slot="activator" @click="resetZoom()" :disabled="cnvPlotReady()">
-                                          <v-icon>zoom_out</v-icon>
-                                          </v-btn>
-                                          <span>Reset Zoom Level</span>
+                                      <v-layout row wrap>
+                                        <v-flex xs12 md12 lg6>
+                                        <v-layout>
+                                          <v-flex xs>
+                                          <span class="subheading">Load CNV Plot: </span>
+                                          <v-tooltip bottom>
+                                            <v-btn slot="activator" @click="handleCNVCurrentChromPlot()" :loading="cnvPlotLoadingCurrentChrom" :disabled="cnvPlotLoadingCurrentChrom"
+                                            :class="[cnvPlotNeedsReload ? 'amber accent-2' : '']"
+                                            ><span v-text="formatChrom(currentVariant.chrom)"></span>
+                                            <v-icon right dark>refresh</v-icon>
+                                            </v-btn>
+                                            <span>Plot only <span v-text="formatChrom(currentVariant.chrom)"></span> (faster)</span>
                                           </v-tooltip>
-                                          <v-tooltip top content-clas="subheading">
-                                              <v-icon slot="activator" color="primary">help</v-icon>
-                                          <span >
-                                          - Darker points are a likely copy number change (copy number equals 2)<br/>
-                                          &nbsp;&nbsp;or represent selected genes<br/>
-                                          - Click and Drag the mouse to zoom in.<br/>
-                                          - Right-Click on the chart to display more actions<br/>
-                                          - Click on the legend to show/hide series<br/>
-                                          - Mouse over a data point to get more information (tooltip)<br/>
-                                          - The chart with ALL chromosomes doesn't have tooltips for faster loading.<br/>
-                                          - You can highlight specific genes by clicking on the list above.</span>
-                                          </v-tooltip>  
                                           </v-flex>
-                                          
-                                          </v-layout>
-
-                                          <v-layout row wrap v-if="visibleGenesCN2 || visibleGenesOther" class="subheading">
-                                          <v-flex xs12><b>Genes Visible on this chart:</b></v-flex>
-                                          <v-flex xs7 md6 lg5 >
-                                                CN=2: 
-                                                <span class="blue-grey--text text--lighten-1">{{ visibleGenesCN2 }}</span><br/>
-                                                Others: 
-                                                <span class="blue-grey--text text--lighten-1">{{ visibleGenesOther }}</span>
+  
+                                          <v-flex xs2 pt-3>
+                                          <v-tooltip right>
+                                          <v-select slot="activator" :items="cnvChromList" v-model="selectedCNVChrom" :disabled="cnvPlotLoadingOtherChrom"
+                                              :loading="cnvPlotLoadingOtherChrom"
+                                              label="Other CHR" single-line hide-details
+                                              item-text="name" clearable item-value="value"
+                                              class="no-height-select" @input="otherCNVChromChanged()"
+                                              ></v-select>
+                                              <span>Display Another Chromosome</span>
+                                          </v-tooltip>
                                           </v-flex>
-                                          <v-flex xs >
-                                                <v-tooltip bottom>
-                                                <v-btn slot="activator" @click="openNewCNVForm">
-                                                    Create New CNV
+  
+                                          <v-flex xs>
+                                          <v-tooltip bottom>
+                                            <v-btn slot="activator" @click="handleCNVAllChromPlot()" :loading="cnvPlotLoadingAllChrom" :disabled="cnvPlotLoadingAllChrom">All</v-btn>
+                                            <span>Plot all chromosomes (slower)</span>
+                                          </v-tooltip>
+                                          <v-tooltip bottom>
+                                            <v-btn slot="activator" @click="resetZoom()" :disabled="cnvPlotReady()">
+                                            <v-icon>zoom_out</v-icon>
+                                            </v-btn>
+                                            <span>Reset Zoom Level</span>
+                                            </v-tooltip>
+                                            <v-tooltip top content-clas="subheading">
+                                                <v-btn slot="activator" @click="chartHelpVisible = true" flat icon>
+                                                <v-icon color="primary">help</v-icon>
                                                 </v-btn>
-                                                <span>Create a new CNV from genes visible on the chart</span>
-                                                </v-tooltip>
-                                          </v-flex>
-                                          </v-layout>
+                                            <span>
+                                              Display Help for the CNV Chart
+                                           </span>
+                                            </v-tooltip>  
+                                            </v-flex>
+                                            
+                                            </v-layout>
+                                        </v-flex>
+                                        <v-flex xs12 md12 lg6>
+                                        <v-layout row wrap v-if="visibleGenesCN2OrSelected || visibleGenesOther" 
+                                        class="subheading elevation-1 mb-4">
+                                        <v-flex xs12 pl-2><b>Genes visible at this zoom level:</b></v-flex>
+                                        <v-flex xs12>
+                                              <v-tooltip bottom>
+                                              <v-btn slot="activator" @click="openNewCNVForm" 
+                                              :loading="toggleAllLoading || cnvPlotLoadingCurrentChrom"
+                                              :disabled="createCNVDisabled">
+                                                  Create New CNV
+                                              </v-btn>
+                                              <span v-show="!createCNVDisabled">Create a new CNV from genes visible on the chart</span>
+                                              <span v-show="createCNVDisabled">No genes visible at this zoom level</span>
+                                              </v-tooltip>
+                                        </v-flex>
+                                        <v-flex xs12 md9 lg8 pl-3>
+                                              <span v-text="genesVisibleTopLabel"></span>
+                                              <span class="blue-grey--text text--lighten-1">{{ visibleGenesCN2OrSelected }}</span><br/>
+                                              <span v-text="genesVisibleBottomLabel"></span>
+                                              <span class="blue-grey--text text--lighten-1">{{ visibleGenesOther }}</span>
+                                        </v-flex>
+                                        </v-layout>
+                                        </v-flex>
+                                      </v-layout>
+
 
                                           <div :style="cnvPlotDataConfig ? fullSizeChart : ''">
                                           <div :id="cnvPlotId" style="height: 100%"></div>
@@ -273,9 +306,13 @@ Vue.component('variant-details', {
             cnvPlotNeedsReload: false,
             toggleAllLoading: false,
             selectedCNVChrom: null,
-            visibleGenesCN2: "",
+            visibleGenesCN2OrSelected: "",
             visibleGenesOther: "",
-            currentListOfVisibleGenes: []
+            currentListOfVisibleGenes: [],
+            createCNVDisabled: false,
+            genesVisibleTopLabel: "CN=2: ",
+            genesVisibleBottomLabel: "Others: ",
+            chartHelpVisible: false
         }
 
     },
@@ -383,9 +420,10 @@ Vue.component('variant-details', {
         },
         updateCNVPlot(chrom) {
             var genesParam = [];
-            this.visibleGenesCN2 = "Zoom in to see the genes visible";
-            this.visibleGenesOther = "Zoom in to see the genes visible";
-            this.currentListOfVisibleGenes = []
+            this.visibleGenesCN2OrSelected = "Counting genes...";
+            this.visibleGenesOther = "Counting genes...";
+            this.currentListOfVisibleGenes = [];
+            this.createCNVDisabled = true;
             for (var i = 0; i < this.genesSelected.length; i++) {
                 genesParam.push(this.currentVariant.geneChips[this.genesSelected[i]].name);
             }
@@ -543,6 +581,14 @@ Vue.component('variant-details', {
                                 object : 'scale',
                                 name : 'scale-x'
                             }).maxValue;
+                            if (this.genesSelected.length > 0) {
+                                this.genesVisibleTopLabel =  "Gene" + (this.genesSelected.length == 1 ? "" : "s") + " selected:";
+                                this.genesVisibleBottomLabel =  "Others: ";
+                            }
+                            else {
+                                this.genesVisibleTopLabel =  "CN=2: ";
+                                this.genesVisibleBottomLabel =  "Others: ";
+                            }
                             this.handleChartZoom({kmin: 0, kmax});
                         });
                     }
@@ -574,20 +620,38 @@ Vue.component('variant-details', {
                     name : 'scale-x'
                 }).maxValue;
             }
-
-            var seriesCN2 = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[0];
-            var labelsCN2 = zingchart.exec(this.cnvPlotId, 'getseriesdata')[0]["data-labels"]; //just item 0 for testing for now
-            var seriesOther = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[1];
-            var labelsOther = zingchart.exec(this.cnvPlotId, 'getseriesdata')[1]["data-labels"]; //just item 0 for testing for now
-            var visibleGenesCN2 = this.getUniqueLabelsFromSeries(kmin, kmax, seriesCN2, labelsCN2);
+            var seriesCN2OrSelected = [];
+            var labelsCN2OrSelected = [];
+            var seriesOther = [];
+            var labelsOther = [];
+            if (this.genesSelected.length > 0) {
+                for (var i = 1; i <= this.genesSelected.length; i++) {
+                    seriesCN2OrSelected = seriesCN2OrSelected.concat(zingchart.exec(this.cnvPlotId, 'getseriesvalues')[i]);
+                    labelsCN2OrSelected = labelsCN2OrSelected.concat(zingchart.exec(this.cnvPlotId, 'getseriesdata')[i]["data-labels"]);
+                }
+                seriesOther = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[0];
+                labelsOther = zingchart.exec(this.cnvPlotId, 'getseriesdata')[0]["data-labels"];
+            }
+            else {
+                seriesCN2OrSelected = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[0];
+                labelsCN2OrSelected = zingchart.exec(this.cnvPlotId, 'getseriesdata')[0]["data-labels"];
+                seriesOther = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[1];
+                labelsOther = zingchart.exec(this.cnvPlotId, 'getseriesdata')[1]["data-labels"];
+            }
+            // var seriesCN2 = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[0];
+            // var labelsCN2 = zingchart.exec(this.cnvPlotId, 'getseriesdata')[0]["data-labels"]; //just item 0 for testing for now
+            // var seriesOther = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[1];
+            // var labelsOther = zingchart.exec(this.cnvPlotId, 'getseriesdata')[1]["data-labels"]; //just item 0 for testing for now
+            var visibleGenesCN2OrSelected = this.getUniqueLabelsFromSeries(kmin, kmax, seriesCN2OrSelected, labelsCN2OrSelected);
             var visibleGenesOther = this.getUniqueLabelsFromSeries(kmin, kmax, seriesOther, labelsOther);
-            for (var i = 0; i < visibleGenesCN2.length; i++) {
-                this.currentListOfVisibleGenes.push(visibleGenesCN2[i]);
+            for (var i = 0; i < visibleGenesCN2OrSelected.length; i++) {
+                this.currentListOfVisibleGenes.push(visibleGenesCN2OrSelected[i]);
             }
             for (var i = 0; i < visibleGenesOther.length; i++) {
                 this.currentListOfVisibleGenes.push(visibleGenesOther[i]);
             }
-            this.visibleGenesCN2 = this.getVisibleGeneStringFromUniqueList(visibleGenesCN2);
+            this.createCNVDisabled = visibleGenesCN2OrSelected.length == 0 && visibleGenesOther.length == 0;
+            this.visibleGenesCN2OrSelected = this.getVisibleGeneStringFromUniqueList(visibleGenesCN2OrSelected);
             this.visibleGenesOther = this.getVisibleGeneStringFromUniqueList(visibleGenesOther);
             
         },
@@ -598,7 +662,9 @@ Vue.component('variant-details', {
                 if (value >= kmin && value <= kmax) {
                     var regex = /(Gene: )(.*)( Log2: [0-9.-]*)/g;
                     var match = regex.exec(labels[i]);
-                    visibleGenes.push(match[2]);
+                    if (match && match[2]) {
+                        visibleGenes.push(match[2]);
+                    }
                 }
             }
             var tempSet = new Set();
@@ -610,13 +676,13 @@ Vue.component('variant-details', {
         },
         getVisibleGeneStringFromUniqueList(visibleGenes) {
             if (visibleGenes.length == 0) {
-                return "No gene visible for that category";
+                return "No genes visible for that category";
             }
-            // else if (visibleGenes.length >= 30) {
-            //     return visibleGenes.length + " genes visible in that category";
-            // }
+            else if (visibleGenes.length >= 100) {
+                return visibleGenes.length + " gene" + (visibleGenes.length == 1 ? "" : "s") + " visible in that category";
+            }
             else {
-                return visibleGenes.join(", ");
+                return visibleGenes.join(", ") + " (" + visibleGenes.length + " gene" + (visibleGenes.length == 1 ? ")" : "s)");
             }
         },
         cnvPlotReady() {

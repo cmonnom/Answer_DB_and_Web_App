@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.GeneToReport;
+import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
@@ -267,5 +268,26 @@ public class ModelDAO {
 //		
 //	}
 	
+	@Transactional
+	public List<HeaderConfig> getHeaderConfigForUserAndTable(Integer userId, String tableTitle) {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "SELECT * FROM header_config" 
+		+" where answer_user_id = :userId "
+				+ " and table_title = :tableTitle";
+		return session.createNativeQuery(sql, HeaderConfig.class)
+				.setParameter("userId", userId)
+				.setParameter("tableTitle", tableTitle)
+				.list();
+	}
+
+	@Transactional
+	public List<HeaderConfig> getAllHeaderConfigForUser(User user) {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "SELECT * FROM header_config" 
+		+" where answer_user_id = :userId ";
+		return session.createNativeQuery(sql, HeaderConfig.class)
+				.setParameter("userId", user.getUserId())
+				.list();
+	}
 	
 }

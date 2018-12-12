@@ -62,11 +62,37 @@ const UserPrefs = {
   <v-card v-if="userPrefs" class="mt-3">
     <v-card-text class="subheading pl-3 pt-3">
       <span pb-2>You can customize the following settings:<br/></span>
+      <v-layout row wrap>
+      <v-flex xs12 md8 lg5>
       <v-switch :label="'Show rewards after annotations: ' + (userPrefs.showGoodies ? 'Yes' : 'No')" v-model="userPrefs.showGoodies"
       @change="saveUserPrefs"></v-switch>
-
+      </v-flex> 
+      </v-layout>
     </v-card-text>
   </v-card>
+
+  <v-card v-if="headerConfigs" class="mt-3">
+  <v-card-text class="subheading pl-3 pt-3">
+    <span pb-3>You customized the following table headers:<br/></span>
+    <v-layout row wrap pt-1>
+    <v-flex xs12 pb-3 v-for="(config, index) in headerConfigs" :key="index">
+    <v-tooltip bottom>
+    <v-btn slot="activator" @click="deleteHeaderConfig(config)" icon flat>
+    <v-icon color="primary">delete</v-icon>
+    </v-btn>
+    <span>Delete this header preference (resets to the normal header)</span>
+    </v-tooltip>
+      <span>{{ config.tableTitle }}:</span>
+      <v-chip label v-for="header in config.headerOrders" 
+      :key="header.value + config.tableTitle" color="primary" text-color="white"
+      disabled>
+        <span class="pr-2"> {{ header.text }} </span>
+          <v-icon :color="header.hidden ? 'white' : 'amber accent-2'">visibility</v-icon>
+      </v-chip>
+    </v-flex>
+    </v-layout>
+  </v-card-text>
+</v-card>
 
 </div>`,
   data() {
@@ -75,7 +101,8 @@ const UserPrefs = {
       snackBarMessage: "",
       userPrefs: null,
       permissions: permissions, //needed to use the global variable in header.jsp
-      admins: ""
+      admins: "",
+      headerConfigs: null
     }
   },
   methods: {
@@ -107,6 +134,23 @@ const UserPrefs = {
           }
           else {
             this.handleDialogs(response.data, this.getUserPrefs);
+          }
+        })
+        .catch(error => {
+          alert(error);
+        });
+    },
+    getHeaderPrefs() {
+      axios.get("./getHeaderPrefs", {
+        params: {
+        }
+      })
+        .then(response => {
+          if (response.data.isAllowed) {
+            this.headerConfigs = response.data.summaries;
+          }
+          else {
+            this.handleDialogs(response.data, this.getHeaderPrefs);
           }
         })
         .catch(error => {
@@ -149,12 +193,37 @@ const UserPrefs = {
         .catch(error => {
           alert(error);
         });
+    },
+
+    deleteHeaderConfig(headerConfig) {
+      if (this.notLoadedYet) {
+        return;
+      }
+      this.snackBarMessage = 'Deleted successfully';
+      axios.get("./deleteHeaderConfig", {
+        params: {
+          tableTitle: headerConfig.tableTitle
+        }
+      })
+        .then(response => {
+          if (response.data.isAllowed && response.data.success) {
+            this.getHeaderPrefs();
+            this.snackBarVisible = true;
+          }
+          else {
+            this.handleDialogs(response.data, this.getHeaderPrefs);
+          }
+        })
+        .catch(error => {
+          alert(error);
+        });
     }
 
   },
   mounted: function () {
     this.getAdmins();
     this.getUserPrefs();
+    this.getHeaderPrefs();
   },
   destroyed: function () {
   },

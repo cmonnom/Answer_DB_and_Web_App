@@ -5,11 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.controller.serialization.vuetify.Header;
+import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.HeaderConfig;
+import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 
 /**
  * Any Controller that needs to return the data as a Vuetify.data-table
@@ -35,26 +40,44 @@ public abstract class Summary<T> {
 	
 	boolean actionable;
 	
+	List<HeaderOrder> headerOrdersPOJO;
+	
 	public Summary() {
 	}
 	
-	public Summary(List<T> items, String uniqueIdField) {
+	public Summary(List<T> items, String uniqueIdField, List<HeaderOrder> headerOrders) {
 		this.items = items;
 		this.headers = new ArrayList<Header>();
-		this.headerOrder = new ArrayList<String>();
+		if (headerOrders != null) {
+			this.headerOrder = headerOrders.stream().map(h -> h.getValue()).collect(Collectors.toList());
+			this.headerOrdersPOJO = headerOrders;
+		}
+		else {
+			this.headerOrder = new ArrayList<String>();
+		}
 		this.uniqueIdField = uniqueIdField;
 		this.isAllowed = true;
 		initializeHeaders();
+		this.updateHeaderOrder();
+		this.setHiddenStatus();
 	}
 	
-	public Summary(List<T> items, String uniqueIdField, boolean actionable) {
+	public Summary(List<T> items, String uniqueIdField, boolean actionable, List<HeaderOrder> headerOrders) {
 		this.items = items;
 		this.headers = new ArrayList<Header>();
-		this.headerOrder = new ArrayList<String>();
+		if (headerOrders != null) {
+			this.headerOrder = headerOrders.stream().map(h -> h.getValue()).collect(Collectors.toList());
+			this.headerOrdersPOJO = headerOrders;
+		}
+		else {
+			this.headerOrder = new ArrayList<String>();
+		}
 		this.uniqueIdField = uniqueIdField;
 		this.isAllowed = true;
 		this.actionable = actionable;
 		initializeHeaders();
+		this.updateHeaderOrder();
+		this.setHiddenStatus();
 	}
 	
 	public abstract void initializeHeaders();
@@ -156,5 +179,42 @@ public abstract class Summary<T> {
 
 	public void setActionable(boolean actionable) {
 		this.actionable = actionable;
+	}
+
+	public void setHiddenStatus() {
+		if (headerOrdersPOJO == null) {
+			return;
+		}
+		for (Header header : headers) {
+			for (HeaderOrder order : headerOrdersPOJO) {
+				if (header.getValue().equals(order.getValue())) {
+					header.setIsHidden(order.isHidden());
+					break;
+				}
+			}
+		}
+	}
+	
+	public void updateHeaderOrder() {
+		//don't override the order if it exists as a preference
+		if (headerOrdersPOJO == null || headerOrdersPOJO.size() != headers.size()) {
+			//keep in the same order
+			headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());
+		}
+	}
+	
+	public static List<HeaderOrder> getHeaderOrdersForUserAndTable(ModelDAO modelDAO, User user, String title) throws JsonParseException, JsonMappingException, IOException {
+		List<HeaderConfig> existingConfigs = modelDAO.getHeaderConfigForUserAndTable(user.getUserId(), title);
+		HeaderConfig uniqueConfigForTable = null;
+		List<HeaderOrder> headerOrders = new ArrayList<HeaderOrder>();
+		if (existingConfigs != null && !existingConfigs.isEmpty()) {
+			uniqueConfigForTable = existingConfigs.get(0);
+			ObjectMapper mapper = new ObjectMapper();
+			HeaderOrder[] headerOrdersArray = mapper.readValue(uniqueConfigForTable.getHeaderOrder(), HeaderOrder[].class);
+			for (HeaderOrder h : headerOrdersArray) {
+				headerOrders.add(h);
+			}
+		}
+		return headerOrders;
 	}
 }

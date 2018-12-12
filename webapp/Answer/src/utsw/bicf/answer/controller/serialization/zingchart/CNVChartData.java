@@ -84,7 +84,7 @@ public class CNVChartData extends ZingChartData {
 		valuesOther.setAlpha(0.2F);
 		for (CNRData cnr : cnrNotInSelectedGenes) {
 			dataOther.add(new Object[] {cnr.getStart(), cnr.getLog2()});
-			dataLabelsOther.add("Gene: " + cnr.getGene() + " Log2:" + cnr.getLog2());
+			dataLabelsOther.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 			dataPointCount++;
 		}
 		valuesByGenes.add(valuesOther);
@@ -104,7 +104,7 @@ public class CNVChartData extends ZingChartData {
 				List<CNRData> cnrList = cnrByGene.get(gene);
 				for (CNRData cnr : cnrList) {
 					data.add(new Object[] {cnr.getStart(), cnr.getLog2()});
-					dataLabels.add("Gene: " + cnr.getGene() + " Log2:" + cnr.getLog2());
+					dataLabels.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 					dataPointCount++;
 				}
 				valuesByGenes.add(values);

@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.VCFAnnotationRow;
 
 public class VariantVcfAnnotationSummary extends Summary<VCFAnnotationRow> {
 	
 
-	public VariantVcfAnnotationSummary(List<VCFAnnotationRow> vcfAnnotations, String uniqueIdField, boolean actionable) {
-		super(vcfAnnotations, uniqueIdField, actionable);
+	public VariantVcfAnnotationSummary(List<VCFAnnotationRow> vcfAnnotations, String uniqueIdField, boolean actionable, List<HeaderOrder> headerOrders) {
+		super(vcfAnnotations, uniqueIdField, actionable, headerOrders);
 		
 	}
 

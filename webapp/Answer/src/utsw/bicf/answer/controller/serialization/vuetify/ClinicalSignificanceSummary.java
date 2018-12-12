@@ -1,10 +1,9 @@
 package utsw.bicf.answer.controller.serialization.vuetify;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 
 public class ClinicalSignificanceSummary extends Summary<ClinicalSignificance> {
 
@@ -12,8 +11,8 @@ public class ClinicalSignificanceSummary extends Summary<ClinicalSignificance> {
 		super();
 	}
 	
-	public ClinicalSignificanceSummary(List<ClinicalSignificance> clinicalSignificanceList, String uniqueIdField) {
-		super(clinicalSignificanceList, uniqueIdField);
+	public ClinicalSignificanceSummary(List<ClinicalSignificance> clinicalSignificanceList, String uniqueIdField, List<HeaderOrder> headerOrders) {
+		super(clinicalSignificanceList, uniqueIdField, headerOrders);
 	}
 
 	@Override
@@ -29,9 +28,6 @@ public class ClinicalSignificanceSummary extends Summary<ClinicalSignificance> {
 		Header annotation = new Header("Annotation", "annotation");
 		annotation.setAlign("left");
 		headers.add(annotation);
-
-		// keep in the same order
-		headerOrder = headers.stream().map(header -> header.getValue()).collect(Collectors.toList());
 
 	}
 

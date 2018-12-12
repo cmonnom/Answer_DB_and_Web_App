@@ -16,6 +16,8 @@ public class FileProperties {
 	String genePanelSearchUrl;
 	String pdfFontPath;
 	File pdfFontFile;
+	String pdfFontBoldPath;
+	File pdfFontBoldFile;
 	String pdfFilesPath;
 	File pdfFilesDir;
 	String pdfLogoPath;
@@ -199,6 +201,24 @@ public class FileProperties {
 	}
 	public void setPdfDraftWatermarkName(String pdfDraftWatermarkName) {
 		this.pdfDraftWatermarkName = pdfDraftWatermarkName;
+	}
+	public String getPdfFontBoldPath() {
+		return pdfFontBoldPath;
+	}
+	public void setPdfFontBoldPath(String pdfFontBoldPath) {
+		this.pdfFontBoldPath = pdfFontBoldPath;
+	}
+	public File getPdfFontBoldFile() {
+		if (pdfFontBoldPath == null) {
+			return null;
+		}
+		if (pdfFontBoldFile == null) {
+			pdfFontBoldFile = new File(pdfFontBoldPath);
+		}
+		return pdfFontBoldFile;
+	}
+	public void setPdfFontBoldFile(File pdfFontBoldFile) {
+		this.pdfFontBoldFile = pdfFontBoldFile;
 	}
 	
 	

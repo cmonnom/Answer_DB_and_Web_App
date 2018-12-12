@@ -1053,7 +1053,7 @@ public class RequestUtils {
 					}
 				}
 				else if (v.getType().equals("snp")){
-					//TODO inform user that no tier was selected
+					//inform user that no tier was selected
 					report.getMissingTierVariants().add(v);
 				}
 				
@@ -1099,22 +1099,29 @@ public class RequestUtils {
 					for (Annotation a : v.getReferenceCnv().getUtswAnnotations()) {
 						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
 						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getBreadth() != null && a.getBreadth().equals("Focal")) {
-							String key = a.getCnvGenes().stream().collect(Collectors.joining(" "));
-							List<Annotation> annotations = selectedAnnotationsForVariant.get(key);
-							if (annotations == null) {
-								annotations = new ArrayList<Annotation>();
+								&& a.getBreadth() != null) {
+							if (a.getBreadth().equals("Chromosomal") && a.getTier() != null && !a.getTier().equals("")) {
+								 //chromosomal annotations don't go into the same table
+								// but need to be counted anyway
+								hasTiers = true;
 							}
-							annotations.add(a);
-							selectedAnnotationsForVariant.put(key, annotations);
-							List<String> tiers = tiersByGenes.get(key);
-							if (tiers == null) {
-								tiers = new ArrayList<String>();
-							}
-							tiers.add(a.getTier());
-							tiersByGenes.put(key, tiers);
-							if (a.getPmids() != null) {
-								pmIds.addAll(this.trimPmIds(a.getPmids()));
+							else if (a.getBreadth().equals("Focal")) {
+								String key = a.getCnvGenes().stream().collect(Collectors.joining(" "));
+								List<Annotation> annotations = selectedAnnotationsForVariant.get(key);
+								if (annotations == null) {
+									annotations = new ArrayList<Annotation>();
+								}
+								annotations.add(a);
+								selectedAnnotationsForVariant.put(key, annotations);
+								List<String> tiers = tiersByGenes.get(key);
+								if (tiers == null) {
+									tiers = new ArrayList<String>();
+								}
+								tiers.add(a.getTier());
+								tiersByGenes.put(key, tiers);
+								if (a.getPmids() != null) {
+									pmIds.addAll(this.trimPmIds(a.getPmids()));
+								}
 							}
 						}
 					}
@@ -1127,7 +1134,7 @@ public class RequestUtils {
 					Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
 					String highestTierForVariant = null;
 					tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
-					if (!tiers.isEmpty()) {
+					if (!tiers.isEmpty() || hasTiers) { //TODO test this
 						hasTiers = true;
 						highestTierForVariant = tiers.get(0);
 						if (strongTiers.contains(highestTierForVariant)) {

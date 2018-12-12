@@ -41,6 +41,7 @@ import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVChromosomeItems;
 import utsw.bicf.answer.controller.serialization.vuetify.GenesInPanelItems;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.Summary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterItems;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListItems;
@@ -51,6 +52,7 @@ import utsw.bicf.answer.controller.serialization.zingchart.CNVChartData;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.FilterStringValue;
+import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
@@ -66,6 +68,8 @@ import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Trial;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.HeaderConfigData;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.model.hybrid.VCFAnnotationRow;
@@ -140,6 +144,10 @@ public class OpenCaseController {
 				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".setDefaultTranscript",
 				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveHeaderConfig",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".deleteHeaderConfig",
+				IndividualPermission.CAN_VIEW);
 		
 	}
 
@@ -490,23 +498,7 @@ public class OpenCaseController {
 			}
 		};
 		if (variantDetails != null) {
-			//fake MDA annotations ////////////////////////////
-//			File file = new File("/opt/answer/files/AMENDMENT_PODS_ReportID_47412_RequestID_51271.html");
-//			if (file.exists()) {
-//				MDAReportTemplate mdaEmail = new MDAReportTemplate(file);
-//				boolean mdaAnnotated = false;
-//				for (String gene : mdaEmail.getAnnotationRows().keySet()) {
-//					if (gene.startsWith(variantDetails.getGeneName())) {
-//						AnnotationRow row = mdaEmail.getAnnotationRows().get(gene);
-//						if (row.getGene().equals(variantDetails.getGeneName())) {
-//							mdaAnnotated = true;
-//							variantDetails.setMdaAnnotation(row);
-//						}
-//					}
-//				}
-//				variantDetails.setMdaAnnotated(mdaAnnotated);
-//				/////////////////////////////////////
-//			}
+			User user = (User) session.getAttribute("user");
 			
 			// populate user info to be used by the UI
 			if (variantDetails.getReferenceVariant() != null
@@ -519,7 +511,8 @@ public class OpenCaseController {
 						.getUtswAnnotations().stream().sorted(annotationComparator).collect(Collectors.toList()));
 			}
 			if (variantDetails.getRelatedVariants() != null && !variantDetails.getRelatedVariants().isEmpty()) {
-				summaryRelated = new VariantRelatedSummary(variantDetails.getRelatedVariants(), "chromPos");
+				List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Related Variants");
+				summaryRelated = new VariantRelatedSummary(variantDetails.getRelatedVariants(), "chromPos", headerOrders);
 			}
 			List<VCFAnnotation> vcfAnnotations = variantDetails.getVcfAnnotations();
 			if (!vcfAnnotations.isEmpty()) {
@@ -528,8 +521,10 @@ public class OpenCaseController {
 				List<VCFAnnotationRow> otherAnnotations = new ArrayList<VCFAnnotationRow>();
 				otherAnnotations.addAll(vcfAnnotations.stream().map(a -> new VCFAnnotationRow(a, true)).collect(Collectors.toList()));
 				otherAnnotations.remove(0);
-				summaryCanonical = new VariantVcfAnnotationSummary(canonicalAnnotation, "proteinPosition", false);
-				summaryOthers = new VariantVcfAnnotationSummary(otherAnnotations, "proteinPosition", true);
+				List<HeaderOrder> headerOrdersCanonical = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, OpenCaseController.class.getName() + "|" + "Canonical VCF Annotations");
+				summaryCanonical = new VariantVcfAnnotationSummary(canonicalAnnotation, "proteinPosition", false, headerOrdersCanonical);
+				List<HeaderOrder> headerOrdersOther = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, OpenCaseController.class.getName() + "|" + "Other VCF Annotations");
+				summaryOthers = new VariantVcfAnnotationSummary(otherAnnotations, "proteinPosition", true, headerOrdersOther);
 				summary = new VariantDetailsSummary(variantDetails, summaryRelated, summaryCanonical, summaryOthers);
 			}
 			return summary.createVuetifyObjectJSON();
@@ -1251,13 +1246,63 @@ public class OpenCaseController {
 	
 	@RequestMapping(value = "/setDefaultTranscript", produces= "application/json; charset=utf-8") 
 	@ResponseBody
-	public String setDefaultTranscript(Model model, @RequestParam String variantId, @RequestBody String data)
+	public String setDefaultTranscript(Model model, HttpSession session, @RequestParam String variantId, @RequestBody String data)
 			throws Exception {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		utils.setDefaultTranscript(response, data, variantId);
+		return response.createObjectJSON();
+
+	}
+	
+	@RequestMapping(value = "/saveHeaderConfig", produces= "application/json; charset=utf-8") 
+	@ResponseBody
+	public String saveHeaderConfig(Model model, HttpSession session, @RequestBody String data)
+			throws Exception {
+
+		ObjectMapper mapper = new ObjectMapper();
+		HeaderConfigData headerConfig = mapper.readValue(data, HeaderConfigData.class);
+		User user = (User) session.getAttribute("user");
+		List<HeaderConfig> existingConfigs = modelDAO.getHeaderConfigForUserAndTable(user.getUserId(), headerConfig.getTableTitle());
+		HeaderConfig uniqueConfigForTable = null;
+		if (existingConfigs != null && !existingConfigs.isEmpty()) {
+			uniqueConfigForTable = existingConfigs.get(0);
+		}
+		if (uniqueConfigForTable == null) {
+			uniqueConfigForTable = new HeaderConfig();
+			uniqueConfigForTable.setUser(user);
+			uniqueConfigForTable.setTableTitle(headerConfig.getTableTitle());
+		}
+		
+		String headerOrder = mapper.writeValueAsString(headerConfig.getHeaders().stream().map(h -> new HeaderOrder(h)).collect(Collectors.toList()));
+		uniqueConfigForTable.setHeaderOrder(headerOrder);
+		modelDAO.saveObject(uniqueConfigForTable);
+		
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		return response.createObjectJSON();
+
+	}
+	
+	@RequestMapping(value = "/deleteHeaderConfig", produces= "application/json; charset=utf-8") 
+	@ResponseBody
+	public String deleteHeaderConfig(Model model, HttpSession session, @RequestParam String tableTitle)
+			throws Exception {
+
+		AjaxResponse response = new AjaxResponse();
+		User user = (User) session.getAttribute("user");
+		List<HeaderConfig> existingConfigs = modelDAO.getHeaderConfigForUserAndTable(user.getUserId(), tableTitle);
+		HeaderConfig uniqueConfigForTable = null;
+		if (existingConfigs != null && !existingConfigs.isEmpty()) {
+			uniqueConfigForTable = existingConfigs.get(0);
+			modelDAO.deleteObject(uniqueConfigForTable);
+		}
+		
+		response.setIsAllowed(true);
+		response.setSuccess(true);
 		return response.createObjectJSON();
 
 	}

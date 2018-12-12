@@ -233,7 +233,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="selectVariantForReport()" v-if="!currentRow.isSelected" :disabled="reviewDialogVisible || !canProceed('canSelect')">
+                        <v-list-tile avatar @click="selectVariantForReport()" v-if="!currentRow.isSelected" :disabled="!canProceed('canSelect')">
                             <v-list-tile-avatar>
                                 <v-icon>done</v-icon>
                             </v-list-tile-avatar>
@@ -242,7 +242,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="removeVariantFromReport()" v-if="currentRow.isSelected" :disabled="reviewDialogVisible || !canProceed('canSelect')">
+                        <v-list-tile avatar @click="removeVariantFromReport()" v-if="currentRow.isSelected" :disabled="!canProceed('canSelect')">
                             <v-list-tile-avatar>
                                 <v-icon>done</v-icon>
                             </v-list-tile-avatar>
@@ -581,11 +581,11 @@ const OpenCase = {
                     </v-btn>
                     <span>Create/Edit Your Annotations</span>
                 </v-tooltip>
-                <v-btn v-if="!currentRow.isSelected" :disabled="reviewDialogVisible || !canProceed('canSelect') || readonly" color="success"
+                <v-btn v-if="!currentRow.isSelected" :disabled="!canProceed('canSelect') || readonly" color="success"
                     @click="selectVariantForReport()" slot="activator">Select Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn v-if="currentRow.isSelected" :disabled="reviewDialogVisible || !canProceed('canSelect') || readonly" color="warning"
+                <v-btn v-if="currentRow.isSelected" :disabled="!canProceed('canSelect') || readonly" color="warning"
                     @click="removeVariantFromReport()" slot="activator">Deselect Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
@@ -854,7 +854,8 @@ const OpenCase = {
                     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
                         no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true"
                         @refresh-requested="handleRefresh()" :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons"
-                        @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
+                        @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase"
+                        >
                         <v-fade-transition slot="action1">
                             <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
                                 <v-btn slot="activator" flat icon @click="toggleFilters('snp')" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
@@ -1435,6 +1436,7 @@ const OpenCase = {
         addCustomWarningFlags(snpIndelVariantSummary) {
             for (var i = 0; i < snpIndelVariantSummary.items.length; i++) {
                 var item = snpIndelVariantSummary.items[i];
+                item.iconFlags.iconFlags.forEach(f => {f.chip = false;});
                 var iconFlags = item.iconFlags.iconFlags;
                 var warnings = [];
                 var tooltips = [];
@@ -1462,7 +1464,6 @@ const OpenCase = {
                         iconName: warnings.join(),
                         tooltip: tooltips.join(", ")
                     });
-
                 }
             }
         },
@@ -3606,7 +3607,7 @@ const OpenCase = {
                 .catch(error => {
                     alert(error);
                 });
-        }
+        },
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",

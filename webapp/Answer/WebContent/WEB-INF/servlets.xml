@@ -104,6 +104,7 @@
 		<property name="bamLinksPath" value="${bam.link.location}" />
 		<property name="bamFilesPath" value="${bam.file.location}" />
 		<property name="pdfFontPath" value="${pdf.font.location}" />
+		<property name="pdfFontBoldPath" value="${pdf.font.bold.location}" />
 		<property name="productionEnv" value="${production.env}" />
 		<property name="genePanelSearchUrl" value="${gene.panel.search.url}" />
 		<property name="pdfFilesPath" value="${pdf.temp.location}" />

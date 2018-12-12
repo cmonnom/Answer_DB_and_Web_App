@@ -12,7 +12,7 @@ public class TranslocationReportSummary extends Summary<TranslocationReport> {
 	}
 	
 	public TranslocationReportSummary(List<TranslocationReport> translocationReports, String uniqueIdField) {
-		super(translocationReports, uniqueIdField);
+		super(translocationReports, uniqueIdField, null);
 	}
 
 	@Override
@@ -40,9 +40,6 @@ public class TranslocationReportSummary extends Summary<TranslocationReport> {
 		Header comment = new Header("Comment", "comment");
 		comment.setAlign("left");
 		headers.add(comment);		
-		
-		headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());
-		
 		
 	}
 	

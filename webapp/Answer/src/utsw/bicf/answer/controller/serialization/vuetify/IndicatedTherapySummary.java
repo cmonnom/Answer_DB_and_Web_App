@@ -12,7 +12,7 @@ public class IndicatedTherapySummary extends Summary<IndicatedTherapy> {
 	}
 	
 	public IndicatedTherapySummary(List<IndicatedTherapy> indicatedTherapies, String uniqueIdField) {
-		super(indicatedTherapies, uniqueIdField);
+		super(indicatedTherapies, uniqueIdField, null);
 	}
 
 	@Override
@@ -26,9 +26,6 @@ public class IndicatedTherapySummary extends Summary<IndicatedTherapy> {
 		Header indication = new Header("Indication", "indication");
 		indication.setAlign("left");
 		headers.add(indication);
-
-		// keep in the same order
-		headerOrder = headers.stream().map(header -> header.getValue()).collect(Collectors.toList());
 
 	}
 

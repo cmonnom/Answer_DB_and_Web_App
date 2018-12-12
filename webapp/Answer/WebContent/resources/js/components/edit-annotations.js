@@ -612,9 +612,9 @@ Vue.component('edit-annotations', {
                 //     }
                 // }
                 // annotation.nctIds = tempSet.size != 0 ? Array.from(tempSet) : null;
-                // if (annotation.breadth == 'Chromosomal') {
-                //     annotation.cnvGenes = [];
-                // }
+                if (annotation.breadth == 'Chromosomal') {
+                    annotation.cnvGenes = [];
+                }
                 if (annotation.category == "Clinical Trial") {
                     annotation.text = annotation.trial.nctId;
                 }

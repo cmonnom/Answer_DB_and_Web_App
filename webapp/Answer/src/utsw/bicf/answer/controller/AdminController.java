@@ -20,12 +20,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.DataReportGroup;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportGroupTableSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.Summary;
 import utsw.bicf.answer.controller.serialization.vuetify.UserTableSummary;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.security.FileProperties;
 
 @Controller
@@ -58,7 +60,9 @@ public class AdminController {
 			throws Exception {
 
 		List<User> users = modelDAO.getAllUsers();
-		UserTableSummary summary = new UserTableSummary(users);
+		User user = (User) session.getAttribute("user");
+		List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Users");
+		UserTableSummary summary = new UserTableSummary(users, headerOrders);
 		
 		return summary.createVuetifyObjectJSON();
 	}
@@ -69,8 +73,9 @@ public class AdminController {
 			throws Exception {
 
 		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
-//		reportGroups.stream().forEach(r -> r.populateGenesToReport(modelDAO));
-		ReportGroupTableSummary summary = new ReportGroupTableSummary(reportGroups);
+		User user = (User) session.getAttribute("user");
+		List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Gene Sets");
+		ReportGroupTableSummary summary = new ReportGroupTableSummary(reportGroups, headerOrders);
 		
 		return summary.createVuetifyObjectJSON();
 	}

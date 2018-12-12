@@ -25,6 +25,8 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
@@ -125,7 +127,7 @@ public class FinalReportPDFTemplate {
 		FinalReportTemplateConstants.MAIN_FONT_TYPE = PDType0Font.load(mainDocument,
 				fileProps.getPdfFontFile());
 		FinalReportTemplateConstants.MAIN_FONT_TYPE_BOLD = PDType0Font.load(mainDocument,
-				fileProps.getPdfFontFile());
+				fileProps.getPdfFontBoldFile());
 		PDPage firstPage = mainDocument.getPage(0);
 		float yPos = pageHeight - FinalReportTemplateConstants.LOGO_MARGIN_TOP;
 
@@ -579,6 +581,7 @@ public class FinalReportPDFTemplate {
 
 	private void applyCellFormatting(Cell<PDPage> cell, float defaultFont, Color color) {
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
+		cell.setFontBold(FinalReportTemplateConstants.MAIN_FONT_TYPE_BOLD);
 		cell.setAlign(HorizontalAlignment.LEFT);
 		cell.setValign(VerticalAlignment.TOP);
 		cell.setFontSize(defaultFont);
@@ -979,11 +982,20 @@ public class FinalReportPDFTemplate {
 				}
 				row = table.createRow(12);
 				StringBuilder sb = new StringBuilder();
-				sb.append("<b>").append(item.getTitle()).append("</b>").append("<br/>");
-				sb.append(item.getDescription());
+//				sb.append("<b>").append(item.getTitle()).append("</b>").append("<br/>"); //can't use tags, it reverts to Helvetica
+				sb.append("").append(item.getTitle()).append("");
+//				Cell<PDPage> cell = row.createCell(100, sanitizeString(sb.toString()));
 				Cell<PDPage> cell = row.createCell(100, sb.toString());
 				cell.setBottomPadding(0);
+				this.applyCellFormatting(cell, FinalReportTemplateConstants.DEFAULT_TEXT_FONT_SIZE, color);
+				cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE_BOLD); //override the normal font to make it bold
+				
+				//Date
+				row = table.createRow(12);
+				cell = row.createCell(100, item.getDescription());
 				this.applyCellFormatting(cell, defaultFont, color);
+				cell.setTopPadding(-10);
+				greyBackground = !greyBackground;
 				
 				//PMID link
 				row = table.createRow(12);
@@ -1000,6 +1012,25 @@ public class FinalReportPDFTemplate {
 		latestYPosition = table.draw() - 20;
 	}
 
+//	private String sanitizeString(String text) throws IOException {
+//		StringBuilder nonSymbolBuffer = new StringBuilder();
+//	    for (char character : text.toCharArray()) {
+//	        if (WinAnsiEncoding.INSTANCE.contains(character)) {
+//	            nonSymbolBuffer.append(character);
+//	        } else {
+//	            //handle writing line with symbols...
+//	        	if ((int) character == 954 ) { //kappa symbol
+//	        		nonSymbolBuffer.append("k");
+//	        	}
+//	        	else {
+//	        		nonSymbolBuffer.append("?");
+//	        	}
+//	        	
+//	        }
+//	    }
+//		return nonSymbolBuffer.toString();
+//	}
+	
 	private Row<PDPage> createRow(BaseTable table, String title, String value, float fontSize) throws IOException {
 		return createRow(table, title, value, fontSize, FinalReportTemplateConstants.MAIN_FONT_TYPE);
 	}
@@ -1076,6 +1107,11 @@ public class FinalReportPDFTemplate {
 			List<FooterColor> colors = colorPerPage.get(i);
 			if (colors == null) { //don't change color until the next page has an entry
 				colors = colorPerPage.get(i - 1);
+			}
+			int pageNb = i - 1;
+			while (colors == null && pageNb > 0) {
+				colors = colorPerPage.get(pageNb -1);
+				pageNb--;
 			}
 			
 //			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);

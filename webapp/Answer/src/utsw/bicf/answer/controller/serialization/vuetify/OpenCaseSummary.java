@@ -2,6 +2,7 @@ package utsw.bicf.answer.controller.serialization.vuetify;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,11 +17,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.controller.OpenCaseController;
 import utsw.bicf.answer.dao.ModelDAO;
-import utsw.bicf.answer.model.FinalReport;
+import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.security.QcAPIAuthentication;
@@ -42,9 +45,12 @@ public class OpenCaseSummary {
 	String type;
 
 	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
-		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups);
-		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField);
-		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField);
+		List<HeaderOrder> snpOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "SNP/Indel Variants");
+		List<HeaderOrder> cnvOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "CNVs");
+		List<HeaderOrder> ftlOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Fusions / Translocations");
+		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups, snpOrders);
+		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField, cnvOrders);
+		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField, ftlOrders);
 		this.patientInfo = new PatientInfo(aCase);
 		this.caseId = aCase.getCaseId();
 		this.caseName = aCase.getCaseName();

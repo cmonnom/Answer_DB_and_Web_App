@@ -5,11 +5,12 @@ import java.util.stream.Collectors;
 
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 
 public class VariantRelatedSummary extends Summary<Variant> {
 
-	public VariantRelatedSummary(List<Variant> relatedVariants, String uniqueIdField) {
-		super(relatedVariants, uniqueIdField);
+	public VariantRelatedSummary(List<Variant> relatedVariants, String uniqueIdField, List<HeaderOrder> headerOrders) {
+		super(relatedVariants, uniqueIdField, headerOrders);
 	}
 
 	@Override
@@ -26,8 +27,6 @@ public class VariantRelatedSummary extends Summary<Variant> {
 		Header alt = new Header("Alt", "alt");
 		headers.add(alt);
 
-		// keep in the same order
-		headerOrder = headers.stream().map(header -> header.getValue()).collect(Collectors.toList());
 
 	}
 

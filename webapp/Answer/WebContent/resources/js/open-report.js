@@ -837,7 +837,7 @@ const OpenReport = {
                 for (var j = 0; j < this.fullReport.patientInfo.patientTables[i].items.length; j++) {
                     var item = this.fullReport.patientInfo.patientTables[i].items[j];
                     if (item.field == "dedupPctOver100X") {
-                        item.value = parseFloat(item.value.replace("%", ""));
+                        item.value = parseFloat((item.value + "").replace("%", ""));
                     }
                 } 
 

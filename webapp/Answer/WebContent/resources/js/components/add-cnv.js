@@ -163,7 +163,7 @@ Vue.component('add-cnv', {
                 });
         },
         getGeneList() {
-            return this.currentGeneList.join(" ,");
+            return this.currentGeneList.join(", ") + " (" + this.currentGeneList.length + " gene" + (this.currentGeneList.length == 1 ? "" : "s)");
         },
         handleAxiosError(error) {
             console.log(error);

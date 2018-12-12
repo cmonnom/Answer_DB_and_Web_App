@@ -8,11 +8,12 @@ import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.hybrid.CNVRow;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 
 public class CNVSummary extends Summary<CNVRow> {
 	
-	public CNVSummary(ModelDAO modelDAO, OrderCase aCase, String uniqueIdField) {
-		super(createRows(modelDAO, aCase), uniqueIdField);
+	public CNVSummary(ModelDAO modelDAO, OrderCase aCase, String uniqueIdField, List<HeaderOrder> cnvOrders) {
+		super(createRows(modelDAO, aCase), uniqueIdField, cnvOrders);
 	}
 
 	private static List<CNVRow> createRows(ModelDAO modelDAO, OrderCase aCase) {
@@ -59,9 +60,6 @@ public class CNVSummary extends Summary<CNVRow> {
 		Header score = new Header("Score", "score");
 		score.setWidth("100px");
 		headers.add(score);
-		//keep in the same order
-		headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());
-		
 		
 	}
 	

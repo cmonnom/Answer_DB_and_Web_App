@@ -345,3 +345,10 @@ table.table tbody td {
 .no-top-text-field {
     margin-top: -18px !important;
 }
+
+.top-right-dialog {
+    position: absolute;
+    right: -24px;
+    top: -24px;
+    opacity: 0.90;
+}

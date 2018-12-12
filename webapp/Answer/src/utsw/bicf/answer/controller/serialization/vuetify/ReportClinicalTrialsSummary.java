@@ -12,7 +12,7 @@ public class ReportClinicalTrialsSummary extends Summary<BiomarkerTrialsRow> {
 	}
 	
 	public ReportClinicalTrialsSummary(List<BiomarkerTrialsRow> trials, String uniqueIdField) {
-		super(trials, uniqueIdField);
+		super(trials, uniqueIdField, null);
 		if (trials != null) {
 			for (BiomarkerTrialsRow row : trials) {
 				if (row.getSelectedBiomarker() != null) {
@@ -64,9 +64,6 @@ public class ReportClinicalTrialsSummary extends Summary<BiomarkerTrialsRow> {
 		dept.setWidth("100px");
 		dept.setAlign("left");
 		headers.add(dept);
-		
-		headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());
-		
 		
 	}
 	

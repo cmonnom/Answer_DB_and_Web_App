@@ -12,7 +12,7 @@ public class CNVReportSummary extends Summary<CNVReport> {
 	}
 	
 	public CNVReportSummary(List<CNVReport> cnvReport, String uniqueIdField) {
-		super(cnvReport, uniqueIdField);
+		super(cnvReport, uniqueIdField, null);
 	}
 
 	@Override
@@ -45,8 +45,6 @@ public class CNVReportSummary extends Summary<CNVReport> {
 		Header comment = new Header("Comment", "comment");
 		comment.setAlign("left");
 		headers.add(comment);
-		//keep in the same order
-		headerOrder = headers.stream().map(aHeader -> aHeader.getValue()).collect(Collectors.toList());
 		
 		
 	}

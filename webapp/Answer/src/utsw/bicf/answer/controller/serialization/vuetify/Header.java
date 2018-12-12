@@ -25,7 +25,7 @@ public class Header {
 	Units unit;
 	Boolean isPassable;
 	Boolean isActionable;
-	Boolean isFlag;
+	Boolean isFlag = false;
 	String width;
 	Integer widthValue;
 	Boolean buttons; //to allow buttons instead of text in a cell

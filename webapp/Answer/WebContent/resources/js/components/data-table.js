@@ -23,7 +23,7 @@ Vue.component('data-table', {
         "show-left-menu": { default: true, type: Boolean },
         "color": { default: "primary", type: String },
         "disable-sticky-header": {default: false, type: Boolean},
-        highlights: { default: () => {}, type: Object }
+        highlights: { default: () => {}, type: Object },
 
     },
     template: `<div>
@@ -203,10 +203,17 @@ Vue.component('data-table', {
                 <v-icon>visibility</v-icon>
               </v-btn>
               <span>Show/Hide all</span>
-            </v-tooltip>
+            </v-tooltip><br/>
+            <v-tooltip bottom>
+            <v-btn slot="activator" icon flat :color="color" small
+            :loading="savingHeaderConfig" :disabled="!saveHeaderConfigNeeded" @click="saveHeaderConfig()">
+              <v-icon>save</v-icon>
+            </v-btn>
+            <span>Save Headers Configuration (position, visibility)</span>
+          </v-tooltip>
           </v-flex>
           <v-flex>
-            <draggable :list="headerOrder" @start="draggingStarted" @end="itemDragging=''" class="draggable">
+            <draggable :list="headerOrder" @start="draggingStarted" @end="draggingEnded" class="draggable">
               <v-chip label v-for="header in headerOrder" :key="header" :color="color" text-color="white" :class="[{'is-dragging':isDragging(header)}, 'elevation-1', 'draggable']"
                 :id="header">
                 <span class="draggable">{{ getHeaderByValue(header) }}</span>
@@ -359,7 +366,7 @@ Vue.component('data-table', {
           </v-tooltip>
           <span v-if="!(props.item.tooltips && props.item.tooltips[header.value])" v-html="formattedItem(header, props.item[header.value])"></span>
 
-          <span v-if="props.item[header.value]">
+          <span v-if="props.item[header.value] && props.item[header.value].iconFlags">
             <v-tooltip bottom v-for="(icon, index) in props.item[header.value].iconFlags" :key="index" v-if="header.isFlag">
                 <v-chip v-if="icon.chip" slot="activator" :color="icon.color"
                 text-color="white" label small disabled>
@@ -473,7 +480,9 @@ Vue.component('data-table', {
             doExport: false, //if true, the table will be exported as a CSV
             csvContent: "",
             headerOptionsVisible: false, //work in progress
-            showButtons: true
+            showButtons: true,
+            saveHeaderConfigNeeded: false,
+            savingHeaderConfig: false
         }
     },
     methods: {
@@ -675,7 +684,10 @@ Vue.component('data-table', {
         draggingStarted(evt) {
             var item = evt.item;
             this.itemDragging = item.id;
-
+        },
+        draggingEnded(evt) {
+            this.itemDragging = '';
+            this.saveHeaderConfigNeeded = true;
         },
         // Retrieve the human readable form by Java field name
         // Used by draggable
@@ -950,6 +962,7 @@ Vue.component('data-table', {
                             //just a refresh. Keep the headerOrder in place
                             //in case the user modified the column order
                             this.expandedHeaderOrder = response.data.headerOrder;
+
                         }
                         this.expandedHeaders = response.data.headers;
                         this.expandedItems = response.data.items;
@@ -1120,9 +1133,53 @@ Vue.component('data-table', {
                 header.width = header.widthValue + "px";
             }
         },
+        saveHeaderConfig() {
+            this.savingHeaderConfig = true;
+            var simpleHeaders = [];
+            for (var i = 0; i < this.headerOrder.length; i++) {
+                var fullHeader = this.getHeaderObjectByValue(this.headerOrder[i]);
+                var text = "";
+                if (fullHeader.text) {
+                    text = fullHeader.text;
+                }
+                else if (fullHeader.textPart2 != null) {
+                    text = fullHeader.textPart1 + " " + fullHeader.textPart2;
+                }
+                else {
+                    text = fullHeader.textPart1;
+                }
+                simpleHeaders.push({
+                    value: fullHeader.value,
+                    isHidden: fullHeader.isHidden,
+                    text: text
+                })
+            }
+            axios({
+                method: 'post',
+                url: webAppRoot + "/saveHeaderConfig",
+                params: {
+                },
+                data: {
+                    headers: simpleHeaders,
+                    tableTitle: this.tableTitle
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        this.saveHeaderConfigNeeded = false;
+                    } else {
+                        this.handleDialogs(response.data, this.saveHeaderConfig.bind(null, headers, tableTitle));
+                    }
+                    this.savingHeaderConfig = false;
+                })
+                .catch(error => {
+                    this.handleAxiosError(error);
+                    this.savingHeaderConfig = false;
+                });
+        }
     },
     computed: {
-        getSortedHeaders: function () {
+        getSortedHeaders() {
             var sortedHeaders = [];
             this.headerOrder.forEach(sortedHeader => {
                 this.headers.forEach(header => {

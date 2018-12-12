@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import utsw.bicf.answer.model.ReportGroup;
+import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.ReportGroupTableRow;
 
 public class ReportGroupTableSummary extends Summary<ReportGroupTableRow>{
 //	
-	public ReportGroupTableSummary(List<ReportGroup> reportGroups) {
-		super(createReportGroupTableRows(reportGroups), "groupName");
+	public ReportGroupTableSummary(List<ReportGroup> reportGroups, List<HeaderOrder> headerOrders) {
+		super(createReportGroupTableRows(reportGroups), "groupName", headerOrders);
 	}
 	
 	
@@ -40,9 +41,6 @@ public class ReportGroupTableSummary extends Summary<ReportGroupTableRow>{
 		Header actions = new Header(new String[] {"Edit", "Gene Set"}, "actions");
 		actions.setButtons(true);
 		headers.add(actions);
-		
-		//keep in the same order
-		headerOrder = headers.stream().map(header -> header.getValue()).collect(Collectors.toList());
 		
 	}
 }
