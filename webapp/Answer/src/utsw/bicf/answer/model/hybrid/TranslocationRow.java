@@ -22,6 +22,8 @@ public class TranslocationRow {
 	Boolean utswAnnotated;
 	FlagValue iconFlags;
 	Boolean isSelected;
+	String leftExons;
+	String rightExons;
 	
 	
 	public TranslocationRow(Translocation translocation) {
@@ -37,6 +39,8 @@ public class TranslocationRow {
 		this.dnaReads = translocation.getDnaReads();
 		this.utswAnnotated = translocation.getUtswAnnotated();
 		this.isSelected = translocation.getSelected();
+		this.leftExons = translocation.getFirstExon();
+		this.rightExons = translocation.getLastExon();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		if (utswAnnotated != null && utswAnnotated) {
@@ -112,6 +116,16 @@ public class TranslocationRow {
 
 	public Boolean getIsSelected() {
 		return isSelected;
+	}
+
+
+	public String getLeftExons() {
+		return leftExons;
+	}
+
+
+	public String getRightExons() {
+		return rightExons;
 	}
 
 

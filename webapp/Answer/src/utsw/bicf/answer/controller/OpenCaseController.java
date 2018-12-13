@@ -1034,7 +1034,7 @@ public class OpenCaseController {
 						caseSummary.setDedupAvgDepth(dedupAvgDepthInt);
 					} catch (Exception e) {
 						response.setSuccess(false);
-						response.setMessage("Dedup Avg. Depth is not a valid integer: " + dedupAvgDepth);
+						response.setMessage("Avg. Depth is not a valid integer: " + dedupAvgDepth);
 					}
 				}
 				if (dedupPctOver100X != "") {
@@ -1043,7 +1043,7 @@ public class OpenCaseController {
 						caseSummary.setDedupPctOver100X(dedupPctOver100XDouble);
 					} catch (Exception e) {
 						response.setSuccess(false);
-						response.setMessage("Dedup Pct. Over 100X is not a valid number: " + dedupPctOver100X);
+						response.setMessage("Pct. Over 100X is not a valid number: " + dedupPctOver100X);
 					}
 				}
 				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);

@@ -17,6 +17,9 @@ public class IndicatedTherapySummary extends Summary<IndicatedTherapy> {
 
 	@Override
 	public void initializeHeaders() {
+		Header drugs = new Header("Drugs", "drugs");
+		drugs.setWidth("200px");
+		headers.add(drugs);
 		Header variant = new Header("Variant", "variant");
 		variant.setWidth("150px");
 		headers.add(variant);

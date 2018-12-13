@@ -412,6 +412,15 @@ public class RequestUtils {
 		return null;
 	}
 
+	/**
+	 * To save changes in patient details usually
+	 * @param ajaxResponse
+	 * @param annotationToSave
+	 * @throws URISyntaxException
+	 * @throws UnsupportedCharsetException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
 	public void saveCaseAnnotation(AjaxResponse ajaxResponse, CaseAnnotation annotationToSave) throws URISyntaxException, UnsupportedCharsetException, ClientProtocolException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
@@ -859,6 +868,7 @@ public class RequestUtils {
 						&& !cnv.getReferenceCnv().getUtswAnnotations().isEmpty()) {
 					StringBuilder sb = new StringBuilder();
 					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
+					boolean atLeastOneChromosomal = false; //to increment the navigation table for chromosomal CNVs
 					for (Annotation a : cnv.getReferenceCnv().getUtswAnnotations()) {
 						Annotation.init(a, cnv.getAnnotationIdsForReporting(), modelDAO);
 						if (a.getIsSelected() != null && a.getIsSelected()
@@ -866,6 +876,7 @@ public class RequestUtils {
 								&& !"Clinical Trial".equals(a.getCategory())) {
 							sb.append(a.getText()).append(" ");
 							atLeastOneSelected = true;
+							atLeastOneChromosomal = true;
 							if (a.getPmids() != null) {
 								pmIds.addAll(this.trimPmIds(a.getPmids()));
 							}
@@ -879,7 +890,18 @@ public class RequestUtils {
 					if (atLeastOneSelected) {
 						cnvReports.add(new CNVReport(sb.toString(), cnv));
 						report.getCnvIds().add(cnv.getMongoDBId().getOid());
-//						report.incrementCnvCount(cnv.getCytoband()); //don't count CNVs at this stage
+						if (atLeastOneChromosomal) {
+							String aberrationType = "";
+							if ("gain".equals(cnv.getAberrationType())
+									|| "amplification".equals(cnv.getAberrationType())) {
+								aberrationType = "Gain ";
+							}
+							else if ("hemizygous loss".equals(cnv.getAberrationType())
+									|| "homozygous loss".equals(cnv.getAberrationType())) {
+								aberrationType = "Loss ";
+							}
+							report.incrementCnvCount(aberrationType + cnv.getChrom() + ":" + cnv.getCytoband());
+						}
 					}
 				}
 			}
@@ -974,7 +996,7 @@ public class RequestUtils {
 				indicatedTherapies.addAll(annotations);
 			}
 		}
-		
+		trials.stream().forEach(t -> t.setIsSelected(true));
 		report.setClinicalTrials(trials); //after adding all the UTSW trials
 		
 		report.setIndicatedTherapies(indicatedTherapies);

@@ -277,23 +277,29 @@ public class FinalReportPDFTemplate {
 		maxTableHeight = Math.max(maxTableHeight, rightTable.getHeaderAndDataHeight());
 
 		// draw borders
-		BaseTable leftTableEmpty = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
+		BaseTable allWidthEmptyTable = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, pageWidthMinusMargins,
 				FinalReportTemplateConstants.MARGINLEFT, mainDocument, firstPage, true, true);
-		Row<PDPage> row = leftTableEmpty.createRow(maxTableHeight);
+		Row<PDPage> row = allWidthEmptyTable.createRow(maxTableHeight);
 		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
-		leftTableEmpty.draw();
-		BaseTable middleTableEmpty = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
-				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth(), mainDocument, firstPage, true,
-				true);
-		row = middleTableEmpty.createRow(maxTableHeight);
-		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
-		middleTableEmpty.draw();
-		BaseTable rightTableEmpty = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
-				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth() + middleTable.getWidth(),
-				mainDocument, firstPage, true, true);
-		row = rightTableEmpty.createRow(maxTableHeight);
-		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
-		rightTableEmpty.draw();
+		allWidthEmptyTable.draw();
+		
+//		BaseTable leftTableEmpty = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
+//				FinalReportTemplateConstants.MARGINLEFT, mainDocument, firstPage, true, true);
+//		Row<PDPage> row = leftTableEmpty.createRow(maxTableHeight);
+//		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
+//		leftTableEmpty.draw();
+//		BaseTable middleTableEmpty = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
+//				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth(), mainDocument, firstPage, true,
+//				true);
+//		row = middleTableEmpty.createRow(maxTableHeight);
+//		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
+//		middleTableEmpty.draw();
+//		BaseTable rightTableEmpty = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
+//				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth() + middleTable.getWidth(),
+//				mainDocument, firstPage, true, true);
+//		row = rightTableEmpty.createRow(maxTableHeight);
+//		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
+//		rightTableEmpty.draw();
 
 		latestYPosition -= maxTableHeight + 10;
 	}
@@ -301,8 +307,8 @@ public class FinalReportPDFTemplate {
 	private void applyPatientRecordTableBorderFormatting(Cell<PDPage> cell) {
 		cell.setTopBorderStyle(FinalReportTemplateConstants.THINLINE_OUTTER_ANSWER_GREEN);
 		cell.setBottomBorderStyle(FinalReportTemplateConstants.THINLINE_OUTTER_ANSWER_GREEN);
-		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER);
-		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER);
+		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 	}
 
 	private void updatePotentialNewPagePosition(long rows) {
@@ -428,11 +434,13 @@ public class FinalReportPDFTemplate {
 		//Headers
 		row = table.createRow(12); 
 		table.addHeaderRow(row);
-		cellHeader = row.createCell(25, "VARIANT");
+		cellHeader = row.createCell(18, "DRUGS");
 		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(20, "LEVEL");
+		cellHeader = row.createCell(18, "VARIANT");
 		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(55, "INDICATION");
+		cellHeader = row.createCell(18, "LEVEL");
+		this.applyHeaderFormatting(cellHeader, defaultFont);
+		cellHeader = row.createCell(46, "INDICATION");
 		this.applyHeaderFormatting(cellHeader, defaultFont);
 
 		boolean greyBackground = false;
@@ -440,7 +448,12 @@ public class FinalReportPDFTemplate {
 			@Override
 			public int compare(IndicatedTherapy o1, IndicatedTherapy o2) {
 				if (o1.getTier() != null && o2.getTier() != null) {
-					return o1.getTier().compareTo(o2.getTier());
+					int compared = o1.getTier().compareTo(o2.getTier());
+					//sort by drugs after tier
+					if (compared == 0) {
+						return o1.getDrugs().compareTo(o2.getDrugs());
+					}
+					return compared;
 				}
 				if (o1.getTier() == null && o2.getTier() != null) {
 					return 1;
@@ -457,11 +470,13 @@ public class FinalReportPDFTemplate {
 				color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
 			}
 			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(25, item.getVariant());
+			Cell<PDPage> cell = row.createCell(18, item.getDrugs());
 			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(20, item.getLevel());
+			cell = row.createCell(18, item.getVariant());
 			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(55, item.getIndication());
+			cell = row.createCell(18, item.getLevel());
+			this.applyCellFormatting(cell, defaultFont, color);
+			cell = row.createCell(46, item.getIndication());
 			this.applyCellFormatting(cell, defaultFont, color);
 			greyBackground = !greyBackground;
 		}
@@ -510,7 +525,7 @@ public class FinalReportPDFTemplate {
 			//Headers
 			row = table.createRow(12); 
 			table.addHeaderRow(row);
-			cellHeader = row.createCell(25, "TITLE");
+			cellHeader = row.createCell(30, "TITLE");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			cellHeader = row.createCell(10, "PHASE");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
@@ -518,7 +533,7 @@ public class FinalReportPDFTemplate {
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			cellHeader = row.createCell(25, "LOCATIONS");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
-			cellHeader = row.createCell(20, "NCT ID");
+			cellHeader = row.createCell(15, "NCT ID");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			
 		}
@@ -530,7 +545,7 @@ public class FinalReportPDFTemplate {
 					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
 				}
 				row = table.createRow(12);
-				Cell<PDPage> cell = row.createCell(25, item.getTitle());
+				Cell<PDPage> cell = row.createCell(30, item.getTitle());
 				this.applyCellFormatting(cell, defaultFont, color);
 				cell = row.createCell(10, item.getPhase());
 				this.applyCellFormatting(cell, defaultFont, color);
@@ -538,7 +553,7 @@ public class FinalReportPDFTemplate {
 				this.applyCellFormatting(cell, defaultFont, color);
 				cell = row.createCell(25, item.getPi() + "<br/>" + item.getDept());
 				this.applyCellFormatting(cell, defaultFont, color);
-				cell = row.createCell(25, item.getNctid());
+				cell = row.createCell(15, item.getNctid());
 				links.add(new Link(item.getNctid(), "https://clinicaltrials.gov/ct2/show/" + item.getNctid()));
 				this.applyCellFormatting(cell, defaultFont, color);
 				this.applyLinkCellFormatting(cell);
@@ -637,7 +652,7 @@ public class FinalReportPDFTemplate {
 
 
 	private void createAClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems, String tableTitle, boolean addLink) throws IOException{
-		this.updatePotentialNewPagePosition(tableItems.size());
+		this.updatePotentialNewPagePosition(tableItems.size() + 1);
 //		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
@@ -1049,7 +1064,7 @@ public class FinalReportPDFTemplate {
 			titleRatio = 60; //leave 40% of space for dates to avoid line returns with long titles
 		}
 		else {
-			titleRatio = Math.min(80, Math.max(20, 100 * titleRatio)); //avoid too small or too large
+			titleRatio = Math.min(75, Math.max(25, 100 * titleRatio)); //avoid too small or too large
 		}
 		float valueRatio = 100 - titleRatio;
 		Row<PDPage> row = table.createRow(12);

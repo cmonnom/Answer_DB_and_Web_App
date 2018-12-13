@@ -1,9 +1,7 @@
 package utsw.bicf.answer.model.extmapping;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -59,6 +57,7 @@ public class Annotation {
 	String rightGene;
 	Trial trial;
 	String oncotreeDiagnosis;
+	String drugs;
 	
 	public Annotation() {
 		
@@ -374,6 +373,14 @@ public class Annotation {
 
 	public void setOncotreeDiagnosis(String oncotreeDiagnosis) {
 		this.oncotreeDiagnosis = oncotreeDiagnosis;
+	}
+
+	public String getDrugs() {
+		return drugs;
+	}
+
+	public void setDrugs(String drugs) {
+		this.drugs = drugs;
 	}
 
 

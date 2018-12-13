@@ -292,14 +292,14 @@ public class Report {
 		this.ftlIds = ftlIds;
 	}
 
-//	public void incrementCnvCount(String cytoband) {
-//		ReportNavigationRow row = this.navigationRowsPerGene.get(cytoband);
-//		if (row == null) {
-//			row = new ReportNavigationRow();
-//		}
-//		row.setCnvCount(row.getCnvCount() + 1);
-//		this.navigationRowsPerGene.put(cytoband, row);
-//	}
+	public void incrementCnvCount(String cytoband) {
+		ReportNavigationRow row = this.navigationRowsPerGene.get(cytoband);
+		if (row == null) {
+			row = new ReportNavigationRow(cytoband);
+		}
+		row.setCnvCount(row.getCnvCount() + 1);
+		this.navigationRowsPerGene.put(cytoband, row);
+	}
 	
 	public void incrementFusionCount(String fusionName) {
 		ReportNavigationRow row = this.navigationRowsPerGene.get(fusionName);

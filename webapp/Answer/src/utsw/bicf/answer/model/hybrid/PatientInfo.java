@@ -50,7 +50,7 @@ public class PatientInfo {
 		items.add(new CellItem("Sex", orderCase.getGender()));
 		items.add(new CellItem("Order #", orderCase.getEpicOrderNumber())); 
 		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));
-		items.add(new CellItem("Tumor Mutation Burden", orderCase.getTumorMutationBurden() + ""));
+		items.add(new CellItem("Tumor Mutation Burden (Mutations/MB)", orderCase.getTumorMutationBurden() + ""));
 		
 		patientTables.add(table);
 		
@@ -93,7 +93,7 @@ public class PatientInfo {
 		items.add(new CellItem("Tumor Tissue", orderCase.getTumorTissueType()));
 		items.add(new CellItem("Germline Tissue", orderCase.getNormalTissueType()));
 		items.add(new CellItem("ICD10", orderCase.getIcd10()));
-		CellItem dedupAvgDepthItem = new CellItem("Dedup Avg. Depth", orderCase.getDedupAvgDepth()  != null ? orderCase.getDedupAvgDepth() + "" : "");
+		CellItem dedupAvgDepthItem = new CellItem("Avg. Depth", orderCase.getDedupAvgDepth()  != null ? orderCase.getDedupAvgDepth() + "" : "");
 		dedupAvgDepthItem.setField("dedupAvgDepth");
 		dedupAvgDepthItem.setType(CellItem.TYPE_TEXT_FIELD);
 		items.add(dedupAvgDepthItem);
@@ -115,7 +115,7 @@ public class PatientInfo {
 		items.add(new CellItem("Lab Received Date", orderCase.getReceivedDate()));
 		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
 		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
-		CellItem dedupPctOver100XItem = new CellItem("Dedup Pct. Over 100X", orderCase.getDedupPctOver100X()  != null ? orderCase.getDedupPctOver100X() + "" : "");
+		CellItem dedupPctOver100XItem = new CellItem("Pct. Over 100X", orderCase.getDedupPctOver100X()  != null ? orderCase.getDedupPctOver100X() + "" : "");
 		dedupPctOver100XItem.setField("dedupPctOver100X");
 		dedupPctOver100XItem.setType(CellItem.TYPE_TEXT_FIELD);
 		items.add(dedupPctOver100XItem);

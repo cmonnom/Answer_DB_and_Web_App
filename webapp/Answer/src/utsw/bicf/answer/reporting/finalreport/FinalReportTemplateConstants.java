@@ -43,6 +43,7 @@ public class FinalReportTemplateConstants {
 
 	public static final LineStyle NO_BORDER = new LineStyle(Color.WHITE, 2f);
 	public static final LineStyle NO_BORDER_THIN = new LineStyle(Color.WHITE, 1.5f);
+	public static final LineStyle NO_BORDER_ZERO = new LineStyle(Color.WHITE, 0.01f);
 	public static final LineStyle LIGHT_GRAY_BORDER_THIN = new LineStyle(BACKGROUND_LIGHT_GRAY, 1.5f);
 
 	public static final Color GENE_COLOR = new Color(255, 171, 64);
@@ -76,7 +77,7 @@ public class FinalReportTemplateConstants {
 	public static final String PATIENT_DETAILS_TITLE = "PATIENT RECORD";
 	public static final String CASE_SUMMARY_TITLE = "CASE SUMMARY";
 	
-	public static final String GENE_TITLE = "GENES";
+	public static final String GENE_TITLE = "BIOMARKERS";
 	public static final String INDICATED_THERAPIES_TITLE = "INDICATED THERAPIES";
 	public static final String INDICATED_THERAPIES_TITLE_NAV = " INDICATED THERAPIES ";
 	public static final String CLINICAL_TRIALS_TITLE = "CLINICAL TRIALS";

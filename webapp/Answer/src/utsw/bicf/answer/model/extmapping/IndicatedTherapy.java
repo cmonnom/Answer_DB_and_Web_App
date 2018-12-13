@@ -12,6 +12,7 @@ public class IndicatedTherapy {
 	String type; //used to keep track of where the variant came from
 	String oid; //used to keep counts of variants used
 	boolean readonly;
+	String drugs;
 	
 	public IndicatedTherapy() {
 	}
@@ -29,6 +30,7 @@ public class IndicatedTherapy {
 		this.indication = a.getText();
 		this.type = v.getType();
 		this.oid = v.getMongoDBId().getOid();
+		this.drugs = a.getDrugs();
 	}
 	public IndicatedTherapy(Annotation a, Translocation v) {
 		this.variant = a.getLeftGene() + "-" + a.getRightGene();
@@ -43,6 +45,7 @@ public class IndicatedTherapy {
 		this.indication = a.getText();
 		this.type = v.getType();
 		this.oid = v.getMongoDBId().getOid();
+		this.drugs = a.getDrugs();
 	}
 //	public IndicatedTherapy(AnnotationCategory cat, Variant v) {
 //		this.variant = v.getGeneName() + " " + v.getNotation();
@@ -103,6 +106,14 @@ public class IndicatedTherapy {
 
 	public void setReadonly(boolean readonly) {
 		this.readonly = readonly;
+	}
+
+	public String getDrugs() {
+		return drugs;
+	}
+
+	public void setDrugs(String drugs) {
+		this.drugs = drugs;
 	}
 	
 	

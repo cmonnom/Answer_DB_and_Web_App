@@ -138,7 +138,7 @@ Vue.component('variant-details', {
                                           </v-data-table>
                                           <v-layout v-if="item.type == 'select'" class="full-width">
                                           <v-flex class="selectable pt-2 pl-0">{{ item.label }}:</v-flex>
-                                          <v-flex xs6 class="max300" >
+                                          <v-flex class="max300" >
                                             <v-tooltip right>
                                             <v-select slot="activator" clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
                                                 :label="item.tooltip" single-line hide-details
@@ -378,6 +378,9 @@ Vue.component('variant-details', {
                 if (name == "dataTable") {
                     return ['xs4', 'md5'];
                 }
+            }
+            if (this.isTranslocation()) {
+                return ['xs4'];
             }
             return [this.widthClass];
         },
@@ -814,7 +817,7 @@ Vue.component('variant-details', {
         },
         openNewCNVForm() {
             bus.$emit("create-new-cnv", this.currentListOfVisibleGenes);
-        }
+        },
     },
     mounted: function () {
 

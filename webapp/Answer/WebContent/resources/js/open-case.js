@@ -1980,23 +1980,38 @@ const OpenCase = {
                                 label: "Right Gene", value: this.currentVariant.rightGene
                             },
                             {
-                                label: "Left Breakpoint", value: this.currentVariant.leftBreakpoint
+                                label: "Left Exons", value: this.currentVariant.leftExons
                             },
                             {
-                                label: "Right Breakpoint", value: this.currentVariant.rightBreakpoint
-                            }
+                                label: "Right Exons", value: this.currentVariant.rightExons
+                            },
+                           
                             ]
                         };
                         this.variantDataTables.push(infoTable);
 
                         var infoTable2 = {
                             name: "infoTable2",
-                            items: [{
+                            items: [
+                                {
+                                    label: "Left Breakpoint", value: this.currentVariant.leftBreakpoint
+                                },
+                                {
+                                    label: "Right Breakpoint", value: this.currentVariant.rightBreakpoint
+                                },
+                            {
                                 label: "Left Strand", value: this.currentVariant.leftStrand
                             },
                             {
                                 label: "Right Strand", value: this.currentVariant.rightStrand
                             },
+                           ]
+                        };
+                        this.variantDataTables.push(infoTable2);
+
+                        var infoTable3 = {
+                            name: "infoTable3",
+                            items: [
                             {
                                 label: "RNA Reads", value: this.currentVariant.rnaReads ? this.currentVariant.rnaReads + "" : ""
                             },
@@ -2012,7 +2027,7 @@ const OpenCase = {
                                 tooltip: "Open OncoKB Genie Portal (Fusion) in new tab"
                             }]
                         };
-                        this.variantDataTables.push(infoTable2);
+                        this.variantDataTables.push(infoTable3);
 
                         this.linkTable = [];
 
@@ -2177,7 +2192,8 @@ const OpenCase = {
                     classification: "",
                     visible: true,
                     isSelected: false,
-                    trial: null
+                    trial: null,
+                    drugs: ""
                 };
                 annotation._id = annotations[i]._id;
                 if (showUser) {
@@ -2201,6 +2217,7 @@ const OpenCase = {
                 annotation.classification = annotations[i].classification;
                 annotation.isSelected = annotations[i].isSelected;
                 annotation.trial = annotations[i].trial;
+                annotation.drugs = annotations[i].drugs;
                 formatted.push(annotation);
             }
             return formatted;

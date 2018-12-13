@@ -45,6 +45,14 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 		rightGene.setWidth("100px");
 		headers.add(rightGene);
 		
+		Header leftExon = new Header(new String[] {"Left", "Exons"}, "leftExons");
+		leftExon.setWidth("100px");
+		headers.add(leftExon);
+		
+		Header rightExon = new Header(new String[] {"Right", "Exons"}, "rightExons");
+		rightExon.setWidth("100px");
+		headers.add(rightExon);
+		
 		Header leftBreakpoint = new Header(new String[] {"Left", "Breakpoint"}, "leftBreakpoint");
 		leftBreakpoint.setWidth("100px");
 		headers.add(leftBreakpoint);

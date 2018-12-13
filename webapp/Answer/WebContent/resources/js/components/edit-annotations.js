@@ -184,7 +184,8 @@ Vue.component('edit-annotations', {
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Gene Specific" v-model="annotation.isGeneSpecific"
                                                                     @change="selectBreadth(annotation, 'Gene Function')"></v-switch>
-                                                                <span>Select either Gene or Variant Specific or both</span>
+                                                                <span v-if="!annotation.isVariantSpecific">Select either Gene or Variant Specific or both</span>
+                                                                <span v-if="annotation.isGeneSpecific && annotation.isVariantSpecific">Uncheck Variant Specific first</span>
                                                             </v-tooltip>
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Variant Specific" v-model="annotation.isVariantSpecific"
@@ -381,13 +382,20 @@ Vue.component('edit-annotations', {
                                                         :disabled="annotation.markedForDeletion" label="Write your comments here">
                                                     </v-text-field>
                                                 </v-flex>
-                                                <v-flex xs12>
+                                                <v-flex xs12 lg6 v-if="annotation.category == 'Therapy'">
+                                                    <v-layout>
+                                                        <v-flex class="mt-4 subheading">Drugs:</v-flex>
+                                                        <v-flex xs8>
+                                                            <v-text-field :disabled="annotation.markedForDeletion" label="(comma separated)" v-model="annotation.drugs"></v-text-field>
+                                                        </v-flex>
+                                                    </v-layout>
+                                                </v-flex>
+                                                <v-flex xs12 lg6>
                                                     <v-layout>
                                                         <v-flex class="mt-4 subheading">PubMed Ids:</v-flex>
-                                                        <v-flex xs4>
+                                                        <v-flex xs8>
                                                             <v-text-field :disabled="annotation.markedForDeletion" label="(comma separated)" v-model="annotation.pmids" :rules="numberRules"></v-text-field>
                                                         </v-flex>
-                                                       
                                                     </v-layout>
                                                 </v-flex>
                                                 <v-flex xs12 sm12 md8 v-if="annotation.category == 'Clinical Trial'">
@@ -464,8 +472,6 @@ Vue.component('edit-annotations', {
                     </v-btn>
                     <span>Discard changes</span>
                 </v-tooltip>
-                <!-- <breadcrumbs>
-                </breadcrumbs> -->
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -540,7 +546,7 @@ Vue.component('edit-annotations', {
                 isTumorSpecific: false,
                 userId: null,
                 variantId: null,
-                isGeneSpecific: this.limitScopeGene,
+                isGeneSpecific: this.limitScopeGene || (this.isCNV() || this.isTranslocation() ? true : false),
                 isVariantSpecific: this.isCNV() || this.isTranslocation() ? true : false,
                 isCaseSpecific: false,
                 isLeftSpecific: false,
@@ -556,16 +562,8 @@ Vue.component('edit-annotations', {
                 cnvGenes: [],
                 leftGene: this.currentVariant.leftGene,
                 rightGene: this.currentVariant.rightGene,
-                trial: null
-                // trial: {
-                //     // nctId: "",
-                //     // title: "",
-                //     // phase: "",
-                //     // biomarker: "",
-                //     // drugs: "",
-                //     // contact: "",
-                //     // location: ""
-                // }
+                trial: null,
+                drugs: ""
             });
         },
         addCustomTrial() {
@@ -604,19 +602,14 @@ Vue.component('edit-annotations', {
                     }
                 }
                 annotation.pmids = tempSet.size != 0 ? Array.from(tempSet) : null;
-                // tempSet = new Set();
-                // if (annotation.nctIds) {
-                //     var nctIdsArray = annotation.nctIds.split(",");
-                //     for (var s = 0; s < nctIdsArray.length; s++) {
-                //         tempSet.add(nctIdsArray[s]);
-                //     }
-                // }
-                // annotation.nctIds = tempSet.size != 0 ? Array.from(tempSet) : null;
                 if (annotation.breadth == 'Chromosomal') {
                     annotation.cnvGenes = [];
                 }
                 if (annotation.category == "Clinical Trial") {
                     annotation.text = annotation.trial.nctId;
+                }
+                if (annotation.isVariantSpecific) {
+                    annotation.isGeneSpecific = true;
                 }
                 this.userAnnotations.push(annotation);
             }
@@ -813,6 +806,9 @@ Vue.component('edit-annotations', {
         selectBreadth(annotation, breadth) {
             if (breadth && !annotation.selectedBreadth) {
                 annotation.selectedBreadth = this.annotationCategories.filter(item => item == breadth)[0];
+            }
+            if (annotation.isVariantSpecific) {
+                annotation.isGeneSpecific = true;
             }
         },
         deleteAnnotation(annotation, index) {

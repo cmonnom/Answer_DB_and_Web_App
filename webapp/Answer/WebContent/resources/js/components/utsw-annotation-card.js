@@ -72,6 +72,12 @@ Vue.component('utsw-annotation-card', {
                     </span>
                     <span v-html="annotation.trial.title"></span>
                 </v-flex>
+                <v-flex xs12 v-if="annotation.drugs" class="pr-1">
+                    <span class="pr-1">
+                        <b>Drugs:</b>
+                    </span>
+                    <span v-html="annotation.drugs"></span>
+                </v-flex>
                 <v-flex xs12>
                     <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>
                     <v-tooltip v-if="id" bottom v-for="id in annotation.pmids" :key="id">
