@@ -543,8 +543,20 @@ public class RequestUtils {
 		
 	}
 	
-	@SuppressWarnings("unchecked")
-	public List<String> getMocliaContent(AjaxResponse ajaxResponse, String caseId, List<String> selectedSNPVariantIds,
+	/**
+	 * Creates the content MDA needs with a list of selected variants.
+	 * Results are stored in AjaxResponse wether success is true or false
+	 * @param ajaxResponse
+	 * @param caseId
+	 * @param selectedSNPVariantIds
+	 * @param selectedCNVIds
+	 * @param selectedTranslocationIds
+	 * @throws URISyntaxException
+	 * @throws UnsupportedCharsetException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	public AjaxResponse getMocliaContent(String caseId, List<String> selectedSNPVariantIds,
 			List<String> selectedCNVIds, List<String> selectedTranslocationIds) throws URISyntaxException, UnsupportedCharsetException, ClientProtocolException, IOException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/moclia");
@@ -552,29 +564,20 @@ public class RequestUtils {
 
 		requestGet = new HttpGet(uri);
 		addAuthenticationHeader(requestGet);
-//		SelectedVariantIds variantIds = new SelectedVariantIds();
-//		variantIds.setSelectedSNPVariantIds(selectedSNPVariantIds);
-//		variantIds.setSelectedCNVIds(selectedCNVIds);
-//		variantIds.setSelectedTranslocationIds(selectedTranslocationIds);
-//		requestPost.setEntity(new StringEntity(variantIds.createObjectJSON(), ContentType.APPLICATION_JSON));
 
 		HttpResponse response = client.execute(requestGet);
-		List<String> result = null;
 		int statusCode = response.getStatusLine().getStatusCode();
+		AjaxResponse apiResponse = null;
 		if (statusCode == HttpStatus.SC_OK) {
-			result = mapper.readValue(response.getEntity().getContent(), List.class);
-			if (result != null && !result.isEmpty()) {
-				ajaxResponse.setSuccess(true);
-			}
-			else {
-				ajaxResponse.setSuccess(false);
-				ajaxResponse.setMessage("Nothing to do. No variant matching MDA requirements were selected.");
-			}
+			apiResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			apiResponse.setSuccess(apiResponse.getSuccess());
+			apiResponse.setMessage(apiResponse.getMessage());
 		} else {
-			ajaxResponse.setSuccess(false);
-			ajaxResponse.setMessage("Something went wrong");
+			apiResponse = new AjaxResponse();
+			apiResponse.setSuccess(false);
+			apiResponse.setMessage("Something went wrong");
 		}
-		return result;
+		return apiResponse;
 	}
 
 	public AnnotationSearchResult getGetAnnotationsByGeneAndVariant(String gene, String variant) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {

@@ -62,7 +62,6 @@ import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
-import utsw.bicf.answer.model.extmapping.Moclia;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Trial;
@@ -654,6 +653,7 @@ public class OpenCaseController {
 				userAnnotation.setCaseId(caseId);
 			}
 			if (userAnnotation.getIsGeneSpecific()) {
+				geneId = geneId != null && geneId.equals("") ? null : geneId;
 				userAnnotation.setGeneId(geneId);
 			}
 			if (userAnnotation.getIsVariantSpecific()) {
@@ -862,12 +862,9 @@ public class OpenCaseController {
 				return response.createObjectJSON();
 			}
 			response.setIsAllowed(true);
-			List<String> rows = utils.getMocliaContent(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds);
-			if (response.getSuccess()) {
-				Moclia moclia = new Moclia(rows);
-				String mocliaContent = moclia.getFullContent();
-				response.setMessage(mocliaContent);
-			}
+			AjaxResponse apiResponse = utils.getMocliaContent(caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds);
+			response.setMessage(apiResponse.getMessage());
+			response.setSuccess(apiResponse.getSuccess());
 			return response.createObjectJSON();
 		}
 		else {

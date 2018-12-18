@@ -35,20 +35,20 @@ Vue.component('add-cnv', {
                     </v-layout>
 
                     <v-layout row wrap>
-                        <v-flex pt-2 xs3>
+                        <v-flex pt-2 xs4>
                             Aberration Type:
                         </v-flex>
-                        <v-flex xs9>
+                        <v-flex xs8>
                             <v-select clearable :items="aberrationTypes" v-model="aberrationType" label="Select Aberration Type"
-                                single-line hide-details class="no-height-select" :disabled="noEdit"></v-select>
+                                single-line hide-details  :disabled="noEdit"></v-select>
                         </v-flex>
                     </v-layout>
                     <v-layout row wrap>
-                        <v-flex xs3>
+                        <v-flex xs4 pt-2>
                             Copy Number:
                         </v-flex>
-                        <v-flex xs9>
-                            <v-text-field v-model="copyNumber" :rules="numberRules" class="no-top-text-field">
+                        <v-flex xs8>
+                            <v-text-field v-model="copyNumber" :rules="numberRules" >
                             </v-text-field>
                         </v-flex>
                     </v-layout>
@@ -163,7 +163,7 @@ Vue.component('add-cnv', {
                 });
         },
         getGeneList() {
-            return this.currentGeneList.join(", ") + " (" + this.currentGeneList.length + " gene" + (this.currentGeneList.length == 1 ? "" : "s)");
+            return this.currentGeneList.join(", ") + " (" + this.currentGeneList.length + " gene" + (this.currentGeneList.length == 1 ? ")" : "s)");
         },
         handleAxiosError(error) {
             console.log(error);

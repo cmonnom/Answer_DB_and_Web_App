@@ -173,7 +173,11 @@ public class AOPAspect {
 				break;
 			}
 		}
-		User user = (User) httpSession.getAttribute("user");
+		Object userValue = httpSession.getAttribute("user");
+		User user = null;
+		if (userValue instanceof User) {
+			user = (User) httpSession.getAttribute("user");
+		}
 		if (user != null) {
 			boolean canProceed = PermissionUtils.canProceed(user, method);
 			logger.info("@Before ===> UserId: " + user.getUserId() + " Username: " + user.getUsername() + " Accessing: " + method.getName() + " Allowed:" + canProceed);
@@ -200,7 +204,11 @@ public class AOPAspect {
 				model = (Model) arg;
 			}
 		}
-		User user = (User) httpSession.getAttribute("user");
+		Object userValue = httpSession.getAttribute("user");
+		User user = null;
+		if (userValue instanceof User) {
+			user = (User) httpSession.getAttribute("user");
+		}
 		
 		if (user != null) {
 			boolean canProceed = PermissionUtils.canProceed(user, method);

@@ -1,5 +1,6 @@
 package utsw.bicf.answer.controller.serialization;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -11,6 +12,7 @@ import utsw.bicf.answer.model.UserPref;
  * @author Guillaume
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AjaxResponse {
 	
 	Boolean isAllowed = true;

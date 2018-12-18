@@ -52,7 +52,7 @@ const UserPrefs = {
           <b>Admin:</b> admistrator and can do all of the above. Be careful.
           </v-flex>
           <v-flex xs12>
-            In you need to enable more access, contact an Answer administrator ({{ admins }}).
+            If you need to enable more access, contact an Answer administrator ({{ admins }}).
           </v-flex>
         </v-layout>
      </v-container>   
@@ -71,7 +71,7 @@ const UserPrefs = {
     </v-card-text>
   </v-card>
 
-  <v-card v-if="headerConfigs" class="mt-3">
+  <v-card v-if="headerConfigs && headerConfigs.length > 0" class="mt-3">
   <v-card-text class="subheading pl-3 pt-3">
     <span pb-3>You customized the following table headers:<br/></span>
     <v-layout row wrap pt-1>

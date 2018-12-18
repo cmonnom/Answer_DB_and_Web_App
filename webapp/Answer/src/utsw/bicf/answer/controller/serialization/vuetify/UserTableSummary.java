@@ -27,7 +27,9 @@ public class UserTableSummary extends Summary<UserTableRow>{
 
 	@Override
 	public void initializeHeaders() {
-		headers.add(new Header("Name", "fullName"));
+		Header fullName = new Header("Name", "fullName");
+		fullName.setAlign("left");
+		headers.add(fullName);
 		headers.add(new Header("User ID", "userName"));
 		headers.add(new Header("View", "viewValue", new ToolTip("Can a user view cases and annotations?"), true));
 		headers.add(new Header("Annotate", "annotateValue", new ToolTip("Can a user create annotations?"), true));

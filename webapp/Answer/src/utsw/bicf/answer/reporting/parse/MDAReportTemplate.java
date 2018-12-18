@@ -65,20 +65,41 @@ public class MDAReportTemplate {
 			} else if (table.select("th:contains(CMS50)").first() != null) {
 				// frequency table
 				frequencyRows = parseFrequencyTable(table);
-			} else if (table.select("caption:contains(Biomarker-Selected Trials)").first() != null) {
-				if (table.select("caption:contains(Biomarker-Selected Trials Requiring Additional Biomarkers)")
-						.first() != null)
-					selectedAdditionalBiomarkers = parseBiomarkerTable(table, "selected");
-				else
-					selectedBiomarkers = parseBiomarkerTable(table, "selected");
-			} else if (table.select("caption:contains(Biomarker-Relevant Trials)").first() != null) {
-				if (table.select("caption:contains(Biomarker-Relevant Trials Requiring Additional Biomarkers)")
-						.first() != null)
-					relevantAdditionalBiomarkers = parseBiomarkerTable(table, "relevant");
-				else
-					relevantBiomarkers = parseBiomarkerTable(table, "relevant");
+			} else if (this.isSelectedAdditionalBiomarkers(table)) {
+				selectedAdditionalBiomarkers = parseBiomarkerTable(table, "selected");
+			}
+			else if (this.isSelectedBiomarkers(table)) {
+				selectedBiomarkers = parseBiomarkerTable(table, "selected");
+			} else if (this.isRelevantAdditionalBiomarkers(table)) {
+				relevantAdditionalBiomarkers = parseBiomarkerTable(table, "relevant");
+			}
+			else if (this.isRelevantBiomarkers(table)) {
+				relevantBiomarkers = parseBiomarkerTable(table, "relevant");
+
 			}
 		}
+	}
+
+	//Future versions of the Moclia report might have different ways required for identifying
+	//the correct table. Add or statements if needed here.
+	private boolean isSelectedBiomarkers(Element table) {
+		return table.select("th:contains(Selected Biomarker(s)*)").first() != null
+				&& table.select("th:contains(Additional Required Biomarker(s))").first() == null;
+	}
+	
+	private boolean isSelectedAdditionalBiomarkers(Element table) {
+		return table.select("th:contains(Selected Biomarker(s)*)").first() != null
+				&& table.select("th:contains(Additional Required Biomarker(s))").first() != null;
+	}
+	
+	private boolean isRelevantBiomarkers(Element table) {
+		return table.select("th:contains(Relevant Biomarker(s)*)").first() != null
+				&& table.select("th:contains(Additional Required Biomarker(s))").first() == null;
+	}
+	
+	private boolean isRelevantAdditionalBiomarkers(Element table) {
+		return table.select("th:contains(Relevant Biomarker(s)*)").first() != null
+				&& table.select("th:contains(Additional Required Biomarker(s))").first() != null;
 	}
 
 	private void init() throws IOException {
