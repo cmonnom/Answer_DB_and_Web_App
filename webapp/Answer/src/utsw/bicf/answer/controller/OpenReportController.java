@@ -3,6 +3,7 @@ package utsw.bicf.answer.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,7 @@ import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -129,6 +131,13 @@ public class OpenReportController {
 				User modifiedBy = modelDAO.getUserByUserId(r.getModifiedBy());
 				summaries.add(new ReportSummary(r, false, createdBy, modifiedBy));
 			}
+			summaries.sort(new Comparator<ReportSummary>() {
+				@Override
+				public int compare(ReportSummary o1, ReportSummary o2) {
+					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+				}
+				
+			});
 			return new ExistingReportsSummary(summaries).createObjectJSON();
 		}
 		AjaxResponse response = new AjaxResponse();
@@ -318,6 +327,9 @@ public class OpenReportController {
 				response.setMessage("You cannot modify a finalized report. Use an amendment or an addendum");
 			}
 		}
+		else { //cannot proceed
+			response.setMessage("You are not allowed to save this report");
+		}
 		return response.createObjectJSON();
 	}
 	
@@ -346,12 +358,17 @@ public class OpenReportController {
 			OrderCase caseSummary = utils.getCaseSummary(reportSummary.getCaseId());
 			Report reportToPreview = new Report(reportSummary);
 			User signedBy = modelDAO.getUserByUserId(reportToPreview.getModifiedBy());
+			try {
 			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportToPreview, fileProps, caseSummary, otherProps, signedBy);
 			pdfReport.saveTemp();
 
 			String linkName = pdfReport.createPDFLink(fileProps);
 			response.setSuccess(true);
 			response.setMessage(linkName);
+			}catch (IllegalArgumentException e) {
+				response.setSuccess(false);
+				response.setMessage(e.getMessage());
+			}
 		}
 		return response.createObjectJSON();
 	}

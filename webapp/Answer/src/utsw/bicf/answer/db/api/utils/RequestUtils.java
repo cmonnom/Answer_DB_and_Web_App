@@ -313,8 +313,7 @@ public class RequestUtils {
 		}
 	}
 
-	public boolean commitAnnotation(AjaxResponse ajaxResponse, String caseId, String variantId,
-			List<Annotation> annotations) throws URISyntaxException, ClientProtocolException, IOException {
+	public boolean commitAnnotation(AjaxResponse ajaxResponse, List<Annotation> annotations) throws URISyntaxException, ClientProtocolException, IOException {
 		boolean didChange = false;
 		ObjectMapper mapper = new ObjectMapper();
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
@@ -1204,7 +1203,7 @@ public class RequestUtils {
 							strongAnnotationsConcat.put(cat, strongAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
 						}
 						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, strongAnnotationsConcat));
-						report.incrementStrongClinicalSignificanceCount(name.replaceAll("\\.", ""));
+						report.incrementStrongClinicalSignificanceCount(name);
 					}
 					if (!possibleAnnotations.isEmpty()) {
 						report.getCnvIds().add(v.getMongoDBId().getOid());
@@ -1213,7 +1212,7 @@ public class RequestUtils {
 							possibleAnnotationsConcat.put(cat, possibleAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
 						}
 						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, possibleAnnotationsConcat));
-						report.incrementPossibleClinicalSignificanceCount(name.replaceAll("\\.", ""));
+						report.incrementPossibleClinicalSignificanceCount(name);
 					}
 					if (!unknownAnnotations.isEmpty()) {
 						report.getCnvIds().add(v.getMongoDBId().getOid());
@@ -1222,7 +1221,7 @@ public class RequestUtils {
 							unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
 						}
 						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, unknownAnnotationsConcat));
-						report.incrementUnknownClinicalSignificanceCount(name.replaceAll("\\.", ""));
+						report.incrementUnknownClinicalSignificanceCount(name);
 					}
 				}
 				if (!hasTiers) {
@@ -1413,7 +1412,107 @@ public class RequestUtils {
 			ajaxResponse.setMessage("Something went wrong");
 		}
 	}
+
+	public List<Annotation> getAllClinicalTrials(AjaxResponse ajaxResponse) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("annotation/trials");
+		URI uri = new URI(sbUrl.toString());
+
+		HttpResponse response = null;
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+		response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			ajaxResponse.setSuccess(mongoDBResponse.getSuccess());
+			ajaxResponse.setMessage(mongoDBResponse.getMessage());
+			if (ajaxResponse.getSuccess()) {
+				Annotation[] result = mapper.convertValue(mongoDBResponse.getPayload(), Annotation[].class);
+				List<Annotation> annotations = new ArrayList<Annotation>();
+				for (Annotation annotation : result) {
+					annotations.add(annotation);
+				}
+				return annotations;
+			}
+			else {
+				return null;
+			}
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+			return null;
+		}
+	}
 	
+	public List<Annotation> getAllSNPsForGene(AjaxResponse ajaxResponse, String geneId) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("annotation/gene/");
+		sbUrl.append(geneId);
+		URI uri = new URI(sbUrl.toString());
+
+		HttpResponse response = null;
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+		response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			ajaxResponse.setSuccess(mongoDBResponse.getSuccess());
+			ajaxResponse.setMessage(mongoDBResponse.getMessage());
+			if (ajaxResponse.getSuccess()) {
+				Annotation[] result = mapper.convertValue(mongoDBResponse.getPayload(), Annotation[].class);
+				List<Annotation> annotations = new ArrayList<Annotation>();
+				for (Annotation annotation : result) {
+					annotations.add(annotation);
+				}
+				return annotations;
+			}
+			else {
+				return null;
+			}
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+			return null;
+		}
+	}
+	
+	public List<Variant> getVariantsForGene(AjaxResponse ajaxResponse, String geneId) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("variants/");
+		sbUrl.append(geneId);
+		URI uri = new URI(sbUrl.toString());
+
+		HttpResponse response = null;
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+		response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			ajaxResponse.setSuccess(mongoDBResponse.getSuccess());
+			ajaxResponse.setMessage(mongoDBResponse.getMessage());
+			if (ajaxResponse.getSuccess()) {
+				Variant[] result = mapper.convertValue(mongoDBResponse.getPayload(), Variant[].class);
+				List<Variant> variants = new ArrayList<Variant>();
+				for (Variant annotation : result) {
+					variants.add(annotation);
+				}
+				return variants;
+			}
+			else {
+				return null;
+			}
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+			return null;
+		}
+	}
 
 
 

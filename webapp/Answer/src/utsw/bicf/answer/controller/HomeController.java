@@ -13,27 +13,38 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.AllOrderCasesSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseAllSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseFinalizedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseForUserSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
 import utsw.bicf.answer.controller.serialization.vuetify.UserSearchItems;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.OrderCaseAll;
+import utsw.bicf.answer.model.hybrid.OrderCaseFinalized;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
+import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
+import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
@@ -45,6 +56,7 @@ public class HomeController {
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getWorklists", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".assignToUser", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getAllUsersToAssign", IndividualPermission.CAN_ASSIGN);
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".createPDFReport", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired
@@ -55,6 +67,8 @@ public class HomeController {
 	EmailProperties emailProps;
 	@Autowired
 	FileProperties fileProps;
+	@Autowired
+	OtherProperties otherProps;
 
 	@RequestMapping("/home")
 	public String home(Model model, HttpSession session) throws IOException {
@@ -77,6 +91,7 @@ public class HomeController {
 		List<OrderCase> caseList = new ArrayList<OrderCase>();
 		
 		if (cases != null) {
+			List<User> users  = modelDAO.getAllUsers();
 			for (OrderCase c : cases) {
 				caseList.add(c);
 			}
@@ -89,14 +104,21 @@ public class HomeController {
 			
 			List<OrderCaseAll> casesAll = 
 					caseList.stream()
-					.map(c -> new OrderCaseAll(c, modelDAO.getAllUsers(), user))
+					.map(c -> new OrderCaseAll(modelDAO, c, users, user))
+					.collect(Collectors.toList());
+			List<OrderCaseFinalized> casesFinalized = 
+					caseList.stream()
+					.filter(c -> CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED))
+					.map(c -> new OrderCaseFinalized(modelDAO, c, users, user))
 					.collect(Collectors.toList());
 			List<HeaderOrder> headerOrdersAll = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "All Cases");
 			OrderCaseAllSummary allSummary = new OrderCaseAllSummary(casesAll, user, headerOrdersAll);
 			List<HeaderOrder> headerOrdersUser = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "My Cases");
 			OrderCaseForUserSummary forUserSummary = new OrderCaseForUserSummary(casesForUser, headerOrdersUser);
+			List<HeaderOrder> headerOrdersFinalized = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Cases Finalized");
+			OrderCaseFinalizedSummary finalizedSummary = new OrderCaseFinalizedSummary(casesFinalized, user, headerOrdersFinalized);
 			
-			AllOrderCasesSummary summary = new AllOrderCasesSummary(allSummary, forUserSummary);
+			AllOrderCasesSummary summary = new AllOrderCasesSummary(allSummary, forUserSummary, finalizedSummary);
 			summary.setSuccess(true);
 			return summary.createVuetifyObjectJSON();
 		}
@@ -147,35 +169,84 @@ public class HomeController {
 			}
 		}
 		AjaxResponse response = utils.assignCaseToUser(realUsers, caseId);
+		User currentUser = (User) session.getAttribute("user");
 		if (response.getSuccess()) {
-			User currentUser = (User) session.getAttribute("user");
 			for (User user : realUsers) {
 				if (alreadyAssignedTo.contains(user.getUserId() + "")
-						|| user.getUserId() == currentUser.getUserId()) { 
+						|| user.getUserId() == currentUser.getUserId()
+						|| user.getIndividualPermission().getReceiveAllNotifications()) { 
 					continue; //skip users that already received the email and current user
 				}
-				String subject = "You have a new case: " + caseId;
-				StringBuilder message = new StringBuilder()
-						.append("<p>Dr. ").append(user.getLast()).append(",</p><br/>")
-						.append("<b>")
-						.append(currentUser.getFullName())
-						.append("</b>")
-						.append(" assigned you a new case. ")
-						.append("<b>")
-						.append("Case Id: ").append(caseId).append("<br/>")
-						.append("</b>");
-						
-				String toEmail = user.getEmail();
-//				String toEmail = "guillaume.jimenez@utsouthwestern.edu"; //for testing to avoid sending other people emails
-				String link = new StringBuilder().append(emailProps.getRootUrl()).append("openCase/").append(caseId).toString();
-				String fullMessage = NotificationUtils.buildStandardMessage(message.toString(), emailProps, link);
-				boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), toEmail, subject, fullMessage);
-				System.out.println("An email was sent. Success:" + success);
+				String servelt = "openCase/";
+				String reason = "";
+				this.sendEmail(caseId, user, currentUser, servelt, reason);
+			}
+		}
+		
+		//notify other users whose receive_all_notifications is true
+		for (User aUser : users) {
+			if (!aUser.equals(currentUser) 
+					&& !ControllerUtil.isUserAssignedToCase(orderCase, aUser) 
+					&& aUser.getIndividualPermission().getReceiveAllNotifications()) {
+				String servelt = "openCaseReadOnly/";
+				String reason = "You are receiving this message because your account is set to receive all notifications.<br/><br/>";
+				this.sendEmail(caseId, aUser, currentUser, servelt, reason);
 			}
 		}
 		
 		return response.createObjectJSON();
 		
+	}
+	
+	private void sendEmail(String caseId, User user, User currentUser, String servlet, String reason) throws IOException, InterruptedException {
+		String subject = "You have a new case: " + caseId;
+		StringBuilder message = new StringBuilder()
+				.append("<p>Dr. ").append(user.getLast()).append(",</p><br/>")
+				.append("<b>")
+				.append(currentUser.getFullName())
+				.append("</b>")
+				.append(" assigned you a new case. ")
+				.append("<b>")
+				.append("Case Id: ").append(caseId).append("</b><br/>")
+				.append("<br/>")
+				.append(reason);
+				
+		String toEmail = user.getEmail();
+//		String toEmail = "guillaume.jimenez@utsouthwestern.edu"; //for testing to avoid sending other people emails
+		String link = new StringBuilder().append(emailProps.getRootUrl()).append(servlet).append(caseId).toString();
+		String fullMessage = NotificationUtils.buildStandardMessage(message.toString(), emailProps, link);
+		boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), toEmail, subject, fullMessage);
+		System.out.println("An email was sent. Success:" + success);
+	}
+	
+	@RequestMapping(value = "/createPDFReport", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String createPDFReport(Model model, HttpSession session, @RequestParam String reportId) throws Exception {
+
+		AjaxResponse response = new AjaxResponse();
+		if (reportId == null || reportId.equals("")) {
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+			response.setMessage("No report provided");
+		}
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		Report report = utils.getReportDetails(reportId);
+		if (report != null) {
+			OrderCase caseSummary = utils.getCaseSummary(report.getCaseId());
+			User signedBy = modelDAO.getUserByUserId(report.getModifiedBy());
+			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(report, fileProps, caseSummary, otherProps, signedBy);
+			pdfReport.saveTemp();
+
+			String linkName = pdfReport.createPDFLink(fileProps);
+			response.setSuccess(true);
+			response.setMessage(linkName);
+		}
+		else {
+			response.setSuccess(false);
+			response.setMessage("No report provided");
+		}
+		return response.createObjectJSON();
 	}
 	
 }

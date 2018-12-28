@@ -21,6 +21,7 @@ public class UserTableRow {
 	PassableValue selectValue;
 	PassableValue assignValue;
 	PassableValue reviewValue;
+	PassableValue notificationValue;
 	PassableValue adminValue;
 	
 	List<Button> buttons = new ArrayList<Button>();
@@ -39,6 +40,7 @@ public class UserTableRow {
 		selectValue = new PassableValue("selectValue", "", p.getCanSelect());
 		assignValue = new PassableValue("assignValue", "", p.getCanAssign());
 		reviewValue = new PassableValue("reviewValue", "", p.getCanReview());
+		notificationValue = new PassableValue("notificationValue", "", p.getReceiveAllNotifications());
 		adminValue = new PassableValue("adminValue", "", p.getAdmin());
 		
 		buttons.add(new Button("create", "editUser", "Edit User", "info"));
@@ -96,6 +98,10 @@ public class UserTableRow {
 
 	public PassableValue getReviewValue() {
 		return reviewValue;
+	}
+
+	public PassableValue getNotificationValue() {
+		return notificationValue;
 	}
 
 

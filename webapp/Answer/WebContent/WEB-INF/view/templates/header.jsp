@@ -19,6 +19,7 @@
         const userFullName = "${userFullName}";
 
         const oncoKBGeniePortalUrl = "${oncoKBGeniePortalUrl}";
+        const oncotreeIconUrl = webAppRoot + "/resources/images/oncotree.ico";
 
 </script>
 

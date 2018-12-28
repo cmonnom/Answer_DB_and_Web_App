@@ -22,6 +22,7 @@ public class IndividualPermission {
 	public static final String CAN_SELECT = "canSelect";
 	public static final String CAN_ASSIGN = "canAssign";
 	public static final String CAN_REVIEW = "canReview";
+	public static final String ALL_NOTIFICATIONS = "allNotifications";
 	
 	public IndividualPermission() {
 		
@@ -50,6 +51,9 @@ public class IndividualPermission {
 	
 	@Column(name="can_review")
 	Boolean canReview;
+	
+	@Column(name="receive_all_notifications")
+	Boolean receiveAllNotifications;
 
 	public Integer getIndividualPermission() {
 		return individualPermission;
@@ -110,6 +114,18 @@ public class IndividualPermission {
 
 	public void setCanReview(Boolean canReview) {
 		this.canReview = canReview;
+	}
+
+	public Boolean getReceiveAllNotifications() {
+		return receiveAllNotifications;
+	}
+
+	public void setReceiveAllNotifications(Boolean receiveAllNotifications) {
+		this.receiveAllNotifications = receiveAllNotifications;
+	}
+
+	public static String getAllNotifications() {
+		return ALL_NOTIFICATIONS;
 	}
 	
 }

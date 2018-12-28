@@ -2,11 +2,12 @@ package utsw.bicf.answer.model.hybrid;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
@@ -15,8 +16,9 @@ import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.Report;
 
-public class OrderCaseAll {
+public class OrderCaseFinalized {
 	
 	String epicOrderNumber;
 	String epicOrderDate;
@@ -28,11 +30,12 @@ public class OrderCaseAll {
 	String patientName;
 	FlagValue typeFlags;
 	String caseType;
+	String reportId;
 	
 	List<Button> buttons = new ArrayList<Button>();
-	FlagValue progressFlags;
+//	FlagValue progressFlags;
 	
-	public OrderCaseAll(ModelDAO modelDAO, OrderCase orderCase, List<User> users, User currentUser) {
+	public OrderCaseFinalized(ModelDAO modelDAO, OrderCase orderCase, List<User> users, User currentUser) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
 		this.epicOrderDate =orderCase.getEpicOrderDate();
 		this.icd10 = orderCase.getIcd10();
@@ -49,25 +52,38 @@ public class OrderCaseAll {
 			}
 		}
 		this.assignedTo = userNames.stream().collect(Collectors.joining("<br/>"));
-		if (currentUser.getIndividualPermission().getCanAssign()) {
-			buttons.add(new Button("assignment_ind", "assignToUser", "Assign To", "info"));
-		}
-		if (currentUser.getIndividualPermission().getCanView()) {
-			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
-			if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)) {
-				RequestUtils utils = new RequestUtils(modelDAO);
-				boolean isAssigned = false;
-				try {
-					isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
-				} catch (IOException | URISyntaxException e) {
-					e.printStackTrace();
+//		if (currentUser.getIndividualPermission().getCanAssign()) {
+//			buttons.add(new Button("assignment_ind", "assignToUser", "Assign To", "info"));
+//		}
+		if (currentUser.getIndividualPermission().getCanView() 
+				&& CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
+			RequestUtils utils = new RequestUtils(modelDAO);
+			List<Report> allReports;
+			try {
+				allReports = utils.getExistingReports(caseId);
+				Report lastFinalized = null;
+				if (allReports != null) {
+					for (Report r : allReports) {
+						if (r.getFinalized() != null) {
+							if (lastFinalized != null) { //compare dates
+								OffsetDateTime lastFinalizedUTCDatetime = OffsetDateTime.parse(lastFinalized.getDateFinalized(), DateTimeFormatter.ISO_DATE_TIME);
+								OffsetDateTime rFinalizedUTCDatetime = OffsetDateTime.parse(r.getDateFinalized(), DateTimeFormatter.ISO_DATE_TIME);
+								if (rFinalizedUTCDatetime.isAfter(lastFinalizedUTCDatetime)) {
+									lastFinalized = r; //current report is older than lastFinalized
+								}
+							}
+							else { //first finalized report, lastFinalized is still null
+								lastFinalized = r;
+							}
+						}
+					}
 				}
-				if (currentUser.getIndividualPermission().getCanReview() && isAssigned) {
-					buttons.add(new Button("assignment", "edit-report", "View/Edit Report", "info"));
+				if (lastFinalized != null) {
+					this.reportId = lastFinalized.getMongoDBId().getOid();
+					buttons.add(new Button("picture_as_pdf", "downloadPDFReport", "Download Finalized Report", "info"));
 				}
-				else {
-					buttons.add(new Button("assignment", "open-report-read-only", "Open Report in View Only Mode", "info"));
-				}
+			} catch (UnsupportedOperationException | IOException | URISyntaxException e) {
+				e.printStackTrace();
 			}
 		}
 		
@@ -88,19 +104,19 @@ public class OrderCaseAll {
 		
 		this.caseType = orderCase.getType();
 		
-		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
-		int step = 0;
-		int totalSteps = OrderCase.getTotalSteps();
-		if (orderCase.getCaseHistory() != null && !orderCase.getCaseHistory().isEmpty()) {
-			step = orderCase.getCaseHistory().get(orderCase.getCaseHistory().size() - 1).getStep(); //get the last step
-		}
+//		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
+//		int step = 0;
+//		int totalSteps = OrderCase.getTotalSteps();
+//		if (orderCase.getCaseHistory() != null && !orderCase.getCaseHistory().isEmpty()) {
+//			step = orderCase.getCaseHistory().get(orderCase.getCaseHistory().size() - 1).getStep(); //get the last step
+//		}
+//		
+//		for (int i = 0; i < totalSteps; i++) {
+//			String color = i <= step ? "info" : "grey";
+//			icons.add(new VuetifyIcon("mdi-numeric-" + i + "-box", color, OrderCase.getStepTooltip(i)));
+//		}
 		
-		for (int i = 0; i < totalSteps; i++) {
-			String color = i <= step ? "info" : "grey";
-			icons.add(new VuetifyIcon("mdi-numeric-" + i + "-box", color, OrderCase.getStepTooltip(i)));
-		}
-		
-		progressFlags = new FlagValue(icons);
+//		progressFlags = new FlagValue(icons);
 	}
 
 	public String getEpicOrderNumber() {
@@ -144,12 +160,16 @@ public class OrderCaseAll {
 		return typeFlags;
 	}
 
-	public FlagValue getProgressFlags() {
-		return progressFlags;
-	}
+//	public FlagValue getProgressFlags() {
+//		return progressFlags;
+//	}
 
 	public String getCaseType() {
 		return caseType;
+	}
+
+	public String getReportId() {
+		return reportId;
 	}
 
 

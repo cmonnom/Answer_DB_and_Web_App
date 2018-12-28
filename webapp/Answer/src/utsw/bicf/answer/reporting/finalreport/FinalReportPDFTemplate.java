@@ -200,7 +200,7 @@ public class FinalReportPDFTemplate {
 
 		// Content
 		Row<PDPage> row = table.createRow(12);
-		cell = row.createCell(100, report.getSummary());
+		cell = row.createCell(100, report.getSummary().replaceAll("\\n", "<br/>")); //otherwise, "No glyph for U+000A in font Calibri"
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
 		cell.setAlign(HorizontalAlignment.LEFT);
 		cell.setFontSize(FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE);
@@ -332,25 +332,26 @@ public class FinalReportPDFTemplate {
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		BaseTable table = createNewTable(currentPage);
 		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
-		FooterColor fColor = new FooterColor(Color.WHITE, FinalReportTemplateConstants.NO_BORDER_THIN);
+		FooterColor fColor = new FooterColor(Color.WHITE, FinalReportTemplateConstants.NO_BORDER_ZERO);
 		if (!colors.contains(fColor)) {
 			colors.add(fColor);
 		}
 		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
 		
 
-		Row<PDPage> row = table.createRow(12);
-		Cell<PDPage> cell = row.createCell(20, FinalReportTemplateConstants.GENE_TITLE);
+		Row<PDPage> headerRow = table.createRow(12);
+		table.addHeaderRow(headerRow);
+		Cell<PDPage> cell = headerRow.createCell(20, FinalReportTemplateConstants.GENE_TITLE);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.GENE_COLOR);
-		cell = row.createCell(20, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV);
+		cell = headerRow.createCell(20, FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.THERAPY_COLOR);
-		cell = row.createCell(20, FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE_NAV);
+		cell = headerRow.createCell(20, FinalReportTemplateConstants.CLINICAL_TRIALS_TITLE_NAV);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.TRIAL_COLOR);
-		cell = row.createCell(20, FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV);
+		cell = headerRow.createCell(20, FinalReportTemplateConstants.CLINICAL_SIGNIFICANCE_NAV);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.CLIN_SIGNIFICANCE_COLOR);
-		cell = row.createCell(9, FinalReportTemplateConstants.CNV_TITLE_SHORT);
+		cell = headerRow.createCell(9, FinalReportTemplateConstants.CNV_TITLE_SHORT);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.CNV_COLOR);
-		cell = row.createCell(11, FinalReportTemplateConstants.TRANSLOCATION_TITLE_SHORT);
+		cell = headerRow.createCell(11, FinalReportTemplateConstants.TRANSLOCATION_TITLE_SHORT);
 		this.applyNavigationCellFormatting(cell, FinalReportTemplateConstants.FTL_COLOR);
 		
 		
@@ -360,12 +361,12 @@ public class FinalReportPDFTemplate {
 		List<ReportNavigationRow> sortedValues = report.getNavigationRowsPerGene().values().stream().sorted().collect(Collectors.toList());
 		
 		for (ReportNavigationRow navigationRow : sortedValues) {
-			String gene = navigationRow.getGene();
+			String gene = navigationRow.getLabel();
 			Color defaultColor = Color.WHITE;
 			if (grayBackground) {
 				defaultColor = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
 			}
-			row = table.createRow(12);
+			Row<PDPage> row = table.createRow(12);
 			cell = row.createCell(20, gene);
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
 			cell.setAlign(HorizontalAlignment.LEFT);
@@ -409,8 +410,9 @@ public class FinalReportPDFTemplate {
 	}
 
 	private void createIndicatedTherapiesTable() throws IOException {
-//		this.updatePotentialNewPagePosition();
-		updatePageBreakPosition();
+		List<IndicatedTherapy> items = report.getIndicatedTherapies();
+		this.updatePotentialNewPagePosition(items.size() + 1);
+//		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
 		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.THERAPY_COLOR, FinalReportTemplateConstants.BORDER_THERAPY_COLOR);
@@ -421,8 +423,6 @@ public class FinalReportPDFTemplate {
 		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
 
 		BaseTable table = createNewTable(currentPage);
-		List<IndicatedTherapy> items = report.getIndicatedTherapies();
-
 		
 		//Title
 		Row<PDPage> row = table.createRow(12); 
@@ -575,10 +575,10 @@ public class FinalReportPDFTemplate {
 		cell.setFontSize(defaultFont);
 		cell.setTextColor(Color.BLACK);
 		cell.setFillColor(FinalReportTemplateConstants.BACKGROUND_GRAY);
-		cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+		cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 	}
 
 	private void applyTitleHeaderFormatting(Cell<PDPage> cell) {
@@ -588,10 +588,10 @@ public class FinalReportPDFTemplate {
 		cell.setValign(VerticalAlignment.MIDDLE);
 		cell.setFontSize(FinalReportTemplateConstants.TITLE_TEXT_FONT_SIZE);
 		cell.setTextColor(Color.BLACK);
-		cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+		cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 	}
 
 	private void applyCellFormatting(Cell<PDPage> cell, float defaultFont, Color color) {
@@ -603,10 +603,10 @@ public class FinalReportPDFTemplate {
 		cell.setTextColor(Color.BLACK);
 		cell.setBottomPadding(10);
 		if (color.equals(Color.WHITE)) {
-			cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-			cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-			cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-			cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+			cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+			cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+			cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+			cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 		}
 		else {
 			cell.setTopBorderStyle(FinalReportTemplateConstants.LIGHT_GRAY_BORDER_THIN);
@@ -619,14 +619,15 @@ public class FinalReportPDFTemplate {
 
 	private void applyNavigationCellFormatting(Cell<PDPage> cell, Color fillColor) {
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
+		cell.setFontBold(FinalReportTemplateConstants.MAIN_FONT_TYPE);
 		cell.setAlign(HorizontalAlignment.CENTER);
 		cell.setValign(VerticalAlignment.MIDDLE);
 		cell.setFontSize(FinalReportTemplateConstants.DEFAULT_TEXT_FONT_SIZE);
 		cell.setTextColor(Color.BLACK);
-		cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+		cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 		cell.setFillColor(fillColor);
 	}
 
@@ -1086,10 +1087,10 @@ public class FinalReportPDFTemplate {
 		cell.setFontSize(FinalReportTemplateConstants.ADDRESS_FONT_SIZE);
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
 		cell.setTextColor(FinalReportTemplateConstants.LIGHT_GRAY);
-		cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+		cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+		cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 		return cell;
 	}
 	
@@ -1108,7 +1109,7 @@ public class FinalReportPDFTemplate {
 		float tableYPos = FinalReportTemplateConstants.MARGINBOTTOM;
 		float tableWidth = pageWidthMinusMargins;
 		Color fillColor = Color.WHITE;
-		LineStyle borderColor = FinalReportTemplateConstants.NO_BORDER_THIN;
+		LineStyle borderColor = FinalReportTemplateConstants.NO_BORDER_ZERO;
 		for (int i = 0; i < pageTotal; i++) {
 			PDPage currentPage = this.mainDocument.getPage(i);
 			BaseTable table = new BaseTable(tableYPos, tableYPos, 0, tableWidth,
@@ -1147,10 +1148,10 @@ public class FinalReportPDFTemplate {
 //			row = table.createRow(1);
 //			Cell<PDPage> cell = row.createCell(100, " ");
 //			cell.setFontSize(1);
-//			cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-//			cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-//			cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
-//			cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_THIN);
+//			cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+//			cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+//			cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+//			cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 //			cell.setFillColor(FinalReportTemplateConstants.CNV_COLOR);
 //			cell.set
 			table.draw();

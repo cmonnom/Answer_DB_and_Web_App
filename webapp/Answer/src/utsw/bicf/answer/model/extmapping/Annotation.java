@@ -58,6 +58,9 @@ public class Annotation {
 	Trial trial;
 	String oncotreeDiagnosis;
 	String drugs;
+	String notation;
+	
+	Boolean canEdit = true;
 	
 	public Annotation() {
 		
@@ -381,6 +384,22 @@ public class Annotation {
 
 	public void setDrugs(String drugs) {
 		this.drugs = drugs;
+	}
+
+	public Boolean getCanEdit() {
+		return canEdit;
+	}
+
+	public void setCanEdit(Boolean canEdit) {
+		this.canEdit = canEdit;
+	}
+
+	public String getNotation() {
+		return notation;
+	}
+
+	public void setNotation(String notation) {
+		this.notation = notation;
 	}
 
 

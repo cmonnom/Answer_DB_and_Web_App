@@ -293,63 +293,77 @@ public class Report {
 	}
 
 	public void incrementCnvCount(String cytoband) {
+		String label = cytoband + "";
+		cytoband = cytoband.replaceAll("\\.", "");
 		ReportNavigationRow row = this.navigationRowsPerGene.get(cytoband);
 		if (row == null) {
-			row = new ReportNavigationRow(cytoband);
+			row = new ReportNavigationRow(cytoband, label);
 		}
 		row.setCnvCount(row.getCnvCount() + 1);
 		this.navigationRowsPerGene.put(cytoband, row);
 	}
 	
 	public void incrementFusionCount(String fusionName) {
+		String label = fusionName + "";
+		fusionName = fusionName.replaceAll("\\.", "");
 		ReportNavigationRow row = this.navigationRowsPerGene.get(fusionName);
 		if (row == null) {
-			row = new ReportNavigationRow(fusionName);
+			row = new ReportNavigationRow(fusionName, label);
 		}
 		row.setFusionCount(row.getFusionCount() + 1);
 		this.navigationRowsPerGene.put(fusionName, row);
 	}
 	
 	public void incrementIndicatedTherapyCount(String geneName) {
+		String label = geneName + "";
+		geneName = geneName.replaceAll("\\.", "");
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow(geneName);
+			row = new ReportNavigationRow(geneName, label);
 		}
 		row.setIndicatedTherapyCount(row.getIndicatedTherapyCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);
 	}
 	
 	public void incrementStrongClinicalSignificanceCount(String geneName) {
+		String label = geneName + "";
+		geneName = geneName.replaceAll("\\.", "");
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow(geneName);
+			row = new ReportNavigationRow(geneName, label);
 		}
 		row.setStrongClinicalSignificanceCount(row.getStrongClinicalSignificanceCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);
 	}
 	
 	public void incrementPossibleClinicalSignificanceCount(String geneName) {
+		String label = geneName + "";
+		geneName = geneName.replaceAll("\\.", "");
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow(geneName);
+			row = new ReportNavigationRow(geneName, label);
 		}
 		row.setPossibleClinicalSignificanceCount(row.getPossibleClinicalSignificanceCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);
 	}
 	
 	public void incrementUnknownClinicalSignificanceCount(String geneName) {
+		String label = geneName + "";
+		geneName = geneName.replaceAll("\\.", "");
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow(geneName);
+			row = new ReportNavigationRow(geneName, label);
 		}
 		row.setUnknownClinicalSignificanceCount(row.getUnknownClinicalSignificanceCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);
 	}
 	
 	public void incrementClinicalTrialCount(String geneName) {
+		String label = geneName + "";
+		geneName = geneName.replaceAll("\\.", "");
 		ReportNavigationRow row = this.navigationRowsPerGene.get(geneName);
 		if (row == null) {
-			row = new ReportNavigationRow(geneName);
+			row = new ReportNavigationRow(geneName, label);
 		}
 		row.setClinicalTrialCount(row.getClinicalTrialCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);

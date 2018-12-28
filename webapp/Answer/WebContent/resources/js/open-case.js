@@ -531,8 +531,8 @@ const OpenCase = {
                                                                         label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
                                                                 </v-flex>
 
-                                                                <v-flex xs6 sm6 md3 lg3 xl2>
-                                                                    <v-select v-if="isCNV()" clearable :value="searchAnnotationBreadth" :items="annotationBreadth" v-model="searchAnnotationBreadth"
+                                                                <v-flex xs6 sm6 md3 lg3 xl2 v-if="isCNV()">
+                                                                    <v-select  clearable :value="searchAnnotationBreadth" :items="annotationBreadth" v-model="searchAnnotationBreadth"
                                                                         label="Search by Breadth" multiple @input="matchAnnotationFilter"></v-select>
                                                                 </v-flex>
 
@@ -783,7 +783,7 @@ const OpenCase = {
                                                             <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'">
                                                                 <v-tooltip bottom>
                                                                     <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator" class="mr-0 ml-0 mt-0 mb-0">
-                                                                        <v-icon> open_in_new</v-icon>
+                                                                        <img :src="oncotreeIconUrl" width="24px"></img>
                                                                     </v-btn>
                                                                     <span>Open OncoTree in New Tab</span>
                                                                 </v-tooltip>
@@ -929,6 +929,7 @@ const OpenCase = {
 </div>
 </div>`, data() {
         return {
+            oncotreeIconUrl: oncotreeIconUrl,
             firstTimeLoading: true,
             loading: true,
             loadingVariantDetails: false,
@@ -1214,7 +1215,7 @@ const OpenCase = {
                     this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
                     //when the items are repopulated, we break the link with currentRow
                     //use the for loop to reset currentRow to the proper reference
-                    if (this.currentRow && this.currentRow.type == "snp") {
+                    if (this.currentRow && this.isSNP()) {
                         for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
                             if (this.$refs.geneVariantDetails.items[i].oid == this.currentRow.oid) {
                                 this.currentRow = this.$refs.geneVariantDetails.items[i];
@@ -1225,7 +1226,7 @@ const OpenCase = {
                     // step = new Date() - start;
                     // console.log(3, step); 
                     this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
-                    if (this.currentRow && this.currentRow.type == "cnv") {
+                    if (this.currentRow && this.isCNV()) {
                         for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
                             if (this.$refs.cnvDetails.items[i].oid == this.currentRow.oid) {
                                 this.currentRow = this.$refs.cnvDetails.items[i];
@@ -1236,7 +1237,7 @@ const OpenCase = {
                     // step = new Date() - start;
                     // console.log(4, step); 
                     this.$refs.translocationDetails.manualDataFiltered(response.data.translocationSummary);
-                    if (this.currentRow && this.currentRow.type == "translocation") {
+                    if (this.currentRow && this.isTranslocation()) {
                         for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
                             if (this.$refs.translocationDetails.items[i].oid == this.currentRow.oid) {
                                 this.currentRow = this.$refs.translocationDetails.items[i];
@@ -2324,7 +2325,7 @@ const OpenCase = {
             return formatted;
         },
         startUserAnnotations() {
-            if (!this.canProceed('canSelect') || this.readonly) {
+            if (!this.canProceed('canAnnotate') || this.readonly) {
                 return;
             }
             if (this.isSNP()) {
@@ -2550,14 +2551,34 @@ const OpenCase = {
             if (!this.canProceed('canSelect') || this.readonly) {
                 return;
             }
-            this.$refs.geneVariantDetails.addToSelection(this.currentRow);
+            var table = null;
+            if (this.isSNP()) {
+                table = this.$refs.geneVariantDetails;
+            }
+            else if (this.isCNV()) {
+                table = this.$refs.cnvDetails;
+            }
+            else if (this.isTranslocation()) {
+                table = this.$refs.translocationDetails;
+            }
+            table.addToSelection(this.currentRow);
             this.handleSelectionChanged();
         },
         removeVariantFromReport() {
             if (!this.canProceed('canSelect') || this.readonly) {
                 return;
             }
-            this.$refs.geneVariantDetails.removeFromSelection(this.currentRow);
+            var table = null;
+            if (this.isSNP()) {
+                table = this.$refs.geneVariantDetails;
+            }
+            else if (this.isCNV()) {
+                table = this.$refs.cnvDetails;
+            }
+            else if (this.isTranslocation()) {
+                table = this.$refs.translocationDetails;
+            }
+            table.removeFromSelection(this.currentRow);
             this.handleSelectionChanged();
         },
         updateSelectedVariantTable() {
@@ -2838,6 +2859,7 @@ const OpenCase = {
         },
         updateEditAnnotationBreadcrumbs(visible) {
             this.urlQuery.edit = visible;
+            zingchart.exec("cnvPlotEdit", 'destroy'); //kill the chart if edit annotation is closed
             this.updateRoute();
         },
         saveCaseAnnotations(skipSnackBar) {
@@ -3269,15 +3291,19 @@ const OpenCase = {
                     var foundTierMatch = false;
                     var foundScopeMatch = false;
                     if (this.searchAnnotations) {
-                        for (var field in this.utswAnnotationsFormatted[i]) {
-                            if (field == "scopeTooltip") {
-                                continue;
-                            }
-                            else if (this.utswAnnotationsFormatted[i][field] && (this.utswAnnotationsFormatted[i][field] + "").indexOf(this.searchAnnotations) > -1) {
-                                foundTextMatch = true;
-                                break;
-                            }
+                        var json = JSON.stringify(this.utswAnnotationsFormatted[i]);
+                        if (json.indexOf(this.searchAnnotations) > -1) {
+                          foundTextMatch = true;
                         }
+                        // for (var field in this.utswAnnotationsFormatted[i]) {
+                        //     if (field == "scopeTooltip") {
+                        //         continue;
+                        //     }
+                        //     else if (this.utswAnnotationsFormatted[i][field] && (this.utswAnnotationsFormatted[i][field] + "").indexOf(this.searchAnnotations) > -1) {
+                        //         foundTextMatch = true;
+                        //         break;
+                        //     }
+                        // }
                     }
                     else {
                         foundTextMatch = true;

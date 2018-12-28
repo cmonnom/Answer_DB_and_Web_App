@@ -3,19 +3,24 @@ package utsw.bicf.answer.controller.serialization.vuetify;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.model.hybrid.OrderCaseAll;
-
+/**
+ * Summary object for all case tables on the home page
+ * @author Guillaume
+ *
+ */
 public class AllOrderCasesSummary {
 	
 	OrderCaseAllSummary casesAll;
 	OrderCaseForUserSummary casesForUser;
+	OrderCaseFinalizedSummary casesFinalized;
 	Boolean isAllowed = true;
 	Boolean success = false;
 	
-	public AllOrderCasesSummary(OrderCaseAllSummary allSummary, OrderCaseForUserSummary forUserSummary) {
+	public AllOrderCasesSummary(OrderCaseAllSummary allSummary, OrderCaseForUserSummary forUserSummary, OrderCaseFinalizedSummary finalizedSummary) {
 		super();
 		this.casesAll = allSummary;
 		this.casesForUser = forUserSummary;
+		this.casesFinalized = finalizedSummary;
 	}
 
 
@@ -57,6 +62,16 @@ public class AllOrderCasesSummary {
 
 	public void setCasesAll(OrderCaseAllSummary casesAll) {
 		this.casesAll = casesAll;
+	}
+
+
+	public OrderCaseFinalizedSummary getCasesFinalized() {
+		return casesFinalized;
+	}
+
+
+	public void setCasesFinalized(OrderCaseFinalizedSummary casesFinalized) {
+		this.casesFinalized = casesFinalized;
 	}
 	
 

@@ -543,6 +543,13 @@ public class OpenCaseController {
 			for (Annotation a : variantDetails.getReferenceCnv().getUtswAnnotations()) {
 				Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
 			}
+			variantDetails.getReferenceCnv().getUtswAnnotations().sort(new Comparator<Annotation>() {
+				@Override
+				public int compare(Annotation o1, Annotation o2) {
+					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+				}
+				
+			});
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(variantDetails);
 		}
@@ -584,6 +591,13 @@ public class OpenCaseController {
 			for (Annotation a : variantDetails.getReferenceTranslocation().getUtswAnnotations()) {
 				Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
 			}
+			variantDetails.getReferenceTranslocation().getUtswAnnotations().sort(new Comparator<Annotation>() {
+				@Override
+				public int compare(Annotation o1, Annotation o2) {
+					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+				}
+				
+			});
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(variantDetails);
 		}
@@ -648,8 +662,14 @@ public class OpenCaseController {
 		JsonNode annotationNodes = mapper.readTree(annotations);
 		for (JsonNode annotationNode : annotationNodes.get("annotations")) {
 			Annotation userAnnotation = mapper.readValue(annotationNode.toString(), Annotation.class);
+			if (userAnnotation.getUserId() != null 
+					&& !userAnnotation.getUserId().equals(user.getUserId())) {
+				response.setSuccess(false);
+				response.setMessage("You cannot modify someone else's annotation");
+				return response.createObjectJSON();
+			}
 			userAnnotation.setUserId(user.getUserId());
-			if (userAnnotation.getIsCaseSpecific()) {
+			if (userAnnotation.getIsCaseSpecific() && !caseId.equals("")) {
 				userAnnotation.setCaseId(caseId);
 			}
 			if (userAnnotation.getIsGeneSpecific()) {
@@ -694,7 +714,7 @@ public class OpenCaseController {
 			}
 			userAnnotations.add(userAnnotation);
 		}
-		boolean didChange = utils.commitAnnotation(response, caseId, variantId, userAnnotations);
+		boolean didChange = utils.commitAnnotation(response, userAnnotations);
 		if (response.getSuccess()) {
 			response.setMessage(didChange + ""); //ajax should check the message in commitAnnotation
 			response.setUserPrefs(user.getUserPref());
@@ -1081,26 +1101,23 @@ public class OpenCaseController {
 				List<User> users = modelDAO.getAllUsers();
 				OrderCase caseSummary = utils.getCaseSummary(caseId);
 				for (User aUser : users) {
-					if (!aUser.equals(currentUser) && ControllerUtil.isUserAssignedToCase(caseSummary, aUser) && aUser.getIndividualPermission().getCanReview()) {
-						String subject = "You have a new case: " + caseId;
-						StringBuilder message = new StringBuilder()
-								.append("<p>Dr. ").append(aUser.getLast()).append(",</p><br/>")
-								.append("<b>")
-								.append(currentUser.getFullName())
-								.append("</b>")
-								.append(" marked a case as ready for review. ")
-								.append("<b>")
-								.append("Case Id: ").append(caseId).append("</b><br/>")
-								.append("<br/>")
-								.append("You are receiving this message because you are a reviewer on this case.<br/><br/>");								;
-
-								String toEmail = aUser.getEmail();
-//								String toEmail = "guillaume.jimenez@utsouthwestern.edu"; //for testing to avoid sending other people emails
-								String link = new StringBuilder().append(emailProps.getRootUrl()).append("openCase/").append(caseId)
-										.append("?showReview=true").toString();
-								String fullMessage = NotificationUtils.buildStandardMessage(message.toString(), emailProps, link);
-								boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), toEmail, subject, fullMessage);
-								System.out.println("An email was sent. Success:" + success);
+					//notify users assigned to the case
+					if (!aUser.equals(currentUser) 
+							&& (ControllerUtil.isUserAssignedToCase(caseSummary, aUser) 
+							&& aUser.getIndividualPermission().getCanReview())) {
+						String servlet = "openCase/";
+						String markedAs = " marked a case as ready for review. ";
+						String reason = "You are receiving this message because you are a reviewer on this case.<br/><br/>";
+						this.sendEmail(caseId, aUser, currentUser, servlet, markedAs, reason);
+					}
+					//notify other users whose receive_all_notifications is true
+					if (!aUser.equals(currentUser) 
+							&& !ControllerUtil.isUserAssignedToCase(caseSummary, aUser) 
+							&& aUser.getIndividualPermission().getReceiveAllNotifications()) {
+						String servlet = "openCaseReadOnly/";
+						String markedAs = " marked a case as ready for review. ";
+						String reason = "You are receiving this message because your account is set to receive all notifications.<br/><br/>";
+						this.sendEmail(caseId, aUser, currentUser, servlet, markedAs, reason);
 					}
 				}
 			}
@@ -1109,6 +1126,28 @@ public class OpenCaseController {
 			}
 		}
 		return response.createObjectJSON();
+	}
+	
+	private void sendEmail(String caseId, User user, User currentUser, String servlet, String markedAs, String reason) throws IOException, InterruptedException {
+		String subject = "You have a new case: " + caseId;
+		StringBuilder message = new StringBuilder()
+				.append("<p>Dr. ").append(user.getLast()).append(",</p><br/>")
+				.append("<b>")
+				.append(currentUser.getFullName())
+				.append("</b>")
+				.append(markedAs)
+				.append("<b>")
+				.append("Case Id: ").append(caseId).append("</b><br/>")
+				.append("<br/>")
+				.append(reason);
+				
+		String toEmail = user.getEmail();
+//		String toEmail = "guillaume.jimenez@utsouthwestern.edu"; //for testing to avoid sending other people emails
+		String link = new StringBuilder().append(emailProps.getRootUrl()).append(servlet).append(caseId)
+				.append("?showReview=true").toString();
+		String fullMessage = NotificationUtils.buildStandardMessage(message.toString(), emailProps, link);
+		boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), toEmail, subject, fullMessage);
+		System.out.println("An email was sent. Success:" + success);
 	}
 	
 	@RequestMapping(value = "/readyForReport", produces= "application/json; charset=utf-8")
@@ -1125,6 +1164,19 @@ public class OpenCaseController {
 			utils.caseReadyForReport(response, caseId);
 			if (!response.getSuccess()) {
 				response.setMessage("You are not allowed to review this case");
+			}
+			else {
+				List<User> users = modelDAO.getAllUsers();
+				for (User aUser : users) {
+					//notify other users whose receive_all_notifications is true
+					if (!aUser.equals(currentUser) 
+							&& aUser.getIndividualPermission().getReceiveAllNotifications()) {
+						String servlet = "openReportReadOnly/";
+						String markedAs = " marked a case as ready for report. ";
+						String reason = "You are receiving this message because your account is set to receive all notifications.<br/><br/>";
+						this.sendEmail(caseId, aUser, currentUser, servlet, markedAs, reason);
+					}
+				}
 			}
 		}
 		return response.createObjectJSON();

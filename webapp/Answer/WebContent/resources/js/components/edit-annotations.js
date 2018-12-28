@@ -8,7 +8,7 @@ Vue.component('edit-annotations', {
         limitScopeChromosome: { default: false, type: Boolean}, //used by CNV to limit the breadth choices
         hideScope: {default: false, type: Boolean},
         color: {default: "primary", type: String},
-        breadcrumbs: { default: [], type: Array },
+        breadcrumbs: { default: () => [], type: Array },
         annotationCategories: {default: () => [], type: Array},
         annotationBreadth: {default: () => [], type: Array},
         annotationClassifications: {default:() => [], type: Array},
@@ -20,6 +20,7 @@ Vue.component('edit-annotations', {
         backColor: {default: "orange lighten-4", type: String},
         caseIcon: {default: "", type: String},
         caseType: {default: "", type: String},
+        single: {default: false, type: Boolean}, //only one annotation at a time (for editing outside of a case)
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -32,7 +33,7 @@ Vue.component('edit-annotations', {
                             <v-icon>more_vert</v-icon>
                         </v-btn>
                         <v-list>
-                        <v-list-tile avatar @click="togglePanel()">
+                        <v-list-tile avatar @click="togglePanel()" v-if="!isOutsideACase()">
                             <v-list-tile-avatar>
                                 <v-icon>zoom_in</v-icon>
                             </v-list-tile-avatar>
@@ -41,7 +42,7 @@ Vue.component('edit-annotations', {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                            <v-list-tile avatar @click="addCustomAnnotation()">
+                            <v-list-tile avatar @click="addCustomAnnotation()" :disabled="single">
                                 <v-list-tile-avatar>
                                     <v-icon>playlist_add</v-icon>
                                 </v-list-tile-avatar>
@@ -50,7 +51,7 @@ Vue.component('edit-annotations', {
                                 </v-list-tile-content>
                             </v-list-tile>
 
-                            <v-list-tile avatar @click="addCustomTrial()">
+                            <v-list-tile avatar @click="addCustomTrial()" :disabled="single">
                             <v-list-tile-avatar>
                                 <v-icon>assignment</v-icon>
                             </v-list-tile-avatar>
@@ -89,13 +90,14 @@ Vue.component('edit-annotations', {
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
                     <v-btn icon flat :color="annotationVariantDetailsVisible ? 'amber accent-2' : ''" @click="togglePanel()"
-                        slot="activator">
+                    v-if="!isOutsideACase()"
+                    slot="activator">
                         <v-icon>zoom_in</v-icon>
                     </v-btn>
                     <span>Show/Hide Variant Details</span>
                  </v-tooltip>
                 <v-tooltip bottom >
-                    <v-btn icon slot="activator" @click="addCustomAnnotation()">
+                    <v-btn icon slot="activator" @click="addCustomAnnotation()" :disabled="single">
                         <v-icon>playlist_add</v-icon>
                     </v-btn>
                     <span>Create a new annotation</span>
@@ -124,9 +126,13 @@ Vue.component('edit-annotations', {
                 <v-card v-if="userEditingAnnotations.length == 0" class="mb-3">
                     <v-card-text>
                         Click on
-                        <v-btn color="primary" @click="addCustomAnnotation()">Add Annotation
+                        <v-btn color="primary" @click="addCustomAnnotation()" :disabled="single">Add Annotation
                             <v-icon right dark>playlist_add</v-icon>
                         </v-btn> to create a new annotation.
+                        Click on
+                        <v-btn color="primary" @click="addCustomTrial()" :disabled="single">Add Trial
+                            <v-icon right dark>assignment</v-icon>
+                        </v-btn> to create a new trial.
                     </v-card-text>
                 </v-card>
 
@@ -176,23 +182,54 @@ Vue.component('edit-annotations', {
                                                                 cases/genes/variants:
                                                             </div>
                                                             <v-tooltip bottom>
-                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
+                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation) || isOutsideACase()" label="Case Specific"
                                                                     v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
                                                                 <span>Select if this annotation only applies to this case
                                                                     <br/>(need to select Gene or Variant Specific first)</span>
                                                             </v-tooltip>
+                                                            <v-layout row wrap>
+                                                            <v-flex :class="[isOutsideACase() ? 'xs6' : 'xs12', 'pl-0']">
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Gene Specific" v-model="annotation.isGeneSpecific"
                                                                     @change="selectBreadth(annotation, 'Gene Function')"></v-switch>
                                                                 <span v-if="!annotation.isVariantSpecific">Select either Gene or Variant Specific or both</span>
                                                                 <span v-if="annotation.isGeneSpecific && annotation.isVariantSpecific">Uncheck Variant Specific first</span>
                                                             </v-tooltip>
+                                                            </v-flex>
+                                                            <v-flex xs6 v-if="isOutsideACase()">
+                                                                <v-tooltip right>
+                                                                <v-select slot="activator" clearable :value="annotation.geneId" :items="allGenes" v-model="annotation.geneId"
+                                                                    label="Gene Symbol" single-line hide-details autocomplete clearable
+                                                                    item-text="name" item-value="value"
+                                                                    class="no-height-select" @change="getVariantsForGene(annotation.geneId,annotation)"
+                                                                    :disabled="annotation.markedForDeletion || !annotation.isGeneSpecific"></v-select>
+                                                                    <span>Select a gene</span>
+                                                                </v-tooltip>
+                                                            </v-flex>
+                                                            </v-layout>
+                                                            <v-layout row wrap>
+                                                            <v-flex :class="[isOutsideACase() ? 'xs6' : 'xs12', 'pl-0']">
                                                             <v-tooltip bottom>
                                                                 <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Variant Specific" v-model="annotation.isVariantSpecific"
                                                                     @change="selectBreadth(annotation, 'Variant Function')"></v-switch>
                                                                 <span>Select either Gene or Variant Specific or both</span>
                                                             </v-tooltip>
-                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Diagnosis Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                            </v-flex>
+                                                            <v-flex xs6 v-if="isOutsideACase()">
+                                                                <v-tooltip right>
+                                                                <v-select slot="activator" clearable :value="annotation.geneId" :items="annotation.variantItems" v-model="annotation.variantId"
+                                                                    label="Variant Notation" single-line hide-details autocomplete clearable
+                                                                    item-text="name" item-value="value"
+                                                                    class="no-height-select"
+                                                                    :disabled="annotation.markedForDeletion || !annotation.isVariantSpecific"></v-select>
+                                                                    <span v-if="annotation.variantItems">Select a variant</span>
+                                                                    <span v-if="!annotation.variantItems">Select a gene first</span>
+                                                                </v-tooltip>
+                                                            </v-flex>
+                                                            </v-layout>
+                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion || isOutsideACase()" 
+                                                            label="Diagnosis Specific" v-model="annotation.isTumorSpecific"
+                                                            ></v-switch>
                                                         </v-card-text>
                                                         <!-- CNV -->
                                                         <v-card-text class="card__text_default" v-if="isCNV()  && !hideScope">
@@ -448,13 +485,13 @@ Vue.component('edit-annotations', {
             </v-card-text>
             <v-card-actions :class="['card-actions-bottom', backColor]">
                 <v-tooltip top>
-                    <v-btn slot="activator" color="primary" @click="addCustomAnnotation()">Add Annotation
+                    <v-btn slot="activator" color="primary" @click="addCustomAnnotation()" :disabled="single">Add Annotation
                         <v-icon right dark>playlist_add</v-icon>
                     </v-btn>
                     <span>Create a new annotation</span>
                 </v-tooltip>
                 <v-tooltip top>
-                <v-btn slot="activator" color="primary" @click="addCustomTrial()">Add Trial
+                <v-btn slot="activator" color="primary" @click="addCustomTrial()" :disabled="single">Add Trial
                     <v-icon right dark>assignment</v-icon>
                 </v-btn>
                 <span>Create a new annotation</span>
@@ -489,7 +526,8 @@ Vue.component('edit-annotations', {
             cnvGeneItems: [],
             saving: false,
             loadingNCTData: false,
-            saveDisabledReasons: ""
+            saveDisabledReasons: "",
+            allGenes: [],
         }
 
     },
@@ -528,7 +566,9 @@ Vue.component('edit-annotations', {
             this.annotationDialogVisible = true;
         },
         addCustomAnnotation() {
-            //TODO 
+            if (this.single)  {
+                return;
+            }
             for (var i = 0; i < this.userEditingAnnotations.length; i++) {
                 this.userEditingAnnotations[i].isVisible = false;
             }
@@ -567,6 +607,9 @@ Vue.component('edit-annotations', {
             });
         },
         addCustomTrial() {
+            if (this.single) {
+                return;
+            }
             this.addCustomAnnotation();
             var annotation = this.userEditingAnnotations[this.userEditingAnnotations.length - 1];
             annotation.trial = {
@@ -654,6 +697,8 @@ Vue.component('edit-annotations', {
                 scopeSelected = scopeSelected && !this.noLevelSelected(annotation);
             }
             var trialsHaveNCTID = true;
+            var caseAgnosticHasGeneSymbol = true;
+            var caseAgnosticHasVariant = true;
             var length = this.userEditingAnnotations.length;
             for (var i = 0; i < length; i++) {
                 if (this.userEditingAnnotations[i].trial) {
@@ -679,6 +724,14 @@ Vue.component('edit-annotations', {
                         trialsHaveNCTID = false;
                     }
                 }
+                if (this.userEditingAnnotations[i].isGeneSpecific && 
+                    this.isOutsideACase() && !this.userEditingAnnotations[i].geneId) { //need to select a gene if outside a case
+                        caseAgnosticHasGeneSymbol = false
+                }
+                if (this.userEditingAnnotations[i].isVariantSpecific && 
+                    this.isOutsideACase() && !this.userEditingAnnotations[i].variantId) { //need to select a gene if outside a case
+                        caseAgnosticHasVariant = false
+                }
             }
             var saveDisabledReasons = [];
             if (!scopeSelected) {
@@ -693,8 +746,15 @@ Vue.component('edit-annotations', {
             if (!trialsHaveNCTID) {
                 saveDisabledReasons.push("Some Clinical Trials are incomplete (all fields are required)");
             }
+            if (!caseAgnosticHasGeneSymbol) {
+                saveDisabledReasons.push("Select a Gene Symbol for Gene Specific annotations");
+            }
+            if (!caseAgnosticHasVariant) {
+                saveDisabledReasons.push("Select a Variant Notation for Variant Specific annotations");
+            }
             this.saveDisabledReasons = saveDisabledReasons.join("<br/>");
-            return !scopeSelected || length == 0 || this.saving || !trialsHaveNCTID;
+            return !scopeSelected || length == 0 || this.saving 
+            || !trialsHaveNCTID || !caseAgnosticHasGeneSymbol || !caseAgnosticHasVariant;
         },
         //at least one level needs to be selected
         //can't only be case specific: needs either gene or variant
@@ -809,6 +869,15 @@ Vue.component('edit-annotations', {
             }
             if (annotation.isVariantSpecific) {
                 annotation.isGeneSpecific = true;
+                if (annotation.geneId) {
+                    this.getVariantsForGene(annotation.geneId, annotation);
+                }
+            }
+            if (annotation.isGeneSpecific) {
+                this.$emit("get-variant-for-gene", annotation.geneId);
+            }
+            if (!annotation.isGeneSpecific) {
+                annotation.genedId = null;
             }
         },
         deleteAnnotation(annotation, index) {
@@ -850,6 +919,12 @@ Vue.component('edit-annotations', {
             return this.type == "translocation";
         },
         createTitle() {
+            if (this.isOutsideACase() && !this.single) {
+                return "Create Annotations";
+            }
+            if (this.isOutsideACase() && this.single) {
+                return "Edit Annotation";
+            }
             if (this.limitScopeGene) {
                 return "Create/Edit Annotations for gene: " + this.title;
             }
@@ -878,12 +953,60 @@ Vue.component('edit-annotations', {
         breadcrumbNavigation(index) {
             this.$emit("breadcrumb-navigation", index);
         },
+        isOutsideACase() {
+            return this.currentVariant._id == null;
+        },
+        getAllGenes() { 
+            axios.get("./getGenesInPanel", {
+              params: {
+              }
+            })
+              .then(response => {
+                if (response.data.isAllowed) {
+                  this.allGenes = response.data.items;
+                }
+                else {
+                  this.handleDialogs(response.data, this.getGenesInPanel);
+                }
+              })
+              .catch(error => {
+                alert(error);
+              });
+          },
+          getVariantsForGene(geneId, annotation) { //TODO
+            if (!geneId) {
+                return;
+            }
+            axios.get("./getVariantsForGene", {
+              params: {
+                geneId: geneId,
+                annotationId: annotation._id.$oid
+              }
+            })
+              .then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    for (var i = 0; i < this.userAnnotations.length; i++) {
+                        if (this.userAnnotations[i]._id.$oid == response.data.payload.annotationId) {
+                            this.userAnnotations[i].variantItems = response.data.payload;
+                            break;
+                        }
+                    }
+                }
+                else {
+                  this.handleDialogs(response.data, this.getVariantsForGene.bind(null, geneId, annotation));
+                }
+              })
+              .catch(error => {
+                alert(error);
+              });
+          },
     },
     created: function () {
     },
     destroyed: function () {
     },
     mounted() {
+        this.getAllGenes();
     },
     computed: {
     },

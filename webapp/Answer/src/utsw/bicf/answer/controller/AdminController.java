@@ -88,7 +88,7 @@ public class AdminController {
 			@RequestParam Boolean canView,
 			@RequestParam Boolean canSelect, @RequestParam Boolean canAnnotate, 
 			@RequestParam Boolean canAssign, @RequestParam Boolean canReview,
-			@RequestParam Boolean admin)
+			@RequestParam Boolean allNotifications, @RequestParam Boolean admin)
 			throws Exception {
 		User user = null;
 		AjaxResponse response = new AjaxResponse();
@@ -120,6 +120,8 @@ public class AdminController {
 		individualPermission.setCanSelect(canSelect);
 		individualPermission.setCanView(canView);
 		individualPermission.setCanReview(canReview);
+		individualPermission.setReceiveAllNotifications(allNotifications);
+		
 		modelDAO.saveObject(individualPermission);
 		
 		modelDAO.saveObject(user);

@@ -36,6 +36,7 @@ public class UserTableSummary extends Summary<UserTableRow>{
 		headers.add(new Header("Select", "selectValue", new ToolTip("Can a user select variants for reporting?"), true));
 		headers.add(new Header("Assign", "assignValue", new ToolTip("Can a user assign cases to other users?"), true));
 		headers.add(new Header("Review", "reviewValue", new ToolTip("Can a user review cases?"), true));
+		headers.add(new Header("Notifications", "notificationValue", new ToolTip("Receive all notifications?"), true));
 		headers.add(new Header("Admin", "adminValue", new ToolTip("Is user an admin?"), true));
 		Header actions = new Header("Edit User", "actions");
 		actions.setButtons(true);

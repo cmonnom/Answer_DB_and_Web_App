@@ -138,7 +138,7 @@ Vue.component('variant-details', {
                                           </v-data-table>
                                           <v-layout v-if="item.type == 'select'" class="full-width">
                                           <v-flex class="selectable pt-2 pl-0">{{ item.label }}:</v-flex>
-                                          <v-flex class="max300" >
+                                          <v-flex class="max300 xs3" >
                                             <v-tooltip right>
                                             <v-select slot="activator" clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
                                                 :label="item.tooltip" single-line hide-details
@@ -328,6 +328,7 @@ Vue.component('variant-details', {
         },
         hidePanel() {
             this.$emit("hide-panel", this);
+            zingchart.exec(this.cnvPlotId, 'destroy'); //kill the chart if variant details is closed
         },
         togglePanel() {
             this.$emit("toggle-panel", this);

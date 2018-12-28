@@ -1,6 +1,12 @@
 const Home = {
     template:
         `<div>
+
+        <v-snackbar :timeout="0" :bottom="true" v-model="snackBarVisible">
+        {{ snackBarMessage }}
+        <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
+      </v-snackbar>
+
   <v-dialog v-model="assignDialogVisible" max-width="50%" scrollable>
     <v-card>
       <v-toolbar dense dark color="primary">
@@ -84,6 +90,14 @@ const Home = {
         </v-flex>
       </v-slide-x-transition>
 
+      <v-slide-x-transition>
+      <v-flex xs12 v-show="caseFinalizedTableVisible" >
+        <data-table ref="casesFinalizedTable" :fixed="false" :fetch-on-created="false" table-title="Cases Finalized" :initial-sort="'epicOrderDate'"
+          no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search">
+        </data-table>
+      </v-flex>
+    </v-slide-x-transition>
+
     </v-layout>
   </v-container>
 </div>`,
@@ -96,7 +110,11 @@ const Home = {
             currentEpicOrderNumber: "",
             caseForUserTableVisible: true,
             caseAllTableVisible: true,
+            caseFinalizedTableVisible: true,
             tableFlex: 'xs4',
+            creatingReport: false,
+            snackBarVisible: false,
+            snackBarMessage: ""
         }
     },
     methods: {
@@ -120,6 +138,7 @@ const Home = {
                     if (response.data.isAllowed && response.data.success) {
                         this.$refs.casesAllTable.manualDataFiltered(response.data.casesAll);
                         this.$refs.casesForUserTable.manualDataFiltered(response.data.casesForUser);
+                        this.$refs.casesFinalizedTable.manualDataFiltered(response.data.casesFinalized);
                     }
                     else {
                         this.handleDialogs(response.data, this.getWorklists);
@@ -228,7 +247,33 @@ const Home = {
             var title = user.canReview ? "(Reviewer)" : "";
             return user.name + " " + title;
         },
-        
+        createPDFReport(reportId) {
+            if (this.creatingReport) {
+                return; //Already creating a report
+            }
+            this.creatingReport = true;
+            this.snackBarMessage = "Downloading PDF Report...";
+            this.snackBarVisible = true;
+            axios.get("./createPDFReport", {
+                params: {
+                    reportId: reportId,
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        window.open(webAppRoot + "/pdfs/" + response.data.message, "_blank");
+                    } else {
+                        this.handleDialogs(response.data, this.createPDFReport.bind(null, reportId));
+                    }
+                    this.creatingReport = false;
+                    this.snackBarVisible = false;
+                })
+                .catch(error => {
+                    this.creatingReport = false;
+                    this.snackBarVisible = false;
+                    alert(error);
+                });
+        },
 
     },
     mounted: function () {
@@ -241,6 +286,7 @@ const Home = {
         bus.$off('open-read-only');
         bus.$off('edit-report');
         bus.$off('open-report-read-only');
+        bus.$off('downloadPDFReport');
        
     },
     created: function () {
@@ -276,6 +322,10 @@ const Home = {
         });
         bus.$on('open-report-read-only', (item) => {
             router.push("./openReportReadOnly/" + item.caseId);
+        });
+        //TODO
+        bus.$on('downloadPDFReport', (item) => {
+            this.createPDFReport(item.reportId);
         });
       
     },

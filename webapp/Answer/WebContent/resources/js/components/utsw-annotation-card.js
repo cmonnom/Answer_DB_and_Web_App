@@ -5,21 +5,31 @@ Vue.component('utsw-annotation-card', {
         "annotation": Object,
         "variantType": {default: "snp", type: String},
         noEdit: { default: true, type: Boolean },
+        caseAgnostic: { default: false, type: Boolean },
+        currentUserId: { default: null, type: Number}
     },
     template: `<div>
     <v-card>
-    <v-card-text class="subheading">
-        <v-container grid-list-md fluid>
+    <v-card-text :class="['subheading', !annotation.canEdit && caseAgnostic ? 'red' : '']">
+        <v-container grid-list-md fluid class="white">
             <v-layout row wrap>
                 <v-flex xs11>
                     From {{ annotation.fullName }}
                     <span v-text="parseDate(annotation)"></span>
                 </v-flex>
                 <v-flex xs1>
-                <v-tooltip bottom>
+                <v-tooltip bottom v-if="!caseAgnostic">
                     <v-switch color="primary" slot="activator" class="no-height" :disabled="noEdit"
                     v-model="annotation.isSelected" @change="annotationSelectionChanged"></v-switch>
                     <span>Select/Unselect for Report</span>
+                    </v-tooltip>
+                    <v-tooltip bottom v-if="caseAgnostic">
+                        <v-btn flat icon v-if="!noEdit" color="primary" :disabled="!annotation.canEdit"
+                        @click="startUserAnnotation(annotation)" slot="activator">
+                            <v-icon>create</v-icon>
+                        </v-btn>
+                        <span v-if="annotation.canEdit">Edit this annotation</span>
+                        <span v-if="!annotation.canEdit">You cannot edit someone else's annotation</span>
                     </v-tooltip>
                 </v-flex>
                 <v-flex xs12>
@@ -129,6 +139,9 @@ Vue.component('utsw-annotation-card', {
         },
         annotationSelectionChanged() {
             this.$emit("annotation-selection-changed");
+        },
+        startUserAnnotation(annotation) {
+            this.$emit("start-user-annotation", annotation);
         }
     },
     computed: {

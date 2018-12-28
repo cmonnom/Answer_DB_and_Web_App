@@ -10,12 +10,14 @@ public class ReportNavigationRow implements Comparable<ReportNavigationRow> {
 	int unknownClinicalSignificanceCount;
 	int cnvCount;
 	int fusionCount;
+	String label;
 	
 	public ReportNavigationRow() {
 	}
 	
-	public ReportNavigationRow(String geneName) {
+	public ReportNavigationRow(String geneName, String label) {
 		this.gene = geneName;
+		this.label = label;
 	}
 	
 	public String getGene() {
@@ -99,5 +101,13 @@ public class ReportNavigationRow implements Comparable<ReportNavigationRow> {
 			return gene.compareTo(o.gene);
 		}
 		return 0;
+	}
+
+	public String getLabel() {
+		return label;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
 	}
 }

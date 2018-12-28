@@ -52,7 +52,7 @@ const UserPrefs = {
           <b>Admin:</b> admistrator and can do all of the above. Be careful.
           </v-flex>
           <v-flex xs12>
-            If you need to enable more access, contact an Answer administrator ({{ admins }}).
+            If you need to enable more permissions, contact an Answer administrator ({{ admins }}).
           </v-flex>
         </v-layout>
      </v-container>   
