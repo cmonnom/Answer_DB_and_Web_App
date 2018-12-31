@@ -84,7 +84,7 @@ Vue.component('main-menu', {
 				{ title: 'Home', iconBefore: 'home', name: 'Home', regularItem: true },
 				{ title: 'Open Case', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseSearch: true },
 				{ title: 'Open Report', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseReportSearch: true },
-				// { title: 'Annotations', name: 'AnnotationBrowser', regularItem: true }, // NOT READY YET
+				{ title: 'Annotations', name: 'AnnotationBrowser', regularItem: true }, // NOT READY YET
 				{ title: 'Admin', name: 'Admin', regularItem: true, adminOnly: true, iconBefore: 'settings' },
 				{ title: 'Preferences', name: 'UserPrefs', regularItem: true, iconBefore: 'account_circle' },
 				{ title: 'Logout', name: 'LogOut', iconBefore: 'mdi-logout', regularItem: true }

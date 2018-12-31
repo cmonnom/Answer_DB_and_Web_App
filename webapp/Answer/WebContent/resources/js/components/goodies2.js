@@ -36,6 +36,11 @@ Vue.component('goodies2', {
           start: this.createFireworks,
           end: this.clearFireworks,
           endDelay: 2000
+        },
+        {
+          start: this.createBlackHoles,
+          end: this.clearBlackHoles,
+          endDelay: 2000
         }
       ],
       lastIndex: -1,
@@ -46,6 +51,7 @@ Vue.component('goodies2', {
       snowParticles: [],
       snowOriginColor: "#AAA",
       fireworks: [],
+      blackHoles: [],
       canClick: false
     }
 
@@ -465,7 +471,42 @@ Vue.component('goodies2', {
     clearFireworks() {
       clearInterval(this.currentInterval);
       this.opacityTransition = true;
-    }
+    },
+    createBlackHoles() {
+      this.canClick = true;
+      this.demo = Sketch.create({
+          container: document.getElementById(this.containerId),
+          retina: 'auto'
+      });
+  
+      this.demo.update = () => {
+          for (var i = 0; i < this.blackHoles.length; i++) {
+            this.blackHoles[i].move();
+            }
+      }
+  
+      this.demo.mousedown = () => {
+          var mouseLoc = {x: this.demo.mouse.x, y: this.demo.mouse.y};
+          this.createABlackHole(mouseLoc);
+      }
+  
+      this.demo.draw = () => {
+        this.blackHoles = this.blackHoles.filter((b) => b.alive);
+          for (var i = this.blackHoles.length - 1; i >= 0; i--) {
+            this.blackHoles[i].draw(this.demo);
+            this.blackHoles[i].move();
+            }
+      }
+  },  
+  createABlackHole(mouseLoc) {
+      var maxSize = random(20, 100);
+      var maxParticles = random(20, 40);
+      this.blackHoles.push(new BlackHole(mouseLoc, maxSize, maxParticles));
+  },
+  clearBlackHoles() {
+    clearInterval(this.currentInterval);
+    this.opacityTransition = true;
+  },
 
   },
   mounted: function () {
