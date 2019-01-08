@@ -340,7 +340,7 @@ Vue.component('variant-details', {
                     link = "https://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=" + id.value;
                 }
                 else if (id.value.indexOf('COSM') == 0) {
-                    link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.value.replace("COSM", "");
+                    link = "https://cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + id.value.replace("COSM", "");
                 }
                 else if (id.value.indexOf('COSN') == 0) {
                     link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.value.replace("COSN", "");

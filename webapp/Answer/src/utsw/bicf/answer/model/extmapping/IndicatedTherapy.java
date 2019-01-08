@@ -13,6 +13,7 @@ public class IndicatedTherapy {
 	String oid; //used to keep counts of variants used
 	boolean readonly;
 	String drugs;
+	boolean drugResistant;
 	
 	public IndicatedTherapy() {
 	}
@@ -31,6 +32,10 @@ public class IndicatedTherapy {
 		this.type = v.getType();
 		this.oid = v.getMongoDBId().getOid();
 		this.drugs = a.getDrugs();
+		this.drugResistant = a.isDrugResistant();
+		if (this.drugResistant) {
+			this.level = "Resistant";
+		}
 	}
 	public IndicatedTherapy(Annotation a, Translocation v) {
 		this.variant = a.getLeftGene() + "-" + a.getRightGene();
@@ -46,6 +51,10 @@ public class IndicatedTherapy {
 		this.type = v.getType();
 		this.oid = v.getMongoDBId().getOid();
 		this.drugs = a.getDrugs();
+		this.drugResistant = a.isDrugResistant();
+		if (this.drugResistant) {
+			this.level = "Resistant";
+		}
 	}
 //	public IndicatedTherapy(AnnotationCategory cat, Variant v) {
 //		this.variant = v.getGeneName() + " " + v.getNotation();
@@ -114,6 +123,14 @@ public class IndicatedTherapy {
 
 	public void setDrugs(String drugs) {
 		this.drugs = drugs;
+	}
+
+	public boolean isDrugResistant() {
+		return drugResistant;
+	}
+
+	public void setDrugResistant(boolean drugResistant) {
+		this.drugResistant = drugResistant;
 	}
 	
 	

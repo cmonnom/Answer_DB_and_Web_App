@@ -352,3 +352,10 @@ table.table tbody td {
     top: -24px;
     opacity: 0.90;
 }
+
+.font-weight-thin{ font-weight:100}
+.font-weight-light{ font-weight:300}
+.font-weight-regular{ font-weight:400}
+.font-weight-medium {font-weight:500}
+.font-weight-bold{ font-weight:700}
+.font-weight-black {font-weight:900}

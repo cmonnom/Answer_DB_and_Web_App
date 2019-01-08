@@ -419,17 +419,23 @@ Vue.component('edit-annotations', {
                                                         :disabled="annotation.markedForDeletion" label="Write your comments here">
                                                     </v-text-field>
                                                 </v-flex>
-                                                <v-flex xs12 lg6 v-if="annotation.category == 'Therapy'">
+                                                <v-flex xs12 lg7 v-if="annotation.category == 'Therapy'">
                                                     <v-layout>
-                                                        <v-flex class="mt-4 subheading">Drugs:</v-flex>
-                                                        <v-flex xs8>
+                                                        <v-flex class="mt-3 pt-2 subheading">Drugs:</v-flex>
+                                                        <v-flex xs7>
                                                             <v-text-field :disabled="annotation.markedForDeletion" label="(comma separated)" v-model="annotation.drugs"></v-text-field>
+                                                        </v-flex>
+                                                        <v-flex xs3 class="mt-3 pt-2 pl-2">
+                                                            <v-tooltip bottom>
+                                                            <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Drug Resistant" v-model="annotation.drugResistant"></v-switch>
+                                                                <span>Activate this button to make the variant resistant to the drugs listed.</span>
+                                                            </v-tooltip>
                                                         </v-flex>
                                                     </v-layout>
                                                 </v-flex>
-                                                <v-flex xs12 lg6>
+                                                <v-flex xs12 lg5>
                                                     <v-layout>
-                                                        <v-flex class="mt-4 subheading">PubMed Ids:</v-flex>
+                                                        <v-flex class="mt-3 pt-2 subheading">PubMed Ids:</v-flex>
                                                         <v-flex xs8>
                                                             <v-text-field :disabled="annotation.markedForDeletion" label="(comma separated)" v-model="annotation.pmids" :rules="numberRules"></v-text-field>
                                                         </v-flex>
@@ -451,6 +457,14 @@ Vue.component('edit-annotations', {
                                                                 class="no-top-text-field"
                                                                     ></v-text-field>
                                                             </v-flex>
+                                                            <!--
+                                                            <v-flex xs4>
+                                                            <v-tooltip bottom>
+                                                            <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Drug Resistant" v-model="annotation.drugResistant"></v-switch>
+                                                                <span>Activate this button to make the variant resistant to the drugs listed.</span>
+                                                            </v-tooltip>
+                                                        </v-flex>
+                                                        -->
                                                         </v-layout>
                                                     </v-card-text>
                                                 </v-card>
@@ -603,7 +617,9 @@ Vue.component('edit-annotations', {
                 leftGene: this.currentVariant.leftGene,
                 rightGene: this.currentVariant.rightGene,
                 trial: null,
-                drugs: ""
+                drugs: "",
+                warningLevel: 0,
+                drugResistant: false
             });
         },
         addCustomTrial() {
@@ -957,7 +973,7 @@ Vue.component('edit-annotations', {
             return this.currentVariant._id == null;
         },
         getAllGenes() { 
-            axios.get("./getGenesInPanel", {
+            axios.get(webAppRoot + "/getGenesInPanel", {
               params: {
               }
             })
@@ -977,7 +993,7 @@ Vue.component('edit-annotations', {
             if (!geneId) {
                 return;
             }
-            axios.get("./getVariantsForGene", {
+            axios.get(webAppRoot + "/getVariantsForGene", {
               params: {
                 geneId: geneId,
                 annotationId: annotation._id.$oid

@@ -61,6 +61,10 @@ public class Annotation {
 	String notation;
 	
 	Boolean canEdit = true;
+	 //if older than 6 months, modified since should be in red. 
+	//this way we can add more warning levels if needed
+	int warningLevel = 0;
+	boolean drugResistant;
 	
 	public Annotation() {
 		
@@ -305,6 +309,16 @@ public class Annotation {
 		a.setCreatedSince(TypeUtils.dateSince(createdUTCDatetime));
 		a.setModifiedSince(TypeUtils.dateSince(modifiedUTCDatetime));
 		
+		boolean needWarningLevel = (a.getIsVariantSpecific() != null && a.getIsVariantSpecific())
+				|| (a.getCategory() != null && (a.getCategory().equals("Therapy") || a.getCategory().equals("Clinical Trial")));
+		if (needWarningLevel && modifiedUTCDatetime.plusMonths(6).isBefore(OffsetDateTime.now())) {
+			a.warningLevel = 2;
+		}
+//		//for testing only.
+//		if (needWarningLevel && modifiedUTCDatetime.plusDays(20).isBefore(OffsetDateTime.now())) {
+//			a.warningLevel = 2;
+//		}it 
+		
 		//the list of selected annotations is not specific to the annotation but to the case/variant
 		if (selectedAnnotationIds != null) {
 			a.isSelected = selectedAnnotationIds.contains(a.getMongoDBId());
@@ -400,6 +414,22 @@ public class Annotation {
 
 	public void setNotation(String notation) {
 		this.notation = notation;
+	}
+
+	public int getWarningLevel() {
+		return warningLevel;
+	}
+
+	public void setWarningLevel(int warningLevel) {
+		this.warningLevel = warningLevel;
+	}
+
+	public boolean isDrugResistant() {
+		return drugResistant;
+	}
+
+	public void setDrugResistant(boolean drugResistant) {
+		this.drugResistant = drugResistant;
 	}
 
 

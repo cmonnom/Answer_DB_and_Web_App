@@ -138,11 +138,20 @@ public class TypeUtils {
 			now = OffsetDateTime.now(ZoneOffset.UTC);
 		}
 		Duration since = Duration.between(date, now);
+		
 		if (since.toDays() > 365) {
-			return (since.toDays() / 365) + " years ago";
+			String ago = " year ago";
+			if (since.toDays() / 365 > 1) {
+				ago = " years ago";
+			}
+			return (since.toDays() / 365) + ago;
 		}
 		if (since.toDays() > 30) {
-			return (since.toDays() / 30) + " months ago";
+			String ago = " month ago";
+			if (since.toDays() / 30 > 1) {
+				ago = " months ago";
+			}
+			return (since.toDays() / 30) + ago;
 		}
 		else if (since.toDays() > 1) {
 			return since.toDays() + " days ago";

@@ -375,7 +375,9 @@ const AnnotationBrowser = {
           trial: null,
           drugs: "",
           canEdit: false,
-          variantItems: []
+          variantItems: [],
+          warningLevel: 0,
+          drugResistant: false
         };
         annotation._id = annotations[i]._id;
         annotation.fullName = annotations[i].fullName;
@@ -399,6 +401,8 @@ const AnnotationBrowser = {
         annotation.trial = annotations[i].trial;
         annotation.drugs = annotations[i].drugs;
         annotation.canEdit = annotations[i].canEdit;
+        annotation.warningLevel = annotations[i].warningLevel;
+        annotation.drugResistant = annotations[i].drugResistant;
         formatted.push(annotation);
       }
       return formatted;

@@ -2194,7 +2194,9 @@ const OpenCase = {
                     visible: true,
                     isSelected: false,
                     trial: null,
-                    drugs: ""
+                    drugs: "",
+                    warningLevel: 0,
+                    drugResistant: false
                 };
                 annotation._id = annotations[i]._id;
                 if (showUser) {
@@ -2219,6 +2221,8 @@ const OpenCase = {
                 annotation.isSelected = annotations[i].isSelected;
                 annotation.trial = annotations[i].trial;
                 annotation.drugs = annotations[i].drugs;
+                annotation.warningLevel = annotations[i].warningLevel;
+                annotation.drugResistant = annotations[i].drugResistant;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2245,7 +2249,9 @@ const OpenCase = {
                     visible: true,
                     isSelected: false,
                     breadth: "",
-                    trial: null
+                    trial: null,
+                    warningLevel: 0,
+                    drugResistant: false
                 };
                 annotation._id = annotations[i]._id;
                 if (showUser) {
@@ -2268,6 +2274,8 @@ const OpenCase = {
                 annotation.classification = annotations[i].classification;
                 annotation.isSelected = annotations[i].isSelected;
                 annotation.trial = annotations[i].trial;
+                annotation.warningLevel = annotations[i].warningLevel;
+                annotation.drugResistant = annotations[i].drugResistant;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2296,7 +2304,9 @@ const OpenCase = {
                     rightGene: "",
                     isLeftSpecific: false,
                     isRightSpecific: false,
-                    trial: null
+                    trial: null,
+                    warningLevel: 0,
+                    drugResistant: false
 
                 };
                 annotation._id = annotations[i]._id;
@@ -2320,6 +2330,8 @@ const OpenCase = {
                 annotation.rightGene = annotations[i].rightGene;
                 annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
                 annotation.trial = annotations[i].trial;
+                annotation.warningLevel = annotations[i].warningLevel;
+                annotation.drugResistant = annotations[i].drugResistant;
                 formatted.push(annotation);
             }
             return formatted;
