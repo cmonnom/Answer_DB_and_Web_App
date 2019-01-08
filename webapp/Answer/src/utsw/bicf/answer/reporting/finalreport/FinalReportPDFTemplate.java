@@ -200,7 +200,7 @@ public class FinalReportPDFTemplate {
 
 		// Content
 		Row<PDPage> row = table.createRow(12);
-		cell = row.createCell(100, report.getSummary().replaceAll("\\n", "<br/>")); //otherwise, "No glyph for U+000A in font Calibri"
+		cell = row.createCell(100, report.getSummary() != null ? report.getSummary().replaceAll("\\n", "<br/>") : ""); //otherwise, "No glyph for U+000A in font Calibri"
 		cell.setFont(FinalReportTemplateConstants.MAIN_FONT_TYPE);
 		cell.setAlign(HorizontalAlignment.LEFT);
 		cell.setFontSize(FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE);

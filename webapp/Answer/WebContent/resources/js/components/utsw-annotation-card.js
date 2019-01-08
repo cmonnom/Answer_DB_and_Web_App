@@ -10,12 +10,12 @@ Vue.component('utsw-annotation-card', {
     },
     template: `<div>
     <v-card>
-    <v-card-text :class="['subheading', !annotation.canEdit && caseAgnostic ? 'red' : '']">
+    <v-card-text :class="['subheading', !annotation.canEdit && caseAgnostic ? 'blue-grey lighten-3' : '']">
         <v-container grid-list-md fluid class="white">
             <v-layout row wrap>
                 <v-flex xs11>
                     From {{ annotation.fullName }}
-                    <span v-text="parseDate(annotation)"></span>
+                    <span v-text="parseDate(annotation)" :class="annotation.warningLevel == 2 ? 'error--text font-weight-bold' : ''"></span>
                 </v-flex>
                 <v-flex xs1>
                 <v-tooltip bottom v-if="!caseAgnostic">
@@ -84,7 +84,8 @@ Vue.component('utsw-annotation-card', {
                 </v-flex>
                 <v-flex xs12 v-if="annotation.drugs" class="pr-1">
                     <span class="pr-1">
-                        <b>Drugs:</b>
+                        <b v-if="!annotation.drugResistant">Drugs:</b>
+                        <b v-if="annotation.drugResistant">Drug Resistant:</b>
                     </span>
                     <span v-html="annotation.drugs"></span>
                 </v-flex>

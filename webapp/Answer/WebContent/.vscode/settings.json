@@ -1,0 +1,5 @@
+{
+    "restructuredtext.confPath": "${workspaceFolder}\\WEB-INF\\view\\docs\\source",
+    "python.pythonPath": "C:\\Users\\Guillaume\\Anaconda3\\python.exe",
+    "python.linting.pylintEnabled": true
+}
