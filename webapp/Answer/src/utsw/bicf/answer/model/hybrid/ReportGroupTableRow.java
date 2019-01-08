@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.model.ReportGroup;
+import utsw.bicf.answer.model.User;
 
 public class ReportGroupTableRow {
 	
@@ -14,10 +16,11 @@ public class ReportGroupTableRow {
 	String description;
 	String referenceUrl;
 	String genes;
+	String createdBy;
 	
 	List<Button> buttons = new ArrayList<Button>();
 	
-	public ReportGroupTableRow(ReportGroup reportGroup) {
+	public ReportGroupTableRow(ReportGroup reportGroup, User currentUser) {
 		this.reportGroupId = reportGroup.getReportGroupId();
 		this.groupName = reportGroup.getGroupName();
 		this.description = reportGroup.getDescription();
@@ -28,9 +31,11 @@ public class ReportGroupTableRow {
 					.sorted()
 					.collect(Collectors.joining(" "));
 		}
-		
-		buttons.add(new Button("create", "editReportGroup", "Edit Gene Set", "info"));
-		buttons.add(new Button("delete", "deleteReportGroup", "Delete Gene Set (irreversible!)", "error"));
+		this.createdBy = reportGroup.getCreatedBy().getFullName();
+		if (ControllerUtil.isOwnerOrAdmin(currentUser, reportGroup.getCreatedBy())) {
+			buttons.add(new Button("create", "editReportGroup", "Edit Gene Set", "info"));
+			buttons.add(new Button("delete", "deleteReportGroup", "Delete Gene Set (irreversible!)", "error"));
+		}
 	}
 
 	public Integer getReportGroupId() {
@@ -79,6 +84,14 @@ public class ReportGroupTableRow {
 
 	public void setButtons(List<Button> buttons) {
 		this.buttons = buttons;
+	}
+
+	public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
 	}
 
 

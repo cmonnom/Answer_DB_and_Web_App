@@ -2,23 +2,23 @@ package utsw.bicf.answer.controller.serialization.vuetify;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import utsw.bicf.answer.model.ReportGroup;
+import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.ReportGroupTableRow;
 
 public class ReportGroupTableSummary extends Summary<ReportGroupTableRow>{
 //	
-	public ReportGroupTableSummary(List<ReportGroup> reportGroups, List<HeaderOrder> headerOrders) {
-		super(createReportGroupTableRows(reportGroups), "groupName", headerOrders);
+	public ReportGroupTableSummary(List<ReportGroup> reportGroups, List<HeaderOrder> headerOrders, User currentUser) {
+		super(createReportGroupTableRows(reportGroups, currentUser), "groupName", headerOrders);
 	}
 	
 	
-	private static List<ReportGroupTableRow> createReportGroupTableRows(List<ReportGroup> reportGroups) {
+	private static List<ReportGroupTableRow> createReportGroupTableRows(List<ReportGroup> reportGroups, User currentUser) {
 		List<ReportGroupTableRow> reportGroupRows = new ArrayList<ReportGroupTableRow>();
 		for (ReportGroup rg : reportGroups) {
-			reportGroupRows.add(new ReportGroupTableRow(rg));
+			reportGroupRows.add(new ReportGroupTableRow(rg, currentUser));
 		}
 		return reportGroupRows;
 	}
@@ -34,6 +34,8 @@ public class ReportGroupTableSummary extends Summary<ReportGroupTableRow>{
 		Header link = new Header("Reference", "referenceUrl");
 		link.setIsLink(true);
 		headers.add(link);
+		Header createdBy = new Header("Created By", "createdBy");
+		headers.add(createdBy);
 		Header genes = new Header("Genes", "genes");
 		genes.setWidth("400px");
 		genes.setWidthValue(400);

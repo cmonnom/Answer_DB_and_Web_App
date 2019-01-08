@@ -843,9 +843,27 @@ Vue.component('data-table', {
                     if (!isNaN(sNb) && !isNaN(rNb))
                         return parseInt(sNb) - parseInt(rNb);
                 }
+                if (s.indexOf("< ") > -1 || r.indexOf("< ") > -1) { //deal with special notations < 0.01%
+                    sNb = s;
+                    rNb = r;
+                    if (s.indexOf("< ") > -1) {
+                        sNb = s.replace("< ", "");
+                        if (!isNaN(sNb)) {
+                            sNb = parseFloat(sNb) / 10000;
+                        }
+                    }
+                    if (r.indexOf("< ") > -1) {
+                        rNb = r.replace("< ", "");
+                        if (!isNaN(rNb)) {
+                            rNb = parseFloat(rNb) / 10000;
+                        }
+                    }
+                    return sNb - rNb;
+                }
                 if (s.indexOf("/") > -1 && r.indexOf("/") > -1) { //tallys like count/total
                     return parseInt(s.split("/")[0]) - parseInt(r.split("/")[0]);
                 }
+                
                 if (dateRegex.test(s) && dateRegex.test(r)) {
                     var sDateArray = s.split("/");
                     var rDateArray = r.split("/");

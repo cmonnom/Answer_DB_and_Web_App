@@ -52,13 +52,16 @@ const AnnotationBrowser = {
           <v-flex xs12>
             UTSW Annotations
           </v-flex>
-          <v-flex xs12 offset-xs2 offset-md4 offset-lg6 offset-xl10>
+          <v-flex xs12 offset-xs2 offset-md3 offset-lg5 offset-xl8>
             <v-tabs grow slot="extension" dark slider-color="warning" color="primary" fixed-tabs v-model="annotationTabActive">
             <v-tab href="#tab-trial" :ripple="false">
                 Clinical Trials
             </v-tab>
             <v-tab href="#tab-snp" :ripple="false">
                 SNP / Indel
+            </v-tab>
+            <v-tab href="#tab-genes" :ripple="false">
+                Gene Sets
             </v-tab>
             </v-tabs>
           </v-flex>
@@ -165,6 +168,10 @@ const AnnotationBrowser = {
                     </v-flex>
                 </v-layout>
             </v-container>
+            </v-tab-item>
+            <!-- Gene sets -->
+            <v-tab-item id="tab-genes">
+              <gene-sets-edit></gene-sets-edit>
             </v-tab-item>
             </v-tabs-items>
 

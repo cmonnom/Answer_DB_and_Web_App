@@ -29,6 +29,7 @@ import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.security.FileProperties;
+import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
 @RequestMapping("/")
@@ -36,7 +37,14 @@ public class AdminController {
 	
 	static {
 		//if no permission is added, only admins will have access to the requests
-//		PermissionUtils.permissionPerUrl.put("getWorklists", new PermissionUtils(true, false, false));
+		PermissionUtils.addPermission(AdminController.class.getCanonicalName() + ".getAllReportGroups",
+				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(AdminController.class.getCanonicalName() + ".saveUser",
+				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(AdminController.class.getCanonicalName() + ".saveReportGroup",
+				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(AdminController.class.getCanonicalName() + ".deleteReportGroup",
+				IndividualPermission.CAN_ANNOTATE);
 	}
 
 	@Autowired
@@ -75,7 +83,7 @@ public class AdminController {
 		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
 		User user = (User) session.getAttribute("user");
 		List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Gene Sets");
-		ReportGroupTableSummary summary = new ReportGroupTableSummary(reportGroups, headerOrders);
+		ReportGroupTableSummary summary = new ReportGroupTableSummary(reportGroups, headerOrders, user);
 		
 		return summary.createVuetifyObjectJSON();
 	}
@@ -139,16 +147,23 @@ public class AdminController {
 		ReportGroup reportGroup = null;
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
-		if (reportGroupId != null) { //edit user
+		User user = (User) session.getAttribute("user");
+		if (reportGroupId != null) { //edit reportGroup
 			reportGroup = modelDAO.getReportGroupById(reportGroupId);
 			if (reportGroup == null) {
 				response.setSuccess(false);
 				response.setMessage("This gene set does not exist");
 				return response.createObjectJSON();
 			}
+			if (!ControllerUtil.isOwnerOrAdmin(user, reportGroup.getCreatedBy())) {
+				response.setSuccess(false);
+				response.setMessage("You cannot modify someone else's gene set.");
+				return response.createObjectJSON();
+			}
 		}
 		else { //new reportGroup
 			reportGroup = new ReportGroup();
+			reportGroup.setCreatedBy(user);
 		}
 		ObjectMapper mapper = new ObjectMapper();
 		DataReportGroup dataPOJO = mapper.readValue(data, DataReportGroup.class);

@@ -210,7 +210,7 @@ Vue.component('edit-annotations', {
                                                             <v-layout row wrap>
                                                             <v-flex :class="[isOutsideACase() ? 'xs6' : 'xs12', 'pl-0']">
                                                             <v-tooltip bottom>
-                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Variant Specific" v-model="annotation.isVariantSpecific"
+                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || isOutsideACase()" label="Variant Specific" v-model="annotation.isVariantSpecific"
                                                                     @change="selectBreadth(annotation, 'Variant Function')"></v-switch>
                                                                 <span>Select either Gene or Variant Specific or both</span>
                                                             </v-tooltip>
@@ -221,7 +221,7 @@ Vue.component('edit-annotations', {
                                                                     label="Variant Notation" single-line hide-details autocomplete clearable
                                                                     item-text="name" item-value="value"
                                                                     class="no-height-select"
-                                                                    :disabled="annotation.markedForDeletion || !annotation.isVariantSpecific"></v-select>
+                                                                    :disabled="annotation.markedForDeletion || !annotation.isVariantSpecific || isOutsideACase()"></v-select>
                                                                     <span v-if="annotation.variantItems">Select a variant</span>
                                                                     <span v-if="!annotation.variantItems">Select a gene first</span>
                                                                 </v-tooltip>

@@ -1208,7 +1208,7 @@ const OpenCase = {
                     // var step = new Date() - start;
                     // console.log(1, step); 
                     this.caseId = response.data.caseId;
-                    this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true";
+                    this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true&primary=true";
                     this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
                     // step = new Date() - start;
                     // console.log(2, step); 
@@ -1724,7 +1724,11 @@ const OpenCase = {
                                 },
                                 {
                                     label: "gnomAD Pop. Max. Allele Frequency",
-                                    value: this.formatPercent(this.currentVariant.gnomadPopmaxAlleleFrequency)
+                                    value: this.formatPercent(this.currentVariant.gnomadPopmaxAlleleFrequency),
+                                    type: "link",
+                                    linkIcon: "open_in_new",
+                                    url: this.createGnomadLink(),
+                                    tooltip: "Open in gnomAD"
                                 },
                             ]
                         };
@@ -2072,6 +2076,11 @@ const OpenCase = {
                 + this.currentVariant.chrom + ":" + (this.currentVariant.pos - 50)
                 + "-" + (this.currentVariant.pos + 50);
         },
+        createGnomadLink() {
+            return "http://gnomad.broadinstitute.org/variant/"
+                + this.currentVariant.oldBuilds.hg19.chrom.replace("chr", "").replace("CHR", "") + "-" + this.currentVariant.oldBuilds.hg19.pos
+                + "-" + this.currentVariant.reference + "-" + this.currentVariant.alt;
+        },
         handleEditAnnotationOpening() {
             if (this.urlQuery.edit === true) {
                 setTimeout(() => {
@@ -2168,8 +2177,14 @@ const OpenCase = {
         },
         formatPercent(value) {
             if (value !== null && !isNaN(value)) {
-                return (Math.round(parseFloat(value) * 100000) / 1000) + "%";
-            } return "";
+            	if (!isNaN(value)) {
+            		return (Math.round(parseFloat(value) * 100000) / 1000) + "%";
+            	}
+            	else if (value.indexOf("<") > -1) {
+            		return value + "%";
+            	}
+            } 
+            return "";
         },
         formatLocalAnnotations(annotations, showUser) {
             var formatted = [];

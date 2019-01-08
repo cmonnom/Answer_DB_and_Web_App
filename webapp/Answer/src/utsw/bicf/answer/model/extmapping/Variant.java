@@ -151,8 +151,15 @@ public class Variant {
 
 
 	public Float getTumorAltFrequency() {
-		if (tumorAltFrequencyFormatted == null) {
-			tumorAltFrequencyFormatted = tumorAltFrequency != null ? String.format("%.2f", tumorAltFrequency * 100) : null;
+		if (tumorAltFrequencyFormatted == null && tumorAltFrequency != null) {
+			if (tumorAltFrequency != null) {
+				if (tumorAltFrequency > 0 && tumorAltFrequency < 0.0001) {
+					tumorAltFrequencyFormatted = "< 0.01";
+				}
+				else {
+					tumorAltFrequencyFormatted = String.format("%.2f", tumorAltFrequency * 100);
+				}
+			}
 		}
 		return tumorAltFrequency;
 	}
@@ -249,8 +256,15 @@ public class Variant {
 
 
 	public Float getNormalAltFrequency() {
-		if (normalAltFrequencyFormatted == null) {
-			normalAltFrequencyFormatted = normalAltFrequency != null ? String.format("%.2f", normalAltFrequency * 100) : null;
+		if (normalAltFrequencyFormatted == null && normalAltFrequency != null) {
+			if (normalAltFrequency != null) {
+				if (normalAltFrequency > 0 && normalAltFrequency < 0.0001) {
+					normalAltFrequencyFormatted = "< 0.01";
+				}
+				else {
+					normalAltFrequencyFormatted = String.format("%.2f", normalAltFrequency * 100);
+				}
+			}
 		}
 		return normalAltFrequency;
 	}
@@ -267,8 +281,15 @@ public class Variant {
 
 
 	public Float getRnaAltFrequency() {
-		if (rnaAltFrequencyFormatted == null) {
-			rnaAltFrequencyFormatted = rnaAltFrequency != null ? String.format("%.2f", rnaAltFrequency * 100) : null;
+		if (rnaAltFrequencyFormatted == null && rnaAltFrequency != null) {
+			if (rnaAltFrequency != null) {
+				if (rnaAltFrequency > 0 && rnaAltFrequency < 0.0001) {
+					rnaAltFrequencyFormatted = "< 0.01";
+				}
+				else {
+					rnaAltFrequencyFormatted = String.format("%.2f", rnaAltFrequency * 100);
+				}
+			}
 		}
 		return rnaAltFrequency;
 	}
@@ -337,8 +358,15 @@ public class Variant {
 
 
 	public Float getExacAlleleFrequency() {
-		if (exacAlleleFrequencyFormatted == null) {
-			exacAlleleFrequencyFormatted = exacAlleleFrequency != null ? String.format("%.2f", exacAlleleFrequency * 100) : null;
+		if (exacAlleleFrequencyFormatted == null && exacAlleleFrequency != null) {
+			if (exacAlleleFrequency != null) {
+				if (exacAlleleFrequency > 0 && exacAlleleFrequency < 0.0001) {
+					exacAlleleFrequencyFormatted = "< 0.01";
+				}
+				else {
+					exacAlleleFrequencyFormatted = String.format("%.2f", exacAlleleFrequency * 100);
+				}
+			}
 		}
 		return exacAlleleFrequency;
 	}
@@ -350,8 +378,13 @@ public class Variant {
 
 
 	public Float getGnomadPopmaxAlleleFrequency() {
-		if (gnomadPopmaxAlleleFrequencyFormatted == null) {
-			gnomadPopmaxAlleleFrequencyFormatted = gnomadPopmaxAlleleFrequency != null ? String.format("%.2f", gnomadPopmaxAlleleFrequency * 100) : null;
+		if (gnomadPopmaxAlleleFrequencyFormatted == null && gnomadPopmaxAlleleFrequency != null) {
+			if (gnomadPopmaxAlleleFrequency > 0 && gnomadPopmaxAlleleFrequency < 0.0001) {
+				gnomadPopmaxAlleleFrequencyFormatted = "< 0.01";
+			}
+			else {
+				gnomadPopmaxAlleleFrequencyFormatted = String.format("%.2f", gnomadPopmaxAlleleFrequency * 100);
+			}
 		}
 		return gnomadPopmaxAlleleFrequency;
 	}

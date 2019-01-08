@@ -71,13 +71,34 @@ public class SNPIndelVariantRow {
 		this.geneVariant = variant.getGeneName() + " " + variant.getNotation();
 		this.effects = variant.getEffects() != null ? variant.getEffects().stream().collect(Collectors.joining("<br/>")) : null;
 		this.notation = variant.getNotation();
-		this.tumorAltFrequency = variant.getTumorAltFrequency() != null ? String.format("%.2f", variant.getTumorAltFrequency() * 100) : null;
+		if (variant.getTumorAltFrequency() != null) {
+			if (variant.getTumorAltFrequency() > 0 && variant.getTumorAltFrequency() < 0.0001) {
+				this.tumorAltFrequency = "< 0.01";
+			}
+			else {
+				this.tumorAltFrequency = String.format("%.2f", variant.getTumorAltFrequency() * 100);
+			}
+		}
 		this.tumorAltDepth = variant.getTumorAltDepth();
 		this.tumorTotalDepth = variant.getTumorTotalDepth();
-		this.normalAltFrequency = variant.getNormalAltFrequency() != null ? String.format("%.2f", variant.getNormalAltFrequency() * 100) : null;
+		if (variant.getNormalAltFrequency() != null) {
+			if (variant.getNormalAltFrequency() > 0 && variant.getNormalAltFrequency() < 0.0001) {
+				this.normalAltFrequency = "< 0.01";
+			}
+			else {
+				this.normalAltFrequency = String.format("%.2f", variant.getNormalAltFrequency() * 100);
+			}
+		}
 		this.normalAltDepth = variant.getNormalAltDepth();
 		this.normalTotalDepth = variant.getNormalTotalDepth();
-		this.rnaAltFrequency = variant.getRnaAltFrequency() != null ? String.format("%.2f", variant.getRnaAltFrequency() * 100) : null;
+		if (variant.getRnaAltFrequency() != null) {
+			if (variant.getRnaAltFrequency() > 0 && variant.getRnaAltFrequency() < 0.0001) {
+				this.rnaAltFrequency = "< 0.01";
+			}
+			else {
+				this.rnaAltFrequency = String.format("%.2f", variant.getRnaAltFrequency() * 100);
+			}
+		}
 		this.rnaAltDepth = variant.getRnaAltDepth();
 		this.rnaTotalDepth = variant.getRnaTotalDepth();
 		this.callSet = variant.getCallSet();
@@ -92,9 +113,23 @@ public class SNPIndelVariantRow {
 		this.utswAnnotated = variant.getUtswAnnotated();
 		this.numCasesSeen = variant.getNumCasesSeen();
 		this.numCasesSeenFormatted = this.numCasesSeen + "/" + totalCases;
-		this.exacAlleleFrequency = variant.getExacAlleleFrequency() != null ? String.format("%.2f", variant.getExacAlleleFrequency() * 100) : null;
+		if (variant.getExacAlleleFrequency() != null) {
+			if (variant.getExacAlleleFrequency() > 0 && variant.getExacAlleleFrequency() < 0.0001) {
+				this.exacAlleleFrequency = "< 0.01";
+			}
+			else {
+				this.exacAlleleFrequency = String.format("%.2f", variant.getExacAlleleFrequency() * 100);
+			}
+		}
 		this.somaticStatus = variant.getSomaticStatus();
-		this.gnomadPopmaxAlleleFrequency = variant.getGnomadPopmaxAlleleFrequency() != null ? String.format("%.2f", variant.getGnomadPopmaxAlleleFrequency() * 100) : null;
+		if (variant.getGnomadPopmaxAlleleFrequency() != null) {
+			if (variant.getGnomadPopmaxAlleleFrequency() > 0 && variant.getGnomadPopmaxAlleleFrequency() < 0.0001) {
+				this.gnomadPopmaxAlleleFrequency = "< 0.01";
+			}
+			else {
+				this.gnomadPopmaxAlleleFrequency = String.format("%.2f", variant.getGnomadPopmaxAlleleFrequency() * 100);
+			}
+		}
 		common = gnomadPopmaxAlleleFrequency != null && variant.getGnomadPopmaxAlleleFrequency() > 0.01;
 		isRepeat = variant.getIsRepeat();
 		callsetInconsistent = variant.getCallsetInconsistent();

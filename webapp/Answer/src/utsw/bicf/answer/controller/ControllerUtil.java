@@ -110,4 +110,17 @@ public class ControllerUtil {
 		return (caseSummary == null || caseSummary.getAssignedTo().contains(user.getUserId().toString()));
 	}
 	
+	/**
+	 * This method can check if a user can modify an object (currentUser is the same as the owner)
+	 * or she's an admin (and can override permissions to modify an object)
+	 * @param currentUser
+	 * @param owner
+	 * @return
+	 */
+	public static boolean isOwnerOrAdmin(User currentUser, User owner) {
+		return (currentUser.getIndividualPermission().getAdmin() != null 
+				&& currentUser.getIndividualPermission().getAdmin())
+				|| owner.equals(currentUser);
+	}
+	
 }

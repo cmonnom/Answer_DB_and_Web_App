@@ -9,6 +9,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -39,6 +41,10 @@ public class ReportGroup {
 
 	@Column(name="required")
 	Boolean required;
+	
+	@ManyToOne(cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+	@JoinColumn(name="created_by_id")
+	User createdBy;
 	
 //	@Transient
 	@OneToMany(mappedBy="reportGroup", fetch=FetchType.EAGER, cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH, CascadeType.REMOVE})
@@ -91,6 +97,14 @@ public class ReportGroup {
 
 	public void setRequired(Boolean required) {
 		this.required = required;
+	}
+
+	public User getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(User createdBy) {
+		this.createdBy = createdBy;
 	}
 
 //	public void populateGenesToReport(ModelDAO modelDAO) {
