@@ -718,6 +718,7 @@ public class OpenCaseController {
 		if (response.getSuccess()) {
 			response.setMessage(didChange + ""); //ajax should check the message in commitAnnotation
 			response.setUserPrefs(user.getUserPref());
+			response.setPayload(variantId);
 		}
 		return response.createObjectJSON();
 

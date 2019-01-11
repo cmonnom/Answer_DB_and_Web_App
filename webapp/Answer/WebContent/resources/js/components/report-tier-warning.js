@@ -21,10 +21,16 @@ Vue.component('report-tier-warning', {
        <span  v-if="variant.type == 'SNP'">{{variant.type}} {{ variant.chrom }}:{{ variant.name}} {{variant.notation }}</span>
        <span  v-if="variant.type == 'CNV'">{{variant.type}} {{ variant.chrom }}</span>
        <v-tooltip bottom>
-       <v-btn icon flat slot="activator" :href="createVariantEditLink(variant)" target="_blank" rel="noreferrer">
+       <v-btn class="mr-0" icon flat slot="activator" :href="createVariantEditLink(variant)" target="_blank" rel="noreferrer">
        <v-icon>zoom_in</v-icon>
        </v-btn>
        <span>Open variant in a new tab</span>
+       </v-tooltip>
+       <v-tooltip bottom v-if="variant.type == 'CNV'">
+       <v-btn icon flat slot="activator" @click="bypassCNVWarning(variant)" class="ml-0 mt-0">
+       <v-icon class="rotate270">mdi-auto-fix</v-icon>
+       </v-btn>
+       <span>Include this CNV anyway by creating a tier 3 chromosomal annotation</span>
        </v-tooltip>
        </v-flex>
        </v-layout>
@@ -46,6 +52,9 @@ Vue.component('report-tier-warning', {
             var link = "../openCase/" + this.$route.params.id + "?showReview=false&variantId="
             + variant.id + "&variantType=" + variant.type.toLowerCase() + "&edit=false";
             return link;
+        },
+        bypassCNVWarning(variant) {
+            this.$emit("bypass-cnv-warning", variant.id);
         }
     },
     computed: {

@@ -57,7 +57,8 @@ const OpenReport = {
 
     <report-tier-warning
     :variants-missing-tier="variantsMissingTier"
-    @get-report-details="getReportDetails">
+    @get-report-details="getReportDetails"
+    @bypass-cnv-warning="bypassCNVWarning">
     </report-tier-warning>
 
     <v-toolbar dense dark :color="colors.openReport" fixed app :extended="loadingReportDetails">
@@ -1017,7 +1018,86 @@ const OpenReport = {
                 });
             this.getReportDetails();
         },
-      
+        //To create a tier 3 annotation without going back to the variant
+        bypassCNVWarning(variantId) {
+            var annotations = [];
+            annotations.push({
+                origin: "UTSW",
+                text: "AUTO GENERATED",
+                markedForDeletion: false,
+                isVisible: true,
+                geneId: null,
+                caseId: null,
+                pmids: null,
+                isTumorSpecific: false,
+                userId: null,
+                variantId: variantId,
+                isGeneSpecific: true,
+                isVariantSpecific: true,
+                isCaseSpecific: false,
+                isLeftSpecific: false,
+                isRightSpecific: false,
+                category: null,
+                createdDate: null,
+                modifiedDate: null,
+                _id: null,
+                classification: null,
+                tier: "3",
+                // nctIds: "",
+                type: "cnv",
+                cnvGenes: [],
+                leftGene: null,
+                rightGene: null,
+                trial: null,
+                drugs: "",
+                warningLevel: 0,
+                drugResistant: false,
+                breadth: "Chromosomal",
+                isSelected: true
+            });
+            axios({
+                method: 'post',
+                url: webAppRoot + "/commitAnnotations",
+                params: {
+                    caseId: this.$route.params.id,
+                    geneId: "",
+                    variantId: variantId
+                },
+                data: {
+                    annotations: annotations,
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        this.saveBypassCNVSelection(response.data.payload);
+                    } else {
+                        this.handleDialogs(response.data, this.bypassCNVWarning.bind(null, variantId));
+                    }
+                })
+                .catch(error => {
+                    this.handleAxiosError(error);
+                });
+        },
+        //the cnv annotation bypassing the warning needs to be selected here
+        saveBypassCNVSelection(variantId) {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/selectByPassCNVWarningAnnotation",
+                params: {
+                    variantId: variantId,
+                    caseId: this.$route.params.id,
+                },
+            }).then(response => {
+                if (response.data.isAllowed) {
+                    this.getReportDetails();
+                }
+                else {
+                    this.handleDialogs(response.data, this.saveBypassCNVSelection.bind(null, variantId));
+                }
+            }).catch(error => {
+                this.handleAxiosError(error);
+            });
+        }
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 
+import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,8 +34,10 @@ import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.Annotation;
+import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
+import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
@@ -68,6 +71,8 @@ public class OpenReportController {
 		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".amendReport",
 				IndividualPermission.CAN_REVIEW);
 		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".addendReport",
+				IndividualPermission.CAN_REVIEW);
+		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".selectByPassCNVWarningAnnotation",
 				IndividualPermission.CAN_REVIEW);
 //		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".getPubmedDetails",
 //				IndividualPermission.CAN_VIEW);
@@ -607,6 +612,48 @@ public class OpenReportController {
 				}
 
 			}
+		}
+		return response.createObjectJSON();
+	}
+	
+	/**
+	 * When a user chose to bypass the CNV warning,
+	 * use this method to toggle the proper annotation
+	 * to go into the report
+	 * @throws URISyntaxException 
+	 * @throws IOException 
+	 * @throws ClientProtocolException 
+	 */
+	@RequestMapping(value = "/selectByPassCNVWarningAnnotation", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String selectByPassCNVWarningAnnotation(Model model, HttpSession session,
+			@RequestParam String caseId, @RequestParam String variantId) throws ClientProtocolException, IOException, URISyntaxException {
+		
+		AjaxResponse response = new AjaxResponse();
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User currentUser = (User) session.getAttribute("user");
+
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
+		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
+		response.setIsAllowed(canProceed);
+		if (canProceed) {
+			//get variant details
+			CNV cnv = utils.getCNVDetails(variantId);
+			for (Annotation annotation : cnv.getReferenceCnv().getUtswAnnotations()) {
+				if (annotation.getText().equals("AUTO GENERATED")) {
+					//add the proper annotation to annotationIdsForReporting
+					List<MongoDBId> selectedAnnotations = new ArrayList<MongoDBId>();
+					selectedAnnotations.add(annotation.getMongoDBId());
+					cnv.setAnnotationIdsForReporting(selectedAnnotations);
+					break; //only need the first auto generated annotation
+				}
+			}
+			//save selectedAnnotations
+			utils.saveSelectedAnnotations(response, cnv, "cnv", variantId);
+		}
+		else {
+			response.setMessage("You're not assigned to this case");
 		}
 		return response.createObjectJSON();
 	}

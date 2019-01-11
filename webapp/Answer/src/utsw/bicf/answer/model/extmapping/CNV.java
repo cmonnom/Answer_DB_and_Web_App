@@ -224,4 +224,9 @@ public class CNV {
 	}
 
 
+	public void setAnnotationIdsForReporting(List<MongoDBId> annotationIdsForReporting) {
+		this.annotationIdsForReporting = annotationIdsForReporting;
+	}
+
+
 }
