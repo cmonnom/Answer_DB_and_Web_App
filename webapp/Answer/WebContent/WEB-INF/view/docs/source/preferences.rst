@@ -1,5 +1,5 @@
-Home / Worklists
-================
+Preferences
+===========
 
 The homepage lists all available cases divided in 3 categories:
 

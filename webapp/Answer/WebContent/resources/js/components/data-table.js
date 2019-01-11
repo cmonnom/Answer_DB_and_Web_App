@@ -884,6 +884,17 @@ Vue.component('data-table', {
             }
             ))
         },
+        //returns the page number (base 0) for the highlighted row
+        //Can be used to jump to the page the highlighted row is on
+        findPageForHiglightedItem() {
+            var sortedItems = this.items.sort((a,b) => {return this.customSort(this.items, this.pagination.sortBy, this.pagination.descending)});
+            var index = sortedItems.map(i => i[this.uniqueIdField]).indexOf(this.highlight);
+            if (index > -1) {
+                var pageNb = Math.floor(index / this.pagination.rowsPerPage);
+                return pageNb;
+            }
+            return -1;
+        },
         alignHeader(header) {
             //go with the align property first
             if (header.align != null) {

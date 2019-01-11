@@ -13,6 +13,10 @@ Welcome to Answer's documentation!
    navigation
    homepage
    opencase
+   openreport
+   annotations
+   admin
+   preferences
 
 
 

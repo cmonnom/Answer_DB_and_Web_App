@@ -10,29 +10,27 @@ Vue.component('main-menu', {
 	</v-toolbar>
 	<v-divider></v-divider>
 	<v-list dense class="pt-0">
-		<v-list-tile>
-			<v-list-tile-action>
-				<v-btn flat icon @click.native.stop="isMinied = !isMinied" active>
-					<v-icon :class="isMinied ? 'rotate90': 'rotate270'">eject</v-icon>
-				</v-btn>
+		<v-list-tile v-if="displayMenuItem(menuItem)" @click="menuItem.isButton ? menuItem.action : ''" v-for="menuItem in menuItems" :disabled="isMinied" :key="menuItem.title" :to="menuItem.skipRoute ? '' : { name: menuItem.name, params: {id: menuItem.id}}">
+			<v-list-tile-action v-if="menuItem.iconBefore && !menuItem.isButton">
+				<v-icon :class="getIconBeforeClass(menuItem)">{{ menuItem.iconBefore }}</v-icon>
 			</v-list-tile-action>
-			<v-list-tile-content>
-				<v-list-tile-title class="subheading">
-					Hide Menu
-				</v-list-tile-title>
-			</v-list-tile-content>
-		</v-list-tile>
-		<v-list-tile v-if="displayMenuItem(menuItem)" v-for="menuItem in menuItems" :disabled="isMinied" :key="menuItem.title" :to="menuItem.skipRoute ? '' : { name: menuItem.name, params: {id: menuItem.id}}">
-			<v-list-tile-action v-if="menuItem.iconBefore">
-				<v-icon>{{ menuItem.iconBefore }}</v-icon>
+
+			<v-list-tile-action v-if="menuItem.iconBefore && menuItem.isButton">
+					<v-icon :class="getIconBeforeClass(menuItem)" @click.prevent="menuItem.action">{{ menuItem.iconBefore }}</v-icon>
 			</v-list-tile-action>
 
 			<!-- Main menu item -->
-			<v-list-tile-content>
+			<v-list-tile-content v-if="!menuItem.isButton">
 				<v-list-tile-title class="subheading">
 					{{ menuItem.title }}
 				</v-list-tile-title>
 			</v-list-tile-content>
+
+			<v-list-tile-content v-if="menuItem.isButton" @click.prevent="menuItem.action">
+			<v-list-tile-title class="subheading">
+				{{ menuItem.title }}
+			</v-list-tile-title>
+		</v-list-tile-content>
 
 			<v-list-tile-action v-if="menuItem.iconAfter">
 				<!-- order search bar -->
@@ -53,6 +51,8 @@ Vue.component('main-menu', {
 
 				</v-menu>
 			</v-list-tile-action>
+
+			
 		</v-list-tile>
 		<v-slide-x-transition>
 		<v-list-tile :class="[statusVisible ? 'menu-status-above' : 'menu-status', 'grey--text']" v-if="userRankVisible">
@@ -81,12 +81,14 @@ Vue.component('main-menu', {
 	data() {
 		return {
 			menuItems: [
+				{ title: 'Hide Menu', name: 'HideMenu', regularItem: true, action: this.toggleMinied, skipRoute:true, iconBefore: 'eject', isButton: true, miniedRotation: true },
 				{ title: 'Home', iconBefore: 'home', name: 'Home', regularItem: true },
 				{ title: 'Open Case', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseSearch: true },
 				{ title: 'Open Report', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseReportSearch: true },
 				{ title: 'Annotations', name: 'AnnotationBrowser', regularItem: true }, // NOT READY YET
 				{ title: 'Admin', name: 'Admin', regularItem: true, adminOnly: true, iconBefore: 'settings' },
 				{ title: 'Preferences', name: 'UserPrefs', regularItem: true, iconBefore: 'account_circle' },
+				{ title: 'Help', name: 'Help', regularItem: true, action: this.openHelp, skipRoute:true, iconBefore: 'mdi-lifebuoy', isButton: true },
 				{ title: 'Logout', name: 'LogOut', iconBefore: 'mdi-logout', regularItem: true }
 			],
 			caseItemSelected: null,
@@ -167,6 +169,7 @@ Vue.component('main-menu', {
 		},
 		displayMenuItem(menuItem) {
 			var isVisible = menuItem.regularItem;
+			isVisible = true; // don't use regular Item for display purpose anymore
 			if (menuItem.adminOnly != null) {
 				return isVisible && menuItem.adminOnly === isAdmin;
 			}
@@ -179,6 +182,24 @@ Vue.component('main-menu', {
 			else {
 				bus.$emit('menu-expanded', [this, null]);
 			}
+		},
+		getIconBeforeClass(menuItem) {
+			var classArray = [];
+			if (menuItem.isButton && menuItem.miniedRotation) {
+				if (this.isMinied) {
+					classArray.push('rotate90');
+				}
+				else {
+					classArray.push('rotate270');
+				}
+			}
+			return classArray;
+		},
+		openHelp() {
+			window.open(webAppRoot + "/help/index.html", "_blank");
+		},
+		toggleMinied() {
+			this.isMinied = !this.isMinied;
 		},
 		// getUserLeaderBoardInfo() {
         //     axios.get(

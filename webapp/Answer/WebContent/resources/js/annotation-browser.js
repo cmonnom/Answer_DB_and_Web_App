@@ -393,7 +393,7 @@ const AnnotationBrowser = {
         annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
         "Gene " + (annotations[i].isGeneSpecific ? annotations[i].geneId : ''),
         "Variant " + (annotations[i].isVariantSpecific ? annotations[i].notation : ''),
-          "Tumor"];
+          "Diagnosis"];
         annotation.category = annotations[i].category;
         annotation.createdDate = annotations[i].createdDate;
         annotation.createdSince = annotations[i].createdSince;

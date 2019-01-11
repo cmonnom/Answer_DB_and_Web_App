@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Open Case &mdash; Answer  documentation</title>
+  <title>Open Case &mdash; Answer Documentation  documentation</title>
   
 
   
@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Open Report" href="openreport.html" />
     <link rel="prev" title="Home / Worklists" href="homepage.html" /> 
 
   
@@ -47,7 +48,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Answer
+            <a href="index.html" class="icon icon-home"> Answer Documentation
           
 
           
@@ -82,11 +83,26 @@
 <li class="toctree-l1"><a class="reference internal" href="navigation.html">Left Menu Bar</a></li>
 <li class="toctree-l1"><a class="reference internal" href="homepage.html">Home / Worklists</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Open Case</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#toolbar-menu-and-buttons">Toolbar menu and buttons</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#patient-details">Patient Details</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#case-notes">Case Notes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#variant-tables-snp-indel-cnv-fusion-translocation">Variant Tables (SNP/INDEL, CNV, FUSION / TRANSLOCATION)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#variant-details-annotations">Variant Details (Annotations)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Toolbar menu and buttons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#variant-details-panel-snp">Variant Details Panel (SNP)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#variant-details-panel-cnv">Variant Details Panel (CNV)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transcripts-snp">Transcripts (SNP)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mda-and-utsw-annotations">MDA and UTSW Annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#create-edit-annotations">Create/Edit Annotations</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#review-selected-variants">Review Selected variants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="openreport.html">Open Report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="annotations.html">Annotations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="admin.html">Admin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preferences.html">Preferences</a></li>
 </ul>
 
             
@@ -101,7 +117,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Answer</a>
+          <a href="index.html">Answer Documentation</a>
         
       </nav>
 
@@ -155,6 +171,10 @@
 <h1>Open Case<a class="headerlink" href="#open-case" title="Permalink to this headline">¶</a></h1>
 <p>The goal of this page is to select variants and create annotations going into the final report.</p>
 <p>Any change on the page is saved every 2 minutes or by clicking the save button at the top right corner in the toolbar.</p>
+<div class="section" id="toolbar-menu-and-buttons">
+<h2>Toolbar menu and buttons<a class="headerlink" href="#toolbar-menu-and-buttons" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/menu_and_buttons.png" src="_images/menu_and_buttons.png" />
+</div>
 <div class="section" id="patient-details">
 <h2>Patient Details<a class="headerlink" href="#patient-details" title="Permalink to this headline">¶</a></h2>
 <p>All cases need an <strong>OncoTree Diagnosis</strong> value. You can open Oncotree or OncoKB Genie Portal by using the two buttons next to the text field.</p>
@@ -167,9 +187,81 @@
 <div class="section" id="variant-tables-snp-indel-cnv-fusion-translocation">
 <h2>Variant Tables (SNP/INDEL, CNV, FUSION / TRANSLOCATION)<a class="headerlink" href="#variant-tables-snp-indel-cnv-fusion-translocation" title="Permalink to this headline">¶</a></h2>
 <p>Click on each tab to display the corresponding variants.</p>
+<p>The <strong>Flags</strong> column indicates that a variant has failed or passed QC, has annotations (<a class="reference internal" href="_images/utsw_annotation.png"><img alt="mdaAnnotation" src="_images/utsw_annotation.png" style="width: 80px;" /></a> from MD Anderson, <a class="reference internal" href="_images/utsw_annotation.png"><img alt="utswAnnotation" src="_images/utsw_annotation.png" style="width: 80px;" /></a> from UTSW),
+or has some warnings such as being a common variant.</p>
+<p>The variant tables show all variants in the case VCFs,
+inclucing variants that failed our quality metrics.
+To narrow down the list of variants, click on <strong>Advanced Filtering</strong> and the <strong>Filters</strong> menu will open.</p>
 <img alt="_images/advanced_filtering_overview.png" src="_images/advanced_filtering_overview.png" />
+<p>Here you can filter on any field available in the variant table.</p>
+<p>For instance, click on <strong>Pass QC</strong> and then click <strong>Refresh</strong></p>
 <a class="reference internal image-reference" href="_images/advanced_filtering_buttons.png"><img alt="_images/advanced_filtering_buttons.png" src="_images/advanced_filtering_buttons.png" style="width: 600px;" /></a>
+<p>More options are available when clicking on <a class="reference internal" href="_images/filters.png"><img alt="filters" src="_images/filters.png" style="width: 80px;" /></a> <strong>Filters</strong>.
+You can save filters for later use or load predefined gene sets.</p>
+<p>More information on creating your own gene sets here: <a class="reference internal" href="annotations.html#annotations"><span class="std std-ref">Annotations</span></a>.</p>
 <a class="reference internal image-reference" href="_images/advanced_filtering_gene_sets.png"><img alt="_images/advanced_filtering_gene_sets.png" src="_images/advanced_filtering_gene_sets.png" style="width: 600px;" /></a>
+<p>To explore a variant details,
+click on the magnifying glass next to the variants position <a class="reference internal" href="_images/location_variant_details.png"><img alt="variantdetails" src="_images/location_variant_details.png" style="width: 150px;" /></a></p>
+</div>
+<div class="section" id="variant-details-annotations">
+<h2>Variant Details (Annotations)<a class="headerlink" href="#variant-details-annotations" title="Permalink to this headline">¶</a></h2>
+<p>This page shows more detailed information about a variant (SNP, CNV or Fusion).
+You can browse existing annotations, create new ones see other transcripts and
+explore external tools and databases such as IGV, gnomAD, Cosmic.</p>
+<p>Some features are specific to the variant type such as the CNV chart.</p>
+<p>If you think this variant should go into the report, click the <strong>SELECT VARIANT</strong> button.
+To go into the report, a variant needs tiered annotations. More information here: <a class="reference internal" href="#mda-and-utsw-annotations">MDA and UTSW Annotations</a></p>
+<div class="section" id="id1">
+<h3>Toolbar menu and buttons<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/variant_details_menu_and_buttons.png" src="_images/variant_details_menu_and_buttons.png" />
+</div>
+<div class="section" id="variant-details-panel-snp">
+<h3>Variant Details Panel (SNP)<a class="headerlink" href="#variant-details-panel-snp" title="Permalink to this headline">¶</a></h3>
+<p>Shows all data available in the variant table row. And provide links to external tools.</p>
+<img alt="_images/variant_details_panel.png" src="_images/variant_details_panel.png" />
+</div>
+<div class="section" id="variant-details-panel-cnv">
+<h3>Variant Details Panel (CNV)<a class="headerlink" href="#variant-details-panel-cnv" title="Permalink to this headline">¶</a></h3>
+<p>When opening a CNV, you can display a chart of the chromosome containing the CNV and create a new CNV by zooming in to the desired location.</p>
+<img alt="_images/cnv_chart.png" src="_images/cnv_chart.png" />
+</div>
+<div class="section" id="transcripts-snp">
+<h3>Transcripts (SNP)<a class="headerlink" href="#transcripts-snp" title="Permalink to this headline">¶</a></h3>
+<p>If you think the canonical transcript is not the correct one, select an alternate transcript from the <strong>Other VCF Annotations</strong> table.</p>
+<img alt="_images/change_transcript.png" src="_images/change_transcript.png" />
+</div>
+<div class="section" id="mda-and-utsw-annotations">
+<h3>MDA and UTSW Annotations<a class="headerlink" href="#mda-and-utsw-annotations" title="Permalink to this headline">¶</a></h3>
+<p>Other users may already have created annotations for a variant or a gene.</p>
+<p>Annotations have a scope which allows to apply this annotations to other genes or variants. Annotations can also be limited to a case or a diagnosis.
+This means that creating a gene level annotation will make the annotation visible to any variant in that gene for any case in Answer.</p>
+<p>Click on <strong>ADD/EDIT</strong> to create new annotations or edit existing ones. You can only edit annotations you have created.</p>
+</div>
+<div class="section" id="create-edit-annotations">
+<h3>Create/Edit Annotations<a class="headerlink" href="#create-edit-annotations" title="Permalink to this headline">¶</a></h3>
+<p>Annotations are specific to the type of variant (SNP, CNV or Fusion) but they share general principles such as a scope.
+An orange background indicates that you are in <strong>edit</strong> mode as opposed to just <strong>view</strong> mode.</p>
+<p>You can create regular annotations or clinical trials. Different fields are required depending on the annotation and variant type so the <strong>SAVE / UPDATE</strong> button might
+be disabled until all requirements are met. You can always go back and change you annotations so feel free to explore the different menus and options. Tooltips will guide you
+through the buttons and drop down functions.</p>
+<p>You can create multiple annotations or trials and save them all in one go by clicking <a class="reference internal" href="_images/add_annotation_buttons.png"><img alt="addAnnotationButtons" src="_images/add_annotation_buttons.png" style="width: 250px;" /></a>.</p>
+<p><strong>Don’t forget to save your work.</strong> Autosave does not apply to creating/editing annotations.</p>
+<p>Once you close the panel. The new annotation cards will be displayed in the <strong>UTSW Annotations</strong> panel.</p>
+<img alt="_images/annotation_cards.png" src="_images/annotation_cards.png" />
+<p>To include these annotations to the report, click <strong>SELECT VARIANT</strong> AND toggle each annotation card that you want included.
+To be valid for reporting, at least one card needs a tier. The highest tier of the selected card will determine the tier of variant in the report.</p>
+<p>You can close the window or click <strong>PREV. VARIANT</strong> or <strong>NEXT VARIANT</strong> to open other variants.</p>
+</div>
+</div>
+<div class="section" id="review-selected-variants">
+<h2>Review Selected variants<a class="headerlink" href="#review-selected-variants" title="Permalink to this headline">¶</a></h2>
+<p>Once you have select variants and created annotations that should go into the report, click on <strong>Review Variant Selected</strong> to get a list
+of the variants that will go into the report.</p>
+<p>Depending on your role, you can mark the case as:
+- Send variants to MD Anderson: MD Anderson will send Answer annotations and clinical trials matching their database
+- Ready for review: a reviewer will get an email to check that the appropriate variants are selected and make/select new annotations if needed
+- Ready for report: the reviewer informs that the annotations are ready and a report can be created</p>
+<p>You can change the selection of variants by opening the <strong>Variant Details</strong> for each row in the tables.</p>
 </div>
 </div>
 
@@ -180,6 +272,8 @@
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="openreport.html" class="btn btn-neutral float-right" title="Open Report" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="homepage.html" class="btn btn-neutral" title="Home / Worklists" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

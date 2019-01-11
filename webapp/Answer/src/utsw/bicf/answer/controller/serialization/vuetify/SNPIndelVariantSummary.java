@@ -79,6 +79,10 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		numCasesSeen.setWidth("50px");
 		headers.add(numCasesSeen);
 		
+		Header numCasesInCosmic = new Header(new String[] {"Nb Cases", "In Cosmic"}, "nbOfCosmicCases", Units.NB);
+		numCasesInCosmic.setWidth("50px");
+		headers.add(numCasesInCosmic);
+		
 		Header exacAlleleFrequency = new Header(new String[] {"ExAC Allele", "Percent"}, "exacAlleleFrequency", Units.PCT);
 		exacAlleleFrequency.setWidth("100px");
 		headers.add(exacAlleleFrequency);

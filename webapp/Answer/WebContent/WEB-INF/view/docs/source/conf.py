@@ -19,7 +19,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Answer'
+project = 'Answer Documentation'
 copyright = '2019, UTSW BICF'
 author = 'UTSW BICF'
 

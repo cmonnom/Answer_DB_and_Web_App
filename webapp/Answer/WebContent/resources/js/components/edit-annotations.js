@@ -885,7 +885,7 @@ Vue.component('edit-annotations', {
             }
             if (annotation.isVariantSpecific) {
                 annotation.isGeneSpecific = true;
-                if (annotation.geneId) {
+                if (annotation.geneId && this.single) {
                     this.getVariantsForGene(annotation.geneId, annotation);
                 }
             }

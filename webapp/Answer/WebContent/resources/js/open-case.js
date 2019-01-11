@@ -645,6 +645,15 @@ const OpenCase = {
                         </v-list-tile-content>
                     </v-list-tile>
 
+                    <v-list-tile avatar v-if="qcUrl" @click="openLink(qcUrl)" :disabled="!qcUrl">
+                        <v-list-tile-avatar>
+                            QC
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Open QC in NuCLIA</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+
                     <v-list-tile avatar @click="openReviewSelectionDialog()">
                         <v-list-tile-avatar>
                             <v-icon>mdi-clipboard-check</v-icon>
@@ -1722,6 +1731,11 @@ const OpenCase = {
                                     label: "Exac Allele Frequency",
                                     value: this.formatPercent(this.currentVariant.exacAlleleFrequency)
                                 },
+                               
+                            ]
+                        };
+                        if (this.currentVariant.gnomadPopmaxAlleleFrequency !=  0) {
+                            depthTable.items.push(
                                 {
                                     label: "gnomAD Pop. Max. Allele Frequency",
                                     value: this.formatPercent(this.currentVariant.gnomadPopmaxAlleleFrequency),
@@ -1729,9 +1743,17 @@ const OpenCase = {
                                     linkIcon: "open_in_new",
                                     url: this.createGnomadLink(),
                                     tooltip: "Open in gnomAD"
-                                },
-                            ]
-                        };
+                                }
+                            );
+                        }
+                        else {
+                            depthTable.items.push(
+                            {
+                                label: "gnomAD Pop. Max. Allele Frequency",
+                                value: this.formatPercent(this.currentVariant.gnomadPopmaxAlleleFrequency)
+                            }
+                            );
+                        }
                         this.variantDataTables.push(depthTable);
                         var dataTable = {
                             name: "dataTable",
@@ -2157,7 +2179,7 @@ const OpenCase = {
             this.updateRoute();
         },
         openLink(link) {
-            window.open(link, "_blank");
+            window.open(link, "_blank", 'noopener');
         },
         formatIdLinkLabel(id, ids, cosmicPatients) {
             if (id == null) {
@@ -2222,7 +2244,7 @@ const OpenCase = {
                 annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
                 "Gene " + (annotations[i].isGeneSpecific ? annotations[i].geneId : ''),
                 "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.notation : ''),
-                    "Tumor"];
+                    "Diagnosis"];
                 annotation.category = annotations[i].category;
                 annotation.createdDate = annotations[i].createdDate;
                 annotation.createdSince = annotations[i].createdSince;
@@ -2276,7 +2298,7 @@ const OpenCase = {
                 annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
                 annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
                 "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.chrom : ''),
-                    "Tumor"];
+                    "Diagnosis"];
                 annotation.category = annotations[i].category;
                 annotation.category = annotations[i].breadth;
                 annotation.cnvGenes = annotations[i].cnvGenes ? annotations[i].cnvGenes.join(" ") : "";
@@ -2332,7 +2354,7 @@ const OpenCase = {
                 annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific, annotations[i].isLeftSpecific, annotations[i].isRightSpecific];
                 annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
                 "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.fusionName : ''),
-                    "Tumor", this.currentVariant.leftGene, this.currentVariant.rightGene];
+                    "Diagnosis", this.currentVariant.leftGene, this.currentVariant.rightGene];
                 annotation.category = annotations[i].category;
                 annotation.createdDate = annotations[i].createdDate;
                 annotation.createdSince = annotations[i].createdSince;
@@ -2418,7 +2440,7 @@ const OpenCase = {
                 annotation.scopes = [geneSpecific ,variantSpecific, tumorSpecific];
                 annotation.scopeLevels = [
                 "Gene " + (geneSpecific ? this.mdaAnnotations.gene : ''),
-                "Variant " + (variantSpecific ? this.currentVariant.notation : ''), "Tumor"];
+                "Variant " + (variantSpecific ? this.currentVariant.notation : ''), "Diagnosis"];
                 if (annotations.annotationCategories[i].title == "Biomarker Summary") {
                     annotation.category = "Gene Function";
                 }
@@ -2428,7 +2450,7 @@ const OpenCase = {
                 else if (annotations.annotationCategories[i].title == "Potential Therapeutic Implications") {
                     annotation.category = "Therapy";
                 }
-                else if (annotations.annotationCategories[i].title == "Tumor type-specific annotation") {
+                else if (annotations.annotationCategories[i].title == "Diagnosis-specific annotation") {
                     annotation.category = "Prognosis"; //TODO not sure about that one
                 }
                 //TOOD keep going

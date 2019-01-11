@@ -34,6 +34,7 @@ public class SNPIndelVariantRow {
 	List<Caller> callSet;
 	String type;
 	List<Integer> cosmicPatients;
+	Integer nbOfCosmicCases;
 	List<String> externalIds; //list of external database ids (dbsnp, cosmic, etc)
 	String alt;
 	String reference;
@@ -104,6 +105,12 @@ public class SNPIndelVariantRow {
 		this.callSet = variant.getCallSet();
 		this.type = variant.getType();
 		this.cosmicPatients = variant.getCosmicPatients();
+		if (this.cosmicPatients != null && this.cosmicPatients.size() > 0) {
+			this.nbOfCosmicCases = this.cosmicPatients.stream().mapToInt(Integer::intValue).max().getAsInt();
+		}
+		else {
+			this.nbOfCosmicCases = 0;
+		}
 		this.externalIds = variant.getIds();
 		this.alt = variant.getAlt();
 		this.reference = variant.getReference();
@@ -484,6 +491,14 @@ public class SNPIndelVariantRow {
 
 	public String getRank() {
 		return rank;
+	}
+
+
+
+
+
+	public Integer getNbOfCosmicCases() {
+		return nbOfCosmicCases;
 	}
 
 
