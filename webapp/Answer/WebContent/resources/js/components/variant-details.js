@@ -170,10 +170,10 @@ Vue.component('variant-details', {
                                       <v-flex xs12 md12 lg12 xl10 v-if="variantType == 'cnv'">
                                       <v-layout row wrap>
                                         <v-flex xs12 md12 lg6>
-                                        <v-layout>
-                                          <v-flex xs>
+                                        <v-layout align-center>
+                                          <v-flex xs class="pt-2 mt-1">
                                           <span class="subheading">Load CNV Plot: </span>
-                                          <v-tooltip bottom>
+                                          <v-tooltip bottom v-if="currentVariant._id">
                                             <v-btn slot="activator" @click="handleCNVCurrentChromPlot()" :loading="cnvPlotLoadingCurrentChrom" :disabled="cnvPlotLoadingCurrentChrom"
                                             :class="[cnvPlotNeedsReload ? 'amber accent-2' : '']"
                                             ><span v-text="formatChrom(currentVariant.chrom)"></span>

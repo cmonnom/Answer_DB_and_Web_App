@@ -179,7 +179,8 @@ public class HomeController {
 				}
 				String servelt = "openCase/";
 				String reason = "";
-				this.sendEmail(caseId, user, currentUser, servelt, reason);
+				String subject = "You have a new case: " + caseId;
+				this.sendEmail(caseId, subject, user, currentUser, servelt, reason);
 			}
 		}
 		
@@ -190,7 +191,8 @@ public class HomeController {
 					&& aUser.getIndividualPermission().getReceiveAllNotifications()) {
 				String servelt = "openCaseReadOnly/";
 				String reason = "You are receiving this message because your account is set to receive all notifications.<br/><br/>";
-				this.sendEmail(caseId, aUser, currentUser, servelt, reason);
+				String subject = "You have a new notification regarding case: " + caseId;
+				this.sendEmail(caseId, subject, aUser, currentUser, servelt, reason);
 			}
 		}
 		
@@ -198,8 +200,7 @@ public class HomeController {
 		
 	}
 	
-	private void sendEmail(String caseId, User user, User currentUser, String servlet, String reason) throws IOException, InterruptedException {
-		String subject = "You have a new case: " + caseId;
+	private void sendEmail(String caseId, String subject, User user, User currentUser, String servlet, String reason) throws IOException, InterruptedException {
 		StringBuilder message = new StringBuilder()
 				.append("<p>Dr. ").append(user.getLast()).append(",</p><br/>")
 				.append("<b>")

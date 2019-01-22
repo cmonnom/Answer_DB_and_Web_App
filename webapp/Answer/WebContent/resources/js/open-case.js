@@ -897,15 +897,6 @@ const OpenCase = {
                                 <span>Advanced Filtering</span>
                             </v-tooltip>
                         </v-fade-transition>
-                        <!--
-                        <v-fade-transition slot="action2">
-                            <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
-                                <v-btn slot="activator" flat icon @click="openAddCNVDialog()" :color="addCNVDialogVisible ? 'amber accent-2' : 'white'">
-                                    <v-icon>playlist_add</v-icon>
-                                </v-btn>
-                                <span>Add a new CNV</span>
-                            </v-tooltip>
-                        </v-fade-transition>  -->
                         <v-list-tile avatar @click="toggleFilters('cnv')" slot="action1MenuItem">
                             <v-list-tile-avatar>
                                 <v-icon>filter_list</v-icon>
@@ -914,15 +905,22 @@ const OpenCase = {
                                 <v-list-tile-title>Advanced Filtering</v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
-                        <!--
-                        <v-list-tile avatar @click="openAddCNVDialog()" slot="action2MenuItem">
-                        <v-list-tile-avatar>
-                            <v-icon>playlist_add</v-icon>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>Add a new CNV</v-list-tile-title>
-                        </v-list-tile-content>
-                        </v-list-tile>  -->
+                        <v-fade-transition slot="action2">
+                        <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
+                            <v-btn slot="activator" flat icon @click="getCNVDetailsNoVariant()">
+                                <v-icon>zoom_in</v-icon>
+                            </v-btn>
+                            <span>Open CNV (no variant)</span>
+                        </v-tooltip>
+                        </v-fade-transition>
+                        <v-list-tile avatar @click="getCNVDetailsNoVariant()" slot="action2MenuItem">
+                            <v-list-tile-avatar>
+                                <v-icon>zoom_in</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Open CNV (no variant)</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
@@ -1372,43 +1370,48 @@ const OpenCase = {
             }
             //then open variant details
             if (this.urlQuery.variantId && this.urlQuery.variantType) {
-                var delay = 0;
-                setTimeout(() => {
-                    //find item
-                    if (this.urlQuery.variantType == 'snp') {
-                        for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
-                            if (this.$refs.geneVariantDetails.items[i].oid == this.urlQuery.variantId) {
-                                if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
-                                    || !newRouteQuery) {
-                                    this.$nextTick(this.getVariantDetails(this.$refs.geneVariantDetails.items[i]));
-                                    break;
+                if (this.$route.query.variantId != 'notreal') {
+                    var delay = 0;
+                    setTimeout(() => {
+                        //find item
+                        if (this.urlQuery.variantType == 'snp') {
+                            for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
+                                if (this.$refs.geneVariantDetails.items[i].oid == this.urlQuery.variantId) {
+                                    if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
+                                        || !newRouteQuery) {
+                                        this.$nextTick(this.getVariantDetails(this.$refs.geneVariantDetails.items[i]));
+                                        break;
+                                    }
                                 }
                             }
                         }
-                    }
-                    else if (this.urlQuery.variantType == 'cnv') {
-                        for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
-                            if (this.$refs.cnvDetails.items[i].oid == this.urlQuery.variantId) {
-                                if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
-                                    || !newRouteQuery) {
-                                    this.$nextTick(this.getCNVDetails(this.$refs.cnvDetails.items[i]));
-                                    break;
+                        else if (this.urlQuery.variantType == 'cnv') {
+                            for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
+                                if (this.$refs.cnvDetails.items[i].oid == this.urlQuery.variantId) {
+                                    if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
+                                        || !newRouteQuery) {
+                                        this.$nextTick(this.getCNVDetails(this.$refs.cnvDetails.items[i]));
+                                        break;
+                                    }
                                 }
                             }
                         }
-                    }
-                    else if (this.urlQuery.variantType == 'translocation') {
-                        for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
-                            if (this.$refs.translocationDetails.items[i].oid == this.urlQuery.variantId) {
-                                if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
-                                    || !newRouteQuery) {
-                                    this.$nextTick(this.getTranslocationDetails(this.$refs.translocationDetails.items[i]));
-                                    break;
+                        else if (this.urlQuery.variantType == 'translocation') {
+                            for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
+                                if (this.$refs.translocationDetails.items[i].oid == this.urlQuery.variantId) {
+                                    if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
+                                        || !newRouteQuery) {
+                                        this.$nextTick(this.getTranslocationDetails(this.$refs.translocationDetails.items[i]));
+                                        break;
+                                    }
                                 }
                             }
                         }
-                    }
-                }, delay);
+                    }, delay);
+                }
+                else {
+                    this.getCNVDetailsNoVariant();
+                }
             }
 
             //build the breadcrumb trail
@@ -1940,6 +1943,48 @@ const OpenCase = {
                     this.loadingVariantDetails = false;
                     this.handleAxiosError(error);
                 });
+        },
+        getCNVDetailsNoVariant(resetSaveFlags) {
+            this.currentVariantType = "cnv";
+            this.currentVariantFlags = [];
+            this.currentRow = { isSelected: false};
+            // this.loadingVariantDetails = true;
+
+            var table; //could be the selected variant table or the regular one
+            if (this.reviewDialogVisible) {
+                table = this.$refs.reviewDialog.getCnvTable();
+            }
+            else {
+                table = this.$refs.cnvDetails;
+            }
+            var currentIndex = 0;
+            this.isFirstVariant = true;
+            this.isLastVariant = true;
+
+            this.variantDetailsUnSaved = false;
+            this.currentVariant = {};
+            this.variantDataTables = [];
+
+            this.userAnnotations = [];
+            this.$refs.cnvAnnotationDialog.userAnnotations = this.userAnnotations;
+            this.utswAnnotations = [];
+            this.mdaAnnotations = "";
+            this.reloadPreviousSelectedState();
+            // this.formatCNVAnnotations();
+            this.loadingVariantDetails = false;
+            if (resetSaveFlags) {
+                this.annotationSelectionUnSaved = false;
+            }
+            this.variantDetailsVisible = true;
+            // this.updateVariantDetails();
+            this.urlQuery.variantId = "notreal";
+            this.urlQuery.variantType = this.currentVariantType;
+            this.updateSplashProgress(); //update progress as if getCNVDetails had been called
+            this.updateRoute();
+            //finally, open edit annotation
+            // this.handleEditAnnotationOpening();
+            // // this.$refs.variantDetailsPanel.updateCNVPlot();
+            // this.updateSplashProgress();
         },
         getCNVChromList() {
             axios.get(
@@ -2818,6 +2863,7 @@ const OpenCase = {
             this.urlQuery.variantId = null;
             this.urlQuery.variantType = null;
             this.urlQuery.edit = false; //also close edit but it should have been done earlier
+            zingchart.exec("cnvPlotDetails", 'destroy'); //kill the chart if variant details is closed
             this.updateRoute();
         },
         toggleHTMLOverlay() {
@@ -2909,6 +2955,7 @@ const OpenCase = {
         updateEditAnnotationBreadcrumbs(visible) {
             this.urlQuery.edit = visible;
             zingchart.exec("cnvPlotEdit", 'destroy'); //kill the chart if edit annotation is closed
+            console.log("killing cnv plot");
             this.updateRoute();
         },
         saveCaseAnnotations(skipSnackBar) {

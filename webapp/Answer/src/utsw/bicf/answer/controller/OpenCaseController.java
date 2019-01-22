@@ -1109,7 +1109,8 @@ public class OpenCaseController {
 						String servlet = "openCase/";
 						String markedAs = " marked a case as ready for review. ";
 						String reason = "You are receiving this message because you are a reviewer on this case.<br/><br/>";
-						this.sendEmail(caseId, aUser, currentUser, servlet, markedAs, reason);
+						String subject = "You have a new case: " + caseId;
+						this.sendEmail(caseId, subject, aUser, currentUser, servlet, markedAs, reason);
 					}
 					//notify other users whose receive_all_notifications is true
 					if (!aUser.equals(currentUser) 
@@ -1118,7 +1119,8 @@ public class OpenCaseController {
 						String servlet = "openCaseReadOnly/";
 						String markedAs = " marked a case as ready for review. ";
 						String reason = "You are receiving this message because your account is set to receive all notifications.<br/><br/>";
-						this.sendEmail(caseId, aUser, currentUser, servlet, markedAs, reason);
+						String subject = "You have a new notification for case: " + caseId;
+						this.sendEmail(caseId, subject, aUser, currentUser, servlet, markedAs, reason);
 					}
 				}
 			}
@@ -1129,8 +1131,7 @@ public class OpenCaseController {
 		return response.createObjectJSON();
 	}
 	
-	private void sendEmail(String caseId, User user, User currentUser, String servlet, String markedAs, String reason) throws IOException, InterruptedException {
-		String subject = "You have a new case: " + caseId;
+	private void sendEmail(String caseId, String subject, User user, User currentUser, String servlet, String markedAs, String reason) throws IOException, InterruptedException {
 		StringBuilder message = new StringBuilder()
 				.append("<p>Dr. ").append(user.getLast()).append(",</p><br/>")
 				.append("<b>")
@@ -1175,7 +1176,8 @@ public class OpenCaseController {
 						String servlet = "openReportReadOnly/";
 						String markedAs = " marked a case as ready for report. ";
 						String reason = "You are receiving this message because your account is set to receive all notifications.<br/><br/>";
-						this.sendEmail(caseId, aUser, currentUser, servlet, markedAs, reason);
+						String subject = "You have a new notification for case: " + caseId;
+						this.sendEmail(caseId, subject, aUser, currentUser, servlet, markedAs, reason);
 					}
 				}
 			}
