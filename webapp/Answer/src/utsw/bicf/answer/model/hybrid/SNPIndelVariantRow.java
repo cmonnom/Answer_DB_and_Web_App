@@ -48,6 +48,7 @@ public class SNPIndelVariantRow {
 	String exacAlleleFrequency;
 	String somaticStatus;
 	String gnomadPopmaxAlleleFrequency;
+	List<Integer> gnomadHomozygotes;
 	Boolean isRepeat;
 	Boolean common;
 	List<String> repeatTypes;
@@ -138,6 +139,7 @@ public class SNPIndelVariantRow {
 			}
 		}
 		common = gnomadPopmaxAlleleFrequency != null && variant.getGnomadPopmaxAlleleFrequency() > 0.01;
+		this.gnomadHomozygotes = variant.getGnomadHomozygotes();
 		isRepeat = variant.getIsRepeat();
 		callsetInconsistent = variant.getCallsetInconsistent();
 		repeatTypes = variant.getRepeatTypes();
@@ -499,6 +501,14 @@ public class SNPIndelVariantRow {
 
 	public Integer getNbOfCosmicCases() {
 		return nbOfCosmicCases;
+	}
+
+
+
+
+
+	public List<Integer> getGnomadHomozygotes() {
+		return gnomadHomozygotes;
 	}
 
 

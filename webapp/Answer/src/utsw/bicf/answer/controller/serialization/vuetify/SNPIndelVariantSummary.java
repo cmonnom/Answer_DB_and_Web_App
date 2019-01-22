@@ -95,6 +95,10 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		gnomadPopmaxAlleleFrequency.setWidth("100px");
 		headers.add(gnomadPopmaxAlleleFrequency);
 		
+		Header gnomadHOM = new Header(new String[] {"gnomAD ", "Homozygotes"}, "gnomadHomozygotes", Units.NB);
+		gnomadHOM.setWidth("100px");
+		headers.add(gnomadHOM);
+		
 //		Header rnaAltDepth = new Header(new String[] {"RNA","Depth"}, "rnaAltDepth", Units.NB);
 //		headers.add(rnaAltDepth);
 		

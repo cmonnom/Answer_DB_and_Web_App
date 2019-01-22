@@ -1758,6 +1758,10 @@ const OpenCase = {
                             }
                             );
                         }
+                        depthTable.items.push({
+                           label: "gnomAD Homozygotes",
+                           value: this.currentVariant.gnomadHomozygotes ? this.currentVariant.gnomadHomozygotes[0] + "" : "" 
+                        });
                         this.variantDataTables.push(depthTable);
                         var dataTable = {
                             name: "dataTable",

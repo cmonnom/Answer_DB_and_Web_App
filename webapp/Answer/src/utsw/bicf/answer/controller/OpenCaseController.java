@@ -426,6 +426,12 @@ public class OpenCaseController {
 		gnomadFilter.setType("snp");
 		gnomadFilter.setNumber(true);
 		filters.add(gnomadFilter);
+		
+		DataTableFilter gnomadHOMFilter = new DataTableFilter("gnomAD Homozygotes",
+				Variant.FIELD_GNOMAD_HOM);
+		gnomadHOMFilter.setType("snp");
+		gnomadHOMFilter.setNumber(true);
+		filters.add(gnomadHOMFilter);
 
 		DataTableFilter numCasesSeenFilter = new DataTableFilter("Nb. Cases Seen", Variant.FIELD_NUM_CASES_SEEN);
 		numCasesSeenFilter.setType("snp");

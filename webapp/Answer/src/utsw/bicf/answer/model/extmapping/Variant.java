@@ -27,6 +27,7 @@ public class Variant {
 	public static final String FIELD_FILTERS = "filters";
 	public static final String FIELD_EXAC_ALLELE_FREQUENCY = "exacAlleleFrequency";
 	public static final String FIELD_GNOMAD_ALLELE_FREQUENCY = "gnomadPopmaxAlleleFrequency";
+	public static final String FIELD_GNOMAD_HOM = "gnomadHomozygotes";
 	public static final String FIELD_NUM_CASES_SEEN = "numCasesSeen";
 	public static final String FIELD_IN_COSMIC = "inCosmic";
 	public static final String FIELD_OLD_BUILDS = "oldBuilds";
@@ -76,6 +77,7 @@ public class Variant {
 	String somaticStatus;
 	Float gnomadPopmaxAlleleFrequency;
 	String gnomadPopmaxAlleleFrequencyFormatted;
+	List<Integer> gnomadHomozygotes;
 	Boolean isRepeat;
 	List<String> repeatTypes;
 	Boolean callsetInconsistent;
@@ -793,6 +795,39 @@ public class Variant {
 	public void setRelatedCNV(String relatedCNV) {
 		this.relatedCNV = relatedCNV;
 	}
+
+
+	public static String getFieldGnomadHom() {
+		return FIELD_GNOMAD_HOM;
+	}
+
+
+	public static String getFieldCnvGeneName() {
+		return FIELD_CNV_GENE_NAME;
+	}
+
+
+	public static String getFieldCnvCopyNumber() {
+		return FIELD_CNV_COPY_NUMBER;
+	}
+
+
+	public static String getFieldImpact() {
+		return FIELD_IMPACT;
+	}
+
+
+	public List<Integer> getGnomadHomozygotes() {
+		return gnomadHomozygotes;
+	}
+
+
+	public void setGnomadHomozygotes(List<Integer> gnomadHomozygotes) {
+		this.gnomadHomozygotes = gnomadHomozygotes;
+	}
+
+
+
 
 
 }
