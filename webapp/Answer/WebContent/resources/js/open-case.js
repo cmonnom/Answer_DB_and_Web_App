@@ -1637,7 +1637,8 @@ const OpenCase = {
                                 },
                                 {
                                     label: "Notation",
-                                    type: "link",
+                                    type: "notation",
+                                    fieldName: "notation",
                                     linkIcon: "mdi-dna",
                                     url: this.createOncoKBGeniePortalVariant(),
                                     value: this.currentVariant.notation,
@@ -3115,6 +3116,7 @@ const OpenCase = {
             lightVariant["_id"] = this.currentVariant._id;
             lightVariant["tier"] = this.currentVariant.tier;
             lightVariant["aberrationType"] = this.currentVariant.aberrationType;
+            lightVariant["notation"] = this.currentVariant.notation;
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveVariant",

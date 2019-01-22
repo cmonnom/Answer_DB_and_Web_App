@@ -97,7 +97,7 @@ Vue.component('variant-details', {
                               <v-list-tile-content class="pb-2">
                                   <v-layout class="full-width">
                                       <v-flex xs12 :class="[item.type == 'link' ? 'pb-0' : '', 'text-xs-left', 'grow']">
-                                          <span v-if="isRegularVariantDetailsLabel(item.type)" class="selectable]">{{ item.label }}:</span>
+                                          <span v-if="isRegularVariantDetailsLabel(item.type)" class="selectable">{{ item.label }}:</span>
                                           <span v-if="!item.type || item.type == 'link'" v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
                                           <v-tooltip bottom>
                                           <v-btn slot="activator" v-if="item.type == 'chip'" flat icon color="primary" @click="toggleAllGenes" :loading="toggleAllLoading">
@@ -105,6 +105,28 @@ Vue.component('variant-details', {
                                           </v-btn>
                                           <span>Toggle all genes for CNV Plot</span>
                                           </v-tooltip>
+                                          <!-- Notation (label + textfield + link) -->
+                                          <v-layout row wrap v-if="item.type == 'notation'">
+                                            <v-flex xs class="pl-0 pt-2"> 
+                                            <span class="selectable">{{ item.label }}:</span>
+                                            </v-flex>
+                                            <v-flex xs6 > 
+                                            <v-text-field hide-details class="no-height-select"
+                                            v-model="currentVariant[item.fieldName]"
+                                            :value="currentVariant[item.fieldName]"
+                                            :disabled="noEdit"
+                                             @input="variantDetailsChanged">
+                                            </v-text-field>
+                                            </v-flex>
+                                            <v-flex xs> 
+                                            <v-tooltip bottom>
+                                                <v-btn slot="activator" color="primary" icon flat @click="openUrl(item)" class="mt-0 mb-0">
+                                                    <v-icon>{{ item.linkIcon }}</v-icon>
+                                                </v-btn>
+                                                <span>{{ item.tooltip }}</span>
+                                            </v-tooltip>  
+                                            </v-flex>
+                                          </v-layout>
                                           <span v-if="item.type == 'chip'">
                                           <span class="subheading warning--text" v-show="cnvPlotNeedsReload" >Click on <span v-text="getChrButtonName()"></span> to refresh the CNV Plot.</span>
                                                 <v-btn-toggle v-model="genesSelected" multiple class="elevation-0" @change="handleGeneSelectionChanged">
