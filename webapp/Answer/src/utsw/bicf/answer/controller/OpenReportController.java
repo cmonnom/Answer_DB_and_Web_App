@@ -97,7 +97,7 @@ public class OpenReportController {
 		String url = "openReport/" + caseId + "?reportId=" + reportId;
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
-		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 //		RequestUtils utils = new RequestUtils(modelDAO);
 //		if (user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
 //			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
@@ -112,7 +112,7 @@ public class OpenReportController {
 		String url = "openReportReadOnly/" + caseId + "?reportId=" + reportId;
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
-		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
 	

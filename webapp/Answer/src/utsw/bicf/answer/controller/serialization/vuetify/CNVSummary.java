@@ -41,9 +41,10 @@ public class CNVSummary extends Summary<CNVRow> {
 //		cytoband.setCanHighlight(true);
 		headers.add(cytoband);
 		Header iconFlags = new Header("Flags", "iconFlags");
-		iconFlags.setWidth("50px");
+		iconFlags.setWidth("100px");
 		iconFlags.setIsFlag(true);
 		iconFlags.setSortable(false);
+		iconFlags.setAlign("left");
 		headers.add(iconFlags);
 		Header start = new Header("Start", "start");
 		start.setWidth("100px");

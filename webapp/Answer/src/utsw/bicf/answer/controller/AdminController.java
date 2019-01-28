@@ -29,6 +29,7 @@ import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.security.FileProperties;
+import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
@@ -53,11 +54,13 @@ public class AdminController {
 	ModelDAO modelDAO;
 	@Autowired
 	FileProperties fileProps;
+	@Autowired
+	OtherProperties otherProps;
 
 	@RequestMapping("/admin")
 	public String admin(Model model, HttpSession session) throws IOException {
 		model.addAttribute("urlRedirect", "admin");
-		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		User user = (User) session.getAttribute("user");
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}

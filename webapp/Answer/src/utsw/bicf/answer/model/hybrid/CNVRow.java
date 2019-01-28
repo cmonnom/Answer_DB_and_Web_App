@@ -24,6 +24,7 @@ public class CNVRow {
 	FlagValue iconFlags;
 	Boolean isSelected;
 	String cytoband;
+	Boolean mdaAnnotated;
 	
 	public CNVRow(CNV cnv) {
 		this.oid = cnv.getMongoDBId().getOid();
@@ -36,10 +37,14 @@ public class CNVRow {
 		this.copyNumber = cnv.getCopyNumber();
 		this.score = cnv.getScore();
 		this.utswAnnotated = cnv.getUtswAnnotated();
+		this.mdaAnnotated = cnv.getMdaAnnotated();
 		this.isSelected = cnv.getSelected();
 		this.cytoband = cnv.getCytoband();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
+		if (mdaAnnotated) {
+			icons.add(new VuetifyIcon("mdi-message-bulleted", "green", "MDA Annotations"));
+		}
 		if (utswAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 		}
@@ -117,6 +122,14 @@ public class CNVRow {
 
 	public String getCytoband() {
 		return cytoband;
+	}
+
+	public Boolean getMdaAnnotated() {
+		return mdaAnnotated;
+	}
+
+	public void setMdaAnnotated(Boolean mdaAnnotated) {
+		this.mdaAnnotated = mdaAnnotated;
 	}
 
 

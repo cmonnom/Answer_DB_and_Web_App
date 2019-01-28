@@ -16,7 +16,8 @@ Vue.component('mda-annotation-card', {
                     <span v-text="parseDate(annotation)"></span>
                 </v-flex>
                 <v-flex xs1>
-                <v-tooltip bottom>
+                <!-- TODO disable copying for CNV annotations for now. Need to handle Chomosomal vs focal -->
+                <v-tooltip bottom v-if="isSNP()">
                 <v-btn color="primary" slot="activator" @click="copyMDAAnnotation()" flat icon
                 :disabled="noEdit">
                 <v-icon>mdi-content-copy</v-icon>
@@ -74,7 +75,7 @@ Vue.component('mda-annotation-card', {
             return this.variantType == "translocation";
         },
         copyMDAAnnotation() {
-            this.$emit("copy-mda-annotation", this.annotation);
+            this.$emit("copy-mda-annotation", this.annotation, this.variantType);
         }
     },
     computed: {

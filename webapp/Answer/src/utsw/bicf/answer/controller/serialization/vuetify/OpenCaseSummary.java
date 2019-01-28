@@ -21,6 +21,7 @@ import utsw.bicf.answer.controller.OpenCaseController;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
@@ -43,6 +44,7 @@ public class OpenCaseSummary {
 	String qcUrl;
 	List<String> assignedToIds;
 	String type;
+	boolean reportReady;
 
 	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
 		List<HeaderOrder> snpOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "SNP/Indel Variants");
@@ -61,6 +63,10 @@ public class OpenCaseSummary {
 		this.qcUrl = qcAPI.getUrl();
 		this.assignedToIds = aCase.getAssignedTo();
 		this.type = aCase.getType();
+		
+		if (user.getIndividualPermission().getCanView()) {
+			reportReady = CaseHistory.lastStepMatches(aCase, CaseHistory.STEP_REPORTING);
+		}
 	}
 
 	
@@ -219,6 +225,16 @@ public class OpenCaseSummary {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+
+	public boolean isReportReady() {
+		return reportReady;
+	}
+
+
+	public void setReportReady(boolean reportReady) {
+		this.reportReady = reportReady;
 	}
 
 

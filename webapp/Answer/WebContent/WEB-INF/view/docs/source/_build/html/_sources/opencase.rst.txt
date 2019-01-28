@@ -1,3 +1,5 @@
+.. _opencase:
+
 Open Case
 ============
 

@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.reporting.parse.AnnotationRow;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CNV {
 	
@@ -26,6 +28,7 @@ public class CNV {
 	Float score;
 	String caseId;
 	Boolean utswAnnotated;
+	Boolean mdaAnnotated;
 	Boolean selected;
 	String type;
 	String cytoband;
@@ -33,6 +36,8 @@ public class CNV {
 	List<MongoDBId> annotationIdsForReporting;
 	
 	AbstractReference referenceCnv;
+	
+	AnnotationRow mdaAnnotation;
 	
 	public CNV() {
 		
@@ -226,6 +231,26 @@ public class CNV {
 
 	public void setAnnotationIdsForReporting(List<MongoDBId> annotationIdsForReporting) {
 		this.annotationIdsForReporting = annotationIdsForReporting;
+	}
+
+
+	public AnnotationRow getMdaAnnotation() {
+		return mdaAnnotation;
+	}
+
+
+	public void setMdaAnnotation(AnnotationRow mdaAnnotation) {
+		this.mdaAnnotation = mdaAnnotation;
+	}
+
+
+	public Boolean getMdaAnnotated() {
+		return mdaAnnotated;
+	}
+
+
+	public void setMdaAnnotated(Boolean mdaAnnotated) {
+		this.mdaAnnotated = mdaAnnotated;
 	}
 
 

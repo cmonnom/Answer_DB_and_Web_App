@@ -7,16 +7,15 @@ Welcome to Answer's documentation!
 ==================================
 
 .. toctree::
-   :maxdepth: 2
 
-   tables
-   navigation
+   features
    homepage
    opencase
    openreport
    annotations
    admin
    preferences
+   faq
 
 
 

@@ -93,18 +93,20 @@ public class Utils {
 					activeFilters.add(vf);
 				}
 				//if checkbox is "effect", I need to create a "impact" filter
-				if (filter.getFieldName().equals(Variant.FIELD_EFFECTS) && !filter.getCheckBoxes().isEmpty()) {
-					boolean someBoxChecked = !filter.getCheckBoxes().stream().filter(c -> (Boolean) c.getValue() == true).collect(Collectors.toList()).isEmpty();
-					if (someBoxChecked && impactFilter == null) {
-						impactFilter = new VariantFilter(Variant.FIELD_IMPACT);
-						if (!impactFilter.getStringValues().stream()
-								.map(fsv -> fsv.getFilterString())
-								.collect(Collectors.toList())
-								.contains(filter.getCategory())) {
-							impactFilter.getStringValues().add(new FilterStringValue(filter.getCategory()));
-						}
-					}
-				}
+				//Commented out because it made the UI not clear to users.
+				//Now it's just a effect search, no impact
+//				if (filter.getFieldName().equals(Variant.FIELD_EFFECTS) && !filter.getCheckBoxes().isEmpty()) {
+//					boolean someBoxChecked = !filter.getCheckBoxes().stream().filter(c -> (Boolean) c.getValue() == true).collect(Collectors.toList()).isEmpty();
+//					if (someBoxChecked && impactFilter == null) {
+//						impactFilter = new VariantFilter(Variant.FIELD_IMPACT);
+//						if (!impactFilter.getStringValues().stream()
+//								.map(fsv -> fsv.getFilterString())
+//								.collect(Collectors.toList())
+//								.contains(filter.getCategory())) {
+//							impactFilter.getStringValues().add(new FilterStringValue(filter.getCategory()));
+//						}
+//					}
+//				}
 			}
 			else if (filter.isDate() != null && filter.isDate()) {
 				//TODO

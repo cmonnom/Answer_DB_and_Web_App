@@ -25,7 +25,7 @@ const Admin = {
       <v-card-text :style="getDialogMaxHeight()">
         <v-container grid-list-md fluid class="pt-2">
           <v-layout row wrap>
-            <v-flex xs3>
+            <v-flex xs5 md4 lg3 xl2>
               <v-card class="pl-2 pr-2">
                 <v-card-title>
                   <div class="title">Name:</div>
@@ -39,7 +39,7 @@ const Admin = {
                 </v-card-text>
               </v-card>
             </v-flex>
-            <v-flex xs4>
+            <v-flex xs7 md4 lg3 xl2>
               <v-card class="pl-2 pr-2">
                 <v-card-title>
                   <div class="title">Permissions:</div>

@@ -66,6 +66,7 @@ public class UserPreferenceController {
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
 		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}

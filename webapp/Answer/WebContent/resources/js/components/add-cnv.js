@@ -29,13 +29,32 @@ Vue.component('add-cnv', {
                     
                     <v-layout row wrap>
                         <v-flex pt-3 xs12>
-                            <span>Genes:</span>
+                            <span>Orignal Genes:</span>
                             <span v-text="getGeneList()" class="blue-grey--text text--lighten-1"></span>
                         </v-flex>
                     </v-layout>
 
                     <v-layout row wrap>
-                        <v-flex pt-2 xs4>
+                    <v-flex pt-3 xs12>
+                            <v-tooltip bottom>
+                                <span slot="activator">Genes To Keep</span>
+                                <span>You can remove some genes from this CNV.
+                                <br/>The final list of CNV will be determined by 
+                                <br/>the left-most and right-most chromosomal positions 
+                                <br/>of genes in the list,regardless of the genes removed.</span>
+                            </v-tooltip>
+                            <v-tooltip bottom>
+                            <v-btn slot="activator" :disabled="canRefreshGeneChips()" @click="createGeneChips()" flat icon 
+                            class="ml-0 mr-0 mt-0 mb-0"><v-icon>refresh</v-icon></v-btn>
+                            <span>Reset</span>
+                            </v-tooltip>
+                            <span>:</span>
+                            <v-chip v-model="chip.visible" v-for="chip in geneChipList" :key="chip.text" close >{{ chip.text }}</v-chip>
+                        </v-flex>
+                    </v-layout>
+
+                    <v-layout row wrap>
+                        <v-flex pt-4 xs4>
                             Aberration Type:
                         </v-flex>
                         <v-flex xs8>
@@ -44,11 +63,11 @@ Vue.component('add-cnv', {
                         </v-flex>
                     </v-layout>
                     <v-layout row wrap>
-                        <v-flex xs4 pt-2>
+                        <v-flex xs4 pt-4>
                             Copy Number:
                         </v-flex>
                         <v-flex xs8>
-                            <v-text-field v-model="copyNumber" :rules="numberRules" >
+                            <v-text-field v-model="copyNumber" :rules="numberRules">
                             </v-text-field>
                         </v-flex>
                     </v-layout>
@@ -86,7 +105,8 @@ Vue.component('add-cnv', {
             genesInPanel: [],
             savingCNV: false,
             start: null,
-            end: null
+            end: null,
+            geneChipList: []
         }
 
     },
@@ -96,7 +116,12 @@ Vue.component('add-cnv', {
         },
         saveCNV() {
             this.savingCNV = true;
-            
+            var finalGeneList = [];
+            for (var i =0; i < this.geneChipList.length; i++) {
+                if (this.geneChipList[i].visible) {
+                    finalGeneList.push(this.geneChipList[i].text);
+                }
+            }
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveCNV",
@@ -105,7 +130,7 @@ Vue.component('add-cnv', {
                 },
                 data: {
                     // chrom: this.chrom,
-                    genes: this.currentGeneList, //should be an array but we only select one gene, so it's a string instead
+                    genes: finalGeneList,
                     aberrationType: this.aberrationType,
                     copyNumber: this.copyNumber
                 }
@@ -163,7 +188,23 @@ Vue.component('add-cnv', {
                 });
         },
         getGeneList() {
+           
             return this.currentGeneList.join(", ") + " (" + this.currentGeneList.length + " gene" + (this.currentGeneList.length == 1 ? ")" : "s)");
+        },
+        createGeneChips() {
+            this.geneChipList = [];
+            for (var i = 0; i < this.currentGeneList.length; i++) {
+                this.geneChipList.push({
+                    text: this.currentGeneList[i],
+                    visible: true
+                });
+            }
+        },
+        canRefreshGeneChips() {
+            if (this.geneChipList.length == 0) {
+                return false;
+            }
+            return this.geneChipList.filter(c => !c.visible).length == 0;
         },
         handleAxiosError(error) {
             console.log(error);
@@ -191,7 +232,7 @@ Vue.component('add-cnv', {
         // this.getGenesInPanel();
     },
     watch: {
-        
+        currentGeneList: "createGeneChips"
     }
 
 

@@ -21,6 +21,7 @@ import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.FileProperties;
+import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
 
 @Controller
@@ -38,6 +39,8 @@ public class BamViewerController {
 	ModelDAO modelDAO;
 	@Autowired
 	FileProperties fileProps;
+	@Autowired
+	OtherProperties otherProps;
 
 	@RequestMapping("/bamViewer")
 	public String bamViewer(Model model, HttpSession session, @RequestParam String locus, @RequestParam String caseId)
@@ -45,7 +48,7 @@ public class BamViewerController {
 		model.addAttribute("urlRedirect", "bamViewer?locus=" + locus + "%26caseId=" + caseId);
 		model.addAttribute("locus", locus);
 		model.addAttribute("caseId", caseId);
-		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		User user = (User) session.getAttribute("user");
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);

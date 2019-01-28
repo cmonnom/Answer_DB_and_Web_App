@@ -117,10 +117,14 @@
 	<target name="scp-test" description="SCP to answer server">
 		<scp file="${target.dir}/Answer.war" trust="yes"
 			todir="${answer.test.username}:${answer.test.password}@${answer.test.host}:${answer.war.test.destination.path}"/>
+			<scp file="${target.dir}/html.zip" trust="yes"
+			todir="${answer.test.username}:${answer.test.password}@${answer.test.host}:${answer.war.test.destination.path}"/>
 	</target>
 	
 	<target name="scp-prod" description="SCP to answer server">
 			<scp file="${target.dir}/Answer.war" trust="yes"
+				todir="${answer.prod.username}:${answer.prod.password}@${answer.prod.host}:${answer.war.prod.destination.path}"/>
+				<scp file="${target.dir}/html.zip" trust="yes"
 				todir="${answer.prod.username}:${answer.prod.password}@${answer.prod.host}:${answer.war.prod.destination.path}"/>
 		</target>
 	

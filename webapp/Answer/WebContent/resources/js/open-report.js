@@ -192,6 +192,15 @@ const OpenReport = {
                     </v-list-tile-content>
                     </v-list-tile>
 
+                    <v-list-tile avatar @click="openCase()">
+                    <v-list-tile-avatar>
+                        <v-icon>assignment_ind</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Open Case</v-list-tile-title>
+                    </v-list-tile-content>
+                    </v-list-tile>
+
                     <v-list-tile avatar @click="openSaveConfirmation()"  :disabled="isSaveDisabled()">
                     <v-list-tile-avatar>
                         <v-icon>save</v-icon>
@@ -1097,6 +1106,14 @@ const OpenReport = {
             }).catch(error => {
                 this.handleAxiosError(error);
             });
+        },
+        openCase() {
+            var path = webAppRoot + "/openCase";
+            if (this.readonly) {
+                path += "ReadOnly"
+            }
+            path += "/" + this.$route.params.id;
+            router.push({path : path});
         }
     },
     mounted() {

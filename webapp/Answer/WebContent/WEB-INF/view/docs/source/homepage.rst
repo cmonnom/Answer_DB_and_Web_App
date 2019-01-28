@@ -1,5 +1,7 @@
-Home / Worklists
-================
+.. _homepage:
+
+|homeIcon| Home / Worklists
+===========================
 
 The homepage lists all available cases divided in 3 categories:
 
@@ -9,3 +11,5 @@ The homepage lists all available cases divided in 3 categories:
 
 **Cases Finalized**: if a report for a case has been finalized (progress level 4), the case will be displayed in this table. You can print finalized reports.
 
+.. |homeIcon| image:: img/baseline_home_black_18dp.png 
+   :width: 20

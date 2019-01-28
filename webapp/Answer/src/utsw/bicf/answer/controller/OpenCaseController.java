@@ -174,8 +174,7 @@ public class OpenCaseController {
 				+ "%26edit=" + edit;
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
-		model.addAttribute("isProduction", fileProps.getProductionEnv());
-		model.addAttribute("oncoKBGeniePortalUrl", otherProps.getOncoKBGeniePortalUrl());
+		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		if (user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
@@ -195,8 +194,7 @@ public class OpenCaseController {
 				+ "%26edit=" + edit;
 		User user = (User) session.getAttribute("user");
 		model.addAttribute("urlRedirect", url);
-		model.addAttribute("isProduction", fileProps.getProductionEnv());
-		model.addAttribute("oncoKBGeniePortalUrl", otherProps.getOncoKBGeniePortalUrl());
+		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
 	
@@ -427,7 +425,7 @@ public class OpenCaseController {
 		gnomadFilter.setNumber(true);
 		filters.add(gnomadFilter);
 		
-		DataTableFilter gnomadHOMFilter = new DataTableFilter("gnomAD Homozygotes",
+		DataTableFilter gnomadHOMFilter = new DataTableFilter("gnomAD HOM",
 				Variant.FIELD_GNOMAD_HOM);
 		gnomadHOMFilter.setType("snp");
 		gnomadHOMFilter.setNumber(true);

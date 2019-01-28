@@ -149,7 +149,9 @@ public class AOPAspect {
 					.replaceAll("&amp;", "&")
 					.replaceAll("&#43;", "+")
 					.replaceAll("&#39;", "'")
-					.replaceAll("&#34;", "\"");
+					.replaceAll("&#34;", "\"")
+					.replaceAll("&#61;", "=")
+					.replaceAll("&lt;", "<");
 			isValid &= argString.replaceAll("<br/>", "").equals(sanitized);
 			return isValid;
 		} else if (tree.isNumber()) {

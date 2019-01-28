@@ -1,13 +1,13 @@
 Using Tables
 ============
 
-Most data tables have the same features. Some tables have extra options described in their own section.
+Most data tables share the same features. Some tables have extra options described in their own section.
 
 .. image:: img/general_table_menu.PNG
 
 .. image:: img/general_table_menu_buttons.PNG
 
-A yellow button indicates that it's currently active (or not hidden). Click on the button again to deactivate the function or hide the menu.
+A yellow button indicates that the function is currently active (or the panel/menu it opens is visible). Click on the button again to deactivate the function or hide the panel/menu.
 
 The **Quick filter** bar can search for any term in the table, even in hidden columns. Only rows containing the search string will be displayed.
 

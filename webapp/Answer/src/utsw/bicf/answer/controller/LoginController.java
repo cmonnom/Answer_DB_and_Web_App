@@ -24,6 +24,7 @@ import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.LDAPAuthentication;
+import utsw.bicf.answer.security.OtherProperties;
 
 @Controller
 @RequestMapping("/")
@@ -37,12 +38,14 @@ public class LoginController {
 	LDAPAuthentication ldapUtils;
 	@Autowired
 	FileProperties fileProps;
+	@Autowired
+	OtherProperties otherProps;
 
 	@RequestMapping("/login")
 	public String login(Model model, HttpSession session) throws IOException {
 		User user = (User) session.getAttribute("user");
-		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		ControllerUtil.initializeModel(model, servletContext, user);
+		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return "login";
 	}
 

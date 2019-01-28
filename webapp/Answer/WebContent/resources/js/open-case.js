@@ -187,7 +187,7 @@ const OpenCase = {
                                             </v-list-tile>
 
 
-                                            <v-list-tile v-if="isSNP()" avatar @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" :disabled="!mdaAnnotationsExists()">
+                                            <v-list-tile v-if="isSNP() || isCNV()" avatar @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" :disabled="!mdaAnnotationsExists()">
                                                 <v-list-tile-avatar>
                                                     <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
                                                     <v-icon v-if="!mdaAnnotationsExists()">mdi-message-bulleted-off</v-icon>
@@ -307,7 +307,7 @@ const OpenCase = {
                     </v-btn>
                     <span>Show/Hide Canonical VCF Annotations</span>
                 </v-tooltip>
-                <v-tooltip bottom v-if="isSNP()">
+                <v-tooltip bottom v-if="isSNP || isCNV()">
                     <v-btn :disabled="!mdaAnnotationsExists()" icon flat :color="(mdaAnnotationsVisible && mdaAnnotationsExists()) ? 'amber accent-2' : ''"
                         @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" slot="activator">
                         <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
@@ -661,6 +661,15 @@ const OpenCase = {
                         <v-list-tile-content>
                             <v-list-tile-title>Review Variants Selected</v-list-tile-title>
                         </v-list-tile-content>
+                    </v-list-tile>
+
+                    <v-list-tile avatar @click="openReport()" :disabled="!reportReady">
+                    <v-list-tile-avatar>
+                        <v-icon>assignment</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Open Report</v-list-tile-title>
+                    </v-list-tile-content>
                     </v-list-tile>
 
                     <v-list-tile avatar @click="handleSaveAll()" :disabled="!isSaveNeededBadgeVisible()">
@@ -1121,7 +1130,8 @@ const OpenCase = {
             patientDetailsDedupPctOver100X: "",
             patientDetailsDedupAvgDepth: "",
             numberRules: [(v) => { return !isNaN(v) || 'Invalid value' }],
-            currentListOfCNVVisibleGenes: []
+            currentListOfCNVVisibleGenes: [],
+            reportReady: false
         }
     }, methods: {
         createSplashText() {
@@ -1205,6 +1215,7 @@ const OpenCase = {
                     this.patientTables = response.data.patientInfo.patientTables;
                     this.caseAssignedTo = response.data.assignedToIds;
                     this.caseType = response.data.type;
+                    this.reportReady = response.data.reportReady;
                     if (this.caseType == "Clinical") {
                         this.caseTypeIcon = "fa-user-md";
                     }
@@ -1743,7 +1754,7 @@ const OpenCase = {
                                 {
                                     label: "gnomAD Pop. Max. Allele Frequency",
                                     value: this.formatPercent(this.currentVariant.gnomadPopmaxAlleleFrequency),
-                                    type: "link",
+                                    //type: "link", //TODO the link currently uses the wrong hg19 position. Remove it until it's fixed
                                     linkIcon: "open_in_new",
                                     url: this.createGnomadLink(),
                                     tooltip: "Open in gnomAD"
@@ -1759,7 +1770,7 @@ const OpenCase = {
                             );
                         }
                         depthTable.items.push({
-                           label: "gnomAD Homozygotes",
+                           label: "gnomAD HOM",
                            value: this.currentVariant.gnomadHomozygotes ? this.currentVariant.gnomadHomozygotes[0] + "" : "" 
                         });
                         this.variantDataTables.push(depthTable);
@@ -1926,7 +1937,7 @@ const OpenCase = {
                         this.userAnnotations = this.currentVariant.referenceCnv.utswAnnotations.filter(a => a.userId == this.userId);
                         this.$refs.cnvAnnotationDialog.userAnnotations = this.userAnnotations;
                         this.utswAnnotations = this.currentVariant.referenceCnv.utswAnnotations;
-                        this.mdaAnnotations = "";
+                        this.mdaAnnotations = this.currentVariant.mdaAnnotation ? this.currentVariant.mdaAnnotation : "";
                         this.reloadPreviousSelectedState();
                         this.formatCNVAnnotations();
                         this.loadingVariantDetails = false;
@@ -1973,7 +1984,9 @@ const OpenCase = {
             this.userAnnotations = [];
             this.$refs.cnvAnnotationDialog.userAnnotations = this.userAnnotations;
             this.utswAnnotations = [];
+            this.utswAnnotationsFormatted = [];
             this.mdaAnnotations = "";
+            this.mdaAnnotationsFormatted = [];
             this.reloadPreviousSelectedState();
             // this.formatCNVAnnotations();
             this.loadingVariantDetails = false;
@@ -2548,6 +2561,9 @@ const OpenCase = {
         },
         formatCNVAnnotations() {
             this.utswAnnotationsFormatted = this.formatLocalCNVAnnotations(this.utswAnnotations, true);
+            if (this.mdaAnnotations) {
+                this.mdaAnnotationsFormatted = this.formatMDAAnnotations(this.mdaAnnotations);
+            }
             this.matchAnnotationFilter();
         },
         formatTranslocationAnnotations() {
@@ -3029,6 +3045,9 @@ const OpenCase = {
         },
         isCNV() {
             return this.currentVariantType == "cnv";
+        },
+        isSNPCNV() {
+            return this.isSNP() || this.isCNV();
         },
         isTranslocation() {
             return this.currentVariantType == "translocation";
@@ -3655,7 +3674,7 @@ const OpenCase = {
                 }
             }, 120000);
         },
-        copyMDAAnnotation(mdaAnnotation) {
+        copyMDAAnnotation(mdaAnnotation, variantType) {
             if (!this.canProceed('canAnnotate') || this.readonly) {
                 return;
             }
@@ -3699,7 +3718,7 @@ const OpenCase = {
                 _id: null,
                 classification: null,
                 tier: null,
-                type: "snp",
+                type: variantType,
                 trial: null
             }
             this.userAnnotations.push(utswAnnotation);
@@ -3753,6 +3772,14 @@ const OpenCase = {
                     alert(error);
                 });
         },
+        openReport() {
+            var path = webAppRoot + "/openReport";
+            if (this.readonly) {
+                path += "ReadOnly"
+            }
+            path += "/" + this.$route.params.id;
+            router.push({path : path});
+        }
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",

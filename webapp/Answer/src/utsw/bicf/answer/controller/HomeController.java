@@ -73,7 +73,7 @@ public class HomeController {
 	@RequestMapping("/home")
 	public String home(Model model, HttpSession session) throws IOException {
 		model.addAttribute("urlRedirect", "home");
-		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		User user = (User) session.getAttribute("user");
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
@@ -134,7 +134,7 @@ public class HomeController {
 	public String getAllUsersToAssign(Model model, HttpSession session)
 			throws Exception {
 		
-		List<User> users = modelDAO.getAllUsers();
+		List<User> users = modelDAO.getAllUsers().stream().filter(u -> u.getIndividualPermission().getCanAnnotate() != null && u.getIndividualPermission().getCanAnnotate()).collect(Collectors.toList());
 		UserSearchItems userList = new UserSearchItems(users);
 		return userList.createVuetifyObjectJSON();
 		

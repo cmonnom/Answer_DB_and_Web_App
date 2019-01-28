@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.security.FileProperties;
+import utsw.bicf.answer.security.OtherProperties;
 
 public class ControllerUtil {
 	
@@ -123,4 +125,13 @@ public class ControllerUtil {
 				|| owner.equals(currentUser);
 	}
 	
+	/**
+	 * All or most pages might use the variables here.
+	 * This is useful when individual controllers like "openCase" is 
+	 * not called because the page loaded is "home" or "openReport"
+	 */
+	public static void setGlobalVariables(Model model, FileProperties fileProps, OtherProperties otherProps) {
+		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		model.addAttribute("oncoKBGeniePortalUrl", otherProps.getOncoKBGeniePortalUrl());
+	}
 }

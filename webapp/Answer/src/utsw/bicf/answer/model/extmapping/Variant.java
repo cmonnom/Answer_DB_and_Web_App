@@ -1,5 +1,6 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -823,7 +824,13 @@ public class Variant {
 
 
 	public void setGnomadHomozygotes(List<Integer> gnomadHomozygotes) {
-		this.gnomadHomozygotes = gnomadHomozygotes;
+		List<Integer> replaceByNull = new ArrayList<Integer>();
+		if (gnomadHomozygotes != null) {
+			for (Integer hom : gnomadHomozygotes) {
+				replaceByNull.add(hom == -1 ? null : hom);
+			}
+			this.gnomadHomozygotes = replaceByNull;
+		}
 	}
 
 
