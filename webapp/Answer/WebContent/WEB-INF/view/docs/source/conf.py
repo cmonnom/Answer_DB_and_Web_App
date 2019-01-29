@@ -153,3 +153,5 @@ texinfo_documents = [
      author, 'Answer', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+html_show_sourcelink = False

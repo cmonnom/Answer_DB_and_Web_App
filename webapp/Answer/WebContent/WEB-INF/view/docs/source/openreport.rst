@@ -30,5 +30,14 @@ All saved reports will be listed in this panel and your can reload any previous 
    :width: 500px
 
 
-
 You can export a report to PDF as many times as you want until you are satisfied with the result.
+
+
+PubMed References
+-----------------
+
+If there are any PubMed ids in the selected annotations, they will appear in this table with a format similar to a PubMed summary page.
+You can click on a PubMed id to go directly to that article in PubMed.
+
+More details on how to create a report :ref:`here <createreport>`.
+

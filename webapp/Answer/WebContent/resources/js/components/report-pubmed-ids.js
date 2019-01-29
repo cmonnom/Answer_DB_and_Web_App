@@ -22,7 +22,7 @@ Vue.component('report-pubmed-ids', {
                 </v-list-tile>
             </v-list>
         </v-menu>
-        <v-toolbar-title>Pubmed References</v-toolbar-title>
+        <v-toolbar-title>PubMed References</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
             <v-btn flat icon @click="closePanel()" slot="activator">

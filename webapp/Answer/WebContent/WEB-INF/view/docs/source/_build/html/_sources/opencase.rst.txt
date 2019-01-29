@@ -122,17 +122,24 @@ This means that creating a gene level annotation will make the annotation visibl
 
 Click on **ADD/EDIT** to create new annotations or edit existing ones. You can only edit annotations you have created.
 
+.. _opencase_create:
+
 Create/Edit Annotations
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Annotations are specific to the type of variant (SNP, CNV or Fusion) but they share general principles such as a scope.
 An orange background indicates that you are in **edit** mode as opposed to just **view** mode.
 
+The scope determines where the annotation applies to other cases/genes/variants/diagnosis. 
+By changing the scope you can determine if an annotation should be visible for any variant in the current gene for instance (**Gene Specific**).
+Or only for the current mutation (**Gene Specific** + **Variant Specific**)
+Or only for the current mutation in the current case (**Case Specific** + **Gene Specific** + **Variant Specific**)
+
 You can create regular annotations or clinical trials. Different fields are required depending on the annotation and variant type so the **SAVE / UPDATE** button might 
 be disabled until all requirements are met. You can always go back and change you annotations so feel free to explore the different menus and options. Tooltips will guide you
 through the buttons and drop down functions. 
 
-You can create multiple annotations or trials and save them all in one go by clicking |addAnnotationButtons|.
+You can create multiple annotations or trials by clicking |addAnnotationButtons| multiple times.
 
 **Don't forget to save your work.** Autosave does not apply to creating/editing annotations.
 

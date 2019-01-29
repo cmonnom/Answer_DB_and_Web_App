@@ -970,7 +970,7 @@ public class FinalReportPDFTemplate {
 
 		if (items == null || items.isEmpty()) {
 			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(100, "No Pubmed references.");
+			Cell<PDPage> cell = row.createCell(100, "No PubMed references.");
 			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
 		else {

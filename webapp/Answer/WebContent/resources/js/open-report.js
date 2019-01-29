@@ -174,7 +174,7 @@ const OpenReport = {
                                             <v-icon>mdi-book-open-page-variant</v-icon>
                                         </v-list-tile-avatar>
                                         <v-list-tile-content>
-                                            <v-list-tile-title>Pubmed References</v-list-tile-title>
+                                            <v-list-tile-title>PubMed References</v-list-tile-title>
                                         </v-list-tile-content>
                                     </v-list-tile>
                                     </v-list>

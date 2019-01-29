@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="annotations.html">Annotations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="admin.html"> Admin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preferences.html"> Preferences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 </ul>
 
             
@@ -237,13 +238,17 @@ This means that creating a gene level annotation will make the annotation visibl
 <p>Click on <strong>ADD/EDIT</strong> to create new annotations or edit existing ones. You can only edit annotations you have created.</p>
 </div>
 <div class="section" id="create-edit-annotations">
-<h3>Create/Edit Annotations<a class="headerlink" href="#create-edit-annotations" title="Permalink to this headline">¶</a></h3>
+<span id="opencase-create"></span><h3>Create/Edit Annotations<a class="headerlink" href="#create-edit-annotations" title="Permalink to this headline">¶</a></h3>
 <p>Annotations are specific to the type of variant (SNP, CNV or Fusion) but they share general principles such as a scope.
 An orange background indicates that you are in <strong>edit</strong> mode as opposed to just <strong>view</strong> mode.</p>
+<p>The scope determines where the annotation applies to other cases/genes/variants/diagnosis.
+By changing the scope you can determine if an annotation should be visible for any variant in the current gene for instance (<strong>Gene Specific</strong>).
+Or only for the current mutation (<strong>Gene Specific</strong> + <strong>Variant Specific</strong>)
+Or only for the current mutation in the current case (<strong>Case Specific</strong> + <strong>Gene Specific</strong> + <strong>Variant Specific</strong>)</p>
 <p>You can create regular annotations or clinical trials. Different fields are required depending on the annotation and variant type so the <strong>SAVE / UPDATE</strong> button might
 be disabled until all requirements are met. You can always go back and change you annotations so feel free to explore the different menus and options. Tooltips will guide you
 through the buttons and drop down functions.</p>
-<p>You can create multiple annotations or trials and save them all in one go by clicking <a class="reference internal" href="_images/add_annotation_buttons.png"><img alt="addAnnotationButtons" src="_images/add_annotation_buttons.png" style="width: 250px;" /></a>.</p>
+<p>You can create multiple annotations or trials by clicking <a class="reference internal" href="_images/add_annotation_buttons.png"><img alt="addAnnotationButtons" src="_images/add_annotation_buttons.png" style="width: 250px;" /></a> multiple times.</p>
 <p><strong>Don’t forget to save your work.</strong> Autosave does not apply to creating/editing annotations.</p>
 <p>Once you close the panel. The new annotation cards will be displayed in the <strong>UTSW Annotations</strong> panel.</p>
 <img alt="_images/annotation_cards.png" src="_images/annotation_cards.png" />
