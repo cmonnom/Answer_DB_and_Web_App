@@ -55,11 +55,13 @@ const OpenReport = {
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
 
-    <report-tier-warning
-    :variants-missing-tier="variantsMissingTier"
-    @get-report-details="getReportDetails"
-    @bypass-cnv-warning="bypassCNVWarning">
-    </report-tier-warning>
+    <v-slide-y-transition>
+        <report-tier-warning v-show="variantsMissingTier.length > 0"
+        :variants-missing-tier="variantsMissingTier"
+        @get-report-details="getReportDetails"
+        @bypass-cnv-warning="bypassCNVWarning">
+        </report-tier-warning>
+    </v-slide-y-transition>
 
     <v-toolbar dense dark :color="colors.openReport" fixed app :extended="loadingReportDetails">
         <v-tooltip class="ml-0" bottom>

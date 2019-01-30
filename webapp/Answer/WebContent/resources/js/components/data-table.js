@@ -446,7 +446,7 @@ Vue.component('data-table', {
   </v-data-table>
   <!-- external pagination -->
   <div class="text-xs-center pt-3" v-show="showPagination">
-    <v-pagination v-model="pagination.page" :length="pages" :total-visible="10"></v-pagination>
+    <v-pagination v-model="pagination.page" :color="color" :length="pages" :total-visible="10"></v-pagination>
   </div>
 
 
