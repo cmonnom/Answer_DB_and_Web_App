@@ -34,7 +34,10 @@ public class ReportGroupTableRow {
 		this.createdBy = reportGroup.getCreatedBy().getFullName();
 		if (ControllerUtil.isOwnerOrAdmin(currentUser, reportGroup.getCreatedBy())) {
 			buttons.add(new Button("create", "editReportGroup", "Edit Gene Set", "info"));
-			buttons.add(new Button("delete", "deleteReportGroup", "Delete Gene Set (irreversible!)", "error"));
+			//shouldn't be able to delete required gene sets like ACMG
+			if (reportGroup.getRequired() == null || !reportGroup.getRequired()) {
+				buttons.add(new Button("delete", "deleteReportGroup", "Delete Gene Set (irreversible!)", "error"));
+			}
 		}
 	}
 

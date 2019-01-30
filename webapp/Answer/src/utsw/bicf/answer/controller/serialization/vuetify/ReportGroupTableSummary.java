@@ -42,6 +42,7 @@ public class ReportGroupTableSummary extends Summary<ReportGroupTableRow>{
 		headers.add(genes);
 		Header actions = new Header(new String[] {"Edit", "Gene Set"}, "actions");
 		actions.setButtons(true);
+		actions.setAlign("left");
 		headers.add(actions);
 		
 	}
