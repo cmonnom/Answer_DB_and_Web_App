@@ -78,6 +78,7 @@ public class ReportSummary {
 	Set<String> ftlIds = new HashSet<String>();
 	
 	Map<String, ReportNavigationRow> navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
+	Map<String, ReportNavigationRow> navigationRowsPerGeneVUS = new HashMap<String, ReportNavigationRow>();
 	Boolean amended;
 	String amendmentReason;
 	Boolean addendum;
@@ -183,6 +184,7 @@ public class ReportSummary {
 		this.ftlIds = reportDetails.getFtlIds();
 		
 		this.navigationRowsPerGene = reportDetails.getNavigationRowsPerGene();
+		this.navigationRowsPerGeneVUS = reportDetails.getNavigationRowsPerGeneVUS();
 		this.amended = reportDetails.getAmended();
 		this.amendmentReason = reportDetails.getAmendmentReason();
 		this.addendum = reportDetails.getAddendum();
@@ -521,6 +523,34 @@ public class ReportSummary {
 	public void setSnpVariantsUnknownClinicalSignificance(
 			Map<String, GeneVariantAndAnnotation> snpVariantsUnknownClinicalSignificance) {
 		this.snpVariantsUnknownClinicalSignificance = snpVariantsUnknownClinicalSignificance;
+	}
+
+	public void updateModifiedRows() {
+		this.updateCSRows(this.snpVariantsStrongClinicalSignificanceSummary, this.snpVariantsStrongClinicalSignificance);
+		this.updateCSRows(this.snpVariantsPossibleClinicalSignificanceSummary, this.snpVariantsPossibleClinicalSignificance);
+		this.updateCSRows(this.snpVariantsUnknownClinicalSignificanceSummary, this.snpVariantsUnknownClinicalSignificance);
+	}
+	
+	private void updateCSRows(ClinicalSignificanceSummary summary, Map<String, GeneVariantAndAnnotation> originalCS) {
+		if (summary != null) {
+			int length = summary.getItems().size();
+			for (int i = 0; i < length; i++) {
+				ClinicalSignificance cs = summary.getItems().get(i);
+				String previousAnnotation = originalCS.get(cs.getGeneVariantAsKey()).getAnnotationsByCategory().get(cs.getCategory());
+				String newAnnotation = summary.getItems().get(i).getAnnotation();
+				if (newAnnotation != null && previousAnnotation != null && !newAnnotation.equals(previousAnnotation)) {
+					originalCS.get(cs.getGeneVariantAsKey()).getAnnotationsByCategory().put(cs.getCategory(), newAnnotation);
+				}
+			}
+		}
+	}
+
+	public Map<String, ReportNavigationRow> getNavigationRowsPerGeneVUS() {
+		return navigationRowsPerGeneVUS;
+	}
+
+	public void setNavigationRowsPerGeneVUS(Map<String, ReportNavigationRow> navigationRowsPerGeneVUS) {
+		this.navigationRowsPerGeneVUS = navigationRowsPerGeneVUS;
 	}
 
 

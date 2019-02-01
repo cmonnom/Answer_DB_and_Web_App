@@ -61,6 +61,8 @@ const OpenCase = {
         @update-highlight="updateHighlights" @filter-action-success="showSnackBarMessage"></advanced-filter>
     <v-dialog v-model="reviewDialogVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <review-selection ref="reviewDialog"
+        @open-report="openReport"
+        :report-ready="reportReady"
         :case-name="caseName" :case-type="caseType" :case-type-icon="caseTypeIcon"
         :selected-ids="getSelectedVariantIds()"
         @save-selection="saveSelection" @close-review-dialog="closeReviewDialog"
@@ -846,6 +848,10 @@ const OpenCase = {
                         </v-tooltip>
                     </v-toolbar>
                     <v-card-text>
+                        <div v-if="labNotes" class="subheading selectable pl-1 pr-2 pt-2 pb-2">
+                        <span>Lab Notes:</span>
+                        <span class="blue-grey--text text--lighten-1">{{ labNotes }}</span>
+                        </div>
                         <v-text-field :textarea="true" :readonly="!canProceed('canAnnotate') || readonly" :disabled="!canProceed('canAnnotate') || readonly"
                             ref="caseNotes" :value="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
                         </v-text-field>
@@ -1131,7 +1137,11 @@ const OpenCase = {
             patientDetailsDedupAvgDepth: "",
             numberRules: [(v) => { return !isNaN(v) || 'Invalid value' }],
             currentListOfCNVVisibleGenes: [],
-            reportReady: false
+            reportReady: false,
+            labNotes: null,
+            snpIndelUnfilteredItems: null,
+            cnvUnfilteredItems: null,
+            ftlUnfilteredItems: null
         }
     }, methods: {
         createSplashText() {
@@ -1222,6 +1232,7 @@ const OpenCase = {
                     else if (this.caseType == "Research") {
                         this.caseTypeIcon = "fa-flask";
                     }
+                    this.labNotes = response.data.labNotes;
                     this.extractPatientDetailsInfo(response.data.caseName);
                     // var step = new Date() - start;
                     // console.log(1, step); 
@@ -1231,6 +1242,10 @@ const OpenCase = {
                     // step = new Date() - start;
                     // console.log(2, step); 
                     this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+                    //keep track of the original items in order to select all the variants regardless of filtering
+                    if (!this.snpIndelUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
+                        this.snpIndelUnfilteredItems = response.data.snpIndelVariantSummary.items;
+                    }
                     //when the items are repopulated, we break the link with currentRow
                     //use the for loop to reset currentRow to the proper reference
                     if (this.currentRow && this.isSNP()) {
@@ -1244,6 +1259,10 @@ const OpenCase = {
                     // step = new Date() - start;
                     // console.log(3, step); 
                     this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
+                                        //keep track of the original items in order to select all the variants regardless of filtering
+                    if (!this.cnvUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
+                        this.cnvUnfilteredItems = response.data.cnvSummary.items;
+                    }
                     if (this.currentRow && this.isCNV()) {
                         for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
                             if (this.$refs.cnvDetails.items[i].oid == this.currentRow.oid) {
@@ -1255,6 +1274,10 @@ const OpenCase = {
                     // step = new Date() - start;
                     // console.log(4, step); 
                     this.$refs.translocationDetails.manualDataFiltered(response.data.translocationSummary);
+                    //keep track of the original items in order to select all the variants regardless of filtering
+                    if (!this.ftlUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
+                        this.ftlUnfilteredItems = response.data.translocationSummary.items;
+                    }
                     if (this.currentRow && this.isTranslocation()) {
                         for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
                             if (this.$refs.translocationDetails.items[i].oid == this.currentRow.oid) {
@@ -2697,9 +2720,10 @@ const OpenCase = {
             this.handleSelectionChanged();
         },
         updateSelectedVariantTable() {
-            var selectedSNPVariants = this.$refs.geneVariantDetails.items.filter(item => item.isSelected);
-            var selectedCNVs = this.$refs.cnvDetails.items.filter(item => item.isSelected);
-            var selectedTranslocations = this.$refs.translocationDetails.items.filter(item => item.isSelected);
+            var selectedIds = this.getSelectedVariantIds();
+            var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => selectedIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
+            var selectedCNVs = this.cnvUnfilteredItems.filter(item => selectedIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
+            var selectedTranslocations = this.ftlUnfilteredItems.filter(item => selectedIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
             this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
 
             var snpHeaders = this.$refs.geneVariantDetails.headers;
@@ -2904,70 +2928,46 @@ const OpenCase = {
                 && !(this.utswAnnotationsVisible && this.utswAnnotationsExists());
         },
         getSelectedVariantIds() {
-            var selectedSNPVariantIds = null;
-            var selectedCNVIds = null;
-            var selectedTranslocationIds = null;
+            var selectedSNPVariantIds = [];
+            var selectedCNVIds = [];
+            var selectedTranslocationIds = [];
             if (this.$refs.geneVariantDetails) {
-                selectedSNPVariantIds = this.$refs.geneVariantDetails.items.filter(item => item.isSelected).map(item => item.oid);
+                selectedSNPVariantIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.geneVariantDetails.items, this.snpIndelUnfilteredItems);
             }
             if (this.$refs.cnvDetails) {
-            selectedCNVIds = this.$refs.cnvDetails.items.filter(item => item.isSelected).map(item => item.oid);
+                selectedCNVIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.cnvDetails.items, this.cnvUnfilteredItems);
             }
             if (this.$refs.translocationDetails) {
-                selectedTranslocationIds = this.$refs.translocationDetails.items.filter(item => item.isSelected).map(item => item.oid);
+                selectedTranslocationIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.translocationDetails.items, this.ftlUnfilteredItems);
             }
             return {
-                selectedSNPVariantIds: selectedSNPVariantIds,
-                selectedCNVIds: selectedCNVIds,
-                selectedTranslocationIds: selectedTranslocationIds
+                selectedSNPVariantIds: selectedSNPVariantIds ? selectedSNPVariantIds : null,
+                selectedCNVIds: selectedCNVIds ? selectedCNVIds : null,
+                selectedTranslocationIds: selectedTranslocationIds  ? selectedTranslocationIds : null,
             }
         },
-        // exportSelectedVariants() {
-        //     // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
-        //     // Use a flag to disable the action in the meantime
-        //     if (this.saveVariantDisabled) {
-        //         return;
-        //     }
-        //     this.exportLoading = true;
-        //     var selectedIds = this.getSelectedVariantIds();
-        //     axios({
-        //         method: 'post',
-        //         responseType: 'blob',
-        //         url: webAppRoot + "/exportSelection",
-        //         params: {
-        //             caseId: this.$route.params.id
-        //         },
-        //         data: {
-        //             filters: [],
-        //             selectedSNPVariantIds: selectedIds.selectedSNPVariantIds,
-        //             selectedCNVIds: selectedIds.selectedCNVIds,
-        //             selectedTranslocationIds: selectedIds.selectedTranslocationIds
-        //         }
-        //     }).then(response => {
-        //         this.createExcelFile(response.data);
-        //         this.exportLoading = false;
-        //     }
-        //     ).catch(error => {
-        //         if (error.response.status == 403) { //need to relogin
-        //             bus.$emit("login-needed", [this, this.exportSelectedVariants]);
-        //         }
-        //         else {
-        //             this.handleAxiosError(error);
-        //         }
-        //         this.exportLoading = false;
-        //     }
-        //     );
-        // },
-        
-        // createExcelFile(content) {
-        //     var url = window.URL.createObjectURL(new Blob([content]));
-        //     var hiddenElement = document.createElement('a');
-        //     hiddenElement.download = this.$route.params.id + '_variants.xlsx';
-        //     hiddenElement.href = url;
-        //     document.body.appendChild(hiddenElement);
-        //     hiddenElement.click();
-        //     document.body.removeChild(hiddenElement);
-        // },
+        /**
+         * To collect which ids are selected, we need to go through the
+         * current filtered tables and the original ones (in case the filter removed some selected rows)
+         * @param {items in the currently filtered table} variantDetailsItems 
+         * @param {items in the original unfiltered table} unfilteredItems 
+         */
+        getFilteredAndUnfilteredVariantIds(variantDetailsItems, unfilteredItems) {
+            var selectedVariantIds = [];
+            var filteredSelectedIds = variantDetailsItems.filter(item => item.isSelected).map(item => item.oid);
+            var unfilteredSelectedIds = unfilteredItems ? unfilteredItems.filter(item => item.isSelected).map(item => item.oid) : [];
+            var unionSet = new Set();
+            for (var i = 0; i < filteredSelectedIds.length; i++) {
+                unionSet.add(filteredSelectedIds[i]);
+            }
+            for (var i = 0; i < unfilteredSelectedIds.length; i++) {
+                unionSet.add(unfilteredSelectedIds[i]);
+            }
+            for (let item of unionSet) {
+                selectedVariantIds.push(item);
+            }
+            return selectedVariantIds;
+        },
         updateVariantDetails() {
             this.urlQuery.variantId = this.currentVariant._id.$oid;
             this.urlQuery.variantType = this.currentVariantType;

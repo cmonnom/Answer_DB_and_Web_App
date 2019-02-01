@@ -79,7 +79,7 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		numCasesSeen.setWidth("50px");
 		headers.add(numCasesSeen);
 		
-		Header numCasesInCosmic = new Header(new String[] {"Nb Cases", "In Cosmic"}, "nbOfCosmicCases", Units.NB);
+		Header numCasesInCosmic = new Header(new String[] {"Nb Cases", "In Cosmic"}, "maxCosmicPatients", Units.NB);
 		numCasesInCosmic.setWidth("50px");
 		headers.add(numCasesInCosmic);
 		

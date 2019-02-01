@@ -660,6 +660,14 @@ Vue.component('advanced-filter', {
                 } return isValid;
             } return true;
         },
+        isAnyFilterUsed() {
+            for (var i = 0; i < this.filters.length; i++) {
+                if (this.isFilterUsed(this.filters[i])) {
+                    return true;
+                }
+            }
+            return false;
+        },
         openSaveFiltersDialog() {
             if (this.currentFilterSet) {
                 this.saveFilterSetId = this.currentFilterSet.variantFilterListId;

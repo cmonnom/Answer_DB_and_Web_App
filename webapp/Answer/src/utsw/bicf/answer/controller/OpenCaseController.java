@@ -435,6 +435,11 @@ public class OpenCaseController {
 		numCasesSeenFilter.setType("snp");
 		numCasesSeenFilter.setNumber(true);
 		filters.add(numCasesSeenFilter);
+		
+		DataTableFilter numCasesCosmicFilter = new DataTableFilter("Nb. Cases in Cosmic", Variant.FIELD_MAX_COSMIC_PATIENTS);
+		numCasesCosmicFilter.setType("snp");
+		numCasesCosmicFilter.setNumber(true);
+		filters.add(numCasesCosmicFilter);
 
 		DataTableFilter effectFilterLOF = new DataTableFilter("LOF Effects (HIGH)", Variant.FIELD_EFFECTS);
 		effectFilterLOF.setType("snp");

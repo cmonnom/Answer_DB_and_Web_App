@@ -30,6 +30,7 @@ public class Variant {
 	public static final String FIELD_GNOMAD_ALLELE_FREQUENCY = "gnomadPopmaxAlleleFrequency";
 	public static final String FIELD_GNOMAD_HOM = "gnomadHomozygotes";
 	public static final String FIELD_NUM_CASES_SEEN = "numCasesSeen";
+	public static final String FIELD_MAX_COSMIC_PATIENTS = "maxCosmicPatients";
 	public static final String FIELD_IN_COSMIC = "inCosmic";
 	public static final String FIELD_OLD_BUILDS = "oldBuilds";
 	
@@ -67,6 +68,7 @@ public class Variant {
 	List<Caller> callSet;
 	String type;
 	List<Integer> cosmicPatients;
+	Integer maxCosmicPatients;
 	List<String> ids; //list of external database ids (dbsnp, cosmic, etc)
 	String alt;
 	String reference;
@@ -831,6 +833,16 @@ public class Variant {
 			}
 			this.gnomadHomozygotes = replaceByNull;
 		}
+	}
+
+
+	public Integer getMaxCosmicPatients() {
+		return maxCosmicPatients;
+	}
+
+
+	public void setMaxCosmicPatients(Integer maxCosmicPatients) {
+		this.maxCosmicPatients = maxCosmicPatients;
 	}
 
 

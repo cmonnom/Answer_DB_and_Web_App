@@ -55,6 +55,7 @@ public class Report {
 	Set<String> ftlIds = new HashSet<String>();
 	
 	Map<String, ReportNavigationRow> navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
+	Map<String, ReportNavigationRow> navigationRowsPerGeneVUS = new HashMap<String, ReportNavigationRow>();
 	Boolean amended;
 	String amendmentReason;
 	Boolean addendum;
@@ -109,6 +110,7 @@ public class Report {
 		this.ftlIds = reportSummary.getFtlIds();
 		
 		this.navigationRowsPerGene = reportSummary.getNavigationRowsPerGene();
+		this.navigationRowsPerGeneVUS = reportSummary.getNavigationRowsPerGeneVUS();
 		this.amended = reportSummary.getAmended();
 		this.amendmentReason = reportSummary.getAmendmentReason();
 		this.addendum = reportSummary.getAddendum();
@@ -356,6 +358,7 @@ public class Report {
 		}
 		row.setUnknownClinicalSignificanceCount(row.getUnknownClinicalSignificanceCount() + 1);
 		this.navigationRowsPerGene.put(geneName, row);
+//		this.navigationRowsPerGeneVUS.put(geneName, row); //on hold for now
 	}
 	
 	public void incrementClinicalTrialCount(String geneName) {
@@ -423,6 +426,14 @@ public class Report {
 
 	public void setPubmeds(List<PubMed> pubmeds) {
 		this.pubmeds = pubmeds;
+	}
+
+	public Map<String, ReportNavigationRow> getNavigationRowsPerGeneVUS() {
+		return navigationRowsPerGeneVUS;
+	}
+
+	public void setNavigationRowsPerGeneVUS(Map<String, ReportNavigationRow> navigationRowsPerGeneVUS) {
+		this.navigationRowsPerGeneVUS = navigationRowsPerGeneVUS;
 	}
 	
 	

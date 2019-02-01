@@ -359,6 +359,15 @@ public class FinalReportPDFTemplate {
 		boolean grayBackground = false;
 //		List<String> sortedKeys = report.getNavigationRowsPerGene().keySet().stream().sorted().collect(Collectors.toList());
 		List<ReportNavigationRow> sortedValues = report.getNavigationRowsPerGene().values().stream().sorted().collect(Collectors.toList());
+		//concatenate VUS into one row
+		//on hold for now
+//		String vusGenes = report.getNavigationRowsPerGeneVUS().keySet().stream().collect(Collectors.joining(" "));
+//		if (vusGenes != null && !vusGenes.equals("")) {
+//			ReportNavigationRow vusRow = report.getNavigationRowsPerGeneVUS().values().stream().findFirst().get();
+//			vusRow.setGene(vusGenes);
+//			vusRow.setLabel(vusGenes);
+//			sortedValues.add(vusRow);
+//		}
 		
 		for (ReportNavigationRow navigationRow : sortedValues) {
 			String gene = navigationRow.getLabel();

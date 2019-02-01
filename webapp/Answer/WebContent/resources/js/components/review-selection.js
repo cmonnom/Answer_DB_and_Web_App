@@ -11,6 +11,7 @@ Vue.component('review-selection', {
         caseType: {default: "", type: String},
         caseTypeIcon: {default: "", type: String},
         saveTooltip: {default: "", type: String},
+        reportReady: {default: false, type: Boolean},
     },
     template: `<v-card class="soft-grey-background">
     <v-toolbar dense dark color="primary">
@@ -53,6 +54,15 @@ Vue.component('review-selection', {
                 </v-list-tile-avatar>
                 <v-list-tile-content>
                     <v-list-tile-title>Save Current Work</v-list-tile-title>
+                </v-list-tile-content>
+                </v-list-tile>
+
+                <v-list-tile avatar @click="openReport()" :disabled="!reportReady">
+                <v-list-tile-avatar>
+                    <v-icon>assignment</v-icon>
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                    <v-list-tile-title>Open Report</v-list-tile-title>
                 </v-list-tile-content>
                 </v-list-tile>
 
@@ -403,6 +413,9 @@ Vue.component('review-selection', {
         getFtlTable() {
             return this.$refs.translocationVariantsSelected;
         },
+        openReport() {
+            this.$emit("open-report");
+        }
     },
     computed: {
 

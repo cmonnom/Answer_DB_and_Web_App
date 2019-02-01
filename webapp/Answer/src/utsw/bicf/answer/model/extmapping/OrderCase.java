@@ -63,6 +63,7 @@ public class OrderCase {
 	Double dedupPctOver100X;
 	@JsonProperty("tmb")
 	Double tumorMutationBurden;
+	String labNotes;
 	
 	
 	public OrderCase() {
@@ -478,6 +479,16 @@ public class OrderCase {
 
 	public void setDedupPctOver100X(Double dedupPctOver100X) {
 		this.dedupPctOver100X = dedupPctOver100X;
+	}
+
+
+	public String getLabNotes() {
+		return labNotes;
+	}
+
+
+	public void setLabNotes(String labNotes) {
+		this.labNotes = labNotes;
 	}
 
 
