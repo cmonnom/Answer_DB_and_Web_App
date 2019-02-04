@@ -15,8 +15,10 @@ import org.springframework.ui.Model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.Version;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
@@ -73,7 +75,7 @@ public class ControllerUtil {
 		return buildFileNameList(resourcesJs);
 	}
 	
-	private static List<String> getAllGoodies(ServletContext servletContext) throws IOException {
+	public static List<String> getAllGoodies(ServletContext servletContext) throws IOException {
 		File resourcesJs = new File( servletContext.getRealPath("/resources/js/goodies") );
 		return buildFileNameList(resourcesJs);
 	}

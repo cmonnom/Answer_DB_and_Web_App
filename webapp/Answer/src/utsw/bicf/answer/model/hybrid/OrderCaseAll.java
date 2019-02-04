@@ -54,7 +54,8 @@ public class OrderCaseAll {
 		}
 		if (currentUser.getIndividualPermission().getCanView()) {
 			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
-			if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)) {
+			if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)
+					|| CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
 				RequestUtils utils = new RequestUtils(modelDAO);
 				boolean isAssigned = false;
 				try {

@@ -793,14 +793,14 @@ const OpenCase = {
                                                                 </v-select>
                                                                 <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
                                                                 </v-tooltip>
-                                                                <v-text-field class="no-top-text-field" v-if="item.type == 'text-field' && item.field == 'dedupPctOver100X'" v-model="patientDetailsDedupPctOver100X"
+                                                                <v-text-field class="no-top-text-field align-input-right" v-if="item.type == 'text-field' && item.field == 'dedupPctOver100X'" v-model="patientDetailsDedupPctOver100X"
                                                                 label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true">
                                                                 </v-text-field>
-                                                                <v-text-field class="no-top-text-field" v-if="item.type == 'text-field' && item.field == 'dedupAvgDepth'" v-model="patientDetailsDedupAvgDepth"
+                                                                <v-text-field class="no-top-text-field align-input-right" v-if="item.type == 'text-field' && item.field == 'dedupAvgDepth'" v-model="patientDetailsDedupAvgDepth"
                                                                 label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true">
                                                                 </v-text-field>
                                                             </v-flex>
-                                                            <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'">
+                                                            <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'" class="align-flex-right">
                                                                 <v-tooltip bottom>
                                                                     <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator" class="mr-0 ml-0 mt-0 mb-0">
                                                                         <img :src="oncotreeIconUrl" width="24px"></img>

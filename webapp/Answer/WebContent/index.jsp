@@ -17,6 +17,11 @@ response.setDateHeader ("Expires", 0);
 <%@include file="/WEB-INF/view/templates/header.jsp" %>
 <script src="${pageContext.request.contextPath}/resources/js/components/login-full-page.js"></script>
 
+<!-- Just for the launch of the final version -->
+<script src="${pageContext.request.contextPath}/resources/js/goodies/sketch.min.js"></script>
+<script src="${pageContext.request.contextPath}/resources/js/components/goodies2.js"></script>
+<script src="${pageContext.request.contextPath}/resources/js/goodies/fireworks.js"></script>
+
 </head>
 <body>
 <div id="app">

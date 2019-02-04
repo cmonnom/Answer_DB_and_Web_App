@@ -50,7 +50,8 @@ public class PatientInfo {
 		items.add(new CellItem("Sex", orderCase.getGender()));
 		items.add(new CellItem("Order #", orderCase.getEpicOrderNumber())); 
 		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));
-		items.add(new CellItem("Tumor Mutation Burden (Mutations/MB)", orderCase.getTumorMutationBurden() + ""));
+		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
+		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
 		
 		patientTables.add(table);
 		
@@ -93,10 +94,10 @@ public class PatientInfo {
 		items.add(new CellItem("Tumor Tissue", orderCase.getTumorTissueType()));
 		items.add(new CellItem("Germline Tissue", orderCase.getNormalTissueType()));
 		items.add(new CellItem("ICD10", orderCase.getIcd10()));
-		CellItem dedupAvgDepthItem = new CellItem("Avg. Depth", orderCase.getDedupAvgDepth()  != null ? orderCase.getDedupAvgDepth() + "" : "");
-		dedupAvgDepthItem.setField("dedupAvgDepth");
-		dedupAvgDepthItem.setType(CellItem.TYPE_TEXT_FIELD);
-		items.add(dedupAvgDepthItem);
+		CellItem oncoTreeItem = new CellItem("OncoTree Diagnosis", orderCase.getOncotreeDiagnosis());
+		oncoTreeItem.setType(CellItem.TYPE_TEXT);
+		oncoTreeItem.setField("oncotree");
+		items.add(oncoTreeItem);
 //		CellItem clinicalStage = new CellItem("Clinical Stage", orderCase.getClinicalStage());
 //		items.add(clinicalStage);//TODO
 //		CellItem treatmentStatus = new CellItem("Treatment Status", orderCase.getTreatmentStatus());
@@ -106,19 +107,18 @@ public class PatientInfo {
 		table = new ListTable();
 		items = new ArrayList<CellItem>();
 		table.setItems(items);
-		CellItem oncoTreeItem = new CellItem("OncoTree Diagnosis", orderCase.getOncotreeDiagnosis());
-		oncoTreeItem.setType(CellItem.TYPE_TEXT);
-		oncoTreeItem.setField("oncotree");
-		items.add(oncoTreeItem);
 		items.add(new CellItem("Order Date", orderCase.getEpicOrderDate()));
 		items.add(new CellItem("Tumor Collection Date", orderCase.getTumorCollectionDate()));
 		items.add(new CellItem("Lab Received Date", orderCase.getReceivedDate()));
-		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
-		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
 		CellItem dedupPctOver100XItem = new CellItem("Pct. Over 100X", orderCase.getDedupPctOver100X()  != null ? orderCase.getDedupPctOver100X() + "" : "");
 		dedupPctOver100XItem.setField("dedupPctOver100X");
 		dedupPctOver100XItem.setType(CellItem.TYPE_TEXT_FIELD);
 		items.add(dedupPctOver100XItem);
+		CellItem dedupAvgDepthItem = new CellItem("Avg. Depth", orderCase.getDedupAvgDepth()  != null ? orderCase.getDedupAvgDepth() + "" : "");
+		dedupAvgDepthItem.setField("dedupAvgDepth");
+		dedupAvgDepthItem.setType(CellItem.TYPE_TEXT_FIELD);
+		items.add(dedupAvgDepthItem);
+		items.add(new CellItem("Tumor Mutation Burden (Mutations/MB)", orderCase.getTumorMutationBurden() + ""));
 		
 		patientTables.add(table);
 		

@@ -1,27 +1,30 @@
 package utsw.bicf.answer.controller;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 
+import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.controller.serialization.DataReportGroup;
+import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.TargetPage;
 import utsw.bicf.answer.controller.serialization.UserCredentials;
 import utsw.bicf.answer.dao.LoginDAO;
+import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.Version;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.LDAPAuthentication;
 import utsw.bicf.answer.security.OtherProperties;
@@ -40,6 +43,8 @@ public class LoginController {
 	FileProperties fileProps;
 	@Autowired
 	OtherProperties otherProps;
+	@Autowired
+	ModelDAO modelDAO;
 
 	@RequestMapping("/login")
 	public String login(Model model, HttpSession session) throws IOException {
@@ -75,6 +80,17 @@ public class LoginController {
 		return new TargetPage(false, "Wrong username or password", null, true).toJSONString(); //stay on the page
 	}
 	
+	@RequestMapping(value = "/updateVersion")
+	@ResponseBody
+	public String updateVersion(Model model, HttpSession session) throws IOException {
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		loginDAO.resetAllVersion();
+		loginDAO.updateToVersion1();
+		return response.createObjectJSON();
+	}
+	
 	@RequestMapping("/logout")
 	public String logout(Model model, HttpSession session) {
 		loginDAO.closeUserSession(session);
@@ -108,5 +124,15 @@ public class LoginController {
 		return new TargetPage(false, "not logged in", "home", true).toJSONString();
 	}
 
+	@RequestMapping("/getCurrentVersion")
+	@ResponseBody
+	public String getCurrentVersion(Model model, HttpSession session) throws ClientProtocolException, URISyntaxException, IOException {
+		Version currentVersion = modelDAO.getCurrentVersion();
+		AjaxResponse response = new AjaxResponse();
+		response.setPayload(currentVersion.getName());
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		return response.createObjectJSON();
+	}
 	
 }

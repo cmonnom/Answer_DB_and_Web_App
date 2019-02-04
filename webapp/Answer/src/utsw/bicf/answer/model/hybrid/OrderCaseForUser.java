@@ -32,7 +32,8 @@ public class OrderCaseForUser {
 		this.dateReceived = orderCase.getReceivedDate();
 		this.patientName = orderCase.getPatientName();
 		buttons.add(new Button("create", "open", "Work on Case", "info"));
-		if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)) {
+		if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)
+				|| CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
 			if (currentUser.getIndividualPermission().getCanReview()) {
 				buttons.add(new Button("assignment", "edit-report", "View/Edit Report", "info"));
 			}

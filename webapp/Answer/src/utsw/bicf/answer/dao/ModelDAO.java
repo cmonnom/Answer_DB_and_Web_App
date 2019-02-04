@@ -17,6 +17,7 @@ import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.UserRank;
 import utsw.bicf.answer.model.VariantFilterList;
+import utsw.bicf.answer.model.Version;
 
 @Repository
 public class ModelDAO {
@@ -161,6 +162,13 @@ public class ModelDAO {
 		String hql = "from ReportGroup where reportGroupId = :reportGroupId";
 		return session.createQuery(hql, ReportGroup.class).setParameter("reportGroupId", reportGroupId).uniqueResult();
 	}
+	
+	@Transactional
+	public Version getCurrentVersion() {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from Version where isCurrent = true";
+		return session.createQuery(hql, Version.class).uniqueResult();
+	}
 
 //	/**
 //	 * Permissions should be from finalized to edit to view
@@ -289,5 +297,7 @@ public class ModelDAO {
 				.setParameter("userId", user.getUserId())
 				.list();
 	}
+	
+	
 	
 }

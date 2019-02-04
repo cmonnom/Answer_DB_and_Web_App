@@ -6,7 +6,8 @@ Vue.component('main-menu', {
 	},
 	template: `<v-navigation-drawer app permanent :width="width" :mini-variant.sync="isMinied">
 	<v-toolbar flat :extended="isMinied ? false : true" style="height:128px">
-		<img :src="baseUrl + '/resources/images/answer-logo-medium-beta.png'" alt="Answer" width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
+		<img v-if="isBetaVersion()" :src="baseUrl + '/resources/images/answer-logo-medium-beta.png'" alt="Answer" width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
+		<img v-if="isVersionOne()" :src="baseUrl + '/resources/images/answer-logo-medium.png'" alt="Answer" width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
 	</v-toolbar>
 	<v-divider></v-divider>
 	<v-list dense class="pt-0">
@@ -16,7 +17,7 @@ Vue.component('main-menu', {
 			</v-list-tile-action>
 
 			<v-list-tile-action v-if="menuItem.iconBefore && menuItem.isButton">
-					<v-icon :class="getIconBeforeClass(menuItem)" @click.prevent="menuItem.action">{{ menuItem.iconBefore }}</v-icon>
+					<v-icon :class="getIconBeforeClass(menuItem)" @click.stop="menuItem.action">{{ menuItem.iconBefore }}</v-icon>
 			</v-list-tile-action>
 
 			<!-- Main menu item -->
@@ -26,7 +27,7 @@ Vue.component('main-menu', {
 				</v-list-tile-title>
 			</v-list-tile-content>
 
-			<v-list-tile-content v-if="menuItem.isButton" @click.prevent="menuItem.action">
+			<v-list-tile-content v-if="menuItem.isButton" @click.stop="menuItem.action">
 			<v-list-tile-title class="subheading">
 				{{ menuItem.title }}
 			</v-list-tile-title>
@@ -102,6 +103,7 @@ Vue.component('main-menu', {
 			statusMessage: "",
 			userLeaderBoardInfo: {},
 			userRankVisible: false,
+			versionName: "1.0"
 		}
 
 	},
@@ -176,12 +178,13 @@ Vue.component('main-menu', {
 			return isVisible;
 		},
 		emitMenuChanged() {
-			if (this.isMinied) {
-				bus.$emit('menu-shrinked', [this, null]);
-			}
-			else {
-				bus.$emit('menu-expanded', [this, null]);
-			}
+			console.log("changed", this.isMinied);
+//			if (this.isMinied) {
+//				bus.$emit('menu-shrinked', [this, null]);
+//			}
+//			else {
+//				bus.$emit('menu-expanded', [this, null]);
+//			}
 		},
 		getIconBeforeClass(menuItem) {
 			var classArray = [];
@@ -199,7 +202,8 @@ Vue.component('main-menu', {
 			window.open(webAppRoot + "/help/index.html", "_blank");
 		},
 		toggleMinied() {
-			this.isMinied = !this.isMinied;
+			// this.isMinied = !this.isMinied;
+			this.$nextTick(() => this.isMinied = true);
 		},
 		// getUserLeaderBoardInfo() {
         //     axios.get(
@@ -223,6 +227,28 @@ Vue.component('main-menu', {
             console.log(error);
             bus.$emit("some-error", [this, error]);
 		},
+		isBetaVersion() {
+            return this.versionName == "beta";
+        },
+        isVersionOne() {
+            return this.versionName == "1.0";
+		},
+		getVersion() {
+			axios.get(webAppRoot + "/getCurrentVersion", {
+				params: {}
+			})
+				.then(response => {
+					if (response.data.isAllowed) {
+						this.versionName = response.data.payload;
+					}
+					else {
+						this.handleDialogs(response);
+					}
+				})
+				.catch(error => {
+					alert(error);
+				});
+		}
 	},
 	mounted() {
 		// this.getUserLeaderBoardInfo();
@@ -230,12 +256,12 @@ Vue.component('main-menu', {
 	created: function () {
 		this.populateCases();
 		this.populateCasesWithReport();
-		bus.$on('shrink-menu', () => {
-			this.isMinied = true;
-		});
-		bus.$on('expand-menu', () => {
-			this.isMinied = false;
-		});
+//		bus.$on('shrink-menu', () => {
+//			this.isMinied = true;
+//		});
+//		bus.$on('expand-menu', () => {
+//			this.isMinied = false;
+//		});
 		bus.$on('clear-item-selected', args => {
 			this.caseItemSelected = "";
 		});
@@ -258,17 +284,18 @@ Vue.component('main-menu', {
 			this.statusVisible = false;
 			this.statusMessage = "";
 		});
+		this.getVersion();
 	},
 	destroyed: function () {
-		bus.$off('shrink-menu');
-		bus.$off('expand-menu');
+//		bus.$off('shrink-menu');
+//		bus.$off('expand-menu');
 		bus.$off('clear-item-selected');
 		bus.$off('need-layout-resize');
 		bus.$off('update-status');
 		bus.$off('update-status-off');
 	},
 	watch: {
-		isMinied: 'emitMenuChanged'
+		// isMinied: 'emitMenuChanged'
 	}
 
 

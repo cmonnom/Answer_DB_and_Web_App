@@ -206,9 +206,19 @@ public class OpenReportController {
 			if (existingReports != null && reportId == null) {
 				List<String> reportNames = existingReports.stream().map(r -> r.getReportName()).collect(Collectors.toList());
 				if (reportNames.contains(reportSummary.getReportName())) {
-					response.setSuccess(false);
-					response.setMessage("You cannot name a new report after an existing one.");
-					return response.createObjectJSON();
+					String[] newReportNameParts = reportSummary.getReportName().split("-");
+					StringBuilder newReportName = new StringBuilder();
+					newReportName.append(newReportNameParts[0]);
+					if (newReportNameParts.length > 1) {
+						newReportName.append("-");
+						newReportName.append(newReportNameParts[1]);
+					}
+					//append counter
+					newReportName.append("-").append(existingReports.size() + 1);
+					reportSummary.setReportName(newReportName.toString());
+//					response.setSuccess(false);
+//					response.setMessage("You cannot name a new report after an existing one.");
+//					return response.createObjectJSON();
 				}
 			}
 			Report reportToSave = null;

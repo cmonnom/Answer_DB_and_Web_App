@@ -243,11 +243,7 @@ public class FinalReportPDFTemplate {
 				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth(), mainDocument, firstPage, cellBorder,
 				true);
 		List<CellItem> middleTableItems = patientDetails.getPatientTables().get(1).getItems();
-		String dateModified = report.getDateModified();
-		if (dateModified == null || dateModified.equals("")) {
-			dateModified = LocalDate.now().format(TypeUtils.monthFormatter);
-		}
-		middleTableItems.add(new CellItem("Report Date", dateModified));
+		
 		for (CellItem item : middleTableItems) {
 			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
 				item.setValue(item.getValue() + "%");
@@ -262,6 +258,16 @@ public class FinalReportPDFTemplate {
 				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth() + middleTable.getWidth(),
 				mainDocument, firstPage, cellBorder, true);
 		List<CellItem> rightTableItems = patientDetails.getPatientTables().get(2).getItems();
+		//add report date
+		String dateModified = report.getDateModified();
+		if (dateModified == null || dateModified.equals("")) {
+			dateModified = LocalDate.now().format(TypeUtils.monthFormatter);
+		}
+		if (report.getFinalized() != null && report.getFinalized() && report.getDateFinalized() != null ) {
+			dateModified = report.getDateFinalized().split("T")[0];
+		}
+		rightTableItems.add(3, new CellItem("Report Date", dateModified));
+		//add signed by
 		String signedByName = "Dr. " + signedBy.getFullName();
 		if (report.getFinalized() == null || !report.getFinalized()) {
 			signedByName = "NOT SIGNED";

@@ -27,6 +27,7 @@ const OpenReport = {
         </v-card>
     </v-dialog>
 
+    <!--
     <v-dialog v-model="confirmationSaveDialogVisible" max-width="500px" >
         <v-toolbar dense dark :color="colors.openReport">
             <v-toolbar-title>
@@ -49,6 +50,7 @@ const OpenReport = {
             </v-card-actions>
         </v-card>
     </v-dialog>
+    -->
 
     <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
@@ -104,7 +106,7 @@ const OpenReport = {
                                                 <v-icon>edit</v-icon>
                                             </v-list-tile-avatar>
                                             <v-list-tile-content>
-                                                <v-list-tile-title>Report Notes</v-list-tile-title>
+                                                <v-list-tile-title>Case Summary</v-list-tile-title>
                                             </v-list-tile-content>
                                         </v-list-tile>
 
@@ -203,7 +205,7 @@ const OpenReport = {
                     </v-list-tile-content>
                     </v-list-tile>
 
-                    <v-list-tile avatar @click="openSaveConfirmation()"  :disabled="isSaveDisabled()">
+                    <v-list-tile avatar @click="saveReport()"  :disabled="isSaveDisabled()">
                     <v-list-tile-avatar>
                         <v-icon>save</v-icon>
                     </v-list-tile-avatar>
@@ -250,7 +252,7 @@ const OpenReport = {
         <v-badge color="red" right bottom overlap v-model="reportUnsaved" class="mini-badge">
         <v-icon slot="badge"></v-icon>
         <v-tooltip bottom>
-        <v-btn flat icon @click="openSaveConfirmation" slot="activator" :disabled="isSaveDisabled()">
+        <v-btn flat icon @click="saveReport()" slot="activator" :disabled="isSaveDisabled()">
             <v-icon>save</v-icon>
         </v-btn>
         <span v-if="!isSaveDisabled()">Save Report</span>
@@ -293,7 +295,7 @@ const OpenReport = {
         </v-layout>
     </v-slide-y-transition>
 
-    <!-- Report Notes -->
+    <!-- Case Summary -->
     <v-slide-y-transition>
         <v-layout v-if="reportNotesVisible">
             <v-flex xs12 xl9 class="pb-3">
@@ -318,25 +320,25 @@ const OpenReport = {
                                     <v-icon>cancel</v-icon>
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
-                                    <v-list-tile-title>Close Report Notes</v-list-tile-title>
+                                    <v-list-tile-title>Close Case Summary</v-list-tile-title>
                                 </v-list-tile-content>
                             </v-list-tile>
                         </v-list>
                     </v-menu>
                         
-                        <v-toolbar-title  class="ml-0">Report Notes</v-toolbar-title>
+                        <v-toolbar-title  class="ml-0">Case Summary</v-toolbar-title>
                         <v-spacer></v-spacer>
                         <v-tooltip bottom>
                             <v-btn flat icon @click="resetReportNotes()" slot="activator" :disabled="readOnlyReportNotes()">
                                 <v-icon>settings_backup_restore</v-icon>
                             </v-btn>
-                            <span>Restore Last Saved Report Notes</span>
+                            <span>Restore Last Saved Case Summary</span>
                         </v-tooltip>
                         <v-tooltip bottom>
                             <v-btn flat icon @click="reportNotesVisible = false" slot="activator">
                                 <v-icon>close</v-icon>
                             </v-btn>
-                            <span>Close Report Notes</span>
+                            <span>Close Case Summary</span>
                         </v-tooltip>
                     </v-toolbar>
                     <v-card-text>
@@ -879,16 +881,16 @@ const OpenReport = {
                         this.updateRoute();
                         this.$refs.existingReports.getExistingReports();
                         this.getReportDetails(response.data.message);
-                        this.confirmationSaveDialogVisible = false;
+                        // this.confirmationSaveDialogVisible = false;
                     } else {
                         this.handleDialogs(response.data, this.saveReport);
-                        this.confirmationSaveDialogVisible = false;
+                        // this.confirmationSaveDialogVisible = false;
                     }
                     this.savingReport = false;
                 })
                 .catch(error => {
                     this.savingReport = false;
-                    this.confirmationSaveDialogVisible = false;
+                    // this.confirmationSaveDialogVisible = false;
                     this.handleAxiosError(error);
                 });
         },
@@ -905,12 +907,12 @@ const OpenReport = {
             }
             return "Save New";
         },
-        openSaveConfirmation() {
-            this.confirmationSaveDialogVisible = true;
-        },
-        cancelSaveConfirmation() {
-            this.confirmationSaveDialogVisible = false;
-        },
+        // openSaveConfirmation() {
+        //     this.confirmationSaveDialogVisible = true;
+        // },
+        // cancelSaveConfirmation() {
+        //     this.confirmationSaveDialogVisible = false;
+        // },
         previewReport() {
             if (this.isPreviewDisabled()) {
                 return;

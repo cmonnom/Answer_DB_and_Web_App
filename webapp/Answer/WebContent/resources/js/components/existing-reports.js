@@ -400,13 +400,13 @@ Vue.component('existing-reports', {
             this.finalizeConfirmationVisible = true;
         },
         finalizeReportExists() {
-            // for (var i = 0; i < this.existingReports.length; i++) {
-            //     var r = this.existingReports[i];
-            //     if (r.finalized && !r.amended) {
-            //         return true;
-            //     }
-            // }
-            return false;
+            for (var i = 0; i < this.existingReports.length; i++) {
+                var r = this.existingReports[i];
+                if (r.finalized && !r.amended) {
+                    return true;
+                }
+            }
+            // return false;
         },
         finalizeButtonDisabled(report) {
             return !this.canFinalize 

@@ -50,4 +50,22 @@ public class LoginDAO {
 		}
 		return user;
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Transactional
+	public void resetAllVersion() {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "update Version set isCurrent = false";
+		Query<User> query = session.createQuery(hql.toString());
+		query.executeUpdate();
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Transactional
+	public void updateToVersion1() {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "update Version set isCurrent = true where versionId = 2";
+		Query<User> query = session.createQuery(hql.toString());
+		query.executeUpdate();
+	}
 }
