@@ -345,7 +345,7 @@ Vue.component('data-table', {
     </template>
 
     <template slot="items" slot-scope="props">
-      <tr :active="props.selected">
+      <tr :active="props.selected" :class="props.item.active === false ? 'blue-grey lighten-5 blue-grey--text' : ''">
         <td v-if="enableSelection" style="width:50px" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
           <v-checkbox :color="color" hide-details :input-value="props.selected" @click="handleSelectionChange(props)" v-model="props.item.isSelected"
             :ripple="false" :disabled="props.item.readonly"></v-checkbox>
@@ -368,11 +368,11 @@ Vue.component('data-table', {
 
           <span v-if="props.item[header.value] && props.item[header.value].iconFlags">
             <v-tooltip bottom v-for="(icon, index) in props.item[header.value].iconFlags" :key="index" v-if="header.isFlag">
-                <v-chip v-if="icon.chip" slot="activator" :color="icon.color"
+                <v-chip v-if="icon.chip" slot="activator" :color="props.item.active === false ? 'blue-grey lighten-2' : icon.color">
                 text-color="white" label small disabled>
                 {{ icon.iconName }}
                 </v-chip>
-                <v-icon v-if="!icon.chip" slot="activator" :color="icon.color">
+                <v-icon v-if="!icon.chip" slot="activator" :color="props.item.active === false ? 'blue-grey lighten-2' : icon.color">
                 {{ icon.iconName }}
               </v-icon>
               <span> {{ icon.tooltip }}</span>
@@ -393,7 +393,8 @@ Vue.component('data-table', {
           </v-tooltip>
 
           <v-tooltip bottom v-if="header.buttons" v-for="(button, index) in props.item.buttons" :key="index">
-            <v-btn class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item)" slot="activator" :color="button.color">
+            <v-btn class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item)" slot="activator"
+             :color="props.item.active === false ? 'blue-grey lighten-2' : button.color">
               <v-icon>{{ button.icon }}</v-icon>
             </v-btn>
             <span v-html="button.tooltip"></span>

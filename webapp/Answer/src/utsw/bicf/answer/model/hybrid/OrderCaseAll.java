@@ -28,6 +28,7 @@ public class OrderCaseAll {
 	String patientName;
 	FlagValue typeFlags;
 	String caseType;
+	boolean active;
 	
 	List<Button> buttons = new ArrayList<Button>();
 	FlagValue progressFlags;
@@ -40,6 +41,7 @@ public class OrderCaseAll {
 		this.dateReceived = orderCase.getReceivedDate();
 		this.assignedToIds = orderCase.getAssignedTo();
 		this.patientName = orderCase.getPatientName();
+		this.active = orderCase.getActive();
 		List<String> userNames = new ArrayList<String>();
 		for (String userId : orderCase.getAssignedTo()) {
 			for (User user : users) {
@@ -151,6 +153,10 @@ public class OrderCaseAll {
 
 	public String getCaseType() {
 		return caseType;
+	}
+
+	public boolean isActive() {
+		return active;
 	}
 
 

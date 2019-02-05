@@ -35,6 +35,32 @@ const Home = {
     </v-card>
   </v-dialog>
 
+  
+  <v-dialog v-model="signoutDialogVisible" max-width="500px" scrollable>
+    <v-card>
+      <v-toolbar dense dark color="primary">
+        <v-toolbar-title class="white--text">Archive case {{ currentEpicOrderNumber }} ?</v-toolbar-title>
+      </v-toolbar>
+      <v-card-text class="pb-3 pt-3 pr-3 pl-3">
+        You are about to archive this case. Which means all work on this case is done.<br/>
+        It will be removed from <b>My Cases</b> for all users assigned to the case.<br/>
+        It will still be accessible in <b>All Cases</b> but greyed out.
+      </v-card-text>
+      <v-card-actions>
+      <v-tooltip bottom>
+        <v-btn color="success" @click="toggleArchivingStatusForCase(currentCaseId, true)" slot="activator">Archive
+          <v-icon right dark>mdi-logout</v-icon>
+        </v-btn>
+        <span>Archive the case and remove it from <b>My Cases</b></span>
+        </v-tooltip>
+        <v-btn color="error" @click="signoutDialogVisible = false">Cancel
+          <v-icon right dark>cancel</v-icon>
+        </v-btn>
+        
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <v-toolbar dense dark color="primary" fixed app>
     <v-tooltip class="ml-0" bottom>
       <v-menu offset-y offset-x slot="activator" class="ml-0">
@@ -114,7 +140,8 @@ const Home = {
             tableFlex: 'xs4',
             creatingReport: false,
             snackBarVisible: false,
-            snackBarMessage: ""
+            snackBarMessage: "",
+            signoutDialogVisible: false
         }
     },
     methods: {
@@ -190,6 +217,26 @@ const Home = {
                     }
                     else {
                         this.handleDialogs(response.data, this.assignToUser.bind(null, this.currentCaseId));
+                    }
+                })
+                .catch(error => {
+                    alert(error);
+                });
+        },
+        toggleArchivingStatusForCase(caseId, doArchive) {
+            this.signoutDialogVisible = false;
+            axios.get("./toggleArchivingStatusForCase", {
+                params: {
+                    caseId: caseId,
+                    doArchive: doArchive
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        this.getWorklists();
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.toggleArchivingStatusForCase.bind(null, caseId));
                     }
                 })
                 .catch(error => {
@@ -286,6 +333,7 @@ const Home = {
         bus.$off('open-read-only');
         bus.$off('edit-report');
         bus.$off('open-report-read-only');
+        bus.$off('deactivate-case');
         bus.$off('downloadPDFReport');
        
     },
@@ -322,6 +370,10 @@ const Home = {
         });
         bus.$on('open-report-read-only', (item) => {
             router.push("./openReportReadOnly/" + item.caseId);
+        });
+        bus.$on('deactivate-case', (item) => {
+            this.currentCaseId = item.caseId;
+            this.signoutDialogVisible = true;
         });
         //TODO
         bus.$on('downloadPDFReport', (item) => {

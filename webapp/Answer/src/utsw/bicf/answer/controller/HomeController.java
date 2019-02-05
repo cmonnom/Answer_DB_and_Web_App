@@ -57,6 +57,7 @@ public class HomeController {
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".assignToUser", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getAllUsersToAssign", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".createPDFReport", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".toggleArchivingStatusForCase", IndividualPermission.CAN_REVIEW);
 	}
 
 	@Autowired
@@ -98,7 +99,8 @@ public class HomeController {
 			//filter by assigned/user/available
 			List<OrderCaseForUser> casesForUser = 
 					caseList.stream()
-					.filter(c -> c.getAssignedTo() != null && c.getAssignedTo().contains(user.getUserId().toString()))
+					.filter(c -> c.getAssignedTo() != null && c.getAssignedTo().contains(user.getUserId().toString())
+							&& c.getActive() != null && c.getActive())
 					.map(c -> new OrderCaseForUser(c, user))
 					.collect(Collectors.toList());
 			
@@ -108,7 +110,8 @@ public class HomeController {
 					.collect(Collectors.toList());
 			List<OrderCaseFinalized> casesFinalized = 
 					caseList.stream()
-					.filter(c -> CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED))
+					.filter(c -> CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
+							&& c.getActive() != null && c.getActive())
 					.map(c -> new OrderCaseFinalized(modelDAO, c, users, user))
 					.collect(Collectors.toList());
 			List<HeaderOrder> headerOrdersAll = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "All Cases");
@@ -198,6 +201,42 @@ public class HomeController {
 		
 		return response.createObjectJSON();
 		
+	}
+	
+	@RequestMapping(value = "/toggleArchivingStatusForCase")
+	@ResponseBody
+	public String toggleArchivingStatusForCase(Model model, HttpSession session, 
+			@RequestParam String caseId, @RequestParam Boolean doArchive) throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = (User) session.getAttribute("user");
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(isAssigned);
+		if (isAssigned) {
+			OrderCase caseSummary = utils.getCaseSummary(caseId);
+			if (caseSummary != null) {
+				caseSummary.setActive(!doArchive);
+				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);
+				if (savedCaseSummary != null) {
+					response.setSuccess(true);
+				}
+				else { //something was wrong
+					response.setMessage("Error: Verify that the data is valid");
+					response.setSuccess(false);
+				}
+			}
+			else {
+				response.setSuccess(false);
+				response.setMessage("The case id " + caseId + " does not exist.");
+			}
+		}
+		else {
+			response.setMessage("You are not allowed to edit this case");
+		}
+		return response.createObjectJSON();
+
 	}
 	
 	private void sendEmail(String caseId, String subject, User user, User currentUser, String servlet, String reason) throws IOException, InterruptedException {

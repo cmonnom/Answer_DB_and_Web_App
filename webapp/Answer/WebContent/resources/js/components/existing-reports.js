@@ -20,7 +20,7 @@ Vue.component('existing-reports', {
             Only amendments and addenda will be allowed after this step.<br/>
             <br/>
             Please type <b><span v-text="getCurrentUserFullName()"></span></b> to confirm:
-            <v-text-field
+            <v-text-field browser-autocomplete="new-password" autocomplete="new-password"
                 v-model="fullNameField" class="mr-2 no-height" label="Full Name">
             </v-text-field>
         </v-card-text>

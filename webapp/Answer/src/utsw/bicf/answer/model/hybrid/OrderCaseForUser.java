@@ -20,6 +20,7 @@ public class OrderCaseForUser {
 	String patientName;
 	FlagValue typeFlags;
 	String caseType;
+	boolean active;
 	
 	List<Button> buttons = new ArrayList<Button>();
 	FlagValue progressFlags;
@@ -31,6 +32,7 @@ public class OrderCaseForUser {
 		this.caseId = orderCase.getCaseId();
 		this.dateReceived = orderCase.getReceivedDate();
 		this.patientName = orderCase.getPatientName();
+		this.active = orderCase.getActive();
 		buttons.add(new Button("create", "open", "Work on Case", "info"));
 		if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)
 				|| CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
@@ -40,6 +42,10 @@ public class OrderCaseForUser {
 			else {
 				buttons.add(new Button("assignment", "open-report-read-only", "Open Report in View Only Mode", "info"));
 			}
+		}
+		if (orderCase.getActive() != null && orderCase.getActive()
+				&& CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
+			buttons.add(new Button("mdi-logout", "deactivate-case", "Archive the case / Final Sign Out", "info"));
 		}
 		
 		List<VuetifyIcon> typeIcons = new ArrayList<VuetifyIcon>();
@@ -119,6 +125,10 @@ public class OrderCaseForUser {
 
 	public String getCaseType() {
 		return caseType;
+	}
+
+	public boolean isActive() {
+		return active;
 	}
 
 
