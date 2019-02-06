@@ -73,7 +73,7 @@ const OpenCase = {
 
     <!-- annotation dialog -->
     <edit-annotations type="snp" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        :color="colors.editAnnotation" ref="annotationDialog" :title="currentVariant.geneName + ' ' + currentVariant.notation + ' -- ' + caseName + ' --'"
+        :color="colors.editAnnotation" ref="annotationDialog" :title="createVariantName() + ' -- ' + caseName + ' --'"
         :caseIcon="caseTypeIcon" :caseType="caseType"
         :breadcrumbs="breadcrumbs" :annotation-categories="annotationCategories" :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
         :annotation-phases="annotationPhases"

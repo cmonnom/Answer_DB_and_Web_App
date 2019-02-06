@@ -116,7 +116,7 @@ Vue.component('edit-annotations', {
                     <span>Close and Discard Changes</span>
                 </v-tooltip>
             </v-toolbar>
-            <v-card-text :style="getDialogMaxHeight(130)" :class="['pl-3', 'pr-3', backColor]">
+            <v-card-text :style="getDialogMaxHeight(130)" :class="['pl-3', 'pr-3', backColor, 'smooth-scroll']" ref="scrollableEditContent">
                 <v-breadcrumbs class="pt-2">
                 <v-icon slot="divider">forward</v-icon>
                     <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"  @click.native="breadcrumbNavigation(index)">
@@ -621,6 +621,7 @@ Vue.component('edit-annotations', {
                 warningLevel: 0,
                 drugResistant: false
             });
+          this.scrollToBottom();
         },
         addCustomTrial() {
             if (this.single) {
@@ -636,10 +637,19 @@ Vue.component('edit-annotations', {
                     drugs: "",
                     contact: "",
                     location: ""
-                }
-                annotation.category = "Clinical Trial";
-                annotation.isGeneSpecific = this.isSNP(); //not gene specific for 
-
+            }
+            annotation.category = "Clinical Trial";
+            annotation.isGeneSpecific = this.isSNP(); //not gene specific for 
+            this.scrollToBottom();    
+        },
+        scrollToBottom() {
+            //scroll to show new annotation
+            setTimeout(() => {
+                this.$nextTick( () => {
+                    var height = this.$refs.scrollableEditContent.scrollHeight;
+                     this.$refs.scrollableEditContent.scrollTo(0,height);
+                });
+            }, 500);
         },
         saveAnnotations() {
              // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.

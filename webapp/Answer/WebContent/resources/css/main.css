@@ -411,3 +411,7 @@ table.table tbody td {
 .align-input-right input {
     text-align: right;
 }
+
+.smooth-scroll {
+    scroll-behavior: smooth;
+}
