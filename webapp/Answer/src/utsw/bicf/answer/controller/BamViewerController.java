@@ -49,7 +49,7 @@ public class BamViewerController {
 		model.addAttribute("locus", locus);
 		model.addAttribute("caseId", caseId);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
 		if (user == null) {

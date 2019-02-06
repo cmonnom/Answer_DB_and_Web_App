@@ -75,7 +75,7 @@ public class HomeController {
 	public String home(Model model, HttpSession session) throws IOException {
 		model.addAttribute("urlRedirect", "home");
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
 	
@@ -84,7 +84,7 @@ public class HomeController {
 	public String getWorklists(Model model, HttpSession session)
 			throws Exception {
 
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		
 		//send user to Ben's API to retrieve all active cases
 		RequestUtils utils = new RequestUtils(modelDAO);
@@ -172,7 +172,7 @@ public class HomeController {
 			}
 		}
 		AjaxResponse response = utils.assignCaseToUser(realUsers, caseId);
-		User currentUser = (User) session.getAttribute("user");
+		User currentUser = ControllerUtil.getSessionUser(session);
 		if (response.getSuccess()) {
 			for (User user : realUsers) {
 				if (alreadyAssignedTo.contains(user.getUserId() + "")
@@ -210,7 +210,7 @@ public class HomeController {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(isAssigned);

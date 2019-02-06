@@ -368,7 +368,7 @@ Vue.component('data-table', {
 
           <span v-if="props.item[header.value] && props.item[header.value].iconFlags">
             <v-tooltip bottom v-for="(icon, index) in props.item[header.value].iconFlags" :key="index" v-if="header.isFlag">
-                <v-chip v-if="icon.chip" slot="activator" :color="props.item.active === false ? 'blue-grey lighten-2' : icon.color">
+                <v-chip v-if="icon.chip" slot="activator" :color="props.item.active === false ? 'blue-grey lighten-2' : icon.color"
                 text-color="white" label small disabled>
                 {{ icon.iconName }}
                 </v-chip>

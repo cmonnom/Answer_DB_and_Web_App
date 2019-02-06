@@ -63,7 +63,7 @@ public class UserPreferenceController {
 	@RequestMapping("/userPrefs")
 	public String userPrefs(Model model, HttpSession session) throws IOException, UnsupportedOperationException, URISyntaxException {
 		String url = "userPrefs";
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		model.addAttribute("urlRedirect", url);
 		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
@@ -75,7 +75,7 @@ public class UserPreferenceController {
 	@ResponseBody
 	public String getUserPrefs(Model model, HttpSession session) throws Exception {
 		// send user to Ben's API
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		UserPref userPref = user.getUserPref();
 		if (userPref == null) {
 			userPref = new UserPref();
@@ -108,7 +108,7 @@ public class UserPreferenceController {
 	public String saveUserPrefs(Model model, HttpSession session,
 			@RequestBody String data) throws Exception {
 		// send user to Ben's API
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		UserPref userPref = user.getUserPref();
 		if (userPref == null) {
 			userPref = new UserPref();
@@ -135,7 +135,7 @@ public class UserPreferenceController {
 	@ResponseBody
 	public String getHeaderPrefs(Model model, HttpSession session)
 			throws Exception {
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		List<HeaderConfig> headerConfigs = modelDAO.getAllHeaderConfigForUser(user);
 		ObjectMapper mapper = new ObjectMapper();
 		List<HeaderConfigSummary> summaries = new ArrayList<HeaderConfigSummary>();

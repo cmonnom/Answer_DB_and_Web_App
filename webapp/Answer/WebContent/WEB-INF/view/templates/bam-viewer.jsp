@@ -22,7 +22,8 @@ response.setDateHeader ("Expires", 0);
 						<!-- <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> -->
 						<!-- <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script> -->
 						<!-- <script type="text/javascript" src="https://igv.org/web/release/1.0.9/igv-1.0.9.js"></script> -->
-						<script type="text/javascript" src="https://igv.org/web/release/2.0.0-beta3/dist/igv.min.js"></script>
+						<!-- <script type="text/javascript" src="https://igv.org/web/release/2.0.0-beta3/dist/igv.min.js"></script> -->
+						<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/igv@2.2.2/dist/igv.min.js"></script>
 					</head>
 
 					<body>

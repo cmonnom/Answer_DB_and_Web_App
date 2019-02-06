@@ -2722,8 +2722,8 @@ const OpenCase = {
         updateSelectedVariantTable() {
             var selectedIds = this.getSelectedVariantIds();
             var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => selectedIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
-            var selectedCNVs = this.cnvUnfilteredItems.filter(item => selectedIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
-            var selectedTranslocations = this.ftlUnfilteredItems.filter(item => selectedIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
+            var selectedCNVs = this.cnvUnfilteredItems.filter(item => selectedIds.selectedCNVIds.indexOf(item.oid) > -1);
+            var selectedTranslocations = this.ftlUnfilteredItems.filter(item => selectedIds.selectedTranslocationIds.indexOf(item.oid) > -1);
             this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
 
             var snpHeaders = this.$refs.geneVariantDetails.headers;
@@ -3242,16 +3242,16 @@ const OpenCase = {
             this.waitingForAjaxMessage = "There were some errors while saving";
         },
         revertAnnotationSelection() {
-            if (this.isSNP()) {
-                this.getVariantDetails(this.currentRow, true);
-            }
-            else if (this.isCNV()) {
-                this.getCNVDetails(this.currentRow, true);
-            }
-            else if (this.isTranslocation()) {
-                this.getTranslocationDetails(this.currentRow, true);
-            }
-            this.annotationIdsForReporting = []; //rest the unsaved list of ids
+            // if (this.isSNP()) {
+            //     this.getVariantDetails(this.currentRow, true);
+            // }
+            // else if (this.isCNV()) {
+            //     this.getCNVDetails(this.currentRow, true);
+            // }
+            // else if (this.isTranslocation()) {
+            //     this.getTranslocationDetails(this.currentRow, true);
+            // }
+            this.annotationIdsForReporting = []; //reset the unsaved list of ids
             this.annotationSelectionUnSaved = false; //update badge on save button
         },
         handleAnnotationSelectionChanged() {

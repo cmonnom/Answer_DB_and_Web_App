@@ -172,7 +172,7 @@ public class OpenCaseController {
 		String url = "openCase/" + caseId + "?showReview=" + showReview
 				+ "%26variantId=" + variantId + "%26variantType=" + variantType
 				+ "%26edit=" + edit;
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		RequestUtils utils = new RequestUtils(modelDAO);
@@ -192,7 +192,7 @@ public class OpenCaseController {
 		String url = "openCaseReadOnly/" + caseId + "?showReview=" + showReview
 				+ "%26variantId=" + variantId + "%26variantType=" + variantType
 				+ "%26edit=" + edit;
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return ControllerUtil.initializeModel(model, servletContext, user);
@@ -205,7 +205,7 @@ public class OpenCaseController {
 	public String getCaseDetails(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String filters) throws Exception {
 
-		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase[] cases = utils.getActiveCases();
@@ -242,7 +242,7 @@ public class OpenCaseController {
 	@ResponseBody
 	public String loadCaseAnnotations(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 
-//		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+//		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		CaseAnnotation annotation = utils.getCaseAnnotation(caseId);
@@ -270,7 +270,7 @@ public class OpenCaseController {
 	public String saveCaseAnnotations(Model model, HttpSession session, @RequestBody String caseAnnotation,
 			@RequestParam String caseId, @RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
-		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(false);
 		response.setSuccess(false);
@@ -506,7 +506,7 @@ public class OpenCaseController {
 			}
 		};
 		if (variantDetails != null) {
-			User user = (User) session.getAttribute("user");
+			User user = ControllerUtil.getSessionUser(session);
 			
 			// populate user info to be used by the UI
 			if (variantDetails.getReferenceVariant() != null
@@ -625,7 +625,7 @@ public class OpenCaseController {
 		response.setUiProceed(closeAfter);
 		
 		if (!caseId.equals("")) { //for annotations within a case
-			User user = (User) session.getAttribute("user");
+			User user = ControllerUtil.getSessionUser(session);
 			if (!ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
 				// user is not assigned to this case
 				response.setIsAllowed(false);
@@ -651,7 +651,7 @@ public class OpenCaseController {
 	@ResponseBody
 	public String commitAnnotations(Model model, HttpSession session, @RequestBody String annotations,
 			@RequestParam String caseId, @RequestParam String geneId, @RequestParam String variantId) throws Exception {
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		if (!caseId.equals("")) { //for annotations within a case
@@ -739,7 +739,7 @@ public class OpenCaseController {
 	public String saveCurrentFilters(Model model, HttpSession session, @RequestBody String filters,
 			@RequestParam Integer filterListId, @RequestParam String filterListName) throws Exception {
 		AjaxResponse response = new AjaxResponse();
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		VariantFilterList filterList = null;
 		if (filterListId == -1) {
 			// create a new one
@@ -788,7 +788,7 @@ public class OpenCaseController {
 	@RequestMapping(value = "/loadUserFilterSets")
 	@ResponseBody
 	public String loadUserFilterSets(Model model, HttpSession session) throws Exception {
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		List<VariantFilterList> filters = modelDAO.getVariantFilterListsForUser(user);
 		VariantFilterListItems items = new VariantFilterListItems(filters);
 
@@ -808,7 +808,7 @@ public class OpenCaseController {
 			response.setMessage("Invalid filter set id");
 			return response.createObjectJSON();
 		}
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		VariantFilterList filterList = modelDAO.getSessionFactory().getCurrentSession().get(VariantFilterList.class,
 				filterSetId);
 		if (filterList.getUser().getUserId() != user.getUserId()) {
@@ -885,7 +885,7 @@ public class OpenCaseController {
 		List<String> selectedCNVIds = dataPOJO.getSelectedCNVIds();
 		List<String> selectedTranslocationIds = dataPOJO.getSelectedTranslocationIds();
 
-		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		if (detailedCase != null) {
 			if (!detailedCase.getAssignedTo().contains(user.getUserId().toString())) {
 				response.setMessage("User " + user.getFullName() + " cannot edit this case.");
@@ -910,7 +910,7 @@ public class OpenCaseController {
 			@RequestParam String caseId, @RequestParam String variantType,
 			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
-		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(false);
 		response.setSuccess(false);
@@ -956,7 +956,7 @@ public class OpenCaseController {
 			@RequestParam String caseId, @RequestParam String variantType,
 			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
-		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(false);
 		response.setSuccess(false);
@@ -1046,7 +1046,7 @@ public class OpenCaseController {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(isAssigned);
@@ -1101,7 +1101,7 @@ public class OpenCaseController {
 		
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User currentUser = (User) session.getAttribute("user");
+		User currentUser = ControllerUtil.getSessionUser(session);
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(isAssigned);
@@ -1167,7 +1167,7 @@ public class OpenCaseController {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User currentUser = (User) session.getAttribute("user");
+		User currentUser = ControllerUtil.getSessionUser(session);
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(isAssigned);
@@ -1265,7 +1265,7 @@ public class OpenCaseController {
 			@RequestBody String data) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User user = (User) session.getAttribute("user"); // to verify that the user is assigned to the case
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
 		AjaxResponse response = new AjaxResponse();
 		if (!isAssigned) {
@@ -1325,7 +1325,7 @@ public class OpenCaseController {
 
 		ObjectMapper mapper = new ObjectMapper();
 		HeaderConfigData headerConfig = mapper.readValue(data, HeaderConfigData.class);
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		List<HeaderConfig> existingConfigs = modelDAO.getHeaderConfigForUserAndTable(user.getUserId(), headerConfig.getTableTitle());
 		HeaderConfig uniqueConfigForTable = null;
 		if (existingConfigs != null && !existingConfigs.isEmpty()) {
@@ -1354,7 +1354,7 @@ public class OpenCaseController {
 			throws Exception {
 
 		AjaxResponse response = new AjaxResponse();
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		List<HeaderConfig> existingConfigs = modelDAO.getHeaderConfigForUserAndTable(user.getUserId(), tableTitle);
 		HeaderConfig uniqueConfigForTable = null;
 		if (existingConfigs != null && !existingConfigs.isEmpty()) {

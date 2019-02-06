@@ -29,6 +29,7 @@ public class ErrorController {
 	@RequestMapping("/404")
 	public String error(Model model, HttpSession session) throws IOException {
 		ControllerUtil.initializeModel(model, servletContext, null);
+		session.setAttribute("user", "error page");
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return "error";
 	}

@@ -95,7 +95,7 @@ public class OpenReportController {
 			@RequestParam(defaultValue="", required=false) String reportId
 			) throws IOException, UnsupportedOperationException, URISyntaxException {
 		String url = "openReport/" + caseId + "?reportId=" + reportId;
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 //		RequestUtils utils = new RequestUtils(modelDAO);
@@ -110,7 +110,7 @@ public class OpenReportController {
 	public String openReportReadOnly(Model model, HttpSession session, @PathVariable String caseId,
 			@RequestParam(defaultValue="", required=false) String reportId) throws IOException, UnsupportedOperationException, URISyntaxException {
 		String url = "openReportReadOnly/" + caseId + "?reportId=" + reportId;
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return ControllerUtil.initializeModel(model, servletContext, user);
@@ -160,7 +160,7 @@ public class OpenReportController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		Report reportDetails = null;
 		if (reportId.equals("")) {
-			User user = (User) session.getAttribute("user");
+			User user = ControllerUtil.getSessionUser(session);
 			reportDetails = utils.buildReportManually(caseId, user, otherProps, ncbiProps);
 		}
 		else {
@@ -188,7 +188,7 @@ public class OpenReportController {
 		}
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User currentUser = (User) session.getAttribute("user");
+		User currentUser = ControllerUtil.getSessionUser(session);
 		JsonNode nodeData = mapper.readTree(data);
 		ReportSummary reportSummary =  mapper.readValue(nodeData.get("report").toString(), ReportSummary.class);
 		reportSummary.updateModifiedRows();
@@ -361,7 +361,7 @@ public class OpenReportController {
 		}
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User currentUser = (User) session.getAttribute("user");
+		User currentUser = ControllerUtil.getSessionUser(session);
 		JsonNode nodeData = mapper.readTree(data);
 		ReportSummary reportSummary =  mapper.readValue(nodeData.get("report").toString(), ReportSummary.class);
 		reportSummary.updateModifiedRows();
@@ -463,7 +463,7 @@ public class OpenReportController {
 		AjaxResponse response = new AjaxResponse();
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User currentUser = (User) session.getAttribute("user");
+		User currentUser = ControllerUtil.getSessionUser(session);
 		
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportId, currentUser);
 		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
@@ -509,7 +509,7 @@ public class OpenReportController {
 		AjaxResponse response = new AjaxResponse();
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User currentUser = (User) session.getAttribute("user");
+		User currentUser = ControllerUtil.getSessionUser(session);
 
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportId, currentUser);
 		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
@@ -643,7 +643,7 @@ public class OpenReportController {
 		AjaxResponse response = new AjaxResponse();
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		User currentUser = (User) session.getAttribute("user");
+		User currentUser = ControllerUtil.getSessionUser(session);
 
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
 		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();

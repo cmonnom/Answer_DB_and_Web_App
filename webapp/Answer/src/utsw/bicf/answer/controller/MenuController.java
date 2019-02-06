@@ -50,7 +50,7 @@ public class MenuController {
 		try {
 			//send user to Ben's API to retrieve all active cases
 			RequestUtils utils = new RequestUtils(modelDAO);
-			User user = (User) session.getAttribute("user");
+			User user = ControllerUtil.getSessionUser(session);
 			OrderCase[] cases = utils.getActiveCases();
 			if (cases != null) {
 				List<OrderCase> assignedCases = new ArrayList<OrderCase>();
@@ -76,7 +76,7 @@ public class MenuController {
 		try {
 			//send user to Ben's API to retrieve all active cases
 			RequestUtils utils = new RequestUtils(modelDAO);
-			User user = (User) session.getAttribute("user");
+			User user = ControllerUtil.getSessionUser(session);
 			OrderCase[] cases = utils.getActiveCases(); //TODO limit to cases with reports
 			if (cases != null) {
 				List<OrderCase> casesWithReports = new ArrayList<OrderCase>();
@@ -112,7 +112,7 @@ public class MenuController {
 	public String getUserLeaderBoardInfo(Model model, HttpSession session) throws ClientProtocolException, URISyntaxException, IOException {
 		//send user to Ben's API to retrieve all active cases
 //		RequestUtils utils = new RequestUtils(modelDAO);
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		if (user != null) {
 			UserLeaderBoardInfo lb = new UserLeaderBoardInfo(user, modelDAO);
 			return lb.createObjectJSON();

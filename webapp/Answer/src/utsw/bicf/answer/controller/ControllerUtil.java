@@ -9,16 +9,15 @@ import java.util.Date;
 import java.util.List;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpSession;
 
 import org.apache.http.client.ClientProtocolException;
 import org.springframework.ui.Model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
-import utsw.bicf.answer.model.Version;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
@@ -26,6 +25,14 @@ import utsw.bicf.answer.security.OtherProperties;
 public class ControllerUtil {
 	
 	private static long timestamp = new Date().getTime();
+	
+	public static User getSessionUser(HttpSession httpSession) {
+		User user = null;
+		if (httpSession.getAttribute("user") instanceof User) {
+			user = (User) httpSession.getAttribute("user");
+		}
+		return user;
+	}
 	
 	private static void initJSFiles(Model model, ServletContext servletContext) throws IOException {
 		model.addAttribute("goodiesFiles", ControllerUtil.getAllGoodies(servletContext));

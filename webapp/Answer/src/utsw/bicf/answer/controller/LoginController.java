@@ -48,8 +48,11 @@ public class LoginController {
 
 	@RequestMapping("/login")
 	public String login(Model model, HttpSession session) throws IOException {
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		ControllerUtil.initializeModel(model, servletContext, user);
+		if (user == null) {
+			session.setAttribute("user", "login redirect");
+		}
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return "login";
 	}
@@ -117,7 +120,7 @@ public class LoginController {
 	@RequestMapping("/checkAlreadyLoggedIn")
 	@ResponseBody
 	public String checkAlreadyLoggedIn(Model model, HttpSession session) throws JsonProcessingException {
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		if (user != null) {
 			return new TargetPage(true, "already logged in", "home", true).toJSONString();
 		}

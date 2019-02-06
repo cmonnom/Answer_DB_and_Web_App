@@ -17,7 +17,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,7 +29,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.ControllerUtil;
-import utsw.bicf.answer.controller.OpenCaseController;
 import utsw.bicf.answer.controller.serialization.TargetPage;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.security.PermissionUtils;
@@ -75,7 +73,7 @@ public class AOPAspect {
 		boolean isAjax = method.getAnnotation(ResponseBody.class) != null;
 
 		if (httpSession != null && model != null) {
-			User user = (User) httpSession.getAttribute("user");
+			User user = ControllerUtil.getSessionUser(httpSession);
 			model.addAttribute("isAjax", isAjax);
 			if (user == null) {
 				model.addAttribute("isAllowed", false);
@@ -178,10 +176,7 @@ public class AOPAspect {
 			}
 		}
 		Object userValue = httpSession.getAttribute("user");
-		User user = null;
-		if (userValue instanceof User) {
-			user = (User) httpSession.getAttribute("user");
-		}
+		User user = ControllerUtil.getSessionUser(httpSession);
 		if (user != null) {
 			boolean canProceed = PermissionUtils.canProceed(user, method);
 			logger.info("@Before ===> UserId: " + user.getUserId() + " Username: " + user.getUsername() + " Accessing: " + method.getName() + " Allowed:" + canProceed);
@@ -208,11 +203,7 @@ public class AOPAspect {
 				model = (Model) arg;
 			}
 		}
-		Object userValue = httpSession.getAttribute("user");
-		User user = null;
-		if (userValue instanceof User) {
-			user = (User) httpSession.getAttribute("user");
-		}
+		User user = ControllerUtil.getSessionUser(httpSession);
 		
 		if (user != null) {
 			boolean canProceed = PermissionUtils.canProceed(user, method);
@@ -285,7 +276,7 @@ public class AOPAspect {
 			// At this point user input should be clean
 			MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
 			Method method = signature.getMethod();
-			User user = (User) httpSession.getAttribute("user");
+			User user = ControllerUtil.getSessionUser(httpSession);
 			boolean canProceed = PermissionUtils.canProceed(user, method);
 
 			if (!isAllowed) {

@@ -61,7 +61,7 @@ public class AdminController {
 	public String admin(Model model, HttpSession session) throws IOException {
 		model.addAttribute("urlRedirect", "admin");
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
 	
@@ -71,7 +71,7 @@ public class AdminController {
 			throws Exception {
 
 		List<User> users = modelDAO.getAllUsers();
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Users");
 		UserTableSummary summary = new UserTableSummary(users, headerOrders);
 		
@@ -84,7 +84,7 @@ public class AdminController {
 			throws Exception {
 
 		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Gene Sets");
 		ReportGroupTableSummary summary = new ReportGroupTableSummary(reportGroups, headerOrders, user);
 		
@@ -150,7 +150,7 @@ public class AdminController {
 		ReportGroup reportGroup = null;
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		if (reportGroupId != null) { //edit reportGroup
 			reportGroup = modelDAO.getReportGroupById(reportGroupId);
 			if (reportGroup == null) {

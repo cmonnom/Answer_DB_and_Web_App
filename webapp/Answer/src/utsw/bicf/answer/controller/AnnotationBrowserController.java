@@ -64,7 +64,7 @@ public class AnnotationBrowserController {
 				+ "%26edit=" + edit;
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		return ControllerUtil.initializeModel(model, servletContext, user);
 	}
 	
@@ -100,7 +100,7 @@ public class AnnotationBrowserController {
 		response.setIsAllowed(true);
 		List<Annotation> clinicalTrials = utils.getAllClinicalTrials(response);
 		if (clinicalTrials != null && !clinicalTrials.isEmpty()) {
-			User user = (User) session.getAttribute("user");
+			User user = ControllerUtil.getSessionUser(session);
 			for (Annotation trial : clinicalTrials) {
 				Annotation.init(trial, null, modelDAO); // format dates and add missing info
 				if (trial.getUserId() == null || !trial.getUserId().equals(user.getUserId())) {
@@ -132,7 +132,7 @@ public class AnnotationBrowserController {
 		response.setIsAllowed(true);
 		List<Annotation> snpAnnotations = utils.getAllSNPsForGene(response, geneId);
 		if (response.getSuccess() && snpAnnotations != null) {
-			User user = (User) session.getAttribute("user");
+			User user = ControllerUtil.getSessionUser(session);
 			for (Annotation trial : snpAnnotations) {
 				Annotation.init(trial, null, modelDAO); // format dates and add missing info
 				if (trial.getUserId() == null || !trial.getUserId().equals(user.getUserId())) {
@@ -157,7 +157,7 @@ public class AnnotationBrowserController {
 	@RequestMapping(value = "/commitCaseAgnosticAnnotations", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String commitCaseAgnosticAnnotations(Model model, HttpSession session, @RequestBody String annotations) throws Exception {
-		User user = (User) session.getAttribute("user");
+		User user = ControllerUtil.getSessionUser(session);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
 		
