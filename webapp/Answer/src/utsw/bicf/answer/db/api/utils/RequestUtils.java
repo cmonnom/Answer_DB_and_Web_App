@@ -55,6 +55,7 @@ import utsw.bicf.answer.model.extmapping.CNVPlotDataRaw;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.ExistingReports;
+import utsw.bicf.answer.model.extmapping.ITD;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
@@ -1511,6 +1512,37 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 			return null;
+		}
+	}
+
+	public void createITD(AjaxResponse ajaxResponse, String caseId, String gene) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
+		ITD itd = new ITD();
+		itd.setGeneName(gene);
+		
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/itd");
+		URI uri = new URI(sbUrl.toString());
+
+		HttpResponse response = null;
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		requestPost.setEntity(new StringEntity(mapper.writeValueAsString(itd), ContentType.APPLICATION_JSON));
+		response = client.execute(requestPost);
+		
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AjaxResponse dbResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			if (dbResponse.getSuccess()) {
+				ajaxResponse.setSuccess(true);
+			}
+			else {
+				ajaxResponse.setSuccess(false);
+				ajaxResponse.setMessage(dbResponse.getMessage());
+			}
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
 		}
 	}
 

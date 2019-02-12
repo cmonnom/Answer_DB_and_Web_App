@@ -10,8 +10,8 @@ response.setHeader("Pragma","no-cache"); //HTTP 1.0
 response.setDateHeader ("Expires", 0);
 //prevents caching at the proxy server
 %>
-			<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-			<html>
+			<!DOCTYPE html>
+			<html lang="en">
 			<c:choose>
 				<c:when test="${isAllowed}">
 
@@ -22,7 +22,7 @@ response.setDateHeader ("Expires", 0);
 
 					<body>
 						<div id="app">
-							<v-app>
+							<v-app id="main-app">
 								<error-handler></error-handler>
 								<main-menu ref="main-menu"></main-menu>
 								<v-content>

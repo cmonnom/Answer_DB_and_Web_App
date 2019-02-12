@@ -10,12 +10,13 @@ response.setHeader("Pragma","no-cache"); //HTTP 1.0
 response.setDateHeader ("Expires", 0);
 //prevents caching at the proxy server
 %>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
 	<title>Answer Error</title>
 	<%@include file="/WEB-INF/view/templates/header.jsp"%>
+	
 
 </head>
 
@@ -26,9 +27,6 @@ response.setDateHeader ("Expires", 0);
 						<v-layout row wrap >
 							<v-flex xs12 md10 lg6>
 								<v-layout row wrap >
-									<!-- <v-flex xs12>
-						<img src="${pageContext.request.contextPath}/resources/images/laptop.jpg" width="100%"/>
-					</v-flex> -->
 									<v-flex xs12 pt-2 class="title pt-4">
 										You have reached an error page. Probably because of a typo in the address bar.
 									</v-flex>

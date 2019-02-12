@@ -34,6 +34,14 @@ const OpenCase = {
   :current-gene-list="currentListOfCNVVisibleGenes"></add-cnv>
   </v-dialog>
 
+  <!-- create ITD dialog -->
+  <v-dialog v-model="itdDialogVisible" max-width="300px" v-if="canProceed('canSelect') && !readonly">
+  <create-itd
+  @hide-create-itd="itdDialogVisible = false"
+  @refresh-variants="getAjaxData"
+  @show-snackbar="showSnackBarMessageWithParams"></create-itd>
+  </v-dialog>
+
     <div>
     <v-dialog v-model="confirmationDialogVisible" max-width="300px">
         <v-card>
@@ -48,6 +56,8 @@ const OpenCase = {
             </v-card-actions>
         </v-card>
     </v-dialog>
+
+   
     <v-snackbar :timeout="snackBarTimeout" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
         <v-tooltip top>
@@ -803,7 +813,7 @@ const OpenCase = {
                                                             <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'" class="align-flex-right">
                                                                 <v-tooltip bottom>
                                                                     <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator" class="mr-0 ml-0 mt-0 mb-0">
-                                                                        <img :src="oncotreeIconUrl" width="24px"></img>
+                                                                        <img alt="oncotree icon" :src="oncotreeIconUrl" width="24px"></img>
                                                                     </v-btn>
                                                                     <span>Open OncoTree in New Tab</span>
                                                                 </v-tooltip>
@@ -896,12 +906,22 @@ const OpenCase = {
                                 <v-list-tile-title>Advanced Filtering</v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
+
+                        <v-list-tile avatar @click="openIDTCreationDialog()" slot="action2MenuItem">
+                            <v-list-tile-avatar>
+                                ITD
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Create a New ITD</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
                     </data-table>
                 </v-tab-item>
                 <!-- CNV table -->
                 <v-tab-item id="tab-cnv">
                     <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
-                        :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()"
+                        :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
                         :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase"
                         :highlights="highlights">
                         <v-fade-transition slot="action1">
@@ -941,7 +961,7 @@ const OpenCase = {
                 <!--  Fusion / Translocation table -->
                 <v-tab-item id="tab-translocation">
                     <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
-                        no-data-text="No Data" :enable-selection="canProceed('canSelect')" :show-row-count="true" @refresh-requested="handleRefresh()"
+                        no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
                         :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
                     </data-table>
                 </v-tab-item>
@@ -1141,7 +1161,8 @@ const OpenCase = {
             labNotes: null,
             snpIndelUnfilteredItems: null,
             cnvUnfilteredItems: null,
-            ftlUnfilteredItems: null
+            ftlUnfilteredItems: null,
+            itdDialogVisible: false,
         }
     }, methods: {
         createSplashText() {
@@ -3302,6 +3323,7 @@ const OpenCase = {
             if (text.length > 18) {
                 return text.substring(0, 18) + "...";
             } 
+            return text;
         },
         variantNameIsTooLong() {
             var text = this.currentVariant.geneName + " " + this.currentVariant.notation;
@@ -3779,7 +3801,11 @@ const OpenCase = {
             }
             path += "/" + this.$route.params.id;
             router.push({path : path});
-        }
+        },
+        openIDTCreationDialog() {
+            this.itdDialogVisible = true;
+        },
+        
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",

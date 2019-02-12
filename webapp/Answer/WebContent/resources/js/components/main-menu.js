@@ -6,8 +6,8 @@ Vue.component('main-menu', {
 	},
 	template: `<v-navigation-drawer app permanent :width="width" :mini-variant.sync="isMinied">
 	<v-toolbar flat :extended="isMinied ? false : true" style="height:128px">
-		<img v-if="isBetaVersion()" :src="baseUrl + '/resources/images/answer-logo-medium-beta.png'" alt="Answer" width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
-		<img v-if="isVersionOne()" :src="baseUrl + '/resources/images/answer-logo-medium.png'" alt="Answer" width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
+		<img alt="answer logo beta" v-if="isBetaVersion()" :src="baseUrl + '/resources/images/answer-logo-medium-beta.png'"  width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
+		<img alt="answer logo" v-if="isVersionOne()" :src="baseUrl + '/resources/images/answer-logo-medium.png'" width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
 	</v-toolbar>
 	<v-divider></v-divider>
 	<v-list dense class="pt-0">

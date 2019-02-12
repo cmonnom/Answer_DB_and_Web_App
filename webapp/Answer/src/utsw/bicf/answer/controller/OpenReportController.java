@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -44,6 +45,7 @@ import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
+import utsw.bicf.answer.reporting.parse.EncodingGlyphException;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.OtherProperties;
@@ -353,7 +355,9 @@ public class OpenReportController {
 	public String previewReport(Model model, HttpSession session, @RequestBody String data) throws Exception {
 
 		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER,	true);
 		AjaxResponse response = new AjaxResponse();
+		data = data.replaceAll("\\\\t", " ");
 		if (data == null || data.equals("")) {
 			response.setIsAllowed(false);
 			response.setSuccess(false);
@@ -381,7 +385,7 @@ public class OpenReportController {
 			String linkName = pdfReport.createPDFLink(fileProps);
 			response.setSuccess(true);
 			response.setMessage(linkName);
-			}catch (IllegalArgumentException e) {
+			}catch (EncodingGlyphException e) {
 				response.setSuccess(false);
 				response.setMessage(e.getMessage());
 			}

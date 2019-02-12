@@ -10,8 +10,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import utsw.bicf.answer.controller.ControllerUtil;
-import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
 
@@ -29,7 +27,9 @@ public class ErrorController {
 	@RequestMapping("/404")
 	public String error(Model model, HttpSession session) throws IOException {
 		ControllerUtil.initializeModel(model, servletContext, null);
-		session.setAttribute("user", "error page");
+		if (ControllerUtil.getSessionUser(session) == null) {
+			session.setAttribute("user", "error page");
+		}
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return "error";
 	}

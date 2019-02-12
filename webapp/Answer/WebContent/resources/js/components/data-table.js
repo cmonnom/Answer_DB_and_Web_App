@@ -24,6 +24,7 @@ Vue.component('data-table', {
         "color": { default: "primary", type: String },
         "disable-sticky-header": {default: false, type: Boolean},
         highlights: { default: () => {}, type: Object },
+        "fixed-header": {default: false, type: Boolean}, //not working yet
 
     },
     template: `<div>
@@ -215,7 +216,7 @@ Vue.component('data-table', {
           <v-flex>
             <draggable :list="headerOrder" @start="draggingStarted" @end="draggingEnded" class="draggable">
               <v-chip label v-for="header in headerOrder" :key="header" :color="color" text-color="white" :class="[{'is-dragging':isDragging(header)}, 'elevation-1', 'draggable']"
-                :id="header">
+                :id="header + tableTitle">
                 <span class="draggable">{{ getHeaderByValue(header) }}</span>
                 <v-btn :color="getHeaderButtonColor(header)" icon flat small @click="toggleHeaderHidden(header)">
                   <v-icon>visibility</v-icon>
@@ -304,7 +305,7 @@ Vue.component('data-table', {
   <!-- Data Table -->
   <v-divider></v-divider>
   <v-data-table :id="tableId" v-model="selected" v-bind:headers="headers" v-bind:items="items" v-bind:search="search" hide-actions
-    v-bind:pagination.sync="pagination" :item-key="uniqueIdField" :no-data-text="noDataText" :loading="loading" :class="['elevation-1', toolbarVisible ? 'mt-0' : '']"
+    v-bind:pagination.sync="pagination" :item-key="uniqueIdField" :no-data-text="noDataText" :loading="loading" :class="['elevation-1', toolbarVisible ? 'mt-0' : '', isHeaderFixed ? 'fixed-header' : '']"
     :custom-sort="customSort" ref="dataTable">
     <template slot="headers" slot-scope="props">
       <tr>
@@ -483,7 +484,8 @@ Vue.component('data-table', {
             headerOptionsVisible: false, //work in progress
             showButtons: true,
             saveHeaderConfigNeeded: false,
-            savingHeaderConfig: false
+            savingHeaderConfig: false,
+            isHeaderFixed: false
         }
     },
     methods: {
@@ -1206,7 +1208,7 @@ Vue.component('data-table', {
                     this.handleAxiosError(error);
                     this.savingHeaderConfig = false;
                 });
-        }
+        },
     },
     computed: {
         getSortedHeaders() {

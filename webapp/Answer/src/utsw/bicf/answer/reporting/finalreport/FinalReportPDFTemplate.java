@@ -56,6 +56,7 @@ import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
+import utsw.bicf.answer.reporting.parse.EncodingGlyphException;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
 
@@ -74,7 +75,7 @@ public class FinalReportPDFTemplate {
 	Map<Integer, List<FooterColor>> colorPerPage = new HashMap<Integer, List<FooterColor>>();
 	User signedBy;
 
-	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps, User signedBy) {
+	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps, User signedBy) throws EncodingGlyphException {
 		this.otherProps = otherProps;
 		this.report = report;
 		this.fileProps = fileProps;
@@ -93,7 +94,7 @@ public class FinalReportPDFTemplate {
 		}
 	}
 
-	private void init() throws IOException, URISyntaxException {
+	private void init() throws IOException, URISyntaxException, EncodingGlyphException {
 		this.mainDocument = new PDDocument();
 		PDPage page = new PDPage(PDRectangle.LETTER);
 		mainDocument.addPage(page);
@@ -123,7 +124,7 @@ public class FinalReportPDFTemplate {
 		this.addLinks();
 	}
 
-	private void addAddress() throws IOException {
+	private void addAddress() throws IOException, EncodingGlyphException {
 		FinalReportTemplateConstants.MAIN_FONT_TYPE = PDType0Font.load(mainDocument,
 				fileProps.getPdfFontFile());
 		FinalReportTemplateConstants.MAIN_FONT_TYPE_BOLD = PDType0Font.load(mainDocument,
@@ -143,7 +144,11 @@ public class FinalReportPDFTemplate {
 			cell.setTopPadding(0);
 			cell.setLeftPadding(0);
 		}
-		latestYPosition = table.draw();
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in address." );
+		}
 
 	}
 
@@ -187,7 +192,7 @@ public class FinalReportPDFTemplate {
 		contentStream.close();
 	}
 
-	private void addNotes() throws IOException {
+	private void addNotes() throws IOException, EncodingGlyphException {
 		// Title
 		float tableWidth = pageWidthMinusMargins;
 		PDPage currentPage = this.mainDocument.getPage(0);
@@ -206,10 +211,14 @@ public class FinalReportPDFTemplate {
 		cell.setFontSize(FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE);
 		cell.setTextColor(Color.BLACK);
 		cell.setBottomPadding(10);
-		latestYPosition = table.draw();
+		try {
+			latestYPosition = table.draw();
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Case Summary." );
+		}
 	}
 	
-	private void createPatientTable() throws IOException {
+	private void createPatientTable() throws IOException, EncodingGlyphException {
 		PatientInfo patientDetails = report.getPatientInfo();
 
 		PDPage firstPage = mainDocument.getPage(0);
@@ -236,7 +245,11 @@ public class FinalReportPDFTemplate {
 			}
 			this.createRow(leftTable, item.getLabel(), item.getValue(), defaultFont);
 		}
-		leftTable.draw();
+		try {
+			leftTable.draw();
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (left table)." );
+		}
 		float maxTableHeight = leftTable.getHeaderAndDataHeight();
 
 		BaseTable middleTable = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
@@ -250,7 +263,11 @@ public class FinalReportPDFTemplate {
 			}
 			this.createRow(middleTable, item.getLabel(), item.getValue(), defaultFont);
 		}
-		middleTable.draw();
+		try {
+			middleTable.draw();
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (middle table)." );
+		}
 
 		maxTableHeight = Math.max(maxTableHeight, middleTable.getHeaderAndDataHeight());
 
@@ -279,7 +296,11 @@ public class FinalReportPDFTemplate {
 			}
 			this.createRow(rightTable, item.getLabel(), item.getValue(), defaultFont);
 		}
-		rightTable.draw();
+		try {
+			rightTable.draw();
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (right table)." );
+		}
 		maxTableHeight = Math.max(maxTableHeight, rightTable.getHeaderAndDataHeight());
 
 		// draw borders
@@ -289,24 +310,6 @@ public class FinalReportPDFTemplate {
 		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
 		allWidthEmptyTable.draw();
 		
-//		BaseTable leftTableEmpty = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
-//				FinalReportTemplateConstants.MARGINLEFT, mainDocument, firstPage, true, true);
-//		Row<PDPage> row = leftTableEmpty.createRow(maxTableHeight);
-//		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
-//		leftTableEmpty.draw();
-//		BaseTable middleTableEmpty = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
-//				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth(), mainDocument, firstPage, true,
-//				true);
-//		row = middleTableEmpty.createRow(maxTableHeight);
-//		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
-//		middleTableEmpty.draw();
-//		BaseTable rightTableEmpty = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
-//				FinalReportTemplateConstants.MARGINLEFT + leftTable.getWidth() + middleTable.getWidth(),
-//				mainDocument, firstPage, true, true);
-//		row = rightTableEmpty.createRow(maxTableHeight);
-//		this.applyPatientRecordTableBorderFormatting(row.createCell(100, ""));
-//		rightTableEmpty.draw();
-
 		latestYPosition -= maxTableHeight + 10;
 	}
 
@@ -333,7 +336,7 @@ public class FinalReportPDFTemplate {
 		latestYPosition = pageHeight - FinalReportTemplateConstants.MARGINTOP;
 	}
 
-	private void createNavigationTable() throws IOException {
+	private void createNavigationTable() throws IOException, EncodingGlyphException {
 		this.updatePotentialNewPagePosition(0);
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
 		BaseTable table = createNewTable(currentPage);
@@ -409,7 +412,11 @@ public class FinalReportPDFTemplate {
 		}
 		
 
-		latestYPosition = table.draw() - 20;
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Navigation Table." );
+		}
 	}
 
 	private void applyNavigationCountCellFormatting(Cell<PDPage> cell, Color color) {
@@ -424,7 +431,7 @@ public class FinalReportPDFTemplate {
 				FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, true, true);
 	}
 
-	private void createIndicatedTherapiesTable() throws IOException {
+	private void createIndicatedTherapiesTable() throws IOException, EncodingGlyphException {
 		List<IndicatedTherapy> items = report.getIndicatedTherapies();
 		this.updatePotentialNewPagePosition(items.size() + 1);
 //		updatePageBreakPosition();
@@ -496,10 +503,14 @@ public class FinalReportPDFTemplate {
 			greyBackground = !greyBackground;
 		}
 		links.add(new Link(FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition - 20));
-		latestYPosition = table.draw() - 20;
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Indicated Therapy Table." );
+		}
 	}
 
-	private void createClinicalTrialsTable() throws IOException, URISyntaxException {
+	private void createClinicalTrialsTable() throws IOException, URISyntaxException, EncodingGlyphException {
 		if (report.getClinicalTrials() == null) {
 			return;
 		}
@@ -580,7 +591,11 @@ public class FinalReportPDFTemplate {
 			Cell<PDPage> cell = row.createCell(100, "No trial selected for this report.");
 			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
-		latestYPosition = table.draw() - 20;
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Clinical Trials Table." );
+		}
 	}
 
 	private void applyHeaderFormatting(Cell<PDPage> cell, float defaultFont) {
@@ -650,7 +665,7 @@ public class FinalReportPDFTemplate {
 		cell.setTextColor(FinalReportTemplateConstants.LINK_ANSWER_GREEN);
 	}
 
-	private void createClinicalSignificanceTables() throws IOException {
+	private void createClinicalSignificanceTables() throws IOException, EncodingGlyphException {
 		List<Map<String, GeneVariantAndAnnotation>> clinicalSignifanceTables = new ArrayList<Map<String, GeneVariantAndAnnotation>>();
 		clinicalSignifanceTables.add(report.getSnpVariantsStrongClinicalSignificance());
 		clinicalSignifanceTables.add(report.getSnpVariantsPossibleClinicalSignificance());
@@ -667,7 +682,7 @@ public class FinalReportPDFTemplate {
 	}
 
 
-	private void createAClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems, String tableTitle, boolean addLink) throws IOException{
+	private void createAClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems, String tableTitle, boolean addLink) throws IOException, EncodingGlyphException{
 		this.updatePotentialNewPagePosition(tableItems.size() + 1);
 //		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
@@ -736,7 +751,11 @@ public class FinalReportPDFTemplate {
 			}
 		}
 
-		latestYPosition = table.draw() - 20;
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Clinical Significance Table: " + tableTitle );
+		}
 
 	}
 	
@@ -750,7 +769,7 @@ public class FinalReportPDFTemplate {
 		return sb.toString();
 	}
 	
-	private void createAnUnkwnownClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems) throws IOException{
+	private void createAnUnkwnownClinicalSignificanceTable(Map<String, GeneVariantAndAnnotation> tableItems) throws IOException, EncodingGlyphException{
 		this.updatePotentialNewPagePosition(tableItems.size());
 //		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
@@ -810,11 +829,15 @@ public class FinalReportPDFTemplate {
 			}
 		}
 
-		latestYPosition = table.draw() - 20;
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Unknown Clinical Significance Table." );
+		}
 
 	}
 
-	private void createCNVTable() throws IOException {
+	private void createCNVTable() throws IOException, EncodingGlyphException {
 		List<CNVReport> items = report.getCnvs();
 		this.updatePotentialNewPagePosition(items.size());
 //		updatePageBreakPosition();
@@ -876,7 +899,11 @@ public class FinalReportPDFTemplate {
 			}
 		}
 
-		latestYPosition = table.draw() - 20;
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in CNV Table." );
+		}
 	}
 
 	private List<FooterColor> getExistingColorsForCurrentPage() {
@@ -887,7 +914,7 @@ public class FinalReportPDFTemplate {
 		return colors;
 	}
 	
-	private void createTranslocationTable() throws IOException {
+	private void createTranslocationTable() throws IOException, EncodingGlyphException {
 		List<TranslocationReport> items = report.getTranslocations();
 		this.updatePotentialNewPagePosition(items.size());
 //		updatePageBreakPosition();
@@ -957,10 +984,14 @@ public class FinalReportPDFTemplate {
 				greyBackground = !greyBackground;
 			}
 		}
-		latestYPosition = table.draw() - 20;
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Fusion Table." );
+		}
 	}
 	
-	private void createPubmedTable() throws IOException {
+	private void createPubmedTable() throws IOException, EncodingGlyphException {
 //		this.updatePotentialNewPagePosition();
 		updatePageBreakPosition();
 		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
@@ -1040,7 +1071,11 @@ public class FinalReportPDFTemplate {
 				greyBackground = !greyBackground;
 			}
 		}
-		latestYPosition = table.draw() - 20;
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in PubMed Table." );
+		}
 	}
 
 //	private String sanitizeString(String text) throws IOException {
@@ -1119,7 +1154,7 @@ public class FinalReportPDFTemplate {
 		return cell;
 	}
 
-	private void addFooters() throws IOException {
+	private void addFooters() throws IOException, EncodingGlyphException {
 		int pageTotal = this.mainDocument.getNumberOfPages();
 		float tableYPos = FinalReportTemplateConstants.MARGINBOTTOM;
 		float tableWidth = pageWidthMinusMargins;
@@ -1169,11 +1204,15 @@ public class FinalReportPDFTemplate {
 //			cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 //			cell.setFillColor(FinalReportTemplateConstants.CNV_COLOR);
 //			cell.set
-			table.draw();
+			try {
+				table.draw();
+			} catch (IllegalArgumentException e) {
+				throw new EncodingGlyphException(e.getMessage() + " in footers." );
+			}
 		}
 	}
 
-	private void addInformationAboutTheTest() throws IOException {
+	private void addInformationAboutTheTest() throws IOException, EncodingGlyphException {
 		// Title
 		this.updatePageBreakPosition();
 		float tableWidth = pageWidthMinusMargins;
@@ -1208,7 +1247,11 @@ public class FinalReportPDFTemplate {
 				cell.setTextColor(FinalReportTemplateConstants.LINK_ANSWER_GREEN);
 			}
 		}
-		latestYPosition = table.draw();
+		try {
+			latestYPosition = table.draw();
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Information About the Test." );
+		}
 		this.links.add(new Link(FinalReportTemplateConstants.ABOUT_THE_TEST_LINK, FinalReportTemplateConstants.ABOUT_THE_TEST_LINK));
 	}
 

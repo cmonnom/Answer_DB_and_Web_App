@@ -104,6 +104,7 @@ public class ControllerUtil {
 			if (!file.isDirectory() 
 					&& file.getName().endsWith(".js")
 					&& !file.getName().equals("vue-starter.js")
+					&& !file.getName().equals("cssrelpreload.js")
 					&& !file.getName().equals("bam-viewer.js")) {
 				files.add(file.getName());
 			}

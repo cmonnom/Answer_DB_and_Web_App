@@ -146,6 +146,12 @@ public class Variant {
 
 
 	public String getNotation() {
+		if (notation != null && alt != null && alt.equals("DUP")) { 
+			int length = notation.length();
+			if (length > 100) { //notation is too long for ITDs
+				this.notation = notation.substring(0, Math.min(length, 50)) + "...";
+			}
+		}
 		return notation;
 	}
 
@@ -844,8 +850,6 @@ public class Variant {
 	public void setMaxCosmicPatients(Integer maxCosmicPatients) {
 		this.maxCosmicPatients = maxCosmicPatients;
 	}
-
-
 
 
 

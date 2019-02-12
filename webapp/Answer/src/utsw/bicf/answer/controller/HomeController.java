@@ -183,7 +183,7 @@ public class HomeController {
 				String servelt = "openCase/";
 				String reason = "";
 				String subject = "You have a new case: " + caseId;
-				this.sendEmail(caseId, subject, user, currentUser, servelt, reason);
+				this.sendEmail(caseId, subject, user, currentUser, servelt, reason, false);
 			}
 		}
 		
@@ -195,7 +195,7 @@ public class HomeController {
 				String servelt = "openCaseReadOnly/";
 				String reason = "You are receiving this message because your account is set to receive all notifications.<br/><br/>";
 				String subject = "You have a new notification regarding case: " + caseId;
-				this.sendEmail(caseId, subject, aUser, currentUser, servelt, reason);
+				this.sendEmail(caseId, subject, aUser, currentUser, servelt, reason, true);
 			}
 		}
 		
@@ -239,14 +239,17 @@ public class HomeController {
 
 	}
 	
-	private void sendEmail(String caseId, String subject, User user, User currentUser, String servlet, String reason) throws IOException, InterruptedException {
+	private void sendEmail(String caseId, String subject, User user, User currentUser, String servlet, String reason, boolean fromNotifications) throws IOException, InterruptedException {
 		StringBuilder message = new StringBuilder()
 				.append("<p>Dr. ").append(user.getLast()).append(",</p><br/>")
 				.append("<b>")
 				.append(currentUser.getFullName())
 				.append("</b>")
-				.append(" assigned you a new case. ")
-				.append("<b>")
+				.append(" assigned ");
+				if (!fromNotifications) {
+					message.append(" you "); //only said "Dr. XXX assigned you" if it's not from notifications
+				}
+				message.append("a new case. <b>")
 				.append("Case Id: ").append(caseId).append("</b><br/>")
 				.append("<br/>")
 				.append(reason);

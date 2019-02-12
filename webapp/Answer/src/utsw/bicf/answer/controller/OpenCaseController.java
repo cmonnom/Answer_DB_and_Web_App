@@ -143,6 +143,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".setDefaultTranscript",
 				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".createITD",
+				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveHeaderConfig",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".deleteHeaderConfig",
@@ -1366,6 +1368,26 @@ public class OpenCaseController {
 		response.setSuccess(true);
 		return response.createObjectJSON();
 
+	}
+	
+	@RequestMapping(value = "/createITD", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String createITD(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestParam String gene) throws Exception {
+
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
+		AjaxResponse response = new AjaxResponse();
+		if (!isAssigned) {
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+			response.setMessage("You are not assigned to this case");
+		}
+		else {
+			utils.createITD(response,caseId, gene);
+		}
+		return response.createObjectJSON();
 	}
 	
 }

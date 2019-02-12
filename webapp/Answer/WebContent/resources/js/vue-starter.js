@@ -12,7 +12,8 @@ var router = new VueRouter({
 		{
 			path: webAppRoot + '/home',
 			name: 'Home',
-			component: Home,
+			component: () => new Promise(
+				resolve => resolve(Home)),
 			meta: {
 				title: 'Home'
 			}
@@ -20,7 +21,9 @@ var router = new VueRouter({
 		{
 			path: webAppRoot + '/openCase/:id',
 			name: 'OpenCase',
-			component: OpenCase,
+			component: () => new Promise(
+				resolve => resolve(OpenCase)),
+			// component: OpenCase,
 			meta: {
 				title: 'Open Case '
 			},
@@ -29,7 +32,9 @@ var router = new VueRouter({
 		{
 			path: webAppRoot + '/openCaseReadOnly/:id',
 			name: 'OpenCase',
-			component: OpenCase,
+			component: () => new Promise(
+				resolve => resolve(OpenCase)),
+			// component: OpenCase,
 			meta: {
 				title: 'Open Case '
 			},
@@ -38,7 +43,9 @@ var router = new VueRouter({
 		{
 			path: webAppRoot + '/openReport/:id',
 			name: 'OpenReport',
-			component: OpenReport,
+			component: () => new Promise(
+				resolve => resolve(OpenReport)),
+			// component: OpenReport,
 			meta: {
 				title: 'Open Report '
 			},
@@ -47,7 +54,9 @@ var router = new VueRouter({
 		{
 			path: webAppRoot + '/openReportReadOnly/:id',
 			name: 'OpenReport',
-			component: OpenReport,
+			component: () => new Promise(
+				resolve => resolve(OpenReport)),
+			// component: OpenReport,
 			meta: {
 				title: 'Open Report '
 			},
@@ -56,7 +65,9 @@ var router = new VueRouter({
 		{
 			path: webAppRoot + '/annotationBrowser',
 			name: 'AnnotationBrowser',
-			component: AnnotationBrowser,
+			component: () => new Promise(
+				resolve => resolve(AnnotationBrowser)),
+			// component: AnnotationBrowser,
 			meta: {
 				title: 'Annotation Browser'
 			}
@@ -64,7 +75,9 @@ var router = new VueRouter({
 		{
 			path: webAppRoot + '/admin',
 			name: 'Admin',
-			component: Admin,
+			component: () => new Promise(
+				resolve => resolve(Admin)),
+			// component: Admin,
 			meta: {
 				title: 'Admin'
 			}
@@ -72,7 +85,9 @@ var router = new VueRouter({
 		{
 			path: webAppRoot + '/userPrefs',
 			name: 'UserPrefs',
-			component: UserPrefs,
+			component: () => new Promise(
+				resolve => resolve(UserPrefs)),
+			// component: UserPrefs,
 			meta: {
 				title: 'User Preferences'
 			}
@@ -80,7 +95,9 @@ var router = new VueRouter({
 		{
 			path: webAppRoot + '/logout',
 			name: 'LogOut',
-			component: LogOut,
+			component: () => new Promise(
+				resolve => resolve(LogOut)),
+			// component: LogOut,
 			meta: {
 				title: 'Log Out'
 			}

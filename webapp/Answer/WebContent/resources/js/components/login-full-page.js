@@ -10,9 +10,9 @@ Vue.component('login-full-page', {
     <v-layout row justify-center>
         <v-flex :class="['text-xs-center', elevation]" xs12 md6 lg3 xl2>
         <div class="plain-light-background">
-        <img :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'" alt="UTSW" width="100%" class="ml-0">
-        <img @click="handleVersionChange" v-if="isBetaVersion()" :src="dataUrlRoot + '/resources/images/answer-logo-large-beta.png'" width="100%" alt="Answer" :class="[changingVersion? 'shake': '', 'pl-4', 'pr-4', 'pb-3']"/> 
-        <img v-if="isVersionOne()"  :src="dataUrlRoot + '/resources/images/answer-logo-large.png'" width="100%" alt="Answer" class="pl-4 pr-4 pb-3"/>     
+        <img alt="utsw master logo" :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'" width="100%" class="ml-0">
+        <img alt="answer logo beta "@click="handleVersionChange" v-if="isBetaVersion()" :src="dataUrlRoot + '/resources/images/answer-logo-large-beta.png'" width="100%" :class="[changingVersion? 'shake': '', 'pl-4', 'pr-4', 'pb-3']"/> 
+        <img alt="answer logo" v-if="isVersionOne()"  :src="dataUrlRoot + '/resources/images/answer-logo-large.png'" width="100%" class="pl-4 pr-4 pb-3"/>     
         <b>An</b>notation <b>S</b>oft<b>w</b>are for <b>E</b>lectronic <b>R</b>eporting
         </div>
         </v-flex>

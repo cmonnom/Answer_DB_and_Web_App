@@ -7,22 +7,20 @@ response.setHeader("Pragma","no-cache"); //HTTP 1.0
 response.setDateHeader ("Expires", 0);
 //prevents caching at the proxy server
 %>
-			<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-			<html>
+			<!DOCTYPE html>
+			<html lang="en">
 			<c:choose>
 				<c:when test="${isAllowed}">
 
 					<head>
 						<title>Bam Viewer</title>
-						<!-- <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css" -->
+						<meta name="viewport" content="width=device-width, initial-scale=1">
+						<meta name="Description" content="Answer is an Annotation Software for Electronic Reporting, 
+Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
+ at the University of Texas Southwestern Medical Center">
 						<!-- Font Awesome CSS -->
 						<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"
 						/>
-						<!-- <link rel="stylesheet" type="text/css" href="https://igv.org/web/release/1.0.9/igv-1.0.9.css"> -->
-						<!-- <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> -->
-						<!-- <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script> -->
-						<!-- <script type="text/javascript" src="https://igv.org/web/release/1.0.9/igv-1.0.9.js"></script> -->
-						<!-- <script type="text/javascript" src="https://igv.org/web/release/2.0.0-beta3/dist/igv.min.js"></script> -->
 						<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/igv@2.2.2/dist/igv.min.js"></script>
 					</head>
 

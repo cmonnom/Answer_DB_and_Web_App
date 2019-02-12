@@ -72,7 +72,15 @@ public class SNPIndelVariantRow {
 		this.geneName = variant.getGeneName();
 		this.geneVariant = variant.getGeneName() + " " + variant.getNotation();
 		this.effects = variant.getEffects() != null ? variant.getEffects().stream().collect(Collectors.joining("<br/>")) : null;
-		this.notation = variant.getNotation();
+		if (variant.getNotation() != null) { 
+			int length = variant.getNotation().length();
+			if (length > 100 && alt != null && alt.equals("DUP")) { //notation is too long
+				this.notation = variant.getNotation().substring(0, Math.min(length, 50)) + "...";
+			}
+		}
+		else {
+			this.notation = variant.getNotation();
+		}
 		if (variant.getTumorAltFrequency() != null) {
 			if (variant.getTumorAltFrequency() > 0 && variant.getTumorAltFrequency() < 0.0001) {
 				this.tumorAltFrequency = "< 0.01";
@@ -516,7 +524,6 @@ public class SNPIndelVariantRow {
 	public Integer getMaxCosmicPatients() {
 		return maxCosmicPatients;
 	}
-
 
 
 }

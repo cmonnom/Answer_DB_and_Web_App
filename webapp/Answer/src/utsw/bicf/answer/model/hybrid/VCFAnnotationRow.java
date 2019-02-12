@@ -45,6 +45,15 @@ public class VCFAnnotationRow {
 		rank = annotation.getRank();
 		codingNotation = annotation.getCodingNotation();
 		proteinNotation = annotation.getProteinNotation();
+		if (annotation.getProteinNotation() != null) { 
+			int length = annotation.getProteinNotation().length();
+			if (length > 100) { //notation is too long (likely ITD)
+				this.proteinNotation = annotation.getProteinNotation().substring(0, Math.min(length, 50)) + "...";
+			}
+		}
+		else {
+			this.proteinNotation = annotation.getProteinNotation();
+		}
 		proteinPosition = annotation.getProteinPosition();
 		cdnaPosition = annotation.getCdnaPosition();
 		distanceToFeature = annotation.getDistanceToFeature();
