@@ -74,7 +74,7 @@ const OpenCase = {
         @open-report="openReport"
         :report-ready="reportReady"
         :case-name="caseName" :case-type="caseType" :case-type-icon="caseTypeIcon"
-        :selected-ids="getSelectedVariantIds()"
+        :selected-ids="currentSelectedVariantIds"
         @save-selection="saveSelection" @close-review-dialog="closeReviewDialog"
         :is-save-badge-visible="isSaveNeededBadgeVisible()" :save-variant-disabled="saveVariantDisabled"
         @save-all="handleSaveAll" :waiting-for-ajax-active="waitingForAjaxActive" @show-snackbar="showSnackBarMessageWithParams"
@@ -1163,7 +1163,8 @@ const OpenCase = {
             cnvUnfilteredItems: null,
             ftlUnfilteredItems: null,
             itdDialogVisible: false,
-            loadingVariant: false
+            loadingVariant: false,
+            currentSelectedVariantIds: {}
         }
     }, methods: {
         createSplashText() {
@@ -2685,11 +2686,11 @@ const OpenCase = {
                         });
 
                         //keep track of the selected variants and refresh
-                        var selectedIds = this.getSelectedVariantIds();
-                        if (selectedIds) {
-                            this.tempSelectedSNPVariants = selectedIds.selectedSNPVariantIds;
-                            this.tempSelectedCNVs = selectedIds.selectedCNVIds;
-                            this.tempSelectedTranslocations = selectedIds.selectedTranslocationIds;
+                        this.currentSelectedVariantIds = this.getSelectedVariantIds();
+                        if (currentSelectedVariantIds) {
+                            this.tempSelectedSNPVariants = currentSelectedVariantIds.selectedSNPVariantIds;
+                            this.tempSelectedCNVs = currentSelectedVariantIds.selectedCNVIds;
+                            this.tempSelectedTranslocations = currentSelectedVariantIds.selectedTranslocationIds;
 
                             //once refreshed, reselect rows that were selected but not saved yet
                             this.$once('get-case-details-done', (annotations) => {
@@ -2762,10 +2763,10 @@ const OpenCase = {
             this.handleSelectionChanged();
         },
         updateSelectedVariantTable() {
-            var selectedIds = this.getSelectedVariantIds();
-            var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => selectedIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
-            var selectedCNVs = this.cnvUnfilteredItems.filter(item => selectedIds.selectedCNVIds.indexOf(item.oid) > -1);
-            var selectedTranslocations = this.ftlUnfilteredItems.filter(item => selectedIds.selectedTranslocationIds.indexOf(item.oid) > -1);
+            this.currentSelectedVariantIds = this.getSelectedVariantIds();
+            var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
+            var selectedCNVs = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIds.indexOf(item.oid) > -1);
+            var selectedTranslocations = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIds.indexOf(item.oid) > -1);
             this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
 
             var snpHeaders = this.$refs.geneVariantDetails.headers;
@@ -2803,7 +2804,7 @@ const OpenCase = {
                 return;
             }
             this.saveLoading = true;
-            var selectedIds = this.getSelectedVariantIds();
+            this.currentSelectedVariantIds = this.getSelectedVariantIds();
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveVariantSelection",
@@ -2813,9 +2814,9 @@ const OpenCase = {
                     skipSnackBar: skipSnackBar //pass this param along to display snackbar after successful ajax call
                 },
                 data: {
-                    selectedSNPVariantIds: selectedIds.selectedSNPVariantIds,
-                    selectedCNVIds: selectedIds.selectedCNVIds,
-                    selectedTranslocationIds: selectedIds.selectedTranslocationIds
+                    selectedSNPVariantIds: this.currentSelectedVariantIds.selectedSNPVariantIds,
+                    selectedCNVIds: this.currentSelectedVariantIds.selectedCNVIds,
+                    selectedTranslocationIds: this.currentSelectedVariantIds.selectedTranslocationIds
                 }
             }).then(response => {
                 if (response.data.isAllowed && response.data.success) {
@@ -2970,6 +2971,7 @@ const OpenCase = {
                 && !(this.utswAnnotationsVisible && this.utswAnnotationsExists());
         },
         getSelectedVariantIds() {
+            var startTime = moment();
             var selectedSNPVariantIds = [];
             var selectedCNVIds = [];
             var selectedTranslocationIds = [];
@@ -2982,6 +2984,8 @@ const OpenCase = {
             if (this.$refs.translocationDetails) {
                 selectedTranslocationIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.translocationDetails.items, this.ftlUnfilteredItems);
             }
+            var duration = moment().diff(startTime);
+            console.log("getSelectedVariantIds", duration);
             return {
                 selectedSNPVariantIds: selectedSNPVariantIds ? selectedSNPVariantIds : null,
                 selectedCNVIds: selectedCNVIds ? selectedCNVIds : null,
@@ -2995,6 +2999,7 @@ const OpenCase = {
          * @param {items in the original unfiltered table} unfilteredItems 
          */
         getFilteredAndUnfilteredVariantIds(variantDetailsItems, unfilteredItems) {
+            var startTime = moment();
             var selectedVariantIds = [];
             var filteredSelectedIds = variantDetailsItems.filter(item => item.isSelected).map(item => item.oid);
             //need to only consider items not in the current table so that we don't reselect items that were intentionally deselected
@@ -3011,6 +3016,8 @@ const OpenCase = {
             for (let item of unionSet) {
                 selectedVariantIds.push(item);
             }
+            var duration = moment().diff(startTime);
+            console.log("getFilteredAndUnfilteredVariantIds", duration);
             return selectedVariantIds;
         },
         updateVariantDetails() {
