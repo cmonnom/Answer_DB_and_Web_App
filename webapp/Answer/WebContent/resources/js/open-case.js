@@ -2687,10 +2687,10 @@ const OpenCase = {
 
                         //keep track of the selected variants and refresh
                         this.currentSelectedVariantIds = this.getSelectedVariantIds();
-                        if (currentSelectedVariantIds) {
-                            this.tempSelectedSNPVariants = currentSelectedVariantIds.selectedSNPVariantIds;
-                            this.tempSelectedCNVs = currentSelectedVariantIds.selectedCNVIds;
-                            this.tempSelectedTranslocations = currentSelectedVariantIds.selectedTranslocationIds;
+                        if (this.currentSelectedVariantIds) {
+                            this.tempSelectedSNPVariants = this.currentSelectedVariantIds.selectedSNPVariantIds;
+                            this.tempSelectedCNVs = this.currentSelectedVariantIds.selectedCNVIds;
+                            this.tempSelectedTranslocations = this.currentSelectedVariantIds.selectedTranslocationIds;
 
                             //once refreshed, reselect rows that were selected but not saved yet
                             this.$once('get-case-details-done', (annotations) => {

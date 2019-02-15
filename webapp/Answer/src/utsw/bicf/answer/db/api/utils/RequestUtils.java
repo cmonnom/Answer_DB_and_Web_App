@@ -1135,6 +1135,9 @@ public class RequestUtils {
 							}
 							else if (a.getBreadth().equals("Focal")) {
 								String key = a.getCnvGenes().stream().collect(Collectors.joining(" "));
+								if (v.getAberrationType().equals("ITD")) {
+									key += "-ITD";
+								}
 								List<Annotation> annotations = selectedAnnotationsForVariant.get(key);
 								if (annotations == null) {
 									annotations = new ArrayList<Annotation>();
