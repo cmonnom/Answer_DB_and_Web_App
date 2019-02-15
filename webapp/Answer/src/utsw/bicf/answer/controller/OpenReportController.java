@@ -357,7 +357,7 @@ public class OpenReportController {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER,	true);
 		AjaxResponse response = new AjaxResponse();
-		data = data.replaceAll("\\\\t", " ");
+		data = data.replaceAll("\\\\t", " ").replaceAll("\\\\n", "<br/>");
 		if (data == null || data.equals("")) {
 			response.setIsAllowed(false);
 			response.setSuccess(false);

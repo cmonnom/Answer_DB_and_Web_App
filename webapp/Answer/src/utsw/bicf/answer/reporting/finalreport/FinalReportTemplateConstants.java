@@ -35,7 +35,8 @@ public class FinalReportTemplateConstants {
 	public static final Color LIGHT_GRAY = new Color(128, 128, 128);
 	public static final Color GRAY = new Color(178, 178, 178);
 	public static final Color BACKGROUND_GRAY = new Color(245, 245, 245);
-	public static final Color BACKGROUND_LIGHT_GRAY = new Color(250, 250, 250);
+//	public static final Color BACKGROUND_LIGHT_GRAY = new Color(250, 250, 250);
+	public static final Color BACKGROUND_LIGHT_GRAY = new Color(245, 245, 245);
 	public static final Color LINK_BLUE = new Color(77, 144, 206);
 	public static final Color LINK_ANSWER_GREEN = new Color(77, 182, 172);
 	public static final LineStyle THINLINE_OUTTER = new LineStyle(new Color(204, 204, 204), 1f);

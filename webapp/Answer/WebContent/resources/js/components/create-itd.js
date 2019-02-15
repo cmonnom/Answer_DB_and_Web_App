@@ -34,7 +34,7 @@ Vue.component('create-itd', {
 `,
     data() {
         return {
-            itdGene: this.itdGene,
+            itdGene: "FLT3",
             itdButtonDisabled: false,
             genes: []
         }

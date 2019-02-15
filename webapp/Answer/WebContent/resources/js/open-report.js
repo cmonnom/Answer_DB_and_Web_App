@@ -367,6 +367,7 @@ const OpenReport = {
         <v-flex xs12 xl10 v-show="clinicalTrialsVisible" pb-3>
             <div>
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
+                :enable-select-all="true"
                     initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
                     :color="colors.trials" :disable-sticky-header="true"
                     :enable-selection="canProceed('canReview') && !readonly"

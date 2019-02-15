@@ -12,6 +12,7 @@ public class OrderCase {
 	
 	public static final String TYPE_CLINICAL = "Clinical";
 	public static final String TYPE_RESEARCH = "Research";
+	public static final String TYPE_CLINICAL_RESEARCH = "ClinicalResearch";
 	
 	private static final Map<Integer, String> stepTooltip = new HashMap<Integer, String>();
 	static {
@@ -53,7 +54,7 @@ public class OrderCase {
 	String oncotreeDiagnosis;
 	Integer totalCases;
 	List<CaseHistory> caseHistory;
-	String type; //Clinical or Research
+	String type; //Clinical or Research or ClinicalResearch
 	String clinicalStage;
 	String treatmentStatus;
 	String labTestName;

@@ -35,7 +35,7 @@ const OpenCase = {
   </v-dialog>
 
   <!-- create ITD dialog -->
-  <v-dialog v-model="itdDialogVisible" max-width="300px" v-if="canProceed('canSelect') && !readonly">
+  <v-dialog v-model="itdDialogVisible" max-width="300px" v-if="canProceed('canSelect') && !readonly" persistent>
   <create-itd
   @hide-create-itd="itdDialogVisible = false"
   @refresh-variants="getAjaxData"
@@ -602,13 +602,13 @@ const OpenCase = {
                     <v-icon right dark>done</v-icon>
                 </v-btn>
                 <v-tooltip top>
-                    <v-btn :disabled="isFirstVariant" color="primary" @click="loadPrevVariant()" slot="activator">Prev. Variant
+                    <v-btn :disabled="isFirstVariant" color="primary" @click="loadPrevVariant()" :loading="loadingVariant" slot="activator">Prev. Variant
                         <v-icon right dark>chevron_left</v-icon>
                     </v-btn>
                     <span>Show Previous Variant</span>
                 </v-tooltip>
                 <v-tooltip top>
-                    <v-btn :disabled="isLastVariant" color="primary" @click="loadNextVariant()" slot="activator">
+                    <v-btn :disabled="isLastVariant" color="primary" @click="loadNextVariant()" :loading="loadingVariant" slot="activator">
                         <v-icon left dark>chevron_right</v-icon>
                         Next Variant
                     </v-btn>
@@ -907,15 +907,6 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="openIDTCreationDialog()" slot="action2MenuItem">
-                            <v-list-tile-avatar>
-                                ITD
-                            </v-list-tile-avatar>
-                            <v-list-tile-content>
-                                <v-list-tile-title>Create a New ITD</v-list-tile-title>
-                            </v-list-tile-content>
-                        </v-list-tile>
-
                     </data-table>
                 </v-tab-item>
                 <!-- CNV table -->
@@ -956,6 +947,14 @@ const OpenCase = {
                                 <v-list-tile-title>Open CNV (no variant)</v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
+                        <v-list-tile avatar @click="openIDTCreationDialog()" slot="action3MenuItem">
+                        <v-list-tile-avatar>
+                            ITD
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Create a New ITD</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
@@ -1077,7 +1076,8 @@ const OpenCase = {
                 'amplification',
                 'gain',
                 'hemizygous loss',
-                'homozygous loss'
+                'homozygous loss',
+                'ITD'
             ],
             variantDetailsUnSaved: false,
             patientDetailsUnSaved: false,
@@ -1163,6 +1163,7 @@ const OpenCase = {
             cnvUnfilteredItems: null,
             ftlUnfilteredItems: null,
             itdDialogVisible: false,
+            loadingVariant: false
         }
     }, methods: {
         createSplashText() {
@@ -1250,7 +1251,7 @@ const OpenCase = {
                     if (this.caseType == "Clinical") {
                         this.caseTypeIcon = "fa-user-md";
                     }
-                    else if (this.caseType == "Research") {
+                    else if (this.caseType == "Research" || this.caseType == "ClinicalResearch") {
                         this.caseTypeIcon = "fa-flask";
                     }
                     this.labNotes = response.data.labNotes;
@@ -1280,7 +1281,7 @@ const OpenCase = {
                     // step = new Date() - start;
                     // console.log(3, step); 
                     this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
-                                        //keep track of the original items in order to select all the variants regardless of filtering
+                    //keep track of the original items in order to select all the variants regardless of filtering
                     if (!this.cnvUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
                         this.cnvUnfilteredItems = response.data.cnvSummary.items;
                     }
@@ -1605,6 +1606,11 @@ const OpenCase = {
                     headers[i].actionTooltip = "Variant Details";
                     break;
                 }
+                if (headers[i].value == "notation" && headers[i]["notationTooltipText"]) {
+                    headers[i].itemAction = this.openVariant;
+                    headers[i].actionIcon = "zoom_in";
+                    headers[i].actionTooltip = "Variant Details";
+                }
             }
         },
         addCNVHeaderAction(headers) {
@@ -1631,6 +1637,7 @@ const OpenCase = {
             getDialogMaxHeight(offset);
         },
         getVariantDetails(item, resetSaveFlags) {
+            this.loadingVariant = true;
             this.currentVariantType = "snp";
 
             this.currentVariantFlags = item.iconFlags.iconFlags;
@@ -1856,6 +1863,7 @@ const OpenCase = {
                         this.mdaAnnotations = this.currentVariant.mdaAnnotation ? this.currentVariant.mdaAnnotation : "";
                         this.formatAnnotations();
                         this.loadingVariantDetails = false;
+                        this.loadingVariant = false;
                         if (resetSaveFlags) {
                             this.annotationSelectionUnSaved = false;
                         }
@@ -1869,11 +1877,13 @@ const OpenCase = {
 
                     } else {
                         this.loadingVariantDetails = false;
+                        this.loadingVariant = false;
                         this.handleDialogs(response.data, this.getVariantDetails.bind(null,
                             item));
                     }
                 }).catch(error => {
                     this.loadingVariantDetails = false;
+                    this.loadingVariant = false;
                     this.handleAxiosError(error);
                 });
         },
@@ -1882,6 +1892,7 @@ const OpenCase = {
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
             // this.loadingVariantDetails = true;
+            this.loadingVariant = true;
 
             var table; //could be the selected variant table or the regular one
             if (this.reviewDialogVisible) {
@@ -1985,6 +1996,7 @@ const OpenCase = {
                         this.reloadPreviousSelectedState();
                         this.formatCNVAnnotations();
                         this.loadingVariantDetails = false;
+                        this.loadingVariant = false;
                         if (resetSaveFlags) {
                             this.annotationSelectionUnSaved = false;
                         }
@@ -1996,11 +2008,13 @@ const OpenCase = {
                         this.updateSplashProgress();
                     } else {
                         this.loadingVariantDetails = false;
+                        this.loadingVariant = false;
                         this.handleDialogs(response.data, this.getCNVDetails.bind(null,
                             item));
                     }
                 }).catch(error => {
                     this.loadingVariantDetails = false;
+                    this.loadingVariant = false;
                     this.handleAxiosError(error);
                 });
         },
@@ -2009,6 +2023,7 @@ const OpenCase = {
             this.currentVariantFlags = [];
             this.currentRow = { isSelected: false};
             // this.loadingVariantDetails = true;
+            this.loadingVariant = true;
 
             var table; //could be the selected variant table or the regular one
             if (this.reviewDialogVisible) {
@@ -2024,6 +2039,7 @@ const OpenCase = {
             this.variantDetailsUnSaved = false;
             this.currentVariant = {};
             this.variantDataTables = [];
+            this.linkTable = [];
 
             this.userAnnotations = [];
             this.$refs.cnvAnnotationDialog.userAnnotations = this.userAnnotations;
@@ -2034,6 +2050,7 @@ const OpenCase = {
             this.reloadPreviousSelectedState();
             // this.formatCNVAnnotations();
             this.loadingVariantDetails = false;
+            this.loadingVariant = false;
             if (resetSaveFlags) {
                 this.annotationSelectionUnSaved = false;
             }
@@ -2079,6 +2096,7 @@ const OpenCase = {
             this.currentVariantFlags = item.iconFlags.iconFlags;
             this.currentRow = item;
             this.loadingVariantDetails = true;
+            this.loadingVariant = true;
 
             if (this.reviewDialogVisible) {
                 table = this.$refs.reviewDialog.getFtlTable();
@@ -2177,17 +2195,20 @@ const OpenCase = {
                         }
                         this.variantDetailsVisible = true;
                         this.updateVariantDetails();
+                        this.loadingVariant = false;
                         //finally, open edit annotation
                         this.handleEditAnnotationOpening();
 
                         this.updateSplashProgress();
                     } else {
                         this.loadingVariantDetails = false;
+                        this.loadingVariant = false;
                         this.handleDialogs(response.data, this.getTranslocationDetails.bind(null,
                             item));
                     }
                 }).catch(error => {
                     this.loadingVariantDetails = false;
+                    this.loadingVariant = false;
                     this.handleAxiosError(error);
                 });
         },
@@ -2976,7 +2997,10 @@ const OpenCase = {
         getFilteredAndUnfilteredVariantIds(variantDetailsItems, unfilteredItems) {
             var selectedVariantIds = [];
             var filteredSelectedIds = variantDetailsItems.filter(item => item.isSelected).map(item => item.oid);
-            var unfilteredSelectedIds = unfilteredItems ? unfilteredItems.filter(item => item.isSelected).map(item => item.oid) : [];
+            //need to only consider items not in the current table so that we don't reselect items that were intentionally deselected
+            //the first filter removes all items in the current table from the unfiltered item list
+            //the second filter checks if any item left (ie: items not currently displayed) is selected
+            var unfilteredSelectedIds = unfilteredItems ? unfilteredItems.filter(item => !this.$refs.geneVariantDetails.items.map(i => i.oid).includes(item.oid)).filter(item => item.isSelected).map(item => item.oid) : [];
             var unionSet = new Set();
             for (var i = 0; i < filteredSelectedIds.length; i++) {
                 unionSet.add(filteredSelectedIds[i]);
@@ -3084,7 +3108,8 @@ const OpenCase = {
                 }
                 var prevVariant = table.getPreviousItem(this.currentRow);
                 if (prevVariant) {
-                    this.getVariantDetails(prevVariant);
+                    // this.getVariantDetails(prevVariant);
+                    this.openVariant(prevVariant);
                 }
             }
             else if (this.isCNV()) {
@@ -3121,9 +3146,10 @@ const OpenCase = {
                 else {
                     table = this.$refs.geneVariantDetails;
                 }
-                var prevVariant = table.getNextItem(this.currentRow);
-                if (prevVariant) {
-                    this.getVariantDetails(prevVariant);
+                var nextVariant = table.getNextItem(this.currentRow);
+                if (nextVariant) {
+                    this.openVariant(nextVariant);
+                    // this.getVariantDetails(nextVariant);
                 }
             }
             else if (this.isCNV()) {
@@ -3133,9 +3159,9 @@ const OpenCase = {
                 else {
                     table = this.$refs.cnvDetails;
                 }
-                var prevVariant = table.getNextItem(this.currentRow);
-                if (prevVariant) {
-                    this.getCNVDetails(prevVariant);
+                var nextVariant = table.getNextItem(this.currentRow);
+                if (nextVariant) {
+                    this.getCNVDetails(nextVariant);
                 }
             }
             else if (this.isTranslocation()) {
@@ -3145,9 +3171,9 @@ const OpenCase = {
                 else {
                     table = this.$refs.translocationDetails;
                 }
-                var prevVariant = table.getNextItem(this.currentRow);
-                if (prevVariant) {
-                    this.getTranslocationDetails(prevVariant);
+                var nextVariant = table.getNextItem(this.currentRow);
+                if (nextVariant) {
+                    this.getTranslocationDetails(nextVariant);
                 }
             }
         },

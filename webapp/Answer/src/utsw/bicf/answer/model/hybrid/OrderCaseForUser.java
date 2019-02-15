@@ -63,6 +63,10 @@ public class OrderCaseForUser {
 			iconName = "fa-flask";
 			tooltip = OrderCase.TYPE_RESEARCH + " case";
 		}
+		else if (OrderCase.TYPE_CLINICAL_RESEARCH.equals(orderCase.getType())) {
+			iconName = "fa-flask";
+			tooltip = OrderCase.TYPE_CLINICAL_RESEARCH + " case";
+		}
 		typeIcons.add(new VuetifyIcon(iconName, "grey", tooltip));
 		typeFlags = new FlagValue(typeIcons);
 		

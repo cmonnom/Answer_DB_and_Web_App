@@ -476,7 +476,7 @@ Vue.component('variant-details', {
                                     alpha: 0.2,
                                     label: {
                                         text: response.data.sortedChrs[i],
-                                        angle: this.cnvPlotLoadingAllChrom ? 0 : 270, //only rotate for ALL chromosomes
+                                        angle: this.cnvPlotLoadingAllChrom ? 270 : 0, //only rotate for ALL chromosomes
                                         "offset-x": 0,
                                         "offset-y": -10,
                                         color: "black"

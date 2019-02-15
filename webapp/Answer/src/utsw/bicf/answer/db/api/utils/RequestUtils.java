@@ -876,6 +876,8 @@ public class RequestUtils {
 						Annotation.init(a, cnv.getAnnotationIdsForReporting(), modelDAO);
 						if (a.getIsSelected() != null && a.getIsSelected()
 								&& a.getBreadth() != null && a.getBreadth().equals("Chromosomal")
+										|| ((a.getBreadth().equals("Focal") && a.getTier() != null && unknownTiers.contains(a.getTier()))
+												|| a.getTier() == null)
 								&& !"Clinical Trial".equals(a.getCategory())) {
 							sb.append(a.getText()).append(" ");
 							atLeastOneSelected = true;
@@ -903,7 +905,8 @@ public class RequestUtils {
 									|| "homozygous loss".equals(cnv.getAberrationType())) {
 								aberrationType = "Loss ";
 							}
-							report.incrementCnvCount(aberrationType + cnv.getChrom() + ":" + cnv.getCytoband());
+							String cytobandTruncated = cnv.getCytoband().substring(0, 1);
+							report.incrementCnvCount(aberrationType + cnv.getChrom() + cytobandTruncated);
 						}
 					}
 				}
@@ -999,7 +1002,7 @@ public class RequestUtils {
 				indicatedTherapies.addAll(annotations);
 			}
 		}
-		trials.stream().forEach(t -> t.setIsSelected(true));
+//		trials.stream().forEach(t -> t.setIsSelected(true)); //don't select them all by default (changed since I added a select all button)
 		report.setClinicalTrials(trials); //after adding all the UTSW trials
 		
 		report.setIndicatedTherapies(indicatedTherapies);
@@ -1108,14 +1111,14 @@ public class RequestUtils {
 						unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
 					}
 					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, unknownAnnotationsConcat));
-					report.incrementUnknownClinicalSignificanceCount(v.getGeneName());
+//					report.incrementUnknownClinicalSignificanceCount(v.getGeneName()); //no tier 3 in navigation table anymore
 				}
 					
 			}
 		}
 		
 		for (CNV v : cnvVariants) {
-			if (v.getUtswAnnotated() && v.getSelected()) {
+			if (v.getSelected()) {
 				boolean hasTiers = false;
 				v = getCNVDetails(v.getMongoDBId().getOid());
 				Map<String, List<Annotation>> selectedAnnotationsForVariant = new HashMap<String, List<Annotation>>();
@@ -1156,7 +1159,7 @@ public class RequestUtils {
 					List<String> tiers = tiersByGenes.get(genes);
 					Map<String, List<String>> strongAnnotations = new HashMap<String, List<String>>();
 					Map<String, List<String>> possibleAnnotations = new HashMap<String, List<String>>();
-					Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
+//					Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
 					String highestTierForVariant = null;
 					tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
 					if (!tiers.isEmpty() || hasTiers) { //TODO test this
@@ -1184,17 +1187,17 @@ public class RequestUtils {
 								possibleAnnotations.put(category, annotationsFormatted);
 							}
 						}
-						else if (unknownTiers.contains(highestTierForVariant)) {
-							for (Annotation a : annotations) {
-								String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
-								List<String> annotationsFormatted = unknownAnnotations.get(category);
-								if (annotationsFormatted == null) {
-									annotationsFormatted = new ArrayList<String>();
-								}
-								annotationsFormatted.add(a.getText());
-								unknownAnnotations.put(category, annotationsFormatted);
-							}
-						}
+//						else if (unknownTiers.contains(highestTierForVariant)) {
+//							for (Annotation a : annotations) {
+//								String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+//								List<String> annotationsFormatted = unknownAnnotations.get(category);
+//								if (annotationsFormatted == null) {
+//									annotationsFormatted = new ArrayList<String>();
+//								}
+//								annotationsFormatted.add(a.getText());
+//								unknownAnnotations.put(category, annotationsFormatted);
+//							}
+//						}
 					}
 					String name = genes;
 					if (!strongAnnotations.isEmpty()) {
@@ -1215,15 +1218,15 @@ public class RequestUtils {
 						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, possibleAnnotationsConcat));
 						report.incrementPossibleClinicalSignificanceCount(name);
 					}
-					if (!unknownAnnotations.isEmpty()) {
-						report.getCnvIds().add(v.getMongoDBId().getOid());
-						Map<String, String> unknownAnnotationsConcat = new HashMap<String, String>();
-						for (String cat : unknownAnnotations.keySet()) {
-							unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
-						}
-						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, unknownAnnotationsConcat));
-						report.incrementUnknownClinicalSignificanceCount(name);
-					}
+//					if (!unknownAnnotations.isEmpty()) {
+//						report.getCnvIds().add(v.getMongoDBId().getOid());
+//						Map<String, String> unknownAnnotationsConcat = new HashMap<String, String>();
+//						for (String cat : unknownAnnotations.keySet()) {
+//							unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+//						}
+//						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, unknownAnnotationsConcat));
+////						report.incrementUnknownClinicalSignificanceCount(name); //no tier 3 in navigation table anymore
+//					}
 				}
 				if (!hasTiers) {
 					v.setType("cnv"); //somehow, the type is not set on CNV

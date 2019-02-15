@@ -30,7 +30,7 @@ Vue.component('review-selection', {
                     </v-list-tile-content>
                 </v-list-tile>
 
-                <v-list-tile avatar @click="markAsReadyForReview()" :disabled="saveVariantDisabled" v-if="canProceed('canAnnotate')">
+                <v-list-tile avatar @click="markAsReadyForReview()"  v-if="canProceed('canAnnotate')">
                     <v-list-tile-avatar>
                         <v-icon>how_to_reg</v-icon>
                     </v-list-tile-avatar>
@@ -39,7 +39,7 @@ Vue.component('review-selection', {
                     </v-list-tile-content>
                 </v-list-tile>
 
-                <v-list-tile avatar @click="markAsReadyForReport()" :disabled="saveVariantDisabled" v-if="canProceed('canReview')">
+                <v-list-tile avatar @click="markAsReadyForReport()" v-if="canProceed('canReview')">
                     <v-list-tile-avatar>
                         <v-icon>assignment</v-icon>
                     </v-list-tile-avatar>
@@ -91,13 +91,13 @@ Vue.component('review-selection', {
             <span>Download Moclia File</span>
         </v-tooltip>
         <v-tooltip bottom v-if="canProceed('canAnnotate')">
-        <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator" :loading="markingForReview">
+        <v-btn icon  @click="markAsReadyForReview()" slot="activator" :loading="markingForReview">
             <v-icon>how_to_reg</v-icon>
         </v-btn>
         <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
     </v-tooltip>
     <v-tooltip bottom v-if="canProceed('canReview')">
-        <v-btn icon :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator" :loading="markingForReport">
+        <v-btn icon @click="markAsReadyForReport()" slot="activator" :loading="markingForReport">
             <v-icon>assignment</v-icon>
         </v-btn>
         <span>Mark as Ready for Report. Save Selected Variants</span>
@@ -178,14 +178,14 @@ Vue.component('review-selection', {
             <span>Download Moclia File</span>
         </v-tooltip>
         <v-tooltip top v-if="canProceed('canAnnotate')">
-            <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReview()" slot="activator"  :loading="markingForReview">
+            <v-btn color="primary" @click="markAsReadyForReview()" slot="activator"  :loading="markingForReview">
                 Ready for Review
             <v-icon right dark>how_to_reg</v-icon>
             </v-btn>
             <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
         </v-tooltip>
         <v-tooltip top v-if="canProceed('canReview')">
-            <v-btn color="primary" :disabled="saveVariantDisabled" @click="markAsReadyForReport()" slot="activator"  :loading="markingForReport">
+            <v-btn color="primary" @click="markAsReadyForReport()" slot="activator"  :loading="markingForReport">
                 Ready for Report
             <v-icon right dark>assignment</v-icon>
             </v-btn>

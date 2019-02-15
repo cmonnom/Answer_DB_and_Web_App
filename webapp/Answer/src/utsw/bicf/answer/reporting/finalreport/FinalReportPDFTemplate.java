@@ -25,14 +25,11 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitWidthDestination;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageXYZDestination;
 
 import be.quodlibet.boxable.BaseTable;
@@ -378,6 +375,7 @@ public class FinalReportPDFTemplate {
 //			sortedValues.add(vusRow);
 //		}
 		
+		
 		for (ReportNavigationRow navigationRow : sortedValues) {
 			String gene = navigationRow.getLabel();
 			Color defaultColor = Color.WHITE;
@@ -423,7 +421,7 @@ public class FinalReportPDFTemplate {
 		this.applyCellFormatting(cell, FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE, color);
 		cell.setAlign(HorizontalAlignment.CENTER);
 		cell.setValign(VerticalAlignment.MIDDLE);
-		cell.setBottomPadding(0);
+		cell.setBottomPadding(4);
 	}
 	
 	private BaseTable createNewTable(PDPage currentPage) throws IOException {
@@ -631,7 +629,7 @@ public class FinalReportPDFTemplate {
 		cell.setValign(VerticalAlignment.TOP);
 		cell.setFontSize(defaultFont);
 		cell.setTextColor(Color.BLACK);
-		cell.setBottomPadding(10);
+		cell.setBottomPadding(4);
 		if (color.equals(Color.WHITE)) {
 			cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 			cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
@@ -639,10 +637,10 @@ public class FinalReportPDFTemplate {
 			cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 		}
 		else {
-			cell.setTopBorderStyle(FinalReportTemplateConstants.LIGHT_GRAY_BORDER_THIN);
-			cell.setBottomBorderStyle(FinalReportTemplateConstants.LIGHT_GRAY_BORDER_THIN);
-			cell.setLeftBorderStyle(FinalReportTemplateConstants.LIGHT_GRAY_BORDER_THIN);
-			cell.setRightBorderStyle(FinalReportTemplateConstants.LIGHT_GRAY_BORDER_THIN);
+			cell.setTopBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+			cell.setBottomBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+			cell.setLeftBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
+			cell.setRightBorderStyle(FinalReportTemplateConstants.NO_BORDER_ZERO);
 		}
 		cell.setFillColor(color);
 	}
@@ -796,37 +794,72 @@ public class FinalReportPDFTemplate {
 			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
 		else {
-//			String variants = tableItems.keySet().stream().collect(Collectors.joining(", "));
-//			row = table.createRow(12);
-//			Color color = Color.WHITE;
-//			Cell<PDPage> cell = row.createCell(100, variants);
-//			this.applyCellFormatting(cell, defaultFont, color);
+//			boolean greyBackground = false;
+//			int counter = 0;
+//			for (String variant : tableItems.keySet()) {
+//				if (counter % 3 == 0) { //new row every 3 VUS
+//					row = table.createRow(12);
+//				}
+//				counter++;
+//				Color color = Color.WHITE;
+//				if (greyBackground) {
+//					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+//				}
+//				GeneVariantAndAnnotation item = tableItems.get(variant);
+//				Cell<PDPage> cell = row.createCell(33.33f, item.getGeneVariant());
+//				this.applyCellFormatting(cell, defaultFont, color);
+//				greyBackground = !greyBackground;
+//			}
+//			while(counter % 3 != 0) {
+//				Color color = Color.WHITE;
+//				if (greyBackground) {
+//					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+//				}
+//				Cell<PDPage> cell = row.createCell(33.33f, "");
+//				this.applyCellFormatting(cell, defaultFont, color);
+//				greyBackground = !greyBackground;
+//				counter++;
+//			}
+			/////TODO
+			//Headers
+			row = table.createRow(12); 
+			table.addHeaderRow(row);
+			cellHeader = row.createCell(25, "VARIANT");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(20, "POSITION");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(25, "ENST");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(15, "VAF");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(15, "DEPTH");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+
 			boolean greyBackground = false;
-			int counter = 0;
 			for (String variant : tableItems.keySet()) {
-				if (counter % 3 == 0) { //new row every 3 VUS
-					row = table.createRow(12);
-				}
-				counter++;
 				Color color = Color.WHITE;
 				if (greyBackground) {
 					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
 				}
 				GeneVariantAndAnnotation item = tableItems.get(variant);
-				Cell<PDPage> cell = row.createCell(33.33f, item.getGeneVariant());
+				row = table.createRow(12);
+				
+				Cell<PDPage> cell = row.createCell(25, item.getGeneVariant());
 				this.applyCellFormatting(cell, defaultFont, color);
-				greyBackground = !greyBackground;
-			}
-			while(counter % 3 != 0) {
-				Color color = Color.WHITE;
-				if (greyBackground) {
-					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
-				}
-				Cell<PDPage> cell = row.createCell(33.33f, "");
+				cell = row.createCell(20, item.getPosition());
 				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(25, item.getTranscript());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(15, item.getTaf());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
+				cell = row.createCell(15, item.gettDepth());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
 				greyBackground = !greyBackground;
-				counter++;
+				
 			}
+			/////TODO
 		}
 
 		try {
@@ -880,11 +913,11 @@ public class FinalReportPDFTemplate {
 			cellHeader = row.createCell(45, "COMMENT");
 			this.applyHeaderFormatting(cellHeader, defaultFont);
 			boolean greyBackground = false;
-			Color color = Color.WHITE;
-			if (greyBackground) {
-				color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
-			}
 			for (CNVReport item : items) {
+				Color color = Color.WHITE;
+				if (greyBackground) {
+					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+				}
 				row = table.createRow(12);
 				Cell<PDPage> cell = row.createCell(25, item.getChrom() + ":" +item.getStartFormatted() + "-" + item.getEndFormatted());
 				this.applyCellFormatting(cell, defaultFont, color);
@@ -1056,8 +1089,7 @@ public class FinalReportPDFTemplate {
 				row = table.createRow(12);
 				cell = row.createCell(100, item.getDescription());
 				this.applyCellFormatting(cell, defaultFont, color);
-				cell.setTopPadding(-10);
-				greyBackground = !greyBackground;
+				cell.setTopPadding(-3);
 				
 				//PMID link
 				row = table.createRow(12);
@@ -1067,7 +1099,7 @@ public class FinalReportPDFTemplate {
 				cell = row.createCell(100, sb.toString());
 				this.applyCellFormatting(cell, defaultFont, color);
 				cell.setTextColor(FinalReportTemplateConstants.LINK_ANSWER_GREEN);
-				cell.setTopPadding(-10);
+				cell.setTopPadding(-3);
 				greyBackground = !greyBackground;
 			}
 		}
@@ -1243,7 +1275,7 @@ public class FinalReportPDFTemplate {
 			cell.setTextColor(FinalReportTemplateConstants.LIGHT_GRAY);
 //			cell.setBottomPadding(10);
 			if (info.startsWith("http")) {
-				cell.setTopPadding(-10);
+				cell.setTopPadding(-3);
 				cell.setTextColor(FinalReportTemplateConstants.LINK_ANSWER_GREEN);
 			}
 		}

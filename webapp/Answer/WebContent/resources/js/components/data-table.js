@@ -310,7 +310,10 @@ Vue.component('data-table', {
     <template slot="headers" slot-scope="props">
       <tr>
         <th v-if="enableSelection" :class="[color, 'white--text']" style="width:50px">
-          <v-checkbox v-if="enableSelectAll" hide-details @click.native="toggleAll" :input-value="props.all" :indeterminate="props.indeterminate"></v-checkbox>
+        <v-tooltip bottom>
+          <v-checkbox slot="activator" v-if="enableSelectAll" hide-details @click.native="toggleAll" :input-value="props.all" :indeterminate="areAllSelected()" dark color="white"></v-checkbox>
+          <span>Select/Unselect All</span>
+        </v-tooltip>
         </th>
         <th v-if="expandedDataUrl" :class="color">
         </th>
@@ -494,8 +497,24 @@ Vue.component('data-table', {
             this.$emit("showing-buttons", doShow);
         },
         toggleAll() {
-            if (this.selected.length) this.selected = []
-            else this.selected = this.items.slice()
+            var doSelect = false;
+            var selectedLength = this.selected.length;
+            if (!selectedLength || (selectedLength > 0 && selectedLength != this.items.length)) {
+                this.selected = this.items.slice();
+                doSelect = true;
+            }
+            else {
+                this.selected = [];
+                doSelect = false;
+            }
+            this.items.forEach(i => {
+                i.selected = doSelect; 
+                i.isSelected = doSelect;
+            });
+        },
+        areAllSelected() {
+            var length = this.selected.length;
+            return length > 0 && this.selected.length != this.items.length;
         },
         changeSort(header) {
             if (!header.sortable) {
@@ -1209,6 +1228,7 @@ Vue.component('data-table', {
                     this.savingHeaderConfig = false;
                 });
         },
+
     },
     computed: {
         getSortedHeaders() {
