@@ -192,9 +192,8 @@ public class AnnotationBrowserController {
 			}
 			userAnnotations.add(userAnnotation);
 		}
-		boolean didChange = utils.commitAnnotation(response, userAnnotations);
+		response = utils.commitAnnotation(response, userAnnotations);
 		if (response.getSuccess()) {
-			response.setMessage(didChange + ""); //ajax should check the message in commitAnnotation
 			response.setUserPrefs(user.getUserPref());
 		}
 		return response.createObjectJSON();

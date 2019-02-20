@@ -2652,14 +2652,14 @@ const OpenCase = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        if (response.data.message == "true") {
+                        if (response.data.payload.annotationModified) {
                             if (response.data.userPrefs && response.data.userPrefs.showGoodies) {
                                 this.waitingForGoodies = true;
                             }
                             this.snackBarMessage = "Annotation(s) Saved";
                             this.snackBarLink = "";
                         }
-                        else if (response.data.message == "false") {
+                        else {
                             this.snackBarMessage = "No Change Detected";
                             this.snackBarLink = "";
                         }

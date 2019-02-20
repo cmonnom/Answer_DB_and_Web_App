@@ -656,7 +656,7 @@ public class OpenReportController {
 			//get variant details
 			CNV cnv = utils.getCNVDetails(variantId);
 			for (Annotation annotation : cnv.getReferenceCnv().getUtswAnnotations()) {
-				if (annotation.getText().equals("AUTO GENERATED")) {
+				if (annotation.getText().equals("Uncertain Clinical Significance")) {
 					//add the proper annotation to annotationIdsForReporting
 					List<MongoDBId> selectedAnnotations = new ArrayList<MongoDBId>();
 					selectedAnnotations.add(annotation.getMongoDBId());

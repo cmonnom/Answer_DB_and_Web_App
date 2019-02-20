@@ -1037,7 +1037,7 @@ const OpenReport = {
             var annotations = [];
             annotations.push({
                 origin: "UTSW",
-                text: "AUTO GENERATED",
+                text: "Uncertain Clinical Significance",
                 markedForDeletion: false,
                 isVisible: true,
                 geneId: null,

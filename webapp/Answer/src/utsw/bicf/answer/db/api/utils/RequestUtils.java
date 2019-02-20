@@ -20,7 +20,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -314,8 +313,7 @@ public class RequestUtils {
 		}
 	}
 
-	public boolean commitAnnotation(AjaxResponse ajaxResponse, List<Annotation> annotations) throws URISyntaxException, ClientProtocolException, IOException {
-		boolean didChange = false;
+	public AjaxResponse commitAnnotation(AjaxResponse ajaxResponse, List<Annotation> annotations) throws URISyntaxException, ClientProtocolException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("annotations/");
@@ -330,13 +328,12 @@ public class RequestUtils {
 		if (statusCode != HttpStatus.SC_OK) {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
+			return ajaxResponse;
 		}
 		else {
-			String r = IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset());
-			didChange = r.contains("true");
-			ajaxResponse.setSuccess(true);
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			return mongoDBResponse;
 		}
-		return didChange;
 	}
 
 	/**

@@ -62,6 +62,8 @@ import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
+import utsw.bicf.answer.model.extmapping.CommitAnnotationResponse;
+import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Trial;
@@ -725,11 +727,54 @@ public class OpenCaseController {
 			}
 			userAnnotations.add(userAnnotation);
 		}
-		boolean didChange = utils.commitAnnotation(response, userAnnotations);
+		response = utils.commitAnnotation(response, userAnnotations);
 		if (response.getSuccess()) {
-			response.setMessage(didChange + ""); //ajax should check the message in commitAnnotation
+			//the response contains the list of new annotations.
+			//need to select new annotations by default by adding them to the existing list of selected annotations
+			CommitAnnotationResponse result = mapper.convertValue(response.getPayload(), CommitAnnotationResponse.class);
 			response.setUserPrefs(user.getUserPref());
-			response.setPayload(variantId);
+			List<MongoDBId> annotationsToToggle = new ArrayList<MongoDBId>();
+			if (result.getNewAnnotations() != null && !result.getNewAnnotations().isEmpty()) {
+				annotationsToToggle.addAll(result.getNewAnnotations());
+			}
+			if (result.getModifiedAnnotations() != null && !result.getModifiedAnnotations().isEmpty()) {
+				annotationsToToggle.addAll(result.getModifiedAnnotations());
+			}
+			List<MongoDBId> previouslySelected = userAnnotations.stream().filter(a -> a.getIsSelected() != null && a.getIsSelected()).map(a -> a.getMongoDBId()).collect(Collectors.toList());
+			if (previouslySelected != null && !previouslySelected.isEmpty()) {
+				annotationsToToggle.addAll(previouslySelected);
+				
+			}
+			if (!annotationsToToggle.isEmpty()) {
+				AjaxResponse selectResponse = new AjaxResponse();
+				Object variant = null;
+				//build a light variant with just the id and list of selected cards
+				if (userAnnotations.get(0).getType().equals("snp")) {
+					Variant lightVariant = new Variant();
+					MongoDBId id = new MongoDBId();
+					id.setOid(variantId);
+					lightVariant.setMongoDBId(id);
+					lightVariant.setAnnotationIdsForReporting(annotationsToToggle);
+					variant = lightVariant;
+				}
+				else if (userAnnotations.get(0).getType().equals("cnv")) {
+					CNV lightVariant = new CNV();
+					MongoDBId id = new MongoDBId();
+					id.setOid(variantId);
+					lightVariant.setMongoDBId(id);
+					lightVariant.setAnnotationIdsForReporting(annotationsToToggle);
+					variant = lightVariant;
+				}
+				else if (userAnnotations.get(0).getType().equals("translocation")) {
+					Translocation lightVariant = new Translocation();
+					MongoDBId id = new MongoDBId();
+					id.setOid(variantId);
+					lightVariant.setMongoDBId(id);
+					lightVariant.setAnnotationIdsForReporting(annotationsToToggle);
+					variant = lightVariant;
+				}
+				utils.saveSelectedAnnotations(selectResponse, variant, userAnnotations.get(0).getType(), variantId);
+			}
 		}
 		return response.createObjectJSON();
 
