@@ -44,6 +44,11 @@ public class Variant {
 	public static final String FIELD_HAS_REPEATS = "isRepeat";
 	public static final String FIELD_IMPACT = "impact";
 	
+	public static final String CATEGORY_PATHOGENIC = "Pathogenic";
+	public static final String CATEGORY_LIKELY_PATHOGENIC = "Likely pathogenic";
+	public static final String CATEGORY_UNCATEGORIZED = "Uncategorized";
+	
+	
 	Boolean isAllowed = true;
 	
 	@JsonProperty("_id")

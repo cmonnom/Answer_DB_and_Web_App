@@ -318,13 +318,16 @@ public class FinalReportPDFTemplate {
 	}
 
 	private void updatePotentialNewPagePosition(long rows) {
-		if ((latestYPosition <= pageHeight / 2 && rows > 2) //passed half the page and table has more than 2 rows
-				|| rows > 5) { // too many rows
+		if ((latestYPosition <= pageHeight / 2 && rows >= 2) //passed half the page and table has more
+				|| rows > 5 // too many rows
+			) {
 			mainDocument.addPage(new PDPage(PDRectangle.LETTER));
 			latestYPosition = pageHeight - FinalReportTemplateConstants.MARGINTOP;
+			System.out.println(latestYPosition + " pageheight:" + pageHeight + " " + rows + "rows page break");
 		}
 		else {
 			latestYPosition -= 20;
+			System.out.println(latestYPosition + " pageheight:" + pageHeight + " " + rows + "rows no break");
 		}
 	}
 	

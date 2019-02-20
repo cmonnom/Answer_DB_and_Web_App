@@ -835,6 +835,7 @@ public class RequestUtils {
 		List<String> strongTiers = Arrays.asList("1A", "1B");
 		List<String> possibleTiers = Arrays.asList("2C", "2D");
 		List<String> unknownTiers = Arrays.asList("3");
+		List<String> tier1Classifications = Arrays.asList(Variant.CATEGORY_LIKELY_PATHOGENIC, Variant.CATEGORY_PATHOGENIC);
 		
 		
 		MDAReportTemplate mdaEmail = this.getMDATrials(caseId);
@@ -1030,6 +1031,14 @@ public class RequestUtils {
 								&& a.getCategory() != null ) {
 							selectedAnnotationsForVariant.add(a);
 							tiers.add(a.getTier());
+							if (a.getClassification() != null && tier1Classifications.contains(a.getClassification())) {
+								if (a.getClassification().equals(Variant.CATEGORY_PATHOGENIC)) {
+									tiers.add("1A");
+								}
+								else if (a.getClassification().equals(Variant.CATEGORY_LIKELY_PATHOGENIC)) {
+									tiers.add("1B");
+								}
+							}
 							if (a.getPmids() != null) {
 								pmIds.addAll(this.trimPmIds(a.getPmids()));
 							}
@@ -1045,7 +1054,7 @@ public class RequestUtils {
 					highestTierForVariant = tiers.get(0);
 					if (strongTiers.contains(highestTierForVariant)) {
 						for (Annotation a : selectedAnnotationsForVariant) {
-							String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+							String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
 							List<String> annotations = strongAnnotations.get(category);
 							if (annotations == null) {
 								annotations = new ArrayList<String>();
@@ -1056,7 +1065,7 @@ public class RequestUtils {
 					}
 					else if (possibleTiers.contains(highestTierForVariant)) {
 						for (Annotation a : selectedAnnotationsForVariant) {
-							String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+							String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
 							List<String> annotations = possibleAnnotations.get(category);
 							if (annotations == null) {
 								annotations = new ArrayList<String>();
@@ -1067,7 +1076,7 @@ public class RequestUtils {
 					}
 					else if (unknownTiers.contains(highestTierForVariant)) {
 						for (Annotation a : selectedAnnotationsForVariant) {
-							String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+							String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
 							List<String> annotations = unknownAnnotations.get(category);
 							if (annotations == null) {
 								annotations = new ArrayList<String>();
@@ -1146,6 +1155,14 @@ public class RequestUtils {
 									tiers = new ArrayList<String>();
 								}
 								tiers.add(a.getTier());
+								if (a.getClassification() != null && tier1Classifications.contains(a.getClassification())) {
+									if (a.getClassification().equals(Variant.CATEGORY_PATHOGENIC)) {
+										tiers.add("1A");
+									}
+									else if (a.getClassification().equals(Variant.CATEGORY_LIKELY_PATHOGENIC)) {
+										tiers.add("1B");
+									}
+								}
 								tiersByGenes.put(key, tiers);
 								if (a.getPmids() != null) {
 									pmIds.addAll(this.trimPmIds(a.getPmids()));
@@ -1167,7 +1184,7 @@ public class RequestUtils {
 						highestTierForVariant = tiers.get(0);
 						if (strongTiers.contains(highestTierForVariant)) {
 							for (Annotation a : annotations) {
-								String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+								String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
 								List<String> annotationsFormatted = strongAnnotations.get(category);
 								if (annotationsFormatted == null) {
 									annotationsFormatted = new ArrayList<String>();
@@ -1178,7 +1195,7 @@ public class RequestUtils {
 						}
 						else if (possibleTiers.contains(highestTierForVariant)) {
 							for (Annotation a : annotations) {
-								String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+								String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
 								List<String> annotationsFormatted = possibleAnnotations.get(category);
 								if (annotationsFormatted == null) {
 									annotationsFormatted = new ArrayList<String>();

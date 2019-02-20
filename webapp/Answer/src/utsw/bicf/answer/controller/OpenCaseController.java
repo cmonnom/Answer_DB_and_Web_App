@@ -653,7 +653,7 @@ public class OpenCaseController {
 
 	@RequestMapping(value = "/commitAnnotations", produces= "application/json; charset=utf-8")
 	@ResponseBody
-	public String commitAnnotations(Model model, HttpSession session, @RequestBody String annotations,
+	public String commitAnnotations(Model model, HttpSession session, @RequestBody String data,
 			@RequestParam String caseId, @RequestParam String geneId, @RequestParam String variantId) throws Exception {
 		User user = ControllerUtil.getSessionUser(session);
 		RequestUtils utils = new RequestUtils(modelDAO);
@@ -672,8 +672,8 @@ public class OpenCaseController {
 
 		List<Annotation> userAnnotations = new ArrayList<Annotation>();
 		ObjectMapper mapper = new ObjectMapper();
-		JsonNode annotationNodes = mapper.readTree(annotations);
-		for (JsonNode annotationNode : annotationNodes.get("annotations")) {
+		JsonNode dataNodes = mapper.readTree(data);
+		for (JsonNode annotationNode : dataNodes.get("annotations")) {
 			Annotation userAnnotation = mapper.readValue(annotationNode.toString(), Annotation.class);
 			if (userAnnotation.getUserId() != null 
 					&& !userAnnotation.getUserId().equals(user.getUserId())) {
@@ -740,7 +740,17 @@ public class OpenCaseController {
 			if (result.getModifiedAnnotations() != null && !result.getModifiedAnnotations().isEmpty()) {
 				annotationsToToggle.addAll(result.getModifiedAnnotations());
 			}
-			List<MongoDBId> previouslySelected = userAnnotations.stream().filter(a -> a.getIsSelected() != null && a.getIsSelected()).map(a -> a.getMongoDBId()).collect(Collectors.toList());
+//			List<MongoDBId> previouslySelected = userAnnotations.stream().filter(a -> a.getIsSelected() != null && a.getIsSelected()).map(a -> a.getMongoDBId()).collect(Collectors.toList());
+			List<MongoDBId> previouslySelected = new ArrayList<MongoDBId>();
+			for (JsonNode annotationNode : dataNodes.get("annotationIdsForReporting")) {
+				MongoDBId oid = mapper.readValue(annotationNode.toString(), MongoDBId.class);
+				previouslySelected.add(oid);
+			}
+//			for (String id : ) {
+//				MongoDBId oid = new MongoDBId();
+//				oid.setOid(id);
+//				previouslySelected.add(oid);
+//			}
 			if (previouslySelected != null && !previouslySelected.isEmpty()) {
 				annotationsToToggle.addAll(previouslySelected);
 				

@@ -2648,6 +2648,7 @@ const OpenCase = {
                 },
                 data: {
                     annotations: this.userAnnotations,
+                    annotationIdsForReporting: this.annotationIdsForReporting
                 }
             })
                 .then(response => {
