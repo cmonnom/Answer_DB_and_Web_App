@@ -10,6 +10,16 @@ public class ClinicalSignificance {
 	String annotation;
 	boolean readonly;
 	
+	//fields only used when adding a new row
+	String position;
+	String enst;
+	String vaf;
+	String depth;
+	String copyNumber;
+	String aberrationType;
+	String csType;
+	boolean additionalRow;
+	
 	
 	
 	public ClinicalSignificance() {
@@ -51,6 +61,54 @@ public class ClinicalSignificance {
 	}
 	public void setGeneVariantAsKey(String geneVariantAsKey) {
 		this.geneVariantAsKey = geneVariantAsKey;
+	}
+	public String getPosition() {
+		return position;
+	}
+	public void setPosition(String position) {
+		this.position = position;
+	}
+	public String getEnst() {
+		return enst;
+	}
+	public void setEnst(String enst) {
+		this.enst = enst;
+	}
+	public String getVaf() {
+		return vaf;
+	}
+	public void setVaf(String vaf) {
+		this.vaf = vaf;
+	}
+	public String getDepth() {
+		return depth;
+	}
+	public void setDepth(String depth) {
+		this.depth = depth;
+	}
+	public boolean isAdditionalRow() {
+		return additionalRow;
+	}
+	public void setAdditionalRow(boolean additionalRow) {
+		this.additionalRow = additionalRow;
+	}
+	public String getCopyNumber() {
+		return copyNumber;
+	}
+	public void setCopyNumber(String copyNumber) {
+		this.copyNumber = copyNumber;
+	}
+	public String getAberrationType() {
+		return aberrationType;
+	}
+	public void setAberrationType(String aberrationType) {
+		this.aberrationType = aberrationType;
+	}
+	public String getCsType() {
+		return csType;
+	}
+	public void setCsType(String csType) {
+		this.csType = csType;
 	}
 
 }

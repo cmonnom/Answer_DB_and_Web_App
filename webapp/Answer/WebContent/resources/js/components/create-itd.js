@@ -58,6 +58,7 @@ Vue.component('create-itd', {
                     if (response.data.isAllowed && response.data.success) {
                         this.itdDialogVisible = false;
                         this.itdButtonDisabled = true;
+                        this.cancelCreateITD();
                         this.$emit("show-snackbar", "ITD created successfully", null, null, 2000);
                         this.$emit("refresh-variants");
                     }

@@ -318,16 +318,17 @@ public class FinalReportPDFTemplate {
 	}
 
 	private void updatePotentialNewPagePosition(long rows) {
-		if ((latestYPosition <= pageHeight / 2 && rows >= 2) //passed half the page and table has more
-				|| rows > 5 // too many rows
+		if ((latestYPosition <= pageHeight * 0.4 && rows >= 2) //passed 60% of the page and table has more than 2 rows
+//				|| rows > 5 // too many rows
+				|| latestYPosition <= 150 //too close to the end of the page
 			) {
 			mainDocument.addPage(new PDPage(PDRectangle.LETTER));
 			latestYPosition = pageHeight - FinalReportTemplateConstants.MARGINTOP;
-			System.out.println(latestYPosition + " pageheight:" + pageHeight + " " + rows + "rows page break");
+//			System.out.println(latestYPosition + " pageheight:" + pageHeight + " " + rows + "rows page break");
 		}
 		else {
 			latestYPosition -= 20;
-			System.out.println(latestYPosition + " pageheight:" + pageHeight + " " + rows + "rows no break");
+//			System.out.println(latestYPosition + " pageheight:" + pageHeight + " " + rows + "rows no break");
 		}
 	}
 	
@@ -454,18 +455,6 @@ public class FinalReportPDFTemplate {
 		this.applyTitleHeaderFormatting(cellHeader);
 		cellHeader.setFillColor(FinalReportTemplateConstants.THERAPY_COLOR);
 
-		//Headers
-		row = table.createRow(12); 
-		table.addHeaderRow(row);
-		cellHeader = row.createCell(18, "DRUGS");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(18, "VARIANT");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(18, "LEVEL");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-		cellHeader = row.createCell(46, "INDICATION");
-		this.applyHeaderFormatting(cellHeader, defaultFont);
-
 		boolean greyBackground = false;
 		List<IndicatedTherapy> sortedItems = items.stream().sorted(new Comparator<IndicatedTherapy>() {
 			@Override
@@ -487,21 +476,40 @@ public class FinalReportPDFTemplate {
 				return 0; //both null
 			}
 		}).collect(Collectors.toList());
-		for (IndicatedTherapy item : sortedItems) {
-			Color color = Color.WHITE;
-			if (greyBackground) {
-				color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+		if (!sortedItems.isEmpty()) {
+			//Headers
+			row = table.createRow(12); 
+			table.addHeaderRow(row);
+			cellHeader = row.createCell(18, "DRUGS");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(18, "VARIANT");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(18, "LEVEL");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(46, "INDICATION");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			
+			for (IndicatedTherapy item : sortedItems) {
+				Color color = Color.WHITE;
+				if (greyBackground) {
+					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+				}
+				row = table.createRow(12);
+				Cell<PDPage> cell = row.createCell(18, item.getDrugs());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(18, item.getVariant());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(18, item.getLevel());
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(46, item.getIndication());
+				this.applyCellFormatting(cell, defaultFont, color);
+				greyBackground = !greyBackground;
 			}
+		}
+		else {
 			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(18, item.getDrugs());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(18, item.getVariant());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(18, item.getLevel());
-			this.applyCellFormatting(cell, defaultFont, color);
-			cell = row.createCell(46, item.getIndication());
-			this.applyCellFormatting(cell, defaultFont, color);
-			greyBackground = !greyBackground;
+			Cell<PDPage> cell = row.createCell(100, "No indicated therapy for this report.");
+			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
 		links.add(new Link(FinalReportTemplateConstants.INDICATED_THERAPIES_TITLE_NAV, this.mainDocument.getNumberOfPages() - 1, (int) this.latestYPosition - 20));
 		try {
@@ -710,7 +718,7 @@ public class FinalReportPDFTemplate {
 
 		if (tableItems == null || tableItems.isEmpty()) {
 			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(100, "No variant to report at this level");
+			Cell<PDPage> cell = row.createCell(100, "No variant to report at this level.");
 			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
 		else {
@@ -793,7 +801,7 @@ public class FinalReportPDFTemplate {
 
 		if (tableItems == null || tableItems.isEmpty()) {
 			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(100, "No variant to report at this level");
+			Cell<PDPage> cell = row.createCell(100, "No variant to report at this level.");
 			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
 		}
 		else {
@@ -1007,12 +1015,12 @@ public class FinalReportPDFTemplate {
 				this.applyCellFormatting(cell, defaultFont, color);
 				cell = row.createCell(10, item.getLeftGene());
 				this.applyCellFormatting(cell, defaultFont, color);
-				cell = row.createCell(10, "0");
+				cell = row.createCell(10, item.getLastExon());
 				this.applyCellFormatting(cell, defaultFont, color);
 				cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
 				cell = row.createCell(10, item.getRightGene());
 				this.applyCellFormatting(cell, defaultFont, color);
-				cell = row.createCell(10, "0");
+				cell = row.createCell(10, item.getFirstExon());
 				this.applyCellFormatting(cell, defaultFont, color);
 				cell.setAlign(HorizontalAlignment.RIGHT); //align numbers to the right
 				cell = row.createCell(40, item.getComment());

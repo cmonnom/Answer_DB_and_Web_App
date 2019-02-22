@@ -12,6 +12,16 @@ Vue.component('report-pubmed-ids', {
                 <v-icon color="amber accent-2">mdi-book-open-page-variant</v-icon>
             </v-btn>
             <v-list>
+                <v-list-tile avatar @click="addNewPubMed()">
+                    <v-list-tile-avatar>
+                        <v-icon>add</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Add New PubMed Reference</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
+            </v-list>
+            <v-list>
                 <v-list-tile avatar @click="closePanel()">
                     <v-list-tile-avatar>
                         <v-icon>cancel</v-icon>
@@ -25,6 +35,12 @@ Vue.component('report-pubmed-ids', {
         <v-toolbar-title>PubMed References</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
+            <v-btn flat icon @click="addNewVisible = !addNewVisible" slot="activator">
+                <v-icon>add</v-icon>
+            </v-btn>
+            <span>Add New PubMed Reference</span>
+        </v-tooltip>
+        <v-tooltip bottom>
             <v-btn flat icon @click="closePanel()" slot="activator">
                 <v-icon>close</v-icon>
             </v-btn>
@@ -34,6 +50,12 @@ Vue.component('report-pubmed-ids', {
     <v-card-text>
     <v-container grid-list-md fluid>
     <v-layout row wrap>
+    <v-flex xs6 v-show="addNewVisible">
+    <v-text-field label="Numbers only (comma separated)" v-model="currentPubMedIds" :rules="numberRules"></v-text-field>
+    </v-flex>
+    <v-flex xs2 v-show="addNewVisible">
+    <v-btn @click="addNewPubMed">Add Reference</v-btn>
+    </v-flex>
     <v-flex xs12 v-for="item in pubmeds" :key="item.pmid">
         <div><b>{{ item.title }}</b></div>
         <div>{{ item.authors }}</div>
@@ -55,9 +77,9 @@ Vue.component('report-pubmed-ids', {
     `,
     data() {
         return {
-           
-
-
+           currentPubMedIds: "",
+           addNewVisible: false,
+           numberRules: [(v) => { return this.isNumberList(v) || 'Only numbers, separated by comma' }],
         }
     },
     methods: {
@@ -106,6 +128,27 @@ Vue.component('report-pubmed-ids', {
         },
         openPMIDLink(pmid) {
             window.open('https://www.ncbi.nlm.nih.gov/pubmed/?term=' + pmid, "_blank");
+        },
+        addNewPubMed() {
+            this.$emit("add-pubmed-reference", this.currentPubMedIds);
+        },
+         //Some external validation might be required or extra fields added.
+        //The parent component should call this method to clean up.
+        confirmAddingANewPubMed() {
+            this.currentPubMedIds = "";
+            this.addNewVisible = false;
+        },
+        isNumberList(v) {
+            var valid = !isNaN(v);
+            if (!valid) {
+                valid = true;
+                //check if separated by comma
+                var items = v.split(",");
+                for (var i = 0; i < items.length; i++) {
+                    valid = valid && !isNaN(items[i].trim());
+                }
+            }
+            return valid;
         },
 
     },

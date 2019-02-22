@@ -654,7 +654,8 @@ public class OpenCaseController {
 	@RequestMapping(value = "/commitAnnotations", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String commitAnnotations(Model model, HttpSession session, @RequestBody String data,
-			@RequestParam String caseId, @RequestParam String geneId, @RequestParam String variantId) throws Exception {
+			@RequestParam String caseId, @RequestParam String geneId, @RequestParam String variantId,
+			@RequestParam(defaultValue="false") Boolean skipAutoSelect) throws Exception {
 		User user = ControllerUtil.getSessionUser(session);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		AjaxResponse response = new AjaxResponse();
@@ -728,7 +729,7 @@ public class OpenCaseController {
 			userAnnotations.add(userAnnotation);
 		}
 		response = utils.commitAnnotation(response, userAnnotations);
-		if (response.getSuccess()) {
+		if (response.getSuccess() && !skipAutoSelect) {
 			//the response contains the list of new annotations.
 			//need to select new annotations by default by adding them to the existing list of selected annotations
 			CommitAnnotationResponse result = mapper.convertValue(response.getPayload(), CommitAnnotationResponse.class);
@@ -785,6 +786,9 @@ public class OpenCaseController {
 				}
 				utils.saveSelectedAnnotations(selectResponse, variant, userAnnotations.get(0).getType(), variantId);
 			}
+		}
+		if (response.getSuccess()) {
+			response.setMessage(variantId); //to pass the current variant id back to the UI
 		}
 		return response.createObjectJSON();
 

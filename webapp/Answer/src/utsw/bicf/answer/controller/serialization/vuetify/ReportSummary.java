@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -525,21 +526,86 @@ public class ReportSummary {
 		this.snpVariantsUnknownClinicalSignificance = snpVariantsUnknownClinicalSignificance;
 	}
 
-	public void updateModifiedRows() {
+	public void updateModifiedRows() throws Exception {
 		this.updateCSRows(this.snpVariantsStrongClinicalSignificanceSummary, this.snpVariantsStrongClinicalSignificance);
 		this.updateCSRows(this.snpVariantsPossibleClinicalSignificanceSummary, this.snpVariantsPossibleClinicalSignificance);
 		this.updateCSRows(this.snpVariantsUnknownClinicalSignificanceSummary, this.snpVariantsUnknownClinicalSignificance);
 	}
 	
-	private void updateCSRows(ClinicalSignificanceSummary summary, Map<String, GeneVariantAndAnnotation> originalCS) {
+	private void updateCSRows(ClinicalSignificanceSummary summary, Map<String, GeneVariantAndAnnotation> originalCS) throws Exception {
 		if (summary != null) {
 			int length = summary.getItems().size();
 			for (int i = 0; i < length; i++) {
 				ClinicalSignificance cs = summary.getItems().get(i);
-				String previousAnnotation = originalCS.get(cs.getGeneVariantAsKey()).getAnnotationsByCategory().get(cs.getCategory());
-				String newAnnotation = summary.getItems().get(i).getAnnotation();
-				if (newAnnotation != null && previousAnnotation != null && !newAnnotation.equals(previousAnnotation)) {
-					originalCS.get(cs.getGeneVariantAsKey()).getAnnotationsByCategory().put(cs.getCategory(), newAnnotation);
+				if (!cs.isAdditionalRow()) {
+					String previousAnnotation = originalCS.get(cs.getGeneVariantAsKey()).getAnnotationsByCategory().get(cs.getCategory());
+					String newAnnotation = summary.getItems().get(i).getAnnotation();
+					if (newAnnotation != null && previousAnnotation != null && !newAnnotation.equals(previousAnnotation)) {
+						originalCS.get(cs.getGeneVariantAsKey()).getAnnotationsByCategory().put(cs.getCategory(), newAnnotation);
+					}
+				}
+			}
+			//handle manually added rows
+			//group the rows by variant
+			Map<String, List<ClinicalSignificance>> csAnnotationsByVariant = new HashMap<String, List<ClinicalSignificance>>();
+			for (int i = 0; i < length; i++) {
+				ClinicalSignificance cs = summary.getItems().get(i);
+				if (cs.isAdditionalRow()) {
+					List<ClinicalSignificance> csList = csAnnotationsByVariant.get(cs.getGeneVariantAsKey());
+					if (csList == null) {
+						csList = new ArrayList<ClinicalSignificance>();
+					}
+					csList.add(cs);
+					csAnnotationsByVariant.put(cs.getGeneVariantAsKey(), csList);
+				}
+			}
+//			Map<String, GeneVariantAndAnnotation> annotationsGroupedByVariant = new HashMap<String, GeneVariantAndAnnotation>();
+			for (String variant : csAnnotationsByVariant.keySet()) {
+				if (originalCS.containsKey(variant)) {
+					throw new Exception("You cannot add a row for an existing variant (" + variant + "). Create a new anntoation card instead.");
+				}
+				Map<String, List<String>> csAnnotationsByCat = new HashMap<String, List<String>>();
+				Map<String, String> csAnnotationsConcatByCat = new HashMap<String, String>();
+				List<ClinicalSignificance> csList = csAnnotationsByVariant.get(variant);
+				for (ClinicalSignificance cs : csList) {
+					List<String> annotationsForCat = csAnnotationsByCat.get(cs.getCategory());
+					if (annotationsForCat == null) {
+						annotationsForCat = new ArrayList<String>();
+					}
+					annotationsForCat.add(cs.getAnnotation());
+					csAnnotationsByCat.put(cs.getCategory(), annotationsForCat);
+				}
+				for (String cat : csAnnotationsByCat.keySet()) {
+					csAnnotationsConcatByCat.put(cat, csAnnotationsByCat.get(cat).stream().collect(Collectors.joining(" ")));
+					//TODO increment cs count. Need to determine which one it is  (strong or possible)
+				}
+				GeneVariantAndAnnotation gva = new GeneVariantAndAnnotation();
+				ClinicalSignificance firstItem = csList.get(0);
+				gva.setAnnotationsByCategory(csAnnotationsConcatByCat);
+				gva.setCopyNumber(firstItem.getCopyNumber());
+				gva.setAberrationType(firstItem.getAberrationType());
+				//separate the gene and variant if snp, gene + variant if cnv
+				gva.setGene(firstItem.getCopyNumber() != null ? firstItem.getGeneVariant() : firstItem.getGeneVariant().split(" ")[0]);
+				gva.setGeneVariant(firstItem.getGeneVariant());
+				gva.setVariant(firstItem.getGeneVariant());
+				gva.setPosition(firstItem.getPosition());
+				String taf = firstItem.getVaf() != null ? firstItem.getVaf() + (firstItem.getVaf().contains("%") ? "" : "%") : "";
+				gva.setTaf(taf);
+				gva.settDepth(firstItem.getDepth());
+				gva.setTranscript(firstItem.getEnst());
+				gva.setType(firstItem.getCopyNumber() != null ? "cnv" : "snp");
+				originalCS.put(variant, gva);
+				//need to add gain or loss in front of cnv gene list
+				String label = firstItem.getCopyNumber() != null ? gva.getAberrationType() + " " + gva.getGene() : gva.getGene();
+				ReportNavigationRow navRow = new ReportNavigationRow(firstItem.getGeneVariantAsKey(), label);
+				if (firstItem.getCsType().equals("strong")) {
+					navRow.setStrongClinicalSignificanceCount(1);
+				}
+				else if (firstItem.getCsType().equals("possible")) {
+					navRow.setPossibleClinicalSignificanceCount(1);
+				}
+				if (firstItem.getCsType().equals("strong")|| firstItem.getCsType().equals("possible")) {
+					this.navigationRowsPerGene.put(gva.getGene(), navRow);
 				}
 			}
 		}

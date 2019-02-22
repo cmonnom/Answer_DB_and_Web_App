@@ -25,6 +25,9 @@ Vue.component('data-table', {
         "disable-sticky-header": {default: false, type: Boolean},
         highlights: { default: () => {}, type: Object },
         "fixed-header": {default: false, type: Boolean}, //not working yet
+        "add-row-button": {default: false, type: Boolean},
+        "add-row-description": {default: "", type: String},
+        "additional-headers": {default: () => [], type: Array} //for situations where add a new row needs more fields than in headers
 
     },
     template: `<div>
@@ -46,6 +49,15 @@ Vue.component('data-table', {
           <slot name="action1MenuItem"></slot>
           <slot name="action2MenuItem"></slot>
           <slot name="action3MenuItem"></slot>
+
+          <v-list-tile avatar @click="toggleAddRowBar" v-if="addRowButton">
+            <v-list-tile-avatar>
+              <v-icon>add</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-title>Add New Row</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>  
 
           <v-list-tile avatar @click="toggleSearchBar">
             <v-list-tile-avatar>
@@ -124,6 +136,15 @@ Vue.component('data-table', {
       <slot name="action3"></slot>
 
     <v-fade-transition>
+      <v-tooltip bottom v-show="showButtons" v-if="addRowButton">
+        <v-btn flat icon @click="toggleAddRowBar" slot="activator" :color="showAddRowBar ? 'amber accent-2' : 'white'">
+          <v-icon>add</v-icon>
+        </v-btn>
+        <span>Add New Row</span>
+      </v-tooltip>
+    </v-fade-transition>
+
+    <v-fade-transition>
       <v-tooltip bottom v-show="showButtons">
         <v-btn flat icon @click="toggleSearchBar" slot="activator" :color="showSearchBar ? 'amber accent-2' : 'white'">
           <v-icon>search</v-icon>
@@ -169,6 +190,34 @@ Vue.component('data-table', {
       </v-tooltip>
     </v-fade-transition>
   </v-toolbar>
+
+  <!--Add Row Bar -->
+  <v-slide-y-transition>
+  <v-card v-show="showAddRowBar">
+    <v-toolbar dense light class="mt-1" >
+      <v-toolbar-title class="subheading">
+        <v-btn icon @click="toggleAddRowBar" slot="activator">
+          <v-icon>keyboard_arrow_up</v-icon>
+        </v-btn>
+        Add a new Row {{ addRowDescription }}
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      </v-toolbar>
+      <v-card-text>
+      <v-layout row wrap align-end>
+      <v-flex xs v-for="header in getSortedHeaders" :key="header.oneLineText" class="pl-2 pr-2" v-if="!header.isFlag">
+         <v-text-field hide-details :label="header.oneLineText" textarea v-model="newRow[header.value]" :style="'width:' + header.width"></v-text-field>
+      </v-flex>
+      <v-flex xs v-for="header in additionalHeaders" :key="header.oneLineText" class="pl-2 pr-2" >
+        <v-text-field hide-details :label="header.oneLineText" :hint="header.hint" textarea v-model="newRow[header.value]" :style="'width:' + header.width"></v-text-field>
+      </v-flex>
+      <v-flex>
+      <v-btn :color="color" @click="addNewRow">Add Row</v-btn>
+      </v-flex>
+      </v-layout>
+      </v-card-text>
+    </v-card>  
+  </v-slide-y-transition>
 
   <!-- Search Bar -->
   <v-slide-y-transition>
@@ -468,6 +517,7 @@ Vue.component('data-table', {
             loading: this.isLoadingColor,
             items: [],
             itemDragging: '',
+            showAddRowBar: false,
             showSearchBar: false,
             showDraggableHeader: false,
             mustSort: true,
@@ -488,7 +538,8 @@ Vue.component('data-table', {
             showButtons: true,
             saveHeaderConfigNeeded: false,
             savingHeaderConfig: false,
-            isHeaderFixed: false
+            isHeaderFixed: false,
+            newRow: {}
         }
     },
     methods: {
@@ -667,6 +718,16 @@ Vue.component('data-table', {
         stopLoading() {
             this.loading = false;
         },
+        addNewRow() {
+            this.$emit("adding-new-row", this, this.newRow);
+        },
+        //Some external validation might be required or extra fields added.
+        //The parent component should call this method to finish adding this.newRow to the table
+        confirmAddingANewRow(newRow) {
+            this.newRow = newRow;
+            this.items.push(this.newRow);
+            this.newRow = {};
+        },
         //In most cases, the response contains data for only one table
         //use this method to manually update the data
         manualData(response) {
@@ -764,6 +825,9 @@ Vue.component('data-table', {
         },
         isDragging(header) {
             return header === this.itemDragging;
+        },
+        toggleAddRowBar() {
+            this.showAddRowBar = !this.showAddRowBar;
         },
         toggleSearchBar() {
             this.showSearchBar = !this.showSearchBar;

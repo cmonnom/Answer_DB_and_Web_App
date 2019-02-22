@@ -28,6 +28,7 @@ public class IndicatedTherapySummary extends Summary<IndicatedTherapy> {
 		headers.add(level);
 		Header indication = new Header("Indication", "indication");
 		indication.setAlign("left");
+		indication.setWidth("400px");
 		headers.add(indication);
 
 	}

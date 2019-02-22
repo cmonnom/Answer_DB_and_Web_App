@@ -357,7 +357,9 @@ const OpenReport = {
             <div>
                 <data-table ref="indicatedTherapies" :fixed="false" :fetch-on-created="false" table-title="Indicated Therapies"
                     initial-sort="gene" no-data-text="No Data" :show-pagination="true" title-icon="mdi-pill" :color="colors.openReport"
-                    :disable-sticky-header="true">
+                    :disable-sticky-header="true" :add-row-button="true"
+                    add-row-description="(for this report only. Unsaved changes will be discarded)"
+                    @adding-new-row="handleNewIndicatedTherapyRow">
                 </data-table>
             </div>
         </v-flex>
@@ -369,9 +371,11 @@ const OpenReport = {
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
                 :enable-select-all="true"
                     initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
-                    :color="colors.trials" :disable-sticky-header="true"
+                    :color="colors.trials" :disable-sticky-header="true" :add-row-button="true"
                     :enable-selection="canProceed('canReview') && !readonly"
-                    @datatable-selection-changed="handleSelectionChanged">
+                    @datatable-selection-changed="handleSelectionChanged"
+                    add-row-description="(for this report only. Unsaved changes will be discarded)"
+                    @adding-new-row="handleNewTrialRow">
                 </data-table>
             </div>
         </v-flex>
@@ -382,7 +386,10 @@ const OpenReport = {
         <div>
             <data-table ref="strongCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Strong Clinical Significance"
                 initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
-                :disable-sticky-header="true">
+                :disable-sticky-header="true" :add-row-button="true"
+                add-row-description="(for this report only. Unsaved changes will be discarded)"
+                @adding-new-row="handleNewStrongCSRow"
+                :additional-headers="additionalCSHeaders">
             </data-table>
         </div>
     </v-flex>
@@ -393,7 +400,10 @@ const OpenReport = {
     <div>
         <data-table ref="possibleCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Possible Clinical Significance"
             initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
-            :disable-sticky-header="true">
+            :disable-sticky-header="true" :add-row-button="true"
+            add-row-description="(for this report only. Unsaved changes will be discarded)"
+            @adding-new-row="handleNewPossibleCSRow"
+            :additional-headers="additionalCSHeaders">
         </data-table>
     </div>
 </v-flex>
@@ -404,7 +414,9 @@ const OpenReport = {
     <div>
         <data-table ref="unknownCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Unknown Clinical Significance"
             initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
-            :disable-sticky-header="true">
+            :disable-sticky-header="true" :add-row-button="true"
+            add-row-description="(for this report only. Unsaved changes will be discarded)"
+            @adding-new-row="handleNewUnknownCSRow">
         </data-table>
     </div>
 </v-flex>
@@ -415,7 +427,9 @@ const OpenReport = {
             <div>
                 <data-table ref="copyNumberAlterations" :fixed="false" :fetch-on-created="false" table-title="Copy Number Alterations"
                     initial-sort="gene" no-data-text="No Data" :show-pagination="true" title-icon="assignment" :color="colors.cnvs"
-                    :disable-sticky-header="true">
+                    :disable-sticky-header="true" :add-row-button="true"
+                    add-row-description="(for this report only. Unsaved changes will be discarded)"
+                    @adding-new-row="handleNewCNVRow"             >
                 </data-table>
             </div>
         </v-flex>
@@ -426,7 +440,9 @@ const OpenReport = {
             <div>
                 <data-table ref="geneFusions" :fixed="false" :fetch-on-created="false" table-title="Gene Fusions"
                     initial-sort="fusionName" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
-                    :color="colors.fusions" :disable-sticky-header="true">
+                    :color="colors.fusions" :disable-sticky-header="true" :add-row-button="true"
+                    add-row-description="(for this report only. Unsaved changes will be discarded)"
+                    @adding-new-row="handleNewFTLRow">
                 </data-table>
             </div>
         </v-flex>
@@ -434,9 +450,10 @@ const OpenReport = {
 
     <v-slide-y-transition>
     <v-flex xs12 xl9 v-show="pmidPanelVisible" pt-3>
-        <report-pubmed-ids :color="colors.pubmeds"
+        <report-pubmed-ids :color="colors.pubmeds" ref="pubmedTable"
         :pubmeds="fullReport.pubmeds"
-        @close-pmid-panel="pmidPanelVisible = false"></report-pubmed-ids>
+        @close-pmid-panel="pmidPanelVisible = false"
+        @add-pubmed-reference="addPubMedReference"></report-pubmed-ids>
     </v-flex>
 </v-slide-y-transition>
 
@@ -495,7 +512,44 @@ const OpenReport = {
             },
             finalizeReportExists: false,
             currentReportName: "",
-            pmidPanelVisible: false
+            pmidPanelVisible: false,
+            additionalCSHeaders: [
+                {
+                    oneLineText: "Position",
+                    value: "position",
+                    width: "100px",
+                    hint: ""
+                },
+                {
+                    oneLineText: "ENST (SNP)",
+                    value: "enst",
+                    width: "200px",
+                    hint: ""
+                },
+                {
+                    oneLineText: "VAF (SNP)",
+                    value: "vaf",
+                    width: "200px",
+                    hint: ""
+                },
+                {
+                    oneLineText: "Depth (SNP)",
+                    value: "depth",
+                    width: "200px",
+                    hint: ""
+                },
+                {
+                    oneLineText: "Copy Number (CNV)",
+                    value: "copyNumber",
+                    width: "200px",
+                    hint: ""
+                },
+                {
+                    oneLineText: "Aberration Type (CNV)",
+                    value: "aberrationType",
+                    width: "200px",
+                    hint: ""
+                },]
 
         }
     }, methods: {
@@ -1075,15 +1129,16 @@ const OpenReport = {
                 params: {
                     caseId: this.$route.params.id,
                     geneId: "",
-                    variantId: variantId
+                    variantId: variantId,
+                    skipAutoSelect: true
                 },
                 data: {
-                    annotations: annotations,
+                    annotations: annotations
                 }
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        this.saveBypassCNVSelection(response.data.payload);
+                        this.saveBypassCNVSelection(response.data.message);
                     } else {
                         this.handleDialogs(response.data, this.bypassCNVWarning.bind(null, variantId));
                     }
@@ -1119,6 +1174,132 @@ const OpenReport = {
             }
             path += "/" + this.$route.params.id;
             router.push({path : path});
+        },
+        handleNewIndicatedTherapyRow(table, newRow) {
+            table.confirmAddingANewRow(newRow);
+        },
+        handleNewStrongCSRow(table, newRow) {
+            newRow.geneVariantAsKey = newRow.geneVariant.replace(/\./g, "");
+            newRow.additionalRow = true;
+            newRow.csType = "strong";
+            table.confirmAddingANewRow(newRow);
+        },
+        handleNewPossibleCSRow(table, newRow) {
+            newRow.geneVariantAsKey = newRow.geneVariant.replace(/\./g, "");
+            newRow.additionalRow = true;
+            newRow.csType = "possible";
+            table.confirmAddingANewRow(newRow);
+        },
+        handleNewUnknownCSRow(table, newRow) {
+            newRow.geneVariantAsKey = newRow.geneVariant.replace(/\./g, "");
+            newRow.additionalRow = true;
+            newRow.csType = "unknown";
+            table.confirmAddingANewRow(newRow);
+        },
+        handleNewTrialRow(table, newRow) {
+            table.confirmAddingANewRow(newRow);
+        },
+        handleNewFTLRow(table, newRow) {
+            table.confirmAddingANewRow(newRow);
+        },
+        handleNewCNVRow(table, newRow) {
+            var isValid = true;
+            //check that loci is formatted correctly
+            const regex = /(chr[0-9XY]+):([0-9]+)-([0-9]+)/gmi;
+            var m = regex.exec(newRow.loci);
+            isValid = m != null;
+            if (isValid) {
+                //split loci in chr start end
+                newRow.chrom = m[1];
+                newRow.start = parseInt(m[2]);
+                newRow.startFormatted = newRow.start.toLocaleString();
+                newRow.end = parseInt(m[3]);
+                newRow.endFormatted = newRow.end.toLocaleString();
+                table.confirmAddingANewRow(newRow);
+            }
+            else {
+                this.handleAxiosError("Loci should be formatted as chrXX:123456-456789");
+            }
+        },
+        addPubMedReference(pubmedIds) {
+            axios.get(
+                webAppRoot + "/createPubMedFromId",
+                {
+                    params: {
+                        pubmedIds: pubmedIds
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        var pubmeds = response.data.payload;
+                        for (var i = 0; i < pubmeds.length; i++) {
+                            this.fullReport.pubmeds.push(pubmeds[i]);
+                        }
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.addPubMedReference.bind(null, pubmedIds));
+                        this.loadingReportDetails = false;
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                });
+        },
+        test() {
+            this.$refs.indicatedTherapies.newRow.drugs = "some drugs";
+            this.$refs.indicatedTherapies.newRow.variant = "some variant";
+            this.$refs.indicatedTherapies.newRow.level = "some level";
+            this.$refs.indicatedTherapies.newRow.indication = "some indication";
+            this.$refs.indicatedTherapies.addNewRow();
+
+            this.$refs.clinicalTrials.newRow.biomarkers = "some biomarkers";
+            this.$refs.clinicalTrials.newRow.drugs = "some drugs";
+            this.$refs.clinicalTrials.newRow.title = "some title";
+            this.$refs.clinicalTrials.newRow.phase = "some phase";
+            this.$refs.clinicalTrials.newRow.contact = "some contact";
+            this.$refs.clinicalTrials.newRow.location = "some location";
+            this.$refs.clinicalTrials.addNewRow();
+
+            this.$refs.strongCS.newRow.geneVariant = "BRCA1 TET2"; 
+            this.$refs.strongCS.newRow.category = "My Category";
+            this.$refs.strongCS.newRow.annotation = "Some annotation"; 
+            this.$refs.strongCS.newRow.position = "chr1:123456"; 
+            this.$refs.strongCS.newRow.copyNumber = "4";
+            this.$refs.strongCS.newRow.aberrationType = "Gain";
+            this.$refs.strongCS.addNewRow();
+
+            this.$refs.possibleCS.newRow.geneVariant = "BRCA1 TET2"; 
+            this.$refs.possibleCS.newRow.category = "My Category";
+            this.$refs.possibleCS.newRow.annotation = "Some annotation"; 
+            this.$refs.possibleCS.newRow.position = "chr1:123456"; 
+            this.$refs.possibleCS.newRow.enst = "ENST123456";
+            this.$refs.possibleCS.newRow.vaf = "0.14";
+            this.$refs.possibleCS.newRow.depth = "1600";
+            this.$refs.possibleCS.addNewRow();
+
+            this.$refs.unknownCS.newRow.geneVariant = "BRCA1 TET2"; 
+            this.$refs.unknownCS.newRow.category = "My Category";
+            this.$refs.unknownCS.newRow.annotation = "Some annotation"; 
+            this.$refs.unknownCS.addNewRow();
+
+            this.$refs.copyNumberAlterations.newRow.loci = "chr12:123456-123458"; 
+            this.$refs.copyNumberAlterations.newRow.copyNumber = "1"; 
+            this.$refs.copyNumberAlterations.newRow.genes = "SOME GENES HERE"; 
+            this.$refs.copyNumberAlterations.newRow.cytoband = "q1.2-35"; 
+            this.$refs.copyNumberAlterations.newRow.comment = "some comments"; 
+            this.$refs.copyNumberAlterations.addNewRow();
+
+            this.$refs.geneFusions.newRow.fusionName = "fusion";
+            this.$refs.geneFusions.newRow.leftGene = "GENE1";
+            this.$refs.geneFusions.newRow.lastExon = "5";
+            this.$refs.geneFusions.newRow.rightGene = "GENE2";
+            this.$refs.geneFusions.newRow.firstExon = "1";
+            this.$refs.geneFusions.newRow.comment = "Some Comment";
+            this.$refs.geneFusions.addNewRow();
+
+            this.$refs.pubmedTable.currentPubMedIds = "23411347,12345678";
+            this.$refs.pubmedTable.addNewPubMed();
+
+
         }
     },
     mounted() {
