@@ -12,6 +12,7 @@
 	<property name="target.dir" location="/Users/Guillaume/Downloads/war" />
 	<property name="tomcat.lib.dir" location="/Program Files (x86)/Apache Software Foundation/Tomcat 8.5/lib" />
 	<property name="answer.ssh.properties" location="/opt/answer/conf/answer-ssh.properties" />
+	<property name="web.xml.path" location="${web.dir}/WEB-INF/web.xml" />
 	<property name="docs.output.dir" location="/Users/Guillaume/Downloads/war/html" />
 	<property name="docs.source.dir" location="${webcontent.dir}/WEB-INF/view/docs/build/html" />
 
@@ -24,14 +25,15 @@
 		<mkdir dir="${docs.output.dir}" />
 	</target>
 
-	<!-- Delete folders -->
+	<!-- Delete folders 
 	<target name="clean" description="clean up">
 		<delete dir="${web.dir}" />
 		<delete dir="${docs.output.dir}" />
-	</target>
+	</target> -->
 	
 	<!-- Delete folders -->
 		<target name="final-clean" description="clean up">
+			<move failonerror="false"  file="${web.dir}/index.jsp" tofile="${web.dir}/index.jsp.old"/>
 			<delete dir="${web.dir}" />
 			<delete dir="${docs.output.dir}" />
 		</target>
@@ -73,6 +75,7 @@
 						<include name="*.properties"/>
 					</fileset>
 		</copy>
+		<move file="${web.xml.path}.devprod" tofile="${web.xml.path}"/>
 	</target>
 	
 	<target name="copy-docs" description="copy documentation files">
@@ -96,12 +99,12 @@
 	</target>
 	
 	<!-- Create the final WAR file for deployment -->
-		<target name="package" depends="clean, compile, copy-resources" description="create a war file">
+		<target name="package" depends="final-clean, compile, copy-resources" description="create a war file">
 			<zip destfile="${target.dir}/Answer.war" basedir="${web.dir}">
 			</zip>
 		</target>
 	
-	<target name="zip-docs" depends="clean, copy-docs" description="zip documentation">
+	<target name="zip-docs" depends="final-clean, copy-docs" description="zip documentation">
 				<zip destfile="${target.dir}/html.zip" basedir="${target.dir}/html">
 				</zip>
 			</target>

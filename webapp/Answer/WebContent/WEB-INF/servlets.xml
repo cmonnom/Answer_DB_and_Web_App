@@ -151,7 +151,6 @@
 
 <context:property-placeholder location="file:///opt/answer/conf/answer.properties"/>
 
-
 </beans>
 
 

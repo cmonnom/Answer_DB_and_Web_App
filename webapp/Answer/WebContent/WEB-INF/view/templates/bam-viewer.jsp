@@ -21,7 +21,8 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 						<!-- Font Awesome CSS -->
 						<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"
 						/>
-						<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/igv@2.2.2/dist/igv.min.js"></script>
+						
+						<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/igv@2.2.5/dist/igv.min.js"></script>
 					</head>
 
 					<body>

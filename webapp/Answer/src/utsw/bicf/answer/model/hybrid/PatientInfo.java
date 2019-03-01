@@ -48,16 +48,11 @@ public class PatientInfo {
 		}
 		items.add(new CellItem("DOB", dab));
 		items.add(new CellItem("Sex", orderCase.getGender()));
-		items.add(new CellItem("Order #", orderCase.getEpicOrderNumber())); 
-		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));
-		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
-		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
-		
-		patientTables.add(table);
-		
-		table = new ListTable();
-		items = new ArrayList<CellItem>();
-		table.setItems(items);
+//		items.add(new CellItem("Order #", orderCase.getEpicOrderNumber())); 
+//		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));
+//		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
+//		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
+		items.add(new CellItem("Institution", orderCase.getInstitution()));
 		String orderedBy = null;
 		if (orderCase.getOrderingPhysician() != null) {
 			int separator = orderCase.getOrderingPhysician().indexOf(" ");
@@ -90,10 +85,53 @@ public class PatientInfo {
 		}
 		items.add(new CellItem("Ordered By", orderedBy));
 		items.add(new CellItem("Authorized By", authorizedBy));
-		items.add(new CellItem("Institution", orderCase.getInstitution()));
+		items.add(new CellItem("ICD10", orderCase.getIcd10()));
+		
+		patientTables.add(table);
+		
+		table = new ListTable();
+		items = new ArrayList<CellItem>();
+		table.setItems(items);
+//		String orderedBy = null;
+//		if (orderCase.getOrderingPhysician() != null) {
+//			int separator = orderCase.getOrderingPhysician().indexOf(" ");
+//			String rawValue = null;
+//			if (separator > -1) {
+//				rawValue = orderCase.getOrderingPhysician().substring(separator, orderCase.getOrderingPhysician().length() - 1);
+//			}
+//			else {
+//				rawValue = orderCase.getOrderingPhysician();
+//			}
+//			orderedBy = "Dr. "  + WordUtils.capitalize(rawValue.toLowerCase(), ' ', ',');
+//		}
+//		else {
+//			orderedBy = "";
+//		}
+//		String authorizedBy = null;
+//		if (orderCase.getAuthorizingPhysician() != null) {
+//			int separator = orderCase.getAuthorizingPhysician().indexOf(" ");
+//			String rawValue = null;
+//			if (separator > -1) {
+//				rawValue = orderCase.getAuthorizingPhysician().substring(separator, orderCase.getAuthorizingPhysician().length() - 1);
+//			}
+//			else {
+//				rawValue = orderCase.getAuthorizingPhysician();
+//			}
+//			authorizedBy = "Dr. "  + WordUtils.capitalize(rawValue.toLowerCase(), ' ', ',');
+//		}
+//		else {
+//			authorizedBy = "";
+//		}
+//		items.add(new CellItem("Ordered By", orderedBy));
+//		items.add(new CellItem("Authorized By", authorizedBy));
+//		items.add(new CellItem("Institution", orderCase.getInstitution()));
+		items.add(new CellItem("Order #", orderCase.getEpicOrderNumber())); 
+		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));
+		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
+		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
 		items.add(new CellItem("Tumor Tissue", orderCase.getTumorTissueType()));
 		items.add(new CellItem("Germline Tissue", orderCase.getNormalTissueType()));
-		items.add(new CellItem("ICD10", orderCase.getIcd10()));
+//		items.add(new CellItem("ICD10", orderCase.getIcd10()));
 		CellItem oncoTreeItem = new CellItem("OncoTree Diagnosis", orderCase.getOncotreeDiagnosis());
 		oncoTreeItem.setType(CellItem.TYPE_TEXT);
 		oncoTreeItem.setField("oncotree");
@@ -118,8 +156,11 @@ public class PatientInfo {
 		dedupAvgDepthItem.setField("dedupAvgDepth");
 		dedupAvgDepthItem.setType(CellItem.TYPE_TEXT_FIELD);
 		items.add(dedupAvgDepthItem);
+		CellItem tumorPercentItem = new CellItem("Tumor Percent", orderCase.getTumorPercent() != null ? orderCase.getTumorPercent() + "" : "");
+		tumorPercentItem.setField("tumorPercent");
+		tumorPercentItem.setType(CellItem.TYPE_TEXT_FIELD);
+		items.add(tumorPercentItem);
 		items.add(new CellItem("Tumor Mutation Burden (Mutations/MB)", orderCase.getTumorMutationBurden() + ""));
-		
 		patientTables.add(table);
 		
 	}

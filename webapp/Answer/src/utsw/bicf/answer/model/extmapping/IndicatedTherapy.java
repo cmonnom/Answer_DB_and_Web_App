@@ -1,5 +1,7 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -20,6 +22,28 @@ public class IndicatedTherapy {
 	
 	public IndicatedTherapy(Annotation a, Variant v) {
 		this.variant = a.getGeneId() + " " + v.getNotation();
+		if (a.getTier() != null) {
+			switch(a.getTier()) {
+			case "1A": this.level = "FDA-Approved"; break;
+			case "1B": this.level = "Strong Evidence"; break;
+			case "2C": this.level = "Weak Evidence"; break;
+			}
+			this.tier = a.getTier();
+		}
+		this.indication = a.getText();
+		this.type = v.getType();
+		this.oid = v.getMongoDBId().getOid();
+		this.drugs = a.getDrugs();
+		this.drugResistant = a.isDrugResistant();
+		if (this.drugResistant) {
+			this.level = "Resistant";
+		}
+	}
+	public IndicatedTherapy(Annotation a, CNV v) {
+		this.variant = a.getCnvGenes().stream().collect(Collectors.joining(" "));
+		if (v.getAberrationType().equals("ITD")) {
+			this.variant += "-ITD";
+		}
 		if (a.getTier() != null) {
 			switch(a.getTier()) {
 			case "1A": this.level = "FDA-Approved"; break;

@@ -1102,6 +1102,7 @@ public class OpenCaseController {
 	public String savePatientDetails(Model model, HttpSession session, @RequestParam String oncotreeDiagnosis,
 			@RequestParam String dedupAvgDepth,
 			@RequestParam String dedupPctOver100X,
+			@RequestParam String tumorPercent,
 			@RequestParam String caseId,
 			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
@@ -1132,6 +1133,15 @@ public class OpenCaseController {
 					} catch (Exception e) {
 						response.setSuccess(false);
 						response.setMessage("Pct. Over 100X is not a valid number: " + dedupPctOver100X);
+					}
+				}
+				if (tumorPercent != "") {
+					try {
+						double tumorPercentDouble = Double.parseDouble(tumorPercent);
+						caseSummary.setTumorPercent(tumorPercentDouble);
+					} catch (Exception e) {
+						response.setSuccess(false);
+						response.setMessage("Tumor Percent is not a valid number: " + tumorPercent);
 					}
 				}
 				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);

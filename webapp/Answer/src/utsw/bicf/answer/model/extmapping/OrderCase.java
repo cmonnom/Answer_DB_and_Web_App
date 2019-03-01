@@ -65,6 +65,7 @@ public class OrderCase {
 	@JsonProperty("tmb")
 	Double tumorMutationBurden;
 	String labNotes;
+	Double tumorPercent;
 	
 	
 	public OrderCase() {
@@ -490,6 +491,16 @@ public class OrderCase {
 
 	public void setLabNotes(String labNotes) {
 		this.labNotes = labNotes;
+	}
+
+
+	public Double getTumorPercent() {
+		return tumorPercent;
+	}
+
+
+	public void setTumorPercent(Double tumorPercent) {
+		this.tumorPercent = tumorPercent;
 	}
 
 

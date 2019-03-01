@@ -43,6 +43,7 @@ import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.AnnotationSearchResult;
@@ -184,6 +185,14 @@ public class RequestUtils {
 			data = "{\"filters\": []}";
 		}
 		VariantFilterList filterList = Utils.parseFilters(data, false);
+		//need to reverse min and max for CNVs
+		for (VariantFilter f : filterList.getFilters()) {
+			if (f.getField().equals(Variant.FIELD_CNV_COPY_NUMBER)) {
+				Double swap = f.getMinValue();
+				f.setMinValue(f.getMaxValue());
+				f.setMaxValue(swap);
+			}
+		}
 		String filterParam = filterList.createJSON();
 		System.out.println(filterParam);
 
@@ -876,6 +885,7 @@ public class RequestUtils {
 								&& a.getBreadth() != null && a.getBreadth().equals("Chromosomal")
 										|| ((a.getBreadth().equals("Focal") && a.getTier() != null && unknownTiers.contains(a.getTier()))
 												|| a.getTier() == null)
+								&& !"Therapy".equals(a.getCategory())
 								&& !"Clinical Trial".equals(a.getCategory())) {
 							sb.append(a.getText()).append(" ");
 							atLeastOneSelected = true;
@@ -972,6 +982,28 @@ public class RequestUtils {
 						if (a.getIsSelected() != null && a.getIsSelected()
 								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
 							trials.add(new BiomarkerTrialsRow(a.getTrial()));
+						}
+					}
+				}
+				indicatedTherapies.addAll(annotations);
+			}
+		}
+		for (CNV v : caseDetails.getCnvs()) {
+			if (v.getSelected() != null && v.getSelected()) {
+				v = getCNVDetails(v.getMongoDBId().getOid());
+				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
+				if (v.getReferenceCnv() != null && 
+						v.getReferenceCnv().getUtswAnnotations() != null) {
+					for (Annotation a : v.getReferenceCnv().getUtswAnnotations()) {
+						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+								&& a.getCategory() != null && a.getCategory().equals("Therapy")) {
+							annotations.add(new IndicatedTherapy(a, v));
+							report.getFtlIds().add(v.getMongoDBId().getOid());
+							report.incrementIndicatedTherapyCount(v.getGenes().stream().collect(Collectors.joining(" ")));
+							if (a.getPmids() != null) {
+								pmIds.addAll(this.trimPmIds(a.getPmids()));
+							}
 						}
 					}
 				}
@@ -1139,7 +1171,7 @@ public class RequestUtils {
 								// but need to be counted anyway
 								hasTiers = true;
 							}
-							else if (a.getBreadth().equals("Focal")) {
+							else if (a.getBreadth().equals("Focal") && !a.getCategory().equals("Therapy")) {
 								String key = a.getCnvGenes().stream().collect(Collectors.joining(" "));
 								if (v.getAberrationType().equals("ITD")) {
 									key += "-ITD";

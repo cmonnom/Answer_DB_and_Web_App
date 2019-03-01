@@ -804,10 +804,13 @@ const OpenCase = {
                                                                 <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
                                                                 </v-tooltip>
                                                                 <v-text-field class="no-top-text-field align-input-right" v-if="item.type == 'text-field' && item.field == 'dedupPctOver100X'" v-model="patientDetailsDedupPctOver100X"
-                                                                label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true">
+                                                                label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true" hide-details>
                                                                 </v-text-field>
                                                                 <v-text-field class="no-top-text-field align-input-right" v-if="item.type == 'text-field' && item.field == 'dedupAvgDepth'" v-model="patientDetailsDedupAvgDepth"
-                                                                label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true">
+                                                                label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true" hide-details>
+                                                                </v-text-field>
+                                                                <v-text-field class="no-top-text-field align-input-right" v-if="item.type == 'text-field' && item.field == 'tumorPercent'" v-model="patientDetailsTumorPercent"
+                                                                label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true" hide-details>
                                                                 </v-text-field>
                                                             </v-flex>
                                                             <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'" class="align-flex-right">
@@ -1155,6 +1158,7 @@ const OpenCase = {
             showGoodiesPanel: false,
             patientDetailsDedupPctOver100X: "",
             patientDetailsDedupAvgDepth: "",
+            patientDetailsTumorPercent: "",
             numberRules: [(v) => { return !isNaN(v) || 'Invalid value' }],
             currentListOfCNVVisibleGenes: [],
             reportReady: false,
@@ -1384,6 +1388,9 @@ const OpenCase = {
                     }
                     else if (item.field == "dedupAvgDepth") {
                         this.patientDetailsDedupAvgDepth = item.value;
+                    }
+                    else if (item.field == "tumorPercent") {
+                        this.patientDetailsTumorPercent = item.value;
                     }
                 }
             }
@@ -3375,6 +3382,7 @@ const OpenCase = {
                     oncotreeDiagnosis: this.patientDetailsOncoTreeDiagnosis.text,
                     dedupAvgDepth: this.patientDetailsDedupAvgDepth,
                     dedupPctOver100X: this.patientDetailsDedupPctOver100X,
+                    tumorPercent: this.patientDetailsTumorPercent,
                     caseId: this.$route.params.id,
                     skipSnackBar: skipSnackBar
                 }

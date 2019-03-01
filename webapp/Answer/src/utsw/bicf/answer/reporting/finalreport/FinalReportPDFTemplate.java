@@ -32,6 +32,8 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageXYZDestination;
 
+import com.mchange.lang.ArrayUtils;
+
 import be.quodlibet.boxable.BaseTable;
 import be.quodlibet.boxable.Cell;
 import be.quodlibet.boxable.HorizontalAlignment;
@@ -236,17 +238,26 @@ public class FinalReportPDFTemplate {
 		BaseTable leftTable = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
 				FinalReportTemplateConstants.MARGINLEFT, mainDocument, firstPage, cellBorder, true);
 		List<CellItem> leftTableItems = patientDetails.getPatientTables().get(0).getItems();
+//		//add signed by
+//		String signedByName = "Dr. " + signedBy.getFullName();
+//		if (report.getFinalized() == null || !report.getFinalized()) {
+//			signedByName = "NOT SIGNED";
+//		}
+//		leftTableItems.add(new CellItem("Report Electronically Signed By", signedByName));
 		for (CellItem item : leftTableItems) {
 			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
 				item.setValue(item.getValue() + "%");
 			}
+			else if (item.getField() != null && item.getField().equals("tumorPercent")) {
+				item.setValue(item.getValue() + "%");
+			}
 			this.createRow(leftTable, item.getLabel(), item.getValue(), defaultFont);
 		}
-		try {
-			leftTable.draw();
-		} catch (IllegalArgumentException e) {
-			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (left table)." );
-		}
+//		try {
+//			leftTable.draw();
+//		} catch (IllegalArgumentException e) {
+//			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (left table)." );
+//		}
 		float maxTableHeight = leftTable.getHeaderAndDataHeight();
 
 		BaseTable middleTable = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, tableWidth,
@@ -258,13 +269,16 @@ public class FinalReportPDFTemplate {
 			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
 				item.setValue(item.getValue() + "%");
 			}
+			else if (item.getField() != null && item.getField().equals("tumorPercent")) {
+				item.setValue(item.getValue() + "%");
+			}
 			this.createRow(middleTable, item.getLabel(), item.getValue(), defaultFont);
 		}
-		try {
-			middleTable.draw();
-		} catch (IllegalArgumentException e) {
-			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (middle table)." );
-		}
+//		try {
+//			middleTable.draw();
+//		} catch (IllegalArgumentException e) {
+//			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (middle table)." );
+//		}
 
 		maxTableHeight = Math.max(maxTableHeight, middleTable.getHeaderAndDataHeight());
 
@@ -281,25 +295,89 @@ public class FinalReportPDFTemplate {
 			dateModified = report.getDateFinalized().split("T")[0];
 		}
 		rightTableItems.add(3, new CellItem("Report Date", dateModified));
-		//add signed by
-		String signedByName = "Dr. " + signedBy.getFullName();
-		if (report.getFinalized() == null || !report.getFinalized()) {
-			signedByName = "NOT SIGNED";
-		}
-		rightTableItems.add(new CellItem("Report Electronically Signed By", signedByName));
+//		//add signed by
+//		String signedByName = "Dr. " + signedBy.getFullName();
+//		if (report.getFinalized() == null || !report.getFinalized()) {
+//			signedByName = "NOT SIGNED";
+//		}
+//		rightTableItems.add(new CellItem("Report Electronically Signed By", signedByName));
 		for (CellItem item : rightTableItems) {
 			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
 				item.setValue(item.getValue() + "%");
 			}
+			else if (item.getField() != null && item.getField().equals("tumorPercent")) {
+				item.setValue(item.getValue() + "%");
+			}
 			this.createRow(rightTable, item.getLabel(), item.getValue(), defaultFont);
+		}
+//		try {
+//			rightTable.draw();
+//		} catch (IllegalArgumentException e) {
+//			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (right table)." );
+//		}
+		maxTableHeight = Math.max(maxTableHeight, rightTable.getHeaderAndDataHeight());
+		
+		List<BaseTable> tables = new ArrayList<BaseTable>();
+		tables.add(leftTable);
+		tables.add(middleTable);
+		tables.add(rightTable);
+		tables.sort(new Comparator<BaseTable>() {
+
+			@Override
+			public int compare(BaseTable o1, BaseTable o2) {
+				if (o1.getHeaderAndDataHeight() < o2.getHeaderAndDataHeight()) {
+					return 1;
+				}
+				else if (o1.getHeaderAndDataHeight() > o2.getHeaderAndDataHeight()) {
+					return -1;
+				}
+				return 0;
+			}
+		});
+		maxTableHeight = tables.get(0).getHeaderAndDataHeight();
+		float avgRowHeight = maxTableHeight / tables.get(1).getRows().size();
+		for (Row<PDPage> row : tables.get(1).getRows()) {
+			row.setHeight(avgRowHeight);
+		}
+		avgRowHeight = maxTableHeight / tables.get(2).getRows().size();
+		for (Row<PDPage> row : tables.get(2).getRows()) {
+			row.setHeight(avgRowHeight);
+		}
+		
+		maxTableHeight += 5;
+		
+		//signature
+		BaseTable signatureTable = new BaseTable(latestYPosition - maxTableHeight, FinalReportTemplateConstants.MARGINTOP, 0, pageWidthMinusMargins * 0.5f,
+				FinalReportTemplateConstants.MARGINLEFT + pageWidthMinusMargins * 0.5f, mainDocument, firstPage, cellBorder, true);
+		String signedByName = "Dr. " + signedBy.getFullName();
+		if (report.getFinalized() == null || !report.getFinalized()) {
+			signedByName = "NOT SIGNED";
+		}
+		this.createRow(signatureTable, "Report Electronically Signed By", signedByName, defaultFont);
+		try {
+			signatureTable.draw();
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (right table)." );
+		}
+		maxTableHeight += signatureTable.getHeaderAndDataHeight();
+		
+		//now draw the adjusted tables
+		try {
+			leftTable.draw();
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (left table)." );
+		}
+		try {
+			middleTable.draw();
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (middle table)." );
 		}
 		try {
 			rightTable.draw();
 		} catch (IllegalArgumentException e) {
 			throw new EncodingGlyphException(e.getMessage() + " in Patient Table (right table)." );
 		}
-		maxTableHeight = Math.max(maxTableHeight, rightTable.getHeaderAndDataHeight());
-
+		
 		// draw borders
 		BaseTable allWidthEmptyTable = new BaseTable(latestYPosition, FinalReportTemplateConstants.MARGINTOP, 0, pageWidthMinusMargins,
 				FinalReportTemplateConstants.MARGINLEFT, mainDocument, firstPage, true, true);
@@ -308,6 +386,7 @@ public class FinalReportPDFTemplate {
 		allWidthEmptyTable.draw();
 		
 		latestYPosition -= maxTableHeight + 10;
+		
 	}
 
 	private void applyPatientRecordTableBorderFormatting(Cell<PDPage> cell) {
@@ -1166,6 +1245,7 @@ public class FinalReportPDFTemplate {
 		cell.setFont(font);
 		cell.setTextColor(Color.GRAY);
 		cell.setFontSize(fontSize);
+		cell.setRightPadding(0);
 		cell = row.createCell(valueRatio, value, HorizontalAlignment.RIGHT, VerticalAlignment.TOP);
 		cell.setFont(font);
 		cell.setTextColor(Color.BLACK);
