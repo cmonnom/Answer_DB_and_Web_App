@@ -28,22 +28,27 @@ public class CNVReportSummary extends Summary<CNVReport> {
 //		headers.add(end);
 		Header combined = new Header("Loci", "loci");
 		combined.setWidth("200px");
+		combined.setIsSafe(true);
 		headers.add(combined);
 		Header copyNumber = new Header(new String[] {"Copy", "Number"}, "copyNumber");
 		copyNumber.setWidth("100px");
+		copyNumber.setIsSafe(true);
 		headers.add(copyNumber);
 		Header gene = new Header("Genes", "genes");
 		gene.setWidth("450px");
 		gene.setAlign("left");
 		gene.setCanHighlight(true);
+		gene.setIsSafe(true);
 		headers.add(gene);
 		Header cytoband = new Header("Cytoband", "cytoband");
 		cytoband.setWidth("100px");
 		cytoband.setAlign("left");
+		cytoband.setIsSafe(true);
 //		cytoband.setCanHighlight(true);
 		headers.add(cytoband);
 		Header comment = new Header("Comment", "comment");
 		comment.setAlign("left");
+		comment.setIsSafe(false);
 		headers.add(comment);
 		
 		

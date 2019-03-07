@@ -909,8 +909,7 @@ public class RequestUtils {
 									|| "amplification".equals(cnv.getAberrationType())) {
 								aberrationType = "Gain ";
 							}
-							else if ("hemizygous loss".equals(cnv.getAberrationType())
-									|| "homozygous loss".equals(cnv.getAberrationType())) {
+							else if (cnv.getAberrationType() != null && cnv.getAberrationType().contains("loss")) {
 								aberrationType = "Loss ";
 							}
 							String cytobandTruncated = cnv.getCytoband().substring(0, 1);
@@ -968,8 +967,7 @@ public class RequestUtils {
 						v.getReferenceVariant().getUtswAnnotations() != null) {
 					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
 						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && a.getCategory().equals("Therapy")
+						if (this.annotationGoesInTherapyTable(a)
 								&& !"Clinical Trial".equals(a.getCategory())) {
 							annotations.add(new IndicatedTherapy(a, v));
 							report.getSnpIds().add(v.getMongoDBId().getOid());
@@ -996,11 +994,14 @@ public class RequestUtils {
 						v.getReferenceCnv().getUtswAnnotations() != null) {
 					for (Annotation a : v.getReferenceCnv().getUtswAnnotations()) {
 						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && a.getCategory().equals("Therapy")) {
+						if (this.annotationGoesInTherapyTable(a)) {
 							annotations.add(new IndicatedTherapy(a, v));
 							report.getFtlIds().add(v.getMongoDBId().getOid());
-							report.incrementIndicatedTherapyCount(v.getGenes().stream().collect(Collectors.joining(" ")));
+							String key = v.getGenes().stream().collect(Collectors.joining(" "));
+							if (v.getAberrationType().equals("ITD")) {
+								key += "-ITD";
+							}
+							report.incrementIndicatedTherapyCount(key);
 							if (a.getPmids() != null) {
 								pmIds.addAll(this.trimPmIds(a.getPmids()));
 							}
@@ -1018,8 +1019,7 @@ public class RequestUtils {
 						v.getReferenceTranslocation().getUtswAnnotations() != null) {
 					for (Annotation a : v.getReferenceTranslocation().getUtswAnnotations()) {
 						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && a.getCategory().equals("Therapy")) {
+						if (this.annotationGoesInTherapyTable(a)) {
 							annotations.add(new IndicatedTherapy(a, v));
 							report.getFtlIds().add(v.getMongoDBId().getOid());
 							report.incrementIndicatedTherapyCount(v.getFusionName());
@@ -1295,6 +1295,21 @@ public class RequestUtils {
 		
 		return report;
 	}
+	
+	/**
+	 * Checks if an annotation should go into the Indicated Therapy table
+	 * It should be selected
+	 * Have a category of Therapy
+	 * and not be a 2D tier
+	 * @param a
+	 * @return true if the annotation should go in the table
+	 */
+	private boolean annotationGoesInTherapyTable(Annotation a) {
+		return a != null && a.getIsSelected() != null && a.getIsSelected()
+				&& a.getCategory() != null 
+				&& (a.getCategory().equals("Therapy") && a.getTier() != null && !a.getTier().equals("2D"));
+	}
+	
 	private List<String> trimPmIds(List<String> pmIds) {
 		return pmIds.stream().map(p -> p.trim()).collect(Collectors.toList());
 	}

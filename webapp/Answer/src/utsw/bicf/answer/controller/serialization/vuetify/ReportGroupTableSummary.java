@@ -26,23 +26,30 @@ public class ReportGroupTableSummary extends Summary<ReportGroupTableRow>{
 
 	@Override
 	public void initializeHeaders() {
-		headers.add(new Header("Name", "groupName"));
+		Header groupName = new Header("Name", "groupName");
+		groupName.setIsSafe(false);
+		headers.add(groupName);
 		Header description = new Header("Description", "description");
 		description.setWidth("150px");
 		description.setWidthValue(150);
+		description.setIsSafe(false);
 		headers.add(description);
 		Header link = new Header("Reference", "referenceUrl");
 		link.setIsLink(true);
+		link.setIsSafe(false);
 		headers.add(link);
 		Header createdBy = new Header("Created By", "createdBy");
+		createdBy.setIsSafe(true);
 		headers.add(createdBy);
 		Header genes = new Header("Genes", "genes");
 		genes.setWidth("400px");
 		genes.setWidthValue(400);
+		genes.setIsSafe(false);
 		headers.add(genes);
 		Header actions = new Header(new String[] {"Edit", "Gene Set"}, "actions");
 		actions.setButtons(true);
 		actions.setAlign("left");
+		actions.setIsSafe(true);
 		headers.add(actions);
 		
 	}

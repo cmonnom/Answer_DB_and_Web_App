@@ -20,13 +20,16 @@ public class ClinicalSignificanceSummary extends Summary<ClinicalSignificance> {
 		Header variant = new Header("Variant", "geneVariant");
 		variant.setWidth("200px");
 		variant.setAlign("left");
+		variant.setIsSafe(true);
 		headers.add(variant);
 		Header category = new Header("Category", "category");
 		category.setWidth("150px");
 		category.setAlign("left");
+		category.setIsSafe(true);
 		headers.add(category);
 		Header annotation = new Header("Annotation", "annotation");
 		annotation.setAlign("left");
+		annotation.setIsSafe(false);
 		headers.add(annotation);
 
 	}

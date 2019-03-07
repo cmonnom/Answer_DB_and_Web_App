@@ -8,15 +8,18 @@ import java.util.List;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 
+import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,6 +46,8 @@ public class AOPAspect {
 	static {
 		METHODS_SKIP_SANITATION.add("commitAnnotations");
 	}
+	
+	public static final PolicyFactory HTML_POLICY = new HtmlPolicyBuilder().allowElements("br").toFactory();
 	
 	@Autowired
 	ServletContext servletContext;
@@ -94,14 +99,14 @@ public class AOPAspect {
 	 * @throws Exception
 	 */
 	public void checkUserInput(JoinPoint joinPoint, Model model) throws Exception {
-//		PolicyFactory policy = new HtmlPolicyBuilder().toFactory();
-//		Object[] args = joinPoint.getArgs();
+		Object[] args = joinPoint.getArgs();
 		boolean isValid = true;
 		//skip the tests for now. Too many special characters to handle
-//		for (Object arg : args) {
-//			if (arg instanceof String) {
+		for (int i = 0; i < args.length; i++) {
+			if (args[i] instanceof String) {
 //				boolean currentArgIsValid = true;
-//				String argString = (String) arg;
+				String argString = (String) args[i];
+				args[i] = HTML_POLICY.sanitize(argString);
 //				String sanitized = policy.sanitize(argString).replaceAll("&#64;", "@"); // emails are ok
 //				if (!argString.equals(sanitized) && !skipSanitation(joinPoint)) {
 //					// check that it's a valid Json
@@ -113,8 +118,8 @@ public class AOPAspect {
 //					}
 //				}
 //				isValid &= currentArgIsValid;
-//			}
-//		}
+			}
+		}
 		if (!isValid) {
 			model.addAttribute("isAllowed", false);
 			model.addAttribute("isXss", true);
@@ -225,6 +230,7 @@ public class AOPAspect {
 				boolean isXss = (boolean) model.asMap().get("isXss");
 				if (isAjax && result instanceof String) {
 					ObjectMapper mapper = new ObjectMapper();
+					//TODO sanitize output
 					JsonNode jsonNodeArray = mapper.readTree(result.toString());
 					if (jsonNodeArray != null && jsonNodeArray.get("isAllowed") != null) {
 						canProceed &= jsonNodeArray.get("isAllowed").booleanValue();
@@ -307,5 +313,5 @@ public class AOPAspect {
 		}
 
 	}
-
+	
 }

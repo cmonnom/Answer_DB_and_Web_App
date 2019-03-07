@@ -29,3 +29,7 @@ function formatChrom(chrom) {
     }
     return formattedChrNb;
 }
+
+function sanitize(text) {
+   return text.split("<br/>");
+}

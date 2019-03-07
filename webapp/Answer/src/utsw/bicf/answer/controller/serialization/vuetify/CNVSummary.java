@@ -29,15 +29,18 @@ public class CNVSummary extends Summary<CNVRow> {
 	public void initializeHeaders() {
 		Header chrom = new Header("CHR", "chrom");
 		chrom.setWidth("100px");
+		chrom.setIsSafe(true);
 		headers.add(chrom);
 		Header gene = new Header("Genes", "genes");
 		gene.setWidth("200px");
 		gene.setAlign("left");
 		gene.setCanHighlight(true);
+		gene.setIsSafe(true);
 		headers.add(gene);
 		Header cytoband = new Header("Cytoband", "cytoband");
 		cytoband.setWidth("100px");
 		cytoband.setAlign("left");
+		cytoband.setIsSafe(true);
 //		cytoband.setCanHighlight(true);
 		headers.add(cytoband);
 		Header iconFlags = new Header("Flags", "iconFlags");
@@ -45,21 +48,27 @@ public class CNVSummary extends Summary<CNVRow> {
 		iconFlags.setIsFlag(true);
 		iconFlags.setSortable(false);
 		iconFlags.setAlign("left");
+		iconFlags.setIsSafe(true);
 		headers.add(iconFlags);
 		Header start = new Header("Start", "start");
 		start.setWidth("100px");
+		start.setIsSafe(true);
 		headers.add(start);
 		Header end = new Header("End", "end");
 		end.setWidth("100px");
+		end.setIsSafe(true);
 		headers.add(end);
 		Header aberrationType = new Header(new String[] {"Aberration", "Type"}, "aberrationType");
 		aberrationType.setWidth("100px");
+		aberrationType.setIsSafe(true);
 		headers.add(aberrationType);
 		Header copyNumber = new Header(new String[] {"Copy", "Number"}, "copyNumber");
 		copyNumber.setWidth("100px");
+		copyNumber.setIsSafe(true);
 		headers.add(copyNumber);
 		Header score = new Header("Score", "score");
 		score.setWidth("100px");
+		score.setIsSafe(true);
 		headers.add(score);
 		
 	}

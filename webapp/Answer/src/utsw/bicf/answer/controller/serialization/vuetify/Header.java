@@ -1,6 +1,5 @@
 package utsw.bicf.answer.controller.serialization.vuetify;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import utsw.bicf.answer.controller.serialization.ToolTip;
@@ -34,6 +33,8 @@ public class Header {
 	Boolean sortable = true;
 	Boolean isLink;
 	Boolean canHighlight; //enable to compare the content of items with an array of values to highlight (eg: gene name filter)
+	Boolean isSafe = false;
+	
 	
 	public Header() {
 	}
@@ -249,6 +250,14 @@ public class Header {
 
 	public void setCanHighlight(Boolean canHighlight) {
 		this.canHighlight = canHighlight;
+	}
+
+	public Boolean getIsSafe() {
+		return isSafe;
+	}
+
+	public void setIsSafe(Boolean isSafe) {
+		this.isSafe = isSafe;
 	}
 
 }

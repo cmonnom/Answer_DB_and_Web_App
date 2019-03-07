@@ -40,26 +40,26 @@ Vue.component('utsw-annotation-card', {
                             <v-icon right v-if="scope" color="green">check</v-icon>
                             <v-icon right v-if="!scope" color="red">close</v-icon>
                         </v-chip>
-                        <span v-html="annotation.scopeTooltip"> </span>
+                        <span v-text="annotation.scopeTooltip"> </span>
                     </v-tooltip>
                 </v-flex>
                 <v-flex xs12>
                     <span class="pr-1" v-if="annotation.category">
                         <b>{{ annotation.category }}:</b>
                     </span>
-                    <span v-html="annotation.text"></span>
+                    <span v-text="annotation.text"></span>
                 </v-flex>
                 <v-flex xs12 v-if="annotation.classification">
                     <span  class="pr-1">
                         <b>Classification:</b>
                     </span>
-                    <span v-html="annotation.classification"></span>
+                    <span v-text="annotation.classification"></span>
                 </v-flex>
                 <v-flex xs12 v-if="annotation.tier" >
                     <span class="pr-1">
                         <b>Tier:</b>
                     </span>
-                    <span v-html="annotation.tier"></span>
+                    <span v-text="annotation.tier"></span>
                 </v-flex>
                 <v-flex xs12 v-if="isCNV() && annotation.cnvGenes" class="pr-1">
                     Applies to genes: {{ annotation.cnvGenes }}
@@ -68,26 +68,26 @@ Vue.component('utsw-annotation-card', {
                     <span class="pr-1">
                         <b>Phase:</b>
                     </span>
-                    <span v-html="annotation.trial.phase"></span>
+                    <span v-text="annotation.trial.phase"></span>
                 </v-flex>
                 <v-flex xs12 v-if="annotation.trial" class="pr-1">
                     <span class="pr-1">
                         <b>Biomarker(s):</b>
                     </span>
-                    <span v-html="annotation.trial.biomarker"></span>
+                    <span v-text="annotation.trial.biomarker"></span>
                 </v-flex>
                 <v-flex xs12 v-if="annotation.category == 'Clinical Trial'" class="pr-1">
                     <span class="pr-1">
                         <b>Title:</b>
                     </span>
-                    <span v-html="annotation.trial.title"></span>
+                    <span v-text="annotation.trial.title"></span>
                 </v-flex>
                 <v-flex xs12 v-if="annotation.drugs" class="pr-1">
                     <span class="pr-1">
                         <b v-if="!annotation.drugResistant">Drugs:</b>
                         <b v-if="annotation.drugResistant">Drug Resistant:</b>
                     </span>
-                    <span v-html="annotation.drugs"></span>
+                    <span v-text="annotation.drugs"></span>
                 </v-flex>
                 <v-flex xs12>
                     <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>

@@ -35,31 +35,46 @@ public class OrderCaseAllSummary extends Summary<OrderCaseAll>{
 		Header type = new Header("Type", "typeFlags");
 		type.setIsFlag(true);
 		type.setToolTip(new ToolTip("Clinical or Research Case"));
+		type.setIsSafe(true);
 		headers.add(type);
 		
 		Header hiddenType = new Header("Case Type", "caseType");
 		hiddenType.setIsHidden(true);
+		hiddenType.setIsSafe(true);
 		headers.add(hiddenType);
 		
 		Header hiddenCaseId = new Header("Case ID", "caseId");
 		hiddenCaseId.setIsHidden(true);
+		hiddenCaseId.setIsSafe(true);
 		headers.add(hiddenCaseId);
 		
-		headers.add(new Header("Patient Name", "patientName"));
+		Header patientName = new Header("Patient Name", "patientName");
+		patientName.setIsSafe(true);
+		headers.add(patientName);
 		
 		Header steps = new Header("Progress", "progressFlags");
 		steps.setIsFlag(true);
 		steps.setSortable(false);
 		steps.setAlign("left");
+		steps.setIsSafe(true);
 		headers.add(steps);
 		
-		headers.add(new Header(new String[] {"Epic","Order Nb"}, "epicOrderNumber"));
-		headers.add(new Header(new String[] {"Epic", "Order Date"}, "epicOrderDate"));
+		Header epicOrderNumber = new Header(new String[] {"Epic","Order Nb"}, "epicOrderNumber");
+		epicOrderNumber.setIsSafe(true);
+		headers.add(epicOrderNumber);
+		Header epicOrderDate = new Header(new String[] {"Epic", "Order Date"}, "epicOrderDate");
+		epicOrderDate.setIsSafe(true);
+		headers.add(epicOrderDate);
 		Header icd10 = new Header("ICD 10", "icd10");
 		icd10.setWidth("300px");
+		icd10.setIsSafe(true);
 		headers.add(icd10);
-		headers.add(new Header(new String[] {"Assigned", "To"}, "assignedTo"));
-		headers.add(new Header(new String[] {"Date", "Received"}, "dateReceived"));
+		Header assignedTo = new Header(new String[] {"Assigned", "To"}, "assignedTo");
+		assignedTo.setIsSafe(true);
+		headers.add(assignedTo);
+		Header dateReceived = new Header(new String[] {"Date", "Received"}, "dateReceived");
+		dateReceived.setIsSafe(true);
+		headers.add(dateReceived);
 		
 		
 	}

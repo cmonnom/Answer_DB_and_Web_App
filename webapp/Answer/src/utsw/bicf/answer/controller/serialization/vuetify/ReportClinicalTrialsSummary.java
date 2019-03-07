@@ -29,23 +29,28 @@ public class ReportClinicalTrialsSummary extends Summary<BiomarkerTrialsRow> {
 	public void initializeHeaders() {
 		Header biomarker = new Header("Biomarker(s)", "biomarker");
 		biomarker.setWidth("150px");
+		biomarker.setIsSafe(false);
 		headers.add(biomarker);
 		
 		Header addBiomarker = new Header(new String[] {"Additional Required", "Biomarker(s)"}, "additionalRequiredBiomarkers");
 		addBiomarker.setWidth("150px");
+		addBiomarker.setIsSafe(false);
 		headers.add(addBiomarker);
 		
 		Header drugs = new Header("Drugs", "drugs");
 		drugs.setWidth("150px");
+		drugs.setIsSafe(false);
 		headers.add(drugs);
 		
 		Header title = new Header("Title", "title");
 		title.setWidth("300px");
 		title.setAlign("left");
+		title.setIsSafe(false);
 		headers.add(title);
 		
 		Header nctid = new Header("NCTID", "nctid");
 		nctid.setWidth("200px");
+		nctid.setIsSafe(false);
 		headers.add(nctid);
 		
 //		Header mdaccProtocol = new Header(new String[] {"MDACC", "Protocol ID"}, "mdaddProtocolId");
@@ -54,15 +59,18 @@ public class ReportClinicalTrialsSummary extends Summary<BiomarkerTrialsRow> {
 		
 		Header phase = new Header("Phase", "phase");
 		phase.setWidth("100px");
+		phase.setIsSafe(false);
 		headers.add(phase);
 		
 		Header pi = new Header("Contact", "pi");
 		pi.setWidth("100px");
+		pi.setIsSafe(false);
 		headers.add(pi);
 		
 		Header dept = new Header("Location", "dept");
 		dept.setWidth("100px");
 		dept.setAlign("left");
+		dept.setIsSafe(false);
 		headers.add(dept);
 		
 	}

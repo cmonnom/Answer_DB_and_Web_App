@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -41,6 +42,7 @@ import utsw.bicf.answer.model.hybrid.OrderCaseAll;
 import utsw.bicf.answer.model.hybrid.OrderCaseFinalized;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
+import utsw.bicf.answer.reporting.parse.EncodingGlyphException;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
@@ -265,7 +267,8 @@ public class HomeController {
 	@RequestMapping(value = "/createPDFReport", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String createPDFReport(Model model, HttpSession session, @RequestParam String reportId) throws Exception {
-
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER,	true);
 		AjaxResponse response = new AjaxResponse();
 		if (reportId == null || reportId.equals("")) {
 			response.setIsAllowed(false);
@@ -276,14 +279,22 @@ public class HomeController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		Report report = utils.getReportDetails(reportId);
 		if (report != null) {
+			String possibleDirtyData = report.createObjectJSON();
+			String cleanData = possibleDirtyData.replaceAll("\\\\t", " ").replaceAll("\\\\n", "<br/>");
+			report = mapper.readValue(cleanData, Report.class);
 			OrderCase caseSummary = utils.getCaseSummary(report.getCaseId());
 			User signedBy = modelDAO.getUserByUserId(report.getModifiedBy());
+			try {
 			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(report, fileProps, caseSummary, otherProps, signedBy);
 			pdfReport.saveTemp();
 
 			String linkName = pdfReport.createPDFLink(fileProps);
 			response.setSuccess(true);
 			response.setMessage(linkName);
+			}catch (EncodingGlyphException e) {
+				response.setSuccess(false);
+				response.setMessage(e.getMessage());
+			}
 		}
 		else {
 			response.setSuccess(false);

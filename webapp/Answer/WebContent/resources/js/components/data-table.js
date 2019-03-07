@@ -412,12 +412,14 @@ Vue.component('data-table', {
 
 
           <v-tooltip bottom v-if="props.item.tooltips && props.item.tooltips[header.value]" max-width="500px">
-            <span slot="activator" v-html="formattedItem(header, props.item[header.value])">
+            <span v-if="header.isSafe" slot="activator" v-html="formattedItem(header, props.item[header.value])">
+            <span v-if="!header.isSafe" slot="activator" v-text="formattedItem(header, props.item[header.value])"></span>
             </span>
             <span v-html="props.item.tooltips[header.value]">
             </span>
           </v-tooltip>
-          <span v-if="!(props.item.tooltips && props.item.tooltips[header.value])" v-html="formattedItem(header, props.item[header.value])"></span>
+          <span v-if="!(props.item.tooltips && props.item.tooltips[header.value]) && header.isSafe" v-html="formattedItem(header, props.item[header.value])"></span>
+          <span v-if="!(props.item.tooltips && props.item.tooltips[header.value]) && !header.isSafe" v-text="formattedItem(header, props.item[header.value])"></span>
 
           <span v-if="props.item[header.value] && props.item[header.value].iconFlags">
             <v-tooltip bottom v-for="(icon, index) in props.item[header.value].iconFlags" :key="index" v-if="header.isFlag">
@@ -485,7 +487,8 @@ Vue.component('data-table', {
         <template slot="items" slot-scope="props">
           <tr @click="expandRow(props.item[uniqueIdField], props)">
             <td v-for="header in expandedHeaders" :class="alignHeader(header)">
-              <span v-html="formattedItem(header, props.item[header.value])"></span>
+              <span v-if="header.isSafe" v-html="formattedItem(header, props.item[header.value])"></span>
+              <span v-if="!header.isSafe" v-text="formattedItem(header, props.item[header.value])"></span>
 
               <v-icon color="green" v-if="showPassFlag(header, props.item)">check_circle</v-icon>
               <v-icon color="red" v-if="showFailFlag(header, props.item)">cancel</v-icon>
