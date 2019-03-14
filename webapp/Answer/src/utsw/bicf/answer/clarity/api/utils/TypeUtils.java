@@ -12,7 +12,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
+import java.util.LinkedList;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -168,5 +170,15 @@ public class TypeUtils {
 		else {
 			return "just now";
 		}
+	}
+	
+	//accept a string, like aCamelString
+	//return a contatenated string containing in this case, [a, Camel, String] -> a Camel String
+	public static String splitCamelCaseString(String s){
+	    LinkedList<String> result = new LinkedList<String>();	
+	    for (String w : s.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])")) {
+	    	result.add(w);
+	    }    
+	    return result.stream().collect(Collectors.joining(" "));
 	}
 }

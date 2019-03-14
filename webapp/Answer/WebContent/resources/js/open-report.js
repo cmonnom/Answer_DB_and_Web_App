@@ -256,7 +256,7 @@ const OpenReport = {
             <v-icon>save</v-icon>
         </v-btn>
         <span v-if="!isSaveDisabled()">Save Report</span>
-        <span v-if="isSaveDisabled()">You cannot make changes to this report.<br/>It's probably finalized.</span>
+        <span v-else>You cannot make changes to this report.<br/>It's probably finalized.</span>
        </v-tooltip>
        </v-badge>
  
@@ -345,7 +345,7 @@ const OpenReport = {
                         <v-text-field :textarea="true" v-if="!readOnlyReportNotes()"
                             v-model="fullReport.summary" class="mr-2 no-height" label="Write your comments here" @input="reportNeedsSaving()">
                         </v-text-field>
-                        <div v-if="readOnlyReportNotes()">{{ fullReport.summary }}</div>
+                        <div v-else>{{ fullReport.summary }}</div>
                     </v-card-text>
                 </v-card>
             </v-flex>
@@ -1022,7 +1022,7 @@ const OpenReport = {
             if (this.readonly) {
                 return;
             }
-            console.log("Amending Report") + reportId;
+            // console.log("Amending Report") + reportId;
             this.$refs.existingReports.amendingReportLoading = true;
             axios({
                 method: 'post',
@@ -1058,7 +1058,7 @@ const OpenReport = {
             if (this.readonly) {
                 return;
             }
-            console.log("Addending Report") + reportId;
+            // console.log("Addending Report") + reportId;
             this.$refs.existingReports.addendingReportLoading = true;
             axios({
                 method: 'post',

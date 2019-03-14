@@ -882,9 +882,10 @@ public class RequestUtils {
 					for (Annotation a : cnv.getReferenceCnv().getUtswAnnotations()) {
 						Annotation.init(a, cnv.getAnnotationIdsForReporting(), modelDAO);
 						if (a.getIsSelected() != null && a.getIsSelected()
-								&& a.getBreadth() != null && a.getBreadth().equals("Chromosomal")
+								&& a.getBreadth() != null 
+								&& (a.getBreadth().equals("Chromosomal")
 										|| ((a.getBreadth().equals("Focal") && a.getTier() != null && unknownTiers.contains(a.getTier()))
-												|| a.getTier() == null)
+												|| a.getTier() == null))
 								&& !"Therapy".equals(a.getCategory())
 								&& !"Clinical Trial".equals(a.getCategory())) {
 							sb.append(a.getText()).append(" ");

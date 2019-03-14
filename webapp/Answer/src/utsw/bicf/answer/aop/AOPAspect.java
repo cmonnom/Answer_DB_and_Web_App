@@ -106,6 +106,8 @@ public class AOPAspect {
 			if (args[i] instanceof String) {
 //				boolean currentArgIsValid = true;
 				String argString = (String) args[i];
+				String removedXSS = argString.replaceAll("<\\s*[a-zA-Z]+[^>]*>(.*?)<\\s*/\\s*[a-zA-Z]+>", "");
+				isValid &= argString.equals(removedXSS) ;
 				args[i] = HTML_POLICY.sanitize(argString);
 //				String sanitized = policy.sanitize(argString).replaceAll("&#64;", "@"); // emails are ok
 //				if (!argString.equals(sanitized) && !skipSanitation(joinPoint)) {

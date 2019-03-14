@@ -61,6 +61,9 @@ public class SNPIndelVariantRow {
 	Boolean hasRelatedVariants;
 	String impact;
 	String rank;
+	Boolean likelyArtifact;
+	Boolean gnomadLcr;
+	String gnomadHg19Variant;
 	
 	
 	
@@ -160,11 +163,18 @@ public class SNPIndelVariantRow {
 		this.inCosmic = variant.getInCosmic();
 		this.impact = variant.getImpact();
 		this.rank = variant.getRank();
+		this.likelyArtifact = variant.getLikelyArtifact();
+		this.gnomadLcr = variant.getGnomadLcr();
+		this.gnomadHg19Variant = variant.getGnomadHg19Variant();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		boolean failed = filters.contains(Variant.VALUE_FAIL);
 		if (failed) {
-			icons.add(new VuetifyIcon("cancel", "red", "Failed QC"));
+			String failedReasons = filters.stream()
+			.filter(f -> !Variant.VALUE_FAIL.equals(f))
+			.map(f -> TypeUtils.splitCamelCaseString(f))
+			.collect(Collectors.joining(", "));
+			icons.add(new VuetifyIcon("cancel", "red", "Failed QC: " + failedReasons));
 		}
 		else {
 			icons.add(new VuetifyIcon("check_circle", "green", "Passed QC"));
@@ -505,14 +515,6 @@ public class SNPIndelVariantRow {
 	}
 
 
-
-
-
-
-
-
-
-
 	public List<Integer> getGnomadHomozygotes() {
 		return gnomadHomozygotes;
 	}
@@ -524,6 +526,25 @@ public class SNPIndelVariantRow {
 	public Integer getMaxCosmicPatients() {
 		return maxCosmicPatients;
 	}
+
+	public Boolean getGnomadLcr() {
+		return gnomadLcr;
+	}
+
+	public Boolean getLikelyArtifact() {
+		return likelyArtifact;
+	}
+
+
+
+
+
+	public String getGnomadHg19Variant() {
+		return gnomadHg19Variant;
+	}
+
+
+
 
 
 }

@@ -59,6 +59,7 @@ public class Annotation {
 	String oncotreeDiagnosis;
 	String drugs;
 	String notation;
+	Boolean likelyArtifact;
 	
 	Boolean canEdit = true;
 	 //if older than 6 months, modified since should be in red. 
@@ -431,6 +432,15 @@ public class Annotation {
 	public void setDrugResistant(boolean drugResistant) {
 		this.drugResistant = drugResistant;
 	}
+
+	public Boolean getLikelyArtifact() {
+		return likelyArtifact;
+	}
+
+	public void setLikelyArtifact(Boolean likelyArtifact) {
+		this.likelyArtifact = likelyArtifact;
+	}
+
 
 
 

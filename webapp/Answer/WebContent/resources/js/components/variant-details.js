@@ -175,7 +175,7 @@ Vue.component('variant-details', {
                                               <v-chip v-if="icon.chip" slot="activator" :color="icon.color" text-color="white" label small disabled>
                                                   {{ icon.iconName }}
                                               </v-chip>
-                                              <v-icon v-if="!icon.chip" slot="activator" :color="icon.color">
+                                              <v-icon v-else slot="activator" :color="icon.color">
                                                   {{ icon.iconName }}
                                               </v-icon>
                                               <span> {{ icon.tooltip }}</span>
@@ -463,7 +463,7 @@ Vue.component('variant-details', {
             })
                 .then(response => {
                     if (response.data.isAllowed) {
-                        startTime = new Date();
+                        // startTime = new Date();
                         this.applySeriesStyle(response.data.series);
                         var chrMarkers = [];
                         for (var i = 0; i < response.data.maxChroms.length; i++) {
@@ -598,9 +598,9 @@ Vue.component('variant-details', {
                             this.cnvPlotLoadingCurrentChrom = false;
                             this.cnvPlotLoadingAllChrom = false;
                             this.cnvPlotLoadingOtherChrom = false;
-                            var endTime = new Date();
-                            var timeDiff = endTime - startTime;
-                            console.log((timeDiff / 1000) + "s");
+                            // var endTime = new Date();
+                            // var timeDiff = endTime - startTime;
+                            // console.log((timeDiff / 1000) + "s");
                             this.cnvPlotNeedsReload = false;
                             this.toggleAllLoading = false;
                             var kmax = zingchart.exec(this.cnvPlotId, 'getobjectinfo', {

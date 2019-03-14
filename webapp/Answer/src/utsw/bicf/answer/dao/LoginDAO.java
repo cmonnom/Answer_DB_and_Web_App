@@ -11,6 +11,7 @@ import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import utsw.bicf.answer.model.LoginAttempt;
 import utsw.bicf.answer.model.User;
 
 @Repository
@@ -67,5 +68,26 @@ public class LoginDAO {
 		String hql = "update Version set isCurrent = true where versionId = 2";
 		Query<User> query = session.createQuery(hql.toString());
 		query.executeUpdate();
+	}
+	
+	@Transactional
+	public LoginAttempt getLoginAttemptForUser(User user) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = null;
+		Query<LoginAttempt> query = null;
+		if (user == null) {
+			hql = "from LoginAttempt where user is null";
+			query = session.createQuery(hql.toString(), LoginAttempt.class);
+		}
+		else {
+			hql = "from LoginAttempt where user = :user";
+			query = session.createQuery(hql.toString(), LoginAttempt.class).setParameter("user", user);
+		}
+		LoginAttempt loginAttempt = null;
+		List<LoginAttempt> results = query.list();
+		if (results != null && !results.isEmpty()) {
+			loginAttempt = results.get(0);
+		}
+		return loginAttempt;
 	}
 }

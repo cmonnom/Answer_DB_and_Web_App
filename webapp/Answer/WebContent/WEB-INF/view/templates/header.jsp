@@ -43,26 +43,23 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 
 <c:choose>
 <c:when test="${isProduction == 'false'}">
-   <script src="https://unpkg.com/vue/dist/vue.js"></script>
+         <script src="https://unpkg.com/vue@2.6.8/dist/vue.js" integrity="sha384-YzY3KQhnjdhKuuhBSraSy+kHLJuhBO3BGqmWfr6JXg98Ns4bAdTkHmtiNZT4mT1S" crossorigin="anonymous"></script>
 </c:when>
 <c:otherwise>
-   <script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+        <script src="https://unpkg.com/vue@2.6.8/dist/vue.min.js" integrity="sha384-tJs0vlPyuG7XcysSkZ0VtWsM/uztJkUtpLwb6HzV5NSgSwGqdW61IBOBJDhbUf+K" crossorigin="anonymous"></script>
 </c:otherwise>
 </c:choose>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.6.0/Sortable.min.js"></script> 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.14.1/vuedraggable.min.js"></script>
-<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.8.4/Sortable.min.js" integrity="sha256-yEySJXdfoPg1V6xPh7TjRM0MRZnJCnIxsoBEp50u0as=" crossorigin="anonymous"></script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/15.0.0/vuedraggable.min.js" integrity="sha256-kZmY4LUwE53ceTqZXPto8gMELhExZWBrmzOCZgzyY0Y=" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/vue-router@3.0.2/dist/vue-router.min.js" integrity="sha384-EnzMJi5PirMz1dgUr9a4DUHwg7e71+fxk3jLLfJn1vljGydxX8c6bdDYdPDE8224" crossorigin="anonymous"></script>
 
-<script src="https://unpkg.com/vuetify@1.0.19/dist/vuetify.min.js"></script>
+<script src="https://unpkg.com/vuetify@1.0.19/dist/vuetify.min.js" integrity="sha384-/tuDalDXfn0/mqH+c+VTK46EiVxKo0Vs3dSRyRLD7jaC1E1t+fhXsB3sB0m+jT5V" crossorigin="anonymous"></script>
 
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/axios@0.18.0/dist/axios.min.js" integrity="sha384-U/+EF1mNzvy5eahP9DeB32duTkAmXrePwnRWtuSh1C/bHHhyR1KZCr/aGZBkctpY" crossorigin="anonymous"></script>
 <!-- <script src="https://unpkg.com/vue-upload-component"></script> -->
 
- <script
-  src="https://code.jquery.com/jquery-3.2.1.min.js"
-  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-  crossorigin="anonymous"></script>
+ <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
 
 <script src="${pageContext.request.contextPath}/resources/js/header.js?timestamp=${timestamp}"></script>
 <script src="${pageContext.request.contextPath}/resources/js/components/login.js?timestamp=${timestamp}"></script>
@@ -70,7 +67,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 <script src="https://unpkg.com/vue-chartjs/dist/vue-chartjs.min.js"></script> -->
 
-<script async src="https://cdn.zingchart.com/zingchart.min.js"></script>
+<script async src="https://cdn.zingchart.com/2.8.5/zingchart.min.js" integrity="sha384-oWBkRCZg0u6cwzWuI23vlFiZ+cHp/4/Kfsxwoad5I22glKztML64zepK4raEOsRy" crossorigin="anonymous"></script>
 <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>

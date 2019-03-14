@@ -13,6 +13,7 @@ public class OrderCaseItems extends SearchItems {
 		super();
 		this.items = orderCases.stream()
 				.map(orderCase -> new SearchItemString(orderCase.getCaseId() + " " + orderCase.getEpicOrderNumber() + "-" + orderCase.getMedicalRecordNumber() + " " + orderCase.getPatientName(), orderCase.getCaseId() ))
+				.sorted((o1, o2) -> o1.getName().compareTo(o2.getName()))
 				.collect(Collectors.toList());
 	}
 

@@ -107,7 +107,7 @@ Vue.component('edit-annotations', {
                         <v-icon>save</v-icon>
                     </v-btn>
                     <span v-if="!saveIsDisabled()">Save/Update Annotations</span>
-                    <span v-if="saveIsDisabled()" v-html="saveDisabledReasons"></span>
+                    <span v-else v-html="saveDisabledReasons"></span>
                 </v-tooltip>
                 <v-tooltip bottom >
                     <v-btn icon @click="cancelAnnotations()" slot="activator">
@@ -223,7 +223,7 @@ Vue.component('edit-annotations', {
                                                                     class="no-height-select"
                                                                     :disabled="annotation.markedForDeletion || !annotation.isVariantSpecific || isOutsideACase()"></v-select>
                                                                     <span v-if="annotation.variantItems">Select a variant</span>
-                                                                    <span v-if="!annotation.variantItems">Select a gene first</span>
+                                                                    <span v-else>Select a gene first</span>
                                                                 </v-tooltip>
                                                             </v-flex>
                                                             </v-layout>
@@ -281,7 +281,7 @@ Vue.component('edit-annotations', {
                                                                 </v-flex>
                                                                 <v-flex xs7>
                                                                     <v-select clearable :value="annotation.category" :disabled="annotation.markedForDeletion" :items="annotationCategories" v-model="annotation.category"
-                                                                        label="Select a Category" single-line class="no-height no-height-select"></v-select>
+                                                                        label="Select a Category" single-line class="no-height no-height-select" max-height="400"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                             <v-layout row wrap>
@@ -515,7 +515,7 @@ Vue.component('edit-annotations', {
                         <v-icon right dark>save</v-icon>
                     </v-btn>
                     <span v-if="!saveIsDisabled()">Save/Update Annotations</span>
-                    <span v-if="saveIsDisabled()" v-html="saveDisabledReasons"></span>
+                    <span v-else v-html="saveDisabledReasons"></span>
                 </v-tooltip>
                 <v-tooltip top>
                     <v-btn slot="activator" color="error" @click="cancelAnnotations()">Cancel
@@ -619,7 +619,7 @@ Vue.component('edit-annotations', {
                 trial: null,
                 drugs: "",
                 warningLevel: 0,
-                drugResistant: false
+                drugResistant: false,
             });
           this.scrollToBottom();
         },

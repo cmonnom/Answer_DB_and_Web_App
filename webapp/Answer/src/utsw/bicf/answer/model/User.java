@@ -64,7 +64,6 @@ public class User {
 	@JoinColumn(name="user_pref_id", unique=true)
 	UserPref userPref;
 	
-	
 	public Integer getUserId() {
 		return userId;
 	}

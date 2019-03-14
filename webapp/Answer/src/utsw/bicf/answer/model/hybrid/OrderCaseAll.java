@@ -61,7 +61,7 @@ public class OrderCaseAll {
 				RequestUtils utils = new RequestUtils(modelDAO);
 				boolean isAssigned = false;
 				try {
-					isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
+					isAssigned = ControllerUtil.isUserAssignedToCase(orderCase, currentUser);
 				} catch (IOException | URISyntaxException e) {
 					e.printStackTrace();
 				}

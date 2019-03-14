@@ -47,6 +47,8 @@ public class Variant {
 	public static final String CATEGORY_PATHOGENIC = "Pathogenic";
 	public static final String CATEGORY_LIKELY_PATHOGENIC = "Likely pathogenic";
 	public static final String CATEGORY_UNCATEGORIZED = "Uncategorized";
+	public static final String FIELD_GNOMAD_LCR = "gnomadLcr";
+	public static final String FIELD_LIKELY_ARTIFACT = "likelyArtifact";
 	
 	
 	Boolean isAllowed = true;
@@ -86,6 +88,8 @@ public class Variant {
 	Float gnomadPopmaxAlleleFrequency;
 	String gnomadPopmaxAlleleFrequencyFormatted;
 	List<Integer> gnomadHomozygotes;
+	String gnomadHg19Variant;
+	Boolean gnomadLcr;
 	Boolean isRepeat;
 	List<String> repeatTypes;
 	Boolean callsetInconsistent;
@@ -111,6 +115,8 @@ public class Variant {
 	List<MongoDBId> annotationIdsForReporting;
 	
 	String rank;
+	
+	Boolean likelyArtifact;
 	
 	@JsonIgnore
 	String relatedCNV;
@@ -855,6 +861,40 @@ public class Variant {
 	public void setMaxCosmicPatients(Integer maxCosmicPatients) {
 		this.maxCosmicPatients = maxCosmicPatients;
 	}
+
+
+	public String getGnomadHg19Variant() {
+		return gnomadHg19Variant;
+	}
+
+
+	public void setGnomadHg19Variant(String gnomadHg19Variant) {
+		this.gnomadHg19Variant = gnomadHg19Variant;
+	}
+
+
+
+
+	public Boolean getGnomadLcr() {
+		return gnomadLcr;
+	}
+
+
+	public void setGnomadLcr(Boolean gnomadLcr) {
+		this.gnomadLcr = gnomadLcr;
+	}
+
+
+	public Boolean getLikelyArtifact() {
+		return likelyArtifact;
+	}
+
+
+	public void setLikelyArtifact(Boolean likelyArtifact) {
+		this.likelyArtifact = likelyArtifact;
+	}
+
+
 
 
 

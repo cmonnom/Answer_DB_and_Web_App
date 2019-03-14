@@ -2,6 +2,7 @@ package utsw.bicf.answer.controller;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
@@ -23,6 +24,7 @@ import utsw.bicf.answer.controller.serialization.TargetPage;
 import utsw.bicf.answer.controller.serialization.UserCredentials;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.LoginAttempt;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.Version;
 import utsw.bicf.answer.security.FileProperties;
@@ -63,24 +65,43 @@ public class LoginController {
 			@RequestBody String data) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		UserCredentials credentials = mapper.readValue(data, UserCredentials.class);
-		//check if email or username
+		//check if using email or username
 		User user = loginDAO.getUserByUsernameOrEmail(credentials.getUsername());
 				
 		boolean proceed = false;
-		if (user != null) {
+		LoginAttempt loginAttempt = null;
+		String logReason = "Wrong username or password";
+		loginAttempt = loginDAO.getLoginAttemptForUser(user); //user could be null. We should still record the login attempt
+		if (loginAttempt == null) {
+			loginAttempt = new LoginAttempt();
+			loginAttempt.setCounter(0);
+			loginAttempt.setUser(user);
+		}
+		loginAttempt.setCounter(loginAttempt.getCounter() + 1); //at this point, either it's the user's login attempt or a null user login attempt. So loginAttempt should not be null
+		//check to see if user waited 10 sec after 5 attempts
+		if (loginAttempt.getCounter() < 5 || loginAttempt.getLastAttemptDatetime().plusSeconds(10).isBefore(LocalDateTime.now())) {
+			proceed = true;
+		}
+		else {
+			proceed = false;
+			logReason = "Too many failed logins. Please wait 10 sec.";
+		}
+		loginAttempt.setLastAttemptDatetime(LocalDateTime.now());
+		if (proceed && user != null){
 			proceed = ldapUtils.isUserValid(user.getUsername(), credentials.getPassword());
-//			if (user.getIndividualPermission().getAdmin()) {
-//				proceed = true;
-//			}
+			if (proceed) {
+				loginAttempt.setCounter(0);
+				modelDAO.saveObject(loginAttempt);
+				session.setAttribute("user", user);
+				return new TargetPage(true, "login successful", (String) model.asMap().get("urlRedirect"), true).toJSONString();
+			}
+			else { //use a default log reason error message
+				logReason = "Wrong username or password";
+			}
 		}
-		
-		if (proceed) {
-			session.setAttribute("user", user);
-			return new TargetPage(true, "login successful", (String) model.asMap().get("urlRedirect"), true).toJSONString();
-			
-		}
+		modelDAO.saveObject(loginAttempt);
 		session.removeAttribute("user");
-		return new TargetPage(false, "Wrong username or password", null, true).toJSONString(); //stay on the page
+		return new TargetPage(false, logReason, null, true).toJSONString(); //stay on the page
 	}
 	
 	@RequestMapping(value = "/updateVersion")

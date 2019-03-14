@@ -369,6 +369,16 @@ public class OpenCaseController {
 		repeatFilter.setType("snp");
 		repeatFilter.setBoolean(true);
 		filters.add(repeatFilter);
+		
+		DataTableFilter lcrFilter = new DataTableFilter("Is in LCR", "Not in LCR", Variant.FIELD_GNOMAD_LCR);
+		lcrFilter.setType("snp");
+		lcrFilter.setBoolean(true);
+		filters.add(lcrFilter);
+		
+		DataTableFilter artifactFilter = new DataTableFilter("Is an Artifact", "Not an Artifact", Variant.FIELD_LIKELY_ARTIFACT);
+		artifactFilter.setType("snp");
+		artifactFilter.setBoolean(true);
+		filters.add(artifactFilter);
 
 
 		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", Variant.FIELD_TUMOR_ALT_FREQUENCY);

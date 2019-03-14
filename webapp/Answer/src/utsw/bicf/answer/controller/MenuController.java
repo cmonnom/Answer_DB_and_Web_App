@@ -3,6 +3,8 @@ package utsw.bicf.answer.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.servlet.ServletContext;
@@ -55,7 +57,7 @@ public class MenuController {
 			if (cases != null) {
 				List<OrderCase> assignedCases = new ArrayList<OrderCase>();
 				for (OrderCase c : cases) {
-					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && ControllerUtil.isUserAssignedToCase(utils, c.getCaseId(), user)
+					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && ControllerUtil.isUserAssignedToCase(c, user)
 							&& c.getActive() != null && c.getActive()) {
 						assignedCases.add(c);
 					}

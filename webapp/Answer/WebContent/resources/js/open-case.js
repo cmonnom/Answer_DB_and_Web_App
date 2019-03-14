@@ -202,22 +202,22 @@ const OpenCase = {
                                             <v-list-tile v-if="isSNP() || isCNV()" avatar @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" :disabled="!mdaAnnotationsExists()">
                                                 <v-list-tile-avatar>
                                                     <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
-                                                    <v-icon v-if="!mdaAnnotationsExists()">mdi-message-bulleted-off</v-icon>
+                                                    <v-icon v-else>mdi-message-bulleted-off</v-icon>
                                                 </v-list-tile-avatar>
                                                 <v-list-tile-content>
                                                     <v-list-tile-title v-if="mdaAnnotationsExists()">MDA Annotations</v-list-tile-title>
-                                                    <v-list-tile-title v-if="!mdaAnnotationsExists()">No MDA Annotations</v-list-tile-title>
+                                                    <v-list-tile-title v-else>No MDA Annotations</v-list-tile-title>
                                                 </v-list-tile-content>
                                             </v-list-tile>
 
                                             <v-list-tile avatar @click="utswAnnotationsVisible = !utswAnnotationsVisible" :disabled="!utswAnnotationsExists()">
                                                 <v-list-tile-avatar>
                                                     <v-icon v-if="utswAnnotationsExists()">mdi-message-bulleted</v-icon>
-                                                    <v-icon v-if="!utswAnnotationsExists()">mdi-message-bulleted-off</v-icon>
+                                                    <v-icon v-else>mdi-message-bulleted-off</v-icon>
                                                 </v-list-tile-avatar>
                                                 <v-list-tile-content>
                                                     <v-list-tile-title v-if="utswAnnotationsExists()">UTSW Annotations</v-list-tile-title>
-                                                    <v-list-tile-title v-if="!utswAnnotationsExists()">No UTSW Annotations</v-list-tile-title>
+                                                    <v-list-tile-title v-else>No UTSW Annotations</v-list-tile-title>
                                                 </v-list-tile-content>
                                             </v-list-tile>
 
@@ -254,7 +254,7 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile avatar @click="removeVariantFromReport()" v-if="currentRow.isSelected" :disabled="!canProceed('canSelect')">
+                        <v-list-tile avatar @click="removeVariantFromReport()" v-else :disabled="!canProceed('canSelect')">
                             <v-list-tile-avatar>
                                 <v-icon>done</v-icon>
                             </v-list-tile-avatar>
@@ -287,16 +287,16 @@ const OpenCase = {
                 <v-toolbar-title class="ml-0">
           Annotations for 
           <span v-if="isSNP()">SNP</span>
-          <span v-if="isCNV()">CNV</span>
-          <span v-if="isTranslocation()">FTL</span>
+          <span v-else-if="isCNV()">CNV</span>
+          <span v-else-if="isTranslocation()">FTL</span>
           Variant:
               <v-tooltip bottom v-if="variantNameIsTooLong() && isSNP()">
               <span slot="activator" v-text="createVariantName()"></span>
               <span>{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
               </v-tooltip>  
               <span v-if="!variantNameIsTooLong() && isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
-              <span v-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
-              <span v-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
+              <span v-else-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
+              <span v-else-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
               <span> -- {{ caseName }} -- </span> 
             <v-tooltip bottom>
               <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
@@ -323,19 +323,19 @@ const OpenCase = {
                     <v-btn :disabled="!mdaAnnotationsExists()" icon flat :color="(mdaAnnotationsVisible && mdaAnnotationsExists()) ? 'amber accent-2' : ''"
                         @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" slot="activator">
                         <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
-                        <v-icon v-if="!mdaAnnotationsExists()">mdi-message-bulleted-off</v-icon>
+                        <v-icon v-else>mdi-message-bulleted-off</v-icon>
                     </v-btn>
                     <span v-if="mdaAnnotationsExists()">Show/Hide MDA Annotations</span>
-                    <span v-if="!mdaAnnotationsExists()">No MDA Annotations</span>
+                    <span v-else>No MDA Annotations</span>
                 </v-tooltip>
                 <v-tooltip bottom>
                     <v-btn :disabled="!utswAnnotationsExists()" icon flat :color="(utswAnnotationsVisible && utswAnnotationsExists()) ? 'amber accent-2' : ''"
                         @click="utswAnnotationsVisible = !utswAnnotationsVisible" slot="activator">
                         <v-icon v-if="utswAnnotationsExists()">mdi-message-bulleted</v-icon>
-                        <v-icon v-if="!utswAnnotationsExists()">mdi-message-bulleted-off</v-icon>
+                        <v-icon v-else>mdi-message-bulleted-off</v-icon>
                     </v-btn>
                     <span v-if="utswAnnotationsExists()">Show/Hide UTSW Annotations</span>
-                    <span v-if="!utswAnnotationsExists()">No UTSW Annotations</span>
+                    <span v-else>No UTSW Annotations</span>
                 </v-tooltip>
                 <v-tooltip bottom v-if="isSNP()">
                     <v-btn ref="bamViewerLink" icon flat slot="activator" :href="createBamViewerLink()" target="_blank" rel="noreferrer">
@@ -359,7 +359,7 @@ const OpenCase = {
                         <v-icon>close</v-icon>
                     </v-btn>
                     <span v-if="!isSaveNeededBadgeVisible()">Save & Close Variant</span>
-                    <span v-if="isSaveNeededBadgeVisible()">Save & Close Variant</span>
+                    <span v-else>Save & Close Variant</span>
                 </v-tooltip>
 
             </v-toolbar>
@@ -539,7 +539,7 @@ const OpenCase = {
                                                                 <v-flex xs6 sm6 md3 lg3 xl2>
                                                                     <v-select v-if="isSNP() || isTranslocation()" clearable :value="searchAnnotationCategory" :items="annotationCategories" v-model="searchAnnotationCategory"
                                                                         label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
-                                                                    <v-select v-if="isCNV()" clearable :value="searchAnnotationCategory" :items="annotationCategoriesCNV" v-model="searchAnnotationCategory"
+                                                                    <v-select v-else-if="isCNV()" clearable :value="searchAnnotationCategory" :items="annotationCategoriesCNV" v-model="searchAnnotationCategory"
                                                                         label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
                                                                 </v-flex>
 
@@ -561,9 +561,9 @@ const OpenCase = {
                                                                 <v-flex xs6 sm6 md3 lg3 xl2>
                                                                     <v-select v-if="isSNP()" clearable :value="searchAnnotationScope" :items="scopesSNP" v-model="searchAnnotationScope" label="Search by Scope"
                                                                         multiple @input="matchAnnotationFilter"></v-select>
-                                                                    <v-select v-if="isCNV()" clearable :value="searchAnnotationScope" :items="scopesCNV" v-model="searchAnnotationScope" label="Search by Scope"
+                                                                    <v-select v-else-if="isCNV()" clearable :value="searchAnnotationScope" :items="scopesCNV" v-model="searchAnnotationScope" label="Search by Scope"
                                                                         multiple @input="matchAnnotationFilter"></v-select>
-                                                                    <v-select v-if="isTranslocation()" clearable :value="searchAnnotationScope" :items="scopesTranslocation" v-model="searchAnnotationScope"
+                                                                    <v-select v-else-if="isTranslocation()" clearable :value="searchAnnotationScope" :items="scopesTranslocation" v-model="searchAnnotationScope"
                                                                         label="Search by Scope" multiple @input="matchAnnotationFilter"></v-select>
                                                                 </v-flex>
 
@@ -597,7 +597,7 @@ const OpenCase = {
                     @click="selectVariantForReport()" slot="activator">Select Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn v-if="currentRow.isSelected" :disabled="!canProceed('canSelect') || readonly" color="warning"
+                <v-btn v-else :disabled="!canProceed('canSelect') || readonly" color="warning"
                     @click="removeVariantFromReport()" slot="activator">Deselect Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
@@ -623,7 +623,7 @@ const OpenCase = {
             </v-tooltip>
                 <v-btn color="error" @click="closeVariantDetails()">
                 <span v-if="!isSaveNeededBadgeVisible()">Close</span>
-                <span v-if="isSaveNeededBadgeVisible()">Save & Close</span>
+                <span v-else>Save & Close</span>
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
             </v-card-actions>
@@ -813,7 +813,7 @@ const OpenCase = {
                                                                 label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true" hide-details>
                                                                 </v-text-field>
                                                             </v-flex>
-                                                            <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'" class="align-flex-right">
+                                                            <v-flex xs4 v-else-if="item.type == 'text' && item.field == 'oncotree'" class="align-flex-right">
                                                                 <v-tooltip bottom>
                                                                     <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator" class="mr-0 ml-0 mt-0 mb-0">
                                                                         <img alt="oncotree icon" :src="oncotreeIconUrl" width="24px"></img>
@@ -875,7 +875,7 @@ const OpenCase = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-tabs slot="extension" dark slider-color="warning" color="primary darken-1" fixed-tabs v-model="variantTabActive">
+        <v-tabs slot="extension" dark slider-color="warning" color="primary darken-1" fixed-tabs v-model="variantTabActive" v-show="variantTabsVisible">
             <v-tab href="#tab-snp" :ripple="false">
                 SNP / Indel
             </v-tab>
@@ -1050,7 +1050,8 @@ const OpenCase = {
                 'Variant Function',
                 'Prognosis',
                 'Diagnosis',
-                'Therapy'],
+                'Therapy',
+                'Likely Artifact'],
             annotationCategoriesCNV: [
                 'Epidemiology',
                 'Prognosis',
@@ -1337,10 +1338,10 @@ const OpenCase = {
                         this.patientDetailsVisible = true;
                         setTimeout(() => {
                             this.caseAnnotationsVisible = true;
-                        }, 500);
+                        }, 200);
                         setTimeout(() => {
                             this.variantTabsVisible = true;
-                        }, 1000);
+                        }, 400);
 
                         setTimeout(() => {
                             this.loadFromParams();
@@ -1524,6 +1525,14 @@ const OpenCase = {
                 if (item.callsetInconsistent) {
                     warnings.push("I");
                     tooltips.push("Inconsistent calls");
+                }
+                if (item.lowComplexity) {
+                    warnings.push("LCR");
+                    tooltips.push("Low Complexity Region");
+                }
+                if (item.likelyArtifact) {
+                    warnings.push("A");
+                    tooltips.push("Likely Artifact");
                 }
                 if (item.isRepeat) {
                     warnings.push("R");
@@ -1813,7 +1822,7 @@ const OpenCase = {
                                 {
                                     label: "gnomAD Pop. Max. Allele Frequency",
                                     value: this.formatPercent(this.currentVariant.gnomadPopmaxAlleleFrequency),
-                                    //type: "link", //TODO the link currently uses the wrong hg19 position. Remove it until it's fixed
+                                    type: this.currentVariant.gnomadHg19Variant ? "link" : null,
                                     linkIcon: "open_in_new",
                                     url: this.createGnomadLink(),
                                     tooltip: "Open in gnomAD"
@@ -2235,9 +2244,10 @@ const OpenCase = {
                 + "-" + (this.currentVariant.pos + 50);
         },
         createGnomadLink() {
-            return "http://gnomad.broadinstitute.org/variant/"
-                + this.currentVariant.oldBuilds.hg19.chrom.replace("chr", "").replace("CHR", "") + "-" + this.currentVariant.oldBuilds.hg19.pos
-                + "-" + this.currentVariant.reference + "-" + this.currentVariant.alt;
+            if (this.currentVariant.gnomadHg19Variant) {
+                return "http://gnomad.broadinstitute.org/variant/" + this.currentVariant.gnomadHg19Variant;
+            }
+            return "";
         },
         handleEditAnnotationOpening() {
             if (this.urlQuery.edit === true) {
@@ -2730,6 +2740,9 @@ const OpenCase = {
                         }, 3000);
                     } else {
                         this.handleDialogs(response.data, this.commitAnnotations.bind(null, userAnnotations));
+                        this.$refs.annotationDialog.saving = false; 
+                        this.$refs.cnvAnnotationDialog.saving = false;
+                        this.$refs.translocationAnnotationDialog.saving = false;
                     }
                 })
                 .catch(error => {
@@ -2841,6 +2854,7 @@ const OpenCase = {
                 }
                 else {
                     this.saveLoading = false;
+                    this.waitingForAjaxCount--;
                     this.handleDialogs(response.data, this.saveSelection.bind(null, response.data.uiProceed, response.data.skipSnackBar));
                 }
             }).catch(error => {
@@ -2979,7 +2993,7 @@ const OpenCase = {
                 && !(this.utswAnnotationsVisible && this.utswAnnotationsExists());
         },
         getSelectedVariantIds() {
-            var startTime = moment();
+            // var startTime = moment();
             var selectedSNPVariantIds = [];
             var selectedCNVIds = [];
             var selectedTranslocationIds = [];
@@ -2992,8 +3006,8 @@ const OpenCase = {
             if (this.$refs.translocationDetails) {
                 selectedTranslocationIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.translocationDetails.items, this.ftlUnfilteredItems);
             }
-            var duration = moment().diff(startTime);
-            console.log("getSelectedVariantIds", duration);
+            // var duration = moment().diff(startTime);
+            // console.log("getSelectedVariantIds", duration);
             return {
                 selectedSNPVariantIds: selectedSNPVariantIds ? selectedSNPVariantIds : null,
                 selectedCNVIds: selectedCNVIds ? selectedCNVIds : null,
@@ -3007,7 +3021,7 @@ const OpenCase = {
          * @param {items in the original unfiltered table} unfilteredItems 
          */
         getFilteredAndUnfilteredVariantIds(variantDetailsItems, unfilteredItems) {
-            var startTime = moment();
+            // var startTime = moment();
             var selectedVariantIds = [];
             var filteredSelectedIds = variantDetailsItems.filter(item => item.isSelected).map(item => item.oid);
             //need to only consider items not in the current table so that we don't reselect items that were intentionally deselected
@@ -3024,8 +3038,8 @@ const OpenCase = {
             for (let item of unionSet) {
                 selectedVariantIds.push(item);
             }
-            var duration = moment().diff(startTime);
-            console.log("getFilteredAndUnfilteredVariantIds", duration);
+            // var duration = moment().diff(startTime);
+            // console.log("getFilteredAndUnfilteredVariantIds", duration);
             return selectedVariantIds;
         },
         updateVariantDetails() {
@@ -3036,7 +3050,7 @@ const OpenCase = {
         updateEditAnnotationBreadcrumbs(visible) {
             this.urlQuery.edit = visible;
             zingchart.exec("cnvPlotEdit", 'destroy'); //kill the chart if edit annotation is closed
-            console.log("killing cnv plot");
+            // console.log("killing cnv plot");
             this.updateRoute();
         },
         saveCaseAnnotations(skipSnackBar) {
@@ -3054,8 +3068,8 @@ const OpenCase = {
                     annotation: [this.caseAnnotation]
                 }
             }).then(response => {
+                this.waitingForAjaxCount--;
                 if (response.data.isAllowed) {
-                    this.waitingForAjaxCount--;
                     this.loadCaseAnnotations();
                     if (!response.data.skipSnackBar) {
                         this.showSnackBarMessage("Annotation Saved");
@@ -3215,8 +3229,8 @@ const OpenCase = {
                     variant: lightVariant
                 }
             }).then(response => {
+                this.waitingForAjaxCount--;
                 if (response.data.isAllowed) {
-                    this.waitingForAjaxCount--;
                     if (!response.data.skipSnackBar) {
                         this.revertVariant();
                         this.showSnackBarMessage("Variant Saved");
@@ -3270,9 +3284,9 @@ const OpenCase = {
                     variant: lightVariant
                 }
             }).then(response => {
+                this.waitingForAjaxCount--;
                 if (response.data.isAllowed) {
                     this.revertAnnotationSelection();
-                    this.waitingForAjaxCount--;
                     if (!response.data.skipSnackBar) {
                         this.snackBarMessage = "Annotation Selection Saved";
                         this.snackBarLink = "";
@@ -3387,8 +3401,8 @@ const OpenCase = {
                     skipSnackBar: skipSnackBar
                 }
             }).then(response => {
+                this.waitingForAjaxCount--;
                 if (response.data.isAllowed && response.data.success) {
-                    this.waitingForAjaxCount--;
                     this.patientDetailsUnSaved = false;
                     this.getPatientDetails();
                     if (!this.skipSnackBar) {
@@ -3800,7 +3814,7 @@ const OpenCase = {
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
                         //reload the variant
-                        console.log("success");
+                        // console.log("success");
                         var variantId = this.currentVariant._id["$oid"];
                         if (this.isSNP()) {
                             for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
@@ -3837,6 +3851,9 @@ const OpenCase = {
                 });
         },
         openReport() {
+            if (!this.reportReady) {
+                return; //a disabled menu item will still call openReport. This should block it.
+            }
             var path = webAppRoot + "/openReport";
             if (this.readonly) {
                 path += "ReadOnly"
