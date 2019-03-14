@@ -9,15 +9,17 @@ public class VariantDetailsSummary {
 	
 	Variant variantDetails;
 	VariantRelatedSummary relatedSummary;
+	CNVRelatedSummary cnvRelatedSummary;
 	VariantVcfAnnotationSummary canonicalSummary;
 	VariantVcfAnnotationSummary otherSummary;
 	Boolean isAllowed = true;
 	
 
-	public VariantDetailsSummary(Variant variantDetails, VariantRelatedSummary relatedSummary, VariantVcfAnnotationSummary canonicalSummary,
+	public VariantDetailsSummary(Variant variantDetails, VariantRelatedSummary relatedSummary, CNVRelatedSummary cnvRelatedSummary, VariantVcfAnnotationSummary canonicalSummary,
 			VariantVcfAnnotationSummary otherSummary) {
 		super();
 		this.relatedSummary = relatedSummary;
+		this.cnvRelatedSummary = cnvRelatedSummary;
 		this.variantDetails = variantDetails;
 		this.canonicalSummary = canonicalSummary;
 		this.otherSummary = otherSummary;
@@ -66,6 +68,14 @@ public class VariantDetailsSummary {
 
 	public void setRelatedSummary(VariantRelatedSummary relatedSummary) {
 		this.relatedSummary = relatedSummary;
+	}
+
+	public CNVRelatedSummary getCnvRelatedSummary() {
+		return cnvRelatedSummary;
+	}
+
+	public void setCnvRelatedSummary(CNVRelatedSummary cnvRelatedSummary) {
+		this.cnvRelatedSummary = cnvRelatedSummary;
 	}
 
 }

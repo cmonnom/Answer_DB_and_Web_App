@@ -118,8 +118,7 @@ public class Variant {
 	
 	Boolean likelyArtifact;
 	
-	@JsonIgnore
-	String relatedCNV;
+	CNV relatedCNV;
 	
 	public Variant() {
 		
@@ -807,12 +806,12 @@ public class Variant {
 	}
 
 
-	public String getRelatedCNV() {
+	public CNV getRelatedCNV() {
 		return relatedCNV;
 	}
 
 
-	public void setRelatedCNV(String relatedCNV) {
+	public void setRelatedCNV(CNV relatedCNV) {
 		this.relatedCNV = relatedCNV;
 	}
 

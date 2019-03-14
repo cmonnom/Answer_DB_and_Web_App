@@ -39,6 +39,7 @@ import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVChromosomeItems;
+import utsw.bicf.answer.controller.serialization.vuetify.CNVRelatedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.GenesInPanelItems;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
@@ -509,6 +510,7 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		Variant variantDetails = utils.getVariantDetails(variantId);
 		VariantRelatedSummary summaryRelated = null;
+		CNVRelatedSummary cnvSummaryRelated = null;
 		VariantVcfAnnotationSummary summaryCanonical = null;
 		VariantVcfAnnotationSummary summaryOthers = null;
 		VariantDetailsSummary summary = null;
@@ -536,6 +538,12 @@ public class OpenCaseController {
 				List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Related Variants");
 				summaryRelated = new VariantRelatedSummary(variantDetails.getRelatedVariants(), "chromPos", headerOrders);
 			}
+			if (variantDetails.getRelatedCNV() != null) {
+				List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Related CNV");
+				List<CNV> relatedCNVs = new ArrayList<CNV>();
+				relatedCNVs.add(variantDetails.getRelatedCNV());
+				cnvSummaryRelated = new CNVRelatedSummary(relatedCNVs, "copyNumber", headerOrders);
+			}
 			List<VCFAnnotation> vcfAnnotations = variantDetails.getVcfAnnotations();
 			if (!vcfAnnotations.isEmpty()) {
 				List<VCFAnnotationRow> canonicalAnnotation = new ArrayList<VCFAnnotationRow>();
@@ -547,7 +555,7 @@ public class OpenCaseController {
 				summaryCanonical = new VariantVcfAnnotationSummary(canonicalAnnotation, "proteinPosition", false, headerOrdersCanonical);
 				List<HeaderOrder> headerOrdersOther = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, OpenCaseController.class.getName() + "|" + "Other VCF Annotations");
 				summaryOthers = new VariantVcfAnnotationSummary(otherAnnotations, "proteinPosition", true, headerOrdersOther);
-				summary = new VariantDetailsSummary(variantDetails, summaryRelated, summaryCanonical, summaryOthers);
+				summary = new VariantDetailsSummary(variantDetails, summaryRelated, cnvSummaryRelated, summaryCanonical, summaryOthers);
 			}
 			return summary.createVuetifyObjectJSON();
 		}

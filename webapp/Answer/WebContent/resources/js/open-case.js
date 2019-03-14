@@ -180,6 +180,15 @@ const OpenCase = {
                                                 </v-list-tile-content>
                                             </v-list-tile>
 
+                                            <v-list-tile v-if="isSNP()" avatar :disabled="!currentVariantHasRelatedCNV" @click="toggleRelatedCNV()">
+                                            <v-list-tile-avatar>
+                                                <v-icon>link</v-icon>
+                                            </v-list-tile-avatar>
+                                            <v-list-tile-content>
+                                                <v-list-tile-title>Related CNV</v-list-tile-title>
+                                            </v-list-tile-content>
+                                        </v-list-tile>
+
                                             <v-list-tile v-if="isSNP()" avatar @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible">
                                                 <v-list-tile-avatar>
                                                     <v-icon>mdi-table-search</v-icon>
@@ -401,6 +410,15 @@ const OpenCase = {
                             <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedVariantsVisible()">
                                 <div>
                                     <data-table ref="relatedVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related Variants" initial-sort="geneId"
+                                        no-data-text="No Data" :show-pagination="false" title-icon="link" :color="colors.variantDetails">
+                                    </data-table>
+                                </div>
+                            </v-flex>
+                        </v-slide-y-transition>
+                        <v-slide-y-transition>
+                            <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedCNVVisible()">
+                                <div>
+                                    <data-table ref="relatedCNVAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related CNV" initial-sort="geneId"
                                         no-data-text="No Data" :show-pagination="false" title-icon="link" :color="colors.variantDetails">
                                     </data-table>
                                 </div>
@@ -998,6 +1016,7 @@ const OpenCase = {
             reviewDialogVisible: false,
             annotationVariantDetailsVisible: true,
             annotationVariantRelatedVisible: true,
+            annotationCNVRelatedVisible: true,
             annotationVariantCanonicalVisible: true,
             annotationVariantOtherVisible: true,
             saveVariantDisabled: false,
@@ -1034,6 +1053,7 @@ const OpenCase = {
             variantTabActive: "tab-snp",
             wasAdvancedFilteringVisibleBeforeTabChange: false,
             currentVariantHasRelatedVariants: false,
+            currentVariantHasRelatedCNV: false,
             isFirstVariant: false,
             isLastVariant: false,
             variantTiers: [
@@ -1871,6 +1891,16 @@ const OpenCase = {
                         else {
                             this.currentVariantHasRelatedVariants = false;
                         }
+                        if (response.data.cnvRelatedSummary) {
+                            this.$refs.relatedCNVAnnotation.manualDataFiltered(response.data.cnvRelatedSummary);
+                            if (response.data.cnvRelatedSummary.items.length > 0) {
+                                this.currentVariantHasRelatedCNV = true;
+                                this.annotationCNVRelatedVisible = true;
+                            }
+                        }
+                        else {
+                            this.currentVariantHasRelatedCNV = false;
+                        }
                         this.$refs.canonicalVariantAnnotation.manualDataFiltered(response.data.canonicalSummary);
                         this.$refs.otherVariantAnnotations.manualDataFiltered(response.data.otherSummary);
                         this.userAnnotations = this.currentVariant.referenceVariant.utswAnnotations.filter(a => a.userId == this.userId);
@@ -2261,9 +2291,9 @@ const OpenCase = {
             var callerNames = callers.map(c => c.callerName);
             var alts = callers.map(c => c.alt);
             var tumorTotalDepths = callers.map(c => c.tumorTotalDepth);
-            var tumorAlleleFrequencys = callers.map(c => c.tumorAlleleFrequencyFormatted + "%");
+            var tumorAlleleFrequencys = callers.map(c => c.tumorAlleleFrequencyFormatted ? c.tumorAlleleFrequencyFormatted + "%": null);
             var normalTotalDepths = callers.map(c => c.normalTotalDepth);
-            var normalAlleleFrequencys = callers.map(c => c.normalAlleleFrequencyFormatted + "%");
+            var normalAlleleFrequencys = callers.map(c => c.normalAlleleFrequencyFormatted ? c.normalAlleleFrequencyFormatted + "%": null);
             var formattedRows = [];
             for (var i = 0; i < labels.length; i++) {
                 formattedRows.push({
@@ -2871,9 +2901,17 @@ const OpenCase = {
         isRelatedVariantsVisible() {
             return this.annotationVariantRelatedVisible && this.isSNP() && this.currentVariantHasRelatedVariants;
         },
+        isRelatedCNVVisible() {
+            return this.annotationCNVRelatedVisible && this.isSNP() && this.currentVariantHasRelatedCNV;
+        },
         toggleRelatedVariants() {
             if (this.currentVariantHasRelatedVariants) {
                 this.annotationVariantRelatedVisible = !this.annotationVariantRelatedVisible;
+            }
+        },
+        toggleRelatedCNV() {
+            if (this.currentVariantHasRelatedCNV) {
+                this.annotationCNVRelatedVisible = !this.annotationCNVRelatedVisible;
             }
         },
         saveCurrentFilters() {

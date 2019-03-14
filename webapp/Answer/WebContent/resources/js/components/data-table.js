@@ -827,7 +827,7 @@ Vue.component('data-table', {
             }
         },
         isDragging(header) {
-            return header === this.itemDragging;
+            return header + this.tableTitle === this.itemDragging;
         },
         toggleAddRowBar() {
             this.showAddRowBar = !this.showAddRowBar;
