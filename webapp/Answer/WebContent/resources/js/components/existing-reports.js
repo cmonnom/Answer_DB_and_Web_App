@@ -286,8 +286,8 @@ Vue.component('existing-reports', {
         closeExistingReport() {
             this.$emit("close-existing-reports");
         },
-        getReportDetails(reportId) {
-            this.$emit("get-report-details", reportId);
+        getReportDetails(reportId, test) {
+            this.$emit("get-report-details", reportId, test);
         },
         handleLoadingReportDetails(isLoading) {
             this.$emit("loading-report-details", isLoading);
@@ -305,7 +305,7 @@ Vue.component('existing-reports', {
                         this.existingReports = response.data.reports;
                         this.existingReports.forEach((r) => {console.log(r._id['$oid'])});
                         this.canFinalize = !this.finalizeReportExists();
-                        this.getReportDetails(this.$route.query.reportId);
+                        this.getReportDetails(this.$route.query.reportId, this.$route.query.test);
                     }
                     else {
                         this.handleDialogs(response, this.getExistingReports);

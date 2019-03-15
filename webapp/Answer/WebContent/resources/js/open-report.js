@@ -508,7 +508,8 @@ const OpenReport = {
             currentReportId: "",
             variantsMissingTier: [],
             urlQuery: {
-                reportId: null
+                reportId: null,
+                test: ""
             },
             finalizeReportExists: false,
             currentReportName: "",
@@ -574,6 +575,7 @@ const OpenReport = {
         },
         loadFromParams(newRouteQuery, oldRouteQuery) {
             this.urlQuery.reportId = this.$route.query.reportId ? this.$route.query.reportId : null;
+            this.urlQuery.test = this.$route.query.test ? this.$route.query.test : null;
         },
         createSaveTooltip() {
             var tooltip = ["Some edits have not been saved yet:"];
@@ -621,14 +623,15 @@ const OpenReport = {
         updateLoadingReportDetails(isLoading) {
             this.loadingReportDetails = isLoading;
         },
-        getReportDetails(reportId) {
+        getReportDetails(reportId, test) {
             this.loadingReportDetails = true;
             axios.get(
                 webAppRoot + "/getReportDetails",
                 {
                     params: {
                         reportId: reportId,
-                        caseId: this.$route.params.id
+                        caseId: this.$route.params.id,
+                        test: test
                     }
                 })
                 .then(response => {
@@ -643,6 +646,7 @@ const OpenReport = {
                         this.fullReport = response.data;
                         this.currentReportId = this.fullReport._id ? this.fullReport._id.$oid : "";
                         this.urlQuery.reportId = this.currentReportId;
+                        this.urlQuery.test = this.$route.query.test;
                         this.currentReportName = this.fullReport.reportName;
                         this.updateRoute();
                         this.variantsMissingTier = [];

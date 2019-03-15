@@ -827,6 +827,11 @@ public class RequestUtils {
 		return null;
 	}
 
+	public Report buildReportManually2(String caseId, User user, OtherProperties otherProps, NCBIProperties ncbiProps) throws ClientProtocolException, UnsupportedOperationException, IOException, URISyntaxException, JAXBException, SAXException, ParserConfigurationException {
+		ReportBuilder rb = new ReportBuilder(this, modelDAO, caseId, user, otherProps, ncbiProps);
+		return rb.build();
+	}
+	
 	//temp method to test displaying the report
 	//while Ben implements the API
 	public Report buildReportManually(String caseId, User user, OtherProperties otherProps, NCBIProperties ncbiProps) throws ClientProtocolException, IOException, URISyntaxException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
@@ -997,7 +1002,7 @@ public class RequestUtils {
 						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
 						if (this.annotationGoesInTherapyTable(a)) {
 							annotations.add(new IndicatedTherapy(a, v));
-							report.getFtlIds().add(v.getMongoDBId().getOid());
+							report.getCnvIds().add(v.getMongoDBId().getOid());
 							String key = v.getGenes().stream().collect(Collectors.joining(" "));
 							if (v.getAberrationType().equals("ITD")) {
 								key += "-ITD";

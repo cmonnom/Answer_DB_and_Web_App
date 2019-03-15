@@ -99,10 +99,14 @@ public class OpenReportController {
 
 	@RequestMapping("/openReport/{caseId}")
 	public String openReport(Model model, HttpSession session, @PathVariable String caseId,
-			@RequestParam(defaultValue="", required=false) String reportId
+			@RequestParam(defaultValue="", required=false) String reportId,
+			@RequestParam(defaultValue="", required=false) String test
 			) throws IOException, UnsupportedOperationException, URISyntaxException {
-		String url = "openReport/" + caseId + "?reportId=" + reportId;
 		User user = ControllerUtil.getSessionUser(session);
+		if (!user.getUserId().equals(1)) { //only allow test for myself
+			test = "";
+		}
+		String url = "openReport/" + caseId + "?reportId=" + reportId + "&test=" + test;
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 //		RequestUtils utils = new RequestUtils(modelDAO);
@@ -162,13 +166,19 @@ public class OpenReportController {
 	@RequestMapping(value = "/getReportDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getReportDetails(Model model, HttpSession session, @RequestParam String caseId,
-			@RequestParam(defaultValue="", required=false) String reportId) throws Exception {
+			@RequestParam(defaultValue="", required=false) String reportId,
+			@RequestParam(defaultValue="", required=false) String test) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
 		Report reportDetails = null;
 		if (reportId.equals("")) {
 			User user = ControllerUtil.getSessionUser(session);
-			reportDetails = utils.buildReportManually(caseId, user, otherProps, ncbiProps);
+			if (test.equals("yes")) {
+				reportDetails = utils.buildReportManually2(caseId, user, otherProps, ncbiProps);
+			}
+			else {
+				reportDetails = utils.buildReportManually(caseId, user, otherProps, ncbiProps);
+			}
 		}
 		else {
 			reportDetails = utils.getReportDetails(reportId);
@@ -540,7 +550,7 @@ public class OpenReportController {
 					reportToSave.setFinalized(false);
 					reportToSave.setDateFinalized(null);
 					reportToSave.setAddendum(true);
-					Report newReport = utils.buildReportManually(reportToSave.getCaseId(), currentUser, otherProps, ncbiProps);
+					Report newReport = utils.buildReportManually2(reportToSave.getCaseId(), currentUser, otherProps, ncbiProps);
 					List<BiomarkerTrialsRow> existingTrials = reportToSave.getClinicalTrials();
 					existingTrials.stream().forEach(t -> t.setReadonly(true));
 					List<String> existingNCTIDs = existingTrials.stream().map(t -> t.getNctid()).collect(Collectors.toList());

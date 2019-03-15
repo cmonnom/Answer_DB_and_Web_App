@@ -26,6 +26,11 @@ response.setDateHeader ("Expires", 0);
 					<!-- 		ADDING PAGE SPECIFIC CONTENT HERE BY POPULATING ${content} with the name of the jsp file
 	from the controller-->
 					You are not allowed to access this page.
+					<c:choose>
+						<c:when test="${not empty redirectReadOnlyUrl}">
+					<span><br/>You will be redirected to the read only page in 3 seconds instead.</span>
+				</c:when>
+			</c:choose>
 				</v-container>	
 			</v-content>
 		</main>
@@ -34,5 +39,12 @@ response.setDateHeader ("Expires", 0);
 </body>
 <!-- Start the Vue application -->
 <script src="${pageContext.request.contextPath}/resources/js/vue-starter.js"></script>
+
+<script>
+	const redirectReadOnlyUrl = "${redirectReadOnlyUrl}";
+	if (redirectReadOnlyUrl) {
+		setTimeout(() => {window.location = "${pageContext.request.contextPath}/login?urlRedirect=${redirectReadOnlyUrl}"}, 3000);
+	}
+</script>
 
 </html>

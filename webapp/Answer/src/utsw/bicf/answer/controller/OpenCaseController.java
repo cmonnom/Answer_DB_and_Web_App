@@ -182,6 +182,7 @@ public class OpenCaseController {
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		if (user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
+			model.addAttribute("redirectReadOnlyUrl", url.replace("openCase/", "openCaseReadOnly/"));
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 		}
 		
