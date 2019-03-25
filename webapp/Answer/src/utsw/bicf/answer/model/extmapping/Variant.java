@@ -74,6 +74,7 @@ public class Variant {
 	Integer pos;
 	List<Caller> callSet;
 	String type;
+	String variantType = "snp";
 	List<Integer> cosmicPatients;
 	Integer maxCosmicPatients;
 	List<String> ids; //list of external database ids (dbsnp, cosmic, etc)
@@ -891,6 +892,16 @@ public class Variant {
 
 	public void setLikelyArtifact(Boolean likelyArtifact) {
 		this.likelyArtifact = likelyArtifact;
+	}
+
+
+	public String getVariantType() {
+		return variantType;
+	}
+
+
+	public void setVariantType(String variantType) {
+		this.variantType = variantType;
 	}
 
 

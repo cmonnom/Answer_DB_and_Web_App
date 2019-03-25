@@ -272,6 +272,7 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			CNV cnv = mapper.readValue(response.getEntity().getContent(), CNV.class);
+			cnv.setType("cnv");
 			return cnv;
 		}
 		return null;

@@ -156,3 +156,7 @@ texinfo_documents = [
 
 html_show_sourcelink = False
 
+html_favicon = "img/lifebuoy.ico"
+
+html_logo = "img/answer-logo-icon-xsmall.png"
+

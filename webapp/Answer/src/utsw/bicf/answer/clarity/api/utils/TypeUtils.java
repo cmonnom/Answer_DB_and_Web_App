@@ -22,7 +22,7 @@ import utsw.bicf.answer.clarity.api.model.ClarityValue;
 
 public class TypeUtils {
 	
-	static final DateTimeFormatter localDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+	public static final DateTimeFormatter localDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 	public static final DateTimeFormatter localDateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 	
 	public static final DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

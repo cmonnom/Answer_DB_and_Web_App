@@ -485,7 +485,14 @@ public class FinalReportPDFTemplate {
 			}
 			cell = row.createCell(20, csList.stream().collect(Collectors.joining(", ")));
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
-			cell = row.createCell(10, navigationRow.getCnvCount() == 0 ? "" : navigationRow.getCnvCount() + "");
+			String aberrationType = "";
+			if (navigationRow.getCnvCount() == -1) {
+				aberrationType = "Loss";
+			}
+			else if (navigationRow.getCnvCount() == 1) {
+				aberrationType = "Gain";
+			}
+			cell = row.createCell(10, aberrationType);
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
 			cell = row.createCell(10, navigationRow.getFusionCount() == 0 ? "" : navigationRow.getFusionCount() + "");
 			this.applyNavigationCountCellFormatting(cell, defaultColor);

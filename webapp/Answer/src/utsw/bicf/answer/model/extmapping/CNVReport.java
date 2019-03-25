@@ -1,13 +1,10 @@
 package utsw.bicf.answer.model.extmapping;
 
 import java.text.NumberFormat;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import utsw.bicf.answer.model.hybrid.CNVRow;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CNVReport {
@@ -27,6 +24,9 @@ public class CNVReport {
 	String loci;
 	String cytoband;
 	boolean readonly;
+	String aberrationType;
+	String cytobandTruncated;
+	String highestAnnotationTier;
 	
 	public CNVReport() {
 		
@@ -45,6 +45,33 @@ public class CNVReport {
 		this.comment = text;
 		this.loci = this.chrom + ":" + this.start + "-" + this.end;
 		this.cytoband = c.getCytoband();
+		this.aberrationType = "";
+		if ("gain".equals(c.getAberrationType())
+				|| "amplification".equals(c.getAberrationType())) {
+			aberrationType = "Gain ";
+		}
+		else if (c.getAberrationType() != null && c.getAberrationType().contains("loss")) {
+			aberrationType = "Loss ";
+		}
+		this.cytobandTruncated = c.getCytoband().substring(0, 1);
+	}
+
+
+	public CNVReport(String text, CNV c, String highestAnnotationTier) {
+		this.mongoDBId = c.mongoDBId;
+		this.genes = c.getGenes().stream().collect(Collectors.joining(" "));
+		this.chrom = c.chrom;
+		this.start = c.start;
+		this.end = c.end;
+		this.startFormatted = c.startFormatted;
+		this.endFormatted = c.endFormatted;
+		this.copyNumber = c.copyNumber;
+		this.comment = text;
+		this.loci = this.chrom + ":" + this.start + "-" + this.end;
+		this.cytoband = c.getCytoband();
+		this.highestAnnotationTier = highestAnnotationTier;
+		this.aberrationType = c.getAberrationType();
+		this.cytobandTruncated = c.getCytoband().substring(0, 1);
 	}
 
 
@@ -185,6 +212,36 @@ public class CNVReport {
 
 	public void setReadonly(boolean readonly) {
 		this.readonly = readonly;
+	}
+
+
+	public String getAberrationType() {
+		return aberrationType;
+	}
+
+
+	public void setAberrationType(String aberrationType) {
+		this.aberrationType = aberrationType;
+	}
+
+
+	public String getCytobandTruncated() {
+		return cytobandTruncated;
+	}
+
+
+	public void setCytobandTruncated(String cytobandTruncated) {
+		this.cytobandTruncated = cytobandTruncated;
+	}
+
+
+	public String getHighestAnnotationTier() {
+		return highestAnnotationTier;
+	}
+
+
+	public void setHighestAnnotationTier(String highestAnnotationTier) {
+		this.highestAnnotationTier = highestAnnotationTier;
 	}
 
 

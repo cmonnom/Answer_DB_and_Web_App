@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantsForGeneItems;
+import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
@@ -54,6 +55,8 @@ public class AnnotationBrowserController {
 	FileProperties fileProps;
 	@Autowired
 	OtherProperties otherProps;
+	@Autowired
+	LoginDAO loginDAO;
 
 	@RequestMapping("/annotationBrowser")
 	public String annotationBrowser(Model model, HttpSession session,
@@ -65,7 +68,7 @@ public class AnnotationBrowserController {
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		User user = ControllerUtil.getSessionUser(session);
-		return ControllerUtil.initializeModel(model, servletContext, user);
+		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
 	@RequestMapping(value = "/searchForAnnotations")

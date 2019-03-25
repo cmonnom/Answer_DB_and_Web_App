@@ -22,6 +22,7 @@ import utsw.bicf.answer.controller.serialization.DataReportGroup;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportGroupTableSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
 import utsw.bicf.answer.controller.serialization.vuetify.UserTableSummary;
+import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.IndividualPermission;
@@ -56,13 +57,15 @@ public class AdminController {
 	FileProperties fileProps;
 	@Autowired
 	OtherProperties otherProps;
-
+	@Autowired
+	LoginDAO loginDAO;
+	
 	@RequestMapping("/admin")
 	public String admin(Model model, HttpSession session) throws IOException {
 		model.addAttribute("urlRedirect", "admin");
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		User user = ControllerUtil.getSessionUser(session);
-		return ControllerUtil.initializeModel(model, servletContext, user);
+		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
 	@RequestMapping(value = "/getAllUsers")

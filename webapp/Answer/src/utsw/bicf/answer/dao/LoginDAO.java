@@ -27,6 +27,21 @@ public class LoginDAO {
 	}
 	
 	@Transactional
+	public void saveObject(Object object) {
+		sessionFactory.getCurrentSession().saveOrUpdate(object);
+	}
+	
+	@Transactional
+	public <T> T getObject(Class<T> clazz, int id) {
+		return sessionFactory.getCurrentSession().get(clazz, id);
+	}
+
+	@Transactional
+	public void deleteObject(Object object) {
+		sessionFactory.getCurrentSession().delete(object);
+	}
+	
+	@Transactional
 	public User getUserByUsername(String username) {
 		Session session = sessionFactory.getCurrentSession();
 		String hql = "from User where username = :username";

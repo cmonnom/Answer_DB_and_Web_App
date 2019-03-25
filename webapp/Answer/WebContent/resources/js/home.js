@@ -2,7 +2,7 @@ const Home = {
     template:
         `<div>
 
-        <v-snackbar :timeout="0" :bottom="true" v-model="snackBarVisible">
+        <v-snackbar :timeout="snackBarTimeout" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
       </v-snackbar>
@@ -141,7 +141,8 @@ const Home = {
             creatingReport: false,
             snackBarVisible: false,
             snackBarMessage: "",
-            signoutDialogVisible: false
+            signoutDialogVisible: false,
+            snackBarTimeout: 0
         }
     },
     methods: {
@@ -300,6 +301,7 @@ const Home = {
             }
             this.creatingReport = true;
             this.snackBarMessage = "Downloading PDF Report...";
+            this.snackBarTimeout = 0;
             this.snackBarVisible = true;
             axios.get("./createPDFReport", {
                 params: {
@@ -321,7 +323,14 @@ const Home = {
                     alert(error);
                 });
         },
-
+        showLastLoginAttempt() {
+            if (showLastLogin) {
+                this.snackBarMessage = "Last Login Attempt: " + lastLogin;
+                this.snackBarTimeout = 8000;
+                this.snackBarVisible = true;
+                showLastLogin = false;
+            }
+        }
     },
     mounted: function () {
         this.getAllUsers();
@@ -379,7 +388,7 @@ const Home = {
         bus.$on('downloadPDFReport', (item) => {
             this.createPDFReport(item.reportId);
         });
-      
+        this.showLastLoginAttempt();
     },
     computed: {
     },

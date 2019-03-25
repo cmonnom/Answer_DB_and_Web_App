@@ -31,6 +31,7 @@ import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.controller.serialization.vuetify.ExistingReportsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
+import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.NCBIRequestUtils;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
@@ -96,17 +97,15 @@ public class OpenReportController {
 	OtherProperties otherProps;
 	@Autowired
 	NCBIProperties ncbiProps;
+	@Autowired
+	LoginDAO loginDAO;
 
 	@RequestMapping("/openReport/{caseId}")
 	public String openReport(Model model, HttpSession session, @PathVariable String caseId,
-			@RequestParam(defaultValue="", required=false) String reportId,
-			@RequestParam(defaultValue="", required=false) String test
+			@RequestParam(defaultValue="", required=false) String reportId
 			) throws IOException, UnsupportedOperationException, URISyntaxException {
 		User user = ControllerUtil.getSessionUser(session);
-		if (!user.getUserId().equals(1)) { //only allow test for myself
-			test = "";
-		}
-		String url = "openReport/" + caseId + "?reportId=" + reportId + "&test=" + test;
+		String url = "openReport/" + caseId + "?reportId=" + reportId;
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 //		RequestUtils utils = new RequestUtils(modelDAO);
@@ -114,7 +113,7 @@ public class OpenReportController {
 //			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 //		}
 		
-		return ControllerUtil.initializeModel(model, servletContext, user);
+		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
 	@RequestMapping("/openReportReadOnly/{caseId}")
@@ -124,7 +123,7 @@ public class OpenReportController {
 		User user = ControllerUtil.getSessionUser(session);
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
-		return ControllerUtil.initializeModel(model, servletContext, user);
+		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
 	@RequestMapping(value = "/getExistingReports", produces= "application/json; charset=utf-8")
@@ -173,12 +172,7 @@ public class OpenReportController {
 		Report reportDetails = null;
 		if (reportId.equals("")) {
 			User user = ControllerUtil.getSessionUser(session);
-			if (test.equals("yes")) {
-				reportDetails = utils.buildReportManually2(caseId, user, otherProps, ncbiProps);
-			}
-			else {
-				reportDetails = utils.buildReportManually(caseId, user, otherProps, ncbiProps);
-			}
+			reportDetails = utils.buildReportManually2(caseId, user, otherProps, ncbiProps);
 		}
 		else {
 			reportDetails = utils.getReportDetails(reportId);
@@ -352,6 +346,7 @@ public class OpenReportController {
 			}
 			if ((reportToSave.getFinalized() == null || !reportToSave.getFinalized()) &&
 					(reportToSave.getAmended() == null || !reportToSave.getAmended())) {
+				reportToSave.buildSummaryTable2(); //rebuild the summary in case new rows have been added.
 				utils.saveReport(response, reportToSave); //can still save if not finalized and not amended
 			}
 			else {
@@ -393,6 +388,9 @@ public class OpenReportController {
 			OrderCase caseSummary = utils.getCaseSummary(reportSummary.getCaseId());
 			Report reportToPreview = new Report(reportSummary);
 			User signedBy = modelDAO.getUserByUserId(reportToPreview.getModifiedBy());
+			if (reportToPreview.getFinalized() == null || !reportToPreview.getFinalized()) {
+				reportToPreview.buildSummaryTable2(); //rebuild the summary in case new rows have been added.
+			}
 			try {
 			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportToPreview, fileProps, caseSummary, otherProps, signedBy);
 			pdfReport.saveTemp();

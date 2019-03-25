@@ -13,13 +13,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
@@ -27,9 +25,9 @@ import utsw.bicf.answer.controller.serialization.vuetify.AllOrderCasesSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseAllSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseFinalizedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseForUserSummary;
-import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
 import utsw.bicf.answer.controller.serialization.vuetify.UserSearchItems;
+import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
@@ -72,13 +70,15 @@ public class HomeController {
 	FileProperties fileProps;
 	@Autowired
 	OtherProperties otherProps;
+	@Autowired
+	LoginDAO loginDAO;
 
 	@RequestMapping("/home")
 	public String home(Model model, HttpSession session) throws IOException {
 		model.addAttribute("urlRedirect", "home");
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		User user = ControllerUtil.getSessionUser(session);
-		return ControllerUtil.initializeModel(model, servletContext, user);
+		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
 	@RequestMapping(value = "/getWorklists")

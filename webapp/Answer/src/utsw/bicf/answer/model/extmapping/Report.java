@@ -13,9 +13,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
-import utsw.bicf.answer.controller.serialization.vuetify.ClinicalSignificanceSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
-import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
+import utsw.bicf.answer.db.api.utils.ReportBuilder;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
@@ -47,6 +46,7 @@ public class Report {
 	String reportName;
 	List<Variant> missingTierVariants = new ArrayList<Variant>();
 	List<CNV> missingTierCNVs = new ArrayList<CNV>();
+	List<Translocation> missingTierFTLs = new ArrayList<Translocation>();
 	Boolean finalized;
 	String labTestName;
 	
@@ -116,6 +116,7 @@ public class Report {
 		this.addendum = reportSummary.getAddendum();
 		this.dateFinalized = reportSummary.getDateFinalized();
 		this.pubmeds = reportSummary.getPubmeds();
+		
 	}
 	public MongoDBId getMongoDBId() {
 		return mongoDBId;
@@ -305,6 +306,17 @@ public class Report {
 		this.navigationRowsPerGene.put(cytoband, row);
 	}
 	
+	public void populateCNVColumn(String biomarker, int aberration) {
+		String label = biomarker + "";
+		biomarker = biomarker.replaceAll("\\.", "");
+		ReportNavigationRow row = this.navigationRowsPerGene.get(biomarker);
+		if (row == null) {
+			row = new ReportNavigationRow(biomarker, label);
+		}
+		row.setCnvCount(aberration);
+		this.navigationRowsPerGene.put(biomarker, row);
+	}
+	
 	public void incrementFusionCount(String fusionName) {
 		String label = fusionName + "";
 		fusionName = fusionName.replaceAll("\\.", "");
@@ -435,7 +447,87 @@ public class Report {
 	public void setNavigationRowsPerGeneVUS(Map<String, ReportNavigationRow> navigationRowsPerGeneVUS) {
 		this.navigationRowsPerGeneVUS = navigationRowsPerGeneVUS;
 	}
+
+	public List<Translocation> getMissingTierFTLs() {
+		return missingTierFTLs;
+	}
+
+	public void setMissingTierFTLs(List<Translocation> missingTierFTLs) {
+		this.missingTierFTLs = missingTierFTLs;
+	}
 	
+	public void buildSummaryTable() {
+		navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
+		navigationRowsPerGeneVUS = new HashMap<String, ReportNavigationRow>();
+		for (IndicatedTherapy it : this.getIndicatedTherapies()) {
+			this.incrementIndicatedTherapyCount(it.getBiomarkers());
+		}
+		//This is handled during the creation of the PDF
+//		for (BiomarkerTrialsRow trial : report.getClinicalTrials()) {
+//			report.incrementClinicalTrialCount(trial.getBiomarker());
+//		}
+		for (String genes : this.getSnpVariantsStrongClinicalSignificance().keySet()) {
+			this.incrementStrongClinicalSignificanceCount(genes);
+		}
+		for (String genes : this.getSnpVariantsPossibleClinicalSignificance().keySet()) {
+			this.incrementPossibleClinicalSignificanceCount(genes);
+		}
+		for (String genes : this.getSnpVariantsUnknownClinicalSignificance().keySet()) {
+			this.incrementUnknownClinicalSignificanceCount(genes);
+		}
+		for (CNVReport cnv : this.getCnvs()) {
+			this.incrementCnvCount(cnv.getAberrationType() + cnv.getChrom() + cnv.getCytobandTruncated());
+		}
+		for (TranslocationReport ftl : this.getTranslocations()) {
+			this.incrementFusionCount(ftl.getFusionName());
+		}
+		
+	}
 	
+	public void buildSummaryTable2() {
+		navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
+		navigationRowsPerGeneVUS = new HashMap<String, ReportNavigationRow>();
+		for (IndicatedTherapy it : this.getIndicatedTherapies()) {
+			this.incrementIndicatedTherapyCount(it.getBiomarkers());
+		}
+		//This is handled during the creation of the PDF
+//		for (BiomarkerTrialsRow trial : report.getClinicalTrials()) {
+//			report.incrementClinicalTrialCount(trial.getBiomarker());
+//		}
+		for (String biomarker : this.getSnpVariantsStrongClinicalSignificance().keySet()) {
+			GeneVariantAndAnnotation gva = this.getSnpVariantsStrongClinicalSignificance().get(biomarker);
+			this.incrementStrongClinicalSignificanceCount(gva.getGene());
+		}
+		for (String biomarker : this.getSnpVariantsPossibleClinicalSignificance().keySet()) {
+			GeneVariantAndAnnotation gva = this.getSnpVariantsPossibleClinicalSignificance().get(biomarker);
+			this.incrementPossibleClinicalSignificanceCount(gva.getGene());
+		}
+		for (String biomarker : this.getSnpVariantsUnknownClinicalSignificance().keySet()) {
+			GeneVariantAndAnnotation gva = this.getSnpVariantsUnknownClinicalSignificance().get(biomarker);
+			this.incrementUnknownClinicalSignificanceCount(gva.getGene());
+		}
+		for (CNVReport cnv : this.getCnvs()) {
+			String biomarker = "";
+			if (ReportBuilder.UNKNOWN_TIERS.contains(cnv.getHighestAnnotationTier())) {
+				biomarker = cnv.getGenes(); //focal annotation
+			}
+			else {
+				biomarker = cnv.getChrom() + cnv.getCytobandTruncated();
+			}
+			int aberration = 0;
+			if ("gain".equals(cnv.getAberrationType())
+					|| "amplification".equals(cnv.getAberrationType())) {
+				aberration = 1;
+			}
+			else if (cnv.getAberrationType() != null && cnv.getAberrationType().contains("loss")) {
+				aberration = -1;
+			}
+			this.populateCNVColumn(biomarker, aberration);
+		}
+		for (TranslocationReport ftl : this.getTranslocations()) {
+			this.incrementFusionCount(ftl.getFusionName());
+		}
+		
+	}
 
 }

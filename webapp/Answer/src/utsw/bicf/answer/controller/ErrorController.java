@@ -26,7 +26,7 @@ public class ErrorController {
 
 	@RequestMapping("/404")
 	public String error(Model model, HttpSession session) throws IOException {
-		ControllerUtil.initializeModel(model, servletContext, null);
+		ControllerUtil.initializeModel(model, servletContext, null, null);
 		if (ControllerUtil.getSessionUser(session) == null) {
 			session.setAttribute("user", "error page");
 		}

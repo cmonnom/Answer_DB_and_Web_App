@@ -562,8 +562,10 @@ Vue.component('data-table', {
                 doSelect = false;
             }
             this.items.forEach(i => {
-                i.selected = doSelect; 
-                i.isSelected = doSelect;
+                if (!i.readonly) {
+                    i.selected = doSelect; 
+                    i.isSelected = doSelect;
+                }
             });
         },
         areAllSelected() {

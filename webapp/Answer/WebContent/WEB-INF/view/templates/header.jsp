@@ -24,6 +24,8 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 
         const oncoKBGeniePortalUrl = "${oncoKBGeniePortalUrl}";
         const oncotreeIconUrl = webAppRoot + "/resources/images/oncotree.ico";
+        const lastLogin = "${lastLogin}";
+        var showLastLogin = "${showLastLogin}" === 'true';
 
 </script>
 

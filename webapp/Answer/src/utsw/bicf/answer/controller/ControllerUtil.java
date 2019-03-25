@@ -16,7 +16,11 @@ import org.springframework.ui.Model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
+import utsw.bicf.answer.dao.LoginDAO;
+import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.LoginAttempt;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.FileProperties;
@@ -40,13 +44,22 @@ public class ControllerUtil {
 		model.addAttribute("jsFiles", ControllerUtil.getAllJSFiles(servletContext));
 	}
 	
-	public static String initializeModel(Model model, ServletContext servletContext, User user) throws IOException {
+	public static String initializeModel(Model model, ServletContext servletContext, User user, LoginDAO loginDAO) throws IOException {
 		initJSFiles(model, servletContext);
 		if (user != null) {
 			model.addAttribute("permissions", user.getIndividualPermission());
 			model.addAttribute("userFullName", user.getFullName());
 			ObjectMapper mapper = new ObjectMapper();
 			model.addAttribute("prefs", mapper.writeValueAsString(user.getUserPref()));
+			model.addAttribute("showLastLogin", false); //this should allow to only display
+			if (loginDAO != null) { //null for error pages
+				LoginAttempt loginAttempt = loginDAO.getLoginAttemptForUser(user);
+				model.addAttribute("showLastLogin", loginAttempt.getShowLastLogin());
+				loginAttempt.setShowLastLogin(false); //reset the flag to only display it once. LoginController takes care of setting it to true
+				String lastLogin = loginAttempt.getLastAttemptDatetime().format(TypeUtils.localDateTimeFormatter);
+				model.addAttribute("lastLogin", lastLogin);
+				loginDAO.saveObject(loginAttempt);
+			}
 		}
 		model.addAttribute("timestamp", timestamp);
 		return "main-template";
@@ -62,7 +75,7 @@ public class ControllerUtil {
 	
 	public static String initializeModelLogin(Model model, ServletContext servletContext, Method method) throws IOException {
 		model.addAttribute("isLogin", true);
-		return initializeModel(model, servletContext, null);
+		return initializeModel(model, servletContext, null, null);
 //		initJSFiles(model, servletContext);
 //		return "login";
 	}

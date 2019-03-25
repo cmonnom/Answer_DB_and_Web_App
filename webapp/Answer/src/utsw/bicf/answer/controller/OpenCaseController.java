@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +51,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListSaved;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantRelatedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSummary;
 import utsw.bicf.answer.controller.serialization.zingchart.CNVChartData;
+import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.FilterStringValue;
@@ -167,6 +169,8 @@ public class OpenCaseController {
 	FileProperties fileProps;
 	@Autowired
 	OtherProperties otherProps;
+	@Autowired
+	LoginDAO loginDAO;
 
 	@RequestMapping("/openCase/{caseId}")
 	public String openCase(Model model, HttpSession session, @PathVariable String caseId,
@@ -186,7 +190,7 @@ public class OpenCaseController {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 		}
 		
-		return ControllerUtil.initializeModel(model, servletContext, user);
+		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
 	@RequestMapping("/openCaseReadOnly/{caseId}")
@@ -201,7 +205,7 @@ public class OpenCaseController {
 		User user = ControllerUtil.getSessionUser(session);
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
-		return ControllerUtil.initializeModel(model, servletContext, user);
+		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
 	
@@ -744,6 +748,9 @@ public class OpenCaseController {
 					response.setMessage("One or more clinical trial is missing information.");
 					return response.createObjectJSON();
 				}
+			}
+			if (userAnnotation.getCnvGenes() != null && !userAnnotation.getCnvGenes().isEmpty() ) {
+				Collections.sort(userAnnotation.getCnvGenes()); //sort genes alphabetically
 			}
 			userAnnotations.add(userAnnotation);
 		}

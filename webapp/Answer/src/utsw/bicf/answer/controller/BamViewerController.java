@@ -112,7 +112,7 @@ public class BamViewerController {
 	 */
 	private static String createIndexLink(FileProperties fileProps, String targetName, String linkName) throws IOException {
 		File target = new File(fileProps.getBamFilesDir(), targetName);
-		System.out.println("link target " + target.getAbsolutePath() + " linkName: " + linkName + " exists? " + target.exists() );
+//		System.out.println("link target " + target.getAbsolutePath() + " linkName: " + linkName + " exists? " + target.exists() );
 		if (!target.exists()) {
 			return null;
 		}

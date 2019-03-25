@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
@@ -48,6 +50,9 @@ public class AOPAspect {
 	}
 	
 	public static final PolicyFactory HTML_POLICY = new HtmlPolicyBuilder().allowElements("br").toFactory();
+	
+	private static final Pattern SHORT_PATTERN = Pattern.compile("<\\\\s*[a-zA-Z]+[^>]*>");
+	private static final Pattern LONG_PATTERN = Pattern.compile("<\\s*[a-zA-Z]+[^>]*>(.*?)<\\s*/\\s*[a-zA-Z]+>");
 	
 	@Autowired
 	ServletContext servletContext;
@@ -105,9 +110,19 @@ public class AOPAspect {
 		for (int i = 0; i < args.length; i++) {
 			if (args[i] instanceof String) {
 //				boolean currentArgIsValid = true;
+				long startTime = System.currentTimeMillis();
 				String argString = (String) args[i];
-				String removedXSS = argString.replaceAll("<\\s*[a-zA-Z]+[^>]*>(.*?)<\\s*/\\s*[a-zA-Z]+>", "");
-				isValid &= argString.equals(removedXSS) ;
+				if (argString.length() > 1000) { //just do detection. Faster. Block input if found
+					Matcher m = SHORT_PATTERN.matcher(argString);
+					boolean found = m.find();
+					isValid &= !found;
+				}
+				else { //if string is not too long, do a replaceAll with a long pattern
+					String removedXSS = argString.replaceAll(LONG_PATTERN.pattern(), "");
+					isValid &= argString.equals(removedXSS) ;
+				}
+				long endTime = System.currentTimeMillis();
+//				System.out.println("Regex time: " + (endTime - startTime) / 1000 );
 				args[i] = HTML_POLICY.sanitize(argString);
 //				String sanitized = policy.sanitize(argString).replaceAll("&#64;", "@"); // emails are ok
 //				if (!argString.equals(sanitized) && !skipSanitation(joinPoint)) {
@@ -275,7 +290,7 @@ public class AOPAspect {
 			// proceed regardless of allowed for non-ajax calls to set redirects properly
 			// unless it's xss
 			if (isXss && !isAjax) {
-				ControllerUtil.initializeModel(model, servletContext, null);
+				ControllerUtil.initializeModel(model, servletContext, null, null);
 				return "error";
 			} else if (isXss && isAjax) {
 				TargetPage targetPage = new TargetPage(model);

@@ -37,6 +37,9 @@ public class LoginAttempt {
 	
 	@Column(name="last_attempt_datetime")
 	LocalDateTime lastAttemptDatetime;
+	
+	@Column(name="show_last_login")
+	Boolean showLastLogin;
 
 	public Integer getLoginAttemptId() {
 		return loginAttemptId;
@@ -68,6 +71,14 @@ public class LoginAttempt {
 
 	public void setLastAttemptDatetime(LocalDateTime lastAttemptDatetime) {
 		this.lastAttemptDatetime = lastAttemptDatetime;
+	}
+
+	public Boolean getShowLastLogin() {
+		return showLastLogin;
+	}
+
+	public void setShowLastLogin(Boolean showLastLogin) {
+		this.showLastLogin = showLastLogin;
 	}
 
 	

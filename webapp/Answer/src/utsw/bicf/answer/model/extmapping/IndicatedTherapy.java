@@ -16,6 +16,7 @@ public class IndicatedTherapy {
 	boolean readonly;
 	String drugs;
 	boolean drugResistant;
+	String biomarkers;
 	
 	public IndicatedTherapy() {
 	}
@@ -38,12 +39,14 @@ public class IndicatedTherapy {
 		if (this.drugResistant) {
 			this.level = "Resistant";
 		}
+		this.biomarkers = v.getGeneName();
 	}
 	public IndicatedTherapy(Annotation a, CNV v) {
 		this.variant = a.getCnvGenes().stream().collect(Collectors.joining(" "));
 		if (v.getAberrationType().equals("ITD")) {
 			this.variant += "-ITD";
 		}
+		this.biomarkers = this.variant;
 		if (a.getTier() != null) {
 			switch(a.getTier()) {
 			case "1A": this.level = "FDA-Approved"; break;
@@ -63,6 +66,7 @@ public class IndicatedTherapy {
 	}
 	public IndicatedTherapy(Annotation a, Translocation v) {
 		this.variant = a.getLeftGene() + "-" + a.getRightGene();
+		this.biomarkers = this.variant;
 		if (a.getTier() != null) {
 			switch(a.getTier()) {
 			case "1A": this.level = "FDA-Approved"; break;
@@ -155,6 +159,14 @@ public class IndicatedTherapy {
 
 	public void setDrugResistant(boolean drugResistant) {
 		this.drugResistant = drugResistant;
+	}
+
+	public String getBiomarkers() {
+		return biomarkers;
+	}
+
+	public void setBiomarkers(String biomarkers) {
+		this.biomarkers = biomarkers;
 	}
 	
 	

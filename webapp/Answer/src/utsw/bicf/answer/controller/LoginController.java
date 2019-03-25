@@ -51,7 +51,7 @@ public class LoginController {
 	@RequestMapping("/login")
 	public String login(Model model, HttpSession session) throws IOException {
 		User user = ControllerUtil.getSessionUser(session);
-		ControllerUtil.initializeModel(model, servletContext, user);
+		ControllerUtil.initializeModel(model, servletContext, user, null);
 		if (user == null) {
 			session.setAttribute("user", "login redirect");
 		}
@@ -91,6 +91,7 @@ public class LoginController {
 			proceed = ldapUtils.isUserValid(user.getUsername(), credentials.getPassword());
 			if (proceed) {
 				loginAttempt.setCounter(0);
+				loginAttempt.setShowLastLogin(true);
 				modelDAO.saveObject(loginAttempt);
 				session.setAttribute("user", user);
 				return new TargetPage(true, "login successful", (String) model.asMap().get("urlRedirect"), true).toJSONString();

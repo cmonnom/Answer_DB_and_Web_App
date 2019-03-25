@@ -369,7 +369,7 @@ const OpenReport = {
         <v-flex xs12 xl10 v-show="clinicalTrialsVisible" pb-3>
             <div>
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
-                :enable-select-all="true"
+                :enable-select-all="!fullReport.finalized"
                     initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
                     :color="colors.trials" :disable-sticky-header="true" :add-row-button="true"
                     :enable-selection="canProceed('canReview') && !readonly"
@@ -509,7 +509,6 @@ const OpenReport = {
             variantsMissingTier: [],
             urlQuery: {
                 reportId: null,
-                test: ""
             },
             finalizeReportExists: false,
             currentReportName: "",
@@ -575,7 +574,6 @@ const OpenReport = {
         },
         loadFromParams(newRouteQuery, oldRouteQuery) {
             this.urlQuery.reportId = this.$route.query.reportId ? this.$route.query.reportId : null;
-            this.urlQuery.test = this.$route.query.test ? this.$route.query.test : null;
         },
         createSaveTooltip() {
             var tooltip = ["Some edits have not been saved yet:"];
@@ -623,15 +621,14 @@ const OpenReport = {
         updateLoadingReportDetails(isLoading) {
             this.loadingReportDetails = isLoading;
         },
-        getReportDetails(reportId, test) {
+        getReportDetails(reportId) {
             this.loadingReportDetails = true;
             axios.get(
                 webAppRoot + "/getReportDetails",
                 {
                     params: {
                         reportId: reportId,
-                        caseId: this.$route.params.id,
-                        test: test
+                        caseId: this.$route.params.id
                     }
                 })
                 .then(response => {
@@ -646,7 +643,6 @@ const OpenReport = {
                         this.fullReport = response.data;
                         this.currentReportId = this.fullReport._id ? this.fullReport._id.$oid : "";
                         this.urlQuery.reportId = this.currentReportId;
-                        this.urlQuery.test = this.$route.query.test;
                         this.currentReportName = this.fullReport.reportName;
                         this.updateRoute();
                         this.variantsMissingTier = [];
@@ -654,7 +650,7 @@ const OpenReport = {
                             var variant = this.fullReport.missingTierVariants[i];
                             this.variantsMissingTier.push({
                                 id: variant._id.$oid,
-                                type: variant.type.toUpperCase(),
+                                type: variant.variantType.toUpperCase(),
                                 chrom: formatChrom(variant.chrom),
                                 notation: variant.notation,
                                 name: variant.geneName
@@ -1248,63 +1244,63 @@ const OpenReport = {
                     this.handleAxiosError(error);
                 });
         },
-        test() {
-            this.$refs.indicatedTherapies.newRow.drugs = "some drugs";
-            this.$refs.indicatedTherapies.newRow.variant = "some variant";
-            this.$refs.indicatedTherapies.newRow.level = "some level";
-            this.$refs.indicatedTherapies.newRow.indication = "some indication";
-            this.$refs.indicatedTherapies.addNewRow();
-
-            this.$refs.clinicalTrials.newRow.biomarkers = "some biomarkers";
-            this.$refs.clinicalTrials.newRow.drugs = "some drugs";
-            this.$refs.clinicalTrials.newRow.title = "some title";
-            this.$refs.clinicalTrials.newRow.phase = "some phase";
-            this.$refs.clinicalTrials.newRow.contact = "some contact";
-            this.$refs.clinicalTrials.newRow.location = "some location";
-            this.$refs.clinicalTrials.addNewRow();
-
-            this.$refs.strongCS.newRow.geneVariant = "BRCA1 TET2"; 
-            this.$refs.strongCS.newRow.category = "My Category";
-            this.$refs.strongCS.newRow.annotation = "Some annotation"; 
-            this.$refs.strongCS.newRow.position = "chr1:123456"; 
-            this.$refs.strongCS.newRow.copyNumber = "4";
-            this.$refs.strongCS.newRow.aberrationType = "Gain";
-            this.$refs.strongCS.addNewRow();
-
-            this.$refs.possibleCS.newRow.geneVariant = "BRCA1 TET2"; 
-            this.$refs.possibleCS.newRow.category = "My Category";
-            this.$refs.possibleCS.newRow.annotation = "Some annotation"; 
-            this.$refs.possibleCS.newRow.position = "chr1:123456"; 
-            this.$refs.possibleCS.newRow.enst = "ENST123456";
-            this.$refs.possibleCS.newRow.vaf = "0.14";
-            this.$refs.possibleCS.newRow.depth = "1600";
-            this.$refs.possibleCS.addNewRow();
-
-            this.$refs.unknownCS.newRow.geneVariant = "BRCA1 TET2"; 
-            this.$refs.unknownCS.newRow.category = "My Category";
-            this.$refs.unknownCS.newRow.annotation = "Some annotation"; 
-            this.$refs.unknownCS.addNewRow();
-
-            this.$refs.copyNumberAlterations.newRow.loci = "chr12:123456-123458"; 
-            this.$refs.copyNumberAlterations.newRow.copyNumber = "1"; 
-            this.$refs.copyNumberAlterations.newRow.genes = "SOME GENES HERE"; 
-            this.$refs.copyNumberAlterations.newRow.cytoband = "q1.2-35"; 
-            this.$refs.copyNumberAlterations.newRow.comment = "some comments"; 
-            this.$refs.copyNumberAlterations.addNewRow();
-
-            this.$refs.geneFusions.newRow.fusionName = "fusion";
-            this.$refs.geneFusions.newRow.leftGene = "GENE1";
-            this.$refs.geneFusions.newRow.lastExon = "5";
-            this.$refs.geneFusions.newRow.rightGene = "GENE2";
-            this.$refs.geneFusions.newRow.firstExon = "1";
-            this.$refs.geneFusions.newRow.comment = "Some Comment";
-            this.$refs.geneFusions.addNewRow();
-
-            this.$refs.pubmedTable.currentPubMedIds = "23411347,12345678";
-            this.$refs.pubmedTable.addNewPubMed();
-
-
-        }
+//        test() {
+//            this.$refs.indicatedTherapies.newRow.drugs = "some drugs";
+//            this.$refs.indicatedTherapies.newRow.variant = "some variant";
+//            this.$refs.indicatedTherapies.newRow.level = "some level";
+//            this.$refs.indicatedTherapies.newRow.indication = "some indication";
+//            this.$refs.indicatedTherapies.addNewRow();
+//
+//            this.$refs.clinicalTrials.newRow.biomarkers = "some biomarkers";
+//            this.$refs.clinicalTrials.newRow.drugs = "some drugs";
+//            this.$refs.clinicalTrials.newRow.title = "some title";
+//            this.$refs.clinicalTrials.newRow.phase = "some phase";
+//            this.$refs.clinicalTrials.newRow.contact = "some contact";
+//            this.$refs.clinicalTrials.newRow.location = "some location";
+//            this.$refs.clinicalTrials.addNewRow();
+//
+//            this.$refs.strongCS.newRow.geneVariant = "BRCA1 TET2"; 
+//            this.$refs.strongCS.newRow.category = "My Category";
+//            this.$refs.strongCS.newRow.annotation = "Some annotation"; 
+//            this.$refs.strongCS.newRow.position = "chr1:123456"; 
+//            this.$refs.strongCS.newRow.copyNumber = "4";
+//            this.$refs.strongCS.newRow.aberrationType = "Gain";
+//            this.$refs.strongCS.addNewRow();
+//
+//            this.$refs.possibleCS.newRow.geneVariant = "BRCA1 TET2"; 
+//            this.$refs.possibleCS.newRow.category = "My Category";
+//            this.$refs.possibleCS.newRow.annotation = "Some annotation"; 
+//            this.$refs.possibleCS.newRow.position = "chr1:123456"; 
+//            this.$refs.possibleCS.newRow.enst = "ENST123456";
+//            this.$refs.possibleCS.newRow.vaf = "0.14";
+//            this.$refs.possibleCS.newRow.depth = "1600";
+//            this.$refs.possibleCS.addNewRow();
+//
+//            this.$refs.unknownCS.newRow.geneVariant = "BRCA1 TET2"; 
+//            this.$refs.unknownCS.newRow.category = "My Category";
+//            this.$refs.unknownCS.newRow.annotation = "Some annotation"; 
+//            this.$refs.unknownCS.addNewRow();
+//
+//            this.$refs.copyNumberAlterations.newRow.loci = "chr12:123456-123458"; 
+//            this.$refs.copyNumberAlterations.newRow.copyNumber = "1"; 
+//            this.$refs.copyNumberAlterations.newRow.genes = "SOME GENES HERE"; 
+//            this.$refs.copyNumberAlterations.newRow.cytoband = "q1.2-35"; 
+//            this.$refs.copyNumberAlterations.newRow.comment = "some comments"; 
+//            this.$refs.copyNumberAlterations.addNewRow();
+//
+//            this.$refs.geneFusions.newRow.fusionName = "fusion";
+//            this.$refs.geneFusions.newRow.leftGene = "GENE1";
+//            this.$refs.geneFusions.newRow.lastExon = "5";
+//            this.$refs.geneFusions.newRow.rightGene = "GENE2";
+//            this.$refs.geneFusions.newRow.firstExon = "1";
+//            this.$refs.geneFusions.newRow.comment = "Some Comment";
+//            this.$refs.geneFusions.addNewRow();
+//
+//            this.$refs.pubmedTable.currentPubMedIds = "23411347,12345678";
+//            this.$refs.pubmedTable.addNewPubMed();
+//
+//
+//        }
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",

@@ -286,8 +286,8 @@ Vue.component('existing-reports', {
         closeExistingReport() {
             this.$emit("close-existing-reports");
         },
-        getReportDetails(reportId, test) {
-            this.$emit("get-report-details", reportId, test);
+        getReportDetails(reportId) {
+            this.$emit("get-report-details", reportId);
         },
         handleLoadingReportDetails(isLoading) {
             this.$emit("loading-report-details", isLoading);
@@ -305,7 +305,7 @@ Vue.component('existing-reports', {
                         this.existingReports = response.data.reports;
                         this.existingReports.forEach((r) => {console.log(r._id['$oid'])});
                         this.canFinalize = !this.finalizeReportExists();
-                        this.getReportDetails(this.$route.query.reportId, this.$route.query.test);
+                        this.getReportDetails(this.$route.query.reportId);
                     }
                     else {
                         this.handleDialogs(response, this.getExistingReports);
@@ -409,10 +409,11 @@ Vue.component('existing-reports', {
             // return false;
         },
         finalizeButtonDisabled(report) {
-            return !this.canFinalize 
+            return (!this.canFinalize 
             || (report._id['$oid'] != this.currentReportId) 
             || this.reportUnsaved
-            || report.finalized;
+            || report.finalized)
+            && !(report.addendum && !report.finalized);
         },
         getCurrentUserFullName() {
             return userFullName; //global variable

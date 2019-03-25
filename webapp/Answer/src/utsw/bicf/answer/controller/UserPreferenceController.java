@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.HeaderConfigSummaries;
 import utsw.bicf.answer.controller.serialization.vuetify.HeaderConfigSummary;
+import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.IndividualPermission;
@@ -59,6 +60,8 @@ public class UserPreferenceController {
 	OtherProperties otherProps;
 	@Autowired
 	NCBIProperties ncbiProps;
+	@Autowired
+	LoginDAO loginDAO;
 
 	@RequestMapping("/userPrefs")
 	public String userPrefs(Model model, HttpSession session) throws IOException, UnsupportedOperationException, URISyntaxException {
@@ -68,7 +71,7 @@ public class UserPreferenceController {
 		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		
-		return ControllerUtil.initializeModel(model, servletContext, user);
+		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
 	@RequestMapping(value = "/getUserPrefs")
