@@ -27,6 +27,7 @@ public class CNVReport {
 	String aberrationType;
 	String cytobandTruncated;
 	String highestAnnotationTier;
+	String breadth;
 	
 	public CNVReport() {
 		
@@ -57,19 +58,25 @@ public class CNVReport {
 	}
 
 
-	public CNVReport(String text, CNV c, String highestAnnotationTier) {
+	public CNVReport(Annotation a, CNV c, String highestAnnotationTier, String breadth) {
 		this.mongoDBId = c.mongoDBId;
-		this.genes = c.getGenes().stream().collect(Collectors.joining(" "));
+		if (CNV.BREADTH_CHROM.equals(breadth)) {
+			this.genes = c.getGenes().stream().collect(Collectors.joining(" "));
+		}
+		else if (CNV.BREADTH_FOCAL.equals(breadth)) {
+			this.genes = a.getCnvGenes().stream().collect(Collectors.joining(" "));
+		}
 		this.chrom = c.chrom;
 		this.start = c.start;
 		this.end = c.end;
 		this.startFormatted = c.startFormatted;
 		this.endFormatted = c.endFormatted;
 		this.copyNumber = c.copyNumber;
-		this.comment = text;
+		this.comment = a.getText();
 		this.loci = this.chrom + ":" + this.start + "-" + this.end;
 		this.cytoband = c.getCytoband();
 		this.highestAnnotationTier = highestAnnotationTier;
+		this.breadth = breadth;
 		this.aberrationType = c.getAberrationType();
 		this.cytobandTruncated = c.getCytoband().substring(0, 1);
 	}
@@ -242,6 +249,16 @@ public class CNVReport {
 
 	public void setHighestAnnotationTier(String highestAnnotationTier) {
 		this.highestAnnotationTier = highestAnnotationTier;
+	}
+
+
+	public String getBreadth() {
+		return breadth;
+	}
+
+
+	public void setBreadth(String breadth) {
+		this.breadth = breadth;
 	}
 
 

@@ -46,10 +46,10 @@ import utsw.bicf.answer.security.OtherProperties;
 
 public class ReportBuilder {
 
-	private static final String BREADTH_FOCAL = "Focal";
 	private static final List<String> STRONG_TIERS = Arrays.asList("1A", "1B");
 	private static final List<String> POSSIBLE_TIERS = Arrays.asList("2C", "2D");
 	public static final List<String> UNKNOWN_TIERS = Arrays.asList("3");
+	public static final List<String> EXCLUDE_TIERS = Arrays.asList("4");
 	private static final List<String> THERAPY_TIERS = Arrays.asList("1A", "1B", "2C");
 	private static final List<String> TIER1_CLASSIFICATIONS = Arrays.asList(Variant.CATEGORY_LIKELY_PATHOGENIC,
 			Variant.CATEGORY_PATHOGENIC);
@@ -159,7 +159,7 @@ public class ReportBuilder {
 		
 		
 		for (CNVReportWithHighestTier v : annotationsPerCNV.keySet()) {
-			List<Annotation> annotations = annotationsPerCNV.get(v).stream().filter(a -> this.annotationGoesInClinicalSignificanceTable(a) && isStringEqual(a.getBreadth(), BREADTH_FOCAL)).collect(Collectors.toList());;
+			List<Annotation> annotations = annotationsPerCNV.get(v).stream().filter(a -> this.annotationGoesInClinicalSignificanceTable(a) && isStringEqual(a.getBreadth(), CNV.BREADTH_FOCAL)).collect(Collectors.toList());
 			Map<String, CNVClinicalSignificance> annotationsByFocalGenesByCategory = new HashMap<String, CNVClinicalSignificance>();
 			for (Annotation a : annotations) {
 				String key = a.getCnvGenes().stream().collect(Collectors.joining(" "));
@@ -276,7 +276,11 @@ public class ReportBuilder {
 				}
 				else {
 					String highestTier = selectedAnnotations.stream().filter(a -> a.getTier() != null).map(a -> a.getTier()).sorted().collect(Collectors.toList()).get(0);
-					annotationsPerCNV.put(new CNVReportWithHighestTier(vDetails, highestTier), selectedAnnotations);
+					CNVReportWithHighestTier detailedCNV = new CNVReportWithHighestTier(vDetails, highestTier);
+					if (detailedCNV.getBreadth() == null && selectedAnnotations.get(0).getBreadth() != null) {
+						detailedCNV.setBreadth(selectedAnnotations.get(0).getBreadth());
+					}
+					annotationsPerCNV.put(detailedCNV, selectedAnnotations);
 					report.getCnvIds().add(v.getMongoDBId().getOid());
 				}
 			}
@@ -439,7 +443,7 @@ public class ReportBuilder {
 	private List<CNVReport> getCNVs(Map<CNVReportWithHighestTier, List<Annotation>> annotationsPerCNV) {
 		List<CNVReport> cnvs = new ArrayList<CNVReport>();
 		for (CNVReportWithHighestTier cnv : annotationsPerCNV.keySet()) {
-			List<CNVReport> cnvCards = annotationsPerCNV.get(cnv).stream().filter(a -> annotationGoesInCNVTable(a)).map(a -> new CNVReport(a.getText(), cnv.getCnv(), cnv.getHighestAnnotationTier())).collect(Collectors.toList());
+			List<CNVReport> cnvCards = annotationsPerCNV.get(cnv).stream().filter(a -> annotationGoesInCNVTable(a)).map(a -> new CNVReport(a, cnv.getCnv(), cnv.getHighestAnnotationTier(), cnv.getBreadth())).collect(Collectors.toList());
 			cnvs.addAll(cnvCards);
 		}
 		return cnvs;
@@ -479,10 +483,16 @@ public class ReportBuilder {
 	 * @param a
 	 * @return
 	 */
+//	private boolean annotationGoesInCNVTable(Annotation a) {
+//		return (!isStringEqual(a.getCategory(), CAT_THERAPY) && !isStringEqual(a.getCategory(), CAT_CLINICAL_TRIAL))
+//				&& ((a.getBreadth().equals("Chromosomal") || ((a.getBreadth().equals("Focal") && a.getTier() != null
+//						&& UNKNOWN_TIERS.contains(a.getTier())) || a.getTier() == null)));
+//	}
 	private boolean annotationGoesInCNVTable(Annotation a) {
-		return (!isStringEqual(a.getCategory(), CAT_THERAPY) && !isStringEqual(a.getCategory(), CAT_CLINICAL_TRIAL))
-				&& ((a.getBreadth().equals("Chromosomal") || ((a.getBreadth().equals("Focal") && a.getTier() != null
-						&& UNKNOWN_TIERS.contains(a.getTier())) || a.getTier() == null)));
+		boolean isChrom = a.getBreadth().equals(CNV.BREADTH_CHROM);
+		boolean notTherapyOrTrial = !isStringEqual(a.getCategory(), CAT_THERAPY) && !isStringEqual(a.getCategory(), CAT_CLINICAL_TRIAL);
+		boolean focalTier1To3OrNull = a.getBreadth().equals("Focal") && (a.getTier() == null || !EXCLUDE_TIERS.contains(a.getTier()));
+		return notTherapyOrTrial && (isChrom || focalTier1To3OrNull);
 	}
 	
 	/**

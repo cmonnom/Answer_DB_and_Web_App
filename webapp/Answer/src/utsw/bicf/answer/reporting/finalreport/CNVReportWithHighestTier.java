@@ -6,6 +6,7 @@ public class CNVReportWithHighestTier {
 
 	CNV cnv;
 	String highestAnnotationTier;
+	String breadth;
 
 	public String getHighestAnnotationTier() {
 		return highestAnnotationTier;
@@ -27,6 +28,14 @@ public class CNVReportWithHighestTier {
 
 	public void setCnv(CNV cnv) {
 		this.cnv = cnv;
+	}
+
+	public String getBreadth() {
+		return breadth;
+	}
+
+	public void setBreadth(String breadth) {
+		this.breadth = breadth;
 	}
 
 	

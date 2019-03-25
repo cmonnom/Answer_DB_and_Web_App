@@ -508,26 +508,31 @@ public class Report {
 		}
 		for (CNVReport cnv : this.getCnvs()) {
 			String biomarker = "";
-			if (ReportBuilder.UNKNOWN_TIERS.contains(cnv.getHighestAnnotationTier())) {
+			if (CNV.BREADTH_FOCAL.equals(cnv.getBreadth())) {
 				biomarker = cnv.getGenes(); //focal annotation
 			}
 			else {
 				biomarker = cnv.getChrom() + cnv.getCytobandTruncated();
 			}
-			int aberration = 0;
-			if ("gain".equals(cnv.getAberrationType())
-					|| "amplification".equals(cnv.getAberrationType())) {
-				aberration = 1;
-			}
-			else if (cnv.getAberrationType() != null && cnv.getAberrationType().contains("loss")) {
-				aberration = -1;
-			}
+			int aberration = this.getAberrationValue(cnv.getAberrationType());
 			this.populateCNVColumn(biomarker, aberration);
 		}
 		for (TranslocationReport ftl : this.getTranslocations()) {
 			this.incrementFusionCount(ftl.getFusionName());
 		}
 		
+	}
+	
+	private int getAberrationValue(String aberrationType) {
+		int aberration = 0;
+		if ("gain".equals(aberrationType)
+				|| "amplification".equals(aberrationType)) {
+			aberration = 1;
+		}
+		else if (aberrationType != null && aberrationType.contains("loss")) {
+			aberration = -1;
+		}
+		return aberration;
 	}
 
 }

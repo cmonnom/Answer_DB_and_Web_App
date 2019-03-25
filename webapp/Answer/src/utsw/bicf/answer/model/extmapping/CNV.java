@@ -13,6 +13,9 @@ import utsw.bicf.answer.reporting.parse.AnnotationRow;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CNV {
 	
+	public static final String BREADTH_FOCAL = "Focal";
+	public static final String BREADTH_CHROM = "Chromosomal";
+	
 	Boolean isAllowed = true;
 	
 	@JsonProperty("_id")
