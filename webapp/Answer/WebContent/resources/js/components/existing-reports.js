@@ -308,7 +308,7 @@ Vue.component('existing-reports', {
                         this.getReportDetails(this.$route.query.reportId);
                     }
                     else {
-                        this.handleDialogs(response, this.getExistingReports);
+                        this.handleDialogs(response.data, this.getExistingReports);
                         this.handleLoadingReportDetails(false);
                     }
                 }).catch(error => {
