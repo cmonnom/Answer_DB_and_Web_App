@@ -2685,6 +2685,7 @@ const OpenCase = {
         },
         commitAnnotations(userAnnotations) {
             this.userAnnotations = userAnnotations;
+            this.handleAnnotationSelectionChanged();
             axios({
                 method: 'post',
                 url: webAppRoot + "/commitAnnotations",
