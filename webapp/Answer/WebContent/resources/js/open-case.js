@@ -3065,7 +3065,7 @@ const OpenCase = {
             //need to only consider items not in the current table so that we don't reselect items that were intentionally deselected
             //the first filter removes all items in the current table from the unfiltered item list
             //the second filter checks if any item left (ie: items not currently displayed) is selected
-            var unfilteredSelectedIds = unfilteredItems ? unfilteredItems.filter(item => !this.$refs.geneVariantDetails.items.map(i => i.oid).includes(item.oid)).filter(item => item.isSelected).map(item => item.oid) : [];
+            var unfilteredSelectedIds = unfilteredItems ? unfilteredItems.filter(item => !variantDetailsItems.map(i => i.oid).includes(item.oid)).filter(item => item.isSelected).map(item => item.oid) : [];
             var unionSet = new Set();
             for (var i = 0; i < filteredSelectedIds.length; i++) {
                 unionSet.add(filteredSelectedIds[i]);
