@@ -27,6 +27,8 @@ public class FileProperties {
 	String pdfNGSLogoName;
 	String pdfUTSWLogoName;
 	String pdfDraftWatermarkName;
+	String pdfFinalizedFilesPath;
+	File pdfFinalizedFilesDir;
 	
 	public String getMdaFilesPath() {
 		return mdaFilesPath;
@@ -219,6 +221,24 @@ public class FileProperties {
 	}
 	public void setPdfFontBoldFile(File pdfFontBoldFile) {
 		this.pdfFontBoldFile = pdfFontBoldFile;
+	}
+	public String getPdfFinalizedFilesPath() {
+		return pdfFinalizedFilesPath;
+	}
+	public void setPdfFinalizedFilesPath(String pdfFinalizedFilesPath) {
+		this.pdfFinalizedFilesPath = pdfFinalizedFilesPath;
+	}
+	public File getPdfFinalizedFilesDir() {
+		if (pdfFinalizedFilesPath == null) {
+			return null;
+		}
+		if (pdfFinalizedFilesDir == null) {
+			pdfFinalizedFilesDir = new File(pdfFinalizedFilesPath);
+		}
+		return pdfFinalizedFilesDir;
+	}
+	public void setPdfFinalizedFilesDir(File pdfFinalizedFilesDir) {
+		this.pdfFinalizedFilesDir = pdfFinalizedFilesDir;
 	}
 	
 	

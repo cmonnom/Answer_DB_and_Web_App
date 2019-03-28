@@ -409,8 +409,11 @@ Vue.component('existing-reports', {
             // return false;
         },
         finalizeButtonDisabled(report) {
+            var currentReportLoaded = report._id['$oid'] == this.currentReportId;
+            if (!currentReportLoaded) {
+                return true;
+            }
             return (!this.canFinalize 
-            || (report._id['$oid'] != this.currentReportId) 
             || this.reportUnsaved
             || report.finalized)
             && !(report.addendum && !report.finalized);

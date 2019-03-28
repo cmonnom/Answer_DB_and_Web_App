@@ -109,6 +109,7 @@
 		<property name="productionEnv" value="${production.env}" />
 		<property name="genePanelSearchUrl" value="${gene.panel.search.url}" />
 		<property name="pdfFilesPath" value="${pdf.temp.location}" />
+		<property name="pdfFinalizedFilesPath" value="${pdf.finalized.location}" />
 		<property name="pdfLogoPath" value="${pdf.logo.location}" />
 		<property name="pdfLinksPath" value="${pdf.link.location}" />
 		<property name="pdfNGSLogoName" value="${pdf.ngs.logo.name}" />

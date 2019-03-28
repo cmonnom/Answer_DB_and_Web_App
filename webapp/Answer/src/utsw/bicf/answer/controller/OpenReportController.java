@@ -388,20 +388,27 @@ public class OpenReportController {
 			OrderCase caseSummary = utils.getCaseSummary(reportSummary.getCaseId());
 			Report reportToPreview = new Report(reportSummary);
 			User signedBy = modelDAO.getUserByUserId(reportToPreview.getModifiedBy());
+			String linkName = null;
 			if (reportToPreview.getFinalized() == null || !reportToPreview.getFinalized()) {
 				reportToPreview.buildSummaryTable2(); //rebuild the summary in case new rows have been added.
 			}
-			try {
-			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportToPreview, fileProps, caseSummary, otherProps, signedBy);
-			pdfReport.saveTemp();
-
-			String linkName = pdfReport.createPDFLink(fileProps);
+			else if (reportToPreview.getFinalized() != null && reportToPreview.getFinalized()) {
+				//fetch the report from pdf/finalized directory
+				linkName = FinalReportPDFTemplate.createPDFLinkWithoutReport(fileProps, reportToPreview.getMongoDBId().getOid());
+			}
+			if (linkName == null) { //otherwise, generate the report.
+				try {
+					FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportToPreview, fileProps, caseSummary, otherProps, signedBy);
+					pdfReport.saveTemp();
+					linkName = pdfReport.createPDFLink(fileProps);
+					
+				}catch (EncodingGlyphException e) {
+					response.setSuccess(false);
+					response.setMessage(e.getMessage());
+				}
+			}
 			response.setSuccess(true);
 			response.setMessage(linkName);
-			}catch (EncodingGlyphException e) {
-				response.setSuccess(false);
-				response.setMessage(e.getMessage());
-			}
 		}
 		return response.createObjectJSON();
 	}
@@ -462,6 +469,12 @@ public class OpenReportController {
 							reportDetails.getCnvs().stream().forEach(c -> c.setReadonly(true));
 							reportDetails.getTranslocations().stream().forEach(t -> t.setReadonly(true));
 							utils.saveReport(response, reportDetails);
+							
+							//save a copy of the pdf
+							OrderCase caseSummary = utils.getCaseSummary(reportDetails.getCaseId());
+							User signedBy = modelDAO.getUserByUserId(reportDetails.getModifiedBy());
+							FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy);
+							pdfReport.saveFinalized();
 						}
 					}
 					

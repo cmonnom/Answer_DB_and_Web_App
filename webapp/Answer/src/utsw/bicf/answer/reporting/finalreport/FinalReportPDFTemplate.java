@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -1389,6 +1390,12 @@ public class FinalReportPDFTemplate {
 		mainDocument.save(tempFile);
 		mainDocument.close();
 	}
+	
+	public void saveFinalized() throws IOException {
+		File finalizedFile = new File(fileProps.getPdfFinalizedFilesDir(), System.currentTimeMillis() + "_" + report.getMongoDBId().getOid() + ".pdf");
+		mainDocument.save(finalizedFile);
+		mainDocument.close();
+	}
 
 	public String createPDFLink(FileProperties fileProps) throws IOException {
 		File target = new File(fileProps.getPdfFilesDir(), tempFile.getName());
@@ -1401,6 +1408,29 @@ public class FinalReportPDFTemplate {
 		Files.createSymbolicLink(link.toPath(), target.toPath());
 
 		return linkName;
+	}
+	
+	public static String createPDFLinkWithoutReport(FileProperties fileProps, String reportOid) throws IOException {
+		List<File> finalizedPDFs = Files.list((fileProps.getPdfFinalizedFilesDir().toPath())).map(p -> p.toFile()).filter(f -> f.getName().endsWith(reportOid + ".pdf"))
+				.collect(Collectors.toList());
+		if (finalizedPDFs != null && !finalizedPDFs.isEmpty()) {
+			Collections.sort(finalizedPDFs, new Comparator<File>() {
+				@Override
+				public int compare(File o1, File o2) {
+					return new Long(o2.lastModified()).compareTo(new Long(o1.lastModified()));
+				}
+			});
+			File target = finalizedPDFs.get(0);
+			if (!target.exists()) {
+				return null;
+			}
+			String random = RandomStringUtils.random(25, true, true);
+			String linkName = random + ".pdf";
+			File link = new File(fileProps.getPdfLinksDir(), linkName);
+			Files.createSymbolicLink(link.toPath(), target.toPath());
+			return linkName;
+		}
+		return null;
 	}
 
 	public void addLinks() throws IOException {
