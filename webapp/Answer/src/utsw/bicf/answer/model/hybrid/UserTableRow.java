@@ -2,6 +2,7 @@ package utsw.bicf.answer.model.hybrid;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.PassableValue;
@@ -23,11 +24,15 @@ public class UserTableRow {
 	PassableValue reviewValue;
 	PassableValue notificationValue;
 	PassableValue adminValue;
+	String groupsConcat;
+	List<String> groupIds;
 	
 	List<Button> buttons = new ArrayList<Button>();
 	
 	public UserTableRow(User user) {
 		this.userId = user.getUserId();
+		this.groupsConcat = user.getGroups() != null ? user.getGroups().stream().map(g -> g.getName()).collect(Collectors.joining("<br/>")) : "";
+		this.groupIds = user.getGroups() != null ? user.getGroups().stream().map(g -> g.getGroupId() + "").collect(Collectors.toList()) : null;
 		this.firstName = user.getFirst();
 		this.lastName = user.getLast();
 		this.fullName = user.getFirst() + " " + user.getLast();
@@ -102,6 +107,14 @@ public class UserTableRow {
 
 	public PassableValue getNotificationValue() {
 		return notificationValue;
+	}
+
+	public String getGroupsConcat() {
+		return groupsConcat;
+	}
+
+	public List<String> getGroupIds() {
+		return groupIds;
 	}
 
 

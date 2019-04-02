@@ -66,6 +66,7 @@ public class OrderCase {
 	Double tumorMutationBurden;
 	String labNotes;
 	Double tumorPercent;
+	List<String> groupIds;
 	
 	
 	public OrderCase() {
@@ -501,6 +502,16 @@ public class OrderCase {
 
 	public void setTumorPercent(Double tumorPercent) {
 		this.tumorPercent = tumorPercent;
+	}
+
+
+	public List<String> getGroupIds() {
+		return groupIds;
+	}
+
+
+	public void setGroupIds(List<String> groupIds) {
+		this.groupIds = groupIds;
 	}
 
 

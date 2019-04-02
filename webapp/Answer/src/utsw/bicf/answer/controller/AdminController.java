@@ -2,7 +2,10 @@ package utsw.bicf.answer.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
@@ -19,12 +22,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.DataReportGroup;
+import utsw.bicf.answer.controller.serialization.vuetify.GroupSearchItems;
+import utsw.bicf.answer.controller.serialization.vuetify.GroupTableSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportGroupTableSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
+import utsw.bicf.answer.controller.serialization.vuetify.UserSearchItems;
 import utsw.bicf.answer.controller.serialization.vuetify.UserTableSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.GeneToReport;
+import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
@@ -81,6 +88,41 @@ public class AdminController {
 		return summary.createVuetifyObjectJSON();
 	}
 	
+	@RequestMapping(value = "/getAllUsersForGroups")
+	@ResponseBody
+	public String getAllUsersForGroups(Model model, HttpSession session)
+			throws Exception {
+		
+		List<User> users = modelDAO.getAllUsers().stream().collect(Collectors.toList());
+		UserSearchItems userList = new UserSearchItems(users);
+		return userList.createVuetifyObjectJSON();
+		
+	}
+	
+	@RequestMapping(value = "/getAllGroupsForUsers")
+	@ResponseBody
+	public String getAllGroupsForUsers(Model model, HttpSession session)
+			throws Exception {
+		
+		List<Group> groups = modelDAO.getAllGroups().stream().collect(Collectors.toList());
+		GroupSearchItems groupList = new GroupSearchItems(groups);
+		return groupList.createVuetifyObjectJSON();
+		
+	}
+	
+	@RequestMapping(value = "/getAllGroups")
+	@ResponseBody
+	public String getAllGroups(Model model, HttpSession session)
+			throws Exception {
+
+		List<Group> groups = modelDAO.getAllGroups();
+		User user = ControllerUtil.getSessionUser(session);
+		List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Groups");
+		GroupTableSummary summary = new GroupTableSummary(groups, headerOrders);
+		
+		return summary.createVuetifyObjectJSON();
+	}
+	
 	@RequestMapping(value = "/getAllReportGroups")
 	@ResponseBody
 	public String getAllReportGroups(Model model, HttpSession session)
@@ -102,7 +144,8 @@ public class AdminController {
 			@RequestParam Boolean canView,
 			@RequestParam Boolean canSelect, @RequestParam Boolean canAnnotate, 
 			@RequestParam Boolean canAssign, @RequestParam Boolean canReview,
-			@RequestParam Boolean allNotifications, @RequestParam Boolean admin)
+			@RequestParam Boolean allNotifications, @RequestParam Boolean admin,
+			@RequestParam String groups)
 			throws Exception {
 		User user = null;
 		AjaxResponse response = new AjaxResponse();
@@ -138,8 +181,68 @@ public class AdminController {
 		
 		modelDAO.saveObject(individualPermission);
 		
+		List<Group> groupList = new ArrayList<Group>();
+		for (String groupId : groups.split(",")) {
+			if (groupId != null && !groupId.equals("")) {
+				groupList.add(modelDAO.getGroupByGroupId(Integer.parseInt(groupId)));
+			}
+		}
+		modelDAO.saveObject(user);
+		user.setGroups(groupList);
+		for (Group g : groupList) {
+			List<User> users = g.getUsers();
+			if (!users.contains(user)) {
+				users.add(user);
+			}
+			modelDAO.saveObject(g);
+		}
+		//need to save before and after the user is created so that Hibernate can update Group with the new User
 		modelDAO.saveObject(user);
 		
+		response.setSuccess(true);
+		
+		return response.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/saveGroup")
+	@ResponseBody
+	public String saveGroup(Model model, HttpSession session,
+			@RequestParam(defaultValue = "") Integer groupId, @RequestParam String name,
+			@RequestParam String description, @RequestParam String users)
+			throws Exception {
+		Group group = null;
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		if (groupId != null) { //edit group
+			group = modelDAO.getGroupByGroupId(groupId);
+			if (group == null) {
+				response.setSuccess(false);
+				response.setMessage("This group does not exist");
+				return response.createObjectJSON();
+			}
+		}
+		else { //new user
+			group = new Group();
+		}
+		group.setName(name);
+		group.setDescription(description);
+		List<User> userList = new ArrayList<User>();
+		for (String userId : users.split(",")) {
+			if (userId != null && !userId.equals("")) {
+				userList.add(modelDAO.getUserByUserId(Integer.parseInt(userId)));
+			}
+		}
+		modelDAO.saveObject(group);
+		group.setUsers(userList);
+		for (User u : userList) {
+			List<Group> groups = u.getGroups();
+			if (!groups.contains(group)) {
+				groups.add(group);
+			}
+			modelDAO.saveObject(u);
+		}
+		//need to save before and after the group is created so that Hibernate can update User with the new Group
+		modelDAO.saveObject(group);
 		response.setSuccess(true);
 		
 		return response.createObjectJSON();

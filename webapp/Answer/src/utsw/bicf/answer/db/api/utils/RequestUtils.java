@@ -42,6 +42,7 @@ import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.AnswerDBCredentials;
+import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
@@ -178,6 +179,31 @@ public class RequestUtils {
 		}
 		return ajaxResponse;
 	}
+	
+	public AjaxResponse assignCaseToGroup(List<Group> groups, String caseId)
+			throws ClientProtocolException, IOException, URISyntaxException {
+		String groupIds = groups.stream().map(group -> group.getGroupId().toString()).collect(Collectors.joining(","));
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/assigngroups").append("?groupIds=").append(groupIds);
+		URI uri = new URI(sbUrl.toString());
+
+		requestPut = new HttpPut(uri);
+
+		addAuthenticationHeader(requestPut);
+
+		HttpResponse response = client.execute(requestPut);
+
+		AjaxResponse ajaxResponse = new AjaxResponse();
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		return ajaxResponse;
+	}
+
 
 	public OrderCase getCaseDetails(String caseId, String data)
 			throws ClientProtocolException, IOException, URISyntaxException {

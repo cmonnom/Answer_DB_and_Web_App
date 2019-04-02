@@ -5,7 +5,11 @@ public class OtherProperties {
 	String proxyHostname;
 	int proxyPort;
 	String oncoKBGeniePortalUrl;
+	String authenticateWith;
 
+	public static final String AUTH_LDAP = "ldap";
+	public static final String AUTH_LOCAL = "local";
+	
 
 	public int getProxyPort() {
 		return proxyPort;
@@ -29,6 +33,14 @@ public class OtherProperties {
 
 	public void setOncoKBGeniePortalUrl(String oncoKBGeniePortalUrl) {
 		this.oncoKBGeniePortalUrl = oncoKBGeniePortalUrl;
+	}
+
+	public String getAuthenticateWith() {
+		return authenticateWith;
+	}
+
+	public void setAuthenticateWith(String authenticateWith) {
+		this.authenticateWith = authenticateWith;
 	}
 
 }

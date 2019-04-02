@@ -35,11 +35,39 @@ const Home = {
     </v-card>
   </v-dialog>
 
+  <v-dialog v-model="assignGroupDialogVisible" max-width="50%" scrollable>
+  <v-card>
+    <v-toolbar dense dark color="primary">
+      <v-toolbar-title class="white--text">Assign group to case: {{ currentEpicOrderNumber }} ({{currentPatientName}})</v-toolbar-title>
+    </v-toolbar>
+    <v-card-title>Pick groups that can access this case:</v-card-title>
+    <v-card-text>
+      <v-layout row wrap class="pl-2">
+        <v-flex xs12 lg6 v-for="(group, index) in allGroups" :key="index">
+          <v-switch :label="createGroupLabel(group)" v-model="groupsAssignedToCase[index]"></v-switch>
+        </v-flex>
+      </v-layout>
+    </v-card-text>
+    <v-card-actions>
+    <v-tooltip bottom>
+      <v-btn color="success" @click="assignToGroup()" slot="activator">Save
+        <v-icon right dark>save</v-icon>
+      </v-btn>
+      <span></span>
+      </v-tooltip>
+      <v-btn color="error" @click="cancelAssignGroup()">Cancel
+        <v-icon right dark>cancel</v-icon>
+      </v-btn>
+      
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+
   
   <v-dialog v-model="signoutDialogVisible" max-width="500px" scrollable>
     <v-card>
       <v-toolbar dense dark color="primary">
-        <v-toolbar-title class="white--text">Archive case {{ currentEpicOrderNumber }} ?</v-toolbar-title>
+        <v-toolbar-title class="white--text">Archive case {{ currentEpicOrderNumber }} ({{currentPatientName}})?</v-toolbar-title>
       </v-toolbar>
       <v-card-text class="pb-3 pt-3 pr-3 pl-3">
         You are about to archive this case. Which means all work on this case is done.<br/>
@@ -130,10 +158,14 @@ const Home = {
     data() {
         return {
             assignDialogVisible: false,
+            assignGroupDialogVisible: false,
             currentCaseId: null,
             allUsers: [],
+            allGroups: [],
             usersAssignedToCase: [],
+            groupsAssignedToCase: [],
             currentEpicOrderNumber: "",
+            currentPatientName: "",
             caseForUserTableVisible: true,
             caseAllTableVisible: true,
             caseFinalizedTableVisible: true,
@@ -198,6 +230,28 @@ const Home = {
                     alert(error);
                 });
         },
+        getAllGroups() {
+            this.groupsAssignedToCase = [];
+            axios.get("./getAllGroupsForUsers", {
+                params: {
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed) {
+                        this.allGroups = response.data.items;
+                        for (var i = 0; i < this.allGroups.length; i++) {
+                            var group = this.allGroups[i];
+                            this.groupsAssignedToCase.push(false);
+                        }
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.getAllGroups);
+                    }
+                })
+                .catch(error => {
+                    alert(error);
+                });
+        },
         assignToUser() {
             var userIds = [];
             for (var i = 0; i < this.allUsers.length; i++) {
@@ -218,6 +272,32 @@ const Home = {
                     }
                     else {
                         this.handleDialogs(response.data, this.assignToUser.bind(null, this.currentCaseId));
+                    }
+                })
+                .catch(error => {
+                    alert(error);
+                });
+        },
+        assignToGroup() {
+            var groupIds = [];
+            for (var i = 0; i < this.allUsers.length; i++) {
+                if (this.groupsAssignedToCase[i] === true) {
+                    groupIds.push(this.allGroups[i].value);
+                }
+            };
+            axios.get("./assignToGroup", {
+                params: {
+                    caseId: this.currentCaseId,
+                    groupIdsParam: groupIds.join(",")
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        this.assignGroupDialogVisible = false;
+                        this.getWorklists();
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.assignToGroup.bind(null, this.currentCaseId));
                     }
                 })
                 .catch(error => {
@@ -247,6 +327,10 @@ const Home = {
         cancelAssign() {
             this.assignDialogVisible = false;
             this.usersAssignedToCase = [];
+        },
+        cancelAssignGroup() {
+            this.assignGroupDialogVisible = false;
+            this.groupsAssignedToCase = [];
         },
         //use this to make tables  resize when other are shown/hidden
         // setFlexClass() {
@@ -295,6 +379,9 @@ const Home = {
             var title = user.canReview ? "(Reviewer)" : "";
             return user.name + " " + title;
         },
+        createGroupLabel(group) {
+            return group.name;
+        },
         createPDFReport(reportId) {
             if (this.creatingReport) {
                 return; //Already creating a report
@@ -334,10 +421,12 @@ const Home = {
     },
     mounted: function () {
         this.getAllUsers();
+        this.getAllGroups();
         this.getWorklists();
     },
     destroyed: function () {
         bus.$off('assignToUser');
+        bus.$off('assignToGroup');
         bus.$off('open');
         bus.$off('open-read-only');
         bus.$off('edit-report');
@@ -350,6 +439,7 @@ const Home = {
         splashDialog = false; //disable splash screen if coming from Home
         bus.$on('assignToUser', (item) => {
             this.currentEpicOrderNumber = item.epicOrderNumber;
+            this.currentPatientName = item.patientName;
             this.currentCaseId = item.caseId;
             this.usersAssignedToCase = [];
 
@@ -367,6 +457,27 @@ const Home = {
                 this.usersAssignedToCase.push(userAssigned);
             }
             this.assignDialogVisible = true;
+        });
+        bus.$on('assignToGroup', (item) => {
+            this.currentEpicOrderNumber = item.epicOrderNumber;
+            this.currentPatientName = item.patientName;
+            this.currentCaseId = item.caseId;
+            this.groupsAssignedToCase = [];
+
+            for (var i = 0; i < this.allGroups.length; i++) {
+                var group = this.allGroups[i];
+                var groupAssigned = false;
+                if (item.groupIds) {
+                    for (var j = 0; j < item.groupIds.length; j++) {
+                        if (item.groupIds[j] == group.value) {
+                            groupAssigned = true;
+                            break;
+                        }
+                    }
+                }
+                this.groupsAssignedToCase.push(groupAssigned);
+            }
+            this.assignGroupDialogVisible = true;
         });
         bus.$on('open', (item) => {
             router.push("./openCase/" + item.caseId);

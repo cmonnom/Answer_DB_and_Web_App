@@ -23,6 +23,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.HeaderConfigSummaries;
 import utsw.bicf.answer.controller.serialization.vuetify.HeaderConfigSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
@@ -47,6 +48,8 @@ public class UserPreferenceController {
 		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".getAdmins",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".getHeaderPrefs",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(UserPreferenceController.class.getCanonicalName() + ".getUserGroups",
 				IndividualPermission.CAN_VIEW);
 	}
 
@@ -104,6 +107,23 @@ public class UserPreferenceController {
 		response.setMessage(message);
 		return response.createObjectJSON();
 	}
+	
+	@RequestMapping(value = "/getUserGroups")
+	@ResponseBody
+	public String getUserGroups(Model model, HttpSession session) throws Exception {
+		User currentUser = ControllerUtil.getSessionUser(session);
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		
+		List<Group> groups = new ArrayList<Group>();
+		for (Group g : currentUser.getGroups()) {
+			g.setUsers(null); //to avoid lazy loading issues when creating a JSON of Group
+			groups.add(g);
+		}
+		response.setPayload(groups);
+		return response.createObjectJSON();
+	}
 
 
 	@RequestMapping(value = "/saveUserPrefs")
@@ -154,4 +174,6 @@ public class UserPreferenceController {
 		
 		return new HeaderConfigSummaries(summaries).createVuetifyObjectJSON();
 	}
+	
+	
 }

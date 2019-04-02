@@ -76,6 +76,15 @@ Vue.component('goodies2', {
       }
       setTimeout(this.endGoodies, 10000 + choice.endDelay);
     },
+    activateGoodiesByIndex(index) {
+      var counter = 0; //in case the random function always returns the same number
+      this.lastIndex = index;
+      var choice = this.choices[index];
+      choice.start();
+      if (choice.end) {
+        setTimeout(choice.end, 10000);
+      }
+    },
     clearParticules() {
       this.demo.mousemove = () => {
       };

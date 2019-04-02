@@ -185,6 +185,10 @@ public class OpenCaseController {
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		if (user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
 			model.addAttribute("redirectReadOnlyUrl", url.replace("openCase/", "openCaseReadOnly/"));
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
@@ -203,6 +207,11 @@ public class OpenCaseController {
 				+ "%26variantId=" + variantId + "%26variantType=" + variantType
 				+ "%26edit=" + edit;
 		User user = ControllerUtil.getSessionUser(session);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
@@ -235,6 +244,11 @@ public class OpenCaseController {
 			response.setMessage(caseId + " does not exist.");
 			return response.createObjectJSON();
 		}
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, detailedCase)) {
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, detailedCase)) {
+				return ControllerUtil.returnFailedGroupCheck();
+			}
+		}
 		List<ReportGroup> reportGroups = modelDAO.getAllReportGroups();
 //		reportGroups.stream().forEach(r -> r.populateGenesToReport(modelDAO));
 		List<ReportGroupForDisplay> reportGroupsForDisplay = reportGroups.stream()
@@ -252,9 +266,13 @@ public class OpenCaseController {
 	@ResponseBody
 	public String loadCaseAnnotations(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
 
-//		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
 		CaseAnnotation annotation = utils.getCaseAnnotation(caseId);
 		if (annotation != null && annotation.getCaseId() != null) {
 //			if (!annotation.getAssignedTo().contains(user.getUserId().toString())) {
@@ -281,11 +299,16 @@ public class OpenCaseController {
 			@RequestParam String caseId, @RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
 		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
+		
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(false);
 		response.setSuccess(false);
 		response.setSkipSnackBar(skipSnackBar);
-		RequestUtils utils = new RequestUtils(modelDAO);
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode annotationNodes = mapper.readTree(caseAnnotation);
 		for (JsonNode annotationNode : annotationNodes.get("annotation")) {
@@ -509,10 +532,15 @@ public class OpenCaseController {
 
 	@RequestMapping(value = "/getVariantDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
-	public String getVariantDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
+	public String getVariantDetails(Model model, HttpSession session, @RequestParam String variantId, @RequestParam String caseId) throws Exception {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
 		Variant variantDetails = utils.getVariantDetails(variantId);
 		VariantRelatedSummary summaryRelated = null;
 		CNVRelatedSummary cnvSummaryRelated = null;
@@ -527,7 +555,6 @@ public class OpenCaseController {
 			}
 		};
 		if (variantDetails != null) {
-			User user = ControllerUtil.getSessionUser(session);
 			
 			// populate user info to be used by the UI
 			if (variantDetails.getReferenceVariant() != null
@@ -570,10 +597,15 @@ public class OpenCaseController {
 
 	@RequestMapping(value = "/getCNVDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
-	public String getCNVDetails(Model model, HttpSession session, @RequestParam String variantId) throws Exception {
+	public String getCNVDetails(Model model, HttpSession session, @RequestParam String variantId, @RequestParam String caseId) throws Exception {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
 		CNV variantDetails = utils.getCNVDetails(variantId);
 		if (variantDetails != null) {
 			for (Annotation a : variantDetails.getReferenceCnv().getUtswAnnotations()) {
@@ -617,11 +649,16 @@ public class OpenCaseController {
 	
 	@RequestMapping(value = "/getTranslocationDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
-	public String getTranslocationDetails(Model model, HttpSession session, @RequestParam String variantId)
+	public String getTranslocationDetails(Model model, HttpSession session, @RequestParam String variantId, @RequestParam String caseId)
 			throws Exception {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
 		Translocation variantDetails = utils.getTranslocationDetails(variantId);
 		if (variantDetails != null) {
 			for (Annotation a : variantDetails.getReferenceTranslocation().getUtswAnnotations()) {
@@ -653,13 +690,17 @@ public class OpenCaseController {
 		
 		if (!caseId.equals("")) { //for annotations within a case
 			User user = ControllerUtil.getSessionUser(session);
-			if (!ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
+			OrderCase caseSummary = utils.getCaseSummary(caseId);
+			if (!ControllerUtil.isUserAssignedToCase(caseSummary, user)) {
 				// user is not assigned to this case
 				response.setIsAllowed(false);
 				response.setSuccess(false);
 				response.setMessage(user.getFullName() + " is not assigned to this case");
 				response.setUiProceed(closeAfter);
 				return response.createObjectJSON();
+			}
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+				return ControllerUtil.returnFailedGroupCheck();
 			}
 		}
 		
@@ -681,14 +722,18 @@ public class OpenCaseController {
 			@RequestParam(defaultValue="false") Boolean skipAutoSelect) throws Exception {
 		User user = ControllerUtil.getSessionUser(session);
 		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
 		AjaxResponse response = new AjaxResponse();
 		if (!caseId.equals("")) { //for annotations within a case
-			if (!ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
+			if (!ControllerUtil.isUserAssignedToCase(caseSummary, user)) {
 				// user is not assigned to this case
 				response.setIsAllowed(false);
 				response.setSuccess(false);
 				response.setMessage(user.getFullName() + " is not assigned to this case");
 				return response.createObjectJSON();
+			}
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+				return ControllerUtil.returnFailedGroupCheck();
 			}
 		}
 		
@@ -717,7 +762,6 @@ public class OpenCaseController {
 				userAnnotation.setVariantId(variantId);
 			}
 			if (userAnnotation.getIsTumorSpecific()) {
-				OrderCase caseSummary = utils.getCaseSummary(caseId);
 				if (caseSummary != null) {
 					if (caseSummary.getOncotreeDiagnosis() != null && !caseSummary.getOncotreeDiagnosis().equals("")) {
 						userAnnotation.setOncotreeDiagnosis(caseSummary.getOncotreeDiagnosis());
@@ -978,6 +1022,9 @@ public class OpenCaseController {
 				response.setMessage("User " + user.getFullName() + " cannot edit this case.");
 				return response.createObjectJSON();
 			}
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, detailedCase)) {
+				return ControllerUtil.returnFailedGroupCheck();
+			}
 			response.setIsAllowed(true);
 			AjaxResponse apiResponse = utils.getMocliaContent(caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds);
 			response.setMessage(apiResponse.getMessage());
@@ -1022,6 +1069,9 @@ public class OpenCaseController {
 					response.setMessage("User " + user.getFullName() + " cannot edit this case.");
 					return response.createObjectJSON();
 				}
+				if (!ControllerUtil.areUserAndCaseInSameGroup(user, orderCase)) {
+					return ControllerUtil.returnFailedGroupCheck();
+				}
 //				stripVariant(variant);
 				utils.saveVariant(response, variant, variantType);
 				return response.createObjectJSON();
@@ -1061,6 +1111,9 @@ public class OpenCaseController {
 		if (orderCase != null && !orderCase.getAssignedTo().contains(user.getUserId().toString())) {
 			response.setMessage("User " + user.getFullName() + " cannot edit this case.");
 			return response.createObjectJSON();
+		}
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, orderCase)) {
+			return ControllerUtil.returnFailedGroupCheck();
 		}
 		
 		if (variantType.equals("snp")) {
@@ -1113,8 +1166,12 @@ public class OpenCaseController {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
 		if (caseSummary != null) {
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+				return ControllerUtil.returnFailedGroupCheck();
+			}
 			PatientInfo patientInfo = new PatientInfo(caseSummary);
 			ObjectMapper mapper = new ObjectMapper();
 			return mapper.writeValueAsString(patientInfo);
@@ -1141,6 +1198,9 @@ public class OpenCaseController {
 		response.setSkipSnackBar(skipSnackBar);
 		if (isAssigned) {
 			OrderCase caseSummary = utils.getCaseSummary(caseId);
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+				return ControllerUtil.returnFailedGroupCheck();
+			}
 			if (caseSummary != null) {
 				caseSummary.setOncotreeDiagnosis(oncotreeDiagnosis);
 				if (dedupAvgDepth != "") {
@@ -1207,6 +1267,9 @@ public class OpenCaseController {
 			if (response.getSuccess()) {
 				List<User> users = modelDAO.getAllUsers();
 				OrderCase caseSummary = utils.getCaseSummary(caseId);
+				if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, caseSummary)) {
+					return ControllerUtil.returnFailedGroupCheck();
+				}
 				for (User aUser : users) {
 					//notify users assigned to the case
 					if (!aUser.equals(currentUser) 
@@ -1265,7 +1328,11 @@ public class OpenCaseController {
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		User currentUser = ControllerUtil.getSessionUser(session);
-		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(caseSummary, currentUser);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(isAssigned);
 		if (isAssigned) {
@@ -1364,6 +1431,10 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
 		AjaxResponse response = new AjaxResponse();
 		if (!isAssigned) {
 			response.setIsAllowed(false);
@@ -1473,6 +1544,10 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
 		AjaxResponse response = new AjaxResponse();
 		if (!isAssigned) {
 			response.setIsAllowed(false);

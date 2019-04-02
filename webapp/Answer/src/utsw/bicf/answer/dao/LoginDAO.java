@@ -5,6 +5,7 @@ import java.util.List;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -63,6 +64,7 @@ public class LoginDAO {
 		List<User> results = query.list();
 		if (results != null && !results.isEmpty()) {
 			user = results.get(0);
+			Hibernate.initialize(user.getGroups());
 		}
 		return user;
 	}

@@ -30,6 +30,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.UserSearchItems;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
@@ -96,7 +97,9 @@ public class HomeController {
 		if (cases != null) {
 			List<User> users  = modelDAO.getAllUsers();
 			for (OrderCase c : cases) {
-				caseList.add(c);
+				if (ControllerUtil.areUserAndCaseInSameGroup(user, c)) {
+					caseList.add(c);
+				}
 			}
 			//filter by assigned/user/available
 			List<OrderCaseForUser> casesForUser = 
@@ -138,8 +141,10 @@ public class HomeController {
 	@ResponseBody
 	public String getAllUsersToAssign(Model model, HttpSession session)
 			throws Exception {
-		
-		List<User> users = modelDAO.getAllUsers().stream().filter(u -> u.getIndividualPermission().getCanAnnotate() != null && u.getIndividualPermission().getCanAnnotate()).collect(Collectors.toList());
+		User currentUser = ControllerUtil.getSessionUser(session);
+		List<User> users = modelDAO.getAllUsers().stream().filter(u -> u.getIndividualPermission().getCanAnnotate() != null 
+				&& u.getIndividualPermission().getCanAnnotate()
+				&& ControllerUtil.areUsersInSameGroup(currentUser, u)).collect(Collectors.toList());
 		UserSearchItems userList = new UserSearchItems(users);
 		return userList.createVuetifyObjectJSON();
 		
@@ -155,6 +160,10 @@ public class HomeController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		
 		OrderCase orderCase = utils.getCaseSummary(caseId);
+		User currentUser = ControllerUtil.getSessionUser(session);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, orderCase)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
 		List<String> alreadyAssignedTo = new ArrayList<String>();
 		if (orderCase != null) {
 			alreadyAssignedTo = orderCase.getAssignedTo(); //to skip users already notified
@@ -174,7 +183,6 @@ public class HomeController {
 			}
 		}
 		AjaxResponse response = utils.assignCaseToUser(realUsers, caseId);
-		User currentUser = ControllerUtil.getSessionUser(session);
 		if (response.getSuccess()) {
 			for (User user : realUsers) {
 				if (alreadyAssignedTo.contains(user.getUserId() + "")
@@ -205,6 +213,53 @@ public class HomeController {
 		
 	}
 	
+	/**
+	 * Only admins should be able to assign a case to groups
+	 * @param model
+	 * @param session
+	 * @param request
+	 * @param groupIdsParam
+	 * @param caseId
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/assignToGroup")
+	@ResponseBody
+	public String assignToGroup(Model model, HttpSession session, HttpServletRequest request,
+			@RequestParam String groupIdsParam,
+			@RequestParam String caseId)
+			throws Exception {
+		
+		RequestUtils utils = new RequestUtils(modelDAO);
+		
+		OrderCase orderCase = utils.getCaseSummary(caseId);
+		User currentUser = ControllerUtil.getSessionUser(session);
+		if (currentUser.getIndividualPermission().getAdmin() == null ||
+				!currentUser.getIndividualPermission().getAdmin()) {
+			AjaxResponse response = new AjaxResponse();
+			response.setSuccess(false);
+			response.setIsAllowed(false);
+			response.setMessage("Only admins can modify groups");
+			return response.createObjectJSON();
+		}
+		List<Group> groups = modelDAO.getAllGroups();
+		List<Group> realGroups = new ArrayList<Group>();
+		String[] groupIds = groupIdsParam.split(",");
+		for (String groupId : groupIds) {
+			if (StringUtils.isNumeric(groupId)) {
+				Integer userIdInt = Integer.parseInt(groupId);
+				for (Group group : groups) {
+					if (userIdInt == group.getGroupId()) {
+						realGroups.add(group);
+					}
+				}
+			}
+		}
+		AjaxResponse response = utils.assignCaseToGroup(realGroups, caseId);
+		return response.createObjectJSON();
+		
+	}
+	
 	@RequestMapping(value = "/toggleArchivingStatusForCase")
 	@ResponseBody
 	public String toggleArchivingStatusForCase(Model model, HttpSession session, 
@@ -219,6 +274,9 @@ public class HomeController {
 		if (isAssigned) {
 			OrderCase caseSummary = utils.getCaseSummary(caseId);
 			if (caseSummary != null) {
+				if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+					return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+				}
 				caseSummary.setActive(!doArchive);
 				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);
 				if (savedCaseSummary != null) {
@@ -283,6 +341,10 @@ public class HomeController {
 			String cleanData = possibleDirtyData.replaceAll("\\\\t", " ").replaceAll("\\\\n", "<br/>");
 			report = mapper.readValue(cleanData, Report.class);
 			OrderCase caseSummary = utils.getCaseSummary(report.getCaseId());
+			User currentUser = ControllerUtil.getSessionUser(session);
+			if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, caseSummary)) {
+				return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+			}
 			User signedBy = modelDAO.getUserByUserId(report.getModifiedBy());
 			try {
 			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(report, fileProps, caseSummary, otherProps, signedBy);

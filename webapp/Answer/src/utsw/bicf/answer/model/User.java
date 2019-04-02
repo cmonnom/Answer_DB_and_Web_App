@@ -1,12 +1,17 @@
 package utsw.bicf.answer.model;
 
+import java.util.List;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -49,6 +54,12 @@ public class User {
 	@OneToOne
 	@JoinColumn(name="individual_permission_id", unique=true)
 	IndividualPermission individualPermission;
+	
+	@ManyToMany(cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH, CascadeType.REMOVE}, fetch = FetchType.LAZY)
+	@JoinTable(name="answer_user_answer_group",
+	joinColumns=@JoinColumn(name="answer_user_id"),
+	inverseJoinColumns=@JoinColumn(name="answer_group_id"))
+	List<Group> groups;
 	
 	/**
 	  * Some attempt at building a leaderboard. For now the idea doesn't seem
@@ -162,5 +173,13 @@ public class User {
 	@Override
 	public String toString() {
 		return this.getFullName();
+	}
+
+	public List<Group> getGroups() {
+		return groups;
+	}
+
+	public void setGroups(List<Group> groups) {
+		this.groups = groups;
 	}
 }

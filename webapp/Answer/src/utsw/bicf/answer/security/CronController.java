@@ -38,7 +38,7 @@ public class CronController {
 			Stream<Path> stream = null;
 			try {
 				stream = Files.list(linkDir.toPath());
-				List<Path> links = stream.collect(Collectors.toList());
+				List<Path> links = stream.filter(p -> p.toFile().isFile()).collect(Collectors.toList());
 				for (Path link : links) {
 					if (now - Files.getLastModifiedTime(link, LinkOption.NOFOLLOW_LINKS).toMillis() > 60 * 60 * 1000) { //modified more than 1h ago
 						link.toFile().delete();

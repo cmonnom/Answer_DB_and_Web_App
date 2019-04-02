@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.transaction.Transactional;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.GeneToReport;
+import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.Token;
@@ -146,14 +148,40 @@ public class ModelDAO {
 	public List<User> getAllUsers() {
 		Session session = sessionFactory.getCurrentSession();
 		String hql = "from User order by last";
-		return session.createQuery(hql, User.class).list();
+		List<User> users = session.createQuery(hql, User.class).list();
+		users.stream().forEach(u -> Hibernate.initialize(u.getGroups()));
+		return users;
+	}
+	
+	@Transactional
+	public List<Group> getAllGroups() {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from Group";
+		List<Group> groups = session.createQuery(hql, Group.class).list();
+		groups.stream().forEach(g -> Hibernate.initialize(g.getUsers()));
+		return groups;
 	}
 	
 	@Transactional
 	public User getUserByUserId(Integer userId) {
 		Session session = sessionFactory.getCurrentSession();
 		String hql = "from User where userId = :userId";
-		return session.createQuery(hql, User.class).setParameter("userId", userId).uniqueResult();
+		User user = session.createQuery(hql, User.class).setParameter("userId", userId).uniqueResult();
+		if (user != null) {
+			Hibernate.initialize(user.getGroups());
+		}
+		return user;
+	}
+	
+	@Transactional
+	public Group getGroupByGroupId(Integer groupId) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from Group where groupId = :groupId";
+		Group group = session.createQuery(hql, Group.class).setParameter("groupId", groupId).uniqueResult();
+		if (group != null) {
+			Hibernate.initialize(group.getUsers());
+		}
+		return group;
 	}
 	
 	@Transactional
@@ -297,6 +325,8 @@ public class ModelDAO {
 				.setParameter("userId", user.getUserId())
 				.list();
 	}
+
+
 	
 	
 	

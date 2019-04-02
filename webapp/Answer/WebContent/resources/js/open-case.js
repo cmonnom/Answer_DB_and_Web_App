@@ -831,7 +831,7 @@ const OpenCase = {
                                                                 label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true" hide-details>
                                                                 </v-text-field>
                                                             </v-flex>
-                                                            <v-flex xs4 v-else-if="item.type == 'text' && item.field == 'oncotree'" class="align-flex-right">
+                                                            <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'" class="align-flex-right">
                                                                 <v-tooltip bottom>
                                                                     <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator" class="mr-0 ml-0 mt-0 mb-0">
                                                                         <img alt="oncotree icon" :src="oncotreeIconUrl" width="24px"></img>
@@ -1696,7 +1696,8 @@ const OpenCase = {
                 webAppRoot + "/getVariantDetails",
                 {
                     params: {
-                        variantId: item.oid
+                        variantId: item.oid,
+                        caseId: this.$route.params.id
 
                     }
                 }).then(response => {
@@ -1956,7 +1957,8 @@ const OpenCase = {
                 webAppRoot + "/getCNVDetails",
                 {
                     params: {
-                        variantId: item.oid
+                        variantId: item.oid,
+                        caseId: this.$route.params.id
                     }
                 }).then(response => {
                     if (response.data.isAllowed) {
@@ -2160,7 +2162,8 @@ const OpenCase = {
                 webAppRoot + "/getTranslocationDetails",
                 {
                     params: {
-                        variantId: item.oid
+                        variantId: item.oid,
+                        caseId: this.$route.params.id
                     }
                 }).then(response => {
                     if (response.data.isAllowed) {

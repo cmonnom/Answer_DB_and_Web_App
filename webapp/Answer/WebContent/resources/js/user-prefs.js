@@ -55,6 +55,12 @@ const UserPrefs = {
             If you need to enable more permissions, contact an Answer administrator ({{ admins }}).
           </v-flex>
         </v-layout>
+        <v-layout row wrap>
+        <v-flex xs12>
+          You belong to the following {{ groupSingPlural }}: 
+          <v-chip disabled v-for="group in userGroups" :key="group.groupId">{{ group.name }}</v-chip>
+        </v-flex>
+        </v-layout>
      </v-container>   
     </v-card-text>
   </v-card>
@@ -102,7 +108,8 @@ const UserPrefs = {
       userPrefs: null,
       permissions: permissions, //needed to use the global variable in header.jsp
       admins: "",
-      headerConfigs: null
+      headerConfigs: null,
+      userGroups: []
     }
   },
   methods: {
@@ -151,6 +158,23 @@ const UserPrefs = {
           }
           else {
             this.handleDialogs(response.data, this.getHeaderPrefs);
+          }
+        })
+        .catch(error => {
+          alert(error);
+        });
+    },
+    getUserGroups() {
+      axios.get("./getUserGroups", {
+        params: {
+        }
+      })
+        .then(response => {
+          if (response.data.isAllowed) {
+            this.userGroups = response.data.payload;
+          }
+          else {
+            this.handleDialogs(response.data, this.getUserGroups);
           }
         })
         .catch(error => {
@@ -224,12 +248,20 @@ const UserPrefs = {
     this.getAdmins();
     this.getUserPrefs();
     this.getHeaderPrefs();
+    this.getUserGroups();
   },
   destroyed: function () {
   },
   created: function () {
   },
   computed: {
+    groupSingPlural() {
+      var groupLabel = "group";
+      if (this.userGroups && this.userGroups.length > 1) {
+        groupLabel += "s";
+      }
+      return groupLabel;
+    }
   },
   watch: {
   }

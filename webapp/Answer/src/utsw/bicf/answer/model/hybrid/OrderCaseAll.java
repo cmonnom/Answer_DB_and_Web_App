@@ -25,6 +25,7 @@ public class OrderCaseAll {
 	String caseId;
 	String assignedTo;
 	List<String> assignedToIds;
+	List<String> groupIds;
 	String patientName;
 	FlagValue typeFlags;
 	String caseType;
@@ -40,6 +41,7 @@ public class OrderCaseAll {
 		this.caseId = orderCase.getCaseId();
 		this.dateReceived = orderCase.getReceivedDate();
 		this.assignedToIds = orderCase.getAssignedTo();
+		this.groupIds = orderCase.getGroupIds();
 		this.patientName = orderCase.getPatientName();
 		this.active = orderCase.getActive();
 		List<String> userNames = new ArrayList<String>();
@@ -72,6 +74,9 @@ public class OrderCaseAll {
 					buttons.add(new Button("assignment", "open-report-read-only", "Open Report in View Only Mode", "info"));
 				}
 			}
+		}
+		if (currentUser.getIndividualPermission().getAdmin()) {
+			buttons.add(new Button("mdi-account-group", "assignToGroup", "Set Group(s)", "info"));
 		}
 		
 		
@@ -162,6 +167,11 @@ public class OrderCaseAll {
 	public boolean isActive() {
 		return active;
 	}
+
+	public List<String> getGroupIds() {
+		return groupIds;
+	}
+
 
 
 

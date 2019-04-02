@@ -7,19 +7,23 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.springframework.ui.Model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
+import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.LoginDAO;
-import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.LoginAttempt;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -156,5 +160,41 @@ public class ControllerUtil {
 	public static void setGlobalVariables(Model model, FileProperties fileProps, OtherProperties otherProps) {
 		model.addAttribute("isProduction", fileProps.getProductionEnv());
 		model.addAttribute("oncoKBGeniePortalUrl", otherProps.getOncoKBGeniePortalUrl());
+	}
+	
+	/**
+	 * Check if a user can access a case by comparing if a user is
+	 * in the same group as a case
+	 * @param user
+	 * @param orderCase
+	 * @return
+	 */
+	public static boolean areUserAndCaseInSameGroup(User user, OrderCase orderCase) {
+		if (user == null || orderCase == null || user.getGroups() == null || orderCase.getGroupIds() == null) {
+			return false;
+		}
+		if (user.getIndividualPermission().getAdmin()) {
+			return true;
+		}
+		List<String> userGroups = user.getGroups().stream().map(g -> g.getGroupId() + "").collect(Collectors.toList());
+		List<String> caseGroups = orderCase.getGroupIds();
+		return !CollectionUtils.intersection(userGroups, caseGroups).isEmpty();
+	}
+	
+	public static boolean areUsersInSameGroup(User user1, User user2) {
+		if (user1 == null || user2 == null || user1.getGroups() == null || user2.getGroups() == null) {
+			return false;
+		}
+		List<Integer> user1Groups = user1.getGroups().stream().map(g -> g.getGroupId()).collect(Collectors.toList());
+		List<Integer> user2Groups = user2.getGroups().stream().map(g -> g.getGroupId()).collect(Collectors.toList());
+		return !CollectionUtils.intersection(user1Groups, user2Groups).isEmpty();
+	}
+	
+	public static String returnFailedGroupCheck() throws JsonProcessingException {
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		response.setMessage("This case does not belong to your group.");
+		return response.createObjectJSON();
 	}
 }

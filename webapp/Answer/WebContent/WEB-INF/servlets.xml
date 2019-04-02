@@ -64,6 +64,9 @@
 		<property name="url" value="${ldap.url}" />
 	</bean>
 	
+	<bean id="localAuthentication" class="utsw.bicf.answer.security.LocalAuthentication">
+	</bean>
+	
 	<bean id="clarityAPIAuthentication" class="utsw.bicf.answer.security.ClarityAPIAuthentication">
 		<property name="username" value="${clarity.api.username}" />
 		<property name="password" value="${clarity.api.password}" />
@@ -129,6 +132,7 @@
 		<property name="proxyHostname" value="${proxy.hostname}" />
 		<property name="proxyPort" value="${proxy.port}" />
 		<property name="oncoKBGeniePortalUrl" value="${oncokb.url}" />
+		<property name="authenticateWith" value="${auth.type}" />
 	</bean>
 	
 	<bean id="ncbiProps" class="utsw.bicf.answer.security.NCBIProperties">

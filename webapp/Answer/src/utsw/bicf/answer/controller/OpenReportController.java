@@ -107,6 +107,11 @@ public class OpenReportController {
 		User user = ControllerUtil.getSessionUser(session);
 		String url = "openReport/" + caseId + "?reportId=" + reportId;
 		model.addAttribute("urlRedirect", url);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 //		RequestUtils utils = new RequestUtils(modelDAO);
 //		if (user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
@@ -122,6 +127,11 @@ public class OpenReportController {
 		String url = "openReportReadOnly/" + caseId + "?reportId=" + reportId;
 		User user = ControllerUtil.getSessionUser(session);
 		model.addAttribute("urlRedirect", url);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
@@ -132,6 +142,11 @@ public class OpenReportController {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		List<Report> allReports = utils.getExistingReports(caseId);
 		if (allReports != null) {
 			List<ReportSummary> summaries = new ArrayList<ReportSummary>();
@@ -169,9 +184,13 @@ public class OpenReportController {
 			@RequestParam(defaultValue="", required=false) String test) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		Report reportDetails = null;
 		if (reportId.equals("")) {
-			User user = ControllerUtil.getSessionUser(session);
 			reportDetails = utils.buildReportManually2(caseId, user, otherProps, ncbiProps);
 		}
 		else {
@@ -204,6 +223,11 @@ public class OpenReportController {
 		ReportSummary reportSummary =  mapper.readValue(nodeData.get("report").toString(), ReportSummary.class);
 		reportSummary.updateModifiedRows();
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportSummary.getCaseId(), currentUser);
+		OrderCase caseSummary = utils.getCaseSummary(reportSummary.getCaseId());
+		if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
+		
 		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
 		response.setIsAllowed(canProceed);
 		if (canProceed) {
@@ -378,6 +402,10 @@ public class OpenReportController {
 		User currentUser = ControllerUtil.getSessionUser(session);
 		JsonNode nodeData = mapper.readTree(data);
 		ReportSummary reportSummary =  mapper.readValue(nodeData.get("report").toString(), ReportSummary.class);
+		OrderCase caseSummary = utils.getCaseSummary(reportSummary.getCaseId());
+		if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		reportSummary.updateModifiedRows();
 		//we might not want to restrict by assigned user
 		//		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportSummary.getCaseId(), currentUser);
@@ -385,7 +413,6 @@ public class OpenReportController {
 		boolean canProceed = currentUser.getIndividualPermission().getCanReview();
 		response.setIsAllowed(canProceed);
 		if (canProceed) {
-			OrderCase caseSummary = utils.getCaseSummary(reportSummary.getCaseId());
 			Report reportToPreview = new Report(reportSummary);
 			User signedBy = modelDAO.getUserByUserId(reportToPreview.getModifiedBy());
 			String linkName = null;
@@ -419,7 +446,12 @@ public class OpenReportController {
 			@RequestParam String reportId) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
-		Report reportDetails = null;
+		User user = ControllerUtil.getSessionUser(session);
+		Report reportDetails = utils.getReportDetails(reportId);;
+		OrderCase caseSummary = utils.getCaseSummary(reportDetails.getCaseId());
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		AjaxResponse response = new AjaxResponse();
 		if (reportId.equals("")) {
 			response.setSuccess(false);
@@ -427,7 +459,6 @@ public class OpenReportController {
 			response.setMessage("No report id provided");
 		}
 		else {
-			reportDetails = utils.getReportDetails(reportId);
 			if (reportDetails == null) {
 				response.setSuccess(false);
 				response.setIsAllowed(false);
@@ -471,7 +502,6 @@ public class OpenReportController {
 							utils.saveReport(response, reportDetails);
 							
 							//save a copy of the pdf
-							OrderCase caseSummary = utils.getCaseSummary(reportDetails.getCaseId());
 							User signedBy = modelDAO.getUserByUserId(reportDetails.getModifiedBy());
 							FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy);
 							pdfReport.saveFinalized();
@@ -503,13 +533,20 @@ public class OpenReportController {
 			JsonNode nodeData = mapper.readTree(reason);
 			String reasonString =  nodeData.get("reason").textValue();
 			Report reportToSave = null;
+			User user = ControllerUtil.getSessionUser(session);
 			if (reportId != null) {
 				reportToSave = utils.getReportDetails(reportId);
 				if (reportToSave == null) {
 					response.setSuccess(false);
 					response.setMessage("Invalid Report");
 				}
-				else if (reportToSave.getFinalized() == null || !reportToSave.getFinalized()) {
+				else if (reportToSave != null) {
+					OrderCase caseSummary = utils.getCaseSummary(reportToSave.getCaseId());
+					if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+						return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+					}
+				}
+				if (reportToSave.getFinalized() == null || !reportToSave.getFinalized()) {
 					response.setSuccess(false);
 					response.setMessage("You can only amend finalized reports.");
 				}
@@ -552,7 +589,13 @@ public class OpenReportController {
 					response.setSuccess(false);
 					response.setMessage("Invalid Report");
 				}
-				else if (reportToSave.getFinalized() == null || !reportToSave.getFinalized()) {
+				else {
+					OrderCase caseSummary = utils.getCaseSummary(reportToSave.getCaseId());
+					if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, caseSummary)) {
+						return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+					}
+				}
+				if (reportToSave.getFinalized() == null || !reportToSave.getFinalized()) {
 					response.setSuccess(false);
 					response.setMessage("You can only addend finalized reports.");
 				}
@@ -674,8 +717,11 @@ public class OpenReportController {
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		User currentUser = ControllerUtil.getSessionUser(session);
-
-		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, currentUser);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(caseSummary, currentUser);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
 		response.setIsAllowed(canProceed);
 		if (canProceed) {

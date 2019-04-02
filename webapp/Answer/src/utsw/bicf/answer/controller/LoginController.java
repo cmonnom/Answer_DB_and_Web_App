@@ -29,6 +29,7 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.Version;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.LDAPAuthentication;
+import utsw.bicf.answer.security.LocalAuthentication;
 import utsw.bicf.answer.security.OtherProperties;
 
 @Controller
@@ -41,6 +42,8 @@ public class LoginController {
 	ServletContext servletContext;
 	@Autowired
 	LDAPAuthentication ldapUtils;
+	@Autowired
+	LocalAuthentication localAuthUtils;
 	@Autowired
 	FileProperties fileProps;
 	@Autowired
@@ -88,7 +91,12 @@ public class LoginController {
 		}
 		loginAttempt.setLastAttemptDatetime(LocalDateTime.now());
 		if (proceed && user != null){
-			proceed = ldapUtils.isUserValid(user.getUsername(), credentials.getPassword());
+			if (OtherProperties.AUTH_LDAP.equals(otherProps.getAuthenticateWith())) {
+				proceed = ldapUtils.isUserValid(user.getUsername(), credentials.getPassword());
+			}
+			else { //TODO replace this by a local auth check
+				proceed = localAuthUtils.isUserValid(user.getUsername(), credentials.getPassword());
+			}
 			if (proceed) {
 				loginAttempt.setCounter(0);
 				loginAttempt.setShowLastLogin(true);

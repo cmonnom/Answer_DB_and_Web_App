@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
+import org.hibernate.Hibernate;
+
 import utsw.bicf.answer.controller.serialization.ToolTip;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
@@ -23,14 +27,16 @@ public class UserTableSummary extends Summary<UserTableRow>{
 		}
 		return userRows;
 	}
-
-
+	
 	@Override
 	public void initializeHeaders() {
 		Header fullName = new Header("Name", "fullName");
 		fullName.setAlign("left");
 		headers.add(fullName);
 		headers.add(new Header("User ID", "userName"));
+		Header groupsHeader = new Header("Groups", "groupsConcat");
+		groupsHeader.setIsSafe(true);
+		headers.add(groupsHeader);
 		headers.add(new Header("View", "viewValue", new ToolTip("Can a user view cases and annotations?"), true));
 		headers.add(new Header("Annotate", "annotateValue", new ToolTip("Can a user create annotations?"), true));
 		headers.add(new Header("Select", "selectValue", new ToolTip("Can a user select variants for reporting?"), true));
