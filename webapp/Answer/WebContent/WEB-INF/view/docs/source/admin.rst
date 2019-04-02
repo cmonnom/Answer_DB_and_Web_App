@@ -26,6 +26,17 @@ To verify a user's credentials, Answer will send the user ID or the email addres
 The first and last names are used in email communications and when displaying 
 the author of an annotation or of a clinical report.
    
+Groups
+------
+
+Groups handle access to each case. Not only does a user need to have the right permissions to access a case, the user and the case also need to be in the same group.
+
+The concept of a group can be thought as an organization or a lab within a bigger organization. Users and cases are assigned to groups.
+
+The **Group** table works similarly to the **Users** table. You can add and edit groups and assign users to those groups.
+
+To assign groups to cases, admins have and extra button in the action column of the :ref:`homepage` page.
+
 
 Gene Sets
 ---------

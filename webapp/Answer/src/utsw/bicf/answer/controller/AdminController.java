@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -136,17 +137,11 @@ public class AdminController {
 		return summary.createVuetifyObjectJSON();
 	}
 	
-	@RequestMapping(value = "/saveUser")
+	@RequestMapping(value = "/saveUser", method = RequestMethod.POST)
 	@ResponseBody
-	public String saveUser(Model model, HttpSession session,
-			@RequestParam(defaultValue = "") Integer userId, @RequestParam String username,
-			@RequestParam String first, @RequestParam String last, @RequestParam String email,
-			@RequestParam Boolean canView,
-			@RequestParam Boolean canSelect, @RequestParam Boolean canAnnotate, 
-			@RequestParam Boolean canAssign, @RequestParam Boolean canReview,
-			@RequestParam Boolean allNotifications, @RequestParam Boolean admin,
-			@RequestParam String groups)
-			throws Exception {
+	public String saveUser(Model model, HttpSession session, @RequestBody String data,
+			@RequestParam(defaultValue = "") Integer userId, 
+			@RequestParam(defaultValue = "") String groups) throws Exception {
 		User user = null;
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
@@ -161,23 +156,26 @@ public class AdminController {
 		else { //new user
 			user = new User();
 		}
-		user.setFirst(first);
-		user.setLast(last);
-		user.setUsername(username);
-		user.setEmail(email);
+		ObjectMapper mapper = new ObjectMapper();
+		User userParams = mapper.readValue(data, User.class);
+		IndividualPermission ipParams = userParams.getIndividualPermission();
+		user.setFirst(userParams.getFirst());
+		user.setLast(userParams.getLast());
+		user.setUsername(userParams.getUsername());
+		user.setEmail(userParams.getEmail());
 		
 		IndividualPermission individualPermission = user.getIndividualPermission();
 		if (individualPermission == null) {
 			individualPermission = new IndividualPermission();
 			user.setIndividualPermission(individualPermission);
 		}
-		individualPermission.setAdmin(admin);
-		individualPermission.setCanAnnotate(canAnnotate);
-		individualPermission.setCanAssign(canAssign);
-		individualPermission.setCanSelect(canSelect);
-		individualPermission.setCanView(canView);
-		individualPermission.setCanReview(canReview);
-		individualPermission.setReceiveAllNotifications(allNotifications);
+		individualPermission.setAdmin(ipParams.getAdmin());
+		individualPermission.setCanAnnotate(ipParams.getCanAnnotate());
+		individualPermission.setCanAssign(ipParams.getCanAssign());
+		individualPermission.setCanSelect(ipParams.getCanSelect());
+		individualPermission.setCanView(ipParams.getCanView());
+		individualPermission.setCanReview(ipParams.getCanReview());
+		individualPermission.setReceiveAllNotifications(ipParams.getReceiveAllNotifications());
 		
 		modelDAO.saveObject(individualPermission);
 		
@@ -204,7 +202,7 @@ public class AdminController {
 		return response.createObjectJSON();
 	}
 	
-	@RequestMapping(value = "/saveGroup")
+	@RequestMapping(value = "/saveGroup", method = RequestMethod.POST)
 	@ResponseBody
 	public String saveGroup(Model model, HttpSession session,
 			@RequestParam(defaultValue = "") Integer groupId, @RequestParam String name,

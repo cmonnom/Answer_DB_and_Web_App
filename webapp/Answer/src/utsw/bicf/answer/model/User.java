@@ -34,7 +34,6 @@ public class User {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="answer_user_id")
-	@JsonIgnore
 	Integer userId;
 	
 	@Column(name="first")
@@ -43,14 +42,12 @@ public class User {
 	@Column(name="last")
 	String last;
 	
-	@JsonIgnore
 	@Column(name="username")
 	String username;
 	
 	@Column(name="email")
 	String email;
 	
-	@JsonIgnore
 	@OneToOne
 	@JoinColumn(name="individual_permission_id", unique=true)
 	IndividualPermission individualPermission;

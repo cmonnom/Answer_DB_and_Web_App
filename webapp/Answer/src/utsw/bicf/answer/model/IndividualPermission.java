@@ -32,7 +32,7 @@ public class IndividualPermission {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="individual_permission_id")
 	@JsonIgnore
-	Integer individualPermission;
+	Integer individualPermissionId;
 	
 	@Column(name="can_view")
 	Boolean canView;
@@ -55,12 +55,12 @@ public class IndividualPermission {
 	@Column(name="receive_all_notifications")
 	Boolean receiveAllNotifications;
 
-	public Integer getIndividualPermission() {
-		return individualPermission;
+	public Integer getIndividualPermissionId() {
+		return individualPermissionId;
 	}
 
-	public void setIndividualPermission(Integer individualPermission) {
-		this.individualPermission = individualPermission;
+	public void setIndividualPermissionId(Integer individualPermissionId) {
+		this.individualPermissionId = individualPermissionId;
 	}
 
 	public Boolean getCanView() {

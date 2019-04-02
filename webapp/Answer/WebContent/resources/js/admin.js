@@ -70,7 +70,7 @@ const Admin = {
         </v-container>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="success" @click="saveEdits()">Save
+        <v-btn color="success" @click="saveEdits()" :disabled="editUserDialogSaveDisabled">Save
           <v-icon right dark>save</v-icon>
         </v-btn>
         <v-btn color="error" @click="cancelEdits()">Cancel
@@ -115,7 +115,7 @@ const Admin = {
         </v-container>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="success" @click="saveGroupEdits()">Save
+        <v-btn color="success" @click="saveGroupEdits()" :disabled="editGroupDialogSaveDisabled">Save
           <v-icon right dark>save</v-icon>
         </v-btn>
         <v-btn color="error" @click="cancelGroupEdits()">Cancel
@@ -178,6 +178,7 @@ const Admin = {
   data() {
     return {
       editUserDialogVisible: false,
+      editUserDialogSaveDisabled: false,
       currentEditUserFullName: "",
       currentEditUserId: null,
       editView: false,
@@ -198,6 +199,7 @@ const Admin = {
       deleteGeneSetDisabled: false,
       deleteGeneSetDialogVisible: false,
       editGroupDialogVisible: false,
+      editGroupDialogSaveDisabled: false,
       currentEditGroupName: "",
       currentEditGroupId: null,
       groupsSelectItems: [],
@@ -224,6 +226,7 @@ const Admin = {
       this.editNotification = user.notificationValue.pass;
       this.editAdmin = user.adminValue.pass;
       this.currentEditGroupsInUser = user.groupIds;
+      this.editUserDialogSaveDisabled = false;
       this.editUserDialogVisible = true;
     },
     editGroup(groupId) {
@@ -253,37 +256,46 @@ const Admin = {
       this.saveEdits();
     },
     saveEdits() {
-      this.editUserDialogVisible = false;
+      this.editUserDialogSaveDisabled = true;
       this.snackBarMessage = this.currentEditUserId ? 'User saved successfully' : 'User Added successfully';
-      axios.get("./saveUser", {
+      axios({
+        method: "post",
+        url: "./saveUser", 
         params: {
           userId: this.currentEditUserId,
+          groups: this.currentEditGroupsInUser.join(",")
+        },
+        data: {
           username: this.$refs.editUsername.inputValue,
           first: this.$refs.editFirstName.inputValue,
           last: this.$refs.editLastName.inputValue,
           email: this.$refs.editEmail.inputValue,
-          canView: this.editView,
-          canSelect: this.editSelect,
-          canAnnotate: this.editAnnotate,
-          canAssign: this.editAssign,
-          canReview: this.editReview,
-          allNotifications: this.editNotification,
-          admin: this.editAdmin,
-          groups: this.currentEditGroupsInUser.join(",")
+          individualPermission: {
+            canView: this.editView,
+            canSelect: this.editSelect,
+            canAnnotate: this.editAnnotate,
+            canAssign: this.editAssign,
+            canReview: this.editReview,
+            receiveAllNotifications: this.editNotification,
+            admin: this.editAdmin,
+          }
         }
       })
         .then(response => {
           if (response.data.isAllowed && response.data.success) {
             this.$refs.userTable.getAjaxData();
             this.$refs.groupTable.getAjaxData();
+            this.cancelEdits();
             this.snackBarVisible = true;
           }
           else {
             this.handleDialogs(response.data, this.saveEdits);
           }
+          this.editUserDialogSaveDisabled = false;
         })
         .catch(error => {
           alert(error);
+          this.editUserDialogSaveDisabled = false;
         });
     },
     cancelEdits() {
@@ -292,7 +304,9 @@ const Admin = {
     saveGroupEdits() {
       this.editGroupDialogVisible = false;
       this.snackBarMessage = this.currentEditGroupId ? 'Group saved successfully' : 'Group Added successfully';
-      axios.get("./saveGroup", {
+      axios({
+        method: "post",
+        url: "./saveGroup", 
         params: {
           groupId: this.currentEditGroupId,
           name: this.$refs.editGroupName.inputValue,
@@ -304,11 +318,13 @@ const Admin = {
           if (response.data.isAllowed && response.data.success) {
             this.$refs.groupTable.getAjaxData();
             this.$refs.userTable.getAjaxData();
+            this.cancelGroupEdits();
             this.snackBarVisible = true;
           }
           else {
             this.handleDialogs(response.data, this.saveGroupEdits);
           }
+          this.editGroupDialogSaveDisabled = false;
         })
         .catch(error => {
           alert(error);
