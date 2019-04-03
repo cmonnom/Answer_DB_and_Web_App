@@ -367,8 +367,11 @@ public class ReportBuilder {
 		}
 
 		for (Annotation a : allAnnotations) {
-			if (isStringEqual(a.getCategory(), CAT_CLINICAL_TRIAL))
-				trials.add(new BiomarkerTrialsRow(a.getTrial()));
+			if (isStringEqual(a.getCategory(), CAT_CLINICAL_TRIAL)) {
+				BiomarkerTrialsRow trial = new BiomarkerTrialsRow(a.getTrial());
+				trial.setIsSelected(true);
+				trials.add(trial);
+			}
 		}
 		return trials;
 	}

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,7 +78,7 @@ public class UserPreferenceController {
 		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
-	@RequestMapping(value = "/getUserPrefs")
+	@RequestMapping(value = "/getUserPrefs", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getUserPrefs(Model model, HttpSession session) throws Exception {
 		// send user to Ben's API
@@ -95,7 +96,7 @@ public class UserPreferenceController {
 		return mapper.writeValueAsString(userPref);
 	}
 	
-	@RequestMapping(value = "/getAdmins")
+	@RequestMapping(value = "/getAdmins", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getAdmins(Model model, HttpSession session) throws Exception {
 		// send user to Ben's API
@@ -108,7 +109,7 @@ public class UserPreferenceController {
 		return response.createObjectJSON();
 	}
 	
-	@RequestMapping(value = "/getUserGroups")
+	@RequestMapping(value = "/getUserGroups", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getUserGroups(Model model, HttpSession session) throws Exception {
 		User currentUser = ControllerUtil.getSessionUser(session);
@@ -126,7 +127,7 @@ public class UserPreferenceController {
 	}
 
 
-	@RequestMapping(value = "/saveUserPrefs")
+	@RequestMapping(value = "/saveUserPrefs", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String saveUserPrefs(Model model, HttpSession session,
 			@RequestBody String data) throws Exception {
@@ -154,7 +155,7 @@ public class UserPreferenceController {
 		return response.createObjectJSON();
 	}
 	
-	@RequestMapping(value = "/getHeaderPrefs")
+	@RequestMapping(value = "/getHeaderPrefs", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getHeaderPrefs(Model model, HttpSession session)
 			throws Exception {

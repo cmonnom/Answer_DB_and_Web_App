@@ -13,6 +13,10 @@ const OpenCase = {
     <v-flex xs12 >
     <span class="display-1">Enjoy a quick break...</span><br/>
     <v-btn large color="warning" @click="showGoodiesPanel = false">Back to work</v-btn>
+    <v-tooltip bottom>
+    <v-btn slot="activator" large color="error" @click="cancelBreaks()">No more breaks</v-btn>
+    <span>Go to Preferences to reset breaks</span>
+    </v-tooltip>
     </v-flex>
     </v-layout>
     </v-dialog>
@@ -3906,6 +3910,26 @@ const OpenCase = {
         openIDTCreationDialog() {
             this.itdDialogVisible = true;
         },
+        cancelBreaks() {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/cancelBreaks",
+                params: {
+                },
+                data: {
+                }
+            }).then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    this.showSnackBarMessage("Breaks will no longer appear. Go to Preferences to reset.");
+                    this.showGoodiesPanel = false;
+                }
+                else {
+                    this.handleDialogs(response.data, this.cancelBreaks);
+                }
+            }).catch(error => {
+                this.handleAxiosError(error);
+            });
+        }
         
     },
     mounted() {

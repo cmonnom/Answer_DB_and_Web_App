@@ -26,6 +26,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -59,6 +60,7 @@ import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.UserPref;
 import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
@@ -154,6 +156,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".deleteHeaderConfig",
 				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".cancelBreaks",
+				IndividualPermission.CAN_VIEW);
 		
 	}
 
@@ -219,7 +223,7 @@ public class OpenCaseController {
 	
 	
 
-	@RequestMapping(value = "/getCaseDetails", produces= "application/json; charset=utf-8")
+	@RequestMapping(value = "/getCaseDetails", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String getCaseDetails(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String filters) throws Exception {
@@ -293,7 +297,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/saveCaseAnnotations", produces= "application/json; charset=utf-8")
+	@RequestMapping(value = "/saveCaseAnnotations", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String saveCaseAnnotations(Model model, HttpSession session, @RequestBody String caseAnnotation,
 			@RequestParam String caseId, @RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
@@ -678,7 +682,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/saveVariantSelection", produces= "application/json; charset=utf-8")
+	@RequestMapping(value = "/saveVariantSelection", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String saveVariantSelection(Model model, HttpSession session, @RequestBody String data,
 			@RequestParam String caseId, @RequestParam(defaultValue="false") Boolean closeAfter,
@@ -715,7 +719,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/commitAnnotations", produces= "application/json; charset=utf-8")
+	@RequestMapping(value = "/commitAnnotations", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String commitAnnotations(Model model, HttpSession session, @RequestBody String data,
 			@RequestParam String caseId, @RequestParam String geneId, @RequestParam String variantId,
@@ -864,7 +868,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/saveCurrentFilters", produces= "application/json; charset=utf-8")
+	@RequestMapping(value = "/saveCurrentFilters", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	@Transactional
 	public String saveCurrentFilters(Model model, HttpSession session, @RequestBody String filters,
@@ -958,7 +962,7 @@ public class OpenCaseController {
 
 	}
 
-	@RequestMapping(value = "/exportSelection")
+	@RequestMapping(value = "/exportSelection", method= RequestMethod.POST)
 	@ResponseBody
 	public ResponseEntity<?> exportSelection(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String data) throws Exception {
@@ -998,7 +1002,7 @@ public class OpenCaseController {
 
 	}
 	
-	@RequestMapping(value = "/sendToMDA", produces= "application/json; charset=utf-8")
+	@RequestMapping(value = "/sendToMDA", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String sendToMDA(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String data) throws Exception {
@@ -1038,7 +1042,7 @@ public class OpenCaseController {
 	}
 
 
-	@RequestMapping(value = "/saveVariant", produces= "application/json; charset=utf-8")
+	@RequestMapping(value = "/saveVariant", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String saveVariant(Model model, HttpSession session, @RequestBody String data,
 			@RequestParam String caseId, @RequestParam String variantType,
@@ -1087,7 +1091,7 @@ public class OpenCaseController {
 		}
 	}
 	
-	@RequestMapping(value = "/saveSelectedAnnotationsForVariant", produces= "application/json; charset=utf-8")
+	@RequestMapping(value = "/saveSelectedAnnotationsForVariant", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String saveSelectedAnnotationsForVariant(Model model, HttpSession session, @RequestBody String data,
 			@RequestParam String caseId, @RequestParam String variantType,
@@ -1423,7 +1427,7 @@ public class OpenCaseController {
 
 	}
 	
-	@RequestMapping(value = "/saveCNV", produces= "application/json; charset=utf-8")
+	@RequestMapping(value = "/saveCNV", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String saveCNV(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String data) throws Exception {
@@ -1473,7 +1477,7 @@ public class OpenCaseController {
 
 	}
 	
-	@RequestMapping(value = "/setDefaultTranscript", produces= "application/json; charset=utf-8") 
+	@RequestMapping(value = "/setDefaultTranscript", produces= "application/json; charset=utf-8", method= RequestMethod.POST) 
 	@ResponseBody
 	public String setDefaultTranscript(Model model, HttpSession session, @RequestParam String variantId, @RequestBody String data)
 			throws Exception {
@@ -1486,7 +1490,7 @@ public class OpenCaseController {
 
 	}
 	
-	@RequestMapping(value = "/saveHeaderConfig", produces= "application/json; charset=utf-8") 
+	@RequestMapping(value = "/saveHeaderConfig", produces= "application/json; charset=utf-8", method= RequestMethod.POST) 
 	@ResponseBody
 	public String saveHeaderConfig(Model model, HttpSession session, @RequestBody String data)
 			throws Exception {
@@ -1558,6 +1562,30 @@ public class OpenCaseController {
 			utils.createITD(response,caseId, gene);
 		}
 		return response.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/cancelBreaks", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
+	@ResponseBody
+	public String cancelBreaks(Model model, HttpSession session) throws Exception {
+
+		// send user to Ben's API
+				User user = ControllerUtil.getSessionUser(session);
+				UserPref userPref = user.getUserPref();
+				if (userPref == null) {
+					userPref = new UserPref();
+					modelDAO.saveObject(userPref);
+					user.setUserPref(userPref);
+					modelDAO.saveObject(user);
+					userPref.setIsAllowed(true);
+					userPref.setSuccess(true);
+				}
+				userPref.setShowGoodies(false);
+				modelDAO.saveObject(userPref);
+				AjaxResponse response = new AjaxResponse();
+				response.setIsAllowed(true);
+				response.setSuccess(true);
+				
+				return response.createObjectJSON();
 	}
 	
 }
