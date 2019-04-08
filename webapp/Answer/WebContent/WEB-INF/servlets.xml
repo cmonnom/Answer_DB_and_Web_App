@@ -115,6 +115,7 @@
 		<property name="pdfFinalizedFilesPath" value="${pdf.finalized.location}" />
 		<property name="pdfLogoPath" value="${pdf.logo.location}" />
 		<property name="pdfLinksPath" value="${pdf.link.location}" />
+		<property name="pdfFinalizedFilesBackupPath" value="${pdf.finalized.backup}" />
 		<property name="pdfNGSLogoName" value="${pdf.ngs.logo.name}" />
 		<property name="pdfUTSWLogoName" value="${pdf.utsw.logo.name}" />
 		<property name="pdfDraftWatermarkName" value="${pdf.draft.watermark.name}" />

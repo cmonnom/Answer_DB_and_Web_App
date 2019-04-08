@@ -36,6 +36,8 @@ public class Translocation {
 	
 	AbstractReference referenceTranslocation;
 	
+	String tier;
+	
 	public Translocation() {
 		
 	}

@@ -30,7 +30,7 @@ var tentacleSettings = {
   friction: 0.02,
   gravity: 0.5,
   colour: { h:205, s:0.7, v:0.8 },
-  length: 70,
+  length: 1, //max 50
   pulse: false,
   wind: 0.3
 };

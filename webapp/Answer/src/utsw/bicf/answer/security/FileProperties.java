@@ -29,6 +29,8 @@ public class FileProperties {
 	String pdfDraftWatermarkName;
 	String pdfFinalizedFilesPath;
 	File pdfFinalizedFilesDir;
+	String pdfFinalizedFilesBackupPath;
+	File pdfFinalizedFilesBackupDir;
 	
 	public String getMdaFilesPath() {
 		return mdaFilesPath;
@@ -239,6 +241,24 @@ public class FileProperties {
 	}
 	public void setPdfFinalizedFilesDir(File pdfFinalizedFilesDir) {
 		this.pdfFinalizedFilesDir = pdfFinalizedFilesDir;
+	}
+	public String getPdfFinalizedFilesBackupPath() {
+		return pdfFinalizedFilesBackupPath;
+	}
+	public void setPdfFinalizedFilesBackupPath(String pdfFinalizedFilesBackupPath) {
+		this.pdfFinalizedFilesBackupPath = pdfFinalizedFilesBackupPath;
+	}
+	public File getPdfFinalizedFilesBackupDir() {
+		if (pdfFinalizedFilesBackupPath == null) {
+			return null;
+		}
+		if (pdfFinalizedFilesBackupDir == null) {
+			pdfFinalizedFilesBackupDir = new File(pdfFinalizedFilesBackupPath);
+		}
+		return pdfFinalizedFilesBackupDir;
+	}
+	public void setPdfFinalizedFilesBackupDir(File pdfFinalizedFilesBackupDir) {
+		this.pdfFinalizedFilesBackupDir = pdfFinalizedFilesBackupDir;
 	}
 	
 	

@@ -384,7 +384,7 @@ Vue.component('review-selection', {
                     return true;
                 }
             }
-            return false; pat
+            return false;
         },
         disableBreadCrumbItem(item, index) {
             return (item.disabled || index == this.breadcrumbs.length - 1);

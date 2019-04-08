@@ -20,7 +20,8 @@ Vue.component('goodies2', {
         {
           start: this.createTentacles,
           end: this.clearTentacles,
-          endDelay: 2000
+          endDelay: 2000,
+          duration: 15000 //how long before the animation stops. Default 10sec
         },
         {
           start: this.createBubbles,
@@ -72,9 +73,9 @@ Vue.component('goodies2', {
       var choice = this.choices[index];
       choice.start();
       if (choice.end) {
-        setTimeout(choice.end, 10000);
+        setTimeout(choice.end, choice.duration || 10000);
       }
-      setTimeout(this.endGoodies, 10000 + choice.endDelay);
+      setTimeout(this.endGoodies, (choice.duration || 10000) + choice.endDelay);
     },
     activateGoodiesByIndex(index) {
       var counter = 0; //in case the random function always returns the same number
@@ -82,7 +83,7 @@ Vue.component('goodies2', {
       var choice = this.choices[index];
       choice.start();
       if (choice.end) {
-        setTimeout(choice.end, 10000);
+        setTimeout(choice.end, choice.duration || 10000);
       }
     },
     clearParticules() {
@@ -93,20 +94,19 @@ Vue.component('goodies2', {
       this.opacityTransition = true;
     },
     endGoodies() {
-      this.demo.destroy();
       this.canClick = false;
       this.$emit("end-goodies");
       this.opacityTransition = false;
       this.stopSnowProduction = false;
       this.snowParticles = [];
       this.fireworks = [];
-      this.demo = null;
     },
     createParticules() {
       var particles = [];
       var pool = [];
       this.demo = Sketch.create({
-        container: document.getElementById(this.containerId)
+        container: document.getElementById(this.containerId),
+        autopause: false
       });
       this.demo.setup = () => {
 
@@ -178,31 +178,30 @@ Vue.component('goodies2', {
       var ease = 0.1;
       var modified = false;
       var radius = tentacleSettings.headRadius;
+      tentacleSettings.length = 1; //reset length of tentacles
       var tentacles = [];
       var center = { x: 0, y: 0 };
       // var scale = window.devicePixelRatio || 1;
       this.demo = Sketch.create({
         retina: 'auto',
-        container: document.getElementById(this.containerId)
+        container: document.getElementById(this.containerId),
+        autopause: false
       });
       this.demo.setup = () => {
 
         center.x = this.demo.width / 2;
         center.y = this.demo.height / 2;
 
-        var tentacle;
-
         for (var i = 0; i < 100; i++) {
-
-          tentacle = new Tentacle({
+          var growingTentacle = new Tentacle({
             length: random(10, 20),
             radius: random(0.05, 1.0),
             spacing: random(0.2, 1.0),
             friction: random(0.7, 0.88)
           });
 
-          tentacle.move(center.x, center.y, true);
-          tentacles.push(tentacle);
+          growingTentacle.move(center.x, center.y, true);
+          tentacles.push(growingTentacle);
         }
       };
 
@@ -219,7 +218,7 @@ Vue.component('goodies2', {
           // center.y += (this.demo.mouse.y / scale - center.y) * ease;
           center.x += (this.demo.mouse.x - center.x);
           center.y += (this.demo.mouse.y - center.y);
-          // console.log(this.demo.mouse.x, this.demo.mouse.y, scale, ease, center);
+          // console.log(this.demo.mouse.x, this.demo.mouse.y, center);
         } else {
           t = this.demo.millis;
           cx = this.demo.width * 0.5;
@@ -229,11 +228,12 @@ Vue.component('goodies2', {
         }
         var px, py, theta, tentacle;
         var step = 2 * Math.PI / tentacleSettings.tentacles;
-        for (var i = 0, n = tentacleSettings.tentacles; i < n; i++) {
+        for (var i = 0, n = tentacles.length; i < n; i++) {
           tentacle = tentacles[i];
           theta = i * step;
           px = cos(theta) * radius;
           py = sin(theta) * radius;
+          tentacleSettings.length = Math.min(tentacleSettings.length * 1.0001, 50); //to grow the tententacles length
           tentacle.move(center.x + px, center.y + py);
           tentacle.update();
         }
@@ -255,7 +255,7 @@ Vue.component('goodies2', {
 
         this.demo.globalAlpha = 1.0;
 
-        for (var i = 0, n = tentacleSettings.tentacles; i < n; i++) {
+        for (var i = 0, n = tentacles.length; i < n; i++) {
           tentacles[i].draw(this.demo);
         }
 
@@ -270,7 +270,8 @@ Vue.component('goodies2', {
       var Particle, particleCount, particles, sketch, z;
 
       sketch = Sketch.create({
-        container: document.getElementById(this.containerId)
+        container: document.getElementById(this.containerId),
+        autopause: false
       }
       );
       this.demo = sketch;
@@ -385,7 +386,8 @@ Vue.component('goodies2', {
     },
     createSnowParticles() {
       this.demo = Sketch.create({
-        container: document.getElementById(this.containerId)
+        container: document.getElementById(this.containerId),
+        autopause: false
       });
 
       this.demo.update = () => {
@@ -433,7 +435,8 @@ Vue.component('goodies2', {
       this.canClick = true;
       this.demo = Sketch.create({
         container: document.getElementById(this.containerId),
-        retina: 'auto'
+        retina: 'auto',
+        autopause: false
       });
 
       this.demo.update = () => {
@@ -485,7 +488,8 @@ Vue.component('goodies2', {
       this.canClick = true;
       this.demo = Sketch.create({
           container: document.getElementById(this.containerId),
-          retina: 'auto'
+          retina: 'auto',
+          autopause: false
       });
   
       this.demo.update = () => {

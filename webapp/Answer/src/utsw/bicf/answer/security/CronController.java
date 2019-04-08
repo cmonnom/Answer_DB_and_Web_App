@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,14 +23,18 @@ public class CronController {
 	FileProperties fileProps;
 	
 
-	@Scheduled(cron = "*/10 * * * * *") //run every 10min, every day
+	@Scheduled(fixedDelay = 600000) //run every 10min after the last task ended (10 * 60 * 1000 milliseconds)
 	public void cleanBamPdfLinks() {
+//		System.out.println("cron started :" + LocalDateTime.now().toLocalTime());
 		File linkDir = fileProps.getBamLinksDir();
 		deleteLinks(linkDir);
 		linkDir = fileProps.getPdfLinksDir();
 		deleteLinks(linkDir);
-		linkDir = fileProps.getPdfFilesDir();
-		deleteLinks(linkDir);
+		File fileDir = fileProps.getPdfFilesDir();
+		deleteLinks(fileDir);
+		File finalizedPDFDir = fileProps.getPdfFinalizedFilesDir();
+		File finalizedPDFBackupDir = fileProps.getPdfFinalizedFilesBackupDir();
+		copyToBackup(finalizedPDFDir, finalizedPDFBackupDir);
 	}
 	
 	private void deleteLinks(File linkDir) {
@@ -49,6 +54,25 @@ public class CronController {
 				e.printStackTrace();
 			} finally {
 				stream.close();
+			}
+		}
+	}
+	
+	private void copyToBackup(File finalizedPDFDir, File finalizedPDFBackupDir) {
+		if (finalizedPDFDir != null && finalizedPDFDir.exists()
+				&& finalizedPDFBackupDir != null && finalizedPDFBackupDir.exists()) {
+			File[] pdfFiles = finalizedPDFDir.listFiles();
+			for (File pdfFile : pdfFiles) {
+				//check if destination file already exists
+				File backupFile = new File(finalizedPDFBackupDir, pdfFile.getName());
+				if (!backupFile.exists()) {
+					//backup the pdf
+					try {
+						FileUtils.copyFile(pdfFile, backupFile);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
 			}
 		}
 	}

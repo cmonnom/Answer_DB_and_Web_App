@@ -42,6 +42,8 @@ public class CNV {
 	
 	AnnotationRow mdaAnnotation;
 	
+	String tier;
+	
 	public CNV() {
 		
 	}
@@ -254,6 +256,16 @@ public class CNV {
 
 	public void setMdaAnnotated(Boolean mdaAnnotated) {
 		this.mdaAnnotated = mdaAnnotated;
+	}
+
+
+	public String getTier() {
+		return tier;
+	}
+
+
+	public void setTier(String tier) {
+		this.tier = tier;
 	}
 
 

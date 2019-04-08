@@ -1,7 +1,7 @@
 .. _homepage:
 
-|homeIcon| Home / Worklists
-===========================
+|homeIcon| Home / Worklist
+"""""""""""""""""""""""""""
 
 The homepage lists all available cases divided in 3 categories:
 

@@ -19,6 +19,7 @@ tr:nth-child(even) {background-color: #fafafa}
 
 .dense-tiles .list__tile {
     height: fit-content;
+    height: -moz-fit-content;
 }
 
 a {

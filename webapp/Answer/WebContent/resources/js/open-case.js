@@ -5,14 +5,14 @@ const OpenCase = {
     },
     template: `<div>
     <!-- goodies panel dialog -->
-    <v-dialog v-model="showGoodiesPanel" content-class="no-transition" full-width hide-overlay fullscreen>
+    <v-dialog v-model="showGoodiesPanel"  full-width hide-overlay fullscreen transition="fade-transition">
     <v-layout row wrap fill-height text-xs-center>
     <v-flex xs12>
-    <goodies2 ref="goodiesPanel" @end-goodies="showGoodiesPanel = false"></goodies2>
+    <goodies2 ref="goodiesPanel" @end-goodies="endGoodies()"></goodies2>
     </v-flex>
     <v-flex xs12 >
     <span class="display-1">Enjoy a quick break...</span><br/>
-    <v-btn large color="warning" @click="showGoodiesPanel = false">Back to work</v-btn>
+    <v-btn large color="warning" @click="endGoodies()">Back to work</v-btn>
     <v-tooltip bottom>
     <v-btn slot="activator" large color="error" @click="cancelBreaks()">No more breaks</v-btn>
     <span>Go to Preferences to reset breaks</span>
@@ -1927,6 +1927,8 @@ const OpenCase = {
 
                         this.updateSplashProgress();
 
+                        this.tryGoodies();
+
                     } else {
                         this.loadingVariantDetails = false;
                         this.loadingVariant = false;
@@ -2008,6 +2010,13 @@ const OpenCase = {
                                     label: "End", value: this.currentVariant.endFormatted
                                 },
                                 {
+                                    label: "Reported Tier",
+                                    type: "select",
+                                    fieldName: "tier",
+                                    tooltip: "Select a Tier",
+                                    items: this.variantTiers
+                                },
+                                {
                                     label: "Aberration Type",
                                     type: "select",
                                     fieldName: "aberrationType",
@@ -2059,6 +2068,7 @@ const OpenCase = {
                         this.handleEditAnnotationOpening();
                         // this.$refs.variantDetailsPanel.updateCNVPlot();
                         this.updateSplashProgress();
+                        this.tryGoodies();
                     } else {
                         this.loadingVariantDetails = false;
                         this.loadingVariant = false;
@@ -2218,6 +2228,13 @@ const OpenCase = {
                         var infoTable3 = {
                             name: "infoTable3",
                             items: [
+                                {
+                                    label: "Reported Tier",
+                                    type: "select",
+                                    fieldName: "tier",
+                                    tooltip: "Select a Tier",
+                                    items: this.variantTiers
+                                },
                             {
                                 label: "RNA Reads", value: this.currentVariant.rnaReads ? this.currentVariant.rnaReads + "" : ""
                             },
@@ -2254,6 +2271,7 @@ const OpenCase = {
                         this.handleEditAnnotationOpening();
 
                         this.updateSplashProgress();
+                        this.tryGoodies();
                     } else {
                         this.loadingVariantDetails = false;
                         this.loadingVariant = false;
@@ -2730,15 +2748,11 @@ const OpenCase = {
                         }
                         this.$nextTick(() => {
                             this.cancelAnnotations();
-                            this.snackBarVisible = true;
-                            if (this.waitingForGoodies) {
-                                this.waitingForGoodies = false;
-                                this.snackBarTimeout = 4000;
-                                setTimeout(() => {
-                                    this.showGoodiesPanel = true;
-                                    this.$refs.goodiesPanel.activateGoodies();
-                                }, this.snackBarTimeout); //4sec might help with having the proper top/left calculated
-                            }
+                            this.snackBarTimeout = 4000;
+                            setTimeout(() => {
+                                this.snackBarVisible = true;
+                            }, 2000);
+                            
                         });
 
                         //keep track of the selected variants and refresh
@@ -2771,11 +2785,13 @@ const OpenCase = {
                                 this.updateSelectedVariantTable();
                             });
                         }
+                        //TESTING THIS: don't update the table because the only change that
+                        //might matters is the annotated flag which is becoming less important as more and more variants have a flag
                         //refresh but wait a bit otherwise the processing
                         //of all the data makes the UI not responsive
-                        setTimeout(() => {
-                            this.getAjaxData();
-                        }, 3000);
+                        // setTimeout(() => {
+                        //     this.getAjaxData();
+                        // }, 3000);
                     } else {
                         this.handleDialogs(response.data, this.commitAnnotations.bind(null, userAnnotations));
                         this.$refs.annotationDialog.saving = false; 
@@ -3929,6 +3945,19 @@ const OpenCase = {
             }).catch(error => {
                 this.handleAxiosError(error);
             });
+        },
+        endGoodies() {
+            this.showGoodiesPanel = false;
+            if (this.$refs.goodiesPanel.demo) {
+                this.$refs.goodiesPanel.demo.destroy();
+            }
+        },
+        tryGoodies() {
+            if (this.waitingForGoodies) {
+                this.waitingForGoodies = false;
+                this.showGoodiesPanel = true;
+                this.$refs.goodiesPanel.activateGoodies();
+            }
         }
         
     },

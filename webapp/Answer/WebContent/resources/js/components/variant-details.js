@@ -160,13 +160,14 @@ Vue.component('variant-details', {
                                           </v-data-table>
                                           <v-layout v-if="item.type == 'select'" class="full-width">
                                           <v-flex class="selectable pt-2 pl-0">{{ item.label }}:</v-flex>
-                                          <v-flex class="max300 xs3" >
+                                          <v-flex class="max300 xs4" >
                                             <v-tooltip right>
                                             <v-select slot="activator" clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
                                                 :label="item.tooltip" single-line hide-details
                                                 class="no-height-select" @input="variantDetailsChanged"
                                                 :disabled="noEdit"></v-select>
-                                                <span v-html="item.helpMessage"></span>
+                                                <span v-if="item.helpMessage" v-html="item.helpMessage"></span>
+                                                <span v-else="item.tooltip" v-html="item.tooltip"></span>
                                             </v-tooltip>
                                           </v-flex>
                                           </v-layout>

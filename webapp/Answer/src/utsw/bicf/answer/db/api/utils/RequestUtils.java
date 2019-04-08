@@ -490,6 +490,10 @@ public class RequestUtils {
 			oid = ((CNV) variant).getMongoDBId().getOid();
 			sbUrl.append("cnv/");
 		}
+		if (variantType.equals("translocation")) {
+			oid = ((Translocation) variant).getMongoDBId().getOid();
+			sbUrl.append("translocation/");
+		}
 		else {
 			ajaxResponse.setSuccess(false);
 		}

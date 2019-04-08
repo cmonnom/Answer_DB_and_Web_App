@@ -508,11 +508,14 @@ public class ReportBuilder {
 	}
 	
 	/**
+	 * Not a Therapy card
+	 * or therapy card with tier 
 	 * @param a
 	 * @return
 	 */
 	private boolean annotationGoesInClinicalSignificanceTable(Annotation a) {
-		return !isStringEqual(a.getCategory(), CAT_THERAPY)
+		return (!isStringEqual(a.getCategory(), CAT_THERAPY) 
+				|| (a.getTier() != null && !THERAPY_TIERS.contains(a.getTier())))
 				&& !isStringEqual(a.getCategory(), CAT_CLINICAL_TRIAL);
 	}
 
