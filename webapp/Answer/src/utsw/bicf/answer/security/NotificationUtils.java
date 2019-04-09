@@ -63,7 +63,7 @@ public class NotificationUtils {
 		else {
 			fullMessage.append("/resources/");
 		}
-		fullMessage.append("images/answer-logo-small-beta.png'")
+		fullMessage.append("images/answer-logo-small.png'")
 				.append(" width='150px' />")
 //				.append("<p>Dr. ").append(toName).append(",</p><br/>")
 //				.append("<b>")
@@ -80,6 +80,29 @@ public class NotificationUtils {
 				.append("'>")
 				.append(link)
 				.append("</a><br/><br/>")
+				.append(emailProps.getSignature())
+				.append("</body></html>");
+		return fullMessage.toString();
+	}
+	
+	public static String buildStandardSelfNotificationMessage(String message, EmailProperties emailProps) {
+		StringBuilder fullMessage = new StringBuilder()
+				.append("<html>")
+				.append(NotificationUtils.HEAD)
+				.append("<body>")
+				.append("<img src='")
+				.append(emailProps.getRootUrl());
+		if (emailProps.getRootUrl().endsWith("/")) {
+			fullMessage.append("resources/"); //to make sure there is no double //
+		}
+		else {
+			fullMessage.append("/resources/");
+		}
+		fullMessage.append("images/answer-logo-small.png'")
+				.append(" width='150px' />")
+				.append("<br/><br/>")
+				.append(message)
+				.append("<br/><br/>")
 				.append(emailProps.getSignature())
 				.append("</body></html>");
 		return fullMessage.toString();

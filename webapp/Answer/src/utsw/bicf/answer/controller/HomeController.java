@@ -164,7 +164,8 @@ public class HomeController {
 	@ResponseBody
 	public String assignToUser(Model model, HttpSession session, HttpServletRequest request,
 			@RequestParam String userIdsParam,
-			@RequestParam String caseId)
+			@RequestParam String caseId,
+			@RequestParam(defaultValue="false") Boolean receiveACopyOfEmail)
 			throws Exception {
 		
 		RequestUtils utils = new RequestUtils(modelDAO);
@@ -217,6 +218,23 @@ public class HomeController {
 				String subject = "You have a new notification regarding case: " + caseId;
 				this.sendEmail(caseId, subject, aUser, currentUser, servelt, reason, true);
 			}
+		}
+		
+		if (receiveACopyOfEmail) {
+			String subject = "Confirmation of Case " + caseId + " Assigned";
+			StringBuilder reason = new StringBuilder("You have assigned cases to: ");
+			String assignedTo = null;
+			if (realUsers != null && !realUsers.isEmpty()) {
+				assignedTo = realUsers.stream().map(u -> u.getFullName()).collect(Collectors.joining(", "));
+			}
+			else {
+				assignedTo = "nobody";
+			}
+			reason.append(assignedTo).append(".");
+			String toEmail = currentUser.getEmail();
+			String message = NotificationUtils.buildStandardSelfNotificationMessage(reason.toString(), emailProps);
+			boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), toEmail, subject, message);
+			System.out.println("An email was sent. Success:" + success);
 		}
 		
 		return response.createObjectJSON();

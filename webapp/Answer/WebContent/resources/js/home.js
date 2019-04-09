@@ -30,6 +30,7 @@ const Home = {
         <v-btn color="error" @click="cancelAssign()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
+        <v-checkbox v-model="receiveACopyOfEmail" label="Also send a notification to my email" hide-details></v-checkbox>
         
       </v-card-actions>
     </v-card>
@@ -220,6 +221,7 @@ const Home = {
             snackBarMessage: "",
             signoutDialogVisible: false,
             snackBarTimeout: 0,
+            receiveACopyOfEmail: false
         }
     },
     methods: {
@@ -308,7 +310,8 @@ const Home = {
             axios.get("./assignToUser", {
                 params: {
                     caseId: this.currentCaseId,
-                    userIdsParam: userIds.join(",")
+                    userIdsParam: userIds.join(","),
+                    receiveACopyOfEmail: this.receiveACopyOfEmail
                 }
             })
                 .then(response => {

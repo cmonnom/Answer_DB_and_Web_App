@@ -56,7 +56,7 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 		Header dateReceived = new Header(new String[] {"Date", "Received"}, "dateReceived");
 		dateReceived.setIsSafe(true);
 		headers.add(dateReceived);
-		Header actions = new Header("Open", "actions");
+		Header actions = new Header("Actions", "actions");
 		actions.setButtons(true);
 		actions.setIsSafe(true);
 		actions.setAlign("left");
