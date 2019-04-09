@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.AllOrderCasesSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseAllSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseArchivedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseFinalizedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseForUserSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
@@ -38,6 +39,7 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.OrderCaseAll;
+import utsw.bicf.answer.model.hybrid.OrderCaseArchived;
 import utsw.bicf.answer.model.hybrid.OrderCaseFinalized;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
@@ -111,6 +113,7 @@ public class HomeController {
 			
 			List<OrderCaseAll> casesAll = 
 					caseList.stream()
+					.filter(c -> c.getActive() != null && c.getActive())
 					.map(c -> new OrderCaseAll(modelDAO, c, users, user))
 					.collect(Collectors.toList());
 			List<OrderCaseFinalized> casesFinalized = 
@@ -119,14 +122,21 @@ public class HomeController {
 							&& c.getActive() != null && c.getActive())
 					.map(c -> new OrderCaseFinalized(modelDAO, c, users, user))
 					.collect(Collectors.toList());
+			List<OrderCaseArchived> casesArchived = 
+					caseList.stream()
+					.filter(c -> !c.getActive())
+					.map(c -> new OrderCaseArchived(modelDAO, c, users, user))
+					.collect(Collectors.toList());
 			List<HeaderOrder> headerOrdersAll = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "All Cases");
 			OrderCaseAllSummary allSummary = new OrderCaseAllSummary(casesAll, user, headerOrdersAll);
 			List<HeaderOrder> headerOrdersUser = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "My Cases");
 			OrderCaseForUserSummary forUserSummary = new OrderCaseForUserSummary(casesForUser, headerOrdersUser);
 			List<HeaderOrder> headerOrdersFinalized = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Cases Finalized");
 			OrderCaseFinalizedSummary finalizedSummary = new OrderCaseFinalizedSummary(casesFinalized, user, headerOrdersFinalized);
+			List<HeaderOrder> headerOrdersArchived = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Cases Archived");
+			OrderCaseArchivedSummary archivedSummary = new OrderCaseArchivedSummary(casesArchived, user, headerOrdersArchived);
 			
-			AllOrderCasesSummary summary = new AllOrderCasesSummary(allSummary, forUserSummary, finalizedSummary);
+			AllOrderCasesSummary summary = new AllOrderCasesSummary(allSummary, forUserSummary, finalizedSummary, archivedSummary);
 			summary.setSuccess(true);
 			return summary.createVuetifyObjectJSON();
 		}

@@ -2482,6 +2482,7 @@ const OpenCase = {
                     modifiedDate: "",
                     modifiedSince: "",
                     cnvGenes: "",
+                    pmids: [],
                     tier: "",
                     classification: "",
                     visible: true,
@@ -2507,6 +2508,7 @@ const OpenCase = {
                 annotation.createdSince = annotations[i].createdSince;
                 annotation.modifiedDate = annotations[i].modifiedDate;
                 annotation.modifiedSince = annotations[i].modifiedSince;
+                annotation.pmids = annotations[i].pmids;
                 annotation.scopeTooltip = this.$refs.cnvAnnotationDialog.createLevelInformation(annotations[i]);
                 annotation.tier = annotations[i].tier;
                 annotation.classification = annotations[i].classification;
@@ -2535,6 +2537,7 @@ const OpenCase = {
                     modifiedDate: "",
                     modifiedSince: "",
                     tier: "",
+                    pmids: [],
                     classification: "",
                     visible: true,
                     isSelected: false,
@@ -2562,6 +2565,7 @@ const OpenCase = {
                 annotation.modifiedDate = annotations[i].modifiedDate;
                 annotation.modifiedSince = annotations[i].modifiedSince;
                 annotation.tier = annotations[i].tier;
+                annotation.pmids = annotations[i].pmids;
                 annotation.classification = annotations[i].classification;
                 annotation.isSelected = annotations[i].isSelected;
                 annotation.leftGene = annotations[i].leftGene;

@@ -15,12 +15,14 @@ public class AllOrderCasesSummary {
 	OrderCaseFinalizedSummary casesFinalized;
 	Boolean isAllowed = true;
 	Boolean success = false;
+	OrderCaseArchivedSummary casesArchived;
 	
-	public AllOrderCasesSummary(OrderCaseAllSummary allSummary, OrderCaseForUserSummary forUserSummary, OrderCaseFinalizedSummary finalizedSummary) {
+	public AllOrderCasesSummary(OrderCaseAllSummary allSummary, OrderCaseForUserSummary forUserSummary, OrderCaseFinalizedSummary finalizedSummary, OrderCaseArchivedSummary archivedSummary) {
 		super();
 		this.casesAll = allSummary;
 		this.casesForUser = forUserSummary;
 		this.casesFinalized = finalizedSummary;
+		this.casesArchived = archivedSummary;
 	}
 
 
@@ -72,6 +74,16 @@ public class AllOrderCasesSummary {
 
 	public void setCasesFinalized(OrderCaseFinalizedSummary casesFinalized) {
 		this.casesFinalized = casesFinalized;
+	}
+
+
+	public OrderCaseArchivedSummary getCasesArchived() {
+		return casesArchived;
+	}
+
+
+	public void setCasesArchived(OrderCaseArchivedSummary casesArchived) {
+		this.casesArchived = casesArchived;
 	}
 	
 

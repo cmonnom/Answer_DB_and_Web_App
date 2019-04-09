@@ -43,9 +43,13 @@ public class OrderCaseForUser {
 				buttons.add(new Button("assignment", "open-report-read-only", "Open Report in View Only Mode", "info"));
 			}
 		}
-		if (orderCase.getActive() != null && orderCase.getActive()
-				&& CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
-			buttons.add(new Button("mdi-logout", "deactivate-case", "Archive the case / Final Sign Out", "info"));
+		if (orderCase.getActive() != null && orderCase.getActive()) {
+			if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
+				buttons.add(new Button("mdi-logout", "deactivate-case", "Archive the case / Final Sign Out", "info"));
+			}
+			else {
+				buttons.add(new Button("mdi-archive", "deactivate-case", "Archive the case (no sign out)", "info"));
+			}
 		}
 		
 		List<VuetifyIcon> typeIcons = new ArrayList<VuetifyIcon>();

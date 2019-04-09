@@ -67,12 +67,12 @@ const Home = {
   <v-dialog v-model="signoutDialogVisible" max-width="500px" scrollable>
     <v-card>
       <v-toolbar dense dark color="primary">
-        <v-toolbar-title class="white--text">Archive case {{ currentEpicOrderNumber }} ({{currentPatientName}})?</v-toolbar-title>
+        <v-toolbar-title class="white--text">Archive case {{ currentEpicOrderNumber }} ({{ currentPatientName }})?</v-toolbar-title>
       </v-toolbar>
       <v-card-text class="pb-3 pt-3 pr-3 pl-3">
         You are about to archive this case. Which means all work on this case is done.<br/>
         It will be removed from <b>My Cases</b> for all users assigned to the case.<br/>
-        It will still be accessible in <b>All Cases</b> but greyed out.
+        It will still be accessible in <b>Archived Cases</b> but greyed out.
       </v-card-text>
       <v-card-actions>
       <v-tooltip bottom>
@@ -96,13 +96,35 @@ const Home = {
           <v-icon>more_vert</v-icon>
         </v-btn>
         <v-list>
-          <v-list-tile @click="toggleTable('forUser')">
+          <v-list-tile avatar @click="toggleTable('forUser')">
+          <v-list-tile-avatar>
+          <v-icon>mdi-account</v-icon>
+        </v-list-tile-avatar>
           <v-list-tile-title>Show/Hide My Cases</v-list-tile-title>
         </v-list-tile>
-          <v-list-tile @click="toggleTable('all')">
+
+          <v-list-tile avatar @click="toggleTable('all')">
+          <v-list-tile-avatar>
+          <v-icon>mdi-table-search</v-icon>
+        </v-list-tile-avatar>
             <v-list-tile-title>Show/Hide All Cases Table</v-list-tile-title>
           </v-list-tile>
+
+          <v-list-tile avatar @click="toggleTable('finalized')">
+          <v-list-tile-avatar>
+          <v-icon>mdi-check-all</v-icon>
+        </v-list-tile-avatar>
+          <v-list-tile-title>Show/Hide Finalized Cases</v-list-tile-title>
+        </v-list-tile>
+
+        <v-list-tile avatar @click="toggleTable('archived')">
+        <v-list-tile-avatar>
+        <v-icon>mdi-archive</v-icon>
+      </v-list-tile-avatar>
+        <v-list-tile-title>Show/Hide Archived Cases</v-list-tile-title>
+      </v-list-tile>
       </v-list>
+
     </v-menu>
     <span>Worklist Menu</span>
   </v-tooltip>
@@ -113,7 +135,7 @@ const Home = {
 
     <v-tooltip bottom>
       <v-btn icon @click="toggleTable('forUser')" slot="activator">
-        <v-icon :color="caseForUserTableVisible ? 'amber accent-2' : ''">mdi-table-search</v-icon>
+        <v-icon :color="caseForUserTableVisible ? 'amber accent-2' : ''">mdi-account</v-icon>
       </v-btn>
       <span>Show/Hide My Cases</span>
     </v-tooltip>
@@ -125,13 +147,27 @@ const Home = {
       <span>Show/Hide All Cases Table</span>
     </v-tooltip>
 
+    <v-tooltip bottom>
+    <v-btn icon @click="toggleTable('finalized')" slot="activator">
+      <v-icon :color="caseFinalizedTableVisible ? 'amber accent-2' : ''">mdi-check-all</v-icon>
+    </v-btn>
+    <span>Show/Hide Finalized Cases</span>
+  </v-tooltip>
+
+  <v-tooltip bottom>
+  <v-btn icon @click="toggleTable('archived')" slot="activator">
+    <v-icon :color="caseArchivedTableVisible ? 'amber accent-2' : ''">mdi-archive</v-icon>
+  </v-btn>
+  <span>Show/Hide Archived Cases</span>
+</v-tooltip>
+
   </v-toolbar>
   <v-container grid-list-md fluid class="pl-0 pr-0">
     <v-layout row wrap>
       <v-slide-x-transition>
         <v-flex xs12 v-show="caseForUserTableVisible" >
           <data-table ref="casesForUserTable" :fixed="false" :fetch-on-created="false" table-title="My Cases" :initial-sort="'epicOrderDate'"
-            no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search">
+            no-data-text="No Data" :show-pagination="true" title-icon="mdi-account">
           </data-table>
         </v-flex>
       </v-slide-x-transition>
@@ -147,10 +183,18 @@ const Home = {
       <v-slide-x-transition>
       <v-flex xs12 v-show="caseFinalizedTableVisible" >
         <data-table ref="casesFinalizedTable" :fixed="false" :fetch-on-created="false" table-title="Cases Finalized" :initial-sort="'epicOrderDate'"
-          no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search">
+          no-data-text="No Data" :show-pagination="true" title-icon="mdi-check-all">
         </data-table>
       </v-flex>
     </v-slide-x-transition>
+
+    <v-slide-x-transition>
+    <v-flex xs12 v-show="caseArchivedTableVisible" >
+      <data-table ref="casesArchivedTable" :fixed="false" :fetch-on-created="false" table-title="Cases Archived" :initial-sort="'epicOrderDate'"
+        no-data-text="No Data" :show-pagination="true" title-icon="mdi-archive">
+      </data-table>
+    </v-flex>
+  </v-slide-x-transition>
 
     </v-layout>
   </v-container>
@@ -169,12 +213,13 @@ const Home = {
             caseForUserTableVisible: true,
             caseAllTableVisible: true,
             caseFinalizedTableVisible: true,
+            caseArchivedTableVisible: false,
             tableFlex: 'xs4',
             creatingReport: false,
             snackBarVisible: false,
             snackBarMessage: "",
             signoutDialogVisible: false,
-            snackBarTimeout: 0
+            snackBarTimeout: 0,
         }
     },
     methods: {
@@ -199,6 +244,7 @@ const Home = {
                         this.$refs.casesAllTable.manualDataFiltered(response.data.casesAll);
                         this.$refs.casesForUserTable.manualDataFiltered(response.data.casesForUser);
                         this.$refs.casesFinalizedTable.manualDataFiltered(response.data.casesFinalized);
+                        this.$refs.casesArchivedTable.manualDataFiltered(response.data.casesArchived);
                     }
                     else {
                         this.handleDialogs(response.data, this.getWorklists);
@@ -362,6 +408,14 @@ const Home = {
                 this.caseForUserTableVisible = !this.caseForUserTableVisible;
                 restoring = this.caseForUserTableVisible;
             }
+            else if (tableName == 'finalized') {
+                this.caseFinalizedTableVisible = !this.caseFinalizedTableVisible;
+                restoring = this.caseForUserTableVisible;
+            }
+            else if (tableName == 'archived') {
+                this.caseArchivedTableVisible = !this.caseArchivedTableVisible;
+                restoring = this.caseForUserTableVisible;
+            }
             // else {
             //     this.caseAssignedTableVisible = !this.caseAssignedTableVisible;
             //     restoring = this.caseAssignedTableVisible;
@@ -493,6 +547,8 @@ const Home = {
         });
         bus.$on('deactivate-case', (item) => {
             this.currentCaseId = item.caseId;
+            this.currentEpicOrderNumber = item.epicOrderNumber;
+            this.currentPatientName = item.patientName;
             this.signoutDialogVisible = true;
         });
         //TODO
