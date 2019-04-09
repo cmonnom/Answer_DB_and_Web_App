@@ -223,14 +223,13 @@ public class HomeController {
 		if (receiveACopyOfEmail) {
 			String subject = "Confirmation of Case " + caseId + " Assigned";
 			StringBuilder reason = new StringBuilder("You have assigned cases to: ");
-			String assignedTo = null;
 			if (realUsers != null && !realUsers.isEmpty()) {
-				assignedTo = realUsers.stream().map(u -> u.getFullName()).collect(Collectors.joining(", "));
+				reason.append(realUsers.stream().map(u -> u.getFullName()).collect(Collectors.joining(", ")));
+				reason.append(". An email was sent to the people listed.");
 			}
 			else {
-				assignedTo = "nobody";
+				reason.append("nobody.");
 			}
-			reason.append(assignedTo).append(".");
 			String toEmail = currentUser.getEmail();
 			String message = NotificationUtils.buildStandardSelfNotificationMessage(reason.toString(), emailProps);
 			boolean success = NotificationUtils.sendEmail(emailProps.getFrom(), toEmail, subject, message);
@@ -260,7 +259,6 @@ public class HomeController {
 		
 		RequestUtils utils = new RequestUtils(modelDAO);
 		
-		OrderCase orderCase = utils.getCaseSummary(caseId);
 		User currentUser = ControllerUtil.getSessionUser(session);
 		if (currentUser.getIndividualPermission().getAdmin() == null ||
 				!currentUser.getIndividualPermission().getAdmin()) {
