@@ -12,7 +12,6 @@ public class FileProperties {
 	File bamLinksDir;
 	String bamFilesPath;
 	File bamFilesDir;
-	Boolean productionEnv;
 	String genePanelSearchUrl;
 	String pdfFontPath;
 	File pdfFontFile;
@@ -103,12 +102,6 @@ public class FileProperties {
 	}
 	public void setBamFilesDir(File bamFilesDir) {
 		this.bamFilesDir = bamFilesDir;
-	}
-	public Boolean getProductionEnv() {
-		return productionEnv;
-	}
-	public void setProductionEnv(Boolean productionEnv) {
-		this.productionEnv = productionEnv;
 	}
 	public String getGenePanelSearchUrl() {
 		return genePanelSearchUrl;

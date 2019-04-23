@@ -64,9 +64,6 @@
 		<property name="url" value="${ldap.url}" />
 	</bean>
 	
-	<bean id="localAuthentication" class="utsw.bicf.answer.security.LocalAuthentication">
-	</bean>
-	
 	<bean id="clarityAPIAuthentication" class="utsw.bicf.answer.security.ClarityAPIAuthentication">
 		<property name="username" value="${clarity.api.username}" />
 		<property name="password" value="${clarity.api.password}" />
@@ -109,7 +106,6 @@
 		<property name="bamFilesPath" value="${bam.file.location}" />
 		<property name="pdfFontPath" value="${pdf.font.location}" />
 		<property name="pdfFontBoldPath" value="${pdf.font.bold.location}" />
-		<property name="productionEnv" value="${production.env}" />
 		<property name="genePanelSearchUrl" value="${gene.panel.search.url}" />
 		<property name="pdfFilesPath" value="${pdf.temp.location}" />
 		<property name="pdfFinalizedFilesPath" value="${pdf.finalized.location}" />
@@ -130,10 +126,13 @@
 	</bean>
 	
 		<bean id="otherProps" class="utsw.bicf.answer.security.OtherProperties">
+		<property name="productionEnv" value="${production.env}" />
 		<property name="proxyHostname" value="${proxy.hostname}" />
 		<property name="proxyPort" value="${proxy.port}" />
 		<property name="oncoKBGeniePortalUrl" value="${oncokb.url}" />
 		<property name="authenticateWith" value="${auth.type}" />
+		<property name="authMessage" value="${auth.message}" />
+		<property name="authUrl" value="${auth.url}" />
 	</bean>
 	
 	<bean id="ncbiProps" class="utsw.bicf.answer.security.NCBIProperties">
@@ -142,8 +141,7 @@
 		<property name="esummary" value="${ncbi.pubmed.esummary.servlet}" />
 		<property name="queryKey" value="${ncbi.pubmed.esummary.querykey}" />
 		<property name="webEnv" value="${ncbi.pubmed.esummary.webenv}" />
-		<property name="email" value="${ncbi.api.email}" />
-		<property name="tool" value="${ncbi.api.tool}" />
+		<property name="apiKey" value="${ncbi.api.key}" />
 	</bean>
 	
 	<!-- Setup Hibernate transaction manager -->

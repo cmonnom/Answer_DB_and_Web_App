@@ -77,8 +77,9 @@ public class ControllerUtil {
 		return template;
 	}
 	
-	public static String initializeModelLogin(Model model, ServletContext servletContext, Method method) throws IOException {
+	public static String initializeModelLogin(Model model, ServletContext servletContext, Method method, OtherProperties otherProps) throws IOException {
 		model.addAttribute("isLogin", true);
+		model.addAttribute("authMessage", otherProps.getAuthMessage());
 		return initializeModel(model, servletContext, null, null);
 //		initJSFiles(model, servletContext);
 //		return "login";
@@ -158,8 +159,9 @@ public class ControllerUtil {
 	 * not called because the page loaded is "home" or "openReport"
 	 */
 	public static void setGlobalVariables(Model model, FileProperties fileProps, OtherProperties otherProps) {
-		model.addAttribute("isProduction", fileProps.getProductionEnv());
+		model.addAttribute("isProduction", otherProps.getProductionEnv());
 		model.addAttribute("oncoKBGeniePortalUrl", otherProps.getOncoKBGeniePortalUrl());
+		model.addAttribute("authMessage", otherProps.getAuthMessage());
 	}
 	
 	/**

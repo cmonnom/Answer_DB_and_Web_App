@@ -2501,8 +2501,10 @@ const OpenCase = {
                 annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
                 "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.chrom : ''),
                     "Diagnosis"];
-                annotation.category = annotations[i].category;
-                annotation.category = annotations[i].breadth;
+                var categoryLabel = annotations[i].category ? annotations[i].category : "";
+                var categoryLabel = categoryLabel + (annotations[i].breadth ? " " + annotations[i].breadth : "");
+                annotation.category = categoryLabel;
+                annotation.breadth = annotations[i].breadth;
                 annotation.cnvGenes = annotations[i].cnvGenes ? annotations[i].cnvGenes.join(" ") : "";
                 annotation.createdDate = annotations[i].createdDate;
                 annotation.createdSince = annotations[i].createdSince;

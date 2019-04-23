@@ -315,6 +315,9 @@ public class Annotation {
 		if (needWarningLevel && modifiedUTCDatetime.plusMonths(6).isBefore(OffsetDateTime.now())) {
 			a.warningLevel = 2;
 		}
+		else {
+			a.warningLevel = 0;
+		}
 //		//for testing only.
 //		if (needWarningLevel && modifiedUTCDatetime.plusDays(20).isBefore(OffsetDateTime.now())) {
 //			a.warningLevel = 2;

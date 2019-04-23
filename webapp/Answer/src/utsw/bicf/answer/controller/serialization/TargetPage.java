@@ -21,6 +21,7 @@ public class TargetPage {
 	Boolean isAjax;
 	Boolean isXss;
 	Boolean isLogin;
+	Object payload;
 	
 	public TargetPage(Boolean success, String reason, String urlRedirect, Boolean isAjax) {
 		super();
@@ -93,6 +94,14 @@ public class TargetPage {
 
 	public void setIsLogin(Boolean isLogin) {
 		this.isLogin = isLogin;
+	}
+
+	public Object getPayload() {
+		return payload;
+	}
+
+	public void setPayload(Object payload) {
+		this.payload = payload;
 	}
 	
 

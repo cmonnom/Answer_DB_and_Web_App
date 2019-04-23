@@ -15,12 +15,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
+import utsw.bicf.answer.dao.ModelDAO;
+
 @Controller
 @EnableScheduling
 public class CronController {
 
 	@Autowired
 	FileProperties fileProps;
+	@Autowired
+	ModelDAO modelDAO;
 	
 
 	@Scheduled(fixedDelay = 600000) //run every 10min after the last task ended (10 * 60 * 1000 milliseconds)
@@ -35,6 +39,11 @@ public class CronController {
 		File finalizedPDFDir = fileProps.getPdfFinalizedFilesDir();
 		File finalizedPDFBackupDir = fileProps.getPdfFinalizedFilesBackupDir();
 		copyToBackup(finalizedPDFDir, finalizedPDFBackupDir);
+	}
+	
+	@Scheduled(fixedDelay = 123000) //run every 2min after the last task ended (2 * 60 * 1000 milliseconds)
+	public void clearResetTokens() {
+		modelDAO.clearResetTokens();
 	}
 	
 	private void deleteLinks(File linkDir) {

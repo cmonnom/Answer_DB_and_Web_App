@@ -12,7 +12,7 @@ const Admin = {
     <v-card class="soft-grey-background">
       <v-toolbar dense dark color="primary">
         <v-toolbar-title class="white--text">
-          {{ editAdd }} User: {{ currentEditUserFullName }}
+          {{ editAdd }} User {{ currentEditUserFullName }}
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
@@ -28,21 +28,20 @@ const Admin = {
             <v-flex xs5 md4 lg3 xl2>
               <v-card class="pl-2 pr-2">
                 <v-card-title>
-                  <div class="title">Name:</div>
+                  <div class="title">Identification</div>
                 </v-card-title>
                 <v-card-text>
                   <v-text-field ref="editUsername" label="User ID"></v-text-field>
                   <v-text-field ref="editFirstName" label="First Name"></v-text-field>
                   <v-text-field ref="editLastName" label="Last Name"></v-text-field>
                   <v-text-field ref="editEmail" label="Email"></v-text-field>
-                  <!-- <div class="grey--text lighten-1">Email:</div><div class="pb-4">{{ userEmail }}</div> -->
                 </v-card-text>
               </v-card>
             </v-flex>
             <v-flex xs7 md4 lg3 xl2>
               <v-card class="pl-2 pr-2">
                 <v-card-title>
-                  <div class="title">Permissions:</div>
+                  <div class="title">Permissions</div>
                 </v-card-title>
                 <v-card-text>
                   <v-switch :label="'Can View: ' + (editView ? 'Yes' : 'No')" v-model="editView"></v-switch>
@@ -58,7 +57,7 @@ const Admin = {
             <v-flex xs7 md4 lg3 xl2>
               <v-card class="pl-2 pr-2">
                 <v-card-title>
-                  <div class="title">Groups:</div>
+                  <div class="title">Groups</div>
                 </v-card-title>
                 <v-card-text>
                 <v-select clearable chips :value="currentEditGroupsInUser" :items="groupsSelectItems" v-model="currentEditGroupsInUser" item-text="name" item-value="value"
@@ -205,7 +204,7 @@ const Admin = {
       groupsSelectItems: [],
       usersSelectItems: [],
       currentEditUsersInGroup: [],
-      currentEditGroupsInUser: []
+      currentEditGroupsInUser: [],
     }
   },
   methods: {
@@ -341,6 +340,7 @@ const Admin = {
       this.$refs.editUsername.inputValue = "";
       this.$refs.editEmail.inputValue = "";
       this.currentEditUserFullName = "";
+      
       this.editView = false;
       this.editSelect = false;
       this.editAnnotate = false;
@@ -349,6 +349,13 @@ const Admin = {
       this.editNotification = false;
       this.editAdmin = false;
       this.editUserDialogVisible = true;
+
+      this.$refs.editFirstName.inputValue = "one";
+      this.$refs.editLastName.inputValue = "two";
+      this.$refs.editUsername.inputValue = "three";
+      this.$refs.editEmail.inputValue = "four";
+      this.currentEditUserFullName = "one two";
+      this.editView = true;
 
     },
     addGroup() {

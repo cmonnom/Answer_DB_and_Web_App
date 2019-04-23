@@ -436,3 +436,7 @@ table.table tbody td {
     overflow: auto;
     height: 100%;
 }
+
+.strike {
+    text-decoration: line-through;
+}

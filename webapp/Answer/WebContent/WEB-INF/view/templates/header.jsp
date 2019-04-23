@@ -27,6 +27,8 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
         const lastLogin = "${lastLogin}";
         var showLastLogin = "${showLastLogin}" === 'true';
 
+        var authMessage = "${authMessage}";
+
 </script>
 
 <link rel="stylesheet"  href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700">

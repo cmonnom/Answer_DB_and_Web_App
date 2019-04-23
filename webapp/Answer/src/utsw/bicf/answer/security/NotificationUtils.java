@@ -6,6 +6,8 @@ import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 
+import utsw.bicf.answer.model.User;
+
 public class NotificationUtils {
 	
 	public static final String HEAD = "<head><style>html {font-family: Roboto,sans-serif;}</style></head>";
@@ -107,4 +109,43 @@ public class NotificationUtils {
 				.append("</body></html>");
 		return fullMessage.toString();
 	}
+	
+	public static String buildStandardPasswordResetMessage(User user, boolean firstTime, String link, EmailProperties emailProps) {
+		StringBuilder fullMessage = new StringBuilder()
+				.append("<html>")
+				.append(NotificationUtils.HEAD)
+				.append("<body>")
+				.append("<img src='")
+				.append(emailProps.getRootUrl());
+		if (emailProps.getRootUrl().endsWith("/")) {
+			fullMessage.append("resources/"); //to make sure there is no double //
+		}
+		else {
+			fullMessage.append("/resources/");
+		}
+		fullMessage.append("images/answer-logo-small.png'")
+				.append(" width='150px' />")
+				.append("<br/><br/>")
+				.append("Dr. ").append(user.getLast()).append(",")
+				.append("<br/><br/>");
+		if (firstTime) {
+			fullMessage.append("Welcome to Answer.");
+		}
+		fullMessage.append("Please click ").append("<a href='")
+				.append(link)
+				.append("'>")
+				.append("this link</a> to ");
+		if (firstTime) {
+			fullMessage.append("set ");
+		}
+		else {
+			fullMessage.append("reset ");
+		}
+		fullMessage.append("your password.<br/>The link will expire in 10 minutes.")
+				.append("<br/><br/>")
+				.append(emailProps.getSignature())
+				.append("</body></html>");
+		return fullMessage.toString();
+	}
+	
 }

@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserCredentials {
 
+	public UserCredentials() {
+		super();
+	}
 	String username;
 	String password;
 	public String getUsername() {
@@ -19,7 +22,4 @@ public class UserCredentials {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
-
-
 }

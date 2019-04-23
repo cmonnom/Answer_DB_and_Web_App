@@ -15,6 +15,7 @@ import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.ReportGroup;
+import utsw.bicf.answer.model.ResetToken;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.UserRank;
@@ -171,6 +172,49 @@ public class ModelDAO {
 			Hibernate.initialize(user.getGroups());
 		}
 		return user;
+	}
+	
+	@Transactional
+	public User getUserByEmail(String email) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from User where email = :email";
+		User user = session.createQuery(hql, User.class).setParameter("email", email).uniqueResult();
+		return user;
+	}
+	
+	@Transactional
+	public ResetToken getResetTokenByTokenValue(String token) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from ResetToken where token = :token";
+		ResetToken resetToken = session.createQuery(hql, ResetToken.class).setParameter("token", token).uniqueResult();
+		return resetToken;
+	}
+	
+	@Transactional
+	public ResetToken getResetTokenByTokenAndEmail(String token, String email) {
+		Session session = sessionFactory.getCurrentSession();
+		User user = this.getUserByEmail(email);
+		if (user == null) {
+			return null;
+		}
+		String hql = "from ResetToken where user = :user and token = :token";
+		ResetToken resetToken = session.createQuery(hql, ResetToken.class)
+				.setParameter("user", user)
+				.setParameter("token", token)
+				.uniqueResult();
+		return resetToken;
+	}
+	
+	@Transactional
+	public void clearResetTokens() {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "select * FROM reset_token where date_created < now() - interval 10 minute;";
+		List<ResetToken> resetTokens = session.createNativeQuery(sql, ResetToken.class).list();
+		if (resetTokens != null) {
+			for (ResetToken token : resetTokens) {
+				this.deleteObject(token);
+			}
+		}
 	}
 	
 	@Transactional

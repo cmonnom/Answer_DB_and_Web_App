@@ -32,11 +32,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import utsw.bicf.answer.model.extmapping.pubmed.EPost;
-import utsw.bicf.answer.model.extmapping.pubmed.PubmedArticle;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.OtherProperties;
@@ -84,7 +82,8 @@ public class NCBIRequestUtils {
 		StringBuilder sbUrl = new StringBuilder(ncbiProps.getUrl());
 		sbUrl.append(ncbiProps.getEpost())
 		.append(pmIdParam);
-		sbUrl.append(this.getEmailAndTool());
+//		sbUrl.append(this.getEmailAndTool());
+		sbUrl.append(this.getAPIKey());
 		URI uri = new URI(sbUrl.toString());
 //		System.out.println(uri.toString());
 		requestGet = new HttpGet(uri);
@@ -98,7 +97,8 @@ public class NCBIRequestUtils {
 			.append(ncbiProps.getQueryKey()).append("=").append(ePost.getQueryKey())
 			.append("&").append(ncbiProps.getWebEnv()).append("=").append(ePost.getWebEnv())
 			.append("&retype=xml");
-			sbUrl.append(this.getEmailAndTool());
+//			sbUrl.append(this.getEmailAndTool());
+			sbUrl.append(this.getAPIKey());
 			uri = new URI(sbUrl.toString());
 			requestGet = new HttpGet(uri);
 			HttpResponse response2 = client.execute(requestGet);
@@ -198,8 +198,8 @@ public class NCBIRequestUtils {
 		return policy.sanitize(StringEscapeUtils.unescapeHtml4(elt.getFirstChild().getNodeValue())).replaceAll("&#39;", "'");
 	}
 	
-	private String getEmailAndTool() {
-		return "&email=" + ncbiProps.getEmail() + "&tool=" + ncbiProps.getTool();
+	private String getAPIKey() {
+		return "&api_key=" + ncbiProps.getApiKey();
 	}
 
 

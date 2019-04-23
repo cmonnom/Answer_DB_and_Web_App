@@ -51,8 +51,6 @@ public class ReportBuilder {
 	public static final List<String> UNKNOWN_TIERS = Arrays.asList("3");
 	public static final List<String> EXCLUDE_TIERS = Arrays.asList("4");
 	private static final List<String> THERAPY_TIERS = Arrays.asList("1A", "1B", "2C");
-	private static final List<String> TIER1_CLASSIFICATIONS = Arrays.asList(Variant.CATEGORY_LIKELY_PATHOGENIC,
-			Variant.CATEGORY_PATHOGENIC);
 
 	private static final String CAT_CLINICAL_TRIAL = "Clinical Trial";
 	private static final String CAT_THERAPY = "Therapy";
@@ -115,8 +113,8 @@ public class ReportBuilder {
 		allAnnotations.addAll(annotationsPerSNP.values().stream().flatMap(List::stream).collect(Collectors.toList()));
 		allAnnotations.addAll(annotationsPerCNV.values().stream().flatMap(List::stream).collect(Collectors.toList()));
 		allAnnotations.addAll(annotationsPerFTL.values().stream().flatMap(List::stream).collect(Collectors.toList()));
-		//set the tier if represented in a classification of Pathogenic or Likely Pathogenic
-		allAnnotations.stream().filter(a-> a.getTier() == null && a.getCategory() != null).forEach(a -> a.setTier(this.getTierFromClassification(a.getClassification())));
+//		//set the tier if represented in a classification of Pathogenic or Likely Pathogenic
+//		allAnnotations.stream().filter(a-> a.getTier() == null && a.getCategory() != null).forEach(a -> a.setTier(this.getTierFromClassification(a.getClassification())));
 		report.setClinicalTrials(this.getTrials(allAnnotations));
 		report.setPubmeds(this.getPubmedReferences(allAnnotations));
 		
@@ -225,6 +223,7 @@ public class ReportBuilder {
 			if (!isEmptyList(vDetails.getReferenceVariant().getUtswAnnotations())) {
 				vDetails.getReferenceVariant().getUtswAnnotations().stream().forEach(a -> Annotation.init(a, vDetails.getAnnotationIdsForReporting(), modelDAO));
 				List<Annotation> selectedAnnotations = vDetails.getReferenceVariant().getUtswAnnotations().stream().filter(a -> a.getIsSelected()).collect(Collectors.toList());
+				selectedAnnotations.stream().filter(a -> a.getClassification() != null).forEach(a -> this.overrideTier(a));
 				//set Uncategorized if needed
 				selectedAnnotations.stream().forEach(a -> a.setCategory(a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory()));
 				long tiersFound = selectedAnnotations.stream().filter(a -> a.getTier() != null).count();
@@ -250,6 +249,18 @@ public class ReportBuilder {
 		return annotationsPerSNP;
 	}
 	
+	private void overrideTier(Annotation a) {
+		if (a.getClassification() != null && a.getTier() == null) {
+			a.setTier(getTierFromClassification(a.getClassification()));
+		}
+		else if (a.getClassification() != null && a.getTier() != null) {
+			String classTier = getTierFromClassification(a.getClassification());
+			if (classTier.compareTo(a.getTier()) < 0) { //if classification is stronger than tier
+				a.setTier(classTier);
+			}
+		}
+	}
+	
 	/**
 	 * Finds all selected annotations for each variant
 	 * and report any variant without tier or selected annotation
@@ -267,6 +278,7 @@ public class ReportBuilder {
 			if (!isEmptyList(vDetails.getReferenceCnv().getUtswAnnotations())) {
 				vDetails.getReferenceCnv().getUtswAnnotations().stream().forEach(a -> Annotation.init(a, vDetails.getAnnotationIdsForReporting(), modelDAO));
 				List<Annotation> selectedAnnotations = vDetails.getReferenceCnv().getUtswAnnotations().stream().filter(a -> a.getIsSelected()).collect(Collectors.toList());
+				selectedAnnotations.stream().filter(a -> a.getClassification() != null).forEach(a -> this.overrideTier(a));
 				//set Uncategorized if needed
 				selectedAnnotations.stream().forEach(a -> a.setCategory(a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory()));
 				long tiersFound = selectedAnnotations.stream().filter(a -> a.getTier() != null).count();
@@ -313,6 +325,7 @@ public class ReportBuilder {
 			if (!isEmptyList(vDetails.getReferenceTranslocation().getUtswAnnotations())) {
 				vDetails.getReferenceTranslocation().getUtswAnnotations().stream().forEach(a -> Annotation.init(a, vDetails.getAnnotationIdsForReporting(), modelDAO));
 				List<Annotation> selectedAnnotations = vDetails.getReferenceTranslocation().getUtswAnnotations().stream().filter(a -> a.getIsSelected()).collect(Collectors.toList());
+				selectedAnnotations.stream().filter(a -> a.getClassification() != null).forEach(a -> this.overrideTier(a));
 				//set Uncategorized if needed
 				selectedAnnotations.stream().forEach(a -> a.setCategory(a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory()));
 				long tiersFound = selectedAnnotations.stream().filter(a -> a.getTier() != null).count();

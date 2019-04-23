@@ -2,14 +2,13 @@ package utsw.bicf.answer.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,10 +18,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.DataReportGroup;
+import utsw.bicf.answer.controller.serialization.UserCredentials;
 import utsw.bicf.answer.controller.serialization.vuetify.GroupSearchItems;
 import utsw.bicf.answer.controller.serialization.vuetify.GroupTableSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportGroupTableSummary;
@@ -31,6 +32,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.UserSearchItems;
 import utsw.bicf.answer.controller.serialization.vuetify.UserTableSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.db.api.utils.AuthUtils;
 import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.IndividualPermission;
@@ -145,6 +147,7 @@ public class AdminController {
 		User user = null;
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
+		boolean newUser = false;
 		if (userId != null) { //edit user
 			user = modelDAO.getUserByUserId(userId);
 			if (user == null) {
@@ -154,9 +157,10 @@ public class AdminController {
 			}
 		}
 		else { //new user
+			newUser = true;
 			user = new User();
 		}
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		User userParams = mapper.readValue(data, User.class);
 		IndividualPermission ipParams = userParams.getIndividualPermission();
 		user.setFirst(userParams.getFirst());
@@ -196,9 +200,19 @@ public class AdminController {
 		}
 		//need to save before and after the user is created so that Hibernate can update Group with the new User
 		modelDAO.saveObject(user);
-		
-		response.setSuccess(true);
-		
+		if (OtherProperties.AUTH_LOCAL.equals(otherProps.getAuthenticateWith())) {
+			UserCredentials userCreds = new UserCredentials();
+			String password = RandomStringUtils.random(255, true, true);
+			userCreds.setPassword(password);
+			userCreds.setUsername(user.getUserId() + ""); //update user credentials after the database set a user id
+			AuthUtils utils = new AuthUtils(modelDAO, otherProps);
+			if (newUser) {
+				utils.addUser(response, userCreds);
+			}
+			else {
+				utils.updateUser(response, userCreds);
+			}
+		}
 		return response.createObjectJSON();
 	}
 	

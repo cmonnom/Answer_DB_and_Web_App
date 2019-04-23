@@ -16,13 +16,8 @@ response.setDateHeader ("Expires", 0);
 <title>Answer Login</title>
 <%@include file="/WEB-INF/view/templates/header.jsp"%>
 
-<!-- Just for the launch of the final version -->
-<script src="${pageContext.request.contextPath}/resources/js/goodies/sketch.min.js"></script>
-<script src="${pageContext.request.contextPath}/resources/js/components/goodies2.js"></script>
-<script src="${pageContext.request.contextPath}/resources/js/goodies/fireworks.js"></script>
-
 <script>
-	var authMessage = "${authMessage}";
+	var userId = "${user.userId}";
 </script>
 </head>
 <body>
@@ -33,7 +28,7 @@ response.setDateHeader ("Expires", 0);
 				<v-container>
 					<!-- 		ADDING PAGE SPECIFIC CONTENT HERE BY POPULATING ${content} with the name of the jsp file
 	from the controller-->
-					<login-full-page :popup="false"></login-full-page>
+					<reset-password></reset-password>
 				</v-container>	
 			</v-content>
 		</main>

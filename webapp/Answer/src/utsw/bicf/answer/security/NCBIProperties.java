@@ -7,8 +7,7 @@ public class NCBIProperties {
 	String esummary;
 	String queryKey;
 	String webEnv;
-	String email;
-	String tool;
+	String apiKey;
 
 	public String getUrl() {
 		return url;
@@ -53,21 +52,14 @@ public class NCBIProperties {
 		this.webEnv = webEnv;
 	}
 
-	public String getEmail() {
-		return email;
+	public String getApiKey() {
+		return apiKey;
 	}
 
-	public void setEmail(String email) {
-		this.email = email;
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
 	}
 
-	public String getTool() {
-		return tool;
-	}
-
-	public void setTool(String tool) {
-		this.tool = tool;
-	}
 	
 	
 	

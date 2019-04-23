@@ -6,6 +6,9 @@ public class OtherProperties {
 	int proxyPort;
 	String oncoKBGeniePortalUrl;
 	String authenticateWith;
+	String authMessage;
+	String authUrl;
+	Boolean productionEnv;
 
 	public static final String AUTH_LDAP = "ldap";
 	public static final String AUTH_LOCAL = "local";
@@ -41,6 +44,30 @@ public class OtherProperties {
 
 	public void setAuthenticateWith(String authenticateWith) {
 		this.authenticateWith = authenticateWith;
+	}
+
+	public String getAuthMessage() {
+		return authMessage;
+	}
+
+	public void setAuthMessage(String authMessage) {
+		this.authMessage = authMessage;
+	}
+
+	public String getAuthUrl() {
+		return authUrl;
+	}
+
+	public void setAuthUrl(String authUrl) {
+		this.authUrl = authUrl;
+	}
+
+	public Boolean getProductionEnv() {
+		return productionEnv;
+	}
+
+	public void setProductionEnv(Boolean productionEnv) {
+		this.productionEnv = productionEnv;
 	}
 
 }

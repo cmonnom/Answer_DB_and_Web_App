@@ -36,11 +36,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.TargetPage;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
 
 @Aspect
 @Component
 public class AOPAspect {
+	
+	@Autowired
+	OtherProperties otherProps;
 
 	private static final Logger logger = Logger.getLogger(AOPAspect.class);
 	
@@ -313,7 +317,7 @@ public class AOPAspect {
 					return targetPage.toJSONString(); // build an error object as ajax response
 				} else {
 					proceedingJoinPoint.proceed(); // need to run the method to initialize the urlRedirect
-					return ControllerUtil.initializeModelLogin(model, servletContext, method);
+					return ControllerUtil.initializeModelLogin(model, servletContext, method, otherProps);
 				}
 			} else if (canProceed) {
 				return proceedingJoinPoint.proceed();
@@ -326,7 +330,7 @@ public class AOPAspect {
 			// model of session is null which indicates an error on the source code side.
 			// for instance the controller method doesn't pass model and session
 			// We should return the user to the login page.
-			return ControllerUtil.initializeModelLogin(model, servletContext, null);
+			return ControllerUtil.initializeModelLogin(model, servletContext, null, otherProps);
 		}
 
 	}
