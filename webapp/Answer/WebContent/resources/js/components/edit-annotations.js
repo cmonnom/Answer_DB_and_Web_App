@@ -620,6 +620,8 @@ Vue.component('edit-annotations', {
                 drugs: "",
                 warningLevel: 0,
                 drugResistant: false,
+                breadth: this.isCNV() ? "Chromosomal" : null
+
             });
           this.scrollToBottom();
         },

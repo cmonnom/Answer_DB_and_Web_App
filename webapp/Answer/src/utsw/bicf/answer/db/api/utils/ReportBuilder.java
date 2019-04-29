@@ -505,7 +505,7 @@ public class ReportBuilder {
 //						&& UNKNOWN_TIERS.contains(a.getTier())) || a.getTier() == null)));
 //	}
 	private boolean annotationGoesInCNVTable(Annotation a) {
-		boolean isChrom = a.getBreadth().equals(CNV.BREADTH_CHROM);
+		boolean isChrom = a.getBreadth() == null || a.getBreadth().equals(CNV.BREADTH_CHROM);
 		boolean notTherapyOrTrial = !isStringEqual(a.getCategory(), CAT_THERAPY) && !isStringEqual(a.getCategory(), CAT_CLINICAL_TRIAL);
 		boolean focalTier1To3OrNull = a.getBreadth().equals("Focal") && (a.getTier() == null || !EXCLUDE_TIERS.contains(a.getTier()));
 		return notTherapyOrTrial && (isChrom || focalTier1To3OrNull);

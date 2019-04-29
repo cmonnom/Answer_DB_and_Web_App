@@ -35,6 +35,7 @@
 	<!-- Add support for reading web resources: css, images, js, etc... -->
 	<mvc:resources location="/resources/" mapping="/resources/**" />
 	<mvc:resources location="file:/opt/answer/links/bams/" mapping="/bams/**" />
+	<mvc:resources location="file:/opt/answer/links/vcfs/" mapping="/vcfs/**" />
 	<mvc:resources location="file:/opt/answer/links/pdfs/" mapping="/pdfs/**" />
 	<mvc:resources location="file:/opt/answer/docs/html/" mapping="/help/**" />
 
@@ -104,6 +105,8 @@
 		<property name="excelFilesPath" value="${excel.file.location}" />
 		<property name="bamLinksPath" value="${bam.link.location}" />
 		<property name="bamFilesPath" value="${bam.file.location}" />
+		<property name="vcfLinksPath" value="${vcf.link.location}" />
+		<property name="vcfFilesPath" value="${vcf.file.location}" />
 		<property name="pdfFontPath" value="${pdf.font.location}" />
 		<property name="pdfFontBoldPath" value="${pdf.font.bold.location}" />
 		<property name="genePanelSearchUrl" value="${gene.panel.search.url}" />
@@ -130,6 +133,7 @@
 		<property name="proxyHostname" value="${proxy.hostname}" />
 		<property name="proxyPort" value="${proxy.port}" />
 		<property name="oncoKBGeniePortalUrl" value="${oncokb.url}" />
+		<property name="mutationalSignatureUrl" value="${mut.sign.url}" />
 		<property name="authenticateWith" value="${auth.type}" />
 		<property name="authMessage" value="${auth.message}" />
 		<property name="authUrl" value="${auth.url}" />

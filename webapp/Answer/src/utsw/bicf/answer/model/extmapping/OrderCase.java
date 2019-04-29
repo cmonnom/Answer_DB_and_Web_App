@@ -49,6 +49,7 @@ public class OrderCase {
 	String normalBam;
 	String tumorBam;
 	String rnaBam;
+	String tumorVcf;
 	List<CNV> cnvs;
 	List<Translocation> translocations;
 	String oncotreeDiagnosis;
@@ -512,6 +513,16 @@ public class OrderCase {
 
 	public void setGroupIds(List<String> groupIds) {
 		this.groupIds = groupIds;
+	}
+
+
+	public String getTumorVcf() {
+		return tumorVcf;
+	}
+
+
+	public void setTumorVcf(String tumorVcf) {
+		this.tumorVcf = tumorVcf;
 	}
 
 

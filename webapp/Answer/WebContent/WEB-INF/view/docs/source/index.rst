@@ -15,6 +15,7 @@ Welcome to Answer's documentation!
    annotations
    admin
    preferences
+   /howto/start_a_case
    faq
 
 

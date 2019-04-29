@@ -9,6 +9,7 @@ public class OtherProperties {
 	String authMessage;
 	String authUrl;
 	Boolean productionEnv;
+	String mutationalSignatureUrl;
 
 	public static final String AUTH_LDAP = "ldap";
 	public static final String AUTH_LOCAL = "local";
@@ -68,6 +69,14 @@ public class OtherProperties {
 
 	public void setProductionEnv(Boolean productionEnv) {
 		this.productionEnv = productionEnv;
+	}
+
+	public String getMutationalSignatureUrl() {
+		return mutationalSignatureUrl;
+	}
+
+	public void setMutationalSignatureUrl(String mutationalSignatureUrl) {
+		this.mutationalSignatureUrl = mutationalSignatureUrl;
 	}
 
 }

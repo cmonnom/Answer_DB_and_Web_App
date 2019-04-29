@@ -12,6 +12,10 @@ public class FileProperties {
 	File bamLinksDir;
 	String bamFilesPath;
 	File bamFilesDir;
+	String vcfLinksPath;
+	File vcfLinksDir;
+	String vcfFilesPath;
+	File vcfFilesDir;
 	String genePanelSearchUrl;
 	String pdfFontPath;
 	File pdfFontFile;
@@ -252,6 +256,42 @@ public class FileProperties {
 	}
 	public void setPdfFinalizedFilesBackupDir(File pdfFinalizedFilesBackupDir) {
 		this.pdfFinalizedFilesBackupDir = pdfFinalizedFilesBackupDir;
+	}
+	public String getVcfLinksPath() {
+		return vcfLinksPath;
+	}
+	public void setVcfLinksPath(String vcfLinksPath) {
+		this.vcfLinksPath = vcfLinksPath;
+	}
+	public File getVcfLinksDir() {
+		if (vcfLinksPath == null) {
+			return null;
+		}
+		if (vcfLinksDir == null) {
+			vcfLinksDir = new File(vcfLinksPath);
+		}
+		return vcfLinksDir;
+	}
+	public void setVcfLinksDir(File vcfLinksDir) {
+		this.vcfLinksDir = vcfLinksDir;
+	}
+	public String getVcfFilesPath() {
+		return vcfFilesPath;
+	}
+	public void setVcfFilesPath(String vcfFilesPath) {
+		this.vcfFilesPath = vcfFilesPath;
+	}
+	public File getVcfFilesDir() {
+		if (vcfFilesPath == null) {
+			return null;
+		}
+		if (vcfFilesDir == null) {
+			vcfFilesDir = new File(vcfFilesPath);
+		}
+		return vcfFilesDir;
+	}
+	public void setVcfFilesDir(File vcfFilesDir) {
+		this.vcfFilesDir = vcfFilesDir;
 	}
 	
 	
