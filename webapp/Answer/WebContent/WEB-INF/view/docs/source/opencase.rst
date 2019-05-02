@@ -15,7 +15,7 @@ Toolbar menu and buttons
 Patient Details
 ---------------
 
-All cases need an **OncoTree Diagnosis** value. You can open Oncotree or OncoKB Genie Portal by using the two buttons next to the text field.
+All cases need an **OncoTree Diagnosis** value. You can open Oncotree or Lookup Portal by using the two buttons next to the text field.
 
 .. image:: img/opencase/oncotree.png
    :width: 400
@@ -102,6 +102,12 @@ Variant Details Panel (CNV)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When opening a CNV, you can display a chart of the chromosome containing the CNV and create a new CNV by zooming in to the desired location.
+
+You can zoom in on a particular location in the chart by dragging an area with your mouse. To zoom out, right-click to open a contextual menu
+or click on the Reset Zoom button |reset_zoom|
+
+.. |reset_zoom| image:: img/opencase/cnv_zoom_out.png
+   :width: 100
 
 .. image:: img/opencase/cnv_chart.png
 

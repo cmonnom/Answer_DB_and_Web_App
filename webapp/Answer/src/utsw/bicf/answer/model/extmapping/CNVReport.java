@@ -58,7 +58,7 @@ public class CNVReport {
 	}
 
 
-	public CNVReport(Annotation a, CNV c, String highestAnnotationTier, String breadth) {
+	public CNVReport(Annotation a, CNV c, String highestAnnotationTier, String breadth, String comment) {
 		this.mongoDBId = c.mongoDBId;
 		if (CNV.BREADTH_CHROM.equals(breadth)) {
 			this.genes = c.getGenes().stream().collect(Collectors.joining(" "));
@@ -72,13 +72,13 @@ public class CNVReport {
 		this.startFormatted = c.startFormatted;
 		this.endFormatted = c.endFormatted;
 		this.copyNumber = c.copyNumber;
-		this.comment = a.getText();
 		this.loci = this.chrom + ":" + this.start + "-" + this.end;
 		this.cytoband = c.getCytoband();
 		this.highestAnnotationTier = highestAnnotationTier;
 		this.breadth = breadth;
 		this.aberrationType = c.getAberrationType();
 		this.cytobandTruncated = c.getCytoband().substring(0, 1);
+		this.comment = comment;
 	}
 
 

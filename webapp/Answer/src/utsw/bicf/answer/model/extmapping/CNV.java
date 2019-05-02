@@ -257,6 +257,10 @@ public class CNV {
 	public void setMdaAnnotated(Boolean mdaAnnotated) {
 		this.mdaAnnotated = mdaAnnotated;
 	}
+	
+	public boolean isITD() {
+		return this.aberrationType != null && this.aberrationType.equals("ITD");
+	}
 
 
 	public String getTier() {

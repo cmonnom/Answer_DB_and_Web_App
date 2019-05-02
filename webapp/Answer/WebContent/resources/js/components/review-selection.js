@@ -282,14 +282,21 @@ Vue.component('review-selection', {
             });
         },
         createCSVFile(csvContent) {
-            var hiddenElement = document.createElement('a');
-            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvContent);
-            //hiddenElement.target = '_blank';
-            hiddenElement.download = this.$route.params.id + moment().format("_YYYY_MM_DD") + '_moclia.csv';
-            document.body.appendChild(hiddenElement);
-            hiddenElement.click();
-            document.body.removeChild(hiddenElement);
-
+        	 var blob = new Blob(
+                     [csvContent],
+                     {
+                         type: "text/plain;charset=utf-8"
+                     }
+                 )
+                 var downloadUrl = URL.createObjectURL( blob );
+                 var hiddenElement = document.createElement('a');
+                 hiddenElement.href = downloadUrl;
+                 //hiddenElement.target = '_blank';
+                 hiddenElement.download = this.$route.params.id + moment().format("_YYYY_MM_DD") + '_moclia.csv';
+                 document.body.appendChild(hiddenElement);
+                 hiddenElement.click();
+                 document.body.removeChild(hiddenElement);
+                 URL.revokeObjectURL( downloadUrl );
         },
         markAsReadyForReview() {
             this.markingForReview = true;

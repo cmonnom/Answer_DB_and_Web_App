@@ -93,7 +93,7 @@ public class OpenCaseController {
 
 	static {
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".openCase",
-				IndividualPermission.CAN_ANNOTATE);
+				IndividualPermission.CAN_VIEW); //allow can_view to handle redirect inside the openCase method
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".openCaseReadOnly",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getCaseDetails",

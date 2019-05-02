@@ -320,7 +320,7 @@ Vue.component('edit-annotations', {
                                                                     Annotation Breadth:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.breadth" :disabled="annotation.markedForDeletion" :items="annotationBreadth"
+                                                                    <v-select clearable required :value="annotation.breadth" :error="!annotation.breadth" :disabled="annotation.markedForDeletion" :items="annotationBreadth"
                                                                         v-model="annotation.breadth" label="Select Chrom vs Focal"
                                                                         single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
@@ -724,6 +724,13 @@ Vue.component('edit-annotations', {
                 var annotation = this.userEditingAnnotations[i];
                 scopeSelected = scopeSelected && !this.noLevelSelected(annotation);
             }
+            var breadthSelected = true;
+            if (this.isCNV()) {
+                for (var i = 0; i < this.userEditingAnnotations.length; i++) {
+                    var annotation = this.userEditingAnnotations[i];
+                    breadthSelected = breadthSelected && annotation.breadth; //need to select breadth
+                }
+            }
             var trialsHaveNCTID = true;
             var caseAgnosticHasGeneSymbol = true;
             var caseAgnosticHasVariant = true;
@@ -780,9 +787,12 @@ Vue.component('edit-annotations', {
             if (!caseAgnosticHasVariant) {
                 saveDisabledReasons.push("Select a Variant Notation for Variant Specific annotations");
             }
+            if (!breadthSelected) {
+                saveDisabledReasons.push("All CNVs must have a breadth selected");
+            }
             this.saveDisabledReasons = saveDisabledReasons.join("<br/>");
             return !scopeSelected || length == 0 || this.saving 
-            || !trialsHaveNCTID || !caseAgnosticHasGeneSymbol || !caseAgnosticHasVariant;
+            || !trialsHaveNCTID || !caseAgnosticHasGeneSymbol || !caseAgnosticHasVariant || !breadthSelected;
         },
         //at least one level needs to be selected
         //can't only be case specific: needs either gene or variant

@@ -846,7 +846,7 @@ const OpenCase = {
                                                                 <v-btn flat color="primary" icon @click="openOncoKBGeniePortalCancer()" slot="activator" class="mr-0 ml-0 mt-0 mb-0">
                                                                     <v-icon>mdi-dna</v-icon>
                                                                 </v-btn>
-                                                                <span>Open OncoKB Genie Portal in New Tab</span>
+                                                                <span>Open Lookup Portal in New Tab</span>
                                                                 </v-tooltip>
                                                             </v-flex>
                                                         </v-layout>
@@ -1737,7 +1737,7 @@ const OpenCase = {
                                     linkIcon: "mdi-dna",
                                     url: this.createOncoKBGeniePortalGene(),
                                     value: this.currentVariant.geneName,
-                                    tooltip: "Open OncoKB Genie Portal (Gene) in new tab"
+                                    tooltip: "Open Lookup Portal (Gene) in new tab"
                                 },
                                 {
                                     label: "Notation",
@@ -1746,7 +1746,7 @@ const OpenCase = {
                                     linkIcon: "mdi-dna",
                                     url: this.createOncoKBGeniePortalVariant(),
                                     value: this.currentVariant.notation,
-                                    tooltip: "Open OncoKB Genie Portal (Variant) in new tab"
+                                    tooltip: "Open Lookup Portal (Variant) in new tab"
                                 },
                                 {
                                     label: "Reference Allele(s)",
@@ -2036,12 +2036,12 @@ const OpenCase = {
                                     label: "Cytoband", value: this.currentVariant.cytoband
                                 },
                                 {
-                                    label: "Open OncoKB Genie Portal (CNV)",
+                                    label: "Open Lookup Portal (CNV)",
                                     type: "link",
                                     linkIcon: "mdi-dna",
                                     url: this.createOncoKBGeniePortalCNV(),
                                     value: "",
-                                    tooltip: "Open OncoKB Genie Portal (CNV) in new tab"
+                                    tooltip: "Open Lookup Portal (CNV) in new tab"
                                 },
                                
                             ]
@@ -2242,12 +2242,12 @@ const OpenCase = {
                                 label: "DNA Reads", value: this.currentVariant.dnaReads ? this.currentVariant.dnaReads + "" : ""
                             },
                             {
-                                label: "Open OncoKB Genie Portal (Fusion)",
+                                label: "Open Lookup Portal (Fusion)",
                                 type: "link",
                                 linkIcon: "mdi-dna",
                                 url: this.createOncoKBGeniePortalFusion(),
                                 value: "",
-                                tooltip: "Open OncoKB Genie Portal (Fusion) in new tab"
+                                tooltip: "Open Lookup Portal (Fusion) in new tab"
                             }]
                         };
                         this.variantDataTables.push(infoTable3);

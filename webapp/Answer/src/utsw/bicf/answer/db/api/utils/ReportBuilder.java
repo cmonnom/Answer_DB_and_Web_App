@@ -198,10 +198,10 @@ public class ReportBuilder {
 	
 	private String getTierFromClassification(String classification) {
 		if (classification != null && classification.equals(Variant.CATEGORY_LIKELY_PATHOGENIC)) {
-			return "1A";
+			return "1B";
 		}
 		else if (classification != null && classification.equals(Variant.CATEGORY_PATHOGENIC)) {
-			return "1B";
+			return "1A";
 		}
 		return null;
 	}
@@ -255,7 +255,7 @@ public class ReportBuilder {
 		}
 		else if (a.getClassification() != null && a.getTier() != null) {
 			String classTier = getTierFromClassification(a.getClassification());
-			if (classTier.compareTo(a.getTier()) < 0) { //if classification is stronger than tier
+			if (classTier != null && classTier.compareTo(a.getTier()) < 0) { //if classification is stronger than tier
 				a.setTier(classTier);
 			}
 		}
@@ -450,8 +450,9 @@ public class ReportBuilder {
 	private List<TranslocationReport> getFTLs(Map<Translocation, List<Annotation>> annotationsPerFTL) {
 		List<TranslocationReport> ftls = new ArrayList<TranslocationReport>();
 		for (Translocation ftl : annotationsPerFTL.keySet()) {
-			List<TranslocationReport> ftlCards = annotationsPerFTL.get(ftl).stream().filter(a -> annotationGoesInFTLTable(a)).map(a -> new TranslocationReport(a.getText(), ftl)).collect(Collectors.toList());
-			ftls.addAll(ftlCards);
+			String concatText = annotationsPerFTL.get(ftl).stream().filter(a -> annotationGoesInFTLTable(a)).map(a -> a.getText()).collect(Collectors.joining(" "));
+			TranslocationReport ftlCard = annotationsPerFTL.get(ftl).stream().filter(a -> annotationGoesInFTLTable(a)).map(a -> new TranslocationReport(concatText, ftl)).collect(Collectors.toList()).get(0);
+			ftls.add(ftlCard);
 		}
 		return ftls;
 	}
@@ -459,8 +460,13 @@ public class ReportBuilder {
 	private List<CNVReport> getCNVs(Map<CNVReportWithHighestTier, List<Annotation>> annotationsPerCNV) {
 		List<CNVReport> cnvs = new ArrayList<CNVReport>();
 		for (CNVReportWithHighestTier cnv : annotationsPerCNV.keySet()) {
-			List<CNVReport> cnvCards = annotationsPerCNV.get(cnv).stream().filter(a -> annotationGoesInCNVTable(a)).map(a -> new CNVReport(a, cnv.getCnv(), cnv.getHighestAnnotationTier(), cnv.getBreadth())).collect(Collectors.toList());
-			cnvs.addAll(cnvCards);
+			CNV simpleCNV = cnv.getCnv();
+			List<Annotation> annotationsFiltered = annotationsPerCNV.get(cnv).stream().filter(a -> annotationGoesInCNVTable(a, simpleCNV)).collect(Collectors.toList());
+			String concatText = annotationsFiltered.stream().map(a -> a.getText()).collect(Collectors.joining(" "));
+			List<CNVReport> cnvCards = annotationsFiltered.stream().map(a -> new CNVReport(a, simpleCNV, cnv.getHighestAnnotationTier(), cnv.getBreadth(), concatText)).collect(Collectors.toList());
+			if (!cnvCards.isEmpty()) {
+				cnvs.add(cnvCards.get(0));
+			}
 		}
 		return cnvs;
 	}
@@ -504,11 +510,12 @@ public class ReportBuilder {
 //				&& ((a.getBreadth().equals("Chromosomal") || ((a.getBreadth().equals("Focal") && a.getTier() != null
 //						&& UNKNOWN_TIERS.contains(a.getTier())) || a.getTier() == null)));
 //	}
-	private boolean annotationGoesInCNVTable(Annotation a) {
+	private boolean annotationGoesInCNVTable(Annotation a, CNV cnv) {
 		boolean isChrom = a.getBreadth() == null || a.getBreadth().equals(CNV.BREADTH_CHROM);
+		boolean isITD = cnv.isITD();
 		boolean notTherapyOrTrial = !isStringEqual(a.getCategory(), CAT_THERAPY) && !isStringEqual(a.getCategory(), CAT_CLINICAL_TRIAL);
-		boolean focalTier1To3OrNull = a.getBreadth().equals("Focal") && (a.getTier() == null || !EXCLUDE_TIERS.contains(a.getTier()));
-		return notTherapyOrTrial && (isChrom || focalTier1To3OrNull);
+		boolean focalTier1To3OrNull = (a.getBreadth() != null && a.getBreadth().equals("Focal")) && (a.getTier() == null || !EXCLUDE_TIERS.contains(a.getTier()));
+		return !isITD && notTherapyOrTrial && (isChrom || focalTier1To3OrNull);
 	}
 	
 	/**

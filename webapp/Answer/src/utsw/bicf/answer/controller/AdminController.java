@@ -182,6 +182,7 @@ public class AdminController {
 		individualPermission.setReceiveAllNotifications(ipParams.getReceiveAllNotifications());
 		
 		modelDAO.saveObject(individualPermission);
+		response.setSuccess(true);
 		
 		List<Group> groupList = new ArrayList<Group>();
 		for (String groupId : groups.split(",")) {

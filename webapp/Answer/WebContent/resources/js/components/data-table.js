@@ -1165,13 +1165,21 @@ Vue.component('data-table', {
             this.getAjaxData();
         },
         createCSVFile() {
-            var hiddenElement = document.createElement('a');
-            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(this.csvContent);
-            //hiddenElement.target = '_blank';
-            hiddenElement.download = this.tableTitle.replace(" ", "_") + '_data.csv';
-            document.body.appendChild(hiddenElement);
-            hiddenElement.click();
-            document.body.removeChild(hiddenElement);
+        	 var blob = new Blob(
+                     [this.csvContent],
+                     {
+                         type: "text/plain;charset=utf-8"
+                     }
+                 )
+                 var downloadUrl = URL.createObjectURL( blob );
+                 var hiddenElement = document.createElement('a');
+                 hiddenElement.href = downloadUrl;
+                 //hiddenElement.target = '_blank';
+                 hiddenElement.download = this.tableTitle.replace(" ", "_") + '_data.csv';
+                 document.body.appendChild(hiddenElement);
+                 hiddenElement.click();
+                 document.body.removeChild(hiddenElement);
+                 URL.revokeObjectURL( downloadUrl );
 
         },
         getRowCount() {
