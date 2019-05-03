@@ -1462,12 +1462,14 @@ const OpenCase = {
                 if (this.$route.query.variantId != 'notreal') {
                     var delay = 0;
                     setTimeout(() => {
+                        var variantFound = false;
                         //find item
                         if (this.urlQuery.variantType == 'snp') {
                             for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
                                 if (this.$refs.geneVariantDetails.items[i].oid == this.urlQuery.variantId) {
                                     if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
                                         || !newRouteQuery) {
+                                            variantFound = true;
                                         this.$nextTick(this.getVariantDetails(this.$refs.geneVariantDetails.items[i]));
                                         break;
                                     }
@@ -1479,6 +1481,7 @@ const OpenCase = {
                                 if (this.$refs.cnvDetails.items[i].oid == this.urlQuery.variantId) {
                                     if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
                                         || !newRouteQuery) {
+                                            variantFound = true;
                                         this.$nextTick(this.getCNVDetails(this.$refs.cnvDetails.items[i]));
                                         break;
                                     }
@@ -1490,11 +1493,21 @@ const OpenCase = {
                                 if (this.$refs.translocationDetails.items[i].oid == this.urlQuery.variantId) {
                                     if ((newRouteQuery && oldRouteQuery && (newRouteQuery.variantId != oldRouteQuery.variantId))
                                         || !newRouteQuery) {
+                                            variantFound = true;
                                         this.$nextTick(this.getTranslocationDetails(this.$refs.translocationDetails.items[i]));
                                         break;
                                     }
                                 }
                             }
+                        }
+                        if (!variantFound) {
+                            var response = {
+                                success: false,
+                                message: "The variant ID could not be found. The URL must be incorrect."
+                            }
+                            this.handleDialogs(response, null);
+                            var html = document.querySelector("html");
+                            html.style.overflow = ""
                         }
                     }, delay);
                 }
