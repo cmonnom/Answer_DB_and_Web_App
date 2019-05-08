@@ -65,7 +65,7 @@ public class IndicatedTherapy {
 		}
 	}
 	public IndicatedTherapy(Annotation a, Translocation v) {
-		this.variant = a.getLeftGene() + "-" + a.getRightGene();
+		this.variant = a.getLeftGene() + "--" + a.getRightGene();
 		this.biomarkers = this.variant;
 		if (a.getTier() != null) {
 			switch(a.getTier()) {

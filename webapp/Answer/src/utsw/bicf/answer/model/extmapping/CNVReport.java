@@ -3,6 +3,8 @@ package utsw.bicf.answer.model.extmapping;
 import java.text.NumberFormat;
 import java.util.stream.Collectors;
 
+import org.springframework.util.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -77,7 +79,16 @@ public class CNVReport {
 		this.highestAnnotationTier = highestAnnotationTier;
 		this.breadth = breadth;
 		this.aberrationType = c.getAberrationType();
-		this.cytobandTruncated = c.getCytoband().substring(0, 1);
+		//if one p and one q, truncated should be empty
+		boolean needTruncatedLetter = c.getCytoband() != null 
+				&& !(StringUtils.countOccurrencesOf(c.getCytoband(), "p") == 1
+				&& StringUtils.countOccurrencesOf(c.getCytoband(), "q") == 1);
+		if (needTruncatedLetter) {
+			this.cytobandTruncated = c.getCytoband().substring(0, 1);
+		}
+		else {
+			this.cytobandTruncated = "";
+		}
 		this.comment = comment;
 	}
 
