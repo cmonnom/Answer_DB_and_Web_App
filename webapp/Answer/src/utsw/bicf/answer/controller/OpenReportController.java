@@ -410,7 +410,7 @@ public class OpenReportController {
 		//we might not want to restrict by assigned user
 		//		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportSummary.getCaseId(), currentUser);
 //		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
-		boolean canProceed = currentUser.getIndividualPermission().getCanReview();
+		boolean canProceed = (currentUser.getIndividualPermission().getAdmin() != null && currentUser.getIndividualPermission().getAdmin()) || currentUser.getIndividualPermission().getCanReview();
 		response.setIsAllowed(canProceed);
 		if (canProceed) {
 			Report reportToPreview = new Report(reportSummary);
@@ -437,6 +437,9 @@ public class OpenReportController {
 			response.setSuccess(true);
 			response.setMessage(linkName);
 		}
+		else {
+			response.setMessage("You are not allowed to preview PDF reports.");
+		}
 		return response.createObjectJSON();
 	}
 	
@@ -447,70 +450,68 @@ public class OpenReportController {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
 		User user = ControllerUtil.getSessionUser(session);
-		Report reportDetails = utils.getReportDetails(reportId);;
-		OrderCase caseSummary = utils.getCaseSummary(reportDetails.getCaseId());
-		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
-			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
-		}
 		AjaxResponse response = new AjaxResponse();
 		if (reportId.equals("")) {
 			response.setSuccess(false);
 			response.setIsAllowed(false);
 			response.setMessage("No report id provided");
+			return response.createObjectJSON();
 		}
-		else {
-			if (reportDetails == null) {
+		Report reportDetails = utils.getReportDetails(reportId);
+		if (reportDetails == null) {
+			response.setSuccess(false);
+			response.setIsAllowed(false);
+			response.setMessage("Invalid report id: " + reportId);
+			return response.createObjectJSON();
+			
+		}
+		OrderCase caseSummary = utils.getCaseSummary(reportDetails.getCaseId());
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
+		//make sure the report is not finalized already
+		if (reportDetails.getFinalized() != null && reportDetails.getFinalized()) {
+			response.setSuccess(false);
+			response.setMessage("This report has already been finalized.");
+		}
+		else{
+			//make sure no other report was finalized for this case
+			List<Report> existingReports = utils.getExistingReports(reportDetails.getCaseId());
+			boolean alreadyFinalized = false; 
+			for (Report r: existingReports) {
+				if (r.getFinalized() != null 
+						&& r.getFinalized() && (r.getAmended() == null || !r.getAmended()) //finalized report but not amended
+						&& r.getMongoDBId().getOid().equals(reportDetails.getMongoDBId().getOid())) {
+					//another report is already finalized
+					alreadyFinalized = true;
+					break;
+				}
+			}
+			if (alreadyFinalized) {
 				response.setSuccess(false);
 				response.setIsAllowed(false);
-				response.setMessage("Invalid report id: " + reportId);
+				response.setMessage("Another report is already finalized. You can only have one report finalized per case.");
 			}
 			else {
-				//make sure the report is not finalized already
-				if (reportDetails.getFinalized() != null && reportDetails.getFinalized()) {
-					response.setSuccess(false);
-					response.setMessage("This report has already been finalized.");
+				utils.finalizeReport(response, reportDetails);
+				if (response.getSuccess()) {
+					reportDetails = utils.getReportDetails(reportDetails.getMongoDBId().getOid());
+					reportDetails.getIndicatedTherapies().stream().forEach(t -> t.setReadonly(true));
+					reportDetails.getClinicalTrials().stream().forEach(t -> t.setReadonly(true));
+					reportDetails.getSnpVariantsStrongClinicalSignificance().values().stream().forEach(v -> v.setReadonly(true));
+					reportDetails.getSnpVariantsPossibleClinicalSignificance().values().stream().forEach(v -> v.setReadonly(true));
+					reportDetails.getSnpVariantsUnknownClinicalSignificance().values().stream().forEach(v -> v.setReadonly(true));
+					reportDetails.getCnvs().stream().forEach(c -> c.setReadonly(true));
+					reportDetails.getTranslocations().stream().forEach(t -> t.setReadonly(true));
+					utils.saveReport(response, reportDetails);
+
+					//save a copy of the pdf
+					User signedBy = modelDAO.getUserByUserId(reportDetails.getModifiedBy());
+					FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy);
+					pdfReport.saveFinalized();
 				}
-				else{
-					//make sure no other report was finalized for this case
-					List<Report> existingReports = utils.getExistingReports(reportDetails.getCaseId());
-					boolean alreadyFinalized = false; 
-					for (Report r: existingReports) {
-						if (r.getFinalized() != null 
-								&& r.getFinalized() && (r.getAmended() == null || !r.getAmended()) //finalized report but not amended
-								&& r.getMongoDBId().getOid().equals(reportDetails.getMongoDBId().getOid())) {
-							//another report is already finalized
-							alreadyFinalized = true;
-							break;
-						}
-					}
-					if (alreadyFinalized) {
-						response.setSuccess(false);
-						response.setIsAllowed(false);
-						response.setMessage("Another report is already finalized. You can only have one report finalized per case.");
-					}
-					else {
-						utils.finalizeReport(response, reportDetails);
-						if (response.getSuccess()) {
-							reportDetails = utils.getReportDetails(reportDetails.getMongoDBId().getOid());
-							reportDetails.getIndicatedTherapies().stream().forEach(t -> t.setReadonly(true));
-							reportDetails.getClinicalTrials().stream().forEach(t -> t.setReadonly(true));
-							reportDetails.getSnpVariantsStrongClinicalSignificance().values().stream().forEach(v -> v.setReadonly(true));
-							reportDetails.getSnpVariantsPossibleClinicalSignificance().values().stream().forEach(v -> v.setReadonly(true));
-							reportDetails.getSnpVariantsUnknownClinicalSignificance().values().stream().forEach(v -> v.setReadonly(true));
-							reportDetails.getCnvs().stream().forEach(c -> c.setReadonly(true));
-							reportDetails.getTranslocations().stream().forEach(t -> t.setReadonly(true));
-							utils.saveReport(response, reportDetails);
-							
-							//save a copy of the pdf
-							User signedBy = modelDAO.getUserByUserId(reportDetails.getModifiedBy());
-							FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy);
-							pdfReport.saveFinalized();
-						}
-					}
-					
-				}
-				
 			}
+
 		}
 		return response.createObjectJSON();
 	}

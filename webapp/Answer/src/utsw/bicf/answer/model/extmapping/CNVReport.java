@@ -30,6 +30,7 @@ public class CNVReport {
 	String cytobandTruncated;
 	String highestAnnotationTier;
 	String breadth;
+	boolean manualRow;
 	
 	public CNVReport() {
 		
@@ -90,6 +91,27 @@ public class CNVReport {
 			this.cytobandTruncated = "";
 		}
 		this.comment = comment;
+	}
+	
+	public void populateManualCNV() {
+		boolean needTruncatedLetter = this.getCytoband() != null 
+				&& !(StringUtils.countOccurrencesOf(this.getCytoband(), "p") == 1
+				&& StringUtils.countOccurrencesOf(this.getCytoband(), "q") == 1);
+		if (needTruncatedLetter) {
+			this.cytobandTruncated = this.getCytoband().substring(0, 1);
+		}
+		else {
+			this.cytobandTruncated = "";
+		}
+		if (this.copyNumber != null && this.copyNumber >= 2) {
+			this.aberrationType = "gain";
+		}
+		else {
+			this.aberrationType = "loss";
+		}
+	}
+	
+	public CNVReport(CNVReport incompleteCNV) {
 	}
 
 
@@ -270,6 +292,16 @@ public class CNVReport {
 
 	public void setBreadth(String breadth) {
 		this.breadth = breadth;
+	}
+
+
+	public boolean isManualRow() {
+		return manualRow;
+	}
+
+
+	public void setManualRow(boolean manualRow) {
+		this.manualRow = manualRow;
 	}
 
 

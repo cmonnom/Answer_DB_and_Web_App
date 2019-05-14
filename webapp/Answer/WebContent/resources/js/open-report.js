@@ -1215,6 +1215,7 @@ const OpenReport = {
                 newRow.startFormatted = newRow.start.toLocaleString();
                 newRow.end = parseInt(m[3]);
                 newRow.endFormatted = newRow.end.toLocaleString();
+                newRow.manualRow = true;
                 table.confirmAddingANewRow(newRow);
             }
             else {

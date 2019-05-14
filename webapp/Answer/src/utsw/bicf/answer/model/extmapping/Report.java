@@ -507,6 +507,9 @@ public class Report {
 			this.incrementUnknownClinicalSignificanceCount(gva.getGene());
 		}
 		for (CNVReport cnv : this.getCnvs()) {
+			if (cnv.isManualRow()) { //need to build the missing fields like cytobandTruncated and aberration Type
+				cnv.populateManualCNV();
+			}
 			String biomarker = "";
 			if (CNV.BREADTH_FOCAL.equals(cnv.getBreadth())) {
 				biomarker = cnv.getGenes(); //focal annotation
