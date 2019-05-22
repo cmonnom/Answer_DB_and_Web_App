@@ -28,6 +28,9 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 					<body>
 						<script>
 							var urlRoot = "${pageContext.request.contextPath}" + "/bams/";
+							if ("${storageType}" != "local") {
+								urlRoot = ""; //url is fully contained in the filename for cloud storage
+							}
 							var locus = "${locus}";
 							var caseId = "${caseId}";
 							var normalBam = "${normalBam}";

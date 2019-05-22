@@ -68,7 +68,7 @@ public class OrderCase {
 	String labNotes;
 	Double tumorPercent;
 	List<String> groupIds;
-	
+	String storageType;
 	
 	public OrderCase() {
 		
@@ -523,6 +523,16 @@ public class OrderCase {
 
 	public void setTumorVcf(String tumorVcf) {
 		this.tumorVcf = tumorVcf;
+	}
+
+
+	public String getStorageType() {
+		return storageType;
+	}
+
+
+	public void setStorageType(String storageType) {
+		this.storageType = storageType;
 	}
 
 

@@ -688,6 +688,15 @@ const OpenCase = {
                         </v-list-tile-content>
                     </v-list-tile>
 
+                    <v-list-tile avatar v-if="mutationalSignatureUrl" @click="openLink(mutationalSignatureUrl)" :disabled="!mutationalSignatureUrl">
+                    <v-list-tile-avatar>
+                    <v-icon>mdi-chart-histogram</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Open Mutational Signature (MuSiCa)</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
+
                     <v-list-tile avatar @click="openReviewSelectionDialog()">
                         <v-list-tile-avatar>
                             <v-icon>mdi-clipboard-check</v-icon>
@@ -747,6 +756,12 @@ const OpenCase = {
             </v-btn>
             <span>Open QC in NuCLIA</span>
         </v-tooltip>
+        <v-tooltip bottom>
+        <v-btn icon flat slot="activator" :href="mutationalSignatureUrl" target="_blank" rel="noreferrer" :disabled="!mutationalSignatureUrl">
+        <v-icon>mdi-chart-histogram</v-icon>
+        </v-btn>
+        <span>Open Mutational Signature (MuSiCa)</span>
+    </v-tooltip>
             <v-tooltip bottom>
                 <v-btn flat icon @click="openReviewSelectionDialog()" slot="activator" :color="reviewDialogVisible ? 'amber accent-2' : ''">
                     <v-icon>mdi-clipboard-check</v-icon>
@@ -1117,6 +1132,7 @@ const OpenCase = {
             topMostDialog: "",
             patientDetailsOncoTreeDiagnosis: "",
             qcUrl: "",
+            mutationalSignatureUrl: "",
             editAnnotationVariantDetailsVisible: true,
             urlQuery: {
                 showReview: false,
@@ -1290,6 +1306,8 @@ const OpenCase = {
                     // console.log(1, step); 
                     this.caseId = response.data.caseId;
                     this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true&primary=true";
+                    response.data.tumorVcf = "delete this";
+                    this.mutationalSignatureUrl = response.data.tumorVcf ? webAppRoot + "/mutationalSignatureViewer?caseId=" + this.caseId : null;
                     this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
                     // step = new Date() - start;
                     // console.log(2, step); 

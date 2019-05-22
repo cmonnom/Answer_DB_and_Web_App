@@ -229,7 +229,6 @@ public class RequestUtils {
 		// requestGet = new HttpGet(uri);
 		// addAuthenticationHeader(requestGet);
 
-		// TODO Ben needs to build the API for filtering
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
 		requestPost.setEntity(new StringEntity(filterParam, ContentType.APPLICATION_JSON));
@@ -525,10 +524,10 @@ public class RequestUtils {
 				sbUrl.append("variant/");
 			}
 			else if (variantType.equals("cnv")) {
-				sbUrl.append("cnv/"); //TODO we might use the same api "variant"
+				sbUrl.append("cnv/"); 
 			}
 			else if (variantType.equals("translocation")) {
-				sbUrl.append("translocation/");  //TODO we might use the same api "variant"
+				sbUrl.append("translocation/");  
 			}
 			else {
 				ajaxResponse.setSuccess(false);
@@ -1248,7 +1247,7 @@ public class RequestUtils {
 //					Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
 					String highestTierForVariant = null;
 					tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
-					if (!tiers.isEmpty() || hasTiers) { //TODO test this
+					if (!tiers.isEmpty() || hasTiers) {
 						hasTiers = true;
 						highestTierForVariant = tiers.get(0);
 						if (strongTiers.contains(highestTierForVariant)) {
@@ -1490,6 +1489,31 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 			return null;
+		}
+	}
+	
+	public AjaxResponse getAzureBams(String caseId) throws ClientProtocolException, IOException, URISyntaxException {
+		AjaxResponse mongoDBResponse = new AjaxResponse();
+		
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("azure/").append(caseId); //TODO need the real API endpoint
+		URI uri = new URI(sbUrl.toString());
+
+		HttpResponse response = null;
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+		response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			mongoDBResponse.setSuccess(mongoDBResponse.getSuccess());
+			mongoDBResponse.setMessage(mongoDBResponse.getMessage());
+			return mongoDBResponse;
+		} else {
+			mongoDBResponse.setSuccess(false);
+			mongoDBResponse.setMessage("Something went wrong");
+			return mongoDBResponse;
 		}
 	}
 

@@ -190,7 +190,7 @@ Vue.component('variant-details', {
                                       </v-card-text>
                                       </v-card>
                                       </v-flex>
-                                      <v-flex xs12 md12 lg12 xl10 v-if="variantType == 'cnv'">
+                                      <v-flex xs12 md12 lg12 xl12 v-if="variantType == 'cnv'">
                                       <v-layout row wrap>
                                         <v-flex xs12 md12 lg6>
                                         <v-layout align-center>
@@ -241,9 +241,9 @@ Vue.component('variant-details', {
                                             
                                             </v-layout>
                                         </v-flex>
-                                        <v-flex xs12 md12 lg6>
+                                        <v-flex xs12 md12 lg12>
                                         <v-layout row wrap v-if="visibleGenesCN2OrSelected || visibleGenesOther" 
-                                        class="subheading elevation-1 mb-4">
+                                        class="subheading elevation-1 mb-4" >
                                         <v-flex xs12 pl-2><b>Genes visible at this zoom level:</b></v-flex>
                                         <v-flex xs12>
                                               <v-tooltip bottom>
@@ -256,7 +256,7 @@ Vue.component('variant-details', {
                                               <span v-show="createCNVDisabled">No genes visible at this zoom level</span>
                                               </v-tooltip>
                                         </v-flex>
-                                        <v-flex xs12 md9 lg8 pl-3>
+                                        <v-flex xs12 md12 lg12 pl-3 class="cnv-list-height">
                                               <span v-text="genesVisibleTopLabel"></span>
                                               <span class="blue-grey--text text--lighten-1">{{ visibleGenesCN2OrSelected }}</span><br/>
                                               <span v-text="genesVisibleBottomLabel"></span>

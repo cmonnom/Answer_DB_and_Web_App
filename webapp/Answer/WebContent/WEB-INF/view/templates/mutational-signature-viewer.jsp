@@ -26,6 +26,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 							var tumorVcf = "${tumorVcf}";
 							var url = "${mutationalSignatureUrl}";
 							var sampleName = "${sampleName}";
+							console.log(url + "?vcfFile=" + tumorVcf + "&name=" + sampleName);
 							window.location=url + "?vcfFile=" + tumorVcf + "&name=" + sampleName;
 						</script>
 					</body>

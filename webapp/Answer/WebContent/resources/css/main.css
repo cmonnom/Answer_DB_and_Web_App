@@ -440,3 +440,8 @@ table.table tbody td {
 .strike {
     text-decoration: line-through;
 }
+
+.cnv-list-height {
+    max-height: 300px;
+    overflow-y: auto;
+}

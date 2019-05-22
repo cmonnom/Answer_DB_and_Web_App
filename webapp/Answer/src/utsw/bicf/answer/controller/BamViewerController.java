@@ -15,10 +15,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.CloudBams;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
@@ -59,32 +63,71 @@ public class BamViewerController {
 			return ControllerUtil.initializeModelError(model, servletContext);
 		}
 		// At this point everything should be granted to access the bams
-		String normalBam = caseSummary.getNormalBam();
-		String tumorBam = caseSummary.getTumorBam();
-		String rnaBam = caseSummary.getRnaBam();
+		
+		//check if local storage or cloud
+		model.addAttribute("storageType", caseSummary.getStorageType());
+		if ("azure".equals(caseSummary.getStorageType())) {
+			AjaxResponse response = utils.getAzureBams(caseId);
+			if (!response.getSuccess()) {
+				return ControllerUtil.initializeModelError(model, servletContext);
+			}
+			ObjectMapper mapper = new ObjectMapper();
+			CloudBams bams = mapper.convertValue(response.getPayload(), CloudBams.class);
+			if (bams != null) {
+				String normalBam = bams.getNormalBam();
+				String tumorBam = bams.getTumorBam();
+				String rnaBam = bams.getRnaBam();
+				
+				if (normalBam != null) {
+					model.addAttribute("normalBam", normalBam);
+					model.addAttribute("normalBai", bams.getNormalBai());
+					model.addAttribute("normalLabel", caseSummary.getNormalBam());
+				}
+				
+				if (tumorBam != null) {
+					model.addAttribute("tumorBam", tumorBam);
+					model.addAttribute("tumorBai", bams.getTumorBai());
+					model.addAttribute("tumorLabel", caseSummary.getTumorBam());
+				}
+				
+				if (rnaBam != null) {
+					model.addAttribute("rnaBam", rnaBam);
+					model.addAttribute("rnaBai", bams.getRnaBai());
+					model.addAttribute("rnaLabel", caseSummary.getRnaBam());
+				}
+			}
+			
+		}
+		else { //local storage
+			String normalBam = caseSummary.getNormalBam();
+			String tumorBam = caseSummary.getTumorBam();
+			String rnaBam = caseSummary.getRnaBam();
 //		normalBam = "SHI710-27-6271_T_DNA_panel1385v2-1.final.bam"; //TODO delete this
-
-
-		if (normalBam != null) {
-			String bamLink = createBamLink(fileProps, normalBam);
-			model.addAttribute("normalBam", bamLink);
-			model.addAttribute("normalBai", createIndexLink(fileProps, normalBam.replaceAll(".bam", ".bai"), bamLink + ".bai"));
-			model.addAttribute("normalLabel", normalBam);
+			
+			
+			if (normalBam != null) {
+				String bamLink = createBamLink(fileProps, normalBam);
+				model.addAttribute("normalBam", bamLink);
+				model.addAttribute("normalBai", createIndexLink(fileProps, normalBam.replaceAll(".bam", ".bai"), bamLink + ".bai"));
+				model.addAttribute("normalLabel", normalBam);
+			}
+			
+			if (tumorBam != null) {
+				String bamLink = createBamLink(fileProps, tumorBam);
+				model.addAttribute("tumorBam", bamLink);
+				model.addAttribute("tumorBai", createIndexLink(fileProps, tumorBam.replaceAll(".bam", ".bai"), bamLink + ".bai"));
+				model.addAttribute("tumorLabel", tumorBam);
+			}
+			
+			if (rnaBam != null) {
+				String bamLink = createBamLink(fileProps, rnaBam);
+				model.addAttribute("rnaBam", bamLink);
+				model.addAttribute("rnaBai", createIndexLink(fileProps, rnaBam.replaceAll(".bam", ".bai"), bamLink + ".bai"));
+				model.addAttribute("rnaLabel", rnaBam);
+			}
+			
 		}
-
-		if (tumorBam != null) {
-			String bamLink = createBamLink(fileProps, tumorBam);
-			model.addAttribute("tumorBam", bamLink);
-			model.addAttribute("tumorBai", createIndexLink(fileProps, tumorBam.replaceAll(".bam", ".bai"), bamLink + ".bai"));
-			model.addAttribute("tumorLabel", tumorBam);
-		}
-
-		if (rnaBam != null) {
-			String bamLink = createBamLink(fileProps, rnaBam);
-			model.addAttribute("rnaBam", bamLink);
-			model.addAttribute("rnaBai", createIndexLink(fileProps, rnaBam.replaceAll(".bam", ".bai"), bamLink + ".bai"));
-			model.addAttribute("rnaLabel", rnaBam);
-		}
+		
 
 		return ControllerUtil.initializeExternalModel(model, servletContext, user, "bam-viewer");
 	}

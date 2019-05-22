@@ -42,6 +42,7 @@ public class OpenCaseSummary {
 	Boolean isAllowed;
 	List<ReportGroupForDisplay> reportGroups;
 	String qcUrl;
+	String tumorVcf;
 	List<String> assignedToIds;
 	String type;
 	boolean reportReady;
@@ -61,6 +62,7 @@ public class OpenCaseSummary {
 		this.isAllowed = true;
 		this.reportGroups = reportGroups;
 		this.qcUrl = qcAPI.getUrl();
+		this.tumorVcf = aCase.getTumorVcf();
 		this.assignedToIds = aCase.getAssignedTo();
 		this.type = aCase.getType();
 		
@@ -236,6 +238,18 @@ public class OpenCaseSummary {
 	public void setReportReady(boolean reportReady) {
 		this.reportReady = reportReady;
 	}
+
+
+	public String getTumorVcf() {
+		return tumorVcf;
+	}
+
+
+	public void setTumorVcf(String tumorVcf) {
+		this.tumorVcf = tumorVcf;
+	}
+
+
 
 
 //	public String getQcUrl() {
