@@ -60,12 +60,15 @@ public class OrderCaseAllSummary extends Summary<OrderCaseAll>{
 		headers.add(steps);
 		
 		Header epicOrderNumber = new Header(new String[] {"Epic","Order Nb"}, "epicOrderNumber");
+		epicOrderNumber.setWidth("95px");
 		epicOrderNumber.setIsSafe(true);
 		headers.add(epicOrderNumber);
 		Header epicOrderDate = new Header(new String[] {"Epic", "Order Date"}, "epicOrderDate");
+		epicOrderDate.setWidth("105px");
 		epicOrderDate.setIsSafe(true);
 		headers.add(epicOrderDate);
 		Header oncotreeDiagnosis = new Header(new String[] {"Oncotree", "Code"}, "oncotreeDiagnosis");
+		oncotreeDiagnosis.setWidth("90px");
 		oncotreeDiagnosis.setIsSafe(true);
 		headers.add(oncotreeDiagnosis);
 		Header icd10 = new Header("ICD 10", "icd10");
