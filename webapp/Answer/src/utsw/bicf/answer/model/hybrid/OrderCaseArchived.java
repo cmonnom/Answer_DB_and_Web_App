@@ -31,6 +31,7 @@ public class OrderCaseArchived {
 	FlagValue typeFlags;
 	String caseType;
 	String reportId;
+	String oncotreeDiagnosis;
 	
 	List<Button> buttons = new ArrayList<Button>();
 //	FlagValue progressFlags;
@@ -38,6 +39,7 @@ public class OrderCaseArchived {
 	public OrderCaseArchived(ModelDAO modelDAO, OrderCase orderCase, List<User> users, User currentUser) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
 		this.epicOrderDate =orderCase.getEpicOrderDate();
+		this.oncotreeDiagnosis = orderCase.getOncotreeDiagnosis();
 		this.icd10 = orderCase.getIcd10();
 		this.caseId = orderCase.getCaseId();
 		this.dateReceived = orderCase.getReceivedDate();
@@ -174,6 +176,10 @@ public class OrderCaseArchived {
 
 	public String getReportId() {
 		return reportId;
+	}
+
+	public String getOncotreeDiagnosis() {
+		return oncotreeDiagnosis;
 	}
 
 

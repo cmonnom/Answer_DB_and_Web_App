@@ -398,6 +398,11 @@ public class OpenCaseController {
 		cosmicFilter.setBoolean(true);
 		filters.add(cosmicFilter);
 		
+		DataTableFilter clinvarFilter = new DataTableFilter("In ClinVar", "Not In ClinVar", Variant.FIELD_IN_CLINVAR);
+		clinvarFilter.setType("snp");
+		clinvarFilter.setBoolean(true);
+		filters.add(clinvarFilter);
+		
 		DataTableFilter repeatFilter = new DataTableFilter("Has Repeats", "No Repeats", Variant.FIELD_HAS_REPEATS);
 		repeatFilter.setType("snp");
 		repeatFilter.setBoolean(true);
@@ -487,6 +492,7 @@ public class OpenCaseController {
 		numCasesCosmicFilter.setType("snp");
 		numCasesCosmicFilter.setNumber(true);
 		filters.add(numCasesCosmicFilter);
+		
 
 		DataTableFilter effectFilterLOF = new DataTableFilter("LOF Effects (HIGH)", Variant.FIELD_EFFECTS);
 		effectFilterLOF.setType("snp");

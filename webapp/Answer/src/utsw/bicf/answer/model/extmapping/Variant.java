@@ -32,6 +32,7 @@ public class Variant {
 	public static final String FIELD_NUM_CASES_SEEN = "numCasesSeen";
 	public static final String FIELD_MAX_COSMIC_PATIENTS = "maxCosmicPatients";
 	public static final String FIELD_IN_COSMIC = "inCosmic";
+	public static final String FIELD_IN_CLINVAR = "inClinvar";
 	public static final String FIELD_OLD_BUILDS = "oldBuilds";
 	
 	public static final String FIELD_CNV_GENE_NAME = "cnvGeneName";
@@ -902,6 +903,11 @@ public class Variant {
 
 	public void setVariantType(String variantType) {
 		this.variantType = variantType;
+	}
+
+
+	public static String getFieldInClinvar() {
+		return FIELD_IN_CLINVAR;
 	}
 
 

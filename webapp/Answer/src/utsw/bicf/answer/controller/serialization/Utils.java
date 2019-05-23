@@ -52,7 +52,8 @@ public class Utils {
 							}
 							if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)
 									|| filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)
-									|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)) {
+									|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)
+									|| filter.getFieldName().equals(Variant.FIELD_IN_CLINVAR)) {
 								vf.setValueTrue(true);
 							}
 						}

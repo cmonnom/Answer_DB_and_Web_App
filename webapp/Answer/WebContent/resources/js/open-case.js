@@ -1519,11 +1519,12 @@ const OpenCase = {
                             }
                         }
                         if (!variantFound) {
-                            var response = {
-                                success: false,
-                                message: "The variant ID could not be found. The URL must be incorrect."
-                            }
-                            this.handleDialogs(response, null);
+                            //commented out because not working properly
+                            // var response = {
+                            //     success: false,
+                            //     message: "The variant ID could not be found. The URL must be incorrect."
+                            // }
+                            // this.handleDialogs(response, null);
                             var html = document.querySelector("html");
                             html.style.overflow = ""
                         }

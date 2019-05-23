@@ -63,6 +63,9 @@ public class OrderCaseArchivedSummary extends Summary<OrderCaseArchived>{
 		Header epicOrderDate = new Header(new String[] {"Epic", "Order Date"}, "epicOrderDate");
 		epicOrderDate.setIsSafe(true);
 		headers.add(epicOrderDate);
+		Header oncotreeDiagnosis = new Header(new String[] {"Oncotree", "Code"}, "oncotreeDiagnosis");
+		oncotreeDiagnosis.setIsSafe(true);
+		headers.add(oncotreeDiagnosis);
 		Header icd10 = new Header("ICD 10", "icd10");
 		icd10.setWidth("300px");
 		icd10.setIsSafe(true);

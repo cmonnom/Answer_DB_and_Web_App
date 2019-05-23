@@ -285,7 +285,7 @@ Vue.component('variant-details', {
                                           <v-tooltip v-if="item.links && id.value !== null" bottom v-for="(id, index) in item.ids" :key="index">
                                               <v-btn @click="handleIdLink(id)" slot="activator" v-html="id.label">
                                               </v-btn>
-                                              <span>Open in new tab</span>
+                                              <span>{{ createLinkTooltip(id) }}</span>
                                           </v-tooltip>
                                       </v-flex>
                                   </v-layout>
@@ -368,7 +368,7 @@ Vue.component('variant-details', {
                 else if (id.value.indexOf('COSN') == 0) {
                     link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.value.replace("COSN", "");
                 }
-                else { //Clinvar
+                else if (!isNaN(id.value)) { //Clinvar
                     link = "https://www.ncbi.nlm.nih.gov/clinvar/variation/" + id.value;
                 }
             }
@@ -381,6 +381,22 @@ Vue.component('variant-details', {
                 }
             }
             window.open(link, "_blank");
+        },
+        createLinkTooltip(id) {
+            if (id.type == "various") {
+                if (id.value.indexOf('rs') == 0) {
+                    return "Open in dbSNP";
+                }
+                else if (id.value.indexOf('COSM') == 0 || id.value.indexOf('COSN') == 0) {
+                    return "Open in COSMIC";
+                }
+                else if (!isNaN(id.value)) { //Clinvar
+                    return "Open in ClinVar";
+                }
+            }
+            else if (id.type == "oncoKB") {
+                    return "Open in OncoKB";
+            }
         },
         //determines if the regular variant details label should be used
         //like Gene, Notation Nb.Cases Seen etc.
