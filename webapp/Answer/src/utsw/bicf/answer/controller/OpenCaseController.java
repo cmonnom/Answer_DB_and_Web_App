@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,6 +17,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
+import org.apache.http.client.ClientProtocolException;
 import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -58,11 +61,13 @@ import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.FilterStringValue;
 import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.IndividualPermission;
+import utsw.bicf.answer.model.LoginAttempt;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.UserPref;
 import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
+import utsw.bicf.answer.model.Version;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
@@ -157,6 +162,8 @@ public class OpenCaseController {
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".deleteHeaderConfig",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".cancelBreaks",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".updateLastLogin",
 				IndividualPermission.CAN_VIEW);
 		
 	}
@@ -1592,6 +1599,25 @@ public class OpenCaseController {
 				response.setSuccess(true);
 				
 				return response.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/updateLastLogin", method= RequestMethod.POST)
+	@ResponseBody
+	public String updateLastLogin(Model model, HttpSession session) throws ClientProtocolException, URISyntaxException, IOException {
+		User user = ControllerUtil.getSessionUser(session);
+		LoginAttempt loginAttempt = loginDAO.getLoginAttemptForUser(user);
+		AjaxResponse response = new AjaxResponse();
+		if (loginAttempt == null) { //something is not right. Disconnect user
+			session.removeAttribute("user");
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+			return response.createObjectJSON();
+		}
+		loginAttempt.setLastAttemptDatetime(LocalDateTime.now(ZoneOffset.UTC));
+		modelDAO.saveObject(loginAttempt);
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		return response.createObjectJSON();
 	}
 	
 }

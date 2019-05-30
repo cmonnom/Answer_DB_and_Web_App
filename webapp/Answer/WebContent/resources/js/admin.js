@@ -136,14 +136,14 @@ const Admin = {
     <v-fade-transition slot="action1">
       <v-tooltip bottom>
         <v-btn flat icon @click="addUser" slot="activator">
-          <v-icon dark>supervisor_account</v-icon>
+          <v-icon dark>mdi-account-plus</v-icon>
         </v-btn>
         <span>Add New User</span>
       </v-tooltip>
     </v-fade-transition>
     <v-list-tile avatar @click="addUser" slot="action1MenuItem">
       <v-list-tile-avatar>
-        <v-icon>supervisor_account</v-icon>
+        <v-icon>mdi-account-plus</v-icon>
       </v-list-tile-avatar>
       <v-list-tile-content>
         <v-list-tile-title>Add New User</v-list-tile-title>
@@ -156,14 +156,14 @@ const Admin = {
     <v-fade-transition slot="action1">
       <v-tooltip bottom>
         <v-btn flat icon @click="addGroup" slot="activator">
-          <v-icon dark>mdi-account-group</v-icon>
+          <v-icon dark>mdi-account-multiple-plus</v-icon>
         </v-btn>
         <span>Add New Group</span>
       </v-tooltip>
     </v-fade-transition>
     <v-list-tile avatar @click="addGroup" slot="action1MenuItem">
       <v-list-tile-avatar>
-        <v-icon>mdi-account-group</v-icon>
+        <v-icon>mdi-account-multiple-plus</v-icon>
       </v-list-tile-avatar>
       <v-list-tile-content>
         <v-list-tile-title>Add New Group</v-list-tile-title>
@@ -349,14 +349,6 @@ const Admin = {
       this.editNotification = false;
       this.editAdmin = false;
       this.editUserDialogVisible = true;
-
-      this.$refs.editFirstName.inputValue = "one";
-      this.$refs.editLastName.inputValue = "two";
-      this.$refs.editUsername.inputValue = "three";
-      this.$refs.editEmail.inputValue = "four";
-      this.currentEditUserFullName = "one two";
-      this.editView = true;
-
     },
     addGroup() {
       this.editAdd = "Add";

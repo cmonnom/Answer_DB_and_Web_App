@@ -60,7 +60,8 @@ public class ControllerUtil {
 				LoginAttempt loginAttempt = loginDAO.getLoginAttemptForUser(user);
 				model.addAttribute("showLastLogin", loginAttempt.getShowLastLogin());
 				loginAttempt.setShowLastLogin(false); //reset the flag to only display it once. LoginController takes care of setting it to true
-				String lastLogin = loginAttempt.getLastAttemptDatetime().format(TypeUtils.localDateTimeFormatter);
+//				String lastLogin = loginAttempt.getLastAttemptDatetime().format(TypeUtils.localDateTimeFormatter);
+				String lastLogin = TypeUtils.dateSince(loginAttempt.getLastAttemptDatetime());
 				model.addAttribute("lastLogin", lastLogin);
 				loginDAO.saveObject(loginAttempt);
 			}

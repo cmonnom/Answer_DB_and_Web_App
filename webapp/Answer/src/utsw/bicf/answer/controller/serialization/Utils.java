@@ -53,7 +53,9 @@ public class Utils {
 							if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)
 									|| filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)
 									|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)
-									|| filter.getFieldName().equals(Variant.FIELD_IN_CLINVAR)) {
+									|| filter.getFieldName().equals(Variant.FIELD_IN_CLINVAR)
+									|| filter.getFieldName().equals(Variant.FIELD_LIKELY_ARTIFACT)
+									|| filter.getFieldName().equals(Variant.FIELD_GNOMAD_LCR)) {
 								vf.setValueTrue(true);
 							}
 						}
@@ -64,7 +66,10 @@ public class Utils {
 							}
 							if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)
 									|| filter.getFieldName().equals(Variant.FIELD_IN_COSMIC)
-									|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)) {
+									|| filter.getFieldName().equals(Variant.FIELD_HAS_REPEATS)
+									|| filter.getFieldName().equals(Variant.FIELD_IN_CLINVAR)
+									|| filter.getFieldName().equals(Variant.FIELD_LIKELY_ARTIFACT)
+									|| filter.getFieldName().equals(Variant.FIELD_GNOMAD_LCR)) {
 								vf.setValueFalse(true);
 							}
 						}

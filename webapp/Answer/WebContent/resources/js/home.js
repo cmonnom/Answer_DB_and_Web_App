@@ -99,7 +99,7 @@ const Home = {
         <v-list>
           <v-list-tile avatar @click="toggleTable('forUser')">
           <v-list-tile-avatar>
-          <v-icon>mdi-account</v-icon>
+          <v-icon>star</v-icon>
         </v-list-tile-avatar>
           <v-list-tile-title>Show/Hide My Cases</v-list-tile-title>
         </v-list-tile>
@@ -136,7 +136,7 @@ const Home = {
 
     <v-tooltip bottom>
       <v-btn icon @click="toggleTable('forUser')" slot="activator">
-        <v-icon :color="caseForUserTableVisible ? 'amber accent-2' : ''">mdi-account</v-icon>
+        <v-icon :color="caseForUserTableVisible ? 'amber accent-2' : ''">star</v-icon>
       </v-btn>
       <span>Show/Hide My Cases</span>
     </v-tooltip>
@@ -168,7 +168,7 @@ const Home = {
       <v-slide-x-transition>
         <v-flex xs12 v-show="caseForUserTableVisible" >
           <data-table ref="casesForUserTable" :fixed="false" :fetch-on-created="false" table-title="My Cases" :initial-sort="'epicOrderDate'"
-            no-data-text="No Data" :show-pagination="true" title-icon="mdi-account">
+            no-data-text="No Data" :show-pagination="true" title-icon="star">
           </data-table>
         </v-flex>
       </v-slide-x-transition>
@@ -184,7 +184,7 @@ const Home = {
       <v-slide-x-transition>
       <v-flex xs12 v-show="caseFinalizedTableVisible" >
         <data-table ref="casesFinalizedTable" :fixed="false" :fetch-on-created="false" table-title="Cases Finalized" :initial-sort="'epicOrderDate'"
-          no-data-text="No Data" :show-pagination="true" title-icon="mdi-check-all">
+        :sort-descending="true" no-data-text="No Data" :show-pagination="true" title-icon="mdi-check-all">
         </data-table>
       </v-flex>
     </v-slide-x-transition>
@@ -192,7 +192,7 @@ const Home = {
     <v-slide-x-transition>
     <v-flex xs12 v-show="caseArchivedTableVisible" >
       <data-table ref="casesArchivedTable" :fixed="false" :fetch-on-created="false" table-title="Cases Archived" :initial-sort="'epicOrderDate'"
-        no-data-text="No Data" :show-pagination="true" title-icon="mdi-archive">
+      :sort-descending="true" no-data-text="No Data" :show-pagination="true" title-icon="mdi-archive">
       </data-table>
     </v-flex>
   </v-slide-x-transition>
@@ -473,7 +473,27 @@ const Home = {
                 this.snackBarTimeout = 8000;
                 this.snackBarVisible = true;
                 showLastLogin = false;
+                this.updateLastLoginAttempt();
             }
+        },
+        updateLastLoginAttempt() {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/updateLastLogin",
+                params: {
+                },
+                data: {
+                }
+            }).then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                }
+                else {
+                    //something is wrong. The user has been disconnected
+                }
+            }).catch(error => {
+                this.saveLoading = false;
+                this.handleAxiosError(error);
+            });
         }
     },
     mounted: function () {

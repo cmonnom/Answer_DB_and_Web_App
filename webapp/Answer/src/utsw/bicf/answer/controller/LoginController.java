@@ -114,7 +114,6 @@ public class LoginController {
 			proceed = false;
 			logReason = "Too many failed logins. Please wait 10 sec.";
 		}
-		loginAttempt.setLastAttemptDatetime(LocalDateTime.now());
 		if (proceed && user != null){
 			if (OtherProperties.AUTH_LDAP.equals(otherProps.getAuthenticateWith())) {
 				proceed = ldapUtils.isUserValid(user.getUsername(), credentials.getPassword());

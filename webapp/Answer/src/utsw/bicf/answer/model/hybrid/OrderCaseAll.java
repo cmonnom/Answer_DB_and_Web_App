@@ -56,7 +56,7 @@ public class OrderCaseAll {
 		}
 		this.assignedTo = userNames.stream().collect(Collectors.joining("<br/>"));
 		if (currentUser.getIndividualPermission().getCanAssign()) {
-			buttons.add(new Button("assignment_ind", "assignToUser", "Assign To", "info"));
+			buttons.add(new Button("mdi-account-arrow-left", "assignToUser", "Assign To", "info"));
 		}
 		if (currentUser.getIndividualPermission().getCanView()) {
 			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
