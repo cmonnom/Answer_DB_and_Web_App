@@ -527,6 +527,9 @@ public class OrderCase {
 
 
 	public String getStorageType() {
+		if (storageType == null) {
+			storageType = "local"; //temp fix. Need to populate on mongo's side
+		}
 		return storageType;
 	}
 

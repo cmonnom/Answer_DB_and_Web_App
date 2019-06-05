@@ -831,7 +831,7 @@ const OpenCase = {
                                                             <v-flex class="text-xs-left xs">
                                                                 <span :class="[item.type == 'text' ? 'pt-4' : '', 'selectable']">{{ item.label }}:</span>
                                                             </v-flex>
-                                                            <v-flex :class="[item.type ? 'xs5' : 'xs','text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
+                                                            <v-flex :class="[getPatientDetailsFlexClass(item),'text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
                                                                 <span v-if="item.type == null" class="selectable">{{ item.value }}</span>
                                                                 <v-tooltip bottom>
                                                                 <v-select class="pt-0" slot="activator" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text' && item.field == 'oncotree'" 
@@ -840,6 +840,9 @@ const OpenCase = {
                                                                 </v-select>
                                                                 <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
                                                                 </v-tooltip>
+                                                                <v-text-field text-area class="no-top-text-field align-input-right" v-if="item.type == 'text-field' && item.field == 'tumorTissueType'" v-model="patientDetailsTumorTissue"
+                                                                label="Tumor Tissue Type" @input="patientDetailsUnSaved = true" hide-details>
+                                                                </v-text-field>
                                                                 <v-text-field class="no-top-text-field align-input-right" v-if="item.type == 'text-field' && item.field == 'dedupPctOver100X'" v-model="patientDetailsDedupPctOver100X"
                                                                 label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true" hide-details>
                                                                 </v-text-field>
@@ -1131,6 +1134,7 @@ const OpenCase = {
             tempSelectedTranslocations: [],
             topMostDialog: "",
             patientDetailsOncoTreeDiagnosis: "",
+            patientDetailsTumorTissue: "",
             qcUrl: "",
             mutationalSignatureUrl: "",
             editAnnotationVariantDetailsVisible: true,
@@ -1209,7 +1213,8 @@ const OpenCase = {
             ftlUnfilteredItems: null,
             itdDialogVisible: false,
             loadingVariant: false,
-            currentSelectedVariantIds: {}
+            currentSelectedVariantIds: {},
+            creatingOtherTissueTypes: false
         }
     }, methods: {
         createSplashText() {
@@ -1425,6 +1430,9 @@ const OpenCase = {
                     }
                     else if (item.field == "oncotree") {
                         this.patientDetailsOncoTreeDiagnosis = { text: item.value, label: "" };
+                    }
+                    else if (item.field == "tumorTissueType") {
+                        this.patientDetailsTumorTissue = item.value;
                     }
                     else if (item.field == "dedupPctOver100X") {
                         this.patientDetailsDedupPctOver100X = item.value;
@@ -3494,6 +3502,7 @@ const OpenCase = {
                 url: webAppRoot + "/savePatientDetails",
                 params: {
                     oncotreeDiagnosis: this.patientDetailsOncoTreeDiagnosis.text,
+                    tumorTissue: this.patientDetailsTumorTissue,
                     dedupAvgDepth: this.patientDetailsDedupAvgDepth,
                     dedupPctOver100X: this.patientDetailsDedupPctOver100X,
                     tumorPercent: this.patientDetailsTumorPercent,
@@ -3996,8 +4005,16 @@ const OpenCase = {
                 this.showGoodiesPanel = true;
                 this.$refs.goodiesPanel.activateGoodies();
             }
-        }
-        
+        },
+        getPatientDetailsFlexClass(item) {
+            if (item && item.field == "tumorTissueType") {
+                return 'xs10';
+            }
+            if (item && item.type) {
+                return 'xs5';
+            }
+            return 'xs';
+        },
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",

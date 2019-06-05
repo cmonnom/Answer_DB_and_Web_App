@@ -121,7 +121,7 @@ const OpenReport = {
 
                                         <v-list-tile avatar @click="clinicalTrialsVisible = !clinicalTrialsVisible">
                                             <v-list-tile-avatar>
-                                                <v-icon>assignment</v-icon>
+                                                <v-icon>mdi-scale-balance</v-icon>
                                             </v-list-tile-avatar>
                                             <v-list-tile-content>
                                                 <v-list-tile-title>Clinical Trials</v-list-tile-title>
@@ -370,7 +370,7 @@ const OpenReport = {
             <div>
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
                 :enable-select-all="!fullReport.finalized"
-                    initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
+                    initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="mdi-scale-balance"
                     :color="colors.trials" :disable-sticky-header="true" :add-row-button="true"
                     :enable-selection="canProceed('canReview') && !readonly"
                     @datatable-selection-changed="handleSelectionChanged"

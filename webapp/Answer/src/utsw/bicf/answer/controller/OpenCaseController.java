@@ -1200,6 +1200,7 @@ public class OpenCaseController {
 	@RequestMapping(value = "/savePatientDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String savePatientDetails(Model model, HttpSession session, @RequestParam String oncotreeDiagnosis,
+			 @RequestParam String tumorTissue,
 			@RequestParam String dedupAvgDepth,
 			@RequestParam String dedupPctOver100X,
 			@RequestParam String tumorPercent,
@@ -1220,6 +1221,7 @@ public class OpenCaseController {
 			}
 			if (caseSummary != null) {
 				caseSummary.setOncotreeDiagnosis(oncotreeDiagnosis);
+				caseSummary.setTumorTissueType(tumorTissue);
 				if (dedupAvgDepth != "") {
 					try {
 						int dedupAvgDepthInt = Integer.parseInt(dedupAvgDepth);

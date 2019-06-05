@@ -129,7 +129,10 @@ public class PatientInfo {
 		items.add(new CellItem("Lab Accession #", orderCase.getCaseName()));
 		items.add(new CellItem("Tumor Specimen #", orderCase.getTumorId()));
 		items.add(new CellItem("Germline Specimen #", orderCase.getNormalId()));
-		items.add(new CellItem("Tumor Tissue", orderCase.getTumorTissueType()));
+		CellItem tumorTissueItem = new CellItem("Tumor Tissue", orderCase.getTumorTissueType());
+		tumorTissueItem.setType(CellItem.TYPE_TEXT_FIELD);
+		tumorTissueItem.setField("tumorTissueType");
+		items.add(tumorTissueItem);
 		items.add(new CellItem("Germline Tissue", orderCase.getNormalTissueType()));
 //		items.add(new CellItem("ICD10", orderCase.getIcd10()));
 		CellItem oncoTreeItem = new CellItem("OncoTree Diagnosis", orderCase.getOncotreeDiagnosis());
