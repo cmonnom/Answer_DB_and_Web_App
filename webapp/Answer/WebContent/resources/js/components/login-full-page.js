@@ -49,7 +49,7 @@ Vue.component('login-full-page', {
         </div>
         </v-flex>
     </v-layout> 
-    <v-layout row justify-center>
+    <v-layout row justify-center v-show="showLogin">
         <v-flex class="text-xs-center elevation-1 teal darken-2" xs12 md6 lg3 xl2>
             <login :message="message" :popup="false"></login>
         </v-flex>
@@ -74,7 +74,8 @@ Vue.component('login-full-page', {
             email: "",
             snackBarVisible: false,
             snackBarMessage: "",
-            allowResetPwd: false
+            allowResetPwd: false,
+            showLogin: false
         }
     },
     methods: {
@@ -95,6 +96,7 @@ Vue.component('login-full-page', {
                         }
                     }
                     else {
+                        this.showLogin = true;
                         this.message = this.message ? this.message : response.data.reason;
                         console.log(response.data.reason);
                         this.allowResetPwd = response.data.payload;

@@ -112,6 +112,10 @@ public class OpenReportController {
 		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 		}
+		if (caseSummary.getActive() == null || !caseSummary.getActive()) { //can't edit archived cases
+			model.addAttribute("redirectReadOnlyUrl", url.replace("openReport/", "openReportReadOnly/"));
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 //		RequestUtils utils = new RequestUtils(modelDAO);
 //		if (user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {

@@ -133,6 +133,9 @@ public class TypeUtils {
 	
 	public static String dateSince(Temporal date) {
 		Temporal now = OffsetDateTime.now(ZoneOffset.UTC);
+		if (date == null) {
+			date = OffsetDateTime.now(ZoneOffset.UTC);
+		}
 		if (date instanceof LocalDate) {
 			date = LocalDateTime.of((LocalDate) date, LocalTime.now(ZoneOffset.UTC));
 		}

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
@@ -57,6 +58,9 @@ public class OrderCaseArchived {
 //		if (currentUser.getIndividualPermission().getCanAssign()) {
 //			buttons.add(new Button("assignment_ind", "assignToUser", "Assign To", "info"));
 //		}
+		if (currentUser.getIndividualPermission().getCanView()) {
+			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
+		}
 		if (currentUser.getIndividualPermission().getCanView() 
 				&& CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
 			RequestUtils utils = new RequestUtils(modelDAO);

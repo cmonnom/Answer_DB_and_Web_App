@@ -50,6 +50,10 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 		epicOrderDate.setWidth("105px");
 		epicOrderDate.setIsSafe(true);
 		headers.add(epicOrderDate);
+		Header uploadedDate = new Header(new String[] {"Uploaded", "Date"}, "uploadedDate");
+		uploadedDate.setWidth("105px");
+		uploadedDate.setIsSafe(true);
+		headers.add(uploadedDate);
 		Header oncotreeDiagnosis = new Header(new String[] {"Oncotree", "Code"}, "oncotreeDiagnosis");
 		oncotreeDiagnosis.setWidth("90px");
 		oncotreeDiagnosis.setIsSafe(true);

@@ -1,8 +1,11 @@
 package utsw.bicf.answer.model.hybrid;
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
@@ -22,6 +25,7 @@ public class OrderCaseForUser {
 	String caseType;
 	boolean active;
 	String oncotreeDiagnosis;
+	String uploadedDate; //date the case was uploaded into Answer
 	
 	List<Button> buttons = new ArrayList<Button>();
 	FlagValue progressFlags;
@@ -91,6 +95,24 @@ public class OrderCaseForUser {
 		}
 		
 		progressFlags = new FlagValue(icons);
+		if (orderCase.getCaseHistory() != null) {
+			for (CaseHistory hist : orderCase.getCaseHistory()) {
+				if (hist.getStep().equals(CaseHistory.STEP_NOT_ASSIGNED)) {
+					OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+					uploadedDate = date.format(TypeUtils.monthFormatter);
+					break;
+				}
+			}
+			if (uploadedDate == null) { //no uploaded date for old cases
+				for (CaseHistory hist : orderCase.getCaseHistory()) {
+					if (hist.getStep().equals(CaseHistory.STEP_ASSIGNED)) {
+						OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+						uploadedDate = date.format(TypeUtils.monthFormatter);
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	public String getEpicOrderNumber() {
@@ -143,6 +165,14 @@ public class OrderCaseForUser {
 
 	public String getOncotreeDiagnosis() {
 		return oncotreeDiagnosis;
+	}
+
+	public String getUploadedDate() {
+		return uploadedDate;
+	}
+
+	public void setUploadedDate(String uploadedDate) {
+		this.uploadedDate = uploadedDate;
 	}
 
 

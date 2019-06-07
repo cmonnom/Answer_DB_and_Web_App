@@ -200,7 +200,8 @@ public class OpenCaseController {
 		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 		}
-		if (user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) {
+		if ((user != null && !ControllerUtil.isUserAssignedToCase(utils, caseId, user)) //can't edit if not assigned
+				|| (caseSummary.getActive() == null || !caseSummary.getActive())) { //can't edit archived cases
 			model.addAttribute("redirectReadOnlyUrl", url.replace("openCase/", "openCaseReadOnly/"));
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 		}
