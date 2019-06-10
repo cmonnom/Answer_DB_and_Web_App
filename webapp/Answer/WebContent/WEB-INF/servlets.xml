@@ -37,6 +37,7 @@
 	<mvc:resources location="file:/opt/answer/links/bams/" mapping="/bams/**" />
 	<mvc:resources location="file:/opt/answer/links/vcfs/" mapping="/vcfs/**" />
 	<mvc:resources location="file:/opt/answer/links/pdfs/" mapping="/pdfs/**" />
+	<mvc:resources location="file:/opt/answer/links/igv/" mapping="/igv/**" />
 	<mvc:resources location="file:/opt/answer/docs/html/" mapping="/help/**" />
 
 	<!-- Define Spring MVC view resolver -->
@@ -107,6 +108,8 @@
 		<property name="bamFilesPath" value="${bam.file.location}" />
 		<property name="vcfLinksPath" value="${vcf.link.location}" />
 		<property name="vcfFilesPath" value="${vcf.file.location}" />
+		<property name="igvLinksPath" value="${igv.link.location}" />
+		<property name="igvTemplateFilesPath" value="${igv.file.location}" />
 		<property name="pdfFontPath" value="${pdf.font.location}" />
 		<property name="pdfFontBoldPath" value="${pdf.font.bold.location}" />
 		<property name="genePanelSearchUrl" value="${gene.panel.search.url}" />

@@ -16,6 +16,10 @@ public class FileProperties {
 	File vcfLinksDir;
 	String vcfFilesPath;
 	File vcfFilesDir;
+	String igvLinksPath;
+	File igvLinksDir;
+	String igvTemplateFilesPath;
+	File igvTemplateFilesDir;
 	String genePanelSearchUrl;
 	String pdfFontPath;
 	File pdfFontFile;
@@ -292,6 +296,42 @@ public class FileProperties {
 	}
 	public void setVcfFilesDir(File vcfFilesDir) {
 		this.vcfFilesDir = vcfFilesDir;
+	}
+	public String getIgvLinksPath() {
+		return igvLinksPath;
+	}
+	public void setIgvLinksPath(String igvLinksPath) {
+		this.igvLinksPath = igvLinksPath;
+	}
+	public File getIgvLinksDir() {
+		if (igvLinksPath == null) {
+			return null;
+		}
+		if (igvLinksDir == null) {
+			igvLinksDir = new File(igvLinksPath);
+		}
+		return igvLinksDir;
+	}
+	public void setIgvLinksDir(File igvLinksDir) {
+		this.igvLinksDir = igvLinksDir;
+	}
+	public String getIgvTemplateFilesPath() {
+		return igvTemplateFilesPath;
+	}
+	public void setIgvTemplateFilesPath(String igvTemplateFilesPath) {
+		this.igvTemplateFilesPath = igvTemplateFilesPath;
+	}
+	public File getIgvTemplateFilesDir() {
+		if (igvTemplateFilesPath == null) {
+			return null;
+		}
+		if (igvTemplateFilesDir == null) {
+			igvTemplateFilesDir = new File(igvTemplateFilesPath);
+		}
+		return igvTemplateFilesDir;
+	}
+	public void setIgvTemplateFilesDir(File igvTemplateFilesDir) {
+		this.igvTemplateFilesDir = igvTemplateFilesDir;
 	}
 	
 	

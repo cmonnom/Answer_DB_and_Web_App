@@ -240,13 +240,31 @@ const OpenCase = {
                             </v-list-tile-content>
                         </v-list-tile>
 
-                        <v-list-tile v-if="isSNP()" avatar @click="openBamViewerLink()">
+                        <v-list-tile v-if="isSNP()" avatar @click="openBamViewerLinkWeb()">
                             <v-list-tile-avatar>
                                 IGV
                             </v-list-tile-avatar>
                             <v-list-tile-content>
-                                <v-list-tile-title>Open Bam Viewer in New Tab</v-list-tile-title>
+                                <v-list-tile-title>Open Bam Viewer (web) <v-icon>mdi-web</v-icon></v-list-tile-title>
                             </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile v-if="isSNP()" avatar @click="downloadIGVFile('jnlp')">
+                        <v-list-tile-avatar>
+                            IGV
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Open Bam Viewer (desktop) <v-icon>mdi-desktop-mac-dashboard</v-icon></v-list-tile-title>
+                        </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile v-if="isSNP()" avatar @click="downloadIGVFile('session')">
+                        <v-list-tile-avatar>
+                            IGV
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Download IGV Session <v-icon>mdi-file-xml</v-icon></v-list-tile-title>
+                        </v-list-tile-content>
                         </v-list-tile>
 
                         <v-list-tile avatar @click="startUserAnnotations()" :disabled="!canProceed('canAnnotate')">
@@ -350,12 +368,32 @@ const OpenCase = {
                     <span v-if="utswAnnotationsExists()">Show/Hide UTSW Annotations</span>
                     <span v-else>No UTSW Annotations</span>
                 </v-tooltip>
+                <v-menu origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y>
+                <v-btn icon flat slot="activator">IGV
+                </v-btn>
+                <v-card color="primary">
                 <v-tooltip bottom v-if="isSNP()">
-                    <v-btn ref="bamViewerLink" icon flat slot="activator" :href="createBamViewerLink()" target="_blank" rel="noreferrer">
-                        IGV
+                    <v-btn ref="bamViewerLink" dark icon flat slot="activator" :href="createBamViewerLink()" target="_blank" rel="noreferrer">
+                        <v-icon>mdi-web</v-icon> 
                     </v-btn>
-                    <span>Open Bam Viewer in New Tab</span>
+                    <span>Open Bam Viewer (web)</span>
                 </v-tooltip>
+                <br/>
+                <v-tooltip bottom v-if="isSNP()">
+                    <v-btn ref="bamViewerLinkDesktop" dark icon flat slot="activator" @click="downloadIGVFile('jnlp')">
+                        <v-icon>mdi-desktop-mac-dashboard</v-icon>
+                    </v-btn>
+                    <span>Open Bam Viewer (desktop)</span>
+                </v-tooltip>
+                <br/>
+                <v-tooltip bottom v-if="isSNP()">
+                    <v-btn ref="bamViewerLinkDesktop" dark icon flat slot="activator" @click="downloadIGVFile('session')">
+                        <v-icon>mdi-file-xml</v-icon>
+                    </v-btn>
+                    <span>Download IGV Session</span>
+                </v-tooltip>
+                </v-card>
+                </v-menu>
 
                 <v-badge color="red" right bottom overlap v-model="isSaveNeededBadgeVisible()" class="mini-badge">
                 <v-icon slot="badge"></v-icon>
@@ -3059,7 +3097,7 @@ const OpenCase = {
                     this.handleAxiosError(error);
                 });
         },
-        openBamViewerLink() {
+        openBamViewerLinkWeb() {
             this.$refs.bamViewerLink.$el.click();
         },
         createBamViewerLink() {
@@ -3071,6 +3109,36 @@ const OpenCase = {
             link += "locus=" + igvRange;
             link += "&caseId=" + this.$route.params.id;
             return link;
+        },
+        downloadIGVFile(igvType) {
+            var igvRange = this.currentVariant.chrom + ":";
+            igvRange += this.currentVariant.pos - 100;
+            igvRange += "-";
+            igvRange += this.currentVariant.pos + 99;
+            axios.get(
+                webAppRoot + "/downloadLocalIGVFile",
+                {
+                    params: {
+                        locus: igvRange,
+                        caseId: this.$route.params.id,
+                        type: igvType
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed) {
+                        var hiddenElement = document.createElement('a');
+                        hiddenElement.href = webAppRoot + "/igv/" + response.data.payload;
+                        hiddenElement.download = response.data.payload;
+                        document.body.appendChild(hiddenElement);
+                        hiddenElement.click();
+                        document.body.removeChild(hiddenElement);
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.downloadIGVFile.bind(null, igvType));
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                });
         },
         closeVariantDetails(skipSave) {
             if (!skipSave) {

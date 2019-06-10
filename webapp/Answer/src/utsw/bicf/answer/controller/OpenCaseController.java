@@ -221,10 +221,10 @@ public class OpenCaseController {
 		User user = ControllerUtil.getSessionUser(session);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		model.addAttribute("urlRedirect", url);
 		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 		}
-		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
 		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}

@@ -11,42 +11,41 @@ response.setDateHeader ("Expires", 0);
 			<html lang="en">
 			<c:choose>
 				<c:when test="${isAllowed}">
-
-					<head>
-						<title>Bam Viewer</title>
-						<meta name="viewport" content="width=device-width, initial-scale=1">
-						<meta name="Description" content="Answer is an Annotation Software for Electronic Reporting, 
-Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
- at the University of Texas Southwestern Medical Center">
-						<!-- Font Awesome CSS -->
-						<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"
-						/>
-						
-						<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/igv@2.2.5/dist/igv.min.js"></script>
-					</head>
-
-					<body>
-						<script>
-							var urlRoot = "${pageContext.request.contextPath}" + "/bams/";
-							if ("${storageType}" != "local") {
-								urlRoot = ""; //url is fully contained in the filename for cloud storage
-							}
-							var locus = "${locus}";
-							var caseId = "${caseId}";
-							var normalBam = "${normalBam}";
-							var normalBai = "${normalBai}";
-							var normalLabel = "${normalLabel}";
-							var tumorBam = "${tumorBam}";
-							var tumorBai = "${tumorBai}";
-							var tumorLabel = "${tumorLabel}";
-							var rnaBam = "${rnaBam}";
-							var rnaBai = "${rnaBai}";
-							var rnaLabel = "${rnaLabel}";
-						</script>
-						<div id="igv-div">
-
-						</div>
-					</body>
+							<head>
+								<title>Bam Viewer</title>
+								<meta name="viewport" content="width=device-width, initial-scale=1">
+								<meta name="Description" content="Answer is an Annotation Software for Electronic Reporting, 
+		Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
+		 at the University of Texas Southwestern Medical Center">
+								<!-- Font Awesome CSS -->
+								<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"
+								/>
+								
+								<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/igv@2.2.5/dist/igv.min.js"></script>
+							</head>
+		
+							<body>
+								<script>
+									var urlRoot = "${pageContext.request.contextPath}" + "/bams/";
+									if ("${storageType}" != "local") {
+										urlRoot = ""; //url is fully contained in the filename for cloud storage
+									}
+									var locus = "${locus}";
+									var caseId = "${caseId}";
+									var normalBam = "${normalBam}";
+									var normalBai = "${normalBai}";
+									var normalLabel = "${normalLabel}";
+									var tumorBam = "${tumorBam}";
+									var tumorBai = "${tumorBai}";
+									var tumorLabel = "${tumorLabel}";
+									var rnaBam = "${rnaBam}";
+									var rnaBai = "${rnaBai}";
+									var rnaLabel = "${rnaLabel}";
+								</script>
+								<div id="igv-div">
+		
+								</div>
+							</body>
 				</c:when>
 				<c:otherwise>
 					<script>window.location = "${pageContext.request.contextPath}/login?urlRedirect=${urlRedirect}"</script>

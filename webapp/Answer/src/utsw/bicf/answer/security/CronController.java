@@ -36,6 +36,8 @@ public class CronController {
 		deleteLinks(linkDir);
 		File fileDir = fileProps.getPdfFilesDir();
 		deleteLinks(fileDir);
+		File igvLinkDir = fileProps.getIgvLinksDir();
+		deleteLinks(igvLinkDir);
 		File finalizedPDFDir = fileProps.getPdfFinalizedFilesDir();
 		File finalizedPDFBackupDir = fileProps.getPdfFinalizedFilesBackupDir();
 		copyToBackup(finalizedPDFDir, finalizedPDFBackupDir);
