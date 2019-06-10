@@ -130,7 +130,7 @@ public class BamViewerController {
 			String normalBam = caseSummary.getNormalBam();
 			String tumorBam = caseSummary.getTumorBam();
 			String rnaBam = caseSummary.getRnaBam();
-			normalBam = "SHI710-27-6271_T_DNA_panel1385v2-1.final.bam"; //TODO delete this
+//			normalBam = "SHI710-27-6271_T_DNA_panel1385v2-1.final.bam"; //TODO delete this
 
 
 			if (normalBam != null) {
