@@ -2,16 +2,18 @@ package utsw.bicf.answer.model.hybrid;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
 import utsw.bicf.answer.dao.ModelDAO;
-import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -31,6 +33,7 @@ public class OrderCaseAll {
 	String caseType;
 	boolean active;
 	String oncotreeDiagnosis;
+	String uploadedDate; //date the case was uploaded into Answer
 	
 	List<Button> buttons = new ArrayList<Button>();
 	FlagValue progressFlags;
@@ -62,7 +65,6 @@ public class OrderCaseAll {
 			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
 			if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)
 					|| CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
-				RequestUtils utils = new RequestUtils(modelDAO);
 				boolean isAssigned = false;
 				try {
 					isAssigned = ControllerUtil.isUserAssignedToCase(orderCase, currentUser);
@@ -115,6 +117,25 @@ public class OrderCaseAll {
 		}
 		
 		progressFlags = new FlagValue(icons);
+		
+		if (orderCase.getCaseHistory() != null) {
+			for (CaseHistory hist : orderCase.getCaseHistory()) {
+				if (hist.getStep().equals(CaseHistory.STEP_NOT_ASSIGNED)) {
+					OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+					uploadedDate = date.format(TypeUtils.monthFormatter);
+					break;
+				}
+			}
+			if (uploadedDate == null) { //no uploaded date for old cases
+				for (CaseHistory hist : orderCase.getCaseHistory()) {
+					if (hist.getStep().equals(CaseHistory.STEP_ASSIGNED)) {
+						OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+						uploadedDate = date.format(TypeUtils.monthFormatter);
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	public String getEpicOrderNumber() {
@@ -176,6 +197,10 @@ public class OrderCaseAll {
 
 	public String getOncotreeDiagnosis() {
 		return oncotreeDiagnosis;
+	}
+
+	public String getUploadedDate() {
+		return uploadedDate;
 	}
 
 

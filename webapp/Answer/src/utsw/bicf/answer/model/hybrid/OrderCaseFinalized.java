@@ -66,7 +66,7 @@ public class OrderCaseFinalized {
 				Report lastFinalized = null;
 				if (allReports != null) {
 					for (Report r : allReports) {
-						if (r.getFinalized() != null) {
+						if (r.getFinalized() != null && r.getFinalized()) {
 							if (lastFinalized != null) { //compare dates
 								OffsetDateTime lastFinalizedUTCDatetime = OffsetDateTime.parse(lastFinalized.getDateFinalized(), DateTimeFormatter.ISO_DATE_TIME);
 								OffsetDateTime rFinalizedUTCDatetime = OffsetDateTime.parse(r.getDateFinalized(), DateTimeFormatter.ISO_DATE_TIME);
@@ -83,6 +83,9 @@ public class OrderCaseFinalized {
 				if (lastFinalized != null) {
 					this.reportId = lastFinalized.getMongoDBId().getOid();
 					buttons.add(new Button("picture_as_pdf", "downloadPDFReport", "Download Finalized Report", "info"));
+					if (orderCase.getActive() != null && orderCase.getActive()) {
+						buttons.add(new Button("mdi-check", "sent-to-epic", "Report was sent to Epic", "info"));
+					}
 				}
 			} catch (UnsupportedOperationException | IOException | URISyntaxException e) {
 				e.printStackTrace();

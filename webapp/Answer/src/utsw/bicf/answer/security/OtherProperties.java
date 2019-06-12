@@ -10,6 +10,8 @@ public class OtherProperties {
 	String authUrl;
 	Boolean productionEnv;
 	String mutationalSignatureUrl;
+	String rootUrl;
+	String webappName;
 
 	public static final String AUTH_LDAP = "ldap";
 	public static final String AUTH_LOCAL = "local";
@@ -77,6 +79,22 @@ public class OtherProperties {
 
 	public void setMutationalSignatureUrl(String mutationalSignatureUrl) {
 		this.mutationalSignatureUrl = mutationalSignatureUrl;
+	}
+
+	public String getRootUrl() {
+		return rootUrl;
+	}
+
+	public void setRootUrl(String rootUrl) {
+		this.rootUrl = rootUrl;
+	}
+
+	public String getWebappName() {
+		return webappName;
+	}
+
+	public void setWebappName(String webappName) {
+		this.webappName = webappName;
 	}
 
 }

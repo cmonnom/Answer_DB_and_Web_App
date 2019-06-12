@@ -10,6 +10,7 @@ public class CaseHistory {
 	public static final Integer STEP_UNDER_REVIEW = 2;
 	public static final Integer STEP_REPORTING = 3;
 	public static final Integer STEP_FINALIZED = 4;
+	public static final Integer STEP_UPLOAD_TO_EPIC = 5;
 	
 	
 	String time;

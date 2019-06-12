@@ -3,12 +3,10 @@ package utsw.bicf.answer.controller;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -19,7 +17,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,18 +26,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
-import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.igv.Global;
 import utsw.bicf.answer.igv.JNLPTemplate;
 import utsw.bicf.answer.igv.Resource;
 import utsw.bicf.answer.model.IndividualPermission;
-import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CloudBams;
 import utsw.bicf.answer.model.extmapping.OrderCase;
-import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
@@ -181,12 +175,7 @@ public class BamViewerController {
 
 		//create a session file and jnlp file to launch IGV locally
 		List<Resource> resources = new ArrayList<Resource>();
-		URL url = new URL(request.getRequestURL().toString());
-		String host  = url.getHost();
-		int port = url.getPort();
-		String scheme = url.getProtocol();
-		String context = request.getContextPath();
-		String urlRoot = scheme + "://" + host + ":" + port + context + "/";
+		String urlRoot = otherProps.getRootUrl() + otherProps.getWebappName() + "/";
 		String bamsRoot = ("azure".equals(caseSummary.getStorageType()) ? "" : urlRoot + "bams/");
 		Map<String, Object> attributes = model.asMap();
 

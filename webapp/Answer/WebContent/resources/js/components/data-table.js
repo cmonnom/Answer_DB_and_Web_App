@@ -183,7 +183,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-show="showButtons">
-        <v-btn flat icon @click="handleRefresh()" slot="activator">
+        <v-btn flat icon @click="handleRefresh()" slot="activator" :loading="loading">
           <v-icon>refresh</v-icon>
         </v-btn>
         <span>Refresh</span>
@@ -645,7 +645,7 @@ Vue.component('data-table', {
                 });
         },
         handleRefresh() {
-            this.$emit("refresh-requested");
+            this.$emit("refresh-requested", this);
             this.getAjaxData();
         },
         createFilters(previousFilters) {

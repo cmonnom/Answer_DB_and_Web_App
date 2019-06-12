@@ -21,6 +21,7 @@ public class OrderCase {
 		stepTooltip.put(2, "Variant selection under review");
 		stepTooltip.put(3, "Creating the report");
 		stepTooltip.put(4, "Finalized");
+		stepTooltip.put(5, "Uploaded to Epic");
 	}
 	
 	Boolean active;

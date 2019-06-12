@@ -60,7 +60,7 @@ public class HomeController {
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".assignToUser", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getAllUsersToAssign", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".createPDFReport", IndividualPermission.CAN_VIEW);
-		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".toggleArchivingStatusForCase", IndividualPermission.CAN_REVIEW);
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".toggleSentToEpicStatusForCase", IndividualPermission.CAN_REVIEW);
 	}
 
 	@Autowired
@@ -107,8 +107,19 @@ public class HomeController {
 			List<OrderCaseForUser> casesForUser = 
 					caseList.stream()
 					.filter(c -> c.getAssignedTo() != null && c.getAssignedTo().contains(user.getUserId().toString())
-							&& c.getActive() != null && c.getActive())
-					.map(c -> new OrderCaseForUser(c, user))
+							&& c.getActive() != null && c.getActive()
+							&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
+							&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC))
+					.map(c -> new OrderCaseForUser(c, users, user))
+					.collect(Collectors.toList());
+			
+			List<OrderCaseForUser> casesForUserCompleted = 
+					caseList.stream()
+					.filter(c -> c.getAssignedTo() != null && c.getAssignedTo().contains(user.getUserId().toString())
+							&& c.getActive() != null && c.getActive()
+							&& (CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
+									|| CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC)))
+					.map(c -> new OrderCaseForUser(c, users, user))
 					.collect(Collectors.toList());
 			
 			List<OrderCaseAll> casesAll = 
@@ -122,21 +133,28 @@ public class HomeController {
 							&& c.getActive() != null && c.getActive())
 					.map(c -> new OrderCaseFinalized(modelDAO, c, users, user))
 					.collect(Collectors.toList());
-			List<OrderCaseArchived> casesArchived = 
-					caseList.stream()
-					.filter(c -> !c.getActive())
-					.map(c -> new OrderCaseArchived(modelDAO, c, users, user))
-					.collect(Collectors.toList());
+//			List<OrderCaseArchived> casesArchived = 
+//					caseList.stream()
+//					.filter(c -> !c.getActive())
+//					.map(c -> new OrderCaseArchived(modelDAO, c, users, user))
+//					.collect(Collectors.toList());
+			
 			List<HeaderOrder> headerOrdersAll = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "All Cases");
 			OrderCaseAllSummary allSummary = new OrderCaseAllSummary(casesAll, user, headerOrdersAll);
-			List<HeaderOrder> headerOrdersUser = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "My Cases");
-			OrderCaseForUserSummary forUserSummary = new OrderCaseForUserSummary(casesForUser, headerOrdersUser);
-			List<HeaderOrder> headerOrdersFinalized = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Cases Finalized");
-			OrderCaseFinalizedSummary finalizedSummary = new OrderCaseFinalizedSummary(casesFinalized, user, headerOrdersFinalized);
-			List<HeaderOrder> headerOrdersArchived = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Cases Archived");
-			OrderCaseArchivedSummary archivedSummary = new OrderCaseArchivedSummary(casesArchived, user, headerOrdersArchived);
 			
-			AllOrderCasesSummary summary = new AllOrderCasesSummary(allSummary, forUserSummary, finalizedSummary, archivedSummary);
+			List<HeaderOrder> headerOrdersUser = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Active Cases");
+			OrderCaseForUserSummary forUserSummary = new OrderCaseForUserSummary(casesForUser, headerOrdersUser);
+			
+			List<HeaderOrder> headerOrdersUserCompleted = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Completed Cases");
+			OrderCaseForUserSummary forUserCompletedSummary = new OrderCaseForUserSummary(casesForUserCompleted, headerOrdersUserCompleted);
+			
+			List<HeaderOrder> headerOrdersFinalized = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Cases Ready for Epic");
+			OrderCaseFinalizedSummary finalizedSummary = new OrderCaseFinalizedSummary(casesFinalized, user, headerOrdersFinalized);
+			
+//			List<HeaderOrder> headerOrdersArchived = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Cases Archived");
+//			OrderCaseArchivedSummary archivedSummary = new OrderCaseArchivedSummary(casesArchived, user, headerOrdersArchived);
+			
+			AllOrderCasesSummary summary = new AllOrderCasesSummary(allSummary, forUserSummary, forUserCompletedSummary, finalizedSummary);
 			summary.setSuccess(true);
 			return summary.createVuetifyObjectJSON();
 		}
@@ -286,24 +304,22 @@ public class HomeController {
 		
 	}
 	
-	@RequestMapping(value = "/toggleArchivingStatusForCase")
+	//TODO
+	@RequestMapping(value = "/toggleSentToEpicStatusForCase")
 	@ResponseBody
-	public String toggleArchivingStatusForCase(Model model, HttpSession session, 
-			@RequestParam String caseId, @RequestParam Boolean doArchive) throws Exception {
+	public String toggleSentToEpicStatusForCase(Model model, HttpSession session, 
+			@RequestParam String caseId) throws Exception {
 
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		User user = ControllerUtil.getSessionUser(session);
-		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
 		AjaxResponse response = new AjaxResponse();
-		response.setIsAllowed(isAssigned);
-		if (isAssigned) {
-			OrderCase caseSummary = utils.getCaseSummary(caseId);
-			if (caseSummary != null) {
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (caseSummary != null) {
+			if (CaseHistory.lastStepMatches(caseSummary, CaseHistory.STEP_FINALIZED)) {
 				if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
 					return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 				}
-				caseSummary.setActive(!doArchive);
 				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);
 				if (savedCaseSummary != null) {
 					response.setSuccess(true);

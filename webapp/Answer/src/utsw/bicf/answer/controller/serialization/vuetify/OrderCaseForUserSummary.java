@@ -63,6 +63,9 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 		icd10.setWidthValue(300);
 		icd10.setIsSafe(true);
 		headers.add(icd10);
+		Header assignedTo = new Header(new String[] {"Assigned", "To"}, "assignedTo");
+		assignedTo.setIsSafe(true);
+		headers.add(assignedTo);
 		Header dateReceived = new Header(new String[] {"Date", "Received"}, "dateReceived");
 		dateReceived.setIsSafe(true);
 		headers.add(dateReceived);

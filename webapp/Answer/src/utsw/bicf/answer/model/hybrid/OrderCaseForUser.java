@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.Button;
@@ -30,13 +31,19 @@ public class OrderCaseForUser {
 	List<Button> buttons = new ArrayList<Button>();
 	FlagValue progressFlags;
 	
-	public OrderCaseForUser(OrderCase orderCase, User currentUser) {
+	List<String> assignedToIds;
+	List<String> groupIds;
+	String assignedTo;
+	
+	public OrderCaseForUser(OrderCase orderCase, List<User> users, User currentUser) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
 		this.epicOrderDate = orderCase.getEpicOrderDate();
 		this.oncotreeDiagnosis = orderCase.getOncotreeDiagnosis();
 		this.icd10 = orderCase.getIcd10();
 		this.caseId = orderCase.getCaseId();
 		this.dateReceived = orderCase.getReceivedDate();
+		this.assignedToIds = orderCase.getAssignedTo();
+		this.groupIds = orderCase.getGroupIds();
 		this.patientName = orderCase.getPatientName();
 		this.active = orderCase.getActive();
 		buttons.add(new Button("mdi-file-document-edit", "open", "Work on Case", "info"));
@@ -49,14 +56,16 @@ public class OrderCaseForUser {
 				buttons.add(new Button("assignment", "open-report-read-only", "Open Report in View Only Mode", "info"));
 			}
 		}
-		if (orderCase.getActive() != null && orderCase.getActive()) {
-			if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
-				buttons.add(new Button("mdi-logout", "deactivate-case", "Archive the case / Final Sign Out", "info"));
-			}
-			else {
-				buttons.add(new Button("mdi-archive", "deactivate-case", "Archive the case (no sign out)", "info"));
+		
+		List<String> userNames = new ArrayList<String>();
+		for (String userId : orderCase.getAssignedTo()) {
+			for (User user : users) {
+				if (userId.equals(user.getUserId().toString())) {
+					userNames.add(user.getFullName());
+				}
 			}
 		}
+		this.assignedTo = userNames.stream().collect(Collectors.joining("<br/>"));
 		
 		List<VuetifyIcon> typeIcons = new ArrayList<VuetifyIcon>();
 		String iconName = null;
@@ -173,6 +182,18 @@ public class OrderCaseForUser {
 
 	public void setUploadedDate(String uploadedDate) {
 		this.uploadedDate = uploadedDate;
+	}
+
+	public List<String> getAssignedToIds() {
+		return assignedToIds;
+	}
+
+	public List<String> getGroupIds() {
+		return groupIds;
+	}
+
+	public String getAssignedTo() {
+		return assignedTo;
 	}
 
 

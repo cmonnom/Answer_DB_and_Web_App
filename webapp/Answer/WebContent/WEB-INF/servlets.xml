@@ -140,6 +140,8 @@
 		<property name="authenticateWith" value="${auth.type}" />
 		<property name="authMessage" value="${auth.message}" />
 		<property name="authUrl" value="${auth.url}" />
+		<property name="rootUrl" value="${root.url}" />
+		<property name="webappName" value="${webapp.name}" />
 	</bean>
 	
 	<bean id="ncbiProps" class="utsw.bicf.answer.security.NCBIProperties">
