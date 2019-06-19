@@ -34,7 +34,7 @@ Vue.component('data-table', {
     <!-- Comment above and uncomment below to use the buttons on hover feature -->
      <!-- <div @mouseover="toggleShowButtons(true)" @mouseleave="toggleShowButtons(false)"> -->
   <!-- Top tool bar with menu options -->
-  <v-toolbar dense dark :color="color" :class="fixed ? '' : 'elevation-0'" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
+  <v-toolbar dense dark :color="loading ? headerLoadingColor : color" :class="fixed ? '' : 'elevation-0'" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
     <!-- icon with no function -->
     <v-icon v-if="titleIcon && !showLeftMenu" color="amber accent-2">{{ titleIcon }}</v-icon>
     <!-- menu with same functions as left side icons -->
@@ -121,11 +121,11 @@ Vue.component('data-table', {
           </v-container>
         </v-flex>
         <v-flex xs7 class="text-xs-right" v-show="showPagination">
-          <div class="title white--text pr-1 pt-4 mt-1">Rows:</div>
+          <div class="title white--text pr-1 pt-4 mt-0">Rows:</div>
         </v-flex>
         <v-flex xs3 v-show="showPagination" class="data-table-row-input">
           <v-container>
-            <v-text-field solo single-line hide-details light v-model="pagination.rowsPerPage"></v-text-field>
+            <v-text-field solo flat single-line hide-details light v-model="pagination.rowsPerPage"></v-text-field>
           </v-container>
         </v-flex>
       </v-layout>
@@ -354,11 +354,11 @@ Vue.component('data-table', {
   <!-- Data Table -->
   <v-divider></v-divider>
   <v-data-table :id="tableId" v-model="selected" v-bind:headers="headers" v-bind:items="items" v-bind:search="search" hide-actions
-    v-bind:pagination.sync="pagination" :item-key="uniqueIdField" :no-data-text="noDataText" :loading="loading" :class="['elevation-1', toolbarVisible ? 'mt-0' : '', isHeaderFixed ? 'fixed-header' : '']"
+    v-bind:pagination.sync="pagination" :item-key="uniqueIdField" :no-data-text="noDataText" :loading="loading ? isLoadingColor : false" :class="['elevation-1', toolbarVisible ? 'mt-0' : '', isHeaderFixed ? 'fixed-header' : '']"
     :custom-sort="customSort" ref="dataTable">
     <template slot="headers" slot-scope="props">
       <tr>
-        <th v-if="enableSelection" :class="[color, 'white--text']" style="width:50px">
+        <th v-if="enableSelection" :class="[loading ? headerLoadingColor : color, 'white--text']" style="width:50px">
         <v-tooltip bottom>
           <v-checkbox slot="activator" v-if="enableSelectAll" hide-details @click.native="toggleAll" :input-value="props.all" :indeterminate="areAllSelected()" dark color="white"></v-checkbox>
           <span>Select/Unselect All</span>
@@ -366,7 +366,7 @@ Vue.component('data-table', {
         </th>
         <th v-if="expandedDataUrl" :class="color">
         </th>
-        <th v-for="header in getSortedHeaders" :key="header.text" :class="[color, 'white--text', 'subheading', header.sortable ? 'column sortable' : '', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
+        <th v-for="header in getSortedHeaders" :key="header.text" :class="[loading ? headerLoadingColor : color, 'white--text', 'subheading', header.sortable ? 'column sortable' : '', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
           @click="changeSort(header)" :width="header.width" :style="'min-width:' + header.width">
           <v-icon v-if="header.sortable" class="table-sorting-icon">arrow_upward</v-icon>
           <v-tooltip bottom v-if="header.toolTip">
@@ -398,7 +398,7 @@ Vue.component('data-table', {
     </template>
 
     <template slot="items" slot-scope="props">
-      <tr :active="props.selected" :class="props.item.active === false ? 'blue-grey lighten-5 blue-grey--text' : ''">
+      <tr :active="props.selected" :class="props.item.active === false || loading ? 'blue-grey lighten-5 blue-grey--text' : ''">
         <td v-if="enableSelection" style="width:50px" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
           <v-checkbox :color="color" hide-details :input-value="props.selected" @click="handleSelectionChange(props)" v-model="props.item.isSelected"
             :ripple="false" :disabled="props.item.readonly"></v-checkbox>
@@ -412,7 +412,7 @@ Vue.component('data-table', {
 
 
           <v-tooltip bottom v-if="props.item.tooltips && props.item.tooltips[header.value]" max-width="500px">
-            <span v-if="header.isSafe" slot="activator" v-html="formattedItem(header, props.item[header.value])">
+            <span v-if="header.isSafe || containsOnlyBR(props.item[header.value])" slot="activator" v-html="formattedItem(header, props.item[header.value])">
             <span v-if="!header.isSafe" slot="activator" v-text="formattedItem(header, props.item[header.value])"></span>
             </span>
             <span v-html="props.item.tooltips[header.value]">
@@ -466,7 +466,7 @@ Vue.component('data-table', {
     <!-- expanded row dynamically loaded when user clicks on row -->
     <template v-if="expandedDataUrl" slot="expand" slot-scope="props">
       <v-data-table id="expandedTableId" ref="expandedTableId" v-model="selected" v-bind:headers="expandedHeaders" v-bind:items="expandedItems"
-        hide-actions :item-key="uniqueIdField" no-data-text="No Data Found" :loading="loading" :class="['pl-5', 'pb-1', 'elevation-1', toolbarVisible ? 'mt-1' : '']"
+        hide-actions :item-key="uniqueIdField" no-data-text="No Data Found" :loading="loading ? isLoadingColor : false" :class="['pl-5', 'pb-1', 'elevation-1', toolbarVisible ? 'mt-1' : '']"
         :custom-sort="customSort">
         <template slot="headers" slot-scope="props">
           <tr>
@@ -517,7 +517,7 @@ Vue.component('data-table', {
             headerOrder: [],
             uniqueIdField: "",
             isLoadingColor: "warning",
-            loading: this.isLoadingColor,
+            loading: this.isLoadingColor ? true : false,
             items: [],
             itemDragging: '',
             showAddRowBar: false,
@@ -542,7 +542,8 @@ Vue.component('data-table', {
             saveHeaderConfigNeeded: false,
             savingHeaderConfig: false,
             isHeaderFixed: false,
-            newRow: {}
+            newRow: {},
+            headerLoadingColor: "blue-grey lighten-4"
         }
     },
     methods: {
@@ -767,7 +768,7 @@ Vue.component('data-table', {
         startLoading() {
             //since the ajax call could be done externally, call this method
             //to set the proper messages and loading states
-            this.loading = this.isLoadingColor;
+            this.loading = this.isLoadingColor ? true : false;
         },
         draggingStarted(evt) {
             var item = evt.item;
@@ -1050,6 +1051,13 @@ Vue.component('data-table', {
                     }
                     itemString = items.join(" ");
                 }
+            }
+            if (header.isSafe) {
+                return itemString;
+            }
+            //when not safe, at least remove the br tags for display
+            if (typeof itemString == "string") {
+                return itemString.replace("<br/>", " ");
             }
             return itemString;
         },

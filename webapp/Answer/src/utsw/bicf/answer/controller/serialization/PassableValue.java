@@ -2,6 +2,9 @@ package utsw.bicf.answer.controller.serialization;
 
 public class PassableValue {
 	
+	public PassableValue() {
+		super();
+	}
 	String field;
 	Object value;
 	Boolean pass;

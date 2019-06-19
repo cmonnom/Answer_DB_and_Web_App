@@ -1,6 +1,8 @@
 package utsw.bicf.answer.dao;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.transaction.Transactional;
 
@@ -152,6 +154,16 @@ public class ModelDAO {
 		List<User> users = session.createQuery(hql, User.class).list();
 		users.stream().forEach(u -> Hibernate.initialize(u.getGroups()));
 		return users;
+	}
+	
+	@Transactional
+	public Map<Integer, User> getAllUsersAsMap() {
+		Map<Integer, User> usersById = new HashMap<Integer, User>();
+		List<User> users = this.getAllUsers();
+		for (User u : users) {
+			usersById.put(u.getUserId(), u);
+		}
+		return usersById;
 	}
 	
 	@Transactional

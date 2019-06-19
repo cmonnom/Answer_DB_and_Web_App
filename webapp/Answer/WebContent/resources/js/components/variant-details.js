@@ -9,7 +9,8 @@ Vue.component('variant-details', {
         variantType: { default: "snp", type: String },
         cnvPlotId: { default: "cnvPlot", type: String },
         type: { default: "snp", type: String },
-        cnvChromList: { default: () => [], type: Array}
+        cnvChromList: { default: () => [], type: Array},
+        loadingVariant: { default: false, type: Boolean },
     },
     template: ` <v-card>
 
@@ -39,7 +40,7 @@ Vue.component('variant-details', {
     </v-card>
     </v-dialog>
 
-  <v-toolbar class="elevation-0" dense dark :color="color">
+  <v-toolbar class="elevation-0" dense dark :color="loadingVariant ? loadingVariantColor : color">
       <v-menu offset-y offset-x class="ml-0">
           <v-btn slot="activator" flat icon dark>
               <v-icon color="amber accent-2">zoom_in</v-icon>
@@ -90,15 +91,15 @@ Vue.component('variant-details', {
   <v-container grid-list-md fluid>
       <v-layout row wrap>
           <v-flex :class="getTableFlexClass(table.name)" v-for="table in variantDataTables" :key="table.name">
-              <v-card flat>
+              <v-card flat >
                   <v-card-text>
                       <v-list class="dense-tiles">
                           <v-list-tile v-for="item in table.items" :key="item.label">
                               <v-list-tile-content class="pb-2">
                                   <v-layout class="full-width">
                                       <v-flex xs12 :class="[item.type == 'link' ? 'pb-0' : '', 'text-xs-left', 'grow']">
-                                          <span v-if="isRegularVariantDetailsLabel(item.type)" class="selectable">{{ item.label }}:</span>
-                                          <span v-if="!item.type || item.type == 'link'" v-html="item.value" class="selectable text-xs-right grow blue-grey--text text--lighten-1"></span>
+                                          <span v-if="isRegularVariantDetailsLabel(item.type)" :class="[loadingVariant ? loadingVariantTextColor : '','selectable']">{{ item.label }}:</span>
+                                          <span v-if="!item.type || item.type == 'link'" v-html="item.value" :class="['selectable text-xs-right grow blue-grey--text', loadingVariant ? 'text--lighten-4': 'text--lighten-1']"></span>
                                           <v-tooltip bottom>
                                           <v-btn slot="activator" v-if="item.type == 'chip'" flat icon color="primary" @click="toggleAllGenes" :loading="toggleAllLoading">
                                           <v-icon>done_all</v-icon>
@@ -108,7 +109,7 @@ Vue.component('variant-details', {
                                           <!-- Notation (label + textfield + link) -->
                                           <v-layout row wrap v-if="item.type == 'notation'">
                                             <v-flex xs class="pl-0 pt-2"> 
-                                            <span class="selectable">{{ item.label }}:</span>
+                                            <span :class="[loadingVariant ? loadingVariantTextColor : '','selectable']">{{ item.label }}:</span>
                                             </v-flex>
                                             <v-flex xs6 > 
                                             <v-text-field hide-details class="no-height-select"
@@ -159,7 +160,7 @@ Vue.component('variant-details', {
                                               </template>
                                           </v-data-table>
                                           <v-layout v-if="item.type == 'select'" class="full-width">
-                                          <v-flex class="selectable pt-2 pl-0">{{ item.label }}:</v-flex>
+                                          <v-flex :class="[loadingVariant ? loadingVariantTextColor : '','selectable', 'pt-2', 'pl-0']">{{ item.label }}:</v-flex>
                                           <v-flex class="max300 xs4" >
                                             <v-tooltip right>
                                             <v-select slot="activator" clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
@@ -281,7 +282,7 @@ Vue.component('variant-details', {
                               <v-list-tile-content class="pb-2">
                                   <v-layout class="full-width">
                                       <v-flex xs12 class="text-xs-left grow">
-                                          <span class="selectable">{{ item.label }}:</span>
+                                          <span :class="[loadingVariant ? loadingVariantTextColor : '','selectable']">{{ item.label }}:</span>
                                           <v-tooltip v-if="item.links && id.value !== null" bottom v-for="(id, index) in item.ids" :key="index">
                                               <v-btn @click="handleIdLink(id)" slot="activator" v-html="id.label">
                                               </v-btn>
@@ -335,7 +336,9 @@ Vue.component('variant-details', {
             createCNVDisabled: false,
             genesVisibleTopLabel: "CN=2: ",
             genesVisibleBottomLabel: "Others: ",
-            chartHelpVisible: false
+            chartHelpVisible: false,
+            loadingVariantColor: "blue-grey lighten-4",
+            loadingVariantTextColor: "blue-grey--text text--lighten-4"
         }
 
     },

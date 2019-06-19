@@ -323,7 +323,7 @@ public class RequestUtils {
 	}
 
 	public void saveVariantSelection(AjaxResponse ajaxResponse, String caseId, List<String> selectedSNPVariantIds, 
-			List<String> selectedCNVIds, List<String> selectedTranslocationIds)
+			List<String> selectedCNVIds, List<String> selectedTranslocationIds, User currentUser)
 			throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/selectvariants");
@@ -335,6 +335,7 @@ public class RequestUtils {
 		variantIds.setSelectedSNPVariantIds(selectedSNPVariantIds);
 		variantIds.setSelectedCNVIds(selectedCNVIds);
 		variantIds.setSelectedTranslocationIds(selectedTranslocationIds);
+		variantIds.setUserId(currentUser.getUserId());
 		requestPost.setEntity(new StringEntity(variantIds.createObjectJSON(), ContentType.APPLICATION_JSON));
 
 		HttpResponse response = client.execute(requestPost);

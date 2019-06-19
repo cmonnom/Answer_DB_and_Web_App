@@ -4,6 +4,10 @@ import java.util.List;
 
 public class FlagValue {
 	
+	public FlagValue() {
+		super();
+	}
+
 	List<VuetifyIcon> iconFlags;
 	
 	public FlagValue(List<VuetifyIcon> iconFlags) {

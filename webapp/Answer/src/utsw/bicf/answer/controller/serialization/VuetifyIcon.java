@@ -2,9 +2,14 @@ package utsw.bicf.answer.controller.serialization;
 
 public class VuetifyIcon {
 	
+	public VuetifyIcon() {
+		super();
+	}
+
 	String iconName;
 	String color;
 	String tooltip;
+	boolean chip;
 	
 	public VuetifyIcon(String iconName, String color, String tooltip) {
 		super();
@@ -35,6 +40,14 @@ public class VuetifyIcon {
 
 	public void setTooltip(String tooltip) {
 		this.tooltip = tooltip;
+	}
+
+	public boolean isChip() {
+		return chip;
+	}
+
+	public void setChip(boolean chip) {
+		this.chip = chip;
 	}
 	
 	

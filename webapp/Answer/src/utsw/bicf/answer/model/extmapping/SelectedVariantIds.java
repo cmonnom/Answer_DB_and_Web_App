@@ -3,7 +3,6 @@ package utsw.bicf.answer.model.extmapping;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -15,6 +14,7 @@ public class SelectedVariantIds {
 	List<String> selectedSNPVariantIds;
 	List<String> selectedCNVIds;
 	List<String> selectedTranslocationIds;
+	Integer userId;
 	
 	public SelectedVariantIds() {
 		
@@ -47,6 +47,14 @@ public class SelectedVariantIds {
 	public String createObjectJSON() throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(this);
+	}
+
+	public Integer getUserId() {
+		return userId;
+	}
+
+	public void setUserId(Integer userId) {
+		this.userId = userId;
 	}
 
 

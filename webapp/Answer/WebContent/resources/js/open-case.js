@@ -77,12 +77,14 @@ const OpenCase = {
         <review-selection ref="reviewDialog"
         @open-report="openReport"
         :report-ready="reportReady"
+        :breadcrumbs="breadcrumbs"
         :case-name="caseName" :case-type="caseType" :case-type-icon="caseTypeIcon"
         :selected-ids="currentSelectedVariantIds"
         @save-selection="saveSelection" @close-review-dialog="closeReviewDialog"
         :is-save-badge-visible="isSaveNeededBadgeVisible()" :save-variant-disabled="saveVariantDisabled"
         @save-all="handleSaveAll" :waiting-for-ajax-active="waitingForAjaxActive" @show-snackbar="showSnackBarMessageWithParams"
-        :save-tooltip="createSaveTooltip()"></review-selection>
+        :save-tooltip="createSaveTooltip()"
+        @review-selection-refresh="updateSelectedVariantTable()"></review-selection>
     </v-dialog>
 
     <!-- annotation dialog -->
@@ -100,7 +102,8 @@ const OpenCase = {
                 :width-class="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                 @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                 @save-variant="saveVariant" :color="colors.variantDetails"
-                :variant-type="currentVariantType" cnv-plot-id="cnvPlotEditUnused">
+                :variant-type="currentVariantType" cnv-plot-id="cnvPlotEditUnused"
+                :loading-variant="loadingVariant">
             </variant-details>
             </v-flex>
         </v-slide-y-transition>
@@ -119,7 +122,8 @@ const OpenCase = {
                     :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
                     @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
                     ref="cnvVariantDetailsPanel" cnv-plot-id="cnvPlotEdit" :cnv-chrom-list="cnvChromList"
-                    :variant-type="currentVariantType">
+                    :variant-type="currentVariantType"
+                    :loading-variant="loadingVariant">
 
                 </variant-details>
             </v-flex>
@@ -140,7 +144,8 @@ const OpenCase = {
                         :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
                         @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
                         cnv-plot-id="cnvPlotEditUnusedFTL"
-                        :variant-type="currentVariantType">
+                        :variant-type="currentVariantType"
+                        :loading-variant="loadingVariant">
 
                     </variant-details>
             </v-flex>
@@ -443,7 +448,8 @@ const OpenCase = {
                                     :width-class="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                                     @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                                     @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel" @variant-details-changed=""
-                                    :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails" :cnv-chrom-list="cnvChromList">
+                                    :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails" :cnv-chrom-list="cnvChromList"
+                                    :loading-variant="loadingVariant">
                                 </variant-details>
 
                             </v-flex>
@@ -524,7 +530,7 @@ const OpenCase = {
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
                                 <v-card class="soft-grey-background">
-                                    <v-toolbar class="elevation-0" dense dark :color="colors.variantDetails">
+                                    <v-toolbar class="elevation-0" dense dark :color="loadingVariant ? loadingColor : colors.variantDetails">
                                     <v-menu offset-y offset-x class="ml-0">
                                     <v-btn slot="activator" flat icon dark>
                                                 <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
@@ -1110,7 +1116,7 @@ const OpenCase = {
             confirmationCancelButton: "Cancel",
             reportGroups: [],
             geneVariantDetailsTableHovering: true,
-            variantTabActive: "tab-snp",
+            variantTabActive: null,
             wasAdvancedFilteringVisibleBeforeTabChange: false,
             currentVariantHasRelatedVariants: false,
             currentVariantHasRelatedCNV: false,
@@ -1252,7 +1258,9 @@ const OpenCase = {
             itdDialogVisible: false,
             loadingVariant: false,
             currentSelectedVariantIds: {},
-            creatingOtherTissueTypes: false
+            creatingOtherTissueTypes: false,
+            updatingSelectedVariantTable: false,
+            loadingColor: "blue-grey lighten-4"
         }
     }, methods: {
         createSplashText() {
@@ -1352,6 +1360,7 @@ const OpenCase = {
                     response.data.tumorVcf = "delete this";
                     this.mutationalSignatureUrl = response.data.tumorVcf ? webAppRoot + "/mutationalSignatureViewer?caseId=" + this.caseId : null;
                     this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
+                    this.addOtherAnnotatorsValues(response.data.snpIndelVariantSummary);
                     // step = new Date() - start;
                     // console.log(2, step); 
                     this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
@@ -1516,6 +1525,7 @@ const OpenCase = {
             //first open save/review dialog
             if (this.urlQuery.showReview === true) {
                 this.$nextTick(this.openReviewSelectionDialog());
+                this.updateSelectedVariantTable();
 
             }
             if (this.urlQuery.variantType) {
@@ -1655,6 +1665,22 @@ const OpenCase = {
                 }
             }
         },
+        addOtherAnnotatorsValues(snpIndelVariantSummary) {
+            var headers = snpIndelVariantSummary.headers.filter(h => h.map);
+            for (var i = 0; i < snpIndelVariantSummary.items.length; i++) {
+                var item = snpIndelVariantSummary.items[i];
+                var annotatorSelections = item.selectionPerAnnotator;
+                for (var j = 0; j < headers.length; j++) {
+                    var header = headers[j];
+                    if (annotatorSelections[header.mapTo]) {
+                        item[header.value] = annotatorSelections[header.mapTo].selectedSince;
+                    }
+                }
+            }
+        },
+        populateAnnotatorDateSince(value, key, map) {
+            value.dateSince()
+        },
         handleRefresh() {
             //issue a warning about unsaved selection
             this.confirmationDialogVisible = true;
@@ -1723,7 +1749,6 @@ const OpenCase = {
                     headers[i].itemAction = this.openVariant;
                     headers[i].actionIcon = "zoom_in";
                     headers[i].actionTooltip = "Variant Details";
-                    break;
                 }
                 if (headers[i].value == "notation" && headers[i]["notationTooltipText"]) {
                     headers[i].itemAction = this.openVariant;
@@ -1772,6 +1797,11 @@ const OpenCase = {
             this.isFirstVariant = table.isFirstItem(currentIndex);
             this.isLastVariant = table.isLastItem(currentIndex);
 
+            //put panels in loading state
+            this.$refs.relatedVariantAnnotation.startLoading();
+            this.$refs.relatedCNVAnnotation.startLoading();
+            this.$refs.canonicalVariantAnnotation.startLoading();
+            this.$refs.otherVariantAnnotations.startLoading();
 
             // this.loadingVariantDetails = true;
             axios.get(
@@ -2036,6 +2066,10 @@ const OpenCase = {
             var currentIndex = table.getCurrentItemIdex(this.currentRow.oid);
             this.isFirstVariant = table.isFirstItem(currentIndex);
             this.isLastVariant = table.isLastItem(currentIndex);
+
+            //put panels in loading state
+
+
 
             axios.get(
                 webAppRoot + "/getCNVDetails",
@@ -2840,42 +2874,43 @@ const OpenCase = {
                         });
 
                         //keep track of the selected variants and refresh
-                        this.currentSelectedVariantIds = this.getSelectedVariantIds();
-                        if (this.currentSelectedVariantIds) {
-                            this.tempSelectedSNPVariants = this.currentSelectedVariantIds.selectedSNPVariantIds;
-                            this.tempSelectedCNVs = this.currentSelectedVariantIds.selectedCNVIds;
-                            this.tempSelectedTranslocations = this.currentSelectedVariantIds.selectedTranslocationIds;
-
-                            //once refreshed, reselect rows that were selected but not saved yet
-                            this.$once('get-case-details-done', (annotations) => {
-                                for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
-                                    var row = this.$refs.geneVariantDetails.items[i];
-                                    if (this.tempSelectedSNPVariants.includes(row.oid)) {
-                                        row.isSelected = true;
+                        this.getSelectedVariantIds()
+                        .then(response => {
+                            this.currentSelectedVariantIds = response;
+                            if (this.currentSelectedVariantIds) {
+                                this.tempSelectedSNPVariants = this.currentSelectedVariantIds.selectedSNPVariantIds;
+                                this.tempSelectedCNVs = this.currentSelectedVariantIds.selectedCNVIds;
+                                this.tempSelectedTranslocations = this.currentSelectedVariantIds.selectedTranslocationIds;
+    
+                                //once refreshed, reselect rows that were selected but not saved yet
+                                this.$once('get-case-details-done', (annotations) => {
+                                    for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
+                                        var row = this.$refs.geneVariantDetails.items[i];
+                                        if (this.tempSelectedSNPVariants.includes(row.oid)) {
+                                            row.isSelected = true;
+                                        }
                                     }
-                                }
-                                for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
-                                    var row = this.$refs.cnvDetails.items[i];
-                                    if (this.tempSelectedCNVs.includes(row.oid)) {
-                                        row.isSelected = true;
+                                    for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
+                                        var row = this.$refs.cnvDetails.items[i];
+                                        if (this.tempSelectedCNVs.includes(row.oid)) {
+                                            row.isSelected = true;
+                                        }
                                     }
-                                }
-                                for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
-                                    var row = this.$refs.translocationDetails.items[i];
-                                    if (this.tempSelectedTranslocations.includes(row.oid)) {
-                                        row.isSelected = true;
+                                    for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
+                                        var row = this.$refs.translocationDetails.items[i];
+                                        if (this.tempSelectedTranslocations.includes(row.oid)) {
+                                            row.isSelected = true;
+                                        }
                                     }
-                                }
-                                this.updateSelectedVariantTable();
-                            });
-                        }
-                        //TESTING THIS: don't update the table because the only change that
-                        //might matters is the annotated flag which is becoming less important as more and more variants have a flag
-                        //refresh but wait a bit otherwise the processing
-                        //of all the data makes the UI not responsive
-                        // setTimeout(() => {
-                        //     this.getAjaxData();
-                        // }, 3000);
+                                    this.updateSelectedVariantTable();
+                                });
+                            }
+                        }).catch(error => {
+                            this.handleDialogs(error.data, this.commitAnnotations.bind(null, userAnnotations));
+                            this.$refs.annotationDialog.saving = false; 
+                            this.$refs.cnvAnnotationDialog.saving = false;
+                            this.$refs.translocationAnnotationDialog.saving = false;
+                        });
                     } else {
                         this.handleDialogs(response.data, this.commitAnnotations.bind(null, userAnnotations));
                         this.$refs.annotationDialog.saving = false; 
@@ -2922,31 +2957,65 @@ const OpenCase = {
             this.handleSelectionChanged();
         },
         updateSelectedVariantTable() {
-            this.currentSelectedVariantIds = this.getSelectedVariantIds();
-            var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
-            var selectedCNVs = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIds.indexOf(item.oid) > -1);
-            var selectedTranslocations = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIds.indexOf(item.oid) > -1);
-            this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
+            if (this.updatingSelectedVariantTable) {
+                return;
+            }
+            this.updatingSelectedVariantTable = true;
+            this.$refs.reviewDialog.startLoading();
 
-            var snpHeaders = this.$refs.geneVariantDetails.headers;
-            var snpHeaderOrder = this.$refs.geneVariantDetails.headerOrder;
+            this.getSelectedVariantIds().then(response => {
+                if (response != null) {
+                    this.currentSelectedVariantIds = response;
+                    var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
+                    var selectedSNPVariantsReviewer = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIdsReviewer.indexOf(item.oid) > -1);
+                    var selectedCNVs = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIds.indexOf(item.oid) > -1);
+                    var selectedCNVsReviewer = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIdsReviewer.indexOf(item.oid) > -1);
+                    var selectedTranslocations = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIds.indexOf(item.oid) > -1);
+                    var selectedFTLsReviewer = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIdsReviewer.indexOf(item.oid) > -1);
+                    this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
 
-            var cnvHeaders = this.$refs.cnvDetails.headers;
-            var cnvHeaderOrder = this.$refs.cnvDetails.headerOrder;
+                    this.$refs.reviewDialog.updateSelectedVariantTable(
+                    selectedSNPVariants, selectedSNPVariantsReviewer, 
+                    this.$refs.geneVariantDetails.headers, this.$refs.geneVariantDetails.headerOrder, 
+                    selectedCNVs, selectedCNVsReviewer,
+                    this.$refs.cnvDetails.headers, this.$refs.cnvDetails.headerOrder, 
+                    selectedTranslocations, selectedFTLsReviewer,
+                    this.$refs.translocationDetails.headers, this.$refs.translocationDetails.headerOrder);
+                    this.updatingSelectedVariantTable = false;
+                    this.updateSplashProgress();
+                }
+            }).catch(error => {
+                this.handleDialogs(error.data, this.updateSelectedVariantTable);
+                this.updatingSelectedVariantTable = false;
+            });
 
-            var ftlHeaders = this.$refs.translocationDetails.headers;
-            var ftlHeaderOrder = this.$refs.translocationDetails.headerOrder;
-            this.$refs.reviewDialog.updateSelectedVariantTable(
-                selectedSNPVariants, snpHeaders, snpHeaderOrder, 
-                selectedCNVs, cnvHeaders, cnvHeaderOrder, 
-                selectedTranslocations, ftlHeaders, ftlHeaderOrder);
+            //original method starts here
+            // this.currentSelectedVariantIds = this.getSelectedVariantIds();
+            // var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
+            // var selectedSNPVariantsReviewer = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIdsReviewer.indexOf(item.oid) > -1);
+            // var selectedCNVs = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIds.indexOf(item.oid) > -1);
+            // var selectedTranslocations = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIds.indexOf(item.oid) > -1);
+            // this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
+
+            // var snpHeaders = this.$refs.geneVariantDetails.headers;
+            // var snpHeaderOrder = this.$refs.geneVariantDetails.headerOrder;
+
+            // var cnvHeaders = this.$refs.cnvDetails.headers;
+            // var cnvHeaderOrder = this.$refs.cnvDetails.headerOrder;
+
+            // var ftlHeaders = this.$refs.translocationDetails.headers;
+            // var ftlHeaderOrder = this.$refs.translocationDetails.headerOrder;
+            // this.$refs.reviewDialog.updateSelectedVariantTable(
+            //     selectedSNPVariants, selectedSNPVariantsReviewer, 
+            //     snpHeaders, snpHeaderOrder, 
+            //     selectedCNVs, cnvHeaders, cnvHeaderOrder, 
+            //     selectedTranslocations, ftlHeaders, ftlHeaderOrder);
         },
         openReviewSelectionDialog() {
-            this.updateSelectedVariantTable();
             this.reviewDialogVisible = true;
             this.urlQuery.showReview = true;
             this.updateRoute();
-            this.updateSplashProgress();
+            // this.$nextTick(this.updateSelectedVariantTable());
         },
         closeReviewDialog() {
             this.reviewDialogVisible = false;
@@ -2963,41 +3032,48 @@ const OpenCase = {
                 return;
             }
             this.saveLoading = true;
-            this.currentSelectedVariantIds = this.getSelectedVariantIds();
-            axios({
-                method: 'post',
-                url: webAppRoot + "/saveVariantSelection",
-                params: {
-                    caseId: this.$route.params.id,
-                    closeAfter: closeAfter, //pass this param along to proceed with closing the dialog
-                    skipSnackBar: skipSnackBar //pass this param along to display snackbar after successful ajax call
-                },
-                data: {
-                    selectedSNPVariantIds: this.currentSelectedVariantIds.selectedSNPVariantIds,
-                    selectedCNVIds: this.currentSelectedVariantIds.selectedCNVIds,
-                    selectedTranslocationIds: this.currentSelectedVariantIds.selectedTranslocationIds
-                }
-            }).then(response => {
-                if (response.data.isAllowed && response.data.success) {
-                    if (!response.data.skipSnackBar) {
-                        this.showSnackBarMessage("Variant Selection Saved");
+            //TODO replace this by doing it on the server side instead
+            this.getSelectedVariantIds().
+            then(response => {
+                this.currentSelectedVariantIds = response;
+                axios({
+                    method: 'post',
+                    url: webAppRoot + "/saveVariantSelection",
+                    params: {
+                        caseId: this.$route.params.id,
+                        closeAfter: closeAfter, //pass this param along to proceed with closing the dialog
+                        skipSnackBar: skipSnackBar //pass this param along to display snackbar after successful ajax call
+                    },
+                    data: {
+                        selectedSNPVariantIds: this.currentSelectedVariantIds.selectedSNPVariantIds,
+                        selectedCNVIds: this.currentSelectedVariantIds.selectedCNVIds,
+                        selectedTranslocationIds: this.currentSelectedVariantIds.selectedTranslocationIds
                     }
-                    this.getAjaxData();
-                    this.waitingForAjaxCount--;
-                    this.variantUnSaved = false;
-                    this.saveLoading = false;
-                    if (response.data.uiProceed) {
-                        this.closeReviewDialog(true);
+                }).then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        if (!response.data.skipSnackBar) {
+                            this.showSnackBarMessage("Variant Selection Saved");
+                        }
+                        this.getAjaxData();
+                        this.waitingForAjaxCount--;
+                        this.variantUnSaved = false;
+                        this.saveLoading = false;
+                        if (response.data.uiProceed) {
+                            this.closeReviewDialog(true);
+                        }
                     }
-                }
-                else {
+                    else {
+                        this.saveLoading = false;
+                        this.waitingForAjaxCount--;
+                        this.handleDialogs(response.data, this.saveSelection.bind(null, response.data.uiProceed, response.data.skipSnackBar));
+                    }
+                }).catch(error => {
                     this.saveLoading = false;
-                    this.waitingForAjaxCount--;
-                    this.handleDialogs(response.data, this.saveSelection.bind(null, response.data.uiProceed, response.data.skipSnackBar));
-                }
+                    this.handleAxiosError(error);
+                });
             }).catch(error => {
+                this.handleDialogs(error.data, this.saveSelection.bind(null, closeAfter, skipSnackBar));
                 this.saveLoading = false;
-                this.handleAxiosError(error);
             });
         },
         mdaAnnotationsExists() {
@@ -3168,24 +3244,101 @@ const OpenCase = {
                 && !this.annotationVariantOtherVisible
                 && !(this.utswAnnotationsVisible && this.utswAnnotationsExists());
         },
+        selectedIdsPreFiltering(i) {
+            return i.isSelected || (i.selectionPerAnnotator && Object.keys(i.selectionPerAnnotator).length > 0);
+        },
+        simplifiedSelectedVariant(i) {
+            return {"oid": i.oid, "isSelected": i.isSelected, "selectionPerAnnotator": i.selectionPerAnnotator};
+        },
         getSelectedVariantIds() {
+            return new Promise((resolve, reject) => {
+                var filteredSNPItems = this.$refs.geneVariantDetails.items.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
+                var unfilteredSNPItems = this.snpIndelUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
+                var filteredCNVItems = this.$refs.cnvDetails.items.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
+                var unfilteredCNVItems = this.cnvUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
+                var filteredFTLItems = this.$refs.translocationDetails.items.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
+                var unfilteredFTLItems = this.ftlUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
+                axios({
+                    method: 'post',
+                    url: webAppRoot + "/getSelectedVariantIds",
+                    params: {
+                        caseId: this.$route.params.id
+                    },
+                    data: {
+                        filteredSNPItems: filteredSNPItems, 
+                        unfilteredSNPItems: unfilteredSNPItems,
+                        filteredCNVItems: filteredCNVItems, 
+                        unfilteredCNVItems: unfilteredCNVItems,
+                        filteredFTLItems: filteredFTLItems, 
+                        unfilteredFTLItems: unfilteredFTLItems
+                    }
+                }).then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        var selectedSNPVariantIds = [];
+                        var selectedSNPVariantIdsReviewer = [];
+                        var selectedCNVIds = [];
+                        var selectedCNVIdsReviewer = [];
+                        var selectedTranslocationIds = [];
+                        var selectedTranslocationIdsReviewer = [];
+                        // if (this.$refs.geneVariantDetails) {
+                        //     selectedSNPVariantIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.geneVariantDetails.items, this.snpIndelUnfilteredItems, true);
+                        //     selectedSNPVariantIdsReviewer = this.getFilteredAndUnfilteredVariantIds(this.$refs.geneVariantDetails.items, this.snpIndelUnfilteredItems, false);
+                        // }
+                        // if (this.$refs.cnvDetails) {
+                        //     selectedCNVIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.cnvDetails.items, this.cnvUnfilteredItems, true);
+                        // }
+                        // if (this.$refs.translocationDetails) {
+                        //     selectedTranslocationIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.translocationDetails.items, this.ftlUnfilteredItems, true);
+                        // }
+                        if (this.$refs.geneVariantDetails) {
+                            selectedSNPVariantIds = response.data.payload.snpIdsAll;
+                            selectedSNPVariantIdsReviewer = response.data.payload.snpIdsReviewer;
+                        }
+                        if (this.$refs.cnvDetails) {
+                            selectedCNVIds = response.data.payload.cnvIdsAll;
+                            selectedCNVIdsReviewer = response.data.payload.cnvIdsReviewer;
+                        }
+                        if (this.$refs.translocationDetails) {
+                            selectedTranslocationIds = response.data.payload.ftlIdsAll;
+                            selectedTranslocationIdsReviewer = response.data.payload.ftlIdsReviewer;
+                        }
+                        resolve({
+                            selectedSNPVariantIds: selectedSNPVariantIds ? selectedSNPVariantIds : null,
+                            selectedSNPVariantIdsReviewer: selectedSNPVariantIdsReviewer ? selectedSNPVariantIdsReviewer : null,
+                            selectedCNVIds: selectedCNVIds ? selectedCNVIds : null,
+                            selectedCNVIdsReviewer: selectedCNVIdsReviewer ? selectedCNVIdsReviewer : null,
+                            selectedTranslocationIds: selectedTranslocationIds  ? selectedTranslocationIds : null,
+                            selectedTranslocationIdsReviewer: selectedTranslocationIdsReviewer ? selectedTranslocationIdsReviewer : null
+                        });
+                    }
+                    else {
+                        reject(response);
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                });
+            });
+
+            
             // var startTime = moment();
             var selectedSNPVariantIds = [];
+            var selectedSNPVariantIdsReviewer = [];
             var selectedCNVIds = [];
             var selectedTranslocationIds = [];
-            if (this.$refs.geneVariantDetails) {
-                selectedSNPVariantIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.geneVariantDetails.items, this.snpIndelUnfilteredItems);
-            }
+            // if (this.$refs.geneVariantDetails) {
+            //     selectedSNPVariantIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.geneVariantDetails.items, this.snpIndelUnfilteredItems, true);
+            //     selectedSNPVariantIdsReviewer = this.getFilteredAndUnfilteredVariantIds(this.$refs.geneVariantDetails.items, this.snpIndelUnfilteredItems, false);
+            // }
             if (this.$refs.cnvDetails) {
-                selectedCNVIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.cnvDetails.items, this.cnvUnfilteredItems);
+                selectedCNVIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.cnvDetails.items, this.cnvUnfilteredItems, true);
             }
             if (this.$refs.translocationDetails) {
-                selectedTranslocationIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.translocationDetails.items, this.ftlUnfilteredItems);
+                selectedTranslocationIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.translocationDetails.items, this.ftlUnfilteredItems, true);
             }
             // var duration = moment().diff(startTime);
-            // console.log("getSelectedVariantIds", duration);
             return {
                 selectedSNPVariantIds: selectedSNPVariantIds ? selectedSNPVariantIds : null,
+                selectedSNPVariantIdsReviewer: selectedSNPVariantIdsReviewer ? selectedSNPVariantIdsReviewer : null,
                 selectedCNVIds: selectedCNVIds ? selectedCNVIds : null,
                 selectedTranslocationIds: selectedTranslocationIds  ? selectedTranslocationIds : null,
             }
@@ -3196,28 +3349,30 @@ const OpenCase = {
          * @param {items in the currently filtered table} variantDetailsItems 
          * @param {items in the original unfiltered table} unfilteredItems 
          */
-        getFilteredAndUnfilteredVariantIds(variantDetailsItems, unfilteredItems) {
-            // var startTime = moment();
-            var selectedVariantIds = [];
-            var filteredSelectedIds = variantDetailsItems.filter(item => item.isSelected).map(item => item.oid);
-            //need to only consider items not in the current table so that we don't reselect items that were intentionally deselected
-            //the first filter removes all items in the current table from the unfiltered item list
-            //the second filter checks if any item left (ie: items not currently displayed) is selected
-            var unfilteredSelectedIds = unfilteredItems ? unfilteredItems.filter(item => !variantDetailsItems.map(i => i.oid).includes(item.oid)).filter(item => item.isSelected).map(item => item.oid) : [];
-            var unionSet = new Set();
-            for (var i = 0; i < filteredSelectedIds.length; i++) {
-                unionSet.add(filteredSelectedIds[i]);
-            }
-            for (var i = 0; i < unfilteredSelectedIds.length; i++) {
-                unionSet.add(unfilteredSelectedIds[i]);
-            }
-            for (let item of unionSet) {
-                selectedVariantIds.push(item);
-            }
-            // var duration = moment().diff(startTime);
-            // console.log("getFilteredAndUnfilteredVariantIds", duration);
-            return selectedVariantIds;
-        },
+        // getFilteredAndUnfilteredVariantIds(variantDetailsItems, unfilteredItems, fromAll) {
+        //     // var startTime = moment();
+        //     var selectedVariantIds = [];
+        //     var filteredSelectedIds = variantDetailsItems.filter(item => item.isSelected 
+        //         || (fromAll && item.selectionPerAnnotator && Object.keys(item.selectionPerAnnotator).length > 0)).map(item => item.oid);
+        //     //need to only consider items not in the current table so that we don't reselect items that were intentionally deselected
+        //     //the first filter removes all items in the current table from the unfiltered item list
+        //     //the second filter checks if any item left (ie: items not currently displayed) is selected
+        //     var unfilteredSelectedIds = unfilteredItems ? unfilteredItems.filter(item => !variantDetailsItems.map(i => i.oid).includes(item.oid)).filter(item => item.isSelected 
+        //         || (fromAll && item.selectionPerAnnotator && Object.keys(item.selectionPerAnnotator)).length > 0).map(item => item.oid) : [];
+        //     var unionSet = new Set();
+        //     for (var i = 0; i < filteredSelectedIds.length; i++) {
+        //         unionSet.add(filteredSelectedIds[i]);
+        //     }
+        //     for (var i = 0; i < unfilteredSelectedIds.length; i++) {
+        //         unionSet.add(unfilteredSelectedIds[i]);
+        //     }
+        //     for (let item of unionSet) {
+        //         selectedVariantIds.push(item);
+        //     }
+        //     // var duration = moment().diff(startTime);
+        //     // console.log("getFilteredAndUnfilteredVariantIds", duration);
+        //     return selectedVariantIds;
+        // },
         updateVariantDetails() {
             this.urlQuery.variantId = this.currentVariant._id.$oid;
             this.urlQuery.variantType = this.currentVariantType;
@@ -3927,7 +4082,7 @@ const OpenCase = {
                 if (!this.waitingForAjaxActive && !editing) {
                     this.handleSaveAll(true);
                 }
-            }, 120000);
+            }, 12000000);
         },
         copyMDAAnnotation(mdaAnnotation, variantType) {
             if (!this.canProceed('canAnnotate') || this.readonly) {

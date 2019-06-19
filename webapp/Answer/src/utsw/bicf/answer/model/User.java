@@ -15,6 +15,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
@@ -69,6 +70,12 @@ public class User {
 	@JoinColumn(name="user_pref_id", unique=true)
 	UserPref userPref;
 	
+	@Transient
+	String initials;
+	
+	@Transient
+	String fullName;
+	
 	public Integer getUserId() {
 		return userId;
 	}
@@ -110,7 +117,10 @@ public class User {
 //	}
 	
 	public String getFullName() {
-		return this.first + " " + this.last;
+		if (fullName == null || fullName.length() == 0) {
+			fullName = this.first + " " + this.last;
+		}
+		return fullName;
 	}
 
 	public String getEmail() {
@@ -175,5 +185,26 @@ public class User {
 
 	public void setGroups(List<Group> groups) {
 		this.groups = groups;
+	}
+	
+	public String getInitials() {
+		if (initials == null || initials.length() == 0) {
+			initials = "";
+			if (first != null && first.length() > 0) {
+				initials += first.substring(0, 1);
+			}
+			if (last != null && last.length() > 0) {
+				initials += last.substring(0, 1);
+			}
+		}
+		return initials;
+	}
+
+	public void setInitials(String initials) {
+		this.initials = initials;
+	}
+
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
 	}
 }

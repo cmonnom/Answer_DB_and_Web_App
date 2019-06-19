@@ -1,10 +1,10 @@
 package utsw.bicf.answer.model.extmapping;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -121,6 +121,9 @@ public class Variant {
 	Boolean likelyArtifact;
 	
 	CNV relatedCNV;
+	
+	Map<Integer, Boolean> annotatorSelections = new HashMap<Integer, Boolean>();
+	Map<Integer, String> annotatorDates = new HashMap<Integer, String>();
 	
 	public Variant() {
 		
@@ -908,6 +911,25 @@ public class Variant {
 
 	public static String getFieldInClinvar() {
 		return FIELD_IN_CLINVAR;
+	}
+
+	public Map<Integer, String> getAnnotatorDates() {
+		return annotatorDates;
+	}
+
+
+	public void setAnnotatorDates(Map<Integer, String> annotatorDates) {
+		this.annotatorDates = annotatorDates;
+	}
+
+
+	public void setAnnotatorSelections(Map<Integer, Boolean> annotatorSelections) {
+		this.annotatorSelections = annotatorSelections;
+	}
+
+
+	public Map<Integer, Boolean> getAnnotatorSelections() {
+		return annotatorSelections;
 	}
 
 

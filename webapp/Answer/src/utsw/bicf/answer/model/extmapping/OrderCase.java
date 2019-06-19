@@ -70,6 +70,7 @@ public class OrderCase {
 	Double tumorPercent;
 	List<String> groupIds;
 	String storageType;
+	String caseOwner;
 	
 	public OrderCase() {
 		
@@ -537,6 +538,16 @@ public class OrderCase {
 
 	public void setStorageType(String storageType) {
 		this.storageType = storageType;
+	}
+
+
+	public String getCaseOwner() {
+		return caseOwner;
+	}
+
+
+	public void setCaseOwner(String caseOwner) {
+		this.caseOwner = caseOwner;
 	}
 
 

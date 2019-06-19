@@ -326,6 +326,15 @@ table.table tbody td {
     max-width: 100px !important;
 }
 
+.data-table-row-input .input-group.input-group--solo  {
+    min-height: 0px;
+}
+
+.data-table-row-input .input-group.input-group--solo .input-group__input {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
 .multi-icon {
     margin-left: -15px;
     margin-top: 15px;

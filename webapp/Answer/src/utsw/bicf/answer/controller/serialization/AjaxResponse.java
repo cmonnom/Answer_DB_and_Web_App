@@ -15,6 +15,11 @@ import utsw.bicf.answer.model.UserPref;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AjaxResponse {
 	
+	public AjaxResponse() {
+		super();
+	}
+
+
 	Boolean isAllowed = true;
 	boolean success;
 	String message;

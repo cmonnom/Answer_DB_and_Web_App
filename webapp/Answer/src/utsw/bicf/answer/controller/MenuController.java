@@ -58,7 +58,9 @@ public class MenuController {
 				List<OrderCase> assignedCases = new ArrayList<OrderCase>();
 				for (OrderCase c : cases) {
 					if (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && ControllerUtil.isUserAssignedToCase(c, user)
-							&& c.getActive() != null && c.getActive()) {
+							&& c.getActive() != null && c.getActive()
+							&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
+							&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC)) {
 						assignedCases.add(c);
 					}
 				}

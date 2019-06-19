@@ -211,6 +211,17 @@ public class HomeController {
 					
 			}
 		}
+		//check that only one reviewer is assigned
+		Long reviewerCount = realUsers.stream().filter(u -> u.getIndividualPermission() != null && u.getIndividualPermission().getCanReview() != null && u.getIndividualPermission().getCanReview())
+		.collect(Collectors.counting());
+		if (reviewerCount > 1) {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			response.setMessage("Only one reviewer is allowed per case.");
+			return response.createObjectJSON();
+		}
+		
 		AjaxResponse response = utils.assignCaseToUser(realUsers, caseId);
 		if (response.getSuccess()) {
 			for (User user : realUsers) {

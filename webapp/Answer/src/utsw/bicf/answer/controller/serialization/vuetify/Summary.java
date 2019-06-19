@@ -15,6 +15,7 @@ import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
+import utsw.bicf.answer.model.hybrid.SNPIndelVariantRow;
 
 /**
  * Any Controller that needs to return the data as a Vuetify.data-table
@@ -29,6 +30,8 @@ import utsw.bicf.answer.model.hybrid.HeaderOrder;
  * @param <T>
  */
 public abstract class Summary<T> {
+	
+	ModelDAO modelDAO; //can be null if not used
 	
 	List<T> items;
 	List<Header> headers;
@@ -80,6 +83,25 @@ public abstract class Summary<T> {
 		this.setHiddenStatus();
 	}
 	
+	public Summary(List<T> items, String uniqueIdField, List<HeaderOrder> headerOrders,
+			ModelDAO modelDAO) {
+		this.modelDAO = modelDAO;
+		this.items = items;
+		this.headers = new ArrayList<Header>();
+		if (headerOrders != null) {
+			this.headerOrder = headerOrders.stream().map(h -> h.getValue()).collect(Collectors.toList());
+			this.headerOrdersPOJO = headerOrders;
+		}
+		else {
+			this.headerOrder = new ArrayList<String>();
+		}
+		this.uniqueIdField = uniqueIdField;
+		this.isAllowed = true;
+		initializeHeaders();
+		this.updateHeaderOrder();
+		this.setHiddenStatus();
+	}
+
 	public abstract void initializeHeaders();
 
 	public String createVuetifyDataTableJSON() throws JsonProcessingException {

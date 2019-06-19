@@ -14,25 +14,31 @@ const Home = {
       </v-toolbar>
       <v-card-title>Pick who should work on this case:</v-card-title>
       <v-card-text>
-        <v-layout row wrap class="pl-2">
-          <v-flex xs12 lg6 v-for="(user, index) in allUsers" :key="index">
-            <v-switch :label="createUserLabel(user)" v-model="usersAssignedToCase[index]"></v-switch>
-          </v-flex>
-        </v-layout>
+      <v-layout row wrap class="pl-2">
+      <v-flex xs12 lg6 v-for="(user, index) in allUsers" :key="index">
+      <v-switch :label="createUserLabel(user)" v-model="usersAssignedToCase[index]" @change="handleAssignToUserValid"></v-switch>
+      </v-flex>
+      <v-flex xs>
+      <v-alert :value="!assignToSelectionValid" type="error" >
+      Only one reviewer per case is allowed
+    </v-alert>
+    </v-flex>
+      
+      </v-layout>
       </v-card-text>
       <v-card-actions>
       <v-tooltip bottom>
-        <v-btn color="success" @click="assignToUser()" slot="activator">Save
-          <v-icon right dark>save</v-icon>
-        </v-btn>
-        <span>Answer will send an email notification<br/>to the selected users</span>
+      <v-btn color="success" @click="assignToUser()" slot="activator" :disabled="assignToUserDisabled">Save
+      <v-icon right dark>save</v-icon>
+      </v-btn>
+      <span>Answer will send an email notification<br/>to the selected users</span>
         </v-tooltip>
         <v-btn color="error" @click="cancelAssign()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
         <v-checkbox v-model="receiveACopyOfEmail" label="Also send a notification to my email" hide-details></v-checkbox>
-        
-      </v-card-actions>
+        </v-card-actions>
+  
     </v-card>
   </v-dialog>
 
@@ -137,7 +143,7 @@ const Home = {
 </div>`,
     data() {
         return {
-            activateTab: "tab-userCases",
+            activateTab: null,
             assignDialogVisible: false,
             assignGroupDialogVisible: false,
             currentCaseId: null,
@@ -152,7 +158,9 @@ const Home = {
             snackBarVisible: false,
             snackBarMessage: "",
             snackBarTimeout: 0,
-            receiveACopyOfEmail: false
+            receiveACopyOfEmail: false,
+            assignToUserDisabled: false,
+            assignToSelectionValid: true
         }
     },
     methods: {
@@ -170,6 +178,7 @@ const Home = {
         getWorklists() {
             this.$refs.casesAllTable.startLoading();
             this.$refs.casesForUserTable.startLoading();
+            this.$refs.casesForUserCompletedTable.startLoading();
             this.$refs.casesFinalizedTable.startLoading();
             axios.get("./getWorklists", {
                 params: {
@@ -234,13 +243,37 @@ const Home = {
                     alert(error);
                 });
         },
+        handleAssignToUserValid() {
+           this.assignToSelectionValid = this.isAssignToUserValid();
+           this.assignToUserDisabled = !this.assignToSelectionValid;
+        },
+        isAssignToUserValid() {
+            var reviewerCount = 0;
+            for (var i = 0; i < this.allUsers.length; i++) {
+                if (this.usersAssignedToCase[i] === true) {
+                    if (this.allUsers[i].canReview) {
+                        reviewerCount++;
+                    }
+                }
+            };
+            return reviewerCount <= 1;
+        },
         assignToUser() {
+            this.assignToUserDisabled = true;
             var userIds = [];
+            var reviewerCount = 0;
             for (var i = 0; i < this.allUsers.length; i++) {
                 if (this.usersAssignedToCase[i] === true) {
                     userIds.push(this.allUsers[i].value);
+                    if (this.allUsers[i].canReview) {
+                        reviewerCount++;
+                    }
                 }
             };
+            if (!this.isAssignToUserValid()) {
+                this.assignToSelectionValid = false;
+                return;
+            }
             axios.get("./assignToUser", {
                 params: {
                     caseId: this.currentCaseId,
@@ -252,6 +285,7 @@ const Home = {
                     if (response.data.isAllowed && response.data.success) {
                         this.assignDialogVisible = false;
                         this.getWorklists();
+                        this.assignToUserDisabled = false;
                     }
                     else {
                         this.handleDialogs(response.data, this.assignToUser.bind(null, this.currentCaseId));
@@ -259,6 +293,7 @@ const Home = {
                 })
                 .catch(error => {
                     alert(error);
+                    this.assignToUserDisabled = false;
                 });
         },
         assignToGroup() {

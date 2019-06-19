@@ -84,7 +84,8 @@ public class OrderCaseFinalized {
 					this.reportId = lastFinalized.getMongoDBId().getOid();
 					buttons.add(new Button("picture_as_pdf", "downloadPDFReport", "Download Finalized Report", "info"));
 					if (orderCase.getActive() != null && orderCase.getActive()) {
-						buttons.add(new Button("mdi-check", "sent-to-epic", "Report was sent to Epic", "info"));
+						//TODO uncomment this when ready
+//						buttons.add(new Button("mdi-check", "sent-to-epic", "Report was sent to Epic", "info"));
 					}
 				}
 			} catch (UnsupportedOperationException | IOException | URISyntaxException e) {

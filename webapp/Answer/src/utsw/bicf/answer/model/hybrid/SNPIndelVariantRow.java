@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
+import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.AnnotatorSelection;
 import utsw.bicf.answer.model.extmapping.Build;
 import utsw.bicf.answer.model.extmapping.Caller;
 import utsw.bicf.answer.model.extmapping.Variant;
@@ -64,10 +66,16 @@ public class SNPIndelVariantRow {
 	Boolean likelyArtifact;
 	Boolean gnomadLcr;
 	String gnomadHg19Variant;
+	String deltaTumorNormal;
+	
+	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
 	
 	
-	
-	public SNPIndelVariantRow(Variant variant, List<ReportGroupForDisplay> reportGroups, Integer totalCases) {
+	public SNPIndelVariantRow() {
+		super();
+	}
+
+	public SNPIndelVariantRow(Variant variant, List<ReportGroupForDisplay> reportGroups, Integer totalCases, Map<Integer, AnnotatorSelection> selectionPerAnnotator) {
 		this.oid = variant.getMongoDBId().getOid();
 		this.chrom = TypeUtils.formatChromosome(variant.getChrom());
 		this.pos = variant.getPos();
@@ -100,6 +108,15 @@ public class SNPIndelVariantRow {
 			}
 			else {
 				this.normalAltFrequency = String.format("%.2f", variant.getNormalAltFrequency() * 100);
+			}
+		}
+		if (variant.getNormalAltFrequency() != null && variant.getTumorAltFrequency() != null) {
+			float delta = Math.abs(variant.getTumorAltFrequency() - variant.getNormalAltFrequency());
+			if (delta > 0 && delta < 0.0001) {
+				this.deltaTumorNormal = "< 0.01";
+			}
+			else {
+				this.deltaTumorNormal = String.format("%.2f", delta * 100);
 			}
 		}
 		this.normalAltDepth = variant.getNormalAltDepth();
@@ -192,6 +209,8 @@ public class SNPIndelVariantRow {
 //			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
 //		}
 		iconFlags = new FlagValue(icons);
+		
+		this.selectionPerAnnotator = selectionPerAnnotator;
 		
 	}
 
@@ -541,6 +560,18 @@ public class SNPIndelVariantRow {
 
 	public String getGnomadHg19Variant() {
 		return gnomadHg19Variant;
+	}
+
+
+
+
+
+	public Map<Integer, AnnotatorSelection> getSelectionPerAnnotator() {
+		return selectionPerAnnotator;
+	}
+
+	public String getDeltaTumorNormal() {
+		return deltaTumorNormal;
 	}
 
 

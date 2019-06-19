@@ -34,6 +34,8 @@ public class Header {
 	Boolean isLink;
 	Boolean canHighlight; //enable to compare the content of items with an array of values to highlight (eg: gene name filter)
 	Boolean isSafe = false;
+	boolean isMap;
+	String mapTo; //this the key in the item map (eg. selectionPerAnnotator)
 	
 	
 	public Header() {
@@ -258,6 +260,22 @@ public class Header {
 
 	public void setIsSafe(Boolean isSafe) {
 		this.isSafe = isSafe;
+	}
+
+	public boolean isMap() {
+		return isMap;
+	}
+
+	public void setMap(boolean isMap) {
+		this.isMap = isMap;
+	}
+
+	public String getMapTo() {
+		return mapTo;
+	}
+
+	public void setMapTo(String mapTo) {
+		this.mapTo = mapTo;
 	}
 
 }

@@ -7,6 +7,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DataFilterList {
 
+	public DataFilterList() {
+		super();
+	}
+
+
 	List<DataTableFilter> filters;
 	List<String> selectedSNPVariantIds;
 	List<String> selectedCNVIds;

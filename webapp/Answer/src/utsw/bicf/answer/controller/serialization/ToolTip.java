@@ -2,6 +2,10 @@ package utsw.bicf.answer.controller.serialization;
 
 public class ToolTip {
 
+	public ToolTip() {
+		super();
+	}
+
 	String text;
 	
 	public ToolTip(String text) {

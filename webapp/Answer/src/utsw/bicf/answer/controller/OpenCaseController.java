@@ -9,7 +9,11 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +37,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -67,8 +73,8 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.UserPref;
 import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
-import utsw.bicf.answer.model.Version;
 import utsw.bicf.answer.model.extmapping.Annotation;
+import utsw.bicf.answer.model.extmapping.AnnotatorSelection;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
@@ -79,6 +85,7 @@ import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Trial;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.CurrentSelectedVariantIds;
 import utsw.bicf.answer.model.hybrid.HeaderConfigData;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
@@ -164,6 +171,8 @@ public class OpenCaseController {
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".cancelBreaks",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".updateLastLogin",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getSelectedVariantIds",
 				IndividualPermission.CAN_VIEW);
 		
 	}
@@ -706,8 +715,8 @@ public class OpenCaseController {
 		response.setSkipSnackBar(skipSnackBar);
 		response.setUiProceed(closeAfter);
 		
+		User user = ControllerUtil.getSessionUser(session);
 		if (!caseId.equals("")) { //for annotations within a case
-			User user = ControllerUtil.getSessionUser(session);
 			OrderCase caseSummary = utils.getCaseSummary(caseId);
 			if (!ControllerUtil.isUserAssignedToCase(caseSummary, user)) {
 				// user is not assigned to this case
@@ -728,7 +737,7 @@ public class OpenCaseController {
 		List<String> selectedSNPVariantIds = dataPOJO.getSelectedSNPVariantIds();
 		List<String> selectedCNVIds = dataPOJO.getSelectedCNVIds();
 		List<String> selectedTranslocationIds = dataPOJO.getSelectedTranslocationIds();
-		utils.saveVariantSelection(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds);
+		utils.saveVariantSelection(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds, user);
 		return response.createObjectJSON();
 
 	}
@@ -1623,4 +1632,69 @@ public class OpenCaseController {
 		return response.createObjectJSON();
 	}
 	
+	@RequestMapping(value = "/getSelectedVariantIds", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
+	@ResponseBody
+	public String getSelectedVariantIds(Model model, HttpSession session, @RequestBody String data, @RequestParam String caseId) throws Exception {
+
+		User user = ControllerUtil.getSessionUser(session);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		Integer caseOwnerId = Integer.parseInt(caseSummary.getCaseOwner());
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode dataNodes = mapper.readTree(data);
+		String[] nodes = new String[] {"filteredSNPItems", "unfilteredSNPItems"};
+		List<Set<String>> snpItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId);
+		nodes = new String[] {"filteredCNVItems", "unfilteredCNVItems"};
+		List<Set<String>> cnvItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId);
+		nodes = new String[] {"filteredFTLItems", "unfilteredFTLItems"};
+		List<Set<String>> ftlItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId);
+		
+		CurrentSelectedVariantIds selectedIds = new CurrentSelectedVariantIds();
+		selectedIds.setSnpIdsAll(snpItems.get(0));
+		selectedIds.setSnpIdsReviewer(snpItems.get(1));
+		selectedIds.setCnvIdsAll(cnvItems.get(0));
+		selectedIds.setCnvIdsReviewer(cnvItems.get(1));
+		selectedIds.setFtlIdsAll(ftlItems.get(0));
+		selectedIds.setFtlIdsReviewer(ftlItems.get(1));
+		
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		response.setPayload(selectedIds);
+		return response.createObjectJSON();
+	}
+	
+	private List<Set<String>> parseSelectedIdData(JsonNode dataNodes, String[] nodes, User currentUser, ObjectMapper mapper, Integer caseOwnerId) throws JsonParseException, JsonMappingException, IOException {
+		Set<String> itemsSelectedIdsAll = new HashSet<String>();
+		Set<String> itemsSelectedIdsReviewer = new HashSet<String>();
+		for (String node : nodes) {
+			for (JsonNode row : dataNodes.get(node)) {
+				String oid = row.get("oid").textValue();
+				boolean isSelected = row.get("isSelected").booleanValue();
+				if (isSelected) { //already selected or new user selection
+					itemsSelectedIdsAll.add(oid);
+					if (currentUser.getUserId().equals(caseOwnerId)) {
+						itemsSelectedIdsReviewer.add(oid);
+					}
+				}
+				JsonNode selectionPerAnnotator = row.get("selectionPerAnnotator");
+				if (selectionPerAnnotator != null && selectionPerAnnotator.fields().hasNext()) { //other annotators selection
+					Iterator<Entry<String, JsonNode>> it = selectionPerAnnotator.fields();
+					while (it.hasNext()) {
+						Entry<String, JsonNode> item = it.next();
+						AnnotatorSelection as = mapper.readValue(item.getValue().toString(), AnnotatorSelection.class);
+						if (as.getUserId().equals(caseOwnerId)) {
+							itemsSelectedIdsReviewer.add(oid);
+							break;
+						}
+					}
+					itemsSelectedIdsAll.add(oid);
+				}
+			}
+		}
+		List<Set<String>> result = new ArrayList<Set<String>>();
+		result.add(itemsSelectedIdsAll);
+		result.add(itemsSelectedIdsReviewer);
+		return result;
+	}
 }

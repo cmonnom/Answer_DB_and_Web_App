@@ -51,7 +51,7 @@ public class OpenCaseSummary {
 		List<HeaderOrder> snpOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "SNP/Indel Variants");
 		List<HeaderOrder> cnvOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "CNVs");
 		List<HeaderOrder> ftlOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Fusions / Translocations");
-		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups, snpOrders);
+		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups, snpOrders, user);
 		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField, cnvOrders);
 		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField, ftlOrders);
 		this.patientInfo = new PatientInfo(aCase);

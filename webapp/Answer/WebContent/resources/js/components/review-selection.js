@@ -120,7 +120,7 @@ Vue.component('review-selection', {
     </v-toolbar>
     <v-card-text :style="getDialogMaxHeight(120)" class="pl-3 pr-3">
 
-        <v-breadcrumbs class="pt-2">
+        <v-breadcrumbs class="pt-2 pb-2">
             <v-icon slot="divider">forward</v-icon>
             <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"
                 @click.native="breadcrumbNavigation(index)">
@@ -128,7 +128,7 @@ Vue.component('review-selection', {
             </v-breadcrumbs-item>
         </v-breadcrumbs>
 
-        <v-card v-show="!areReportableGeneSelected()" class="mt-2 mb-2">
+        <v-card v-show="!areReportableGeneSelected()" class="mt-1 mb-2">
             <v-card-text>
                 The following genes should be included in the report if pathogenic or likely pathogenic :
                 <v-tooltip bottom v-for="(reportGroup, index1) in requiredReportGroups" :key="index1">
@@ -161,15 +161,54 @@ Vue.component('review-selection', {
 
             </v-card-text>
         </v-card>
-        <data-table ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected SNP/Indel Variants"
-            initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary">
-        </data-table>
-        <data-table ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected CNVs" initial-sort="chrom"
-            no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary">
-        </data-table>
-        <data-table ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Selected Translocations"
-            initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary">
-        </data-table>
+
+        <v-tabs slot="extension" dark slider-color="warning" color="primary darken-1" fixed-tabs v-model="variantTabActive">
+            <v-tab href="#tab-selected-snp" :ripple="false">
+               Selected SNP / Indel
+            </v-tab>
+            <v-tab href="#tab-selected-cnv" :ripple="false">
+               Selected CNV
+            </v-tab>
+            <v-tab href="#tab-selected-translocation" :ripple="false">
+               Selected Fusion / Translocation
+            </v-tab>
+            <v-tabs-items v-model="variantTabActive">
+            <!-- SNP / Indel table -->
+        <v-tab-item id="tab-selected-snp" class="pt-1">
+            <data-table ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from Case Owner"
+            initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            @refresh-requested="handleRefresh()">
+            </data-table>        
+            <data-table ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
+                initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+                @refresh-requested="handleRefresh()">
+            </data-table>
+        </v-tab-item>
+        <!-- CNV table -->
+        <v-tab-item id="tab-selected-cnv"  class="pt-1">
+            <data-table ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="CNVs from Case Owner" initial-sort="chrom"
+            no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            @refresh-requested="handleRefresh()">
+            </data-table>
+            <data-table ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
+                no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+                @refresh-requested="handleRefresh()">
+             </data-table>
+        </v-tab-item>
+        <!--  Fusion / Translocation table -->
+        <v-tab-item id="tab-selected-translocation" class="pt-1">
+            <data-table ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from Case Owner"
+            initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            @refresh-requested="handleRefresh()">
+            </data-table>
+            <data-table ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
+                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+                @refresh-requested="handleRefresh()">
+            </data-table>
+        </v-tab-item>
+        </v-tabs-items>
+    </v-tabs>
+
     </v-card-text>
     <v-card-actions class="card-actions-bottom">
         <v-tooltip top>
@@ -210,6 +249,7 @@ Vue.component('review-selection', {
             requiredReportGroups: [],
             markingForReview: false,
             markingForReport: false,
+            variantTabActive: null
         }
     },
     methods: {
@@ -399,17 +439,24 @@ Vue.component('review-selection', {
         getDialogMaxHeight(offset) {
             getDialogMaxHeight(offset);
         },
-        updateSelectedVariantTable(selectedSNPVariants, snpHeaders, snpHeaderOrder, 
-            selectedCNVs, cnvHeaders, cnvHeaderOrder, 
-            selectedTranslocations, ftlHeaders, ftlHeaderOrder) {
+        updateSelectedVariantTable(selectedSNPVariants, selectedSNPVariantsReviewer, snpHeaders, snpHeaderOrder, 
+            selectedCNVs, selectedCNVsReviewer, cnvHeaders, cnvHeaderOrder, 
+            selectedTranslocations, selectedTranslocationsReviewer, ftlHeaders, ftlHeaderOrder) {
             this.$refs.snpVariantsSelected.manualDataFiltered(
                 { items: selectedSNPVariants, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });
+            this.$refs.snpVariantsSelectedReviewer.manualDataFiltered(
+                { items: selectedSNPVariantsReviewer, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });    
 
             this.$refs.cnvVariantsSelected.manualDataFiltered(
                 { items: selectedCNVs, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrder });
-
+            this.$refs.cnvVariantsSelectedReviewer.manualDataFiltered(
+                { items: selectedCNVsReviewer, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrder });
+    
             this.$refs.translocationVariantsSelected.manualDataFiltered(
                 { items: selectedTranslocations, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrder });
+            this.$refs.translocationVariantsSelectedReviewer.manualDataFiltered(
+                { items: selectedTranslocationsReviewer, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrder });
+            this.stopLoading();    
         },
         getSnpTable() {
             return this.$refs.snpVariantsSelected;
@@ -422,6 +469,19 @@ Vue.component('review-selection', {
         },
         openReport() {
             this.$emit("open-report");
+        },
+        startLoading() {
+            this.$refs.snpVariantsSelected.startLoading();
+            this.$refs.snpVariantsSelectedReviewer.startLoading();
+            this.$refs.cnvVariantsSelected.startLoading();
+            this.$refs.translocationVariantsSelected.startLoading();
+        },
+        stopLoading() {
+            this.$refs.snpVariantsSelected.stopLoading();
+            this.$refs.snpVariantsSelectedReviewer.stopLoading();
+        },
+        handleRefresh() {
+            this.$emit("review-selection-refresh");
         }
     },
     computed: {
