@@ -439,23 +439,23 @@ Vue.component('review-selection', {
         getDialogMaxHeight(offset) {
             getDialogMaxHeight(offset);
         },
-        updateSelectedVariantTable(selectedSNPVariants, selectedSNPVariantsReviewer, snpHeaders, snpHeaderOrder, 
-            selectedCNVs, selectedCNVsReviewer, cnvHeaders, cnvHeaderOrder, 
-            selectedTranslocations, selectedTranslocationsReviewer, ftlHeaders, ftlHeaderOrder) {
+        updateSelectedVariantTable(selectedSNPVariants, selectedSNPVariantsReviewer, snpHeaders, snpHeaderOrderAll, snpHeaderOrderReviewer,
+            selectedCNVs, selectedCNVsReviewer, cnvHeaders, cnvHeaderOrderAll, cnvHeaderOrderReviewer,
+            selectedTranslocations, selectedTranslocationsReviewer, ftlHeaders, ftlHeaderOrderAll, ftlHeaderOrderReviewer) {
             this.$refs.snpVariantsSelected.manualDataFiltered(
-                { items: selectedSNPVariants, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });
+                { items: selectedSNPVariants, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderAll });
             this.$refs.snpVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedSNPVariantsReviewer, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrder });    
+                { items: selectedSNPVariantsReviewer, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderReviewer });    
 
             this.$refs.cnvVariantsSelected.manualDataFiltered(
-                { items: selectedCNVs, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrder });
+                { items: selectedCNVs, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderAll });
             this.$refs.cnvVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedCNVsReviewer, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrder });
+                { items: selectedCNVsReviewer, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderReviewer });
     
             this.$refs.translocationVariantsSelected.manualDataFiltered(
-                { items: selectedTranslocations, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrder });
+                { items: selectedTranslocations, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderAll });
             this.$refs.translocationVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedTranslocationsReviewer, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrder });
+                { items: selectedTranslocationsReviewer, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer });
             this.stopLoading();    
         },
         getSnpTable() {
@@ -482,7 +482,7 @@ Vue.component('review-selection', {
         },
         handleRefresh() {
             this.$emit("review-selection-refresh");
-        }
+        },
     },
     computed: {
 

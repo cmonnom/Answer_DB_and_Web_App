@@ -65,6 +65,7 @@ public class OrderCaseForUserSummary extends Summary<OrderCaseForUser>{
 		headers.add(icd10);
 		Header assignedTo = new Header(new String[] {"Assigned", "To"}, "assignedTo");
 		assignedTo.setIsSafe(true);
+		assignedTo.setToolTip(new ToolTip("Users who can modify annotations for this case.<br/>Case owner in bold."));
 		headers.add(assignedTo);
 		Header dateReceived = new Header(new String[] {"Date", "Received"}, "dateReceived");
 		dateReceived.setIsSafe(true);

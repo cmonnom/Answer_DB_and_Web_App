@@ -1634,20 +1634,23 @@ public class OpenCaseController {
 	
 	@RequestMapping(value = "/getSelectedVariantIds", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
-	public String getSelectedVariantIds(Model model, HttpSession session, @RequestBody String data, @RequestParam String caseId) throws Exception {
+	public String getSelectedVariantIds(Model model, HttpSession session, @RequestBody String data, @RequestParam String caseId,  @RequestParam(defaultValue="false") Boolean currentUserOnly) throws Exception {
 
 		User user = ControllerUtil.getSessionUser(session);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (caseSummary.getCaseOwner() == null) {
+			caseSummary.setCaseOwner("-1");
+		}
 		Integer caseOwnerId = Integer.parseInt(caseSummary.getCaseOwner());
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode dataNodes = mapper.readTree(data);
 		String[] nodes = new String[] {"filteredSNPItems", "unfilteredSNPItems"};
-		List<Set<String>> snpItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId);
+		List<Set<String>> snpItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId, currentUserOnly);
 		nodes = new String[] {"filteredCNVItems", "unfilteredCNVItems"};
-		List<Set<String>> cnvItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId);
+		List<Set<String>> cnvItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId, currentUserOnly);
 		nodes = new String[] {"filteredFTLItems", "unfilteredFTLItems"};
-		List<Set<String>> ftlItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId);
+		List<Set<String>> ftlItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId, currentUserOnly);
 		
 		CurrentSelectedVariantIds selectedIds = new CurrentSelectedVariantIds();
 		selectedIds.setSnpIdsAll(snpItems.get(0));
@@ -1664,7 +1667,7 @@ public class OpenCaseController {
 		return response.createObjectJSON();
 	}
 	
-	private List<Set<String>> parseSelectedIdData(JsonNode dataNodes, String[] nodes, User currentUser, ObjectMapper mapper, Integer caseOwnerId) throws JsonParseException, JsonMappingException, IOException {
+	private List<Set<String>> parseSelectedIdData(JsonNode dataNodes, String[] nodes, User currentUser, ObjectMapper mapper, Integer caseOwnerId, Boolean currentUserOnly) throws JsonParseException, JsonMappingException, IOException {
 		Set<String> itemsSelectedIdsAll = new HashSet<String>();
 		Set<String> itemsSelectedIdsReviewer = new HashSet<String>();
 		for (String node : nodes) {
@@ -1678,7 +1681,7 @@ public class OpenCaseController {
 					}
 				}
 				JsonNode selectionPerAnnotator = row.get("selectionPerAnnotator");
-				if (selectionPerAnnotator != null && selectionPerAnnotator.fields().hasNext()) { //other annotators selection
+				if (!currentUserOnly && selectionPerAnnotator != null && selectionPerAnnotator.fields().hasNext()) { //other annotators selection
 					Iterator<Entry<String, JsonNode>> it = selectionPerAnnotator.fields();
 					while (it.hasNext()) {
 						Entry<String, JsonNode> item = it.next();
@@ -1688,7 +1691,9 @@ public class OpenCaseController {
 							break;
 						}
 					}
-					itemsSelectedIdsAll.add(oid);
+					if (!currentUserOnly) {
+						itemsSelectedIdsAll.add(oid);
+					}
 				}
 			}
 		}

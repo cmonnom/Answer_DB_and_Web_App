@@ -19,12 +19,25 @@ const Home = {
       <v-switch :label="createUserLabel(user)" v-model="usersAssignedToCase[index]" @change="handleAssignToUserValid"></v-switch>
       </v-flex>
       <v-flex xs>
-      <v-alert :value="!assignToSelectionValid" type="error" >
-      Only one reviewer per case is allowed
-    </v-alert>
     </v-flex>
-      
       </v-layout>
+
+      <v-layout row wrap class="pl-2">
+        <v-flex xs6 lg5 xl3>
+        <v-select clearable :value="caseOwnerSelected" :items="allUsers" v-model="caseOwnerSelected" return-object item-text="name" item-value="value"
+        :disabled="!currentCaseOwnerEnabled"
+        label="Case Owner" ></v-select>
+        </v-flex>
+        <v-flex xs6 lg5 xl3 pt-3 pl-3>
+            <v-tooltip bottom>
+            <v-switch slot="activator" label="Change Case Owner" v-model="currentCaseOwnerEnabled" color="error"></v-switch>
+            <span>The case owner is responsible for deciding which variants go in the report.
+            <br/>The new case owner's variant will be used to build new reports.
+            <br/>Are you sure you want to change it? (this is not common)</span>
+            </v-tooltip>
+        </v-flex>
+      </v-layout>
+
       </v-card-text>
       <v-card-actions>
       <v-tooltip bottom>
@@ -39,6 +52,8 @@ const Home = {
         <v-checkbox v-model="receiveACopyOfEmail" label="Also send a notification to my email" hide-details></v-checkbox>
         </v-card-actions>
   
+
+
     </v-card>
   </v-dialog>
 
@@ -160,7 +175,9 @@ const Home = {
             snackBarTimeout: 0,
             receiveACopyOfEmail: false,
             assignToUserDisabled: false,
-            assignToSelectionValid: true
+            assignToSelectionValid: true,
+            caseOwnerSelected: null,
+            currentCaseOwnerEnabled: false
         }
     },
     methods: {
@@ -248,26 +265,23 @@ const Home = {
            this.assignToUserDisabled = !this.assignToSelectionValid;
         },
         isAssignToUserValid() {
-            var reviewerCount = 0;
-            for (var i = 0; i < this.allUsers.length; i++) {
-                if (this.usersAssignedToCase[i] === true) {
-                    if (this.allUsers[i].canReview) {
-                        reviewerCount++;
-                    }
-                }
-            };
-            return reviewerCount <= 1;
+            return this.allUsers.length > 0;
+            // var reviewerCount = 0;
+            // for (var i = 0; i < this.allUsers.length; i++) {
+            //     if (this.usersAssignedToCase[i] === true) {
+            //         if (this.allUsers[i].canReview) {
+            //             reviewerCount++;
+            //         }
+            //     }
+            // };
+            // return reviewerCount <= 1;
         },
         assignToUser() {
             this.assignToUserDisabled = true;
             var userIds = [];
-            var reviewerCount = 0;
             for (var i = 0; i < this.allUsers.length; i++) {
                 if (this.usersAssignedToCase[i] === true) {
                     userIds.push(this.allUsers[i].value);
-                    if (this.allUsers[i].canReview) {
-                        reviewerCount++;
-                    }
                 }
             };
             if (!this.isAssignToUserValid()) {
@@ -278,6 +292,7 @@ const Home = {
                 params: {
                     caseId: this.currentCaseId,
                     userIdsParam: userIds.join(","),
+                    caseOwnerId: this.caseOwnerSelected && this.caseOwnerSelected.value != "-1" ? this.caseOwnerSelected.value : null,
                     receiveACopyOfEmail: this.receiveACopyOfEmail
                 }
             })
@@ -285,11 +300,11 @@ const Home = {
                     if (response.data.isAllowed && response.data.success) {
                         this.assignDialogVisible = false;
                         this.getWorklists();
-                        this.assignToUserDisabled = false;
                     }
                     else {
                         this.handleDialogs(response.data, this.assignToUser.bind(null, this.currentCaseId));
                     }
+                    this.assignToUserDisabled = false;
                 })
                 .catch(error => {
                     alert(error);
@@ -437,11 +452,20 @@ const Home = {
             this.currentEpicOrderNumber = item.epicOrderNumber;
             this.currentPatientName = item.patientName;
             this.currentCaseId = item.caseId;
+            var caseOwnerId = item.caseOwnerId;
+            this.currentCaseOwnerEnabled = true;
+            this.caseOwnerSelected = null;
+            if (caseOwnerId && caseOwnerId > -1) {
+                this.currentCaseOwnerEnabled = false; //already a case owner. Disable the button
+            }
             this.usersAssignedToCase = [];
 
             for (var i = 0; i < this.allUsers.length; i++) {
                 var user = this.allUsers[i];
                 var userAssigned = false;
+                if (user.value == caseOwnerId) {
+                    this.caseOwnerSelected = user;
+                }
                 if (item.assignedToIds) {
                     for (var j = 0; j < item.assignedToIds.length; j++) {
                         if (item.assignedToIds[j] == user.value) {

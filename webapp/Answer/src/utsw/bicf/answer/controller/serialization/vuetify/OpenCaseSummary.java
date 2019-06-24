@@ -2,7 +2,6 @@ package utsw.bicf.answer.controller.serialization.vuetify;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,9 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.controller.OpenCaseController;
 import utsw.bicf.answer.dao.ModelDAO;
-import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -52,8 +49,8 @@ public class OpenCaseSummary {
 		List<HeaderOrder> cnvOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "CNVs");
 		List<HeaderOrder> ftlOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Fusions / Translocations");
 		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups, snpOrders, user);
-		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField, cnvOrders);
-		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField, ftlOrders);
+		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField, cnvOrders, user);
+		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField, ftlOrders, user);
 		this.patientInfo = new PatientInfo(aCase);
 		this.caseId = aCase.getCaseId();
 		this.caseName = aCase.getCaseName();

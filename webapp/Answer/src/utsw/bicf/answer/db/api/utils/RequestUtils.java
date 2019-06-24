@@ -156,7 +156,7 @@ public class RequestUtils {
 		}
 	}
 
-	public AjaxResponse assignCaseToUser(List<User> users, String caseId)
+	public AjaxResponse assignCaseToUser(List<User> users, String caseId, User caseOwner)
 			throws ClientProtocolException, IOException, URISyntaxException {
 		String userIds = users.stream().map(user -> user.getUserId().toString()).collect(Collectors.joining(","));
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
@@ -177,6 +177,45 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
+		
+		if (ajaxResponse.getSuccess() && caseOwner != null) {
+			//set the case owner
+			ajaxResponse = this.assignCaseOwner(caseId, caseOwner);
+		}
+		return ajaxResponse;
+	}
+	
+	public AjaxResponse assignCaseOwner(String caseId, User caseOwner)
+			throws ClientProtocolException, IOException, URISyntaxException {
+		if (caseOwner == null) {
+			AjaxResponse ajaxResponse = new AjaxResponse();
+			ajaxResponse.setIsAllowed(true);
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Case owner is null");
+			return ajaxResponse;
+		}
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/setOwner");
+		URI uri = new URI(sbUrl.toString());
+
+		requestPost = new HttpPost(uri);
+
+		addAuthenticationHeader(requestPost);
+		
+		String userJson = "{\"userId\": \"" + caseOwner.getUserId() + "\"}";
+
+		requestPost.setEntity(new StringEntity(userJson, ContentType.APPLICATION_JSON));
+		HttpResponse response = client.execute(requestPost);
+
+		AjaxResponse ajaxResponse = new AjaxResponse();
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		
 		return ajaxResponse;
 	}
 	
@@ -335,7 +374,7 @@ public class RequestUtils {
 		variantIds.setSelectedSNPVariantIds(selectedSNPVariantIds);
 		variantIds.setSelectedCNVIds(selectedCNVIds);
 		variantIds.setSelectedTranslocationIds(selectedTranslocationIds);
-		variantIds.setUserId(currentUser.getUserId());
+		variantIds.setUserId(currentUser.getUserId() + "");
 		requestPost.setEntity(new StringEntity(variantIds.createObjectJSON(), ContentType.APPLICATION_JSON));
 
 		HttpResponse response = client.execute(requestPost);

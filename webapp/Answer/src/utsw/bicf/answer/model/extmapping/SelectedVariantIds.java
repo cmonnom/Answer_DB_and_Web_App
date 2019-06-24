@@ -14,7 +14,7 @@ public class SelectedVariantIds {
 	List<String> selectedSNPVariantIds;
 	List<String> selectedCNVIds;
 	List<String> selectedTranslocationIds;
-	Integer userId;
+	String userId;
 	
 	public SelectedVariantIds() {
 		
@@ -49,11 +49,11 @@ public class SelectedVariantIds {
 		return mapper.writeValueAsString(this);
 	}
 
-	public Integer getUserId() {
+	public String getUserId() {
 		return userId;
 	}
 
-	public void setUserId(Integer userId) {
+	public void setUserId(String userId) {
 		this.userId = userId;
 	}
 

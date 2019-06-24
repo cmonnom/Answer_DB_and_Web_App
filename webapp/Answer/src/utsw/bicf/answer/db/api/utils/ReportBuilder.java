@@ -82,7 +82,7 @@ public class ReportBuilder {
 	 */
 	private void init() {
 	}
-
+	
 	public Report build() throws ClientProtocolException, IOException, URISyntaxException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
 		caseDetails = utils.getCaseDetails(caseId, null);
 		report.setCaseId(caseDetails.getCaseId());
@@ -99,9 +99,17 @@ public class ReportBuilder {
 		report.setLive(true);
 
 		//only keep selected variants
-		List<Variant> variantsSelected = caseDetails.getVariants().stream().filter(v -> isTrue(v.getSelected())).collect(Collectors.toList());
-		List<CNV> cnvsSelected = caseDetails.getCnvs().stream().filter(v -> isTrue(v.getSelected())).collect(Collectors.toList());
-		List<Translocation> ftlsSelected = caseDetails.getTranslocations().stream().filter(v -> isTrue(v.getSelected())).collect(Collectors.toList());
+		String caseOwnerId = caseDetails.getCaseOwner();
+		List<Variant> variantsSelected = new ArrayList<Variant>();
+		List<CNV> cnvsSelected = new ArrayList<CNV>();
+		List<Translocation> ftlsSelected = new ArrayList<Translocation>();
+		
+		if (caseOwnerId != null && !caseOwnerId.equals("-1")) {
+			Integer caseOwnerIdInt = Integer.parseInt(caseOwnerId);
+			variantsSelected = caseDetails.getVariants().stream().filter(v -> v.getAnnotatorSelections() != null && isTrue(v.getAnnotatorSelections().get(caseOwnerIdInt))).collect(Collectors.toList());
+			cnvsSelected = caseDetails.getCnvs().stream().filter(v -> v.getAnnotatorSelections() != null && isTrue(v.getAnnotatorSelections().get(caseOwnerIdInt))).collect(Collectors.toList());
+			ftlsSelected = caseDetails.getTranslocations().stream().filter(v -> v.getAnnotatorSelections() != null && isTrue(v.getAnnotatorSelections().get(caseOwnerIdInt))).collect(Collectors.toList());
+		}
 		
 		//filter out unselected annotations and variants without tiered annotations
 		Map<VariantReport, List<Annotation>> annotationsPerSNP = extractAnnotationsForSNPs(variantsSelected);

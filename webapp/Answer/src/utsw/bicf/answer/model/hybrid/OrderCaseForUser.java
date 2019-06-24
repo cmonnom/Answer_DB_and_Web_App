@@ -61,7 +61,12 @@ public class OrderCaseForUser {
 		for (String userId : orderCase.getAssignedTo()) {
 			for (User user : users) {
 				if (userId.equals(user.getUserId().toString())) {
-					userNames.add(user.getFullName());
+					if (userId.equals(orderCase.getCaseOwner())) {
+						userNames.add("<b>" + user.getFullName() + "</b>");
+					}
+					else {
+						userNames.add(user.getFullName());
+					}
 				}
 			}
 		}

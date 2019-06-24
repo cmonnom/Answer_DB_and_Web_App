@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
+import utsw.bicf.answer.controller.serialization.HeaderAdditionalData;
 import utsw.bicf.answer.controller.serialization.ToolTip;
 import utsw.bicf.answer.controller.serialization.Units;
 import utsw.bicf.answer.dao.ModelDAO;
@@ -44,7 +45,7 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		for (Variant variant : aCase.getVariants()) {
 			
 			//TODO for testing only
-			addTestingAnnotators(variant);
+//			addTestingAnnotators(variant);
 			
 			//populate selection from other annotators
 			Map<Integer, AnnotatorSelection> selectionPerAnnotator = new HashMap<Integer, AnnotatorSelection>();
@@ -54,7 +55,7 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 					boolean isSelected = variant.getAnnotatorSelections().get(userId) != null && variant.getAnnotatorSelections().get(userId);
 					String date = variant.getAnnotatorDates().get(userId);
 					if (isSelected) {
-						if (!userId.equals(currentUser.getUserId())) { //skip current user
+//						if (!userId.equals(currentUser.getUserId())) { //skip current user
 							for (User u : allUsers) {
 								if (u.getUserId().equals(userId)) {
 									AnnotatorSelection s = new AnnotatorSelection();
@@ -67,7 +68,7 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 									if (s.getDate() != null) {
 										OffsetDateTime dateUTCDatetime = OffsetDateTime.parse(s.getDate(), DateTimeFormatter.ISO_DATE_TIME);
 										boolean ownsTheCase = aCase.getCaseOwner() != null && userId.toString().equals(aCase.getCaseOwner());
-										s.setSelectedSince(buildDateSinceChip(TypeUtils.dateSince(dateUTCDatetime), ownsTheCase));
+										s.setSelectedSince(TypeUtils.buildDateSinceChip(TypeUtils.dateSince(dateUTCDatetime), ownsTheCase));
 									}
 									else {
 										s.setSelectedSince("Unknown");
@@ -80,8 +81,8 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 //								}
 							}
 							
-						}
-						else if (userId.equals(currentUser.getUserId())) {
+//						}
+						if (userId.equals(currentUser.getUserId())) {
 							variant.setSelected(true); //this is the selection of the current user
 						}
 					}
@@ -92,22 +93,6 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		return rows;
 	}
 	
-	/**
-	 * Since the column is "trusted" Vuetify will interpret the html tags
-	 * This is kind of a hack but easier to manage than doing it as a special case in data-tables
-	 * @param dateSince
-	 * @param isReviewer 
-	 * @return
-	 */
-	private static String buildDateSinceChip(String dateSince, Boolean isReviewer) {
-		StringBuilder sb = new StringBuilder();
-		String chipColor = (isReviewer != null && isReviewer) ? "green" : "grey";
-		sb.append("<span tabindex='-1' class='chip chip--disabled chip--label ").append(chipColor).append(" chip--small white--text'><span class='chip__content'>")
-        .append("<i aria-hidden='true' class='icon material-icons mdi mdi-checkbox-marked'></i>") 
-        .append("<span class='pl-2'>").append(dateSince).append("</span></span></span>");
-		return sb.toString();
-	}
-
 	private static void addTestingAnnotators(Variant variant) {
 		if (variant.getMongoDBId().getOid().equals("5c47a25f5b19805aabc1d47b")
 				|| variant.getMongoDBId().getOid().equals("5c47a25f5b19805aabc1d47c")) {
@@ -159,32 +144,32 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 	@Override
 	public void initializeHeaders() {
 		
-		Map<String, AdditionalData> annotatorInitials = new HashMap<String, AdditionalData>();
+		Map<String, HeaderAdditionalData> annotatorInitials = new HashMap<String, HeaderAdditionalData>();
 		for (SNPIndelVariantRow row : items) {
 			for (Integer userId : row.getSelectionPerAnnotator().keySet()) {
 				//need to guarantee uniqueness of header. For now, append the userId.
 				//TODO find a better way to handle same initials. 
 				//Maybe scan through first to see if any initials are the same
 				//and append a number to those only
-				AdditionalData data = new AdditionalData();
+				HeaderAdditionalData data = new HeaderAdditionalData();
 //				data.tooltip = new ToolTip(row.getSelectionPerAnnotator().get(userId).getUserFullName());
 				User u = modelDAO.getUserByUserId(userId);
 				String reviewer = u.getIndividualPermission().getCanReview() != null && u.getIndividualPermission().getCanReview() ? "Case Owner " : "";
-				data.tooltip = new ToolTip(reviewer + row.getSelectionPerAnnotator().get(userId).getUserFullName() + "'s selection");
-				data.userId = userId;
-				data.firstName = row.getSelectionPerAnnotator().get(userId).getFirstName();
-				data.lastName = row.getSelectionPerAnnotator().get(userId).getLastName();
+				data.setTooltip(new ToolTip(reviewer + row.getSelectionPerAnnotator().get(userId).getUserFullName() + "'s selection"));
+				data.setUserId(userId);
+				data.setFirstName(row.getSelectionPerAnnotator().get(userId).getFirstName());
+				data.setLastName(row.getSelectionPerAnnotator().get(userId).getLastName());
 				annotatorInitials.put(row.getSelectionPerAnnotator().get(userId).getUserFullName(),data);
 			}
 		}
 		
 		for (String annotator : annotatorInitials.keySet()) {
-			AdditionalData data = annotatorInitials.get(annotator);
-			Header annHeader = new Header(new String[] {data.firstName, data.lastName}, "dateSince" + data.userId);
+			HeaderAdditionalData data = annotatorInitials.get(annotator);
+			Header annHeader = new Header(new String[] {data.getFirstName(), data.getLastName()}, "dateSince" + data.getUserId());
 			annHeader.setIsSafe(true);
 			annHeader.setMap(true);
-			annHeader.setToolTip(data.tooltip);
-			annHeader.setMapTo(data.userId + "");
+			annHeader.setToolTip(data.getTooltip());
+			annHeader.setMapTo(data.getUserId() + "");
 //			annHeader.setWidth("65px");
 			headers.add(annHeader);
 		}
@@ -283,15 +268,6 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		
 //		Header rnaAltDepth = new Header(new String[] {"RNA","Depth"}, "rnaAltDepth", Units.NB);
 //		headers.add(rnaAltDepth);
-		
-	}
-	
-	class AdditionalData {
-		ToolTip tooltip;
-		Integer userId;
-		String firstName;
-		String lastName;
-		
 		
 	}
 	

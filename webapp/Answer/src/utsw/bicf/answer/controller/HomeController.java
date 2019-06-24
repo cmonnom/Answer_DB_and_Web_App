@@ -183,6 +183,7 @@ public class HomeController {
 	public String assignToUser(Model model, HttpSession session, HttpServletRequest request,
 			@RequestParam String userIdsParam,
 			@RequestParam String caseId,
+			@RequestParam(defaultValue="-1") String caseOwnerId,
 			@RequestParam(defaultValue="false") Boolean receiveACopyOfEmail)
 			throws Exception {
 		
@@ -192,6 +193,26 @@ public class HomeController {
 		User currentUser = ControllerUtil.getSessionUser(session);
 		if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, orderCase)) {
 			return ControllerUtil.returnFailedGroupCheck();
+		}
+		User caseOwner = null;
+		if (!caseOwnerId.equals("-1")) {
+			caseOwner = modelDAO.getUserByUserId(Integer.parseInt(caseOwnerId));
+			if (caseOwner != null) {
+				if (!ControllerUtil.areUserAndCaseInSameGroup(caseOwner, orderCase)) {
+					AjaxResponse response = new AjaxResponse();
+					response.setIsAllowed(false);
+					response.setSuccess(false);
+					response.setMessage("Selected case owner is not part of the correct group");
+					return response.createObjectJSON();
+				}
+				if (caseOwner.getIndividualPermission().getCanReview() == null || !caseOwner.getIndividualPermission().getCanReview()) {
+					AjaxResponse response = new AjaxResponse();
+					response.setIsAllowed(false);
+					response.setSuccess(false);
+					response.setMessage("Selected case owner is not a reviewer");
+					return response.createObjectJSON();
+				}
+			}
 		}
 		List<String> alreadyAssignedTo = new ArrayList<String>();
 		if (orderCase != null) {
@@ -211,18 +232,18 @@ public class HomeController {
 					
 			}
 		}
-		//check that only one reviewer is assigned
-		Long reviewerCount = realUsers.stream().filter(u -> u.getIndividualPermission() != null && u.getIndividualPermission().getCanReview() != null && u.getIndividualPermission().getCanReview())
-		.collect(Collectors.counting());
-		if (reviewerCount > 1) {
-			AjaxResponse response = new AjaxResponse();
-			response.setIsAllowed(true);
-			response.setSuccess(false);
-			response.setMessage("Only one reviewer is allowed per case.");
-			return response.createObjectJSON();
-		}
+		//check that only one reviewer is assigned. Decided not to do that
+//		Long reviewerCount = realUsers.stream().filter(u -> u.getIndividualPermission() != null && u.getIndividualPermission().getCanReview() != null && u.getIndividualPermission().getCanReview())
+//		.collect(Collectors.counting());
+//		if (reviewerCount > 1) {
+//			AjaxResponse response = new AjaxResponse();
+//			response.setIsAllowed(true);
+//			response.setSuccess(false);
+//			response.setMessage("Only one reviewer is allowed per case.");
+//			return response.createObjectJSON();
+//		}
 		
-		AjaxResponse response = utils.assignCaseToUser(realUsers, caseId);
+		AjaxResponse response = utils.assignCaseToUser(realUsers, caseId, caseOwner);
 		if (response.getSuccess()) {
 			for (User user : realUsers) {
 				if (alreadyAssignedTo.contains(user.getUserId() + "")

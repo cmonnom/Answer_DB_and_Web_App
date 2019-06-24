@@ -1419,6 +1419,7 @@ const OpenCase = {
                     this.addSNPIndelHeaderAction(response.data.snpIndelVariantSummary.headers);
                     this.addCNVHeaderAction(response.data.cnvSummary.headers);
                     this.addFusionHeaderAction(response.data.translocationSummary.headers);
+                    this.removeCurrentUserSelectionColumnFromHeaders(response.data.snpIndelVariantSummary.headerOrder, response.data.cnvSummary.headerOrder, response.data.translocationSummary.headerOrder)
                     // step = new Date() - start;
                     // console.log(7, step); 
                     this.reportGroups = response.data.reportGroups;
@@ -1463,7 +1464,9 @@ const OpenCase = {
             }
             ).catch(error => {
                 this.loadingVariantDetails = false;
-                this.$refs.advancedFilter.loading = false;
+                if (this.$refs.advancedFilter) {
+                    this.$refs.advancedFilter.loading = false;
+                }
                 this.handleAxiosError(error);
             }
             );
@@ -2874,7 +2877,7 @@ const OpenCase = {
                         });
 
                         //keep track of the selected variants and refresh
-                        this.getSelectedVariantIds()
+                        this.getSelectedVariantIds(true)
                         .then(response => {
                             this.currentSelectedVariantIds = response;
                             if (this.currentSelectedVariantIds) {
@@ -2963,7 +2966,7 @@ const OpenCase = {
             this.updatingSelectedVariantTable = true;
             this.$refs.reviewDialog.startLoading();
 
-            this.getSelectedVariantIds().then(response => {
+            this.getSelectedVariantIds(false).then(response => {
                 if (response != null) {
                     this.currentSelectedVariantIds = response;
                     var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
@@ -2974,13 +2977,20 @@ const OpenCase = {
                     var selectedFTLsReviewer = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIdsReviewer.indexOf(item.oid) > -1);
                     this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
 
+                    //add the current user column headerOrder but only to the all annotator table
+                    snpAllHeaderOrder =   this.$refs.geneVariantDetails.headerOrder.slice();
+                    cnvAllHeaderOrder =   this.$refs.cnvDetails.headerOrder.slice();
+                    ftlAllHeaderOrder =   this.$refs.translocationDetails.headerOrder.slice();
+
+                    this.addCurrentUserSelectionColumnToHeaders(snpAllHeaderOrder, cnvAllHeaderOrder, ftlAllHeaderOrder);
+
                     this.$refs.reviewDialog.updateSelectedVariantTable(
                     selectedSNPVariants, selectedSNPVariantsReviewer, 
-                    this.$refs.geneVariantDetails.headers, this.$refs.geneVariantDetails.headerOrder, 
+                    this.$refs.geneVariantDetails.headers, snpAllHeaderOrder, this.$refs.geneVariantDetails.headerOrder, 
                     selectedCNVs, selectedCNVsReviewer,
-                    this.$refs.cnvDetails.headers, this.$refs.cnvDetails.headerOrder, 
+                    this.$refs.cnvDetails.headers, cnvAllHeaderOrder, this.$refs.cnvDetails.headerOrder, 
                     selectedTranslocations, selectedFTLsReviewer,
-                    this.$refs.translocationDetails.headers, this.$refs.translocationDetails.headerOrder);
+                    this.$refs.translocationDetails.headers, ftlAllHeaderOrder, this.$refs.translocationDetails.headerOrder);
                     this.updatingSelectedVariantTable = false;
                     this.updateSplashProgress();
                 }
@@ -3033,7 +3043,7 @@ const OpenCase = {
             }
             this.saveLoading = true;
             //TODO replace this by doing it on the server side instead
-            this.getSelectedVariantIds().
+            this.getSelectedVariantIds(true).
             then(response => {
                 this.currentSelectedVariantIds = response;
                 axios({
@@ -3250,7 +3260,7 @@ const OpenCase = {
         simplifiedSelectedVariant(i) {
             return {"oid": i.oid, "isSelected": i.isSelected, "selectionPerAnnotator": i.selectionPerAnnotator};
         },
-        getSelectedVariantIds() {
+        getSelectedVariantIds(currentUserOnly) {
             return new Promise((resolve, reject) => {
                 var filteredSNPItems = this.$refs.geneVariantDetails.items.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
                 var unfilteredSNPItems = this.snpIndelUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
@@ -3262,7 +3272,8 @@ const OpenCase = {
                     method: 'post',
                     url: webAppRoot + "/getSelectedVariantIds",
                     params: {
-                        caseId: this.$route.params.id
+                        caseId: this.$route.params.id,
+                        currentUserOnly: currentUserOnly
                     },
                     data: {
                         filteredSNPItems: filteredSNPItems, 
@@ -4238,6 +4249,23 @@ const OpenCase = {
             }
             return 'xs';
         },
+        removeCurrentUserSelectionColumnFromHeaders(snpSummaryHeaderOrder, cnvSummaryHeaderOrder, ftlSummaryHeaderOrder) {
+            var headerOrders = [snpSummaryHeaderOrder, cnvSummaryHeaderOrder, ftlSummaryHeaderOrder];
+            for (var i = 0; i < headerOrders.length; i++) {
+                for (var j = 0; j < headerOrders[i].length; j++) {
+                    if (headerOrders[i][j] == "dateSince" + this.userId) {
+                        headerOrders[i].splice(j, 1);
+                        break;
+                    }
+                }
+            }
+        },
+        addCurrentUserSelectionColumnToHeaders(snpSummaryHeaderOrder, cnvSummaryHeaderOrder, ftlSummaryHeaderOrder) {
+            var headerOrders = [snpSummaryHeaderOrder, cnvSummaryHeaderOrder, ftlSummaryHeaderOrder];
+            for (var i = 0; i < headerOrders.length; i++) {
+                headerOrders[i].splice(0,0, "dateSince" + this.userId);
+            }
+        }
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",

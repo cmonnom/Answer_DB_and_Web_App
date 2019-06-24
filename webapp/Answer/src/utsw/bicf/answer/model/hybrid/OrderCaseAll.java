@@ -37,6 +37,7 @@ public class OrderCaseAll {
 	
 	List<Button> buttons = new ArrayList<Button>();
 	FlagValue progressFlags;
+	String caseOwnerId;
 	
 	public OrderCaseAll(ModelDAO modelDAO, OrderCase orderCase, List<User> users, User currentUser) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
@@ -49,11 +50,17 @@ public class OrderCaseAll {
 		this.groupIds = orderCase.getGroupIds();
 		this.patientName = orderCase.getPatientName();
 		this.active = orderCase.getActive();
+		this.caseOwnerId = orderCase.getCaseOwner();
 		List<String> userNames = new ArrayList<String>();
 		for (String userId : orderCase.getAssignedTo()) {
 			for (User user : users) {
 				if (userId.equals(user.getUserId().toString())) {
-					userNames.add(user.getFullName());
+					if (userId.equals(orderCase.getCaseOwner())) {
+						userNames.add("<b>" + user.getFullName() + "</b>");
+					}
+					else {
+						userNames.add(user.getFullName());
+					}
 				}
 			}
 		}
@@ -201,6 +208,10 @@ public class OrderCaseAll {
 
 	public String getUploadedDate() {
 		return uploadedDate;
+	}
+
+	public String getCaseOwnerId() {
+		return caseOwnerId;
 	}
 
 

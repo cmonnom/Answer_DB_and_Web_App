@@ -2,9 +2,11 @@ package utsw.bicf.answer.model.hybrid;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
+import utsw.bicf.answer.model.extmapping.AnnotatorSelection;
 import utsw.bicf.answer.model.extmapping.Translocation;
 
 public class TranslocationRow {
@@ -25,8 +27,12 @@ public class TranslocationRow {
 	String leftExons;
 	String rightExons;
 	
+	String fusionType;
+	String annotations;
 	
-	public TranslocationRow(Translocation translocation) {
+	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
+	
+	public TranslocationRow(Translocation translocation, Map<Integer, AnnotatorSelection> selectionPerAnnotator) {
 		this.oid = translocation.getMongoDBId().getOid();
 		this.fusionName = translocation.getFusionName();
 		this.leftGene = translocation.getLeftGene();
@@ -41,6 +47,12 @@ public class TranslocationRow {
 		this.isSelected = translocation.getSelected();
 		this.leftExons = translocation.getFirstExon();
 		this.rightExons = translocation.getLastExon();
+		this.fusionType = translocation.getFusionType();
+		this.annotations = translocation.getAnnot();
+		if (this.annotations != null && this.annotations.length() > 1) {
+			//remove outer brackets, remove quotes, replace comma with new line
+			this.annotations = this.annotations.substring(1, this.annotations.length() - 2).replaceAll("\"", "").replaceAll(",", "<br/>");
+		}
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		if (utswAnnotated != null && utswAnnotated) {
@@ -50,6 +62,8 @@ public class TranslocationRow {
 //			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
 //		}
 		iconFlags = new FlagValue(icons);
+		
+		this.selectionPerAnnotator = selectionPerAnnotator;
 		
 	}
 
@@ -126,6 +140,21 @@ public class TranslocationRow {
 
 	public String getRightExons() {
 		return rightExons;
+	}
+
+
+	public Map<Integer, AnnotatorSelection> getSelectionPerAnnotator() {
+		return selectionPerAnnotator;
+	}
+
+
+	public String getFusionType() {
+		return fusionType;
+	}
+
+
+	public String getAnnotations() {
+		return annotations;
 	}
 
 

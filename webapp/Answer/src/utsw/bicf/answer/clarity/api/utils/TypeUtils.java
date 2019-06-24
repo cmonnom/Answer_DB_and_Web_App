@@ -184,4 +184,20 @@ public class TypeUtils {
 	    }    
 	    return result.stream().collect(Collectors.joining(" "));
 	}
+	
+	/**
+	 * Since the column is "trusted" Vuetify will interpret the html tags
+	 * This is kind of a hack but easier to manage than doing it as a special case in data-tables
+	 * @param dateSince
+	 * @param isReviewer 
+	 * @return
+	 */
+	public static String buildDateSinceChip(String dateSince, Boolean isReviewer) {
+		StringBuilder sb = new StringBuilder();
+		String chipColor = (isReviewer != null && isReviewer) ? "green" : "grey";
+		sb.append("<span tabindex='-1' class='chip chip--disabled chip--label ").append(chipColor).append(" chip--small white--text'><span class='chip__content'>")
+        .append("<i aria-hidden='true' class='icon material-icons mdi mdi-checkbox-marked'></i>") 
+        .append("<span class='pl-2'>").append(dateSince).append("</span></span></span>");
+		return sb.toString();
+	}
 }

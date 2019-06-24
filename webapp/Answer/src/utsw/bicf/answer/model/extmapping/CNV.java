@@ -1,7 +1,9 @@
 package utsw.bicf.answer.model.extmapping;
 
 import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,6 +45,9 @@ public class CNV {
 	AnnotationRow mdaAnnotation;
 	
 	String tier;
+	
+	Map<Integer, Boolean> annotatorSelections = new HashMap<Integer, Boolean>();
+	Map<Integer, String> annotatorDates = new HashMap<Integer, String>();
 	
 	public CNV() {
 		
@@ -270,6 +275,26 @@ public class CNV {
 
 	public void setTier(String tier) {
 		this.tier = tier;
+	}
+
+
+	public Map<Integer, Boolean> getAnnotatorSelections() {
+		return annotatorSelections;
+	}
+
+
+	public void setAnnotatorSelections(Map<Integer, Boolean> annotatorSelections) {
+		this.annotatorSelections = annotatorSelections;
+	}
+
+
+	public Map<Integer, String> getAnnotatorDates() {
+		return annotatorDates;
+	}
+
+
+	public void setAnnotatorDates(Map<Integer, String> annotatorDates) {
+		this.annotatorDates = annotatorDates;
 	}
 
 

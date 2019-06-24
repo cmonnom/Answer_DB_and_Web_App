@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
-import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.AnnotatorSelection;
 import utsw.bicf.answer.model.extmapping.Build;
 import utsw.bicf.answer.model.extmapping.Caller;

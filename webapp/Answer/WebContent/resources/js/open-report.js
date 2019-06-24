@@ -1245,6 +1245,10 @@ const OpenReport = {
                     this.handleAxiosError(error);
                 });
         },
+        toggleHTMLOverlay() {
+            var html = document.querySelector("html");
+            html.style.overflow = "";
+        },
 //        test() {
 //            this.$refs.indicatedTherapies.newRow.drugs = "some drugs";
 //            this.$refs.indicatedTherapies.newRow.variant = "some variant";
@@ -1313,6 +1317,7 @@ const OpenReport = {
         }
         this.$refs.existingReports.getExistingReports();
         splashDialog = false; //prevent splash dialog when user navigate to open case for the 1st time
+        this.toggleHTMLOverlay(); // if coming from the opencase->review, the scrollbar is hidden. Reset to default
     },
     created() {
     },
