@@ -2,7 +2,7 @@ const UserPrefs = {
   template:
     `<div>
 
-  <v-snackbar :timeout="2000" :bottom="true" v-model="snackBarVisible">
+  <v-snackbar :timeout="2000" :bottom="true" :value="snackBarVisible">
     {{ snackBarMessage }}
     <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
   </v-snackbar>

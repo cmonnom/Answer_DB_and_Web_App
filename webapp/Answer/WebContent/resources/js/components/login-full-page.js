@@ -6,7 +6,7 @@ Vue.component('login-full-page', {
     },
     template: `<div :class="[magicClass, 'magic-transition', backgroundClass, ]">
 
-    <v-snackbar :timeout="0" :bottom="true" v-model="snackBarVisible">
+    <v-snackbar :timeout="0" :bottom="true" :value="snackBarVisible">
     {{ snackBarMessage }}
     <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
   </v-snackbar>
@@ -27,11 +27,11 @@ Vue.component('login-full-page', {
         </v-layout>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="success" @click="sendResetPasswordEmail()" slot="activator"
+        <v-btn class="mr-2" color="success" @click="sendResetPasswordEmail()" slot="activator"
         :disabled="!email">Send
           <v-icon right dark>email</v-icon>
         </v-btn>
-        <v-btn color="error" @click="cancelReset()">Cancel
+        <v-btn class="mr-2" color="error" @click="cancelReset()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
       </v-card-actions>

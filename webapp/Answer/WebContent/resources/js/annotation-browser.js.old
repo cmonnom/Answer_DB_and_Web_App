@@ -12,7 +12,7 @@ const AnnotationBrowser = {
     <edit-annotations type="translocation" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
         ref="translocationAnnotationDialog" :title="leftGene + '--'  + rightGene"></edit-annotations>
 
-        <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
+        <v-snackbar :timeout="4000" :bottom="true" :value="snackBarVisible">
             {{ snackBarMessage }}
             <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
         </v-snackbar>
@@ -73,7 +73,7 @@ const AnnotationBrowser = {
       <v-card-text>
         <v-layout row wrap>
           <v-flex xs5>
-            <v-radio-group v-model="variantType" column>
+            <v-radio-group :value="variantType" column>
               <v-radio label="SNP/Indel" value="snp"></v-radio>
               <v-radio label="CNV" value="cnv"></v-radio>
               <v-radio label="Fusion/Translocation" value="translocation"></v-radio>
@@ -84,10 +84,10 @@ const AnnotationBrowser = {
               <v-layout row wrap>
                 <v-flex xs12 class="subheading">Search SNP Annotations by Gene:</v-flex>
                 <v-flex xs5>
-                  <v-text-field slot="activator" autocomplete="off" clearable label="Gene Name" v-model="searchGene" hide-details></v-text-field>
+                  <v-text-field slot="activator" autocomplete="off" clearable label="Gene Name" :value="searchGene" hide-details></v-text-field>
                 </v-flex>
                  <!-- <v-flex xs5>
-                   <v-text-field slot="activator" autocomplete="off" clearable label="Variant" v-model="searchVariant" hide-details></v-text-field>
+                   <v-text-field slot="activator" autocomplete="off" clearable label="Variant" :value="searchVariant" hide-details></v-text-field>
                  </v-flex> -->
               </v-layout>
             </v-container>
@@ -98,10 +98,10 @@ const AnnotationBrowser = {
               <v-layout row wrap>
                 <v-flex xs12 class="subheading">Search CNV Annotations by Chrom/Gene:</v-flex>
                 <v-flex xs5>
-                  <v-text-field slot="activator" autocomplete="off" clearable label="Chromosome" v-model="chrom" hide-details></v-text-field>
+                  <v-text-field slot="activator" autocomplete="off" clearable label="Chromosome" :value="chrom" hide-details></v-text-field>
                 </v-flex>
                 <v-flex xs5>
-                  <v-text-field slot="activator" autocomplete="off" clearable label="Gene Name" v-model="searchGene" hide-details></v-text-field>
+                  <v-text-field slot="activator" autocomplete="off" clearable label="Gene Name" :value="searchGene" hide-details></v-text-field>
                 </v-flex>
               </v-layout>
             </v-container>
@@ -112,10 +112,10 @@ const AnnotationBrowser = {
               <v-layout row wrap>
                 <v-flex xs12 class="subheading">Search Fusion Annotations by Genes:</v-flex>
                 <v-flex xs5>
-                  <v-text-field slot="activator" autocomplete="off" clearable label="Left Gene" v-model="leftGene" hide-details></v-text-field>
+                  <v-text-field slot="activator" autocomplete="off" clearable label="Left Gene" :value="leftGene" hide-details></v-text-field>
                 </v-flex>
                 <v-flex xs5>
-                  <v-text-field slot="activator" autocomplete="off" clearable label="Right Gene" v-model="rightGene" hide-details></v-text-field>
+                  <v-text-field slot="activator" autocomplete="off" clearable label="Right Gene" :value="rightGene" hide-details></v-text-field>
                 </v-flex>
               </v-layout>
             </v-container>

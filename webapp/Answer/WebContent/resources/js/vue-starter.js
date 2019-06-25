@@ -115,6 +115,7 @@ new Vue({
 	el: '#app',
 	mounted() {
 		this.$vuetify.theme.primary = '#4db6ac'; //set the theme here
+		this.$vuetify.theme.warning = "#FFD740";
 	}
 })
 

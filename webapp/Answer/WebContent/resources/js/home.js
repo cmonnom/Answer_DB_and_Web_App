@@ -2,7 +2,7 @@ const Home = {
     template:
         `<div>
 
-        <v-snackbar :timeout="snackBarTimeout" :bottom="true" v-model="snackBarVisible">
+        <v-snackbar :timeout="snackBarTimeout" :bottom="true" :value="snackBarVisible">
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
       </v-snackbar>
@@ -40,13 +40,13 @@ const Home = {
 
       </v-card-text>
       <v-card-actions>
-      <v-tooltip bottom>
+      <v-tooltip bottom class="pr-2">
       <v-btn color="success" @click="assignToUser()" slot="activator" :disabled="assignToUserDisabled">Save
       <v-icon right dark>save</v-icon>
       </v-btn>
       <span>Answer will send an email notification<br/>to the selected users</span>
         </v-tooltip>
-        <v-btn color="error" @click="cancelAssign()">Cancel
+        <v-btn class="mr-2" color="error" @click="cancelAssign()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
         <v-checkbox v-model="receiveACopyOfEmail" label="Also send a notification to my email" hide-details></v-checkbox>
@@ -71,13 +71,13 @@ const Home = {
       </v-layout>
     </v-card-text>
     <v-card-actions>
-    <v-tooltip bottom>
+    <v-tooltip bottom class="pr-2">
       <v-btn color="success" @click="assignToGroup()" slot="activator">Save
         <v-icon right dark>save</v-icon>
       </v-btn>
       <span></span>
       </v-tooltip>
-      <v-btn color="error" @click="cancelAssignGroup()">Cancel
+      <v-btn class="mr-2" color="error" @click="cancelAssignGroup()">Cancel
         <v-icon right dark>cancel</v-icon>
       </v-btn>
       
@@ -99,13 +99,13 @@ const Home = {
   </v-toolbar>
   <v-container grid-list-md fluid class="pl-0 pr-0 pt-0">
 
-    <v-tabs dark slider-color="warning" color="primary darken-1" fixed-tabs v-model="activateTab">
+    <v-tabs dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="activateTab">
         <v-tab href="#tab-userCases" :ripple="false">My Cases</v-tab>
         <v-tab href="#tab-allCases" :ripple="false">All Cases</v-tab>
         <v-tab href="#tab-finalizedCases" :ripple="false">Ready for Epic</v-tab>
 
         <v-tabs-items>
-            <v-tab-item id="tab-userCases"  class="pt-1">
+            <v-tab-item value="tab-userCases"  class="pt-1">
             <v-layout row wrap>
             <v-slide-x-transition>
               <v-flex xs12 >
@@ -126,7 +126,7 @@ const Home = {
             </v-layout>
             </v-tab-item>
     
-            <v-tab-item id="tab-allCases"  class="pt-1">
+            <v-tab-item value="tab-allCases"  class="pt-1">
                 <v-layout row wrap>
                   <v-slide-x-transition>
                     <v-flex xs12>
@@ -138,7 +138,7 @@ const Home = {
                   </v-layout>
             </v-tab-item>
     
-            <v-tab-item id="tab-finalizedCases"  class="pt-1">
+            <v-tab-item value="tab-finalizedCases"  class="pt-1">
               <v-layout row wrap>
               <v-slide-x-transition>
               <v-flex xs12>

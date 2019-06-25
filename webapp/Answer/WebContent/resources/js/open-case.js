@@ -22,11 +22,7 @@ const OpenCase = {
     </v-dialog>
 
     <!-- splash screen dialog -->
-    <div class="splash-screen" v-if="splashDialog">
-    <v-layout align-center justify-center row fill-height class="splash-screen-item">
-	<span class="subheading">{{ splashTextCurrent }}</span>
-  </v-layout>
-  </div>
+    <splash-screen ref="splashScreen" :splash-dialog="splashDialog" ></splash-screen>
 
   <!-- add CNV dialog -->
   <v-dialog v-model="addCNVDialogVisible" max-width="500px" scrollable>
@@ -53,16 +49,16 @@ const OpenCase = {
 
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
-                <v-btn color="primary" @click="proceedWithConfirmation" slot="activator">{{ confirmationProceedButton }}
+                <v-btn class="mr-2" color="primary" @click="proceedWithConfirmation" slot="activator">{{ confirmationProceedButton }}
                 </v-btn>
-                <v-btn color="error" @click="cancelConfirmation" slot="activator">{{ confirmationCancelButton }}
+                <v-btn class="mr-2" color="error" @click="cancelConfirmation" slot="activator">{{ confirmationCancelButton }}
                 </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 
    
-    <v-snackbar :timeout="snackBarTimeout" :bottom="true" v-model="snackBarVisible">
+    <v-snackbar :timeout="snackBarTimeout" :bottom="true" :value="snackBarVisible">
         {{ snackBarMessage }}
         <v-tooltip top>
         <a slot="activator" :href="snackBarLink"><v-icon dark>{{ snackBarLinkIcon }}</v-icon></a>
@@ -164,7 +160,7 @@ const OpenCase = {
                         <v-list-tile class="list-menu">
                             <v-list-tile-content>
                                 <v-list-tile-title>
-                                    <v-menu offset-y offset-x open-on-hover>
+                                    <v-menu offset-y offset-x close-delay="2000" open-on-hover>
                                         <span slot="activator">
                                             <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide
                                             <!-- This is a hack to extend the menu active area because the title is much shorter than other items -->
@@ -249,7 +245,7 @@ const OpenCase = {
                             <v-list-tile-avatar>
                                 IGV
                             </v-list-tile-avatar>
-                            <v-list-tile-content>
+                            <v-list-tile-content class="mb-2">
                                 <v-list-tile-title>Open Bam Viewer (web) <v-icon>mdi-web</v-icon></v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
@@ -258,7 +254,7 @@ const OpenCase = {
                         <v-list-tile-avatar>
                             IGV
                         </v-list-tile-avatar>
-                        <v-list-tile-content>
+                        <v-list-tile-content  class="mb-2">
                             <v-list-tile-title>Open Bam Viewer (desktop) <v-icon>mdi-desktop-mac-dashboard</v-icon></v-list-tile-title>
                         </v-list-tile-content>
                         </v-list-tile>
@@ -267,7 +263,7 @@ const OpenCase = {
                         <v-list-tile-avatar>
                             IGV
                         </v-list-tile-avatar>
-                        <v-list-tile-content>
+                        <v-list-tile-content  class="mb-2">
                             <v-list-tile-title>Download IGV Session <v-icon>mdi-file-xml</v-icon></v-list-tile-title>
                         </v-list-tile-content>
                         </v-list-tile>
@@ -430,7 +426,7 @@ const OpenCase = {
                     </v-breadcrumbs-item>
                 </v-breadcrumbs>
 
-                <v-container grid-list-md fluid>
+                <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
                     <v-layout row wrap>
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="annotationAllHidden()">
@@ -513,7 +509,7 @@ const OpenCase = {
                                         </v-card>
                                     </v-card-text> -->
                                     <v-card-text>
-                                        <v-container grid-list-md fluid>
+                                        <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
                                     <v-layout row wrap>
                                     <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in mdaAnnotationsFormatted" :key="index" v-show="annotation.visible">
                                         <mda-annotation-card :annotation="annotation" :variant-type="currentVariantType"
@@ -587,7 +583,7 @@ const OpenCase = {
                                         </v-tooltip>
                                     </v-toolbar>
                                     <v-card-text>
-                                        <v-container grid-list-md fluid>
+                                        <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
                                             <v-layout row wrap>
                                             <v-slide-y-transition>
                                                 <v-flex xs12 v-show="searchAnnotationsVisible">
@@ -653,40 +649,40 @@ const OpenCase = {
                 </v-container>
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
-                <v-tooltip top>
+                <v-tooltip top class="pr-2">
                     <v-btn color="primary" @click="startUserAnnotations()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">Add/Edit
                         <v-icon right dark>create</v-icon>
                     </v-btn>
                     <span>Create/Edit Your Annotations</span>
                 </v-tooltip>
-                <v-btn v-if="!currentRow.isSelected" :disabled="!canProceed('canSelect') || readonly" color="success"
+                <v-btn class="mr-2" v-if="!currentRow.isSelected" :disabled="!canProceed('canSelect') || readonly" color="success"
                     @click="selectVariantForReport()" slot="activator">Select Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-btn v-else :disabled="!canProceed('canSelect') || readonly" color="warning"
+                <v-btn class="mr-2" v-else :disabled="!canProceed('canSelect') || readonly" color="warning"
                     @click="removeVariantFromReport()" slot="activator">Deselect Variant
                     <v-icon right dark>done</v-icon>
                 </v-btn>
-                <v-tooltip top>
+                <v-tooltip top class="pr-2">
                     <v-btn :disabled="isFirstVariant" color="primary" @click="loadPrevVariant()" :loading="loadingVariant" slot="activator">Prev. Variant
                         <v-icon right dark>chevron_left</v-icon>
                     </v-btn>
                     <span>Show Previous Variant</span>
                 </v-tooltip>
-                <v-tooltip top>
+                <v-tooltip top class="pr-2">
                     <v-btn :disabled="isLastVariant" color="primary" @click="loadNextVariant()" :loading="loadingVariant" slot="activator">
                         <v-icon left dark>chevron_right</v-icon>
                         Next Variant
                     </v-btn>
                     <span>Show Next Variant</span>
                 </v-tooltip>
-                <v-tooltip top>
+                <v-tooltip top class="pr-2">
                 <v-btn color="success" @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive" :disabled="!isSaveNeededBadgeVisible()">
                     Save Work
                 <v-icon right dark>save</v-icon>
                 </v-btn>
                 <span>Save Current Work</span>
-            </v-tooltip>
+            </v-tooltip class="pr-2">
                 <v-btn color="error" @click="closeVariantDetails()">
                 <span v-if="!isSaveNeededBadgeVisible()">Close</span>
                 <span v-else>Save & Close</span>
@@ -863,14 +859,14 @@ const OpenCase = {
                                 <span>Close Details</span>
                             </v-tooltip>
                         </v-toolbar>
-                        <v-container grid-list-md fluid>
+                        <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
                             <v-layout row wrap>
                                 <v-flex xs4 v-for="table in patientTables" :key="table.name">
                                     <v-card flat>
                                         <v-card-text>
                                             <v-list class="dense-tiles">
-                                                <v-list-tile v-for="item in table.items" :key="item.label">
-                                                    <v-list-tile-content class="pb-2">
+                                                <v-list-tile v-for="item in table.items" :key="item.label" class="pl-0 pr-0 pb-2 no-tile-padding">
+                                                    <v-list-tile-content class="pl-0 pr-0">
                                                         <v-layout class="full-width " justify-space-between>
                                                             <v-flex class="text-xs-left xs">
                                                                 <span :class="[item.type == 'text' ? 'pt-4' : '', 'selectable']">{{ item.label }}:</span>
@@ -878,15 +874,15 @@ const OpenCase = {
                                                             <v-flex :class="[getPatientDetailsFlexClass(item),'text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
                                                                 <span v-if="item.type == null" class="selectable">{{ item.value }}</span>
                                                                 <v-tooltip bottom>
-                                                                <v-select class="pt-0" slot="activator" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text' && item.field == 'oncotree'" 
-                                                                v-model="patientDetailsOncoTreeDiagnosis" :items="oncotree" autocomplete single-line return-object
+                                                                <v-autocomplete class="pt-0" slot="activator" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text' && item.field == 'oncotree'" 
+                                                                v-model="patientDetailsOncoTreeDiagnosis" :items="oncotree" single-line return-object
                                                                 item-text="text" item-value="text" hide-details @input="patientDetailsUnSaved = true">
-                                                                </v-select>
+                                                                </v-autocomplete>
                                                                 <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
                                                                 </v-tooltip>
-                                                                <v-text-field text-area class="no-top-text-field align-input-right" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text-field' && item.field == 'tumorTissueType'" v-model="patientDetailsTumorTissue"
-                                                                label="Tumor Tissue Type" @input="patientDetailsUnSaved = true" hide-details>
-                                                                </v-text-field>
+                                                                <v-textarea class="align-input-right" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text-field' && item.field == 'tumorTissueType'" v-model="patientDetailsTumorTissue"
+                                                                label="Tumor Tissue Type" @input="patientDetailsUnSaved = true" hide-details rows="1" auto-grow>
+                                                                </v-textarea>
                                                                 <v-text-field class="no-top-text-field align-input-right" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text-field' && item.field == 'dedupPctOver100X'" v-model="patientDetailsDedupPctOver100X"
                                                                 label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true" hide-details>
                                                                 </v-text-field>
@@ -944,14 +940,14 @@ const OpenCase = {
                             <span>Close Annotations</span>
                         </v-tooltip>
                     </v-toolbar>
-                    <v-card-text>
+                    <v-card-text class="pl-3">
                         <div v-if="labNotes" class="subheading selectable pl-1 pr-2 pt-2 pb-2">
                         <span>Lab Notes:</span>
                         <span class="blue-grey--text text--lighten-1">{{ labNotes }}</span>
                         </div>
-                        <v-text-field :textarea="true" :readonly="!canProceed('canAnnotate') || readonly" :disabled="!canProceed('canAnnotate') || readonly"
+                        <v-textarea :readonly="!canProceed('canAnnotate') || readonly" :disabled="!canProceed('canAnnotate') || readonly" hide-details
                             ref="caseNotes" :value="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
-                        </v-text-field>
+                        </v-textarea>
                     </v-card-text>
                 </v-card>
             </v-flex>
@@ -959,19 +955,13 @@ const OpenCase = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-tabs slot="extension" dark slider-color="warning" color="primary darken-1" fixed-tabs v-model="variantTabActive" v-show="variantTabsVisible">
-            <v-tab href="#tab-snp" :ripple="false">
-                SNP / Indel
-            </v-tab>
-            <v-tab href="#tab-cnv" :ripple="false">
-                CNV
-            </v-tab>
-            <v-tab href="#tab-translocation" :ripple="false">
-                Fusion / Translocation
-            </v-tab>
-            <v-tabs-items v-model="variantTabActive">
+        <v-tabs slot="extension" dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="variantTabActive" v-show="variantTabsVisible">
+            <v-tab href="#tab-snp" :ripple="false">SNP / Indel</v-tab>
+            <v-tab href="#tab-cnv" :ripple="false">CNV</v-tab>
+            <v-tab href="#tab-translocation" :ripple="false">Fusion / Translocation</v-tab>
+            <v-tabs-items>
                 <!-- SNP / Indel table -->
-                <v-tab-item id="tab-snp">
+                <v-tab-item value="tab-snp">
                     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
                         no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true"
                         @refresh-requested="handleRefresh()" :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons"
@@ -997,7 +987,7 @@ const OpenCase = {
                     </data-table>
                 </v-tab-item>
                 <!-- CNV table -->
-                <v-tab-item id="tab-cnv">
+                <v-tab-item value="tab-cnv">
                     <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
                         :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
                         :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase"
@@ -1045,7 +1035,7 @@ const OpenCase = {
                     </data-table>
                 </v-tab-item>
                 <!--  Fusion / Translocation table -->
-                <v-tab-item id="tab-translocation">
+                <v-tab-item value="tab-translocation">
                     <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
                         no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
                         :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
@@ -1070,7 +1060,7 @@ const OpenCase = {
             patientTables: [],
             patientDetailsVisible: false,
             caseAnnotationsVisible: false,
-            variantTabsVisible: false,
+            variantTabsVisible: true,
             caseName: "",
             caseId: "",
             variantDetailsVisible: false,
@@ -1210,19 +1200,7 @@ const OpenCase = {
             annotationSelectionUnSaved: false,
             savingAnnotationSelection: false,
             splashDialog: splashDialog,
-            splashTextCurrent: "Warming Up...",
-            splashTextItems: [
-                "Acquiring Patient Data...",
-                "Spellchecking Annotations...",
-                "Formatting Input...",
-                "Initializing User Permissions...",
-                "Rendering Page...",
-                "Coloring Icons...",
-                "Loading User Preferences...",
-                "Dusting Off Variants",
-                "Translocating Translocations",
-                "Reviewing Reviewers..."
-            ],
+           
             splashProgress: 0,
             splashSteps: 0,
             splashTextVisible: true,
@@ -1263,13 +1241,7 @@ const OpenCase = {
             loadingColor: "blue-grey lighten-4"
         }
     }, methods: {
-        createSplashText() {
-            var newText = "";
-            while (newText == "" || this.splashTextCurrent == newText) {
-                newText = this.splashTextItems[Math.floor(Math.random() * this.splashTextItems.length)]
-            }
-            this.splashTextCurrent = newText;
-        },
+        
         canProceed(field) {
             if (isAdmin) {
                 return true;
@@ -1532,7 +1504,7 @@ const OpenCase = {
 
             }
             if (this.urlQuery.variantType) {
-                this.variantTabActive = "tab-" + this.urlQuery.variantType;
+                // this.variantTabActive = "tab-" + this.urlQuery.variantType;
             }
             //then open variant details
             if (this.urlQuery.variantId && this.urlQuery.variantType) {
@@ -1726,18 +1698,6 @@ const OpenCase = {
             else { //no filter for translocation for now
                 this.$refs.advancedFilter.disableFiltering = true;
             }
-            // if (this.variantTabActive != "tab-snp") { //remember if filter was visible or not before the change
-            //     // this.wasAdvancedFilteringVisibleBeforeTabChange = this.$refs.advancedFilter.advancedFilteringVisible;
-            //     // if (this.wasAdvancedFilteringVisibleBeforeTabChange) {
-            //     //     this.$refs.advancedFilter.toggleFilters(); //hide filtering because of tab change
-            //     // }
-            //     this.$refs.advancedFilter.disableFiltering = true;
-            //     this.currentFilterType
-            // }
-            // if (this.$refs.advancedFilter && this.variantTabActive == "tab-snp") { //restore the previous visibility of the filter
-            //     // this.$refs.advancedFilter.toggleFilters(); //show filtering because it was previsously visible
-            //     this.$refs.advancedFilter.disableFiltering = false;
-            // }
         },
         filterData() {
             this.getAjaxData();
@@ -3922,18 +3882,6 @@ const OpenCase = {
                 }
             }
         },
-        manageSplashScreen() {
-            if (this.splashDialog) {
-                splashInterval = setInterval(() => {
-                    this.splashTextVisible = !this.splashTextVisible;
-                    if (this.splashTextVisible) {
-                        this.createSplashText();
-                    }
-                }
-                    , 750);
-                document.querySelector(".splash-screen").style = getDialogMaxHeight(0);
-            }
-        },
         handleSplashVisibility() {
             if (this.splashProgress > 95) {
                 setTimeout(() => {
@@ -4093,7 +4041,7 @@ const OpenCase = {
                 if (!this.waitingForAjaxActive && !editing) {
                     this.handleSaveAll(true);
                 }
-            }, 12000000);
+            }, 120000);
         },
         copyMDAAnnotation(mdaAnnotation, variantType) {
             if (!this.canProceed('canAnnotate') || this.readonly) {
@@ -4280,7 +4228,7 @@ const OpenCase = {
         this.loadCaseAnnotations();
 
         this.$refs.geneVariantDetails.headerOptionsVisible = true;
-        this.manageSplashScreen();
+        this.$refs.splashScreen.manageSplashScreen();
         this.getCNVChromList();
     },
     created() {

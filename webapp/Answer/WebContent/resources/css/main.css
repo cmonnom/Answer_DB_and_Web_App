@@ -17,7 +17,7 @@ th, td {
 
 tr:nth-child(even) {background-color: #fafafa}
 
-.dense-tiles .list__tile {
+.dense-tiles .v-list__tile {
     height: fit-content;
     height: -moz-fit-content;
 }
@@ -219,12 +219,12 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
     background-color: #fafafa !important;
 }
 
-.card__text {
+.v-card__text {
     padding: 4px;
     width: 100%;
 }
 
-.card__text_default {
+.v-card__text_default {
     padding: 16px;
     width: 100%;
 }
@@ -244,7 +244,7 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
     background: rgba(0,0,0,.12);
 }
 
-.mini-badge > .badge__badge {
+.mini-badge > .v-badge__badge {
     right: 12px;
     bottom: 10px !important;
     width: 20%;
@@ -289,7 +289,7 @@ table.table tbody td {
 
 .splash-screen {
     z-index: 1000 !important;
-    width:100%;
+    width: calc(100% + 200px);
     /* height:100%; */
     position: absolute;
     background: rgb(254,254,254);
@@ -434,7 +434,7 @@ table.table tbody td {
     background-color: #fff; /* just for LIGHT THEME, change it to #474747 for DARK */
     position: sticky;
     top: 0;
-    z-index: 10;
+    /* z-index: 10; */
 }
 
 .fixed-header tr.datatable__progress th {
@@ -453,4 +453,35 @@ table.table tbody td {
 .cnv-list-height {
     max-height: 300px;
     overflow-y: auto;
+}
+
+
+/* for vuetify 1.5.16*/
+
+.v-toolbar__content {
+    padding: 0px 12px;
+}
+
+.small-solo-input .v-text-field.v-text-field--solo .v-input__control {
+    min-height: 36px;
+    min-height: 24px;
+    max-width: 60px;
+}
+
+.menu-image .v-toolbar__content, .v-toolbar__extension {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), table.v-table tbody th:first-child, table.v-table tbody th:not(:first-child), table.v-table thead td:first-child, table.v-table thead td:not(:first-child), table.v-table thead th:first-child, table.v-table thead th:not(:first-child) {
+    padding: 5px 12px;
+}
+
+.v-text-field {
+    padding-bottom: 12px;
+}
+
+.no-tile-padding .v-list__tile {
+    padding-left: 0px;
+    padding-right: 0px;
 }

@@ -174,7 +174,7 @@ Vue.component('review-selection', {
             </v-tab>
             <v-tabs-items v-model="variantTabActive">
             <!-- SNP / Indel table -->
-        <v-tab-item id="tab-selected-snp" class="pt-1">
+        <v-tab-item value="tab-selected-snp" class="pt-1">
             <data-table ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from Case Owner"
             initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
@@ -185,7 +185,7 @@ Vue.component('review-selection', {
             </data-table>
         </v-tab-item>
         <!-- CNV table -->
-        <v-tab-item id="tab-selected-cnv"  class="pt-1">
+        <v-tab-item value="tab-selected-cnv"  class="pt-1">
             <data-table ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="CNVs from Case Owner" initial-sort="chrom"
             no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
@@ -196,7 +196,7 @@ Vue.component('review-selection', {
              </data-table>
         </v-tab-item>
         <!--  Fusion / Translocation table -->
-        <v-tab-item id="tab-selected-translocation" class="pt-1">
+        <v-tab-item value="tab-selected-translocation" class="pt-1">
             <data-table ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from Case Owner"
             initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
@@ -211,33 +211,33 @@ Vue.component('review-selection', {
 
     </v-card-text>
     <v-card-actions class="card-actions-bottom">
-        <v-tooltip top>
+        <v-tooltip top class="pr-2">
             <v-btn color="primary" :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">Moclia File
             </v-btn>
             <span>Download Moclia File</span>
         </v-tooltip>
-        <v-tooltip top v-if="canProceed('canAnnotate')">
+        <v-tooltip top v-if="canProceed('canAnnotate')" class="pr-2">
             <v-btn color="primary" @click="markAsReadyForReview()" slot="activator"  :loading="markingForReview">
                 Ready for Review
             <v-icon right dark>how_to_reg</v-icon>
             </v-btn>
             <span>Mark as Ready for Review. Save Selected Variants and Email reviewer(s)</span>
         </v-tooltip>
-        <v-tooltip top v-if="canProceed('canReview')">
+        <v-tooltip top v-if="canProceed('canReview')" class="pr-2">
             <v-btn color="primary" @click="markAsReadyForReport()" slot="activator"  :loading="markingForReport">
                 Ready for Report
             <v-icon right dark>assignment</v-icon>
             </v-btn>
             <span>Mark as Ready for Report. Save Selected Variants</span>
         </v-tooltip>
-        <v-tooltip top>
+        <v-tooltip top class="pr-2">
             <v-btn color="success" @click="handleSaveAll()" slot="activator" :loading="waitingForAjaxActive" :disabled="!isSaveBadgeVisible">
                 Save Work
             <v-icon right dark>save</v-icon>
             </v-btn>
             <span>Save Current Work</span>
         </v-tooltip>
-        <v-btn color="error" @click="closeReviewDialog()" slot="activator">Close
+        <v-btn class="mr-2" color="error" @click="closeReviewDialog()" slot="activator">Close
             <v-icon right dark>cancel</v-icon>
         </v-btn>
     </v-card-actions>

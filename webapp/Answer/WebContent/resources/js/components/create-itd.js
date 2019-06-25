@@ -19,14 +19,14 @@ Vue.component('create-itd', {
     </v-toolbar>
             <v-card-text class="pt-3 pl-3 pr-4 pb-3 subheading">
                 Select a gene for this ITD:
-                <v-select clearable :value="itdGene" :items="genes" v-model="itdGene"
-                label="Select a Gene" single-line autocomplete
-                item-text="name" item-value="value"></v-select>
+                <v-autocomplete clearable :value="itdGene" :items="genes" v-model="itdGene"
+                label="Select a Gene" single-line
+                item-text="name" item-value="value"></v-autocomplete>
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
-                <v-btn color="primary" @click="createITD()" slot="activator" :disabled="isDisabled()">Create ITD
+                <v-btn class="mr-2" color="primary" @click="createITD()" slot="activator" :disabled="isDisabled()">Create ITD
                 </v-btn>
-                <v-btn color="error" @click="cancelCreateITD()" :disabled="isDisabled()" slot="activator">Cancel
+                <v-btn class="mr-2" color="error" @click="cancelCreateITD()" :disabled="isDisabled()" slot="activator">Cancel
                 </v-btn>
             </v-card-actions>
         </v-card>

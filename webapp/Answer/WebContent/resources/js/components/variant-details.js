@@ -88,14 +88,14 @@ Vue.component('variant-details', {
       </v-tooltip>
 
   </v-toolbar>
-  <v-container grid-list-md fluid>
+  <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
       <v-layout row wrap>
           <v-flex :class="getTableFlexClass(table.name)" v-for="table in variantDataTables" :key="table.name">
               <v-card flat >
                   <v-card-text>
                       <v-list class="dense-tiles">
-                          <v-list-tile v-for="item in table.items" :key="item.label">
-                              <v-list-tile-content class="pb-2">
+                          <v-list-tile v-for="item in table.items" :key="item.label" class="pl-0 pr-0 pb-2 no-tile-padding">
+                              <v-list-tile-content class="pl-0 pr-0">
                                   <v-layout class="full-width">
                                       <v-flex xs12 :class="[item.type == 'link' ? 'pb-0' : '', 'text-xs-left', 'grow']">
                                           <span v-if="isRegularVariantDetailsLabel(item.type)" :class="[loadingVariant ? loadingVariantTextColor : '','selectable']">{{ item.label }}:</span>
@@ -108,7 +108,7 @@ Vue.component('variant-details', {
                                           </v-tooltip>
                                           <!-- Notation (label + textfield + link) -->
                                           <v-layout row wrap v-if="item.type == 'notation'">
-                                            <v-flex xs class="pl-0 pt-2"> 
+                                            <v-flex xs class="pl-0 pt-2 mt-1"> 
                                             <span :class="[loadingVariant ? loadingVariantTextColor : '','selectable']">{{ item.label }}:</span>
                                             </v-flex>
                                             <v-flex xs6 > 
@@ -160,7 +160,7 @@ Vue.component('variant-details', {
                                               </template>
                                           </v-data-table>
                                           <v-layout v-if="item.type == 'select'" class="full-width">
-                                          <v-flex :class="[loadingVariant ? loadingVariantTextColor : '','selectable', 'pt-2', 'pl-0']">{{ item.label }}:</v-flex>
+                                          <v-flex :class="[loadingVariant ? loadingVariantTextColor : '','selectable', 'pt-2', 'pl-0', 'mt-1']">{{ item.label }}:</v-flex>
                                           <v-flex class="max300 xs4" >
                                             <v-tooltip right>
                                             <v-select slot="activator" clearable :value="currentVariant[item.fieldName]" :items="item.items" v-model="currentVariant[item.fieldName]"
@@ -174,7 +174,7 @@ Vue.component('variant-details', {
                                           </v-layout>
 
                                           <v-tooltip bottom v-for="(icon, index) in item.value" :key="index" v-if="item.type == 'flag'">
-                                              <v-chip v-if="icon.chip" slot="activator" :color="icon.color" text-color="white" label small disabled>
+                                              <v-chip v-if="icon.chip" slot="activator" :color="icon.color" text-color="white" label small disabled style="vertical-align: bottom">
                                                   {{ icon.iconName }}
                                               </v-chip>
                                               <v-icon v-else slot="activator" :color="icon.color">

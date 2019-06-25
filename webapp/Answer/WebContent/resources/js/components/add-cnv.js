@@ -76,7 +76,7 @@ Vue.component('add-cnv', {
         </v-container>
     </v-card-text>
     <v-card-actions :class="['card-actions-bottom']">
-        <v-tooltip top>
+        <v-tooltip top class="pr-2">
             <v-btn slot="activator" color="primary" @click="saveCNV()"
             :disabled="isDisabled()">Save
                 <v-icon right dark>save</v-icon>
@@ -86,7 +86,7 @@ Vue.component('add-cnv', {
             All fields are required.<br/>
             Choose between a Gene <b>OR</b> a Range (for multiple genes)</span>
         </v-tooltip>
-        <v-tooltip top>
+        <v-tooltip top class="pr-2">
             <v-btn slot="activator" color="error" @click="hidePanel()"
             :disabled="savingCNV">Cancel
                 <v-icon right dark>cancel</v-icon>

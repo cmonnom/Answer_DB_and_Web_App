@@ -2,7 +2,7 @@ Vue.component('gene-sets-edit', {
   template:
     `<div>
 
-  <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
+  <v-snackbar :timeout="4000" :bottom="true" :value="snackBarVisible">
     {{ snackBarMessage }}
     <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
   </v-snackbar>
@@ -53,10 +53,10 @@ Vue.component('gene-sets-edit', {
         </v-container>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="success" @click="saveEditsGeneSet()" :disabled="saveGeneSetDisabled">Save
+        <v-btn class="mr-2" color="success" @click="saveEditsGeneSet()" :disabled="saveGeneSetDisabled">Save
           <v-icon right dark>save</v-icon>
         </v-btn>
-        <v-btn color="error" @click="cancelEditsGeneSet()">Cancel
+        <v-btn class="mr-2" color="error" @click="cancelEditsGeneSet()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
       </v-card-actions>
@@ -72,10 +72,10 @@ Vue.component('gene-sets-edit', {
       Click Cancel to keep the panel.<br/>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="warning" @click="deleteReportGroup()" :disabled="deleteGeneSetDisabled">Delete
+        <v-btn class="mr-2" color="warning" @click="deleteReportGroup()" :disabled="deleteGeneSetDisabled">Delete
           <v-icon right dark>delete</v-icon>
         </v-btn>
-        <v-btn color="error" @click="deleteGeneSetDialogVisible = false">Cancel
+        <v-btn class="mr-2" color="error" @click="deleteGeneSetDialogVisible = false">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
       </v-card-actions>

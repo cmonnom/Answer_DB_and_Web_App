@@ -25,9 +25,9 @@ Vue.component('existing-reports', {
             </v-text-field>
         </v-card-text>
         <v-card-actions class="card-actions-bottom">
-            <v-btn color="warning" @click="finalizeReport()" slot="activator" :disabled="!readyToFinalize()" :loading="finalizingReport">Finalize
+            <v-btn class="mr-2" color="warning" @click="finalizeReport()" slot="activator" :disabled="!readyToFinalize()" :loading="finalizingReport">Finalize
             </v-btn>
-            <v-btn color="error" @click="cancelFinalizeReport()" slot="activator" :disabled="finalizingReport">Cancel
+            <v-btn class="mr-2" color="error" @click="cancelFinalizeReport()" slot="activator" :disabled="finalizingReport">Cancel
             </v-btn>
         </v-card-actions>
     </v-card>
@@ -48,14 +48,14 @@ Vue.component('existing-reports', {
         will be marked as amended and the new report will need to be saved and finalized.<br/>
         <br/>
         Please state the reason for this amendment:
-        <v-text-field textarea
+        <v-textarea textarea
             v-model="amendmentReason" label="Amendment Reason">
-        </v-text-field>
+        </v-textarea>
     </v-card-text>
     <v-card-actions class="card-actions-bottom">
-        <v-btn color="warning" @click="amendReport()" slot="activator" :disabled="!amendmentReason" :loading="amendingReportLoading">Confirm
+        <v-btn class="mr-2" color="warning" @click="amendReport()" slot="activator" :disabled="!amendmentReason" :loading="amendingReportLoading">Confirm
         </v-btn>
-        <v-btn color="error" @click="cancelAmendingReport()" slot="activator" :disabled="amendingReportLoading">Cancel
+        <v-btn class="mr-2" color="error" @click="cancelAmendingReport()" slot="activator" :disabled="amendingReportLoading">Cancel
         </v-btn>
     </v-card-actions>
 </v-card>
@@ -76,9 +76,9 @@ Vue.component('existing-reports', {
         Nothing else can be modified.
     </v-card-text>
     <v-card-actions class="card-actions-bottom">
-        <v-btn color="warning" @click="addendReport()" slot="activator" :loading="addendingReportLoading">Confirm
+        <v-btn class="mr-2" color="warning" @click="addendReport()" slot="activator" :loading="addendingReportLoading">Confirm
         </v-btn>
-        <v-btn color="error" @click="cancelAddendingReport()" slot="activator" :disabled="addendingReportLoading">Cancel
+        <v-btn class="mr-2" color="error" @click="cancelAddendingReport()" slot="activator" :disabled="addendingReportLoading">Cancel
         </v-btn>
     </v-card-actions>
 </v-card>
@@ -111,7 +111,7 @@ Vue.component('existing-reports', {
             <span>Close Existing Reports</span>
         </v-tooltip>
     </v-toolbar>
-    <v-container grid-list-md fluid>
+    <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
     <v-layout row wrap>
     <v-flex xs12>
         <v-btn @click="getReportDetails()">New Report</v-btn>

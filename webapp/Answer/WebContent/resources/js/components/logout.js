@@ -15,7 +15,7 @@ Vue.component('logout', {
     <v-flex xs6>You have been disconnected.<br/> 
         Redirecting to login page in {{ valueFormatted }}.</v-flex>
     <v-flex xs3>
-        <v-progress-linear color="teal lighten-2" v-model="valueDeterminate"></v-progress-linear>
+        <v-progress-linear color="teal lighten-2" :value="valueDeterminate"></v-progress-linear>
     </v-flex>
 </v-layout>
 

@@ -5,7 +5,7 @@ Vue.component('main-menu', {
 		width: { type: Number, default: 200 }
 	},
 	template: `<v-navigation-drawer app permanent :width="width" :mini-variant.sync="isMinied">
-	<v-toolbar flat :extended="isMinied ? false : true" style="height:128px">
+	<v-toolbar flat :extended="isMinied ? false : true" style="height:128px" class="menu-image">
 		<img alt="answer logo beta" v-if="isBetaVersion()" :src="baseUrl + '/resources/images/answer-logo-medium-beta.png'"  width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
 		<img alt="answer logo" v-if="isVersionOne()" :src="baseUrl + '/resources/images/answer-logo-medium.png'" width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
 	</v-toolbar>
@@ -41,13 +41,13 @@ Vue.component('main-menu', {
 					</v-btn>
 
 					<v-card v-if="menuItem.caseSearch">
-						<v-select v-on:input="loadOpenCase" v-bind:items="cases" v-model="caseItemSelected" item-text="name" clearable
-						 item-value="value" label="Case ID" single-line solo autocomplete></v-select>
+						<v-autocomplete hide-details v-on:input="loadOpenCase" v-bind:items="cases" v-model="caseItemSelected" item-text="name" clearable
+						 item-value="value" label="Case ID" single-line solo></v-autocomplete>
 					</v-card>
 
 					<v-card v-if="menuItem.caseReportSearch">
-					<v-select v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
-					 item-value="value" label="Case ID" single-line solo autocomplete></v-select>
+					<v-autocomplete v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
+					 item-value="value" label="Case ID" single-line solo></v-autocomplete>
 				</v-card>
 
 				</v-menu>
@@ -265,13 +265,18 @@ Vue.component('main-menu', {
 		bus.$on('clear-item-selected', args => {
 			this.caseItemSelected = "";
 		});
+		//might not be needed anymore with vuetify 1.5.16
 		bus.$on('need-layout-resize', args => {
 			//resize the main content because it does not happen automatically
 			this.$nextTick(function () {
-				document.getElementsByClassName("content")[0].style.paddingLeft = this.width + "px";
-				var titlebars = document.getElementsByClassName("toolbar toolbar--fixed");
-				for (var i = 0; i < titlebars.length; i++) {
-					titlebars[i].style.paddingLeft = this.width + "px";
+				var content = document.getElementsByClassName("v-content");
+				if (content) {
+					console.log(content[0], this.width);
+					content[0].style.paddingLeft = this.width + "px";
+					var titlebars = document.getElementsByClassName("v-toolbar v-toolbar--fixed");
+					for (var i = 0; i < titlebars.length; i++) {
+						titlebars[i].style.paddingLeft = this.width + "px";
+					}
 				}
 
 			});

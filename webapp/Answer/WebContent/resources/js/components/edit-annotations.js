@@ -198,11 +198,11 @@ Vue.component('edit-annotations', {
                                                             </v-flex>
                                                             <v-flex xs6 v-if="isOutsideACase()">
                                                                 <v-tooltip right>
-                                                                <v-select slot="activator" clearable :value="annotation.geneId" :items="allGenes" v-model="annotation.geneId"
-                                                                    label="Gene Symbol" single-line hide-details autocomplete clearable
+                                                                <v-autocomplete slot="activator" clearable :value="annotation.geneId" :items="allGenes" v-model="annotation.geneId"
+                                                                    label="Gene Symbol" single-line hide-details clearable
                                                                     item-text="name" item-value="value"
                                                                     class="no-height-select" @change="getVariantsForGene(annotation.geneId,annotation)"
-                                                                    :disabled="annotation.markedForDeletion || !annotation.isGeneSpecific"></v-select>
+                                                                    :disabled="annotation.markedForDeletion || !annotation.isGeneSpecific"></v-autocomplete>
                                                                     <span>Select a gene</span>
                                                                 </v-tooltip>
                                                             </v-flex>
@@ -217,11 +217,11 @@ Vue.component('edit-annotations', {
                                                             </v-flex>
                                                             <v-flex xs6 v-if="isOutsideACase()">
                                                                 <v-tooltip right>
-                                                                <v-select slot="activator" clearable :value="annotation.geneId" :items="annotation.variantItems" v-model="annotation.variantId"
-                                                                    label="Variant Notation" single-line hide-details autocomplete clearable
+                                                                <v-autocomplete slot="activator" clearable :value="annotation.geneId" :items="annotation.variantItems" v-model="annotation.variantId"
+                                                                    label="Variant Notation" single-line hide-details clearable
                                                                     item-text="name" item-value="value"
                                                                     class="no-height-select"
-                                                                    :disabled="annotation.markedForDeletion || !annotation.isVariantSpecific || isOutsideACase()"></v-select>
+                                                                    :disabled="annotation.markedForDeletion || !annotation.isVariantSpecific || isOutsideACase()"></v-autocomplete>
                                                                     <span v-if="annotation.variantItems">Select a variant</span>
                                                                     <span v-else>Select a gene first</span>
                                                                 </v-tooltip>
@@ -415,9 +415,9 @@ Vue.component('edit-annotations', {
                                                     </v-card>
                                                 </v-flex>
                                                 <v-flex xs12 class="pt-2" v-if="annotation.category != 'Clinical Trial'">
-                                                    <v-text-field v-show="annotation.isVisible" ref="editAnnotation" :textarea="true" v-model="annotation.text" class="mr-2 no-height"
+                                                    <v-textarea v-show="annotation.isVisible" ref="editAnnotation" v-model="annotation.text" class="mr-2 no-height"
                                                         :disabled="annotation.markedForDeletion" label="Write your comments here">
-                                                    </v-text-field>
+                                                    </v-textarea>
                                                 </v-flex>
                                                 <v-flex xs12 lg7 v-if="annotation.category == 'Therapy'">
                                                     <v-layout>
@@ -498,26 +498,26 @@ Vue.component('edit-annotations', {
                 </v-card>
             </v-card-text>
             <v-card-actions :class="['card-actions-bottom', backColor]">
-                <v-tooltip top>
+                <v-tooltip top class="pr-2">
                     <v-btn slot="activator" color="primary" @click="addCustomAnnotation()" :disabled="single">Add Annotation
                         <v-icon right dark>playlist_add</v-icon>
                     </v-btn>
                     <span>Create a new annotation</span>
                 </v-tooltip>
-                <v-tooltip top>
+                <v-tooltip top class="pr-2">
                 <v-btn slot="activator" color="primary" @click="addCustomTrial()" :disabled="single">Add Trial
                     <v-icon right dark>assignment</v-icon>
                 </v-btn>
                 <span>Create a new annotation</span>
             </v-tooltip>
-                <v-tooltip top >
+                <v-tooltip top class="pr-2">
                     <v-btn slot="activator" color="success" @click="saveAnnotations()" :disabled="saveIsDisabled()">Save / Update
                         <v-icon right dark>save</v-icon>
                     </v-btn>
                     <span v-if="!saveIsDisabled()">Save/Update Annotations</span>
                     <span v-else v-html="saveDisabledReasons"></span>
                 </v-tooltip>
-                <v-tooltip top>
+                <v-tooltip top class="pr-2">
                     <v-btn slot="activator" color="error" @click="cancelAnnotations()">Cancel
                         <v-icon right dark>cancel</v-icon>
                     </v-btn>

@@ -27,7 +27,7 @@ const NewCase = {
         </v-card>
     </v-dialog>
 
-    <v-snackbar :timeout="2000" :bottom="true" v-model="snackBarVisible">
+    <v-snackbar :timeout="2000" :bottom="true" :value="snackBarVisible">
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
@@ -88,7 +88,7 @@ const NewCase = {
         <v-flex>
             <v-card flat class="gray-background">
                 <v-card-text>
-                    <file-upload v-model="files" :post-action="uploadUrl" ref="upload" extensions="html" :multiple="false" @input-file="inputFile"
+                    <file-upload :value="files" :post-action="uploadUrl" ref="upload" extensions="html" :multiple="false" @input-file="inputFile"
                         :headers="{enctype:'multipart/form-data'}">
                         <div class="btn primary div-button">
                             <span class="btn__content">IMPORT MDA FILE

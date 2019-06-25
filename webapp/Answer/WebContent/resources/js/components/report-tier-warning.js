@@ -15,9 +15,9 @@ Vue.component('report-tier-warning', {
        The following variants have been selected for this report but none of their annotation cards have tiers.<br/>
        Check if all annotations have been selected for this variant.
        Check if the variant has more than just a Therapy card.<br/>
-       <v-layout row wrap>
+       <v-layout row wrap align-end>
        <v-flex xs12 v-for="variant in variantsMissingTier" :key="variant.id">
-       <v-icon color="error" class="pb-2">warning</v-icon>
+       <v-icon color="error">warning</v-icon>
        <span  v-if="variant.type == 'SNP'">{{variant.type}} {{ variant.chrom }}:{{ variant.name}} {{variant.notation }}</span>
        <span  v-if="variant.type == 'CNV'">{{variant.type}} {{ variant.chrom }}</span>
        <v-tooltip bottom>

@@ -195,8 +195,8 @@ public class TypeUtils {
 	public static String buildDateSinceChip(String dateSince, Boolean isReviewer) {
 		StringBuilder sb = new StringBuilder();
 		String chipColor = (isReviewer != null && isReviewer) ? "green" : "grey";
-		sb.append("<span tabindex='-1' class='chip chip--disabled chip--label ").append(chipColor).append(" chip--small white--text'><span class='chip__content'>")
-        .append("<i aria-hidden='true' class='icon material-icons mdi mdi-checkbox-marked'></i>") 
+		sb.append("<span tabindex='-1' class='v-chip v-chip--disabled v-chip--label ").append(chipColor).append(" v-chip--small white--text'><span class='v-chip__content'>")
+        .append("<i aria-hidden='true' class='icon material-icons mdi mdi-checkbox-marked' style='font-size: 16px; vertical-align: bottom'></i>") 
         .append("<span class='pl-2'>").append(dateSince).append("</span></span></span>");
 		return sb.toString();
 	}

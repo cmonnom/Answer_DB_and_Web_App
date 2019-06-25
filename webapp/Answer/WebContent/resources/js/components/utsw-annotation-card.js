@@ -11,7 +11,7 @@ Vue.component('utsw-annotation-card', {
     template: `<div>
     <v-card>
     <v-card-text :class="['subheading', !annotation.canEdit && caseAgnostic ? 'blue-grey lighten-3' : '']">
-        <v-container grid-list-md fluid class="white">
+        <v-container grid-list-md fluid class="white" pl-2 pr-2 pt-2 pb-2>
             <v-layout row wrap>
                 <v-flex xs11>
                     From {{ annotation.fullName }}
@@ -19,7 +19,7 @@ Vue.component('utsw-annotation-card', {
                 </v-flex>
                 <v-flex xs1>
                 <v-tooltip bottom v-if="!caseAgnostic">
-                    <v-switch color="primary" slot="activator" class="no-height" :disabled="noEdit"
+                    <v-switch color="primary" slot="activator"  hide-details class="no-height mt-0" :disabled="noEdit"
                     v-model="annotation.isSelected" @change="annotationSelectionChanged"></v-switch>
                     <span>Select/Unselect for Report</span>
                     </v-tooltip>

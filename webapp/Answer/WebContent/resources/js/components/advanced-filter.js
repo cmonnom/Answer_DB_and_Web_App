@@ -66,7 +66,7 @@ Vue.component('advanced-filter', {
                 </v-layout>
             </v-card-text>
             <v-card-actions class="card-actions-bottom">
-                <v-tooltip top>
+                <v-tooltip top class="pr-2">
                     <v-btn color="primary" :disabled="!isNameValid()" @click="saveCurrentFilters()" slot="activator">
                         <span v-if="saveFilterSetId == -1">Create</span>
                         <span v-if="saveFilterSetId != -1">Update</span>
@@ -74,14 +74,14 @@ Vue.component('advanced-filter', {
                     </v-btn>
                     <span>Save Filter Set</span>
                 </v-tooltip>
-                <v-tooltip top>
+                <v-tooltip top class="pr-2">
                     <v-btn color="warning" :disabled="saveFilterSetId == -1" @click="deleteFilterSet()" slot="activator">
                         Delete
                         <v-icon right dark>delete</v-icon>
                     </v-btn>
                     <span>Delete Filter Set</span>
                 </v-tooltip>
-                <v-btn color="error" @click="saveFilterSetDialogVisible = false" slot="activator">Cancel
+                <v-btn class="mr-2" color="error" @click="saveFilterSetDialogVisible = false" slot="activator">Cancel
                     <v-icon right dark>cancel</v-icon>
                 </v-btn>
             </v-card-actions>
@@ -272,17 +272,17 @@ Vue.component('advanced-filter', {
             </div>
             <v-divider></v-divider>
             <!-- list of possible filters -->
-            <v-container grid-list-md>
-                <v-form v-model="filtersValid" :class="[disableFiltering ? 'grey--text lighten-1' : '']">
+            <v-container grid-list-md pl-1 pr-1 pt-1 pb-1>
+                <v-form :value="filtersValid" :class="[disableFiltering ? 'grey--text lighten-1' : '']">
                     <v-layout row v-for="(filter, index3) in getFiltersByType(filters)" :key="index3" :class="[filter.button? '' : 'pr-3', 'pl-3']">
 
                         <v-flex xs12 v-if="filter.isSelect">
                             <v-layout>
                                 <v-flex xs5 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                                 <v-flex xs7>
-                                    <v-select multiple chips deletable-chips hide-details v-bind:items="filter.selectItems" clearable v-model="filter.value"
+                                    <v-autocomplete multiple chips deletable-chips hide-details v-bind:items="filter.selectItems" clearable v-model="filter.value"
                                         item-text="name" item-value="value" :label="filter.headerText" @input="updateFilterNeedsReload(true)"
-                                        auto autocomplete clearable :disabled="disableFiltering"></v-select>
+                                        auto clearable :disabled="disableFiltering"></v-autocomplete>
                                 </v-flex>
                             </v-layout>
                         </v-flex>
@@ -340,17 +340,19 @@ Vue.component('advanced-filter', {
 
                     <!-- filter flags -->
                     <v-layout row :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3']" v-if="getFiltersByType(flagFilters).length > 0">
-                        <v-expansion-panel expand class="expandable-filter elevation-0">
-                            <v-expansion-panel-content :value="true">
+                        <v-expansion-panel expand class="expandable-filter elevation-0"  :value="flagExpansion">
+                            <v-expansion-panel-content>
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">Flags</div>
-                                <v-layout row class="pt-3" v-for="filter in getFiltersByType(flagFilters)" :key="filter.fieldName">
+                                <v-layout row class="pt-3" v-for="filter in getFiltersByType(flagFilters)" :key="filter.fieldName" align-end>
                                     <v-flex xs6>
                                         <v-switch :disabled="disableFiltering" hide-details color="primary" :label="filter.headerTextTrue" v-model="filter.valueTrue"
-                                            @change="updateFilterNeedsReload(true)"></v-switch>
+                                            @change="updateFilterNeedsReload(true)"
+                                            class="no-height mt-0"></v-switch>
                                     </v-flex>
                                     <v-flex xs5>
                                         <v-switch :disabled="disableFiltering" hide-details color="primary" :label="filter.headerTextFalse" v-model="filter.valueFalse"
-                                            @change="updateFilterNeedsReload(true)"></v-switch>
+                                            @change="updateFilterNeedsReload(true)"
+                                            class="no-height mt-0"></v-switch>
                                     </v-flex>
                                     <v-flex>
                                         <v-tooltip right>
@@ -389,7 +391,7 @@ Vue.component('advanced-filter', {
 
                     <!-- filter numbers -->
                     <v-layout row v-for="filter in getFiltersByType(numberFilters)" :key="filter.fieldName" class="pl-3 pr-3">
-                        <v-flex xs12 v-if="filter.isNumber">
+                        <v-flex xs12 v-if="filter.isNumber" pt-0 pb-0>
                             <v-layout row>
                                 <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                                 <v-flex xs4>
@@ -402,7 +404,7 @@ Vue.component('advanced-filter', {
                                 </v-flex>
                             </v-layout>
                         </v-flex>
-                        <v-flex xs12 v-if="filter.isReverseNumber">
+                        <v-flex xs12 v-if="filter.isReverseNumber" pt-0 pb-0>
                             <v-layout row>
                                 <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
                                 <v-flex xs4>
@@ -419,8 +421,8 @@ Vue.component('advanced-filter', {
 
                     <!-- checkbox -->
                     <v-layout row v-for="filter in getFiltersByType(checkboxFilters)" :key="filter.headerText" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3', 'mt-2']">
-                        <v-expansion-panel expand v-if="filter.isCheckBox" class="expandable-filter elevation-0">
-                            <v-expansion-panel-content :value="true">
+                        <v-expansion-panel expand v-if="filter.isCheckBox" class="expandable-filter elevation-0" :value="checkboxExpansion">
+                            <v-expansion-panel-content >
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">
                                     {{ filter.headerText }}
                                     <v-tooltip right>
@@ -433,7 +435,7 @@ Vue.component('advanced-filter', {
                                 <v-layout row wrap>
                                     <v-flex xs12 lg6 v-for="(checkBox, index) in filter.checkBoxes" :key="index">
                                         <v-tooltip bottom>
-                                            <v-checkbox :disabled="disableFiltering" color="primary" slot="activator" hide-details :label="checkBox.name" v-model="checkBox.value"
+                                            <v-checkbox class="mt-0" :disabled="disableFiltering" color="primary" slot="activator" hide-details :label="checkBox.name" v-model="checkBox.value"
                                                 @change="updateFilterNeedsReload(true)"></v-checkbox>
                                             <span>{{ checkBox.name }}</span>
                                         </v-tooltip>
@@ -469,7 +471,9 @@ Vue.component('advanced-filter', {
             disableFiltering: false,
             filterNameRules: [v => { return /^[a-zA-Z0-9_. -]*$/.test(v) || "Only Letters and Numbers" }],
             messageDialogVisible: false,
-            message: ""
+            message: "",
+            checkboxExpansion: [true, true, true, true], //controls the open state of each panel. Add more items here when creating new expandable panels
+            flagExpansion: [true]
         }
 
     },

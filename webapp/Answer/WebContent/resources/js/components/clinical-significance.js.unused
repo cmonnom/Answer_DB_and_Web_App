@@ -54,7 +54,7 @@ Vue.component('clinical-significance', {
                                 </v-layout>
                             </v-flex>
                             <v-flex xs8 pt-0 class="caption" v-if="!item.readonly">
-                                <v-text-field :textarea="true" v-model="item.text" class="mr-2 no-height pt-1 no-label"
+                                <v-text-field :textarea="true" :value="item.text" class="mr-2 no-height pt-1 no-label"
                                     hide-details @input="handleInputChanged" :readonly="item.readonly">
                                 </v-text-field>
                             </v-flex>

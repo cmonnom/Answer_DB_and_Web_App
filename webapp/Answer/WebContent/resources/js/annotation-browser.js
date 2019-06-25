@@ -15,7 +15,7 @@ const AnnotationBrowser = {
     </v-layout>
     </v-dialog>
 
-    <v-snackbar :timeout="4000" :bottom="true" v-model="snackBarVisible">
+    <v-snackbar :timeout="4000" :bottom="true" :value="snackBarVisible">
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
@@ -80,7 +80,7 @@ const AnnotationBrowser = {
     
             <v-tabs-items v-model="annotationTabActive">
             <!-- Trials -->
-                <v-tab-item id="tab-trial">
+                <v-tab-item value="tab-trial">
             <v-container grid-list-md fluid pt-0 pl-1 pr-1>
                 <v-layout row wrap>
                     <v-slide-y-transition>
@@ -114,7 +114,7 @@ const AnnotationBrowser = {
             </v-container>
             </v-tab-item>
             <!-- SNPs -->
-            <v-tab-item id="tab-snp">
+            <v-tab-item value="tab-snp">
             <v-container grid-list-md fluid pt-0 pl-1 pr-1>
                 <v-layout row wrap>
                     <v-slide-y-transition>
@@ -133,11 +133,11 @@ const AnnotationBrowser = {
                                         </v-flex>
                                         <v-flex xs6>
                                         <v-tooltip right>
-                                        <v-select slot="activator" clearable :value="snpGeneSearch" :items="allGenes" v-model="snpGeneSearch"
-                                            label="Gene Symbol" hide-details autocomplete clearable
+                                        <v-autocomplete slot="activator" clearable :value="snpGeneSearch" :items="allGenes" v-model="snpGeneSearch"
+                                            label="Gene Symbol" hide-details clearable
                                             item-text="name" item-value="value" autofocus
                                             class="no-height-select" @input="getAllSNPsForGene(snpGeneSearch)"
-                                            ></v-select>
+                                            ></v-autocomplete>
                                             <span>Select a gene</span>
                                         </v-tooltip>
                                         </v-flex>
@@ -170,7 +170,7 @@ const AnnotationBrowser = {
             </v-container>
             </v-tab-item>
             <!-- Gene sets -->
-            <v-tab-item id="tab-genes">
+            <v-tab-item value="tab-genes">
               <gene-sets-edit></gene-sets-edit>
             </v-tab-item>
             </v-tabs-items>

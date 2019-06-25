@@ -8,7 +8,7 @@ Vue.component('login', {
     },
     template: `<div>
             <v-container>
-                <v-form v-model="formValid" @submit.prevent ref="form" lazy @submit="submitForm">
+                <v-form :value="formValid" @submit.prevent ref="form" lazy @submit="submitForm">
                         <div class="text-xs-center white--text">
                             {{ message }}
                         </div>
@@ -25,7 +25,7 @@ Vue.component('login', {
                         dark
                         color="white"
                         :append-icon="showPasswordIcon ? 'visibility' : 'visibility_off'" 
-                        :append-icon-cb="() => (showPasswordIcon = !showPasswordIcon)"
+                        @click:append="() => (showPasswordIcon = !showPasswordIcon)"
                         :type="showPasswordIcon ? 'password' : 'text'"
                         ></v-text-field>
                     </div>

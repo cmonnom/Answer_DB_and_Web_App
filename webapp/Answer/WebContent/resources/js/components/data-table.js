@@ -114,19 +114,17 @@ Vue.component('data-table', {
     </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-fade-transition>
-      <v-layout justify-end v-show="showButtons">
+      <v-layout justify-end align-center v-show="showButtons">
         <v-flex class="text-xs-right">
           <v-container>
             <slot name="title"></slot>
           </v-container>
         </v-flex>
         <v-flex xs7 class="text-xs-right" v-show="showPagination">
-          <div class="title white--text pr-1 pt-4 mt-0">Rows:</div>
+          <div class="title white--text pr-2">Rows:</div>
         </v-flex>
-        <v-flex xs3 v-show="showPagination" class="data-table-row-input">
-          <v-container>
+        <v-flex xs3 v-show="showPagination" class="data-table-row-input small-solo-input">
             <v-text-field solo flat single-line hide-details light v-model="pagination.rowsPerPage"></v-text-field>
-          </v-container>
         </v-flex>
       </v-layout>
     </v-fade-transition>
@@ -206,10 +204,10 @@ Vue.component('data-table', {
       <v-card-text>
       <v-layout row wrap align-end>
       <v-flex xs v-for="header in getSortedHeaders" :key="header.oneLineText" class="pl-2 pr-2" v-if="!header.isFlag">
-         <v-text-field hide-details :label="header.oneLineText" textarea v-model="newRow[header.value]" :style="'width:' + header.width"></v-text-field>
+         <v-textarea hide-details :label="header.oneLineText" v-model="newRow[header.value]" :style="'width:' + header.width"></v-textarea>
       </v-flex>
       <v-flex xs v-for="header in additionalHeaders" :key="header.oneLineText" class="pl-2 pr-2" >
-        <v-text-field hide-details :label="header.oneLineText" :hint="header.hint" textarea v-model="newRow[header.value]" :style="'width:' + header.width"></v-text-field>
+        <v-textarea hide-details :label="header.oneLineText" :hint="header.hint" v-model="newRow[header.value]" :style="'width:' + header.width"></v-textarea>
       </v-flex>
       <v-flex>
       <v-btn :color="color" @click="addNewRow">Add Row</v-btn>
@@ -368,7 +366,7 @@ Vue.component('data-table', {
         </th>
         <th v-for="header in getSortedHeaders" :key="header.text" :class="[loading ? headerLoadingColor : color, 'white--text', 'subheading', header.sortable ? 'column sortable' : '', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
           @click="changeSort(header)" :width="header.width" :style="'min-width:' + header.width">
-          <v-icon v-if="header.sortable" class="table-sorting-icon">arrow_upward</v-icon>
+          <v-icon v-if="header.sortable" class="table-sorting-icon" color="white">mdi-menu-up</v-icon>
           <v-tooltip bottom v-if="header.toolTip">
             <span slot="activator" v-html="formattedHeader(header)">
             </span>
@@ -400,7 +398,7 @@ Vue.component('data-table', {
     <template slot="items" slot-scope="props">
       <tr :active="props.selected" :class="props.item.active === false || loading ? 'blue-grey lighten-5 blue-grey--text' : ''">
         <td v-if="enableSelection" style="width:50px" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
-          <v-checkbox :color="color" hide-details :input-value="props.selected" @click="handleSelectionChange(props)" v-model="props.item.isSelected"
+          <v-checkbox :color="color" hide-details :input-value="props.selected" @change="selectionChanged()" v-model="props.item.isSelected"
             :ripple="false" :disabled="props.item.readonly"></v-checkbox>
         </td>
         <td v-if="expandedDataUrl" class="pl-0 pr-0" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']" @click="expandRow(props.item[uniqueIdField], props)">
@@ -424,7 +422,7 @@ Vue.component('data-table', {
           <span v-if="props.item[header.value] && props.item[header.value].iconFlags">
             <v-tooltip bottom v-for="(icon, index) in props.item[header.value].iconFlags" :key="index" v-if="header.isFlag">
                 <v-chip v-if="icon.chip" slot="activator" :color="props.item.active === false ? 'blue-grey lighten-2' : icon.color"
-                text-color="white" label small disabled>
+                text-color="white" label small disabled style="vertical-align: bottom">
                 {{ icon.iconName }}
                 </v-chip>
                 <v-icon v-if="!icon.chip" slot="activator" :color="props.item.active === false ? 'blue-grey lighten-2' : icon.color">
@@ -516,7 +514,7 @@ Vue.component('data-table', {
             headers: [],
             headerOrder: [],
             uniqueIdField: "",
-            isLoadingColor: "warning",
+            isLoadingColor: "amber accent-2",
             loading: this.isLoadingColor ? true : false,
             items: [],
             itemDragging: '',
@@ -1139,6 +1137,7 @@ Vue.component('data-table', {
             // }
             props.item.isSelected = !props.item.isSelected;
             props.selected = props.item.isSelected;
+            this.selectionChanged();
         },
         addToSelection(item) {
             // item.isSelected = true;
