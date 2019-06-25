@@ -7,7 +7,7 @@ Vue.component('error-handler', {
     template: `<div>
     <v-dialog v-model="showDialog" max-width="500px">
     <v-card>
-    <v-card-text class="card__text_default">{{ errorMessage }}</v-card-text>
+    <v-card-text class="pt-3 pb-3 pl-3 pr-3">{{ errorMessage }}</v-card-text>
     </v-card>
     </v-dialog>
     <v-dialog v-model="showLoginDialog" max-width="300px">

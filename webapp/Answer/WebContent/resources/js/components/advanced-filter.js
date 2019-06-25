@@ -453,6 +453,7 @@ Vue.component('advanced-filter', {
         return {
             filters: [],
             effects: null,
+            failedFilters: null,
             flagFilters: [],
             checkboxFilters: [],
             numberFilters: [],
@@ -503,6 +504,17 @@ Vue.component('advanced-filter', {
                                 for (var j = 0; j < this.effects[impact].length; j++) {
                                     filter.checkBoxes.push({ name: this.effects[impact][j], value: false});
                                 }
+                            }
+                        }
+                    }
+                    else if (filter.fieldName == 'filters') {
+                        if (filter.checkBoxes.length > 0) {
+                            continue;
+                        }
+                        filter.checkBoxes = [];
+                        if (this.failedFilters) {
+                            for (var j = 0; j < this.failedFilters.length; j++) {
+                                filter.checkBoxes.push({ name: this.failedFilters[j], value: false});
                             }
                         }
                     }

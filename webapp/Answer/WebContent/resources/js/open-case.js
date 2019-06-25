@@ -1383,6 +1383,7 @@ const OpenCase = {
                     // step = new Date() - start;
                     // console.log(5, step); 
                     this.$refs.advancedFilter.effects = response.data.effects;
+                    this.$refs.advancedFilter.failedFilters = response.data.failedFilters;
                     this.userId = response.data.userId;
                     this.$refs.advancedFilter.populateCheckBoxes();
                     // step = new Date() - start;

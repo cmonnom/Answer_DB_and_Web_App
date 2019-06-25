@@ -535,6 +535,12 @@ public class OpenCaseController {
 		effectFilterNonCoding.setCategory("MODIFIER");
 		filters.add(effectFilterNonCoding);
 		
+		DataTableFilter failedReason = new DataTableFilter("Failed Reasons", Variant.FIELD_FILTERS);
+		failedReason.setType("snp");
+		failedReason.setCheckBox(true);
+		failedReason.setCategory("FAILED_FILTER");
+		filters.add(failedReason);
+		
 		//CNV filters
 
 		DataTableFilter cnvGeneFilter = new DataTableFilter("Gene Name(s)", Variant.FIELD_CNV_GENE_NAME);

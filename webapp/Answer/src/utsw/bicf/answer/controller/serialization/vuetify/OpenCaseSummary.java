@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
@@ -32,6 +33,7 @@ public class OpenCaseSummary {
 	String caseId;
 	String caseName;
 	Map<String, Set<String>> effects; //unique list of effects. Used for filtering by checking which effects should be included
+	Set<String> failedFilters; //unique list of failed QC filters. Used for filtering by checking which failed reason should be included
 	Integer userId;
 	SNPIndelVariantSummary snpIndelVariantSummary;
 	CNVSummary cnvSummary;
@@ -56,6 +58,7 @@ public class OpenCaseSummary {
 		this.caseName = aCase.getCaseName();
 		this.userId = user.getUserId();
 		this.effects = getUniqueEffects(aCase);
+		this.failedFilters = getUniqueFailedFilters(aCase);
 		this.isAllowed = true;
 		this.reportGroups = reportGroups;
 		this.qcUrl = qcAPI.getUrl();
@@ -90,13 +93,35 @@ public class OpenCaseSummary {
 			Set<String> effects = effectsByImpact.get(impact);
 			Set<String> effectsFormatted = new HashSet<String>();
 			for (String effect : effects) {
-				effect = effect.replaceAll("_", " ");
-				effect = StringUtils.capitalize(effect);
-				effectsFormatted.add(effect);
+				String effectFormatted = effect.replaceAll("_", " ");
+				Variant.CHECKBOX_FILTERS_MAP.put(effectFormatted, effect);
+				effectFormatted = StringUtils.capitalize(effectFormatted);
+				effectsFormatted.add(effectFormatted);
 			}
 			formattedEffectsByImpact.put(impact, effectsFormatted.stream().sorted().collect(Collectors.toSet()));
 		}
 		return formattedEffectsByImpact;
+		
+	}
+	
+	/**
+	 * Create a unique list of effects in the current case.
+	 * Sort alphabetically and tries to make the string prettier
+	 * @param aCase
+	 * @return
+	 */
+	private static Set<String> getUniqueFailedFilters(OrderCase aCase) {
+		Set<String> failedFilters = new HashSet<String>(); 
+		for (Variant variant : aCase.getVariants()) {
+			for (String filter : variant.getFilters()) {
+				String filterFormatted = TypeUtils.splitCamelCaseString(filter);
+				Variant.CHECKBOX_FILTERS_MAP.put(filterFormatted, filter);
+				if (!Variant.VALUE_FAIL.equals(filter) && !Variant.VALUE_PASS.equals(filter)) {
+					failedFilters.add(filterFormatted);
+				}
+			}
+		}
+		return failedFilters;
 		
 	}
 
@@ -245,6 +270,18 @@ public class OpenCaseSummary {
 	public void setTumorVcf(String tumorVcf) {
 		this.tumorVcf = tumorVcf;
 	}
+
+
+	public Set<String> getFailedFilters() {
+		return failedFilters;
+	}
+
+
+	public void setFailedFilters(Set<String> failedFilters) {
+		this.failedFilters = failedFilters;
+	}
+
+
 
 
 

@@ -58,10 +58,10 @@ public class PatientInfo {
 			int separator = orderCase.getOrderingPhysician().indexOf(" ");
 			String rawValue = null;
 			if (separator > -1) {
-				rawValue = orderCase.getOrderingPhysician().substring(separator, orderCase.getOrderingPhysician().length() - 1);
+				rawValue = orderCase.getOrderingPhysician().substring(separator, orderCase.getOrderingPhysician().length()).trim();
 			}
 			else {
-				rawValue = orderCase.getOrderingPhysician();
+				rawValue = orderCase.getOrderingPhysician().trim();
 			}
 			orderedBy = "Dr. "  + WordUtils.capitalize(rawValue.toLowerCase(), ' ', ',');
 		}
@@ -73,10 +73,10 @@ public class PatientInfo {
 			int separator = orderCase.getAuthorizingPhysician().indexOf(" ");
 			String rawValue = null;
 			if (separator > -1) {
-				rawValue = orderCase.getAuthorizingPhysician().substring(separator, orderCase.getAuthorizingPhysician().length() - 1);
+				rawValue = orderCase.getAuthorizingPhysician().substring(separator, orderCase.getAuthorizingPhysician().length()).trim();
 			}
 			else {
-				rawValue = orderCase.getAuthorizingPhysician();
+				rawValue = orderCase.getAuthorizingPhysician().trim();
 			}
 			authorizedBy = "Dr. "  + WordUtils.capitalize(rawValue.toLowerCase(), ' ', ',');
 		}

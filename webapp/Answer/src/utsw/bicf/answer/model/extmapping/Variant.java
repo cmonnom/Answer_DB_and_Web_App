@@ -51,6 +51,8 @@ public class Variant {
 	public static final String FIELD_GNOMAD_LCR = "gnomadLcr";
 	public static final String FIELD_LIKELY_ARTIFACT = "likelyArtifact";
 	
+	//keep track of the mapping between the value in the VCF and the displayed value
+	public static final Map<String, String> CHECKBOX_FILTERS_MAP = new HashMap<String, String>();
 	
 	Boolean isAllowed = true;
 	

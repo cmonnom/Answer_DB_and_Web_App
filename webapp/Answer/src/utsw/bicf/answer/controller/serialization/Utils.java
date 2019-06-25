@@ -91,8 +91,11 @@ public class Utils {
 				List<SearchItem> checkBoxes = filter.getCheckBoxes();
 				for (SearchItem cb : checkBoxes) {
 					if (cb.getValue() != null && (boolean) cb.getValue()) {
-						String fieldName = cb.getName().replaceAll(" ", "_").toLowerCase();
-						vf.getStringValues().add(new FilterStringValue(fieldName));
+//						String fieldName = cb.getName().replaceAll(" ", "_").toLowerCase();
+						String fieldName = Variant.CHECKBOX_FILTERS_MAP.get(cb.getName());
+						if (fieldName != null) {
+							vf.getStringValues().add(new FilterStringValue(fieldName));
+						}
 					}
 				}
 				if (!vf.getStringValues().isEmpty() && !activeFilters.contains(vf) ) {
