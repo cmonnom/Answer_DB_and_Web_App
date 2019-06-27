@@ -21,7 +21,7 @@ import utsw.bicf.answer.model.hybrid.TranslocationRow;
 public class TranslocationSummary extends Summary<TranslocationRow> {
 	
 	public TranslocationSummary(ModelDAO modelDAO, OrderCase aCase, String uniqueIdField, List<HeaderOrder> ftlOrders, User currentUser) {
-		super(createRows(modelDAO, aCase, currentUser), uniqueIdField, ftlOrders);
+		super(createRows(modelDAO, aCase, currentUser), uniqueIdField, ftlOrders, modelDAO);
 	}
 
 	private static List<TranslocationRow> createRows(ModelDAO modelDAO, OrderCase aCase, User currentUser) {

@@ -43,6 +43,7 @@ public class DataTableFilter {
 	String category;
 	
 	String type;
+	String uiFilterType;
 	@JsonProperty("isReverseNumber")
 	Boolean isReverseNumber; //flag to handles cases where we want values less than min and more than max
 	
@@ -259,5 +260,14 @@ public class DataTableFilter {
 	public void setButton(Button button) {
 		this.button = button;
 	}
+
+	public String getUiFilterType() {
+		return uiFilterType;
+	}
+
+	public void setUiFilterType(String uiFilterType) {
+		this.uiFilterType = uiFilterType;
+	}
+
 	
 }

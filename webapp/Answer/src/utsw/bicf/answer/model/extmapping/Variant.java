@@ -34,6 +34,7 @@ public class Variant {
 	public static final String FIELD_IN_COSMIC = "inCosmic";
 	public static final String FIELD_IN_CLINVAR = "inClinvar";
 	public static final String FIELD_OLD_BUILDS = "oldBuilds";
+	public static final String FIELD_SOMATIC_STATUS = "somaticStatus";
 	
 	public static final String FIELD_CNV_GENE_NAME = "cnvGeneName";
 	public static final String FIELD_CNV_COPY_NUMBER = "cnvCopyNumber";

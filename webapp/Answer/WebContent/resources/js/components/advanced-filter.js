@@ -37,29 +37,29 @@ Vue.component('advanced-filter', {
                     <v-flex xs12>
                         <v-divider></v-divider>
                         <div class="pt-2 pb-2">
-                            <v-chip v-if="isFilterUsed(filter)" label v-for="filter in filters" :key="filter.fieldName" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
+                            <v-chip disabled class="pt-1 pb-1 pr-0" v-if="isFilterUsed(filter)" label v-for="filter in filters" :key="filter.fieldName" :color="isInputNumberValid(filter) ? 'primary' : 'error'"
                                 text-color="white">
-                                <v-avatar class="" v-text="getFormattedType(filter.type)"></v-avatar>
+                                <v-avatar class="pl-2" v-text="getFormattedType(filter.type)"></v-avatar>
                                 <span v-html="getFilterChip(filter)"></span>
                                 <v-tooltip bottom>
-                                    <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)">
+                                    <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)" class="mr-0">
                                         <v-icon>close</v-icon>
                                     </v-btn>
                                     <span>Clear Filter</span>
                                 </v-tooltip>
                             </v-chip>
-                            <div v-if="filter.isCheckBox" v-for="filter in filters" :key="filter.headerText">
-                                <v-chip v-if="isCheckBoxFilterUsed(checkBox)" label v-for="checkBox in filter.checkBoxes" :key="checkBox.name" color="primary"
-                                    text-color="white">
-                                    <span v-html="getFilterCheckBoxChip(filter, checkBox)"></span>
-                                    <v-tooltip bottom>
-                                        <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(checkBox)">
-                                            <v-icon>close</v-icon>
-                                        </v-btn>
-                                        <span>Clear Filter</span>
-                                    </v-tooltip>
-                                </v-chip>
-                            </div>
+                            <div v-if="filter.isCheckBox" v-for="(filter, index3) in filters" :key="index3">
+                            <v-chip v-if="isCheckBoxFilterUsed(filter.checkBoxes)" class="no-left-padding" label color="primary" text-color="white" disabled>
+                                <span v-html="getFilterCheckBoxChip(filter)" class="pl-2"></span>
+                                <v-tooltip bottom>
+                                <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(filter)" :disabled="disableFiltering" class="mr-0">
+                                    <v-icon>close</v-icon>
+                                </v-btn>
+                                <span>Clear Filter</span>
+                            </v-tooltip>
+                            </v-chip>
+                        </div>
+
                         </div>
                         <v-divider></v-divider>
                     </v-flex>
@@ -246,29 +246,28 @@ Vue.component('advanced-filter', {
             <!-- displays which filters are active -->
             <div v-if="currentFilterSet" class="pl-2 pt-2 subheading">Current Filter Set: {{ currentFilterSet.listName }}</div>
             <div class="pt-2 pb-2">
-                <v-chip v-if="isFilterUsed(filter)" label v-for="(filter, index1) in filters" :key="index1" :color="getChipFilterColor(filter)"
+                <v-chip disabled class="pt-1 pb-1 pr-0" v-if="isFilterUsed(filter)" label v-for="(filter, index1) in filters" :key="index1" :color="getChipFilterColor(filter)"
                     text-color="white">
-                    <v-avatar class="" v-text="getFormattedType(filter.type)"></v-avatar>
+                    <v-avatar class="pl-2" v-text="getFormattedType(filter.type)"></v-avatar>
                     <span v-html="getFilterChip(filter)"></span>
                     <v-tooltip bottom>
-                        <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)" :disabled="disableFiltering">
+                        <v-btn slot="activator" dark flat icon small @click="clearFilter(filter, true)"  class="mr-0" :disabled="disableFiltering">
                             <v-icon>close</v-icon>
                         </v-btn>
                         <span>Clear Filter</span>
                     </v-tooltip>
                 </v-chip>
-                <div v-if="filter.isCheckBox" v-for="(filter, index2) in filters" :key="index2">
-                    <v-chip v-if="isCheckBoxFilterUsed(checkBox)" label v-for="checkBox in filter.checkBoxes" :key="checkBox.name" :color="getChipFilterColor(filter)"
-                        text-color="white">
-                        <span v-html="getFilterCheckBoxChip(filter, checkBox)"></span>
-                        <v-tooltip bottom>
-                            <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(checkBox)" :disabled="disableFiltering">
-                                <v-icon>close</v-icon>
-                            </v-btn>
-                            <span>Clear Filter</span>
-                        </v-tooltip>
-                    </v-chip>
-                </div>
+
+                <v-chip v-if="isCheckBoxFilterUsed(filter.checkBoxes) && filter.isCheckBox"  v-for="(filter, index3) in filters" :key="index3" class="no-left-padding multi-line-chip" label color="primary" text-color="white" disabled>
+                    <span v-html="getFilterCheckBoxChip(filter)" class="pl-2"></span>
+                    <v-tooltip bottom>
+                    <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(filter)"  class="mr-0" :disabled="disableFiltering">
+                        <v-icon>close</v-icon>
+                    </v-btn>
+                    <span>Clear Filter</span>
+                </v-tooltip>
+                </v-chip>
+
             </div>
             <v-divider></v-divider>
             <!-- list of possible filters -->
@@ -418,11 +417,10 @@ Vue.component('advanced-filter', {
                             </v-layout>
                         </v-flex>
                     </v-layout>
-
                     <!-- checkbox -->
                     <v-layout row v-for="filter in getFiltersByType(checkboxFilters)" :key="filter.headerText" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3', 'mt-2']">
                         <v-expansion-panel expand v-if="filter.isCheckBox" class="expandable-filter elevation-0" :value="checkboxExpansion">
-                            <v-expansion-panel-content >
+                            <v-expansion-panel-content>
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">
                                     {{ filter.headerText }}
                                     <v-tooltip right>
@@ -474,7 +472,10 @@ Vue.component('advanced-filter', {
             messageDialogVisible: false,
             message: "",
             checkboxExpansion: [true, true, true, true], //controls the open state of each panel. Add more items here when creating new expandable panels
-            flagExpansion: [true]
+            flagExpansion: [true],
+            checkBoxCategories: [],
+            checkBoxFiltersByCategory: {},
+            checkBoxLabelsByValue: {} //dict to map a saved filter checkboxes when loading it's fields
         }
 
     },
@@ -490,6 +491,7 @@ Vue.component('advanced-filter', {
             for (var i = 0; i < this.filters.length; i++) {
                 var filter = this.filters[i];
                 if (filter.isCheckBox) {
+                    filter.uiFilterType = "checkBox";
                     this.checkboxFilters.push(filter);
                     if (filter.fieldName == 'effects') {
                         if (filter.checkBoxes.length > 0) {
@@ -533,6 +535,7 @@ Vue.component('advanced-filter', {
             for (var i = 0; i < this.filters.length; i++) {
                 var filter = this.filters[i];
                 if (filter.isBoolean) {
+                    filter.uiFilterType = "boolean";
                     this.flagFilters.push(filter);
                 }
             }
@@ -542,6 +545,7 @@ Vue.component('advanced-filter', {
             for (var i = 0; i < this.filters.length; i++) {
                 var filter = this.filters[i];
                 if (filter.isNumber || filter.isReverseNumber) {
+                    filter.uiFilterType = "number";
                     this.numberFilters.push(filter);
                 }
             }
@@ -576,8 +580,10 @@ Vue.component('advanced-filter', {
             }
             this.$emit("update-highlight", filter);
         },
-        clearCheckBoxFilter(checkBox) {
-            checkBox.value = false;
+        clearCheckBoxFilter(filter) {
+            for (var i = 0; i < filter.checkBoxes.length; i++) {
+                filter.checkBoxes[i].value = false;
+            }
             this.currentFilterSet = "";
             this.filterData();
         },
@@ -637,9 +643,12 @@ Vue.component('advanced-filter', {
             } //TODO dates and numbers
             return filter.headerText;
         },
-        getFilterCheckBoxChip(filter, checkBox) {
-            return filter.headerText + ": <b>" + checkBox.name
-                + "</b>";
+        getFilterCheckBoxChip(filter) {
+            var items = filter.checkBoxes.filter(c => c.value).map(c => "<b>" + c.name + "</b>").join(",<br/>");
+            if (filter.checkBoxes.length > 1) {
+                return filter.headerText + ":<br/>" + items;
+            }
+            return filter.headerText + ": " + items;
         },
         toggleFilters() {
             this.advancedFilteringVisible = !this.advancedFilteringVisible;
@@ -663,7 +672,15 @@ Vue.component('advanced-filter', {
             }
             return filter.value != null && filter.value.length > 0;
         },
-        isCheckBoxFilterUsed(checkBox) { return checkBox.value == true; }, isInputNumberValid(filter) {
+        isCheckBoxFilterUsed(checkBoxes) {
+            for (var i = 0; i < checkBoxes.length; i++) {
+                if (checkBoxes[i].value == true) {
+                    return true;
+                }
+            }
+            return false;
+        }, 
+        isInputNumberValid(filter) {
             if (filter.isNumber  || filter.isReverseNumber) {
                 var isValid = (filter.minValue === "" || !isNaN(filter.minValue)) && (filter.maxValue === "" || !isNaN(filter.maxValue));
                 if (isValid) {
@@ -727,7 +744,7 @@ Vue.component('advanced-filter', {
             this.currentFilterSet = this.filterSets.filter(f => f.variantFilterListId == filterSet.value)[0];
             for (var i = 0; i < this.currentFilterSet.filters.length; i++) {
                 var filter = this.currentFilterSet.filters[i];
-                var filterToPopulate = this.filters.filter(f => f.fieldName == filter.field)[0];
+                var filterToPopulate = this.filters.filter(f => f.fieldName == filter.field && f.type == filter.type && f.uiFilterType == filter.uiFilterType)[0];
                 this.populateFilter(filterToPopulate, filter);
             }
             this.$emit("refresh-data", null);
@@ -751,7 +768,7 @@ Vue.component('advanced-filter', {
             filterToPopulate.valueFalse = loadedFilter.valueFalse;
             if (filterToPopulate.isCheckBox) {
                 for (var i = 0; i < filterToPopulate.checkBoxes.length; i++) {
-                    var field = filterToPopulate.checkBoxes[i].name.replace(/ /g, "_").toLowerCase();
+                    var field = this.checkBoxLabelsByValue[filterToPopulate.checkBoxes[i].name];
                     var checkboxHasValue = false;
                     for (var j = 0; j < loadedFilter.stringValues.length; j++) {
                         var currentCheckBoxValue = loadedFilter.stringValues[j].filterString;

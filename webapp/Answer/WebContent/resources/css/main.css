@@ -485,3 +485,11 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
     padding-left: 0px;
     padding-right: 0px;
 }
+
+.no-left-padding .v-chip__content {
+    padding-left: 0px;
+}
+
+.multi-line-chip .v-chip__content {
+    display: contents;
+}

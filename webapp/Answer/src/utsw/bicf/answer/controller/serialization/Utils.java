@@ -31,11 +31,10 @@ public class Utils {
 		ObjectMapper mapper = new ObjectMapper();
 		DataFilterList filterList = mapper.readValue(data, DataFilterList.class);
 		List<VariantFilter> activeFilters = new ArrayList<VariantFilter>();
-		VariantFilter impactFilter = null;
 		for (DataTableFilter filter : filterList.getFilters()) {
 			if (filter.isBoolean() != null && filter.isBoolean()) {
 				if (filter.getValueTrue() != null || filter.getValueFalse() != null) {
-					VariantFilter vf = new VariantFilter(filter.getFieldName());
+					VariantFilter vf = new VariantFilter(filter.getFieldName(), filter.getUiFilterType());
 					if (parseToSave) { //keep normal behavior to save in local database
 						if (filter.getValueTrue() != null && filter.getValueTrue()) {
 							vf.setValueTrue(true);
@@ -86,7 +85,7 @@ public class Utils {
 					vf = existingVFs.get(0); //a VariantFilter already exists (eg. with "effects"). Use that one instead of a new one.
 				}
 				else {
-					vf = new VariantFilter(filter.getFieldName());
+					vf = new VariantFilter(filter.getFieldName(), filter.getUiFilterType());
 				}
 				List<SearchItem> checkBoxes = filter.getCheckBoxes();
 				for (SearchItem cb : checkBoxes) {
@@ -122,7 +121,7 @@ public class Utils {
 			}
 			else if ((filter.isNumber() != null && filter.isNumber()) || (filter.isReverseNumber() != null && filter.isReverseNumber())) {
 				if (filter.getMinValue() != null || filter.getMaxValue() != null) {
-					VariantFilter vf = new VariantFilter(filter.getFieldName());
+					VariantFilter vf = new VariantFilter(filter.getFieldName(), filter.getUiFilterType());
 					if (filter.getMinValue() != null) {
 						if (vf.getField().contains("Frequency")) { //frequencies are converted to pct. Need to revert it to ratio
 							vf.setMinValue(filter.getMinValue() / 100);
@@ -143,7 +142,7 @@ public class Utils {
 				}
 			}
 			else if (filter.isSelect() != null && filter.isSelect() && filter.getValue() != null) {
-				VariantFilter vf = new VariantFilter(filter.getFieldName());
+				VariantFilter vf = new VariantFilter(filter.getFieldName(), filter.getUiFilterType());
 				String stringValue = null;
 				if (filter.getValue() instanceof String) {
 					stringValue = (String) filter.getValue();
@@ -160,7 +159,7 @@ public class Utils {
 				}
 			}
 			else if (filter.isString() != null && filter.isString()) {
-				VariantFilter vf = new VariantFilter(filter.getFieldName());
+				VariantFilter vf = new VariantFilter(filter.getFieldName(), filter.getUiFilterType());
 				if (filter.getValue() != null) {
 					List<String> items = new ArrayList<String>();
 					if (filter.getValue() instanceof String) {
@@ -183,10 +182,6 @@ public class Utils {
 				}
 			}
 				
-		}
-		//add manually created filters here (like impact)
-		if (impactFilter != null) {
-			activeFilters.add(impactFilter);
 		}
 		VariantFilterList list = new VariantFilterList();
 		activeFilters.stream().forEach(filter -> filter.setFilterList(list));

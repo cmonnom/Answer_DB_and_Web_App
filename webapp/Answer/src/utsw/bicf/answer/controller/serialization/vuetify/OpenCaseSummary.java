@@ -45,6 +45,7 @@ public class OpenCaseSummary {
 	List<String> assignedToIds;
 	String type;
 	boolean reportReady;
+	Map<String, String> checkBoxLabelsByValue;
 
 	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
 		List<HeaderOrder> snpOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "SNP/Indel Variants");
@@ -65,6 +66,11 @@ public class OpenCaseSummary {
 		this.tumorVcf = aCase.getTumorVcf();
 		this.assignedToIds = aCase.getAssignedTo();
 		this.type = aCase.getType();
+		
+		this.checkBoxLabelsByValue = Variant.CHECKBOX_FILTERS_MAP;
+//		for (String formattedValue : Variant.CHECKBOX_FILTERS_MAP.keySet()) {
+//			this.checkBoxLabelsByValue.put(Variant.CHECKBOX_FILTERS_MAP.get(formattedValue), formattedValue);
+//		}
 		
 		if (user.getIndividualPermission().getCanView()) {
 			reportReady = CaseHistory.lastStepMatches(aCase, CaseHistory.STEP_REPORTING);
@@ -94,8 +100,8 @@ public class OpenCaseSummary {
 			Set<String> effectsFormatted = new HashSet<String>();
 			for (String effect : effects) {
 				String effectFormatted = effect.replaceAll("_", " ");
-				Variant.CHECKBOX_FILTERS_MAP.put(effectFormatted, effect);
 				effectFormatted = StringUtils.capitalize(effectFormatted);
+				Variant.CHECKBOX_FILTERS_MAP.put(effectFormatted, effect);
 				effectsFormatted.add(effectFormatted);
 			}
 			formattedEffectsByImpact.put(impact, effectsFormatted.stream().sorted().collect(Collectors.toSet()));
@@ -279,6 +285,16 @@ public class OpenCaseSummary {
 
 	public void setFailedFilters(Set<String> failedFilters) {
 		this.failedFilters = failedFilters;
+	}
+
+
+	public Map<String, String> getCheckBoxLabelsByValue() {
+		return checkBoxLabelsByValue;
+	}
+
+
+	public void setCheckBoxLabelsByValue(Map<String, String> checkBoxLabelsByValue) {
+		this.checkBoxLabelsByValue = checkBoxLabelsByValue;
 	}
 
 

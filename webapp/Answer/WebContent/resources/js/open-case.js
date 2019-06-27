@@ -926,7 +926,7 @@ const OpenCase = {
 
     <v-slide-y-transition>
         <v-layout v-if="caseAnnotationsVisible">
-            <v-flex xs12 class="pb-3">
+            <v-flex xs12 md12 lg12 xl10 class="pb-3">
                 <v-card>
                     <v-toolbar class="elevation-0" dense dark :color="colors.openCase">
                         <!-- <v-icon>perm_identity</v-icon> -->
@@ -1384,6 +1384,7 @@ const OpenCase = {
                     // console.log(5, step); 
                     this.$refs.advancedFilter.effects = response.data.effects;
                     this.$refs.advancedFilter.failedFilters = response.data.failedFilters;
+                    this.$refs.advancedFilter.checkBoxLabelsByValue = response.data.checkBoxLabelsByValue;
                     this.userId = response.data.userId;
                     this.$refs.advancedFilter.populateCheckBoxes();
                     // step = new Date() - start;
@@ -1691,6 +1692,8 @@ const OpenCase = {
             if (this.variantTabActive == "tab-snp") {
                 this.currentFilterType = "snp";
                 this.$refs.advancedFilter.disableFiltering = false;
+                this.$refs.advancedFilter.checkboxExpansion = [true, true, true, true]; //controls the open state of each panel. Add more items here when creating new expandable panels
+                this.$refs.advancedFilter.flagExpansion = [true];
             }
             else if (this.variantTabActive == "tab-cnv") {
                 this.currentFilterType = "cnv";

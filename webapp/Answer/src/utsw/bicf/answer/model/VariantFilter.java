@@ -51,9 +51,11 @@ public class VariantFilter {
 	@Column(name="value_false")
 	Boolean valueFalse;
 	
-	@Transient
+	@Column(name="variant_type")
 	String type;
 
+	@Column(name="ui_filter_type")
+	String uiFilterType;
 	
 	@JsonIgnore
 	@ManyToOne(cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH, CascadeType.REMOVE})
@@ -71,7 +73,7 @@ public class VariantFilter {
 		this.field = field;
 	}
 
-	public VariantFilter(String field) {
+	public VariantFilter(String field, String uifilterType) {
 		super();
 		this.field = field;
 		this.stringValues = new ArrayList<FilterStringValue>();
@@ -81,6 +83,7 @@ public class VariantFilter {
 		else { //TODO for now, there are only 2 types but if we filter on translocations, we'll need to add all snp filters to  VariantFilterList.filtersType
 			this.type = "snp";
 		}
+		this.uiFilterType = uifilterType;
 	}
 
 	public List<FilterStringValue> getStringValues() {
@@ -162,6 +165,15 @@ public class VariantFilter {
 	public void setType(String type) {
 		this.type = type;
 	}
+
+	public String getUiFilterType() {
+		return uiFilterType;
+	}
+
+	public void setUiFilterType(String uiFilterType) {
+		this.uiFilterType = uiFilterType;
+	}
+
 
 
 }

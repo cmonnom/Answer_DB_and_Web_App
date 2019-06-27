@@ -51,6 +51,27 @@ public class VariantFilterList {
 		filtersType.put(Variant.FIELD_CNV_COPY_NUMBER, "cnv");
 		filtersType.put(Variant.FIELD_CNV_GENE_NAME, "cnv");
 		
+		filtersType.put(Variant.FIELD_CHROM, "snp");
+		filtersType.put(Variant.FIELD_GENE_NAME, "snp");
+		filtersType.put(Variant.FIELD_SOMATIC_STATUS, "snp");
+		filtersType.put(Variant.FIELD_FILTERS, "snp");
+		filtersType.put(Variant.FIELD_TUMOR_ALT_FREQUENCY, "snp");
+		filtersType.put(Variant.FIELD_TUMOR_TOTAL_DEPTH, "snp");
+		filtersType.put(Variant.FIELD_NORMAL_ALT_FREQUENCY, "snp");
+		filtersType.put(Variant.FIELD_NORMAL_TOTAL_DEPTH, "snp");
+		filtersType.put(Variant.FIELD_RNA_ALT_FREQUENCY, "snp");
+		filtersType.put(Variant.FIELD_RNA_TOTAL_DEPTH, "snp");
+		filtersType.put(Variant.FIELD_EXAC_ALLELE_FREQUENCY, "snp");
+		filtersType.put(Variant.FIELD_GNOMAD_ALLELE_FREQUENCY, "snp");
+		filtersType.put(Variant.FIELD_GNOMAD_HOM, "snp");
+		filtersType.put(Variant.FIELD_NUM_CASES_SEEN, "snp");
+		filtersType.put(Variant.FIELD_IN_COSMIC, "snp");
+		filtersType.put(Variant.FIELD_HAS_REPEATS, "snp");
+		filtersType.put(Variant.FIELD_IN_CLINVAR, "snp");
+		filtersType.put(Variant.FIELD_GNOMAD_LCR, "snp");
+		filtersType.put(Variant.FIELD_LIKELY_ARTIFACT, "snp");
+		filtersType.put(Variant.FIELD_EFFECTS, "snp");
+		
 	}
 
 	public String createJSON() throws JsonProcessingException {

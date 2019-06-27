@@ -389,7 +389,7 @@ public class OpenCaseController {
 		geneFilter.setButton(geneButton);
 		filters.add(geneFilter);
 
-		DataTableFilter somaticFilter = new DataTableFilter("Somatic Status", "somaticStatus");
+		DataTableFilter somaticFilter = new DataTableFilter("Somatic Status", Variant.FIELD_SOMATIC_STATUS);
 		somaticFilter.setType("snp");
 		somaticFilter.setSelect(true);
 		List<SearchItem> somaticSelectItems = new ArrayList<SearchItem>();
