@@ -20,7 +20,11 @@ Vue.component('splash-screen', {
                 "Loading User Preferences...",
                 "Dusting Off Variants",
                 "Translocating Translocations",
-                "Reviewing Reviewers..."
+                "Reviewing Reviewers...",
+                "Appreciating Your Patience...",
+                "Thinking...",
+                "Loading Environment...",
+                "Almost There..."
             ],
         }
 

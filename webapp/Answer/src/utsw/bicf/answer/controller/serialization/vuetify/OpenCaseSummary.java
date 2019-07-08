@@ -46,6 +46,7 @@ public class OpenCaseSummary {
 	String type;
 	boolean reportReady;
 	Map<String, String> checkBoxLabelsByValue;
+	String caseOwnerId;
 
 	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
 		List<HeaderOrder> snpOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "SNP/Indel Variants");
@@ -66,6 +67,7 @@ public class OpenCaseSummary {
 		this.tumorVcf = aCase.getTumorVcf();
 		this.assignedToIds = aCase.getAssignedTo();
 		this.type = aCase.getType();
+		this.caseOwnerId = aCase.getCaseOwner();
 		
 		this.checkBoxLabelsByValue = Variant.CHECKBOX_FILTERS_MAP;
 //		for (String formattedValue : Variant.CHECKBOX_FILTERS_MAP.keySet()) {
@@ -295,6 +297,16 @@ public class OpenCaseSummary {
 
 	public void setCheckBoxLabelsByValue(Map<String, String> checkBoxLabelsByValue) {
 		this.checkBoxLabelsByValue = checkBoxLabelsByValue;
+	}
+
+
+	public String getCaseOwnerId() {
+		return caseOwnerId;
+	}
+
+
+	public void setCaseOwnerId(String caseOwnerId) {
+		this.caseOwnerId = caseOwnerId;
 	}
 
 

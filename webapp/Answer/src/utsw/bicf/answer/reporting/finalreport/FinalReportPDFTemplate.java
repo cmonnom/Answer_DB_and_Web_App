@@ -826,7 +826,11 @@ public class FinalReportPDFTemplate {
 				GeneVariantAndAnnotation item = tableItems.get(variant);
 				row = table.createRow(12);
 				StringBuilder cellContent = new StringBuilder();
-				cellContent.append("<b>").append(item.getGeneVariant()).append("</b><br/>")
+				String geneVariant = item.getGeneVariant();
+				if (geneVariant.length() > 25) {
+					geneVariant = geneVariant.substring(0, 20) + "<br/>" + geneVariant.substring(20); 
+				}
+				cellContent.append("<b>").append(geneVariant).append("</b><br/>")
 				.append("<b>Pos: </b>").append(item.getPosition()).append("<br/>");
 				if (item.getType().equals("snp")) {
 					cellContent.append("<b>ENST: </b>").append(item.getTranscript()).append("<br/>")

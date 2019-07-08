@@ -46,7 +46,7 @@ Vue.component('main-menu', {
 					</v-card>
 
 					<v-card v-if="menuItem.caseReportSearch">
-					<v-autocomplete v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
+					<v-autocomplete hide-details v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
 					 item-value="value" label="Case ID" single-line solo></v-autocomplete>
 				</v-card>
 
@@ -271,7 +271,6 @@ Vue.component('main-menu', {
 			this.$nextTick(function () {
 				var content = document.getElementsByClassName("v-content");
 				if (content) {
-					console.log(content[0], this.width);
 					content[0].style.paddingLeft = this.width + "px";
 					var titlebars = document.getElementsByClassName("v-toolbar v-toolbar--fixed");
 					for (var i = 0; i < titlebars.length; i++) {

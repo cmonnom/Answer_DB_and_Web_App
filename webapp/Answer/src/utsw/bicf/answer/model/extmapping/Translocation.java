@@ -33,7 +33,7 @@ public class Translocation {
 	String lastExon;
 	String fusionType;
 	String annot;
-	
+	List<String> ftlFilters; //list of filters
 	List<MongoDBId> annotationIdsForReporting;
 	
 	AbstractReference referenceTranslocation;
@@ -233,6 +233,14 @@ public class Translocation {
 
 	public String getTier() {
 		return tier;
+	}
+
+	public List<String> getFtlFilters() {
+		return ftlFilters;
+	}
+
+	public void setFtlFilters(List<String> ftlFilters) {
+		this.ftlFilters = ftlFilters;
 	}
 
 

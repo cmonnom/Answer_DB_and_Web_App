@@ -21,6 +21,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
         csrf:"${_csrf}" }
 
         const userFullName = "${userFullName}";
+        const callingName = (permissions.canReview ? "Dr. " + "${lastName}" : "${firstName}");
 
         const oncoKBGeniePortalUrl = "${oncoKBGeniePortalUrl}";
         const oncotreeIconUrl = webAppRoot + "/resources/images/oncotree.ico";

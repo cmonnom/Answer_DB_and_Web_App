@@ -149,7 +149,7 @@ const OpenCase = {
         </edit-annotations>
 
     <!-- variant details dialog -->
-    <v-dialog v-model="variantDetailsVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
+    <v-dialog v-model="variantDetailsVisible" ref="variantDetailsDialog" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
             <v-toolbar dense dark :color="colors.variantDetails">
                 <v-menu offset-y offset-x class="ml-0">
@@ -246,7 +246,7 @@ const OpenCase = {
                                 IGV
                             </v-list-tile-avatar>
                             <v-list-tile-content class="mb-2">
-                                <v-list-tile-title>Open Bam Viewer (web) <v-icon>mdi-web</v-icon></v-list-tile-title>
+                                <v-list-tile-title>Open IGV (web) <v-icon>mdi-web</v-icon></v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
 
@@ -255,7 +255,7 @@ const OpenCase = {
                             IGV
                         </v-list-tile-avatar>
                         <v-list-tile-content  class="mb-2">
-                            <v-list-tile-title>Open Bam Viewer (desktop) <v-icon>mdi-desktop-mac-dashboard</v-icon></v-list-tile-title>
+                            <v-list-tile-title>Open IGV (desktop) <v-icon>mdi-desktop-mac-dashboard</v-icon></v-list-tile-title>
                         </v-list-tile-content>
                         </v-list-tile>
 
@@ -369,7 +369,7 @@ const OpenCase = {
                     <span v-if="utswAnnotationsExists()">Show/Hide UTSW Annotations</span>
                     <span v-else>No UTSW Annotations</span>
                 </v-tooltip>
-                <v-menu origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y>
+                <v-menu origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y v-if="isSNP()">
                 <v-btn icon flat slot="activator">IGV
                 </v-btn>
                 <v-card color="primary">
@@ -377,14 +377,14 @@ const OpenCase = {
                     <v-btn ref="bamViewerLink" dark icon flat slot="activator" :href="createBamViewerLink()" target="_blank" rel="noreferrer">
                         <v-icon>mdi-web</v-icon> 
                     </v-btn>
-                    <span>Open Bam Viewer (web)</span>
+                    <span>Open IGV (web)</span>
                 </v-tooltip>
                 <br/>
                 <v-tooltip bottom v-if="isSNP()">
                     <v-btn ref="bamViewerLinkDesktop" dark icon flat slot="activator" @click="downloadIGVFile('jnlp')">
                         <v-icon>mdi-desktop-mac-dashboard</v-icon>
                     </v-btn>
-                    <span>Open Bam Viewer (desktop)</span>
+                    <span>Open IGV (desktop)</span>
                 </v-tooltip>
                 <br/>
                 <v-tooltip bottom v-if="isSNP()">
@@ -867,8 +867,8 @@ const OpenCase = {
                                             <v-list class="dense-tiles">
                                                 <v-list-tile v-for="item in table.items" :key="item.label" class="pl-0 pr-0 pb-2 no-tile-padding">
                                                     <v-list-tile-content class="pl-0 pr-0">
-                                                        <v-layout class="full-width " justify-space-between>
-                                                            <v-flex class="text-xs-left xs">
+                                                        <v-layout class="full-width " justify-space-between align-top>
+                                                            <v-flex :class="[getPatientDetailsMarginClass(item), 'text-xs-left', 'xs']">
                                                                 <span :class="[item.type == 'text' ? 'pt-4' : '', 'selectable']">{{ item.label }}:</span>
                                                             </v-flex>
                                                             <v-flex :class="[getPatientDetailsFlexClass(item),'text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
@@ -880,8 +880,11 @@ const OpenCase = {
                                                                 </v-autocomplete>
                                                                 <span> {{ patientDetailsOncoTreeDiagnosis.label }}</span>
                                                                 </v-tooltip>
-                                                                <v-textarea class="align-input-right" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text-field' && item.field == 'tumorTissueType'" v-model="patientDetailsTumorTissue"
-                                                                label="Tumor Tissue Type" @input="patientDetailsUnSaved = true" hide-details rows="1" auto-grow>
+                                                                <v-textarea class="align-input-right pt-0 mt-0" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text-field' && item.field == 'tumorTissueType'" v-model="patientDetailsTumorTissue"
+                                                                label="Tumor Tissue Type" single-line @input="patientDetailsUnSaved = true" hide-details rows="1" auto-grow>
+                                                                </v-textarea>
+                                                                <v-textarea class="align-input-right pt-0 mt-0" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text-field' && item.field == 'icd10'" v-model="patientDetailsICD10"
+                                                                label="ICD10 Code" single-line @input="patientDetailsUnSaved = true" hide-details rows="1" auto-grow>
                                                                 </v-textarea>
                                                                 <v-text-field class="no-top-text-field align-input-right" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text-field' && item.field == 'dedupPctOver100X'" v-model="patientDetailsDedupPctOver100X"
                                                                 label="Numbers Only" :rules="numberRules" single-line @input="patientDetailsUnSaved = true" hide-details>
@@ -955,10 +958,10 @@ const OpenCase = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-tabs slot="extension" dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="variantTabActive" v-show="variantTabsVisible">
-            <v-tab href="#tab-snp" :ripple="false">SNP / Indel</v-tab>
-            <v-tab href="#tab-cnv" :ripple="false">CNV</v-tab>
-            <v-tab href="#tab-translocation" :ripple="false">Fusion / Translocation</v-tab>
+        <v-tabs slot="extension" dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="variantTabActive" v-show="variantTabsVisible" hide-slider>
+            <v-tab href="#tab-snp" :ripple="false" active-class="v-tabs__item--active primary">SNP / Indel</v-tab>
+            <v-tab href="#tab-cnv" :ripple="false" active-class="v-tabs__item--active primary">CNV</v-tab>
+            <v-tab href="#tab-translocation" :ripple="false" active-class="v-tabs__item--active primary">Fusion / Translocation</v-tab>
             <v-tabs-items>
                 <!-- SNP / Indel table -->
                 <v-tab-item value="tab-snp">
@@ -1039,6 +1042,22 @@ const OpenCase = {
                     <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
                         no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
                         :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
+                        <v-fade-transition slot="action1">
+                        <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
+                            <v-btn slot="activator" flat icon @click="toggleFilters('ftl')" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
+                                <v-icon>filter_list</v-icon>
+                            </v-btn>
+                            <span>Advanced Filtering</span>
+                        </v-tooltip>
+                    </v-fade-transition>
+                    <v-list-tile avatar @click="toggleFilters('ftl')" slot="action1MenuItem">
+                        <v-list-tile-avatar>
+                            <v-icon>filter_list</v-icon>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Advanced Filtering</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
                     </data-table>
                 </v-tab-item>
             </v-tabs-items>
@@ -1169,6 +1188,7 @@ const OpenCase = {
             topMostDialog: "",
             patientDetailsOncoTreeDiagnosis: "",
             patientDetailsTumorTissue: "",
+            patientDetailsICD10: "",
             qcUrl: "",
             mutationalSignatureUrl: "",
             editAnnotationVariantDetailsVisible: true,
@@ -1238,7 +1258,9 @@ const OpenCase = {
             currentSelectedVariantIds: {},
             creatingOtherTissueTypes: false,
             updatingSelectedVariantTable: false,
-            loadingColor: "blue-grey lighten-4"
+            loadingColor: "blue-grey lighten-4",
+            userId: null,
+            caseOwnerId: null,
         }
     }, methods: {
         
@@ -1317,6 +1339,7 @@ const OpenCase = {
                     this.caseAssignedTo = response.data.assignedToIds;
                     this.caseType = response.data.type;
                     this.reportReady = response.data.reportReady;
+                    this.caseOwnerId = response.data.caseOwnerId;
                     if (this.caseType == "Clinical") {
                         this.caseTypeIcon = "fa-user-md";
                     }
@@ -1352,6 +1375,7 @@ const OpenCase = {
                     }
                     // step = new Date() - start;
                     // console.log(3, step); 
+                    this.addOtherAnnotatorsValues(response.data.cnvSummary);
                     this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
                     //keep track of the original items in order to select all the variants regardless of filtering
                     if (!this.cnvUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
@@ -1367,6 +1391,7 @@ const OpenCase = {
                     }
                     // step = new Date() - start;
                     // console.log(4, step); 
+                    this.addOtherAnnotatorsValues(response.data.translocationSummary);
                     this.$refs.translocationDetails.manualDataFiltered(response.data.translocationSummary);
                     //keep track of the original items in order to select all the variants regardless of filtering
                     if (!this.ftlUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
@@ -1458,6 +1483,9 @@ const OpenCase = {
                     else if (item.field == "tumorTissueType") {
                         this.patientDetailsTumorTissue = item.value;
                     }
+                    else if (item.field == "icd10") {
+                        this.patientDetailsICD10 = item.value;
+                    }
                     else if (item.field == "dedupPctOver100X") {
                         this.patientDetailsDedupPctOver100X = item.value;
                     }
@@ -1506,7 +1534,7 @@ const OpenCase = {
 
             }
             if (this.urlQuery.variantType) {
-                // this.variantTabActive = "tab-" + this.urlQuery.variantType;
+                this.variantTabActive = "tab-" + this.urlQuery.variantType;
             }
             //then open variant details
             if (this.urlQuery.variantId && this.urlQuery.variantType) {
@@ -1642,10 +1670,10 @@ const OpenCase = {
                 }
             }
         },
-        addOtherAnnotatorsValues(snpIndelVariantSummary) {
-            var headers = snpIndelVariantSummary.headers.filter(h => h.map);
-            for (var i = 0; i < snpIndelVariantSummary.items.length; i++) {
-                var item = snpIndelVariantSummary.items[i];
+        addOtherAnnotatorsValues(itemSummary) {
+            var headers = itemSummary.headers.filter(h => h.map);
+            for (var i = 0; i < itemSummary.items.length; i++) {
+                var item = itemSummary.items[i];
                 var annotatorSelections = item.selectionPerAnnotator;
                 for (var j = 0; j < headers.length; j++) {
                     var header = headers[j];
@@ -1654,9 +1682,6 @@ const OpenCase = {
                     }
                 }
             }
-        },
-        populateAnnotatorDateSince(value, key, map) {
-            value.dateSince()
         },
         handleRefresh() {
             //issue a warning about unsaved selection
@@ -1697,6 +1722,11 @@ const OpenCase = {
             }
             else if (this.variantTabActive == "tab-cnv") {
                 this.currentFilterType = "cnv";
+                this.$refs.advancedFilter.disableFiltering = false;
+            }
+            else if (this.variantTabActive == "tab-translocation") {
+                this.currentFilterType = "ftl";
+                this.$refs.advancedFilter.flagExpansion = [true];
                 this.$refs.advancedFilter.disableFiltering = false;
             }
             else { //no filter for translocation for now
@@ -2934,11 +2964,11 @@ const OpenCase = {
                 if (response != null) {
                     this.currentSelectedVariantIds = response;
                     var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
-                    var selectedSNPVariantsReviewer = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIdsReviewer.indexOf(item.oid) > -1);
+                    var selectedSNPVariantsReviewer = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIdsReviewer.indexOf(item.oid) > -1).filter(item => item.selectionPerAnnotator[this.caseOwnerId]);
                     var selectedCNVs = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIds.indexOf(item.oid) > -1);
-                    var selectedCNVsReviewer = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIdsReviewer.indexOf(item.oid) > -1);
+                    var selectedCNVsReviewer = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIdsReviewer.indexOf(item.oid) > -1).filter(item => item.selectionPerAnnotator[this.caseOwnerId]);
                     var selectedTranslocations = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIds.indexOf(item.oid) > -1);
-                    var selectedFTLsReviewer = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIdsReviewer.indexOf(item.oid) > -1);
+                    var selectedFTLsReviewer = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIdsReviewer.indexOf(item.oid) > -1).filter(item => item.selectionPerAnnotator[this.caseOwnerId]);
                     this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
 
                     //add the current user column headerOrder but only to the all annotator table
@@ -3701,6 +3731,7 @@ const OpenCase = {
                 params: {
                     oncotreeDiagnosis: this.patientDetailsOncoTreeDiagnosis.text,
                     tumorTissue: this.patientDetailsTumorTissue,
+                    icd10: this.patientDetailsICD10,
                     dedupAvgDepth: this.patientDetailsDedupAvgDepth,
                     dedupPctOver100X: this.patientDetailsDedupPctOver100X,
                     tumorPercent: this.patientDetailsTumorPercent,
@@ -3895,6 +3926,17 @@ const OpenCase = {
                         clearInterval(splashInterval);
                     }
                 }, 500);
+                //make sure the dialogs are stacked up properly
+                if (this.urlQuery.showReview && this.urlQuery.variantId) {
+                    var styleVariantDetails = this.$refs.variantDetailsDialog.$children[0].$el.parentElement.style;
+                    var styleShowReview = this.$refs.reviewDialog.$parent.$parent.$children[0].$el.parentElement.style;
+                    var zIndexVariantDetails = parseInt(styleVariantDetails.zIndex);
+                    var zIndexShowReview = parseInt(styleShowReview.zIndex);
+                    while (zIndexVariantDetails <= zIndexShowReview) {
+                        zIndexVariantDetails++;
+                    }
+                    styleVariantDetails.zIndex = zIndexVariantDetails + "";
+                }
             }
             else {
 
@@ -4193,13 +4235,19 @@ const OpenCase = {
             }
         },
         getPatientDetailsFlexClass(item) {
-            if (item && item.field == "tumorTissueType") {
-                return 'xs10';
+            if (item && (item.field == "tumorTissueType" || item.field == "icd10")) {
+                return 'xs10 lg8 xl7';
             }
             if (item && item.type) {
                 return 'xs5';
             }
             return 'xs';
+        },
+        getPatientDetailsMarginClass(item) {
+            if (item && (item.field == "tumorTissueType" || item.field == "icd10")) {
+                return "mt-1";
+            }
+            return "";
         },
         removeCurrentUserSelectionColumnFromHeaders(snpSummaryHeaderOrder, cnvSummaryHeaderOrder, ftlSummaryHeaderOrder) {
             var headerOrders = [snpSummaryHeaderOrder, cnvSummaryHeaderOrder, ftlSummaryHeaderOrder];

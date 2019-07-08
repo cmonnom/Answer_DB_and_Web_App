@@ -89,8 +89,7 @@ const Home = {
   <v-toolbar dense dark color="primary" fixed app>
     <v-icon color="amber accent-2">mdi-home</v-icon>
   </v-tooltip>
-    <v-toolbar-title class="white--text">
-      Worklists
+    <v-toolbar-title class="white--text" v-text="getWelcomeMessage()">
     </v-toolbar-title>
     <v-spacer></v-spacer>
 
@@ -99,10 +98,10 @@ const Home = {
   </v-toolbar>
   <v-container grid-list-md fluid class="pl-0 pr-0 pt-0">
 
-    <v-tabs dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="activateTab">
-        <v-tab href="#tab-userCases" :ripple="false">My Cases</v-tab>
-        <v-tab href="#tab-allCases" :ripple="false">All Cases</v-tab>
-        <v-tab href="#tab-finalizedCases" :ripple="false">Ready for Epic</v-tab>
+    <v-tabs dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="activateTab" hide-slider>
+        <v-tab href="#tab-userCases" :ripple="false" active-class="v-tabs__item--active primary">My Cases</v-tab>
+        <v-tab href="#tab-allCases" :ripple="false" active-class="v-tabs__item--active primary">All Cases</v-tab>
+        <v-tab href="#tab-finalizedCases" :ripple="false" active-class="v-tabs__item--active primary">Ready for Epic</v-tab>
 
         <v-tabs-items>
             <v-tab-item value="tab-userCases"  class="pt-1">
@@ -428,6 +427,24 @@ const Home = {
         },
         handleRefresh() {
             this.getWorklists();
+        },
+        getWelcomeMessage() {
+            var now = moment();
+            var ampm = now.format("A");
+            var isMorning = ampm == "AM";
+            var isAfternoon = ampm == "PM";
+            var isEvening = isAfternoon && now.hour() >= 18;
+            var greetings = "Hello"
+            if (isMorning) {
+                greetings = "Good morning ";
+            }
+            else if (isEvening) {
+                greetings = "Good evening ";
+            }
+            else if (isAfternoon) {
+                greetings = "Good afternoon ";
+            }
+            return greetings + callingName;
         }
     },
     mounted: function () {

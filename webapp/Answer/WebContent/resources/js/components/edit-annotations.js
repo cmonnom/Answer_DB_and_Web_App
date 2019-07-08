@@ -166,23 +166,23 @@ Vue.component('edit-annotations', {
                             <v-layout color="primary" row wrap>
                                 <v-flex xs12>
                                     <v-form>
-                                        <v-container grid-list-md fluid>
+                                        <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
                                             <v-layout row wrap>
                                                 <!-- Scope -->
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                    <v-card-text class="card__text_default" v-if="isSNP() && hideScope">
+                                                    <v-card-text class="pl-3 pr-3 pt-3 pb-3" v-if="isSNP() && hideScope">
                                                         The scope has been preselected based on your annotation search.
                                                     </v-card-text>
                                                         <!-- SNP -->
-                                                        <v-card-text class="card__text_default" v-if="isSNP() && !hideScope">
-                                                            <div class="subheading pb-2">
+                                                        <v-card-text class="pl-3 pr-3 pt-3 pb-3" v-if="isSNP() && !hideScope">
+                                                            <div class="subheading pt-1">
                                                                 The
                                                                 <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
                                                                 cases/genes/variants:
                                                             </div>
                                                             <v-tooltip bottom>
-                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation) || isOutsideACase()" label="Case Specific"
+                                                                <v-switch hide-details slot="activator" class="no-height mt-0" :disabled="annotation.markedForDeletion || noLevelSelected(annotation) || isOutsideACase()" label="Case Specific"
                                                                     v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
                                                                 <span>Select if this annotation only applies to this case
                                                                     <br/>(need to select Gene or Variant Specific first)</span>
@@ -190,7 +190,7 @@ Vue.component('edit-annotations', {
                                                             <v-layout row wrap>
                                                             <v-flex :class="[isOutsideACase() ? 'xs6' : 'xs12', 'pl-0']">
                                                             <v-tooltip bottom>
-                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Gene Specific" v-model="annotation.isGeneSpecific"
+                                                                <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Gene Specific" v-model="annotation.isGeneSpecific"
                                                                     @change="selectBreadth(annotation, 'Gene Function')"></v-switch>
                                                                 <span v-if="!annotation.isVariantSpecific">Select either Gene or Variant Specific or both</span>
                                                                 <span v-if="annotation.isGeneSpecific && annotation.isVariantSpecific">Uncheck Variant Specific first</span>
@@ -210,7 +210,7 @@ Vue.component('edit-annotations', {
                                                             <v-layout row wrap>
                                                             <v-flex :class="[isOutsideACase() ? 'xs6' : 'xs12', 'pl-0']">
                                                             <v-tooltip bottom>
-                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || isOutsideACase()" label="Variant Specific" v-model="annotation.isVariantSpecific"
+                                                                <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion || isOutsideACase()" label="Variant Specific" v-model="annotation.isVariantSpecific"
                                                                     @change="selectBreadth(annotation, 'Variant Function')"></v-switch>
                                                                 <span>Select either Gene or Variant Specific or both</span>
                                                             </v-tooltip>
@@ -227,44 +227,44 @@ Vue.component('edit-annotations', {
                                                                 </v-tooltip>
                                                             </v-flex>
                                                             </v-layout>
-                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion || isOutsideACase()" 
+                                                            <v-switch hide-details class="no-height" :disabled="annotation.markedForDeletion || isOutsideACase()" 
                                                             label="Diagnosis Specific" v-model="annotation.isTumorSpecific"
                                                             ></v-switch>
                                                         </v-card-text>
                                                         <!-- CNV -->
-                                                        <v-card-text class="card__text_default" v-if="isCNV()  && !hideScope">
+                                                        <v-card-text class="pl-3 pr-3 pt-3 pb-3" v-if="isCNV()  && !hideScope">
                                                             <div class="subheading pb-2">
                                                                 The
                                                                 <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
                                                                 cases:
                                                             </div>
                                                             <v-tooltip bottom>
-                                                                <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
+                                                                <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
                                                                     v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
                                                                 <span>Select if this annotation applies to this case only</span>
                                                             </v-tooltip>
-                                                            <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Diagnosis Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                            <v-switch hide-details class="no-height" :disabled="annotation.markedForDeletion" label="Diagnosis Specific" v-model="annotation.isTumorSpecific"></v-switch>
                                                         </v-card-text>
                                                         <!-- Translocation -->
-                                                        <v-card-text class="card__text_default" v-if="isTranslocation()  && !hideScope">
+                                                        <v-card-text class="pl-3 pr-3 pt-3 pb-3" v-if="isTranslocation()  && !hideScope">
                                                         <div class="subheading pb-2">
                                                             The
                                                             <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
                                                             cases or genes:
                                                         </div>
                                                         <v-tooltip bottom>
-                                                            <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
+                                                            <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
                                                                 v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
                                                             <span>Select if this annotation applies to this case only</span>
                                                         </v-tooltip>
-                                                        <v-switch class="no-height" :disabled="annotation.markedForDeletion" label="Diagnosis Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                        <v-switch hide-details class="no-height" :disabled="annotation.markedForDeletion" label="Diagnosis Specific" v-model="annotation.isTumorSpecific"></v-switch>
                                                         <v-tooltip bottom>
-                                                            <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" :label="'Left Gene Specific: ' + annotation.leftGene"
+                                                            <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" :label="'Left Gene Specific: ' + annotation.leftGene"
                                                                 v-model="annotation.isLeftSpecific"></v-switch>
                                                             <span>Select if this annotation applies to the left gene</span>
                                                         </v-tooltip>
                                                         <v-tooltip bottom>
-                                                        <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" :label="'Right Gene Specific: ' + annotation.rightGene"
+                                                        <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" :label="'Right Gene Specific: ' + annotation.rightGene"
                                                             v-model="annotation.isRightSpecific"></v-switch>
                                                         <span>Select if this annotation applies to the right gene</span>
                                                     </v-tooltip>
@@ -274,89 +274,89 @@ Vue.component('edit-annotations', {
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
                                                         <!-- SNP  or fusion-->
-                                                        <v-card-text v-if="(isSNP() || isTranslocation()) && annotation.category != 'Clinical Trial'" class="card__text_default subheading">
+                                                        <v-card-text v-if="(isSNP() || isTranslocation()) && annotation.category != 'Clinical Trial'" class="pl-3 pr-3 pt-3 pb-3 subheading">
                                                             <v-layout row wrap>
-                                                                <v-flex xs5 class="mt-1">
+                                                                <v-flex xs5 class="mt-2">
                                                                     Annotation Category:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.category" :disabled="annotation.markedForDeletion" :items="annotationCategories" v-model="annotation.category"
+                                                                    <v-select hide-details  clearable :value="annotation.category" :disabled="annotation.markedForDeletion" :items="annotationCategories" v-model="annotation.category"
                                                                         label="Select a Category" single-line class="no-height no-height-select" max-height="400"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                             <v-layout row wrap>
-                                                                <v-flex xs5 class="mt-1">
+                                                                <v-flex xs5 class="mt-2">
                                                                     Classification:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.classification" :disabled="annotation.markedForDeletion" :items="annotationClassifications"
+                                                                    <v-select hide-details  clearable :value="annotation.classification" :disabled="annotation.markedForDeletion" :items="annotationClassifications"
                                                                         v-model="annotation.classification" label="Select a Classification"
                                                                         single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                             <v-layout row wrap>
-                                                                <v-flex xs5 class="mt-1">
+                                                                <v-flex xs5 class="mt-2">
                                                                     Tier:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.tier" :disabled="annotation.markedForDeletion" :items="annotationTiers" v-model="annotation.tier"
+                                                                    <v-select hide-details  clearable :value="annotation.tier" :disabled="annotation.markedForDeletion" :items="annotationTiers" v-model="annotation.tier"
                                                                         label="Select a Tier" single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                         </v-card-text>
                                                         <!-- CNV -->
-                                                        <v-card-text v-if="isCNV() && annotation.category != 'Clinical Trial'" class="card__text_default subheading">
+                                                        <v-card-text v-if="isCNV() && annotation.category != 'Clinical Trial'" class="pl-3 pr-3 pb-3 pt-3 subheading">
                                                             <v-layout row wrap>
-                                                                <v-flex xs5 class="mt-1">
+                                                                <v-flex xs5 class="mt-2">
                                                                     Annotation Category:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.category" :disabled="annotation.markedForDeletion" :items="annotationCategoriesCNV" v-model="annotation.category"
+                                                                    <v-select hide-details  clearable :value="annotation.category" :disabled="annotation.markedForDeletion" :items="annotationCategoriesCNV" v-model="annotation.category"
                                                                         label="Select a Category" single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                             <v-layout row wrap>
-                                                                <v-flex xs5 class="mt-1">
+                                                                <v-flex xs5 class="mt-2">
                                                                     Annotation Breadth:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable required :value="annotation.breadth" :error="!annotation.breadth" :disabled="annotation.markedForDeletion" :items="annotationBreadth"
+                                                                    <v-select hide-details  clearable required :value="annotation.breadth" :error="!annotation.breadth" :disabled="annotation.markedForDeletion" :items="annotationBreadth"
                                                                         v-model="annotation.breadth" label="Select Chrom vs Focal"
                                                                         single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                             <v-layout row wrap v-show="isCNV()" >
-                                                                <v-flex xs5 class="mt-1 pt-4">
+                                                                <v-flex xs5 class="mt-2 pt-4">
                                                                     Genes:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.cnvGenes" :disabled="annotation.markedForDeletion || annotation.breadth != 'Focal'" :items="cnvGeneItems" v-model="annotation.cnvGenes"
+                                                                    <v-select hide-details  clearable :value="annotation.cnvGenes" :disabled="annotation.markedForDeletion || annotation.breadth != 'Focal'" :items="cnvGeneItems" v-model="annotation.cnvGenes"
                                                                         label="Select Gene(s)" chips deletable-chips multiple
                                                                         single-line hide-details></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                             <v-layout row wrap>
-                                                                <v-flex xs5 class="mt-1">
+                                                                <v-flex xs5 class="mt-2">
                                                                     Classification:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.classification" :disabled="annotation.markedForDeletion" :items="annotationClassifications"
+                                                                    <v-select hide-details  clearable :value="annotation.classification" :disabled="annotation.markedForDeletion" :items="annotationClassifications"
                                                                         v-model="annotation.classification" label="Select a Classification"
                                                                         single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                             <v-layout row wrap>
-                                                                <v-flex xs5 class="mt-1">
+                                                                <v-flex xs5 class="mt-2">
                                                                     Tier:
                                                                 </v-flex>
                                                                 <v-flex xs7>
-                                                                    <v-select clearable :value="annotation.tier" :disabled="annotation.markedForDeletion" :items="annotationTiers" v-model="annotation.tier"
+                                                                    <v-select hide-details  clearable :value="annotation.tier" :disabled="annotation.markedForDeletion" :items="annotationTiers" v-model="annotation.tier"
                                                                         label="Select a Tier" single-line class="no-height no-height-select"></v-select>
                                                                 </v-flex>
                                                             </v-layout>
                                                         </v-card-text>
                                                         <!-- Clincal Trial-->
-                                                        <v-card-text v-if="annotation.category == 'Clinical Trial'" class="card__text_default subheading">
+                                                        <v-card-text v-if="annotation.category == 'Clinical Trial'" class="pl-3 pr-3 pt-3 pb-3 subheading">
                                                             <v-layout row wrap>
                                                                 <v-flex xs5 class="mt-1">
                                                                     NCT ID:
@@ -397,7 +397,7 @@ Vue.component('edit-annotations', {
                                                 </v-flex>
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                        <v-card-text class="card__text_default subheading">
+                                                        <v-card-text class="pl-3 pr-3 pt-3 pb-3 subheading">
                                                             <div v-show="noLevelSelected(annotation)" class="warning--text">You need to select an annotation's scope (Gene or Variant Specific
                                                                 or both).</div>
                                                             <div v-if="annotation.createdDate">
@@ -427,7 +427,7 @@ Vue.component('edit-annotations', {
                                                         </v-flex>
                                                         <v-flex xs3 class="mt-3 pt-2 pl-2">
                                                             <v-tooltip bottom>
-                                                            <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Drug Resistant" v-model="annotation.drugResistant"></v-switch>
+                                                            <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Drug Resistant" v-model="annotation.drugResistant"></v-switch>
                                                                 <span>Activate this button to make the variant resistant to the drugs listed.</span>
                                                             </v-tooltip>
                                                         </v-flex>
@@ -443,7 +443,7 @@ Vue.component('edit-annotations', {
                                                 </v-flex>
                                                 <v-flex xs12 sm12 md8 v-if="annotation.category == 'Clinical Trial'">
                                                 <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                    <v-card-text class="card__text_default subheading">
+                                                    <v-card-text class="pl-3 pr-3 pt-3 pb-3 subheading">
                                                         <v-layout row wrap>
                                                             <v-flex xs2 class="subheading">Title:</v-flex>
                                                             <v-flex xs10>
@@ -460,7 +460,7 @@ Vue.component('edit-annotations', {
                                                             <!--
                                                             <v-flex xs4>
                                                             <v-tooltip bottom>
-                                                            <v-switch slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Drug Resistant" v-model="annotation.drugResistant"></v-switch>
+                                                            <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Drug Resistant" v-model="annotation.drugResistant"></v-switch>
                                                                 <span>Activate this button to make the variant resistant to the drugs listed.</span>
                                                             </v-tooltip>
                                                         </v-flex>
@@ -471,7 +471,7 @@ Vue.component('edit-annotations', {
                                                 </v-flex>
                                                 <v-flex xs12 sm8 md4 v-if="annotation.category == 'Clinical Trial'">
                                                 <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                    <v-card-text class="card__text_default subheading">
+                                                    <v-card-text class="pl-3 pr-3 pt-3 pb-3 subheading">
                                                         <v-layout row wrap>
                                                             <v-flex class="subheading">Contact:</v-flex>
                                                             <v-flex xs10>
@@ -479,7 +479,7 @@ Vue.component('edit-annotations', {
                                                             </v-flex>
                                                         </v-layout>
                                                         <v-layout row wrap>
-                                                            <v-flex class="subheading mt-1">Location:</v-flex>
+                                                            <v-flex class="subheading mt-2">Location:</v-flex>
                                                             <v-flex xs10>
                                                             <v-text-field single-line class="no-top-text-field" :disabled="annotation.markedForDeletion" label="City, State" v-model="annotation.trial.location"
                                                             ></v-text-field>

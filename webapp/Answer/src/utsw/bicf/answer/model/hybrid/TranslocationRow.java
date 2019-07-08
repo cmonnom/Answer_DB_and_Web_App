@@ -3,11 +3,14 @@ package utsw.bicf.answer.model.hybrid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
 import utsw.bicf.answer.model.extmapping.AnnotatorSelection;
 import utsw.bicf.answer.model.extmapping.Translocation;
+import utsw.bicf.answer.model.extmapping.Variant;
 
 public class TranslocationRow {
 	
@@ -30,6 +33,8 @@ public class TranslocationRow {
 	String fusionType;
 	String annotations;
 	
+	List<String> ftlFilters; //list of filers
+	
 	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
 	
 	public TranslocationRow(Translocation translocation, Map<Integer, AnnotatorSelection> selectionPerAnnotator) {
@@ -49,18 +54,29 @@ public class TranslocationRow {
 		this.rightExons = translocation.getLastExon();
 		this.fusionType = translocation.getFusionType();
 		this.annotations = translocation.getAnnot();
+		this.ftlFilters = translocation.getFtlFilters();
 		if (this.annotations != null && this.annotations.length() > 1) {
 			//remove outer brackets, remove quotes, replace comma with new line
-			this.annotations = this.annotations.substring(1, this.annotations.length() - 2).replaceAll("\"", "").replaceAll(",", "<br/>");
+			this.annotations = this.annotations.replaceAll("\"", "").replaceAll(",", "<br/>");
 		}
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
-		if (utswAnnotated != null && utswAnnotated) {
+		if (ftlFilters != null) {
+			boolean failed = ftlFilters.contains(Variant.VALUE_FAIL);
+			if (failed) {
+				String failedReasons = ftlFilters.stream()
+						.filter(f -> !Variant.VALUE_FAIL.equals(f))
+						.map(f -> TypeUtils.splitCamelCaseString(f))
+						.collect(Collectors.joining(", "));
+				icons.add(new VuetifyIcon("cancel", "red", "Failed QC: " + failedReasons));
+			}
+			else {
+				icons.add(new VuetifyIcon("check_circle", "green", "Passed QC"));
+			}
+		}
+		if (utswAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 		}
-//		else {
-//			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
-//		}
 		iconFlags = new FlagValue(icons);
 		
 		this.selectionPerAnnotator = selectionPerAnnotator;
@@ -155,6 +171,11 @@ public class TranslocationRow {
 
 	public String getAnnotations() {
 		return annotations;
+	}
+
+
+	public List<String> getFtlFilters() {
+		return ftlFilters;
 	}
 
 

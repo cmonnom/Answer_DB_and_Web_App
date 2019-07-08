@@ -556,6 +556,12 @@ public class OpenCaseController {
 		cnFilter.setReverseNumber(true);
 		filters.add(cnFilter);
 		
+		//FTL Filters
+		DataTableFilter passQCFilterFTL = new DataTableFilter("Pass QC", "Fail QC", Variant.FIELD_FTL_FILTERS);
+		passQCFilterFTL.setType("ftl");
+		passQCFilterFTL.setBoolean(true);
+		filters.add(passQCFilterFTL);
+		
 
 		VariantFilterItems items = new VariantFilterItems();
 		items.setFilters(filters);
@@ -1215,8 +1221,9 @@ public class OpenCaseController {
 	
 	@RequestMapping(value = "/savePatientDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody
-	public String savePatientDetails(Model model, HttpSession session, @RequestParam String oncotreeDiagnosis,
+	public String savePatientDetails(Model model, HttpSession session, @RequestParam(defaultValue="") String oncotreeDiagnosis,
 			 @RequestParam String tumorTissue,
+			 @RequestParam String icd10,
 			@RequestParam String dedupAvgDepth,
 			@RequestParam String dedupPctOver100X,
 			@RequestParam String tumorPercent,
@@ -1238,6 +1245,7 @@ public class OpenCaseController {
 			if (caseSummary != null) {
 				caseSummary.setOncotreeDiagnosis(oncotreeDiagnosis);
 				caseSummary.setTumorTissueType(tumorTissue);
+				caseSummary.setIcd10(icd10);
 				if (dedupAvgDepth != "") {
 					try {
 						int dedupAvgDepthInt = Integer.parseInt(dedupAvgDepth);
@@ -1676,9 +1684,14 @@ public class OpenCaseController {
 	private List<Set<String>> parseSelectedIdData(JsonNode dataNodes, String[] nodes, User currentUser, ObjectMapper mapper, Integer caseOwnerId, Boolean currentUserOnly) throws JsonParseException, JsonMappingException, IOException {
 		Set<String> itemsSelectedIdsAll = new HashSet<String>();
 		Set<String> itemsSelectedIdsReviewer = new HashSet<String>();
+		Set<String> oidsFiltered = new HashSet<String>(); //keep track of filtered oids so that the unfiltered variants don't override the selected flag
 		for (String node : nodes) {
 			for (JsonNode row : dataNodes.get(node)) {
 				String oid = row.get("oid").textValue();
+				if (oidsFiltered.contains(oid)) {
+					continue; //skip this variant, it was already dealt with with the filtered data
+				}
+				oidsFiltered.add(oid);
 				boolean isSelected = row.get("isSelected").booleanValue();
 				if (isSelected) { //already selected or new user selection
 					itemsSelectedIdsAll.add(oid);

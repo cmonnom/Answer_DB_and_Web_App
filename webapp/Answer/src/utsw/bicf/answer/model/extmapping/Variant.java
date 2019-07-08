@@ -39,6 +39,8 @@ public class Variant {
 	public static final String FIELD_CNV_GENE_NAME = "cnvGeneName";
 	public static final String FIELD_CNV_COPY_NUMBER = "cnvCopyNumber";
 	
+	public static final String FIELD_FTL_FILTERS = "filters";
+	
 	//Some values like filter pass/fail need to be translated into boolean
 	//keep the values expected in the JSON string here
 	public static final String VALUE_PASS = "PASS";
@@ -84,7 +86,7 @@ public class Variant {
 	List<String> ids; //list of external database ids (dbsnp, cosmic, etc)
 	String alt;
 	String reference;
-	List<String> filters; //list of filers
+	List<String> filters; //list of filters
 	Boolean selected;
 	Integer numCasesSeen;
 	Float exacAlleleFrequency;

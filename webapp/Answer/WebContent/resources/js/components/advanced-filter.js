@@ -12,7 +12,7 @@ Vue.component('advanced-filter', {
     </v-card>
 </v-dialog>
     <!-- save filter set dialog -->
-    <v-dialog v-model="saveFilterSetDialogVisible" max-width="500px">
+    <v-dialog v-model="saveFilterSetDialogVisible" max-width="600px">
         <v-card class="soft-grey-background">
             <v-toolbar dense dark color="primary" class="elevation-0">
                 <v-toolbar-title>Save Current Filter Set
@@ -48,8 +48,7 @@ Vue.component('advanced-filter', {
                                     <span>Clear Filter</span>
                                 </v-tooltip>
                             </v-chip>
-                            <div v-if="filter.isCheckBox" v-for="(filter, index3) in filters" :key="index3">
-                            <v-chip v-if="isCheckBoxFilterUsed(filter.checkBoxes)" class="no-left-padding" label color="primary" text-color="white" disabled>
+                            <v-chip v-if="isCheckBoxFilterUsed(filter.checkBoxes) && filter.isCheckBox" v-for="(filter, index3) in filters" :key="index3" class="no-left-padding multi-line-chip" label color="primary" text-color="white" disabled>
                                 <span v-html="getFilterCheckBoxChip(filter)" class="pl-2"></span>
                                 <v-tooltip bottom>
                                 <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(filter)" :disabled="disableFiltering" class="mr-0">
@@ -58,7 +57,6 @@ Vue.component('advanced-filter', {
                                 <span>Clear Filter</span>
                             </v-tooltip>
                             </v-chip>
-                        </div>
 
                         </div>
                         <v-divider></v-divider>
@@ -338,7 +336,7 @@ Vue.component('advanced-filter', {
 
 
                     <!-- filter flags -->
-                    <v-layout row :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3']" v-if="getFiltersByType(flagFilters).length > 0">
+                    <v-layout row :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'mr-3']" v-if="getFiltersByType(flagFilters).length > 0">
                         <v-expansion-panel expand class="expandable-filter elevation-0"  :value="flagExpansion">
                             <v-expansion-panel-content>
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">Flags</div>
@@ -389,7 +387,7 @@ Vue.component('advanced-filter', {
                     </v-layout>
 
                     <!-- filter numbers -->
-                    <v-layout row v-for="filter in getFiltersByType(numberFilters)" :key="filter.fieldName" class="pl-3 pr-3">
+                    <v-layout row v-for="filter in getFiltersByType(numberFilters)" :key="filter.fieldName" class="pl-3 pr-3 mt-3">
                         <v-flex xs12 v-if="filter.isNumber" pt-0 pb-0>
                             <v-layout row>
                                 <v-flex xs4 class="subheading mt-4" v-html="filter.headerText + ':'"></v-flex>
@@ -418,7 +416,7 @@ Vue.component('advanced-filter', {
                         </v-flex>
                     </v-layout>
                     <!-- checkbox -->
-                    <v-layout row v-for="filter in getFiltersByType(checkboxFilters)" :key="filter.headerText" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3', 'mt-2']">
+                    <v-layout row v-for="filter in getFiltersByType(checkboxFilters)" :key="filter.headerText" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3', 'mt-2', 'mr-3']">
                         <v-expansion-panel expand v-if="filter.isCheckBox" class="expandable-filter elevation-0" :value="checkboxExpansion">
                             <v-expansion-panel-content>
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">
@@ -818,7 +816,7 @@ Vue.component('advanced-filter', {
             return filters.filter(f => f.type == this.type);
         },
         getFormattedType(type) {
-            if (type == "snp" || type == "cnv") {
+            if (type == "snp" || type == "cnv" || type == "ftl") {
                 return type.toUpperCase();
             }
             else if (type == "translocation") {

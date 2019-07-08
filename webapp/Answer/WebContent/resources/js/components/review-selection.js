@@ -162,46 +162,46 @@ Vue.component('review-selection', {
             </v-card-text>
         </v-card>
 
-        <v-tabs slot="extension" dark slider-color="warning" color="primary darken-1" fixed-tabs v-model="variantTabActive">
-            <v-tab href="#tab-selected-snp" :ripple="false">
+        <v-tabs slot="extension" dark slider-color="warning" color="primary darken-1" fixed-tabs v-model="variantTabActive" hide-slider>
+            <v-tab href="#tab-selected-snp" :ripple="false" active-class="v-tabs__item--active primary">
                Selected SNP / Indel
             </v-tab>
-            <v-tab href="#tab-selected-cnv" :ripple="false">
+            <v-tab href="#tab-selected-cnv" :ripple="false" active-class="v-tabs__item--active primary">
                Selected CNV
             </v-tab>
-            <v-tab href="#tab-selected-translocation" :ripple="false">
+            <v-tab href="#tab-selected-translocation" :ripple="false" active-class="v-tabs__item--active primary">
                Selected Fusion / Translocation
             </v-tab>
             <v-tabs-items v-model="variantTabActive">
             <!-- SNP / Indel table -->
         <v-tab-item value="tab-selected-snp" class="pt-1">
-            <data-table ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from Case Owner"
+            <data-table disable-sticky-header ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from Case Owner"
             initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>        
-            <data-table ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
+            <data-table disable-sticky-header ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
                 initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
         </v-tab-item>
         <!-- CNV table -->
         <v-tab-item value="tab-selected-cnv"  class="pt-1">
-            <data-table ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="CNVs from Case Owner" initial-sort="chrom"
+            <data-table disable-sticky-header ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="CNVs from Case Owner" initial-sort="chrom"
             no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
-            <data-table ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
+            <data-table disable-sticky-header ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
                 no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
                 @refresh-requested="handleRefresh()">
              </data-table>
         </v-tab-item>
         <!--  Fusion / Translocation table -->
         <v-tab-item value="tab-selected-translocation" class="pt-1">
-            <data-table ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from Case Owner"
+            <data-table disable-sticky-header ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from Case Owner"
             initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
-            <data-table ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
+            <data-table disable-sticky-header ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
                 initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>

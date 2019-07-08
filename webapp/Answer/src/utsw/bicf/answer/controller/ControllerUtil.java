@@ -53,6 +53,8 @@ public class ControllerUtil {
 		if (user != null) {
 			model.addAttribute("permissions", user.getIndividualPermission());
 			model.addAttribute("userFullName", user.getFullName());
+			model.addAttribute("lastName", user.getLast());
+			model.addAttribute("firstName", user.getFirst());
 			ObjectMapper mapper = new ObjectMapper();
 			model.addAttribute("prefs", mapper.writeValueAsString(user.getUserPref()));
 			model.addAttribute("showLastLogin", false); //this should allow to only display

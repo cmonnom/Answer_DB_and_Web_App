@@ -85,7 +85,10 @@ public class PatientInfo {
 		}
 		items.add(new CellItem("Ordered By", orderedBy));
 		items.add(new CellItem("Authorized By", authorizedBy));
-		items.add(new CellItem("ICD10", orderCase.getIcd10()));
+		CellItem icd10Item = new CellItem("ICD10", orderCase.getIcd10());
+		icd10Item.setType(CellItem.TYPE_TEXT_FIELD);
+		icd10Item.setField("icd10");
+		items.add(icd10Item);
 		
 		patientTables.add(table);
 		
