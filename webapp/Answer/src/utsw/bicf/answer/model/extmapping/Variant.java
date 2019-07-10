@@ -39,7 +39,7 @@ public class Variant {
 	public static final String FIELD_CNV_GENE_NAME = "cnvGeneName";
 	public static final String FIELD_CNV_COPY_NUMBER = "cnvCopyNumber";
 	
-	public static final String FIELD_FTL_FILTERS = "filters";
+	public static final String FIELD_FTL_FILTERS = "ftlFilters";
 	
 	//Some values like filter pass/fail need to be translated into boolean
 	//keep the values expected in the JSON string here

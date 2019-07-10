@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import utsw.bicf.answer.controller.serialization.HeaderAdditionalData;
+import utsw.bicf.answer.controller.serialization.Units;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.AnnotatorSelection;
@@ -82,24 +83,33 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 		headers.add(iconFlags);
 		
 		Header leftGene = new Header(new String[] {"Left", "Gene"}, "leftGene");
-		leftGene.setWidth("100px");
+//		leftGene.setWidth("100px");
 		leftGene.setIsSafe(true);
 		headers.add(leftGene);
 		
 		Header rightGene = new Header(new String[] {"Right", "Gene"}, "rightGene");
-		rightGene.setWidth("100px");
+//		rightGene.setWidth("100px");
 		rightGene.setIsSafe(true);
 		headers.add(rightGene);
 		
 		Header leftExon = new Header(new String[] {"Left", "Exons"}, "leftExons");
-		leftExon.setWidth("100px");
+//		leftExon.setWidth("100px");
 		leftExon.setIsSafe(true);
 		headers.add(leftExon);
 		
 		Header rightExon = new Header(new String[] {"Right", "Exons"}, "rightExons");
-		rightExon.setWidth("100px");
+//		rightExon.setWidth("100px");
 		rightExon.setIsSafe(true);
 		headers.add(rightExon);
+		
+		Header chrDistance = new Header(new String[] {"Chromosome", "Distance"}, "chrDistance");
+		chrDistance.setWidth("100px");
+		chrDistance.setIsSafe(true);
+		headers.add(chrDistance);
+		
+		Header chrType = new Header(new String[] {"Chromosome", "Type"}, "chrType");
+		chrType.setIsSafe(true);
+		headers.add(chrType);
 		
 		Header leftBreakpoint = new Header(new String[] {"Left", "Breakpoint"}, "leftBreakpoint");
 		leftBreakpoint.setWidth("100px");
@@ -127,7 +137,7 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 		headers.add(rnaReads);
 		
 		Header dnaReads = new Header(new String[] {"DNA", "Reads"}, "dnaReads");
-		dnaReads.setWidth("100px");
+//		dnaReads.setWidth("100px");
 		dnaReads.setIsSafe(true);
 		headers.add(dnaReads);
 		
@@ -140,6 +150,12 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 		annotations.setWidth("100px");
 		annotations.setIsSafe(true);
 		headers.add(annotations);
+		
+		Header percentSupportingReads = new Header(new String[] {"Alt", "Percent"}, "percentSupportingReads");
+		percentSupportingReads.setIsSafe(true);
+		percentSupportingReads.setIsHidden(true);
+		percentSupportingReads.setUnit(Units.PCT);
+		headers.add(percentSupportingReads);
 		
 	}
 	

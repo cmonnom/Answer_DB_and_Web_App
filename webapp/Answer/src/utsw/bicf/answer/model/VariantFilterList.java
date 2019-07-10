@@ -51,6 +51,8 @@ public class VariantFilterList {
 		filtersType.put(Variant.FIELD_CNV_COPY_NUMBER, "cnv");
 		filtersType.put(Variant.FIELD_CNV_GENE_NAME, "cnv");
 		
+		filtersType.put(Variant.FIELD_FTL_FILTERS, "ftl");
+		
 		filtersType.put(Variant.FIELD_CHROM, "snp");
 		filtersType.put(Variant.FIELD_GENE_NAME, "snp");
 		filtersType.put(Variant.FIELD_SOMATIC_STATUS, "snp");

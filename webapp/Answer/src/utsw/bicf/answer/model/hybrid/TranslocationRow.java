@@ -37,6 +37,10 @@ public class TranslocationRow {
 	
 	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
 	
+	String chrType;
+	String chrDistance;
+	String percentSupportingReads;
+	
 	public TranslocationRow(Translocation translocation, Map<Integer, AnnotatorSelection> selectionPerAnnotator) {
 		this.oid = translocation.getMongoDBId().getOid();
 		this.fusionName = translocation.getFusionName();
@@ -55,6 +59,9 @@ public class TranslocationRow {
 		this.fusionType = translocation.getFusionType();
 		this.annotations = translocation.getAnnot();
 		this.ftlFilters = translocation.getFtlFilters();
+		this.chrType = translocation.getChrType();
+		this.chrDistance = translocation.getChrDistance();
+		this.percentSupportingReads = translocation.getPercentSupportingReads();
 		if (this.annotations != null && this.annotations.length() > 1) {
 			//remove outer brackets, remove quotes, replace comma with new line
 			this.annotations = this.annotations.replaceAll("\"", "").replaceAll(",", "<br/>");
@@ -176,6 +183,21 @@ public class TranslocationRow {
 
 	public List<String> getFtlFilters() {
 		return ftlFilters;
+	}
+
+
+	public String getChrType() {
+		return chrType;
+	}
+
+
+	public String getChrDistance() {
+		return chrDistance;
+	}
+
+
+	public String getPercentSupportingReads() {
+		return percentSupportingReads;
 	}
 
 

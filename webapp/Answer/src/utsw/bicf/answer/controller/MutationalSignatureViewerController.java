@@ -82,7 +82,7 @@ public class MutationalSignatureViewerController {
 		}
 		else { //local storage
 			tumorVcf = caseSummary.getTumorVcf();
-			tumorVcf = "GM12878.vcf";//TODO delete this
+//			tumorVcf = "GM12878.vcf";//TODO delete this
 			String vcfLink = createVcfLink(fileProps, tumorVcf);
 			model.addAttribute("tumorVcf", vcfLink);
 		}

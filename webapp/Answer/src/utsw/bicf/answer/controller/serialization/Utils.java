@@ -45,8 +45,9 @@ public class Utils {
 					}
 					else { //change some boolean flags to string to query MongoDB
 						if (filter.getValueTrue() != null && filter.getValueTrue()) {
-							if (filter.getFieldName().equals(Variant.FIELD_FILTERS)) {
+							if (filter.getFieldName().equals(Variant.FIELD_FILTERS) || filter.getFieldName().equals(Variant.FIELD_FTL_FILTERS)) {
 								vf.getStringValues().add(new FilterStringValue(Variant.VALUE_PASS));
+								vf.setField(Variant.FIELD_FILTERS); //rename field for FTL since we had to make the distinction on the front-end but the back end has the same field name for snp and ftl
 //							vf.setValueTrue(true);
 							}
 							if (filter.getFieldName().equals(Variant.FIELD_ANNOTATIONS)

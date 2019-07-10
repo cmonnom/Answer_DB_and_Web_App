@@ -33,12 +33,16 @@ public class Translocation {
 	String lastExon;
 	String fusionType;
 	String annot;
+	@JsonProperty("filters")
 	List<String> ftlFilters; //list of filters
 	List<MongoDBId> annotationIdsForReporting;
 	
 	AbstractReference referenceTranslocation;
 	
 	String tier;
+	String chrType;
+	String chrDistance;
+	String percentSupportingReads;
 	
 	Map<Integer, Boolean> annotatorSelections = new HashMap<Integer, Boolean>();
 	Map<Integer, String> annotatorDates = new HashMap<Integer, String>();
@@ -241,6 +245,30 @@ public class Translocation {
 
 	public void setFtlFilters(List<String> ftlFilters) {
 		this.ftlFilters = ftlFilters;
+	}
+
+	public String getChrType() {
+		return chrType;
+	}
+
+	public void setChrType(String chrType) {
+		this.chrType = chrType;
+	}
+
+	public String getChrDistance() {
+		return chrDistance;
+	}
+
+	public void setChrDistance(String chrDistance) {
+		this.chrDistance = chrDistance;
+	}
+
+	public String getPercentSupportingReads() {
+		return percentSupportingReads;
+	}
+
+	public void setPercentSupportingReads(String percentSupportingReads) {
+		this.percentSupportingReads = percentSupportingReads;
 	}
 
 
