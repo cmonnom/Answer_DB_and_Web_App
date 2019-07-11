@@ -506,6 +506,7 @@ Vue.component('advanced-filter', {
                                 }
                             }
                         }
+                        filter.checkBoxes.sort((a,b) => {return this.checkBoxCompare(a,b)});
                     }
                     else if (filter.fieldName == 'filters') {
                         if (filter.checkBoxes.length > 0) {
@@ -517,9 +518,19 @@ Vue.component('advanced-filter', {
                                 filter.checkBoxes.push({ name: this.failedFilters[j], value: false});
                             }
                         }
+                        filter.checkBoxes.sort((a,b) => {return this.checkBoxCompare(a,b)});
                     }
                 }
             }
+        },
+        checkBoxCompare(a, b) {
+            if (a.name < b.name) {
+                return  -1;
+            }
+            if (a.name > b.name) {
+                return 1;
+            }
+            return 0;
         },
         toggleAllCheckBoxes(filter) {
             var selectAll = filter.checkBoxes[0].value;
