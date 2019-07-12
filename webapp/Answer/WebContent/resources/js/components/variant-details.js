@@ -133,7 +133,7 @@ Vue.component('variant-details', {
                                                 <v-btn-toggle v-model="genesSelected" multiple class="elevation-0" @change="handleGeneSelectionChanged">
                                                 <v-layout row wrap>
                                                     <v-flex pl-0 pr-0 pt-0 pb-0 v-for="chip in item.value" :key="chip.name">
-                                                        <v-btn flat class="selectable">
+                                                         <v-btn flat class="selectable-pointer">
                                                         {{ chip.name }}
                                                         </v-btn>
                                                     </v-flex>
@@ -151,6 +151,25 @@ Vue.component('variant-details', {
                                           <span v-if="item.type == 'array'" class="selectable text-xs-right grow blue-grey--text text--lighten-1">
                                             <span v-for="v in item.value" :key="v">{{ v }}<br/></span>
                                           </span>  
+                                          <v-menu v-if="item.type == 'menu-link'" offset-x>
+                                            <v-tooltip slot="activator" bottom>
+                                            <v-btn slot="activator" color="primary" icon flat class="mt-0 mb-0">
+                                            <v-icon>{{ item.linkIcon }}</v-icon>
+                                            </v-btn>
+                                            <span>Click to select a gene</span>
+                                            </v-tooltip>
+                                            <v-card>
+                                                <v-card-text>
+                                                <v-layout row wrap>
+                                                <v-flex pl-0 pr-0 pt-0 pb-0 v-for="chip in item.items" :key="chip.name">
+                                                     <v-btn flat class="pl-0 pr-0 ml-0 mb-0 mr-0 mt-0 selectable-pointer" @click="openLookupLink(chip.name)">
+                                                    {{ chip.name }}
+                                                    </v-btn>
+                                                </v-flex>
+                                                </v-layout>
+                                                </v-card-text>
+                                            </v-card>
+                                          </v-menu>
                                           <v-data-table v-if="item.type == 'callSet'" :items="item.value" hide-actions hide-headers >
                                               <template slot="items" slot-scope="props">
                                                   <td class="normal-word-break">
@@ -359,6 +378,9 @@ Vue.component('variant-details', {
         togglePanel() {
             this.$emit("toggle-panel", this);
         },
+        openLookupLink(geneName) {
+            this.$emit("open-lookup-link", geneName);
+        },
         handleIdLink(id) {
             var link = "";
             if (id.type == "various") {
@@ -405,7 +427,7 @@ Vue.component('variant-details', {
         //like Gene, Notation Nb.Cases Seen etc.
         //so that it behaves like a regular "label: string" combo
         isRegularVariantDetailsLabel(type) {
-            return !type || type == 'chip' || type == 'callSet' || type == 'flag' || type == 'link' || type == 'array';
+            return !type || type == 'chip' || type == 'callSet' || type == 'flag' || type == 'link' || type == 'array' || type == 'menu-link';
         },
         getTableFlexClass(name) {
             if (this.variantType == "cnv") {

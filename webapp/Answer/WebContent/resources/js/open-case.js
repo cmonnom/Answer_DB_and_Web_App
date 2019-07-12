@@ -58,18 +58,18 @@ const OpenCase = {
     </v-dialog>
 
    
-    <v-snackbar :timeout="snackBarTimeout" :bottom="true" :value="snackBarVisible">
+    <v-snackbar :timeout="snackBarTimeout" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
         <v-tooltip top>
         <a slot="activator" :href="snackBarLink"><v-icon dark>{{ snackBarLinkIcon }}</v-icon></a>
         <span>Open Link</span>
         </v-tooltip>
-        <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
+        <v-btn flat color="primary" @click="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
     <advanced-filter ref="advancedFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"
         :type="currentFilterType"
         @update-highlight="updateHighlights" @filter-action-success="showSnackBarMessage"></advanced-filter>
-    <v-dialog v-model="reviewDialogVisible" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
+    <v-dialog v-model="reviewDialogVisible" scrollable fullscreen hide-overlay persistent transition="dialog-bottom-transition">
         <review-selection ref="reviewDialog"
         @open-report="openReport"
         :report-ready="reportReady"
@@ -149,7 +149,7 @@ const OpenCase = {
         </edit-annotations>
 
     <!-- variant details dialog -->
-    <v-dialog v-model="variantDetailsVisible" ref="variantDetailsDialog" scrollable fullscreen hide-overlay transition="dialog-bottom-transition">
+    <v-dialog v-model="variantDetailsVisible" ref="variantDetailsDialog" scrollable fullscreen persistent hide-overlay transition="dialog-bottom-transition">
         <v-card class="soft-grey-background">
             <v-toolbar dense dark :color="colors.variantDetails">
                 <v-menu offset-y offset-x class="ml-0">
@@ -445,7 +445,8 @@ const OpenCase = {
                                     @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                                     @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel" @variant-details-changed=""
                                     :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails" :cnv-chrom-list="cnvChromList"
-                                    :loading-variant="loadingVariant">
+                                    :loading-variant="loadingVariant"
+                                    @open-lookup-link="openLookupLink">
                                 </variant-details>
 
                             </v-flex>
@@ -1309,7 +1310,7 @@ const OpenCase = {
             }
             this.splashProgress = 100; //should dismiss the splash dialog
             this.waitingForAjaxMessage = "There were some errors while saving";
-
+            this.waitingForAjaxActive = false; //stops spinning wheel if error
         },
         getAjaxData() {
             this.loadingVariantDetails = true;
@@ -1586,8 +1587,9 @@ const OpenCase = {
                             //     message: "The variant ID could not be found. The URL must be incorrect."
                             // }
                             // this.handleDialogs(response, null);
-                            var html = document.querySelector("html");
-                            html.style.overflow = ""
+                            this.toggleHTMLOverlay();
+                            // var html = document.querySelector("html");
+                            // html.style.overflow = ""
                         }
                     }, delay);
                 }
@@ -2146,9 +2148,9 @@ const OpenCase = {
                                 },
                                 {
                                     label: "Open Lookup Portal (CNV)",
-                                    type: "link",
+                                    type: "menu-link",
                                     linkIcon: "mdi-dna",
-                                    url: this.createOncoKBGeniePortalCNV(),
+                                    items: this.currentVariant.geneChips,
                                     value: "",
                                     tooltip: "Open Lookup Portal (CNV) in new tab"
                                 },
@@ -2953,6 +2955,10 @@ const OpenCase = {
             table.removeFromSelection(this.currentRow);
             this.handleSelectionChanged();
         },
+        createTempSelectionPerAnnotator() {
+            return"<span tabindex='-1' class='v-chip v-chip--disabled v-chip--label warning v-chip--small white--text'><span class='v-chip__content'><i aria-hidden='true' class='icon material-icons mdi mdi-checkbox-marked' style='font-size: 16px; vertical-align: bottom'></i><span class='pl-2'>latest</span></span></span>";
+        },
+
         updateSelectedVariantTable() {
             if (this.updatingSelectedVariantTable) {
                 return;
@@ -2964,12 +2970,50 @@ const OpenCase = {
                 if (response != null) {
                     this.currentSelectedVariantIds = response;
                     var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
-                    var selectedSNPVariantsReviewer = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIdsReviewer.indexOf(item.oid) > -1).filter(item => item.selectionPerAnnotator[this.caseOwnerId]);
+                    var selectedSNPVariantsReviewer = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIdsReviewer.indexOf(item.oid) > -1); //.filter(item => item.selectionPerAnnotator[this.caseOwnerId]);
                     var selectedCNVs = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIds.indexOf(item.oid) > -1);
-                    var selectedCNVsReviewer = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIdsReviewer.indexOf(item.oid) > -1).filter(item => item.selectionPerAnnotator[this.caseOwnerId]);
+                    var selectedCNVsReviewer = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIdsReviewer.indexOf(item.oid) > -1); //.filter(item => item.selectionPerAnnotator[this.caseOwnerId]);
                     var selectedTranslocations = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIds.indexOf(item.oid) > -1);
-                    var selectedFTLsReviewer = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIdsReviewer.indexOf(item.oid) > -1).filter(item => item.selectionPerAnnotator[this.caseOwnerId]);
+                    var selectedFTLsReviewer = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIdsReviewer.indexOf(item.oid) > -1); //.filter(item => item.selectionPerAnnotator[this.caseOwnerId]);
                     this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
+                    //populate the selected variants but not yet saved by creating fake selectionPerAnnotator objects
+                    for (var i= 0; i < selectedSNPVariants.length; i++) {
+                        if (!selectedSNPVariants[i].selectionPerAnnotator[this.userId]) {
+                            selectedSNPVariants[i]["dateSince" + this.userId] = this.createTempSelectionPerAnnotator();
+                        }
+                    }
+                    
+                    for (var i= 0; i < selectedSNPVariantsReviewer.length; i++) {
+                        if (!selectedSNPVariantsReviewer[i].selectionPerAnnotator[this.userId]) {
+                            selectedSNPVariantsReviewer[i].selectionPerAnnotator[this.userId] = this.createTempSelectionPerAnnotator();
+                        }
+                    }
+
+                    
+                    for (var i= 0; i < selectedCNVs.length; i++) {
+                        if (!selectedCNVs[i].selectionPerAnnotator[this.userId]) {
+                            selectedCNVs[i].selectionPerAnnotator[this.userId] = this.createTempSelectionPerAnnotator();
+                        }
+                    }
+                    
+                    for (var i= 0; i < selectedCNVsReviewer.length; i++) {
+                        if (!selectedCNVsReviewer[i].selectionPerAnnotator[this.userId]) {
+                            selectedCNVsReviewer[i].selectionPerAnnotator[this.userId] = this.createTempSelectionPerAnnotator();
+                        }
+                    }
+
+                    
+                    for (var i= 0; i < selectedTranslocations.length; i++) {
+                        if (!selectedTranslocations[i].selectionPerAnnotator[this.userId]) {
+                            selectedTranslocations[i].selectionPerAnnotator[this.userId] = this.createTempSelectionPerAnnotator();
+                        }
+                    }
+                    
+                    for (var i= 0; i < selectedFTLsReviewer.length; i++) {
+                        if (!selectedFTLsReviewer[i].selectionPerAnnotator[this.userId]) {
+                            selectedFTLsReviewer[i].selectionPerAnnotator[this.userId] = this.createTempSelectionPerAnnotator();
+                        }
+                    }
 
                     //add the current user column headerOrder but only to the all annotator table
                     snpAllHeaderOrder =   this.$refs.geneVariantDetails.headerOrder.slice();
@@ -3770,16 +3814,24 @@ const OpenCase = {
             return oncoKBGeniePortalUrl + "Variant/?gene_name=" + this.currentVariant.geneName
             + "&variant=" + this.currentVariant.notation + "&Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
         },
-        createOncoKBGeniePortalCNV() {
+        createOncoKBGeniePortalCNV(geneName) {
             var ampDel = "";
+            var gene = "";
             if (this.currentVariant.aberrationType == "amplification") {
                 ampDel = "Amplification";
             }
             else if (this.currentVariant.aberrationType == "homozygous loss" ) {
                 ampDel = "Deletion";
             }
-            return oncoKBGeniePortalUrl + "CNA/?gene_name=&Amp_Del="
+            if (geneName) {
+                gene = geneName;
+            }
+            return oncoKBGeniePortalUrl + "CNA/?gene_name=" + gene + "&Amp_Del="
             + ampDel + "&Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
+        },
+        openLookupLink(geneName) {
+            var link = this.createOncoKBGeniePortalCNV(geneName);
+            window.open(link, "_blank");
         },
         createOncoKBGeniePortalFusion() {
             return oncoKBGeniePortalUrl + "Fusion/?gene1=" + this.currentVariant.leftGene
@@ -4266,6 +4318,7 @@ const OpenCase = {
                 headerOrders[i].splice(0,0, "dateSince" + this.userId);
             }
         }
+
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",

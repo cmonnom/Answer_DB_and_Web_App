@@ -13,7 +13,7 @@ const Home = {
         <v-toolbar-title class="white--text">Assign case: {{ currentEpicOrderNumber }}</v-toolbar-title>
       </v-toolbar>
       <v-card-title>Pick who should work on this case:</v-card-title>
-      <v-card-text>
+      <v-card-text height="50%">
       <v-layout row wrap class="pl-2">
       <v-flex xs12 lg6 v-for="(user, index) in allUsers" :key="index">
       <v-switch :label="createUserLabel(user)" v-model="usersAssignedToCase[index]" @change="handleAssignToUserValid"></v-switch>
@@ -30,7 +30,7 @@ const Home = {
         </v-flex>
         <v-flex xs6 lg5 xl3 pt-3 pl-3>
             <v-tooltip bottom>
-            <v-switch slot="activator" label="Change Case Owner" v-model="currentCaseOwnerEnabled" color="error"></v-switch>
+            <v-switch slot="activator" label="Change Case Owner" v-model="currentCaseOwnerEnabled" color="error" hide-details class="no-margin-top-controls"></v-switch>
             <span>The case owner is responsible for deciding which variants go in the report.
             <br/>The new case owner's variant will be used to build new reports.
             <br/>Are you sure you want to change it? (this is not common)</span>
@@ -49,7 +49,7 @@ const Home = {
         <v-btn class="mr-2" color="error" @click="cancelAssign()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
-        <v-checkbox v-model="receiveACopyOfEmail" label="Also send a notification to my email" hide-details></v-checkbox>
+        <v-checkbox v-model="receiveACopyOfEmail" label="Also send a notification to my email" hide-details class="no-margin-top-controls"></v-checkbox>
         </v-card-actions>
   
 
@@ -87,21 +87,39 @@ const Home = {
 
   
   <v-toolbar dense dark color="primary" fixed app>
-    <v-icon color="amber accent-2">mdi-home</v-icon>
-  </v-tooltip>
-    <v-toolbar-title class="white--text" v-text="getWelcomeMessage()">
+  <v-menu offset-y offset-x class="ml-0">
+  <v-btn slot="activator" flat icon dark>
+  <v-icon color="amber accent-2">mdi-home</v-icon>
+          </v-btn>
+          <v-list>
+              <v-list-tile avatar @click="saveTabPreference()">
+                  <v-list-tile-avatar>
+                      <v-icon>bookmark</v-icon>
+                  </v-list-tile-avatar>
+                  <v-list-tile-content>
+                      <v-list-tile-title>Bookmark Current Tab</v-list-tile-title>
+                  </v-list-tile-content>
+              </v-list-tile>
+          </v-list>
+</v-menu>
+    <v-toolbar-title class="white--text ml-0" v-text="getWelcomeMessage()">
     </v-toolbar-title>
     <v-spacer></v-spacer>
-
+    <v-tooltip bottom>
+    <v-btn flat icon @click="saveTabPreference()" slot="activator" color="white">
+        <v-icon>bookmark</v-icon>
+    </v-btn>
+    <span>Bookmark Current Tab</span>
+</v-tooltip>
    
 
   </v-toolbar>
   <v-container grid-list-md fluid class="pl-0 pr-0 pt-0">
 
     <v-tabs dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="activateTab" hide-slider>
-        <v-tab href="#tab-userCases" :ripple="false" active-class="v-tabs__item--active primary">My Cases</v-tab>
-        <v-tab href="#tab-allCases" :ripple="false" active-class="v-tabs__item--active primary">All Cases</v-tab>
-        <v-tab href="#tab-finalizedCases" :ripple="false" active-class="v-tabs__item--active primary">Ready for Epic</v-tab>
+        <v-tab href="#tab-userCases" :ripple="false" active-class="v-tabs__item--active primary">My Cases<v-icon class="pl-2" v-if="isDefaultTab('tab-userCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
+        <v-tab href="#tab-allCases" :ripple="false" active-class="v-tabs__item--active primary">All Cases<v-icon class="pl-2" v-if="isDefaultTab('tab-allCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
+        <v-tab href="#tab-finalizedCases" :ripple="false" active-class="v-tabs__item--active primary">Ready for Epic<v-icon class="pl-2" v-if="isDefaultTab('tab-finalizedCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
 
         <v-tabs-items>
             <v-tab-item value="tab-userCases"  class="pt-1">
@@ -157,6 +175,7 @@ const Home = {
 </div>`,
     data() {
         return {
+            forceRenderKey: 0,
             activateTab: null,
             assignDialogVisible: false,
             assignGroupDialogVisible: false,
@@ -425,6 +444,27 @@ const Home = {
                 this.handleAxiosError(error);
             });
         },
+        saveTabPreference() {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/saveTabPreference",
+                params: {
+                    tabid: this.activateTab
+                },
+                data: {
+                }
+            }).then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    defaultHomeTab = this.activateTab;
+                    this.forceRenderKey++;
+                }
+                else {
+                    //something is wrong. The user has been disconnected
+                }
+            }).catch(error => {
+                this.handleAxiosError(error);
+            });
+        },
         handleRefresh() {
             this.getWorklists();
         },
@@ -445,12 +485,21 @@ const Home = {
                 greetings = "Good afternoon ";
             }
             return greetings + callingName;
+        },
+        openDefaultTab() {
+            if (defaultHomeTab) {
+                this.activateTab = defaultHomeTab;
+            }
+        },
+        isDefaultTab(tabTitle) {
+            return tabTitle == defaultHomeTab;
         }
     },
     mounted: function () {
         this.getAllUsers();
         this.getAllGroups();
         this.getWorklists();
+        this.openDefaultTab();
     },
     destroyed: function () {
         bus.$off('assignToUser');

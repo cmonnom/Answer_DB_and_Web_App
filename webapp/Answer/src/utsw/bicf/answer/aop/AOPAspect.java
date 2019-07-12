@@ -114,18 +114,26 @@ public class AOPAspect {
 		for (int i = 0; i < args.length; i++) {
 			if (args[i] instanceof String) {
 //				boolean currentArgIsValid = true;
-				long startTime = System.currentTimeMillis();
+//				long startTime = System.currentTimeMillis();
 				String argString = (String) args[i];
 				if (argString.length() > 1000) { //just do detection. Faster. Block input if found
 					Matcher m = SHORT_PATTERN.matcher(argString);
 					boolean found = m.find();
 					isValid &= !found;
+					if (!isValid) {
+						System.out.println("The following string is invalid: <START>" + argString + "<END>");
+						System.out.println("A blocked character was found among: <START>" + SHORT_PATTERN + "<END>");
+					}
 				}
 				else { //if string is not too long, do a replaceAll with a long pattern
 					String removedXSS = argString.replaceAll(LONG_PATTERN.pattern(), "");
 					isValid &= argString.equals(removedXSS) ;
+					if (!isValid) {
+						System.out.println("The following string is invalid: <START>" + argString + "<END>");
+						System.out.println("It was compared to: <START>" + removedXSS + "<END>");
+					}
 				}
-				long endTime = System.currentTimeMillis();
+//				long endTime = System.currentTimeMillis();
 //				System.out.println("Regex time: " + (endTime - startTime) / 1000 );
 				args[i] = HTML_POLICY.sanitize(argString);
 //				String sanitized = policy.sanitize(argString).replaceAll("&#64;", "@"); // emails are ok

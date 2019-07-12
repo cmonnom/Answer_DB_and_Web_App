@@ -41,10 +41,18 @@ public class PatientInfo {
 		items.add(new CellItem("MRN", orderCase.getMedicalRecordNumber()));
 		String dab = orderCase.getDateOfBirth();
 		if (dab != null) {
-			LocalDate dabDate = LocalDate.parse(dab, TypeUtils.monthFormatter);
-			LocalDate now = LocalDate.now();
-			int years = Period.between(dabDate, now).getYears();
-			dab = dab + " (" + years + " years old)";
+			LocalDate dabDate = null;
+			if (dab.contains("-")) {
+				dabDate = LocalDate.parse(dab, TypeUtils.monthFormatter);
+			}
+			if (dab.contains("/")) {
+				dabDate = LocalDate.parse(dab, TypeUtils.localDateFormatter);
+			}
+			if (dabDate != null) { //only calculate the age if the date if formatted properly
+				LocalDate now = LocalDate.now();
+				int years = Period.between(dabDate, now).getYears();
+				dab = dab + " (" + years + " years old)";
+			}
 		}
 		items.add(new CellItem("DOB", dab));
 		items.add(new CellItem("Sex", orderCase.getGender()));

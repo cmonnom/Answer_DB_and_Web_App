@@ -56,7 +56,7 @@ public class ControllerUtil {
 			model.addAttribute("lastName", user.getLast());
 			model.addAttribute("firstName", user.getFirst());
 			ObjectMapper mapper = new ObjectMapper();
-			model.addAttribute("prefs", mapper.writeValueAsString(user.getUserPref()));
+			model.addAttribute("prefs", user.getUserPref());
 			model.addAttribute("showLastLogin", false); //this should allow to only display
 			if (loginDAO != null) { //null for error pages
 				LoginAttempt loginAttempt = loginDAO.getLoginAttemptForUser(user);

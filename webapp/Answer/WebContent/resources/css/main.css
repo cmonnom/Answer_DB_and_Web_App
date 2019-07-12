@@ -65,6 +65,14 @@ a {
     cursor: text;
 }
 
+.selectable-pointer {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    cursor: pointer;
+}
+
 .toolbar-fixed-bottom {
     bottom: 0;
     top:auto;
@@ -492,4 +500,8 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
 
 .multi-line-chip .v-chip__content {
     display: contents;
+}
+
+.no-margin-top-controls {
+    margin-top: 0px;
 }

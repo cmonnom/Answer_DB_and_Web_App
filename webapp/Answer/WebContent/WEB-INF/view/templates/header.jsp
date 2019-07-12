@@ -30,6 +30,8 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 
         var authMessage = "${authMessage}";
 
+        var defaultHomeTab = "${prefs.homeTab}";
+
 </script>
 
 <link rel="stylesheet"  href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700">
