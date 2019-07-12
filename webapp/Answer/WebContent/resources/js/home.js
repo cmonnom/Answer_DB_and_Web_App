@@ -117,9 +117,9 @@ const Home = {
   <v-container grid-list-md fluid class="pl-0 pr-0 pt-0">
 
     <v-tabs dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="activateTab" hide-slider>
-        <v-tab href="#tab-userCases" :ripple="false" active-class="v-tabs__item--active primary">My Cases<v-icon class="pl-2" v-show="isDefaultTab('tab-userCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
-        <v-tab href="#tab-allCases" :ripple="false" active-class="v-tabs__item--active primary">All Cases<v-icon class="pl-2" v-show="isDefaultTab('tab-allCases')" :key="forceRenderKey1">bookmark</v-icon></v-tab>
-        <v-tab href="#tab-finalizedCases" :ripple="false" active-class="v-tabs__item--active primary">Ready for Epic<v-icon class="pl-2" v-show="isDefaultTab('tab-finalizedCases')" :key="forceRenderKey2">bookmark</v-icon></v-tab>
+        <v-tab href="#tab-userCases" :ripple="false" active-class="v-tabs__item--active primary">My Cases<v-icon class="pl-2" v-if="isDefaultTab('tab-userCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
+        <v-tab href="#tab-allCases" :ripple="false" active-class="v-tabs__item--active primary">All Cases<v-icon class="pl-2" v-if="isDefaultTab('tab-allCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
+        <v-tab href="#tab-finalizedCases" :ripple="false" active-class="v-tabs__item--active primary">Ready for Epic<v-icon class="pl-2" v-if="isDefaultTab('tab-finalizedCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
 
         <v-tabs-items>
             <v-tab-item value="tab-userCases"  class="pt-1">
@@ -176,8 +176,6 @@ const Home = {
     data() {
         return {
             forceRenderKey: 0,
-            forceRenderKey1: 10,
-            forceRenderKey2: 20,
             activateTab: null,
             assignDialogVisible: false,
             assignGroupDialogVisible: false,
@@ -459,8 +457,6 @@ const Home = {
                 if (response.data.isAllowed && response.data.success) {
                     defaultHomeTab = this.activateTab;
                     this.forceRenderKey++;
-                    this.forceRenderKey1++;
-                    this.forceRenderKey2++;
                 }
                 else {
                     //something is wrong. The user has been disconnected
