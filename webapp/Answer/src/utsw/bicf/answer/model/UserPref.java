@@ -32,6 +32,9 @@ public class UserPref {
 	@Column(name="show_goodies")
 	Boolean showGoodies;
 	
+	@Column(name="home_tab")
+	String homeTab;
+	
 	public Integer getUserPrefId() {
 		return userPrefId;
 	}
@@ -62,6 +65,14 @@ public class UserPref {
 
 	public void setSuccess(boolean success) {
 		this.success = success;
+	}
+
+	public String getHomeTab() {
+		return homeTab;
+	}
+
+	public void setHomeTab(String homeTab) {
+		this.homeTab = homeTab;
 	}
 	
 	

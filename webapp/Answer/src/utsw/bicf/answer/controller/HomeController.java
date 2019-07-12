@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -34,6 +35,7 @@ import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.UserPref;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
@@ -61,6 +63,7 @@ public class HomeController {
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getAllUsersToAssign", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".createPDFReport", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".toggleSentToEpicStatusForCase", IndividualPermission.CAN_REVIEW);
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".saveTabPreference", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired
@@ -439,4 +442,26 @@ public class HomeController {
 		return response.createObjectJSON();
 	}
 	
+	@RequestMapping(value = "/saveTabPreference", produces= "application/json; charset=utf-8", method=RequestMethod.POST)
+	@ResponseBody
+	public String saveTabPreference(Model model, HttpSession session, @RequestParam String tabid) throws Exception {
+		AjaxResponse response = new AjaxResponse();
+		User user = ControllerUtil.getSessionUser(session);
+		response.setSuccess(false);
+		response.setIsAllowed(true);
+		UserPref userPref = user.getUserPref();
+		if (userPref == null) {
+			userPref = new UserPref();
+			modelDAO.saveObject(userPref);
+			user.setUserPref(userPref);
+			modelDAO.saveObject(user);
+		}
+		userPref.setHomeTab(tabid);
+		modelDAO.saveObject(userPref);
+		userPref.setIsAllowed(true);
+		userPref.setSuccess(true);
+		response.setSuccess(true);
+		response.setIsAllowed(true);
+		return response.createObjectJSON();
+	}
 }

@@ -158,14 +158,23 @@ public class TypeUtils {
 			}
 			return (since.toDays() / 30) + ago;
 		}
+		else if (since.toDays() > 7) {
+			return (since.toDays() / 7) + " weeks ago";
+		}
 		else if (since.toDays() > 1) {
 			return since.toDays() + " days ago";
 		}
 		else if (since.toHours() > 1) {
 			return since.toHours() + " hours ago";
 		}
+		else if (since.toMinutes() > 30) {
+			return "~ 1 hour ago";
+		}
 		else if (since.toMinutes() > 1) {
 			return since.toMinutes() + " minutes ago";
+		}
+		else if (since.toMillis() > 30000) {
+			return "~1 minute ago";
 		}
 		else if (since.toMillis() > 2000) {
 			return since.toMillis() / 1000 + " seconds ago";

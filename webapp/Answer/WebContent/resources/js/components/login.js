@@ -7,7 +7,7 @@ Vue.component('login', {
         dataUrlRoot: { default: webAppRoot, type: String }
     },
     template: `<div>
-            <v-container>
+            <v-container pl-3 pr-3 pt-3 pb-3>
                 <v-form :value="formValid" @submit.prevent ref="form" lazy @submit="submitForm">
                         <div class="text-xs-center white--text">
                             {{ message }}
