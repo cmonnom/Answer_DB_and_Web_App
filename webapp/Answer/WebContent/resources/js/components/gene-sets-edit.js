@@ -31,9 +31,9 @@ Vue.component('gene-sets-edit', {
                   <div class="title">Gene Set Details:</div>
                 </v-card-title>
                 <v-card-text>
-                  <v-text-field ref="editGroupName" label="Name"></v-text-field>
-                  <v-text-field ref="editDescription" label="Description" multi-line></v-text-field>
-                  <v-text-field ref="editReference" label="Link to More Info"></v-text-field>
+                  <v-text-field v-model="editGroupName" label="Name"></v-text-field>
+                  <v-textarea v-model="editDescription" label="Description"></v-textarea>
+                  <v-text-field v-model="editReference" label="Link to More Info"></v-text-field>
                 </v-card-text>
               </v-card>
             </v-flex>
@@ -43,9 +43,9 @@ Vue.component('gene-sets-edit', {
                   <div class="title">Genes:</div>
                 </v-card-title>
                 <v-card-text>
-                <v-text-field :textarea="true" v-model="editGenes" label="Add genes here (separated by space or comma)">
+                <v-textarea v-model="editGenes" label="Add genes here (separated by space or comma)">
 
-                </v-text-field>
+                </v-textarea>
                 </v-card-text>
               </v-card>
             </v-flex>
@@ -120,8 +120,10 @@ Vue.component('gene-sets-edit', {
       editGenes: "",
       saveGeneSetDisabled: false,
       deleteGeneSetDisabled: false,
-      deleteGeneSetDialogVisible: false
-
+      deleteGeneSetDialogVisible: false,
+      editGroupName: "",
+      editDescription: "",
+      editReference: ""
     }
   },
   methods: {
@@ -144,9 +146,9 @@ Vue.component('gene-sets-edit', {
     createGeneSet() {
       this.editAdd = "Add";
       this.currentEditGeneSetReportGroupId = null;
-      this.$refs.editGroupName.inputValue = "";
-      this.$refs.editDescription.inputValue = "";
-      this.$refs.editReference.inputValue = "";
+      this.editGroupName = "";
+      this.editDescription = "";
+      this.editReference = "";
       this.editGenes = "";
       this.editGeneSetDialogVisible = true;
     },
@@ -155,9 +157,9 @@ Vue.component('gene-sets-edit', {
       var reportGroup = this.$refs.geneSetTable.items.filter(item => item.reportGroupId == reportGroupId)[0];
       this.currentEditGeneSetReportGroupId = reportGroup.reportGroupId;
       this.currentEditGeneSetGroupName = reportGroup.groupName;
-      this.$refs.editGroupName.inputValue = reportGroup.groupName;
-      this.$refs.editDescription.inputValue = reportGroup.description;
-      this.$refs.editReference.inputValue = reportGroup.referenceUrl;
+      this.editGroupName = reportGroup.groupName;
+      this.editDescription = reportGroup.description;
+      this.editReference = reportGroup.referenceUrl;
       this.editGenes = reportGroup.genes;
       this.editGeneSetDialogVisible = true;
     },
@@ -204,9 +206,9 @@ Vue.component('gene-sets-edit', {
           reportGroupId: this.currentEditGeneSetReportGroupId,
         },
         data: {
-          groupName: this.$refs.editGroupName.inputValue,
-          description: this.$refs.editDescription.inputValue,
-          referenceUrl: this.$refs.editReference.inputValue,
+          groupName: this.editGroupName,
+          description: this.editDescription,
+          referenceUrl: this.editReference,
           genes: this.editGenes
         }
       })

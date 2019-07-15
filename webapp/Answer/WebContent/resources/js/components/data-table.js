@@ -438,7 +438,7 @@ Vue.component('data-table', {
 
           <!-- action button in after  cell content  -->
           <v-tooltip bottom v-if="header.itemAction && !props.item.readonly">
-            <v-btn :ripple="false" slot="activator" flat small icon @click="header['itemAction'](props.item)" class="mt-0 mb-0 ml-0 mr-0">
+            <v-btn :ripple="false" slot="activator" flat small icon @click="header['itemAction'](props.item)" class="mt-0 mb-0 ml-0 mr-0" :loading="props.item.loading">
               <v-icon v-if="!header.actionIcon">keyboard_arrow_right</v-icon>
               <v-icon v-if="header.actionIcon"> {{ header.actionIcon }}</v-icon>
             </v-btn>

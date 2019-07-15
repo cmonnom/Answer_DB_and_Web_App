@@ -31,10 +31,10 @@ const Admin = {
                   <div class="title">Identification</div>
                 </v-card-title>
                 <v-card-text>
-                  <v-text-field ref="editUsername" label="User ID"></v-text-field>
-                  <v-text-field ref="editFirstName" label="First Name"></v-text-field>
-                  <v-text-field ref="editLastName" label="Last Name"></v-text-field>
-                  <v-text-field ref="editEmail" label="Email"></v-text-field>
+                  <v-text-field v-model="editUsername" label="User ID"></v-text-field>
+                  <v-text-field v-model="editFirstName" label="First Name"></v-text-field>
+                  <v-text-field v-model="editLastName" label="Last Name"></v-text-field>
+                  <v-text-field v-model="editEmail" label="Email"></v-text-field>
                 </v-card-text>
               </v-card>
             </v-flex>
@@ -103,8 +103,8 @@ const Admin = {
                   <div class="title">Name:</div>
                 </v-card-title>
                 <v-card-text>
-                  <v-text-field ref="editGroupName" label="Group Name"></v-text-field>
-                  <v-text-field ref="editDescription" label="Description"></v-text-field>
+                  <v-text-field v-model="editGroupName" label="Group Name"></v-text-field>
+                  <v-text-field v-model="editDescription" label="Description"></v-text-field>
                   <v-select clearable chips :value="currentEditUsersInGroup" :items="usersSelectItems" v-model="currentEditUsersInGroup" item-text="name" item-value="value"
                 label="Select Users" multiple ></v-select>
                 </v-card-text>
@@ -205,6 +205,13 @@ const Admin = {
       usersSelectItems: [],
       currentEditUsersInGroup: [],
       currentEditGroupsInUser: [],
+      editUsername: "",
+      editFirstName: "",
+      editLastName: "",
+      editEmail: "",
+      currentEditUserFullName: "",
+      editGroupName: "",
+      editDescription: "",
     }
   },
   methods: {
@@ -212,10 +219,10 @@ const Admin = {
       this.editAdd = "Edit";
       var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
       this.currentEditUserId = user.userId;
-      this.$refs.editFirstName.inputValue = user.firstName;
-      this.$refs.editLastName.inputValue = user.lastName;
-      this.$refs.editUsername.inputValue = user.userName;
-      this.$refs.editEmail.inputValue = user.email;
+      this.editFirstName = user.firstName;
+      this.editLastName = user.lastName;
+      this.editUsername = user.userName;
+      this.editEmail = user.email;
       this.currentEditUserFullName = user.fullName;
       this.editView = user.viewValue.pass;
       this.editAnnotate = user.annotateValue.pass;
@@ -232,8 +239,8 @@ const Admin = {
       this.editAdd = "Edit";
       var group = this.$refs.groupTable.items.filter(item => item.groupId == groupId)[0];
       this.currentEditGroupId = group.groupId;
-      this.$refs.editGroupName.inputValue = group.name;
-      this.$refs.editDescription.inputValue = group.description;
+      this.editGroupName = group.name;
+      this.editDescription = group.description;
       this.currentEditUsersInGroup = group.userIds;
       this.editGroupDialogVisible = true;
     },
@@ -248,10 +255,10 @@ const Admin = {
       this.editAdmin = false;
       var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
       this.currentEditUserId = userId;
-      this.$refs.editFirstName.inputValue = user.firstName;
-      this.$refs.editLastName.inputValue = user.lastName;
-      this.$refs.editUsername.inputValue = user.userName;
-      this.$refs.editEmail.inputValue = user.email;
+      this.editFirstName = user.firstName;
+      this.editLastName = user.lastName;
+      this.editUsername = user.userName;
+      this.editEmail = user.email;
       this.saveEdits();
     },
     saveEdits() {
@@ -265,10 +272,10 @@ const Admin = {
           groups: this.currentEditGroupsInUser.join(",")
         },
         data: {
-          username: this.$refs.editUsername.inputValue,
-          first: this.$refs.editFirstName.inputValue,
-          last: this.$refs.editLastName.inputValue,
-          email: this.$refs.editEmail.inputValue,
+          username: this.editUsername,
+          first: this.editFirstName,
+          last: this.editLastName,
+          email: this.editEmail,
           individualPermission: {
             canView: this.editView,
             canSelect: this.editSelect,
@@ -308,8 +315,8 @@ const Admin = {
         url: "./saveGroup", 
         params: {
           groupId: this.currentEditGroupId,
-          name: this.$refs.editGroupName.inputValue,
-          description: this.$refs.editDescription.inputValue,
+          name: this.editGroupName,
+          description: this.editDescription,
           users: this.currentEditUsersInGroup.join(",")
         }
       })
@@ -335,10 +342,10 @@ const Admin = {
     addUser() {
       this.editAdd = "Add";
       this.currentEditUserId = null;
-      this.$refs.editFirstName.inputValue = "";
-      this.$refs.editLastName.inputValue = "";
-      this.$refs.editUsername.inputValue = "";
-      this.$refs.editEmail.inputValue = "";
+      this.editFirstName = "";
+      this.editLastName = "";
+      this.editUsername = "";
+      this.editEmail = "";
       this.currentEditUserFullName = "";
       
       this.editView = false;
@@ -353,8 +360,8 @@ const Admin = {
     addGroup() {
       this.editAdd = "Add";
       this.currentEditGroupId = null;
-      this.$refs.editGroupName.inputValue = "";
-      this.$refs.editDescription.inputValue = "";
+      this.editGroupName = "";
+      this.editDescription = "";
       this.currentEditUsersInGroup = [];
       this.editGroupDialogVisible = true;
 

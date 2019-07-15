@@ -1262,6 +1262,7 @@ const OpenCase = {
             loadingColor: "blue-grey lighten-4",
             userId: null,
             caseOwnerId: null,
+            currentItem: null
         }
     }, methods: {
         
@@ -1812,6 +1813,7 @@ const OpenCase = {
 
                     }
                 }).then(response => {
+                    this.variantDetailsEndedLoading();
                     if (response.data.isAllowed) {
                         this.variantDetailsUnSaved = false;
                         this.currentVariant = response.data.variantDetails;
@@ -2045,6 +2047,7 @@ const OpenCase = {
                 }).catch(error => {
                     this.loadingVariantDetails = false;
                     this.loadingVariant = false;
+                    this.variantDetailsEndedLoading();
                     this.handleAxiosError(error);
                 });
         },
@@ -2078,6 +2081,7 @@ const OpenCase = {
                         caseId: this.$route.params.id
                     }
                 }).then(response => {
+                    this.variantDetailsEndedLoading();
                     if (response.data.isAllowed) {
                         this.variantDetailsUnSaved = false;
                         this.currentVariant = response.data;
@@ -2189,6 +2193,7 @@ const OpenCase = {
                 }).catch(error => {
                     this.loadingVariantDetails = false;
                     this.loadingVariant = false;
+                    this.variantDetailsEndedLoading();
                     this.handleAxiosError(error);
                 });
         },
@@ -2265,6 +2270,11 @@ const OpenCase = {
             }
             return builds;
         },
+        variantDetailsEndedLoading() {
+            if (this.currentItem) {
+                this.currentItem.loading = false;
+            }
+        },
         getTranslocationDetails(item, resetSaveFlags) {
             this.currentVariantType = "translocation";
             this.currentVariantFlags = item.iconFlags.iconFlags;
@@ -2291,6 +2301,7 @@ const OpenCase = {
                         caseId: this.$route.params.id
                     }
                 }).then(response => {
+                    this.variantDetailsEndedLoading();
                     if (response.data.isAllowed) {
                         this.variantDetailsUnSaved = false;
                         this.currentVariant = response.data;
@@ -2392,6 +2403,7 @@ const OpenCase = {
                 }).catch(error => {
                     this.loadingVariantDetails = false;
                     this.loadingVariant = false;
+                    this.variantDetailsEndedLoading();
                     this.handleAxiosError(error);
                 });
         },
@@ -2472,22 +2484,35 @@ const OpenCase = {
                 return 'xs6';
             }
         },
+        isVariantOpening() {
+            return (this.currentItem && this.currentItem.loading);
+        },
         openVariant(item) {
-            // this.getVariantDetails(item);
+            if (this.isVariantOpening()) {
+                return;
+            }
             this.urlQuery.variantType = "snp";
             this.urlQuery.variantId = item.oid;
+            item.loading = true;
+            this.currentItem = item;
             this.updateRoute();
         },
         openCNV(item) {
-            // this.getCNVDetails(item);
+            if (this.isVariantOpening()) {
+                return;
+            }
             this.urlQuery.variantType = "cnv";
             this.urlQuery.variantId = item.oid;
+            this.currentItem = item;
             this.updateRoute();
         },
         openTranslocation(item) {
-            // this.getTranslocationDetails(item);
+            if (this.isVariantOpening()) {
+                return;
+            }
             this.urlQuery.variantType = "translocation";
             this.urlQuery.variantId = item.oid;
+            this.currentItem = item;
             this.updateRoute();
         },
         openLink(link) {
