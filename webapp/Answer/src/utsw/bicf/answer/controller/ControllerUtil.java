@@ -83,6 +83,7 @@ public class ControllerUtil {
 	public static String initializeModelLogin(Model model, ServletContext servletContext, Method method, OtherProperties otherProps) throws IOException {
 		model.addAttribute("isLogin", true);
 		model.addAttribute("authMessage", otherProps.getAuthMessage());
+		model.addAttribute("authType", otherProps.getAuthenticateWith());
 		return initializeModel(model, servletContext, null, null);
 //		initJSFiles(model, servletContext);
 //		return "login";
@@ -165,6 +166,7 @@ public class ControllerUtil {
 		model.addAttribute("isProduction", otherProps.getProductionEnv());
 		model.addAttribute("oncoKBGeniePortalUrl", otherProps.getOncoKBGeniePortalUrl());
 		model.addAttribute("authMessage", otherProps.getAuthMessage());
+		model.addAttribute("authType", otherProps.getAuthenticateWith());
 	}
 	
 	/**

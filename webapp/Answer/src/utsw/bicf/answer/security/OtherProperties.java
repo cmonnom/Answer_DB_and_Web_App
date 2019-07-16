@@ -14,6 +14,7 @@ public class OtherProperties {
 	String webappName;
 
 	public static final String AUTH_LDAP = "ldap";
+	public static final String AUTH_AZURE_OAUTH = "azure_oauth";
 	public static final String AUTH_LOCAL = "local";
 	
 

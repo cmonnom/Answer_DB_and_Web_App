@@ -51,7 +51,7 @@ Vue.component('login-full-page', {
     </v-layout> 
     <v-layout row justify-center v-show="showLogin">
         <v-flex class="text-xs-center elevation-1 teal darken-2" xs12 md6 lg3 xl2>
-            <login :message="message" :popup="false"></login>
+            <login :message="message" :popup="false" :authType="authType"></login>
         </v-flex>
     </v-layout>
     <v-layout row justify-center pt-3 v-if="allowResetPwd">
@@ -70,6 +70,7 @@ Vue.component('login-full-page', {
             changingVersion: false,
             versionName: "1.0",
             message: authMessage,
+            authType: authType,
             showResetPasswordDialog: false,
             email: "",
             snackBarVisible: false,
@@ -99,7 +100,8 @@ Vue.component('login-full-page', {
                         this.showLogin = true;
                         this.message = this.message ? this.message : response.data.reason;
                         console.log(response.data.reason);
-                        this.allowResetPwd = response.data.payload;
+                        this.allowResetPwd = response.data.payload == "local";
+                        this.authType = response.data.payload;
                     }
                 }).catch(error => {
                 });

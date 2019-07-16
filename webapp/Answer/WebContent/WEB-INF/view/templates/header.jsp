@@ -29,6 +29,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
         var showLastLogin = "${showLastLogin}" === 'true';
 
         var authMessage = "${authMessage}";
+        var authType = "${authType}";
 
         var defaultHomeTab = "${prefs.homeTab}";
 
@@ -72,6 +73,8 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 
 <script src="${pageContext.request.contextPath}/resources/js/header.js?timestamp=${timestamp}"></script>
 <script src="${pageContext.request.contextPath}/resources/js/components/login.js?timestamp=${timestamp}"></script>
+
+<script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.2/js/msal.js"></script>
 
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 <script src="https://unpkg.com/vue-chartjs/dist/vue-chartjs.min.js"></script> -->

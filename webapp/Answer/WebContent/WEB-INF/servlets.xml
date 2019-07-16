@@ -66,6 +66,10 @@
 		<property name="url" value="${ldap.url}" />
 	</bean>
 	
+	<bean id="azureOAuth" class="utsw.bicf.answer.security.AzureOAuth">
+		<property name="msGraphUrl" value="${azure.graph.url}" />
+	</bean>
+	
 	<bean id="clarityAPIAuthentication" class="utsw.bicf.answer.security.ClarityAPIAuthentication">
 		<property name="username" value="${clarity.api.username}" />
 		<property name="password" value="${clarity.api.password}" />

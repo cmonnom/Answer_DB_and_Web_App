@@ -8,7 +8,7 @@ Vue.component('login-ajax', {
     template: `<div>
     <v-layout row justify-center>
         <v-flex class="text-xs-center elevation-1 indigo" xs12 teal darken-2>
-            <login :message="message" v-on:login-success="loginSuccess"></login>
+            <login :message="message" v-on:login-success="loginSuccess" :authType="getAuthType()"></login>
         </v-flex>
     </v-layout>
 
@@ -22,6 +22,9 @@ Vue.component('login-ajax', {
     methods: {
         loginSuccess() {
             this.$emit("login-success");
+        },
+        getAuthType() {
+            return authType;
         }
 
     },

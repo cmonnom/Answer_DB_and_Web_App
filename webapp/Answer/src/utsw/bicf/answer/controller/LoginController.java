@@ -32,6 +32,7 @@ import utsw.bicf.answer.model.LoginAttempt;
 import utsw.bicf.answer.model.ResetToken;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.Version;
+import utsw.bicf.answer.security.AzureOAuth;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.LDAPAuthentication;
@@ -56,6 +57,8 @@ public class LoginController {
 	ModelDAO modelDAO;
 	@Autowired
 	EmailProperties emailProps;
+	@Autowired
+	AzureOAuth azureAuthUtils;
 
 	@RequestMapping("/login")
 	public String login(Model model, HttpSession session) throws IOException {
@@ -115,7 +118,11 @@ public class LoginController {
 			logReason = "Too many failed logins. Please wait 10 sec.";
 		}
 		if (proceed && user != null){
-			if (OtherProperties.AUTH_LDAP.equals(otherProps.getAuthenticateWith())) {
+			proceed = false;
+			if (OtherProperties.AUTH_AZURE_OAUTH.equals(otherProps.getAuthenticateWith())) {
+					proceed = azureAuthUtils.isUserValid(otherProps, credentials.getPassword());
+			}
+			else if (OtherProperties.AUTH_LDAP.equals(otherProps.getAuthenticateWith())) {
 				proceed = ldapUtils.isUserValid(user.getUsername(), credentials.getPassword());
 			}
 			else { //local auth check
@@ -184,10 +191,10 @@ public class LoginController {
 			return new TargetPage(true, "already logged in", "home", true).toJSONString();
 		}
 		TargetPage page = new TargetPage(false, otherProps.getAuthMessage(), "home", true);
-		page.setPayload(OtherProperties.AUTH_LOCAL.equals(otherProps.getAuthenticateWith()));
+		page.setPayload(otherProps.getAuthenticateWith());
 		return page.toJSONString();
 	}
-
+	
 	@RequestMapping("/getCurrentVersion")
 	@ResponseBody
 	public String getCurrentVersion(Model model, HttpSession session) throws ClientProtocolException, URISyntaxException, IOException {

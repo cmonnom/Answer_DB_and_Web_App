@@ -110,8 +110,11 @@ public class SNPIndelVariantRow {
 			}
 		}
 		if (variant.getNormalAltFrequency() != null && variant.getTumorAltFrequency() != null) {
-			float delta = Math.abs(variant.getTumorAltFrequency() - variant.getNormalAltFrequency());
-			if (delta > 0 && delta < 0.0001) {
+			float delta = (variant.getTumorAltFrequency() - variant.getNormalAltFrequency());
+			if (delta <= 0) {
+				this.deltaTumorNormal = "0";
+			}
+			else if (delta > 0 && delta < 0.0001) {
 				this.deltaTumorNormal = "< 0.01";
 			}
 			else {
