@@ -55,8 +55,18 @@ For more information, you can click links here for **ClinVar, dpSNP, and COSMIC*
 If you have access to the BAM files, the desktop version of IGV has many resources to determine if a variant is 
 worth considering. IGV is available here: https://software.broadinstitute.org/software/igv/ 
 
-If you do not have direct access to the BAM files, Answer provides a light version of IGV.
-After opening a SNP with the |zoom| button, click on **IGV** in the toolbar at the top.
+If you do not have direct access to the BAM files, Answer provides 3 ways to view them in IGV.
+After opening a SNP with the |zoom| button, open the **IGV** menu in the toolbar at the top:
+
+.. image:: /img/howto/igv_menu.png
+
+**Web IGV**: use this option if you do not have IGV installed on your computer or just need to quickly look at a SNP.
+
+**Desktop IGV (auto load)**: this button will launch IGV on your computer and load all available bam files. Use this option for a more detailed view of a SNP.
+
+**Desktop IGV (manual load)**: even if IGV is installed on your computer, some security settings may prevent you from automatically launching and loading bam files from the web.
+This button will download a session file that you can open in IGV manually (File -> Open Session).
+
 This will load the three BAM files for the case: tumor, normal and RNA (if available).
 
 .. |zoom| image:: /img/baseline_zoom_in_black_18dp.png 
