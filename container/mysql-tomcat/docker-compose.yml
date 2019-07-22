@@ -21,3 +21,5 @@ services:
     volumes:
       - ./web/answer:/opt/answer
       - ./web/webapps:/usr/local/tomcat/webapps/
+    depends_on:
+      - "db"
