@@ -446,7 +446,7 @@ Vue.component('data-table', {
           </v-tooltip>
 
           <v-tooltip bottom v-if="header.buttons" v-for="(button, index) in props.item.buttons" :key="index">
-            <v-btn class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item)" slot="activator"
+            <v-btn class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item, $event)" slot="activator"
              :color="props.item.active === false ? 'blue-grey lighten-2' : button.color">
               <v-icon>{{ button.icon }}</v-icon>
             </v-btn>
@@ -1164,8 +1164,8 @@ Vue.component('data-table', {
                 && item[header.value]
                 && item[header.value].pass === false;
         },
-        handleButtonTriggered(action, item) {
-            bus.$emit(action, item);
+        handleButtonTriggered(action, item, event) {
+            bus.$emit(action, item, event);
         },
         exportToCSV() {
             this.doExport = true;

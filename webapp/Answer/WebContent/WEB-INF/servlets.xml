@@ -50,7 +50,7 @@
 	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
 		destroy-method="close">
 		<property name="driverClass" value="com.mysql.jdbc.Driver" />
-        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/${db.name}?useSSL=false" />
+        <property name="jdbcUrl" value="jdbc:mysql://${db.url}:3306/${db.name}?useSSL=false&amp;allowPublicKeyRetrieval=true" />
         <property name="user" value="${db.user}" />
         <property name="password" value="${db.password}" /> 
 		<!-- these are connection pool properties for C3P0 -->
@@ -58,6 +58,8 @@
 		<property name="minPoolSize" value="5" />
 		<property name="maxPoolSize" value="20" />
 		<property name="maxIdleTime" value="30000" />
+		<property name="acquireRetryDelay" value="10000" />
+		<property name="acquireRetryAttempts" value="0" />
 	</bean>
 	
 	<bean id="ldapAuthentication" class="utsw.bicf.answer.security.LDAPAuthentication">

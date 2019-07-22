@@ -1,0 +1,111 @@
+2019-07-18 19:59:57 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 19:59:57 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 19:59:57 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:03 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: checkAlreadyLoggedIn
+2019-07-18 20:00:03 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: getCurrentVersion
+2019-07-18 20:00:05 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: checkAlreadyLoggedIn
+2019-07-18 20:00:05 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:05 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: getCurrentVersion
+2019-07-18 20:00:05 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:15 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:00:15 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:00:15 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:16 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:00:16 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:00:16 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:17 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: checkAlreadyLoggedIn
+2019-07-18 20:00:17 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: checkAlreadyLoggedIn
+2019-07-18 20:00:17 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:17 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: getCurrentVersion
+2019-07-18 20:00:17 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: getCurrentVersion
+2019-07-18 20:00:17 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:50 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:00:50 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:00:50 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:52 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:00:52 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:00:52 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:53 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: checkAlreadyLoggedIn
+2019-07-18 20:00:53 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: checkAlreadyLoggedIn
+2019-07-18 20:00:53 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:00:53 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: getCurrentVersion
+2019-07-18 20:00:53 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: getCurrentVersion
+2019-07-18 20:00:53 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:00 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:01:00 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:01:00 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:01 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:01:01 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:01:01 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:02 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: checkAlreadyLoggedIn
+2019-07-18 20:01:02 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: checkAlreadyLoggedIn
+2019-07-18 20:01:02 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:02 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: getCurrentVersion
+2019-07-18 20:01:02 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: getCurrentVersion
+2019-07-18 20:01:02 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:33 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:01:33 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:01:33 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:34 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:01:34 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:01:34 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:34 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: checkAlreadyLoggedIn
+2019-07-18 20:01:34 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: getCurrentVersion
+2019-07-18 20:01:34 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: checkAlreadyLoggedIn
+2019-07-18 20:01:34 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:34 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: getCurrentVersion
+2019-07-18 20:01:34 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:44 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:01:44 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:01:44 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:45 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:01:45 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:01:45 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:47 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: checkAlreadyLoggedIn
+2019-07-18 20:01:47 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: checkAlreadyLoggedIn
+2019-07-18 20:01:47 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:47 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: getCurrentVersion
+2019-07-18 20:01:47 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: getCurrentVersion
+2019-07-18 20:01:47 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:51 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:01:51 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:01:51 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:52 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:01:52 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:01:52 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:53 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: checkAlreadyLoggedIn
+2019-07-18 20:01:53 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: getCurrentVersion
+2019-07-18 20:01:53 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: checkAlreadyLoggedIn
+2019-07-18 20:01:53 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:53 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: getCurrentVersion
+2019-07-18 20:01:53 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:53 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: validateUser
+2019-07-18 20:01:56 INFO  AOPAspect:273 - @AfterReturning ===> UserId: 1 Username: s178318 Accessing: validateUser
+2019-07-18 20:01:56 INFO  AOPAspect:274 - ------------------------
+2019-07-18 20:01:56 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: home
+2019-07-18 20:01:56 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: home
+2019-07-18 20:01:56 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:01:58 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: login
+2019-07-18 20:01:58 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: login
+2019-07-18 20:01:58 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:02:00 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:02:00 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:02:00 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:02:04 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-18 20:02:04 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-18 20:02:04 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:02:05 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: checkAlreadyLoggedIn
+2019-07-18 20:02:05 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: checkAlreadyLoggedIn
+2019-07-18 20:02:05 INFO  AOPAspect:279 - ------------------------
+2019-07-18 20:02:05 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: getCurrentVersion
+2019-07-18 20:02:05 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: getCurrentVersion
+2019-07-18 20:02:05 INFO  AOPAspect:279 - ------------------------
+2019-07-21 18:07:16 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: error
+2019-07-21 18:07:16 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: error
+2019-07-21 18:07:16 INFO  AOPAspect:279 - ------------------------
+2019-07-21 18:07:20 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: checkAlreadyLoggedIn
+2019-07-21 18:07:20 INFO  AOPAspect:220 - @Before ===> User was not logged in when accessing: getCurrentVersion
+2019-07-21 18:07:21 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: checkAlreadyLoggedIn
+2019-07-21 18:07:21 INFO  AOPAspect:279 - ------------------------
+2019-07-21 18:07:22 INFO  AOPAspect:278 - @AfterReturning ===> User was not logged in and was denied access when accessing: getCurrentVersion
+2019-07-21 18:07:22 INFO  AOPAspect:279 - ------------------------

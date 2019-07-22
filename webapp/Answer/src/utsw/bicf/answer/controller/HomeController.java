@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.AllOrderCasesSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseAllSummary;
-import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseArchivedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseFinalizedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseForUserSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
@@ -41,7 +40,6 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.OrderCaseAll;
-import utsw.bicf.answer.model.hybrid.OrderCaseArchived;
 import utsw.bicf.answer.model.hybrid.OrderCaseFinalized;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
@@ -133,6 +131,7 @@ public class HomeController {
 			List<OrderCaseFinalized> casesFinalized = 
 					caseList.stream()
 					.filter(c -> CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
+							&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC)
 							&& c.getActive() != null && c.getActive())
 					.map(c -> new OrderCaseFinalized(modelDAO, c, users, user))
 					.collect(Collectors.toList());
@@ -339,7 +338,6 @@ public class HomeController {
 		
 	}
 	
-	//TODO
 	@RequestMapping(value = "/toggleSentToEpicStatusForCase")
 	@ResponseBody
 	public String toggleSentToEpicStatusForCase(Model model, HttpSession session, 
@@ -355,13 +353,8 @@ public class HomeController {
 				if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
 					return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 				}
-				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);
-				if (savedCaseSummary != null) {
-					response.setSuccess(true);
-				}
-				else { //something was wrong
-					response.setMessage("Error: Verify that the data is valid");
-					response.setSuccess(false);
+				else {
+					utils.markAsSentToEpic(response, caseId);
 				}
 			}
 			else {

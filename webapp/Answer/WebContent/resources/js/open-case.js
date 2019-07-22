@@ -950,7 +950,7 @@ const OpenCase = {
                         <span class="blue-grey--text text--lighten-1">{{ labNotes }}</span>
                         </div>
                         <v-textarea :readonly="!canProceed('canAnnotate') || readonly" :disabled="!canProceed('canAnnotate') || readonly" hide-details
-                            ref="caseNotes" :value="caseAnnotation.caseAnnotation" class="mr-2 no-height" label="Write your comments here">
+                            ref="caseNotes" v-model="caseAnnotation.caseAnnotation" @input="caseNotesChanged = true" class="mr-2 no-height" label="Write your comments here">
                         </v-textarea>
                     </v-card-text>
                 </v-card>
@@ -3459,9 +3459,6 @@ const OpenCase = {
             this.updateRoute();
         },
         saveCaseAnnotations(skipSnackBar) {
-            if (this.$refs.caseNotes) {
-                this.caseAnnotation.caseAnnotation = this.$refs.caseNotes.inputValue;
-            }
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveCaseAnnotations",
@@ -3479,7 +3476,6 @@ const OpenCase = {
                     if (!response.data.skipSnackBar) {
                         this.showSnackBarMessage("Annotation Saved");
                     }
-                    this.$refs.caseNotes.inputValue = this.caseAnnotation.caseAnnotation;
                     this.caseAnnotationOriginalText = this.caseAnnotation.caseAnnotation; //to reset the isCaseAnnotationChanged
                     this.caseNotesChanged = false;
                 }
@@ -3514,9 +3510,6 @@ const OpenCase = {
             this.variantUnSaved = true;
         },
         isCaseAnnotationChanged() {
-            if (!this.caseNotesChanged && this.$refs.caseNotes) {
-                this.caseNotesChanged = this.$refs.caseNotes.inputValue != this.caseAnnotationOriginalText;
-            }
             return this.caseNotesChanged;
         },
         isSNP() {
@@ -4049,7 +4042,7 @@ const OpenCase = {
                 || (this.$refs.variantDetailsPanel ? this.$refs.variantDetailsPanel.variantDetailsUnSaved : false)
                 || this.isCaseAnnotationChanged();
             }
-            return this.saveAllNeeded;
+            return this.saveAllNeeded && !this.readonly;
         },
         buildAberrationTypeHelp() {
             var message = "amplification: High level copy number gain</br>"

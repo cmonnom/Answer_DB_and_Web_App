@@ -90,7 +90,7 @@ public class OrderCaseFinalized {
 					buttons.add(new Button("picture_as_pdf", "downloadPDFReport", "Download Finalized Report", "info"));
 					if (orderCase.getActive() != null && orderCase.getActive()) {
 						//TODO uncomment this when ready
-//						buttons.add(new Button("mdi-check", "sent-to-epic", "Report was sent to Epic", "info"));
+						buttons.add(new Button("mdi-check", "sent-to-epic", "Report was sent to Epic", "info"));
 					}
 				}
 			} catch (UnsupportedOperationException | IOException | URISyntaxException e) {

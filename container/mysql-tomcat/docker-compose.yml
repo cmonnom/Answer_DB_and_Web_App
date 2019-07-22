@@ -1,0 +1,23 @@
+version: "3.7"
+
+services:
+  db:
+    image: mysql:5.7.26
+    environment:
+      MYSQL_ROOT_PASSWORD: <ROOT_USER_PASSWORD>
+      MYSQL_DATABASE: answer_db
+      MYSQL_USER: answer_user
+      MYSQL_PASSWORD: <ANSWER_USER_PASSWORD>
+
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/:/docker-entrypoint-initdb.d
+
+  web:
+    image: tomcat:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./web/answer:/opt/answer
+      - ./web/webapps:/usr/local/tomcat/webapps/

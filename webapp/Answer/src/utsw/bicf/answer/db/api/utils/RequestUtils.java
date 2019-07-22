@@ -55,6 +55,7 @@ import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CNVPlotDataRaw;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
+import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.ExistingReports;
 import utsw.bicf.answer.model.extmapping.ITD;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
@@ -1483,6 +1484,28 @@ public class RequestUtils {
 		addAuthenticationHeader(requestPut);
 
 		HttpResponse response = client.execute(requestPut);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+		}
+		else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+	}
+	
+	public void markAsSentToEpic(AjaxResponse ajaxResponse, String caseId) throws URISyntaxException, ClientProtocolException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/"); 
+		sbUrl.append(caseId);
+		sbUrl.append("/sendToEpic");
+		URI uri = new URI(sbUrl.toString());
+		requestPost = new HttpPost(uri);
+
+		addAuthenticationHeader(requestPost);
+
+		HttpResponse response = client.execute(requestPost);
 
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<jnlp
+  spec="6.0+"
+  codebase="https://data.broadinstitute.org/igv/projects/2.4">
+  <information>
+    <title>IGV 2.4</title>
+    <vendor>The Broad Institute</vendor>
+    <homepage href="http://www.broadinstitute.org/igv"/>
+    <description>IGV Software</description>
+    <description kind="short">IGV</description>
+    <icon href="IGV_64.gif"/>
+    <icon kind="splash" href="IGV_64.gif"/>
+    <offline-allowed/>
+	<shortcut/>
+  </information>
+  <security>
+      <all-permissions/>
+  </security>
+  <update check="background"/>
+  <resources>
+<java version="1.8+" initial-heap-size="256m" max-heap-size="900m"/>    <jar href="https://data.broadinstitute.org/igv/projects/2.4/igv.jar" download="eager" main="true"/>
+    <jar href="https://data.broadinstitute.org/igv/projects/2.4/batik-codec-1.10.jar" download="eager"/>
+    <jar href="https://data.broadinstitute.org/igv/projects/2.4/goby-io-igv-1.1.jar" download="eager"/>   
+    <jar href="https://data.broadinstitute.org/igv/projects/2.4/log4j-core-2.11.0.jar" download="eager"/>   
+    <property name="java.net.preferIPv4Stack" value="true"/> 
+    <property name="apple.laf.useScreenMenuBar" value="true"/>
+    <property name="com.apple.mrj.application.growbox.intrudes" value="false"/>
+    <property name="com.apple.mrj.application.live-resize" value="true"/>
+    <property name="com.apple.macos.smallTabs" value="true"/>
+    <property name="http.agent" value="IGV"/>
+    <property name="production" value="true"/>
+  </resources>
+  <application-desc main-class="org.broad.igv.ui.Main">
+     <argument>${sessionIGV}</argument>
+  </application-desc>
+</jnlp>
+

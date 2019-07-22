@@ -57,6 +57,30 @@ const Home = {
     </v-card>
   </v-dialog>
 
+  <v-menu v-model="confirmSentToEpicDialogVisible" :position-x="positionx"  :position-y="positiony">
+  <v-card>
+  <v-toolbar color="primary" dark>
+    <v-toolbar-title class="title">
+    Report for Case: {{ currentEpicOrderNumber }} ({{currentPatientName}})
+    </v-toolbar-title>
+  </v-toolbar>
+  <v-card-text class="pl-0 pr-0">
+  <v-list>
+    <v-list-tile @click="toggleSentToEpicStatusForCase(currentCaseId)">
+    <v-list-tile-action>
+    <v-icon  color="green">check_circle</v-icon>
+    </v-list-tile-action>
+    <v-list-tile-title>UPLOADED (The report was uploaded to Epic)</v-list-tile-title></v-list-tile>
+    <v-list-tile @click="confirmSentToEpicDialogVisible = false">
+    <v-list-tile-action>
+    <v-icon color="red">cancel</v-icon>
+    </v-list-tile-action>
+    <v-list-tile-title>NOT READY (The report has not been uploaded yet)</v-list-tile-title></v-list-tile>
+  </v-list>
+  </v-card-text>
+  </v-card>
+</v-menu>
+
   <v-dialog v-model="assignGroupDialogVisible" max-width="50%" scrollable>
   <v-card>
     <v-toolbar dense dark color="primary">
@@ -195,7 +219,11 @@ const Home = {
             assignToUserDisabled: false,
             assignToSelectionValid: true,
             caseOwnerSelected: null,
-            currentCaseOwnerEnabled: false
+            currentCaseOwnerEnabled: false,
+            firstTime: true,
+            positionx: 0,
+            positiony: 0,
+            confirmSentToEpicDialogVisible: false
         }
     },
     methods: {
@@ -225,6 +253,7 @@ const Home = {
                         this.$refs.casesForUserTable.manualDataFiltered(response.data.casesForUser);
                         this.$refs.casesForUserCompletedTable.manualDataFiltered(response.data.casesForUserCompleted);
                         this.$refs.casesFinalizedTable.manualDataFiltered(response.data.casesFinalized);
+                        this.openDefaultTab();
                     }
                     else {
                         this.handleDialogs(response.data, this.getWorklists);
@@ -487,7 +516,8 @@ const Home = {
             return greetings + callingName;
         },
         openDefaultTab() {
-            if (defaultHomeTab) {
+            if (defaultHomeTab && this.firstTime) {
+                this.firstTime = false;
                 this.activateTab = defaultHomeTab;
             }
         },
@@ -499,7 +529,6 @@ const Home = {
         this.getAllUsers();
         this.getAllGroups();
         this.getWorklists();
-        this.openDefaultTab();
     },
     destroyed: function () {
         bus.$off('assignToUser');
@@ -577,10 +606,13 @@ const Home = {
         bus.$on('open-report-read-only', (item) => {
             router.push("./openReportReadOnly/" + item.caseId);
         });
-        bus.$on('sent-to-peic', (item) => {
+        bus.$on('sent-to-epic', (item, event) => {
             this.currentCaseId = item.caseId;
             this.currentEpicOrderNumber = item.epicOrderNumber;
             this.currentPatientName = item.patientName;
+            this.positionx = event.clientX;
+            this.positiony = event.clientY;
+            this.confirmSentToEpicDialogVisible = true;
         });
         //TODO
         bus.$on('downloadPDFReport', (item) => {
