@@ -21,7 +21,6 @@ Vue.component('splash-screen', {
                 "Dusting Off Variants",
                 "Translocating Translocations",
                 "Reviewing Reviewers...",
-                "Appreciating Your Patience...",
                 "Thinking...",
                 "Loading Environment...",
                 "Almost There..."

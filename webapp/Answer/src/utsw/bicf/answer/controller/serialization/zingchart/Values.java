@@ -14,13 +14,17 @@ public class Values {
 	String color;
 	Float alpha;
 	
+	public Values() {
+		super();
+	}
+	
 	public Values(List<Object> values, String text, List<String> dataLabels) {
 		super();
 		this.values = values;
 		this.text = text;
 		this.dataLabels = dataLabels;
 	}
-
+	
 	public List<Object> getValues() {
 		return values;
 	}

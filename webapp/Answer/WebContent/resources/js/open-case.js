@@ -57,6 +57,19 @@ const OpenCase = {
         </v-card>
     </v-dialog>
 
+    <!-- FPKM plot drawer -->
+    <v-menu
+        v-model="fpkmVisible"
+        :close-on-content-click="false"
+        :close-on-click="false"
+        :position-x="fpkmPositionx"  :position-y="fpkmPositiony"
+        absolute
+      >
+      <fpkm-plot ref="fpkmPlot"
+      :can-plot="patientDetailsOncoTreeDiagnosis.text != null"
+      @hide-fpkm-plot="closeFPKMChart"
+      ></fpkm-plot>
+      </v-menu>  
    
     <v-snackbar :timeout="snackBarTimeout" :bottom="true" v-model="snackBarVisible">
         {{ snackBarMessage }}
@@ -736,7 +749,16 @@ const OpenCase = {
                     <v-list-tile-content>
                         <v-list-tile-title>Open Mutational Signature (MuSiCa)</v-list-tile-title>
                     </v-list-tile-content>
-                </v-list-tile>
+                    </v-list-tile>
+
+                    <v-list-tile avatar @click="openFPKMChart">
+                    <v-list-tile-avatar>
+                    <img alt="boxplot icon" class="alpha-54" :src="webAppRoot + '/resources/images/boxplot_icon_black.png'" width="16px" />
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Open FPKM Plot</v-list-tile-title>
+                    </v-list-tile-content>
+                    </v-list-tile>
 
                     <v-list-tile avatar @click="openReviewSelectionDialog()">
                         <v-list-tile-avatar>
@@ -802,6 +824,12 @@ const OpenCase = {
         <v-icon>mdi-chart-histogram</v-icon>
         </v-btn>
         <span>Open Mutational Signature (MuSiCa)</span>
+    </v-tooltip>
+    <v-tooltip bottom>
+        <v-btn icon flat slot="activator" @click="openFPKMChart">
+        <img alt="boxplot icon" :src="webAppRoot + '/resources/images/boxplot_icon_white.png'" width="36px" />
+        </v-btn>
+        <span>Open FPKM Plot</span>
     </v-tooltip>
             <v-tooltip bottom>
                 <v-btn flat icon @click="openReviewSelectionDialog()" slot="activator" :color="reviewDialogVisible ? 'amber accent-2' : ''">
@@ -1262,7 +1290,10 @@ const OpenCase = {
             loadingColor: "blue-grey lighten-4",
             userId: null,
             caseOwnerId: null,
-            currentItem: null
+            currentItem: null,
+            fpkmVisible: false,
+            fpkmPositionx: 0,
+            fpkmPositiony: 0,
         }
     }, methods: {
         
@@ -3819,7 +3850,7 @@ const OpenCase = {
             });
         },
         openOncoTree() {
-            window.open("http://oncotree.mskcc.org", "_blank");
+           var oncotreeWindow = window.open("http://oncotree.mskcc.org", "_blank");
         },
         openOncoKBGeniePortalCancer() {
             var url = oncoKBGeniePortalUrl + "Cancer/?Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
@@ -4335,6 +4366,17 @@ const OpenCase = {
             for (var i = 0; i < headerOrders.length; i++) {
                 headerOrders[i].splice(0,0, "dateSince" + this.userId);
             }
+        },
+        openFPKMChart(event) {
+            this.fpkmPositionx = event.clientX;
+            this.fpkmPositiony = event.clientY;
+            this.fpkmVisible = true;
+            // this.$nextTick(() => {
+            //     this.$refs.fpkmPlot.updateFPKMPlot();
+            // });
+        },
+        closeFPKMChart() {
+            this.fpkmVisible = false;
         }
 
     },
@@ -4370,6 +4412,9 @@ const OpenCase = {
         });
     },
     computed: {
+        webAppRoot() {
+            return webAppRoot;
+        }
     },
     destroyed: function () {
         bus.$off('bam-viewer-closed');

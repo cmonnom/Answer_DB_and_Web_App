@@ -1,0 +1,11 @@
+version: "3.7"
+
+services:
+  shiny:
+    image: cmonnom/shinyapp_musica
+
+    ports:
+      - "3838:3838"
+    volumes:
+      - ./musica:/srv/shiny-server/musica
+

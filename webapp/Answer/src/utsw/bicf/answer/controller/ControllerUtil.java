@@ -23,7 +23,6 @@ import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
-import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.LoginAttempt;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.OrderCase;

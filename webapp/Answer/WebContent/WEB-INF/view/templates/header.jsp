@@ -24,7 +24,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
         const callingName = (permissions.canReview ? "Dr. " + "${lastName}" : "${firstName}");
 
         const oncoKBGeniePortalUrl = "${oncoKBGeniePortalUrl}";
-        const oncotreeIconUrl = webAppRoot + "/resources/images/oncotree.ico";
+        const oncotreeIconUrl = webAppRoot + "/resources/images/oncotree_256.ico";
         const lastLogin = "${lastLogin}";
         var showLastLogin = "${showLastLogin}" === 'true';
 
@@ -80,7 +80,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 <script src="https://unpkg.com/vue-chartjs/dist/vue-chartjs.min.js"></script> -->
 
 <!-- <script async src="https://cdn.zingchart.com/2.8.5/zingchart.min.js" integrity="sha384-oWBkRCZg0u6cwzWuI23vlFiZ+cHp/4/Kfsxwoad5I22glKztML64zepK4raEOsRy" crossorigin="anonymous"></script> -->
-<script async src="${pageContext.request.contextPath}/resources/js/zingchart.min.js"></script>
+<!-- <script async src="${pageContext.request.contextPath}/resources/js/zingchart.min.js"></script> -->
 <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>

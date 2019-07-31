@@ -800,7 +800,7 @@ Vue.component('variant-details', {
                 title += 'all Chromosomes (CN=<b>2</b> VS Others)';
             }
             else if (this.genesSelected.length > 0) {
-                title += formatChrom(this.currentVariant.chrom) + " (selected genes in dark)";
+                title += formatChrom(this.currentVariant.chrom) + " (selected genes in dark blue)";
             }
             else {
                 var chrName = this.currentVariant.chrom;

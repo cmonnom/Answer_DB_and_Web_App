@@ -20,7 +20,6 @@ response.setDateHeader ("Expires", 0);
 <script src="${pageContext.request.contextPath}/resources/js/goodies/sketch.min.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/components/goodies2.js"></script>
 <script src="${pageContext.request.contextPath}/resources/js/goodies/fireworks.js"></script>
-<script src="${pageContext.request.contextPath}/resources/js/components/azure-oauth.js"></script>
 
 <script>
 	var authMessage = "${authMessage}";

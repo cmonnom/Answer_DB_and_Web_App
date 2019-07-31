@@ -12,7 +12,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,6 +20,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +61,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListSaved;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantRelatedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSummary;
 import utsw.bicf.answer.controller.serialization.zingchart.CNVChartData;
+import utsw.bicf.answer.controller.serialization.zingchart.FPKMChartData;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
@@ -79,6 +80,8 @@ import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.CommitAnnotationResponse;
+import utsw.bicf.answer.model.extmapping.FPKMData;
+import utsw.bicf.answer.model.extmapping.FPKMPerCaseData;
 import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
@@ -173,6 +176,10 @@ public class OpenCaseController {
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".updateLastLogin",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getSelectedVariantIds",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getFPKMChartData",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".searchGenesInPanels",
 				IndividualPermission.CAN_VIEW);
 		
 	}
@@ -682,6 +689,17 @@ public class OpenCaseController {
 	@ResponseBody
 	public String getGenesInPanel(Model model, HttpSession session) throws Exception {
 		List<String> genesFound = modelDAO.getAllGenesInPanels();
+		GenesInPanelItems genes = new GenesInPanelItems(genesFound);
+		return genes.createVuetifyObjectJSON();		
+	}
+	
+	@RequestMapping(value = "/searchGenesInPanels", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String searchGenesInPanels(Model model, HttpSession session, @RequestParam(defaultValue="", required=false) String geneSearch) throws Exception {
+		List<String> genesFound = new ArrayList<String>();
+		if (!geneSearch.equals("") || geneSearch.length() >= 3) {
+			genesFound = modelDAO.searchGenesInPanels(geneSearch);
+		}
 		GenesInPanelItems genes = new GenesInPanelItems(genesFound);
 		return genes.createVuetifyObjectJSON();		
 	}
@@ -1720,5 +1738,56 @@ public class OpenCaseController {
 		result.add(itemsSelectedIdsAll);
 		result.add(itemsSelectedIdsReviewer);
 		return result;
+	}
+	
+	@RequestMapping(value = "/getFPKMChartData", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String getFPKMChartData(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestParam String geneParam, @RequestParam(defaultValue="false", required=false) Boolean showOtherPlots) throws Exception {
+
+		RequestUtils utils = new RequestUtils(modelDAO);
+		FPKMData data = new FPKMData(); 
+		
+		//create fake data here for testing
+		data.setOncotreeCode("COAD");
+		List<FPKMPerCaseData> fpkms = new ArrayList<FPKMPerCaseData>();
+		for (int i = 0; i < 50; i++) {
+			FPKMPerCaseData d = new FPKMPerCaseData();
+			d.setCaseId("ORD" + RandomUtils.nextInt(100, 1000));
+			if (d.getCaseId().equals(caseId)) {
+				d.setCaseId("ORD1001");
+			}
+			d.setCaseName("ZZTEST, SOMEONE");
+			d.setFpkmValue(RandomUtils.nextInt(0, 2500));
+			fpkms.add(d);
+		}
+		//currentCase
+		FPKMPerCaseData d = new FPKMPerCaseData();
+		d.setCaseId(caseId);
+		d.setCaseName("ZZTEST, SOMEONE");
+		d.setFpkmValue(RandomUtils.nextInt(0, 6000));
+		fpkms.add(d);
+		
+		//add some outliers
+		for (int i = 0; i < 5; i++) {
+			d = new FPKMPerCaseData();
+			d.setCaseId("ORD Outlier");
+			d.setCaseName("ZZTEST, SOMEONE");
+			d.setFpkmValue(RandomUtils.nextInt(4500, 5900));
+			fpkms.add(d);
+		}
+		
+		data.setFpkms(fpkms);
+		data.setOncotreeCode("COAD");
+		if (data != null) {
+			return new FPKMChartData(data, caseId, showOtherPlots).createObjectJSON();
+		}
+		else {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+			return response.createObjectJSON();
+		}
+
 	}
 }

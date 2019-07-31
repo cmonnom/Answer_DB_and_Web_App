@@ -158,7 +158,7 @@ public class TypeUtils {
 			}
 			return (since.toDays() / 30) + ago;
 		}
-		else if (since.toDays() > 7) {
+		else if (since.toDays() > 14) {
 			return (since.toDays() / 7) + " weeks ago";
 		}
 		else if (since.toDays() > 1) {

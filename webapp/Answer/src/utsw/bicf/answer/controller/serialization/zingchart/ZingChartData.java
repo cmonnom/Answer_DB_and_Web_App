@@ -11,6 +11,7 @@ public class ZingChartData {
 	
 	List<String> labels;
 	List<Values> series;
+	List<Object> customSeries;
 	Boolean isAllowed = true;
 	
 	public ZingChartData() {
@@ -43,6 +44,14 @@ public class ZingChartData {
 
 	public void setSeries(List<Values> series) {
 		this.series = series;
+	}
+
+	public List<Object> getCustomSeries() {
+		return customSeries;
+	}
+
+	public void setCustomSeries(List<Object> customSeries) {
+		this.customSeries = customSeries;
 	}
 
 

@@ -505,3 +505,8 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
 .no-margin-top-controls {
     margin-top: 0px;
 }
+
+/* to match v-list icons for custom images */
+.alpha-54 {
+    opacity: 0.54;
+}

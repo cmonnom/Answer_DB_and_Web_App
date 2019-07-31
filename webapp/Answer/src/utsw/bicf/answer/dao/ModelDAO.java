@@ -330,6 +330,16 @@ public class ModelDAO {
 		return session.createNativeQuery(sql)
 				.list();
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Transactional
+	public List<String> searchGenesInPanels(String search) {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "SELECT distinct(gene_name) FROM gene_to_report"
+				+ " where gene_name like upper(:search) order by gene_name";
+		return session.createNativeQuery(sql).setParameter("search", "%" + search + "%")
+				.list();
+	}
 
 	@Transactional
 	public UserRank getFirstRank() {
