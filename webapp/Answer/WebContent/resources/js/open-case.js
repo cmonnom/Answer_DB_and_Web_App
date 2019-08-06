@@ -1294,6 +1294,7 @@ const OpenCase = {
             fpkmVisible: false,
             fpkmPositionx: 0,
             fpkmPositiony: 0,
+            snpItemsTemp: [], //a temp list of selected variants
         }
     }, methods: {
         
@@ -3012,9 +3013,15 @@ const OpenCase = {
             this.handleSelectionChanged();
         },
         createTempSelectionPerAnnotator() {
-            return"<span tabindex='-1' class='v-chip v-chip--disabled v-chip--label warning v-chip--small white--text'><span class='v-chip__content'><i aria-hidden='true' class='icon material-icons mdi mdi-checkbox-marked' style='font-size: 16px; vertical-align: bottom'></i><span class='pl-2'>latest</span></span></span>";
+            return "<span tabindex='-1' class='v-chip v-chip--disabled v-chip--label warning v-chip--small white--text'><span class='v-chip__content'><i aria-hidden='true' class='icon material-icons mdi mdi-checkbox-marked' style='font-size: 16px; vertical-align: bottom'></i><span class='pl-2'>latest</span></span></span>";
         },
-
+        isVariantTempSelected(item) {
+            return this.snpItemsTemp.filter(i => i.oid == item.oid && i.isSelected).length > 0;
+        },
+        isSelectionPerAnnotatorReal(selectionPerAnnotator) {
+            //check if it's a real object or a html string (temp v-chip)
+            return selectionPerAnnotator && selectionPerAnnotator.userId;
+        },
         updateSelectedVariantTable() {
             if (this.updatingSelectedVariantTable) {
                 return;
@@ -3034,7 +3041,7 @@ const OpenCase = {
                     this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
                     //populate the selected variants but not yet saved by creating fake selectionPerAnnotator objects
                     for (var i= 0; i < selectedSNPVariants.length; i++) {
-                        if (!selectedSNPVariants[i].selectionPerAnnotator[this.userId]) {
+                        if (!this.isSelectionPerAnnotatorReal(selectedSNPVariants[i].selectionPerAnnotator[this.userId]) && this.isVariantTempSelected(selectedSNPVariants[i])) {
                             selectedSNPVariants[i]["dateSince" + this.userId] = this.createTempSelectionPerAnnotator();
                         }
                     }
@@ -3092,28 +3099,6 @@ const OpenCase = {
                 this.handleDialogs(error.data, this.updateSelectedVariantTable);
                 this.updatingSelectedVariantTable = false;
             });
-
-            //original method starts here
-            // this.currentSelectedVariantIds = this.getSelectedVariantIds();
-            // var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIds.indexOf(item.oid) > -1);
-            // var selectedSNPVariantsReviewer = this.snpIndelUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedSNPVariantIdsReviewer.indexOf(item.oid) > -1);
-            // var selectedCNVs = this.cnvUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedCNVIds.indexOf(item.oid) > -1);
-            // var selectedTranslocations = this.ftlUnfilteredItems.filter(item => this.currentSelectedVariantIds.selectedTranslocationIds.indexOf(item.oid) > -1);
-            // this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
-
-            // var snpHeaders = this.$refs.geneVariantDetails.headers;
-            // var snpHeaderOrder = this.$refs.geneVariantDetails.headerOrder;
-
-            // var cnvHeaders = this.$refs.cnvDetails.headers;
-            // var cnvHeaderOrder = this.$refs.cnvDetails.headerOrder;
-
-            // var ftlHeaders = this.$refs.translocationDetails.headers;
-            // var ftlHeaderOrder = this.$refs.translocationDetails.headerOrder;
-            // this.$refs.reviewDialog.updateSelectedVariantTable(
-            //     selectedSNPVariants, selectedSNPVariantsReviewer, 
-            //     snpHeaders, snpHeaderOrder, 
-            //     selectedCNVs, cnvHeaders, cnvHeaderOrder, 
-            //     selectedTranslocations, ftlHeaders, ftlHeaderOrder);
         },
         openReviewSelectionDialog() {
             this.reviewDialogVisible = true;
@@ -3348,20 +3333,34 @@ const OpenCase = {
                 && !this.annotationVariantOtherVisible
                 && !(this.utswAnnotationsVisible && this.utswAnnotationsExists());
         },
-        selectedIdsPreFiltering(i) {
+        selectedIdsPreFiltering(i, currentUserOnly) {
+            // if (currentUserOnly) {
+            //     return i.isSelected;
+            // }
+            // return i.selectionPerAnnotator && Object.keys(i.selectionPerAnnotator).length > 0;
             return i.isSelected || (i.selectionPerAnnotator && Object.keys(i.selectionPerAnnotator).length > 0);
+        },
+        selectedIdsPreFilteringTempOnly(i) {
+            return (i.isSelected && !this.isSelectionPerAnnotatorReal(i.selectionPerAnnotator[this.userId]));
+            // return (i.isSelected && (!i.selectionPerAnnotator || Object.keys(i.selectionPerAnnotator).length == 0));
         },
         simplifiedSelectedVariant(i) {
             return {"oid": i.oid, "isSelected": i.isSelected, "selectionPerAnnotator": i.selectionPerAnnotator};
         },
         getSelectedVariantIds(currentUserOnly) {
             return new Promise((resolve, reject) => {
-                var filteredSNPItems = this.$refs.geneVariantDetails.items.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
-                var unfilteredSNPItems = this.snpIndelUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
-                var filteredCNVItems = this.$refs.cnvDetails.items.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
-                var unfilteredCNVItems = this.cnvUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
-                var filteredFTLItems = this.$refs.translocationDetails.items.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
-                var unfilteredFTLItems = this.ftlUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i)).map(i => (this.simplifiedSelectedVariant(i)));
+                var filteredSNPItems = this.$refs.geneVariantDetails.items.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+                var filteredSNPItemsTemp = this.$refs.geneVariantDetails.items.filter(i => this.selectedIdsPreFilteringTempOnly(i)).map(i => (this.simplifiedSelectedVariant(i)));
+                var unfilteredSNPItems = this.snpIndelUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+                var unfilteredSNPItemsTemp = this.snpIndelUnfilteredItems.filter(i => this.selectedIdsPreFilteringTempOnly(i)).map(i => (this.simplifiedSelectedVariant(i)));
+                var filteredCNVItems = this.$refs.cnvDetails.items.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+                var unfilteredCNVItems = this.cnvUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+                var filteredFTLItems = this.$refs.translocationDetails.items.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+                var unfilteredFTLItems = this.ftlUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+
+                this.snpItemsTemp = filteredSNPItemsTemp.concat(unfilteredSNPItemsTemp);
+
+
                 axios({
                     method: 'post',
                     url: webAppRoot + "/getSelectedVariantIds",
@@ -3423,61 +3422,8 @@ const OpenCase = {
                     this.handleAxiosError(error);
                 });
             });
-
             
-            // var startTime = moment();
-            var selectedSNPVariantIds = [];
-            var selectedSNPVariantIdsReviewer = [];
-            var selectedCNVIds = [];
-            var selectedTranslocationIds = [];
-            // if (this.$refs.geneVariantDetails) {
-            //     selectedSNPVariantIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.geneVariantDetails.items, this.snpIndelUnfilteredItems, true);
-            //     selectedSNPVariantIdsReviewer = this.getFilteredAndUnfilteredVariantIds(this.$refs.geneVariantDetails.items, this.snpIndelUnfilteredItems, false);
-            // }
-            if (this.$refs.cnvDetails) {
-                selectedCNVIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.cnvDetails.items, this.cnvUnfilteredItems, true);
-            }
-            if (this.$refs.translocationDetails) {
-                selectedTranslocationIds = this.getFilteredAndUnfilteredVariantIds(this.$refs.translocationDetails.items, this.ftlUnfilteredItems, true);
-            }
-            // var duration = moment().diff(startTime);
-            return {
-                selectedSNPVariantIds: selectedSNPVariantIds ? selectedSNPVariantIds : null,
-                selectedSNPVariantIdsReviewer: selectedSNPVariantIdsReviewer ? selectedSNPVariantIdsReviewer : null,
-                selectedCNVIds: selectedCNVIds ? selectedCNVIds : null,
-                selectedTranslocationIds: selectedTranslocationIds  ? selectedTranslocationIds : null,
-            }
         },
-        /**
-         * To collect which ids are selected, we need to go through the
-         * current filtered tables and the original ones (in case the filter removed some selected rows)
-         * @param {items in the currently filtered table} variantDetailsItems 
-         * @param {items in the original unfiltered table} unfilteredItems 
-         */
-        // getFilteredAndUnfilteredVariantIds(variantDetailsItems, unfilteredItems, fromAll) {
-        //     // var startTime = moment();
-        //     var selectedVariantIds = [];
-        //     var filteredSelectedIds = variantDetailsItems.filter(item => item.isSelected 
-        //         || (fromAll && item.selectionPerAnnotator && Object.keys(item.selectionPerAnnotator).length > 0)).map(item => item.oid);
-        //     //need to only consider items not in the current table so that we don't reselect items that were intentionally deselected
-        //     //the first filter removes all items in the current table from the unfiltered item list
-        //     //the second filter checks if any item left (ie: items not currently displayed) is selected
-        //     var unfilteredSelectedIds = unfilteredItems ? unfilteredItems.filter(item => !variantDetailsItems.map(i => i.oid).includes(item.oid)).filter(item => item.isSelected 
-        //         || (fromAll && item.selectionPerAnnotator && Object.keys(item.selectionPerAnnotator)).length > 0).map(item => item.oid) : [];
-        //     var unionSet = new Set();
-        //     for (var i = 0; i < filteredSelectedIds.length; i++) {
-        //         unionSet.add(filteredSelectedIds[i]);
-        //     }
-        //     for (var i = 0; i < unfilteredSelectedIds.length; i++) {
-        //         unionSet.add(unfilteredSelectedIds[i]);
-        //     }
-        //     for (let item of unionSet) {
-        //         selectedVariantIds.push(item);
-        //     }
-        //     // var duration = moment().diff(startTime);
-        //     // console.log("getFilteredAndUnfilteredVariantIds", duration);
-        //     return selectedVariantIds;
-        // },
         updateVariantDetails() {
             this.urlQuery.variantId = this.currentVariant._id.$oid;
             this.urlQuery.variantType = this.currentVariantType;
@@ -3537,8 +3483,21 @@ const OpenCase = {
                     this.handleAxiosError(error);
                 });
         },
-        handleSelectionChanged(selectedSize) {
+        handleSelectionChanged(selectedSize, item) {
             this.variantUnSaved = true;
+            if (item) {
+                //update unfiltered items
+                for (var i = 0; i < this.snpIndelUnfilteredItems.length; i++){
+                    if (this.snpIndelUnfilteredItems[i].oid == item.oid) {
+                        this.snpIndelUnfilteredItems[i].isSelected = item.isSelected;
+                        if (!item.isSelected) {
+                            delete this.snpIndelUnfilteredItems[i].selectionPerAnnotator[this.userId];
+                            this.snpIndelUnfilteredItems[i]["dateSince" + this.userId] = "";
+                        }
+                        break;
+                    }
+                }
+            }
         },
         isCaseAnnotationChanged() {
             return this.caseNotesChanged;

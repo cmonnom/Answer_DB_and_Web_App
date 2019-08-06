@@ -1722,10 +1722,19 @@ public class OpenCaseController {
 					Iterator<Entry<String, JsonNode>> it = selectionPerAnnotator.fields();
 					while (it.hasNext()) {
 						Entry<String, JsonNode> item = it.next();
-						AnnotatorSelection as = mapper.readValue(item.getValue().toString(), AnnotatorSelection.class);
-						if (as.getUserId().equals(caseOwnerId)) {
-							itemsSelectedIdsReviewer.add(oid);
-							break;
+						String itemValue = item.getValue().toString();
+						if (itemValue != null && itemValue.startsWith("{")) { //valid JSON object
+							AnnotatorSelection as = mapper.readValue(item.getValue().toString(), AnnotatorSelection.class);
+							if (as.getUserId().equals(caseOwnerId)) {
+								itemsSelectedIdsReviewer.add(oid);
+								break;
+							}
+						}
+						else { //"latest" entry. Assume it's from current user
+							if (currentUser.getUserId().equals(caseOwnerId)) {
+								itemsSelectedIdsReviewer.add(oid);
+								break;
+							}
 						}
 					}
 					if (!currentUserOnly) {

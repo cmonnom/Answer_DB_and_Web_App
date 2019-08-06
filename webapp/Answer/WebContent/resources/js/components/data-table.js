@@ -398,7 +398,7 @@ Vue.component('data-table', {
     <template slot="items" slot-scope="props">
       <tr :active="props.selected" :class="props.item.active === false || loading ? 'blue-grey lighten-5 blue-grey--text' : ''">
         <td v-if="enableSelection" style="width:50px" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
-          <v-checkbox :color="color" hide-details :input-value="props.selected" @change="selectionChanged()" v-model="props.item.isSelected"
+          <v-checkbox :color="color" hide-details :input-value="props.selected" @change="selectionChanged(props.item)" v-model="props.item.isSelected"
             :ripple="false" :disabled="props.item.readonly"></v-checkbox>
         </td>
         <td v-if="expandedDataUrl" class="pl-0 pr-0" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']" @click="expandRow(props.item[uniqueIdField], props)">
@@ -1137,7 +1137,7 @@ Vue.component('data-table', {
             // }
             props.item.isSelected = !props.item.isSelected;
             props.selected = props.item.isSelected;
-            this.selectionChanged();
+            this.selectionChanged(props.item);
         },
         addToSelection(item) {
             // item.isSelected = true;
@@ -1196,8 +1196,8 @@ Vue.component('data-table', {
             }
             return null;
         },
-        selectionChanged() {
-            this.$emit('datatable-selection-changed', this.selected.length);
+        selectionChanged(item) {
+            this.$emit('datatable-selection-changed', this.selected.length, item);
         },
         getFilteredItems() {
             return this.$refs.dataTable.filteredItems;

@@ -121,16 +121,16 @@ public class AOPAspect {
 					boolean found = m.find();
 					isValid &= !found;
 					if (!isValid) {
-						System.out.println("The following string is invalid: <START>" + argString + "<END>");
-						System.out.println("A blocked character was found among: <START>" + SHORT_PATTERN + "<END>");
+						logger.info("The following string is invalid: <START>" + argString + "<END>");
+						logger.info("A blocked character was found among: <START>" + SHORT_PATTERN + "<END>");
 					}
 				}
 				else { //if string is not too long, do a replaceAll with a long pattern
 					String removedXSS = argString.replaceAll(LONG_PATTERN.pattern(), "");
 					isValid &= argString.equals(removedXSS) ;
 					if (!isValid) {
-						System.out.println("The following string is invalid: <START>" + argString + "<END>");
-						System.out.println("It was compared to: <START>" + removedXSS + "<END>");
+						logger.info("The following string is invalid: <START>" + argString + "<END>");
+						logger.info("It was compared to: <START>" + removedXSS + "<END>");
 					}
 				}
 //				long endTime = System.currentTimeMillis();
