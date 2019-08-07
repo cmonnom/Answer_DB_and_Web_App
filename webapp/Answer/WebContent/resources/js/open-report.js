@@ -371,7 +371,7 @@ const OpenReport = {
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
                 :enable-select-all="!fullReport.finalized"
                     initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="mdi-scale-balance"
-                    :color="colors.trials" :disable-sticky-header="true" :add-row-button="true"
+                    :color="colors.trials" icon-color="white" icon-active-color="error" :disable-sticky-header="true" :add-row-button="true"
                     :enable-selection="canProceed('canReview') && !readonly"
                     @datatable-selection-changed="handleSelectionChanged"
                     add-row-description="(for this report only. Unsaved changes will be discarded)"

@@ -27,7 +27,9 @@ Vue.component('data-table', {
         "fixed-header": {default: false, type: Boolean}, //not working yet
         "add-row-button": {default: false, type: Boolean},
         "add-row-description": {default: "", type: String},
-        "additional-headers": {default: () => [], type: Array} //for situations where add a new row needs more fields than in headers
+        "additional-headers": {default: () => [], type: Array}, //for situations where add a new row needs more fields than in headers
+        "icon-color": {default: "", type: String},
+        "icon-active-color": {default: "", type: String},
 
     },
     template: `<div>
@@ -36,13 +38,13 @@ Vue.component('data-table', {
   <!-- Top tool bar with menu options -->
   <v-toolbar dense dark :color="loading ? headerLoadingColor : color" :class="fixed ? '' : 'elevation-0'" :fixed="fixed" :app="fixed" v-show="toolbarVisible">
     <!-- icon with no function -->
-    <v-icon v-if="titleIcon && !showLeftMenu" color="amber accent-2">{{ titleIcon }}</v-icon>
+    <v-icon v-if="titleIcon && !showLeftMenu" :color="iconColor ? iconColor : 'amber accent-2'">{{ titleIcon }}</v-icon>
     <!-- menu with same functions as left side icons -->
     <v-tooltip class="ml-0" bottom v-if="showLeftMenu">
       <v-menu offset-y offset-x slot="activator" class="ml-0">
         <v-btn slot="activator" flat icon dark>
           <v-icon v-if="!titleIcon">more_vert</v-icon>
-          <v-icon v-if="titleIcon" color="amber accent-2">{{ titleIcon }}</v-icon>
+          <v-icon v-if="titleIcon" :color="iconColor ? iconColor : 'amber accent-2'">{{ titleIcon }}</v-icon>
         </v-btn>
         <v-list>
 
@@ -135,7 +137,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-show="showButtons" v-if="addRowButton">
-        <v-btn flat icon @click="toggleAddRowBar" slot="activator" :color="showAddRowBar ? 'amber accent-2' : 'white'">
+        <v-btn flat icon @click="toggleAddRowBar" slot="activator"  :color="getButtonColor(showAddRowBar)">
           <v-icon>add</v-icon>
         </v-btn>
         <span>Add New Row</span>
@@ -144,7 +146,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-show="showButtons">
-        <v-btn flat icon @click="toggleSearchBar" slot="activator" :color="showSearchBar ? 'amber accent-2' : 'white'">
+        <v-btn flat icon @click="toggleSearchBar" slot="activator" :color="getButtonColor(showSearchBar)">
           <v-icon>search</v-icon>
         </v-btn>
         <span>Quick Filter</span>
@@ -153,7 +155,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-if="advanceFiltering" v-show="showButtons">
-        <v-btn flat icon @click="toggleFilters" slot="activator" :color="showDrawer ? 'amber accent-2' : 'white'">
+        <v-btn flat icon @click="toggleFilters" slot="activator" :color="getButtonColor(showDrawer)">
           <v-icon>filter_list</v-icon>
         </v-btn>
         <span>Filter Menu</span>
@@ -172,7 +174,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-show="showButtons">
-        <v-btn flat icon @click="showDraggableHeader=!showDraggableHeader" slot="activator" :color="showDraggableHeader ? 'amber accent-2' : 'white'">
+        <v-btn flat icon @click="showDraggableHeader=!showDraggableHeader" slot="activator" :color="getButtonColor(showDraggableHeader)">
           <v-icon>swap_horiz</v-icon>
         </v-btn>
         <span>Move Columns</span>
@@ -191,23 +193,22 @@ Vue.component('data-table', {
 
   <!--Add Row Bar -->
   <v-slide-y-transition>
-  <v-card v-show="showAddRowBar">
-    <v-toolbar dense light class="mt-1" >
-      <v-toolbar-title class="subheading">
-        <v-btn icon @click="toggleAddRowBar" slot="activator">
+  <v-card v-show="showAddRowBar" class="mt-1 mb-1">
+  <v-card-text>
+      <v-layout>
+        <v-flex xs12>
+          <v-btn icon @click="toggleAddRowBar" slot="activator">
           <v-icon>keyboard_arrow_up</v-icon>
-        </v-btn>
-        Add a new Row {{ addRowDescription }}
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-      </v-toolbar>
-      <v-card-text>
+          </v-btn>
+          <span class="subheading"> Add a new Row {{ addRowDescription }}</span>
+        </v-flex>
+      </v-layout>
       <v-layout row wrap align-end>
       <v-flex xs v-for="header in getSortedHeaders" :key="header.oneLineText" class="pl-2 pr-2" v-if="!header.isFlag">
-         <v-textarea hide-details :label="header.oneLineText" v-model="newRow[header.value]" :style="'width:' + header.width"></v-textarea>
+         <v-textarea hide-details :label="header.oneLineText" v-model="newRow[header.value]" :style="'width:' + header.width" :color="color"></v-textarea>
       </v-flex>
       <v-flex xs v-for="header in additionalHeaders" :key="header.oneLineText" class="pl-2 pr-2" >
-        <v-textarea hide-details :label="header.oneLineText" :hint="header.hint" v-model="newRow[header.value]" :style="'width:' + header.width"></v-textarea>
+        <v-textarea hide-details :label="header.oneLineText" :hint="header.hint" v-model="newRow[header.value]" :style="'width:' + header.width" :color="color"></v-textarea>
       </v-flex>
       <v-flex>
       <v-btn :color="color" @click="addNewRow">Add Row</v-btn>
@@ -219,31 +220,35 @@ Vue.component('data-table', {
 
   <!-- Search Bar -->
   <v-slide-y-transition>
-    <v-toolbar dense light class="mt-1" v-show="showSearchBar">
-      <v-toolbar-title class="subheading">
+
+    <v-card v-show="showSearchBar" class="mt-1 mb-1">
+      <v-card-text>
+      <v-layout row wrap justify-space-between>
+      <v-flex xs3>
         <v-btn icon @click="toggleSearchBar" slot="activator">
-          <v-icon>keyboard_arrow_up</v-icon>
+        <v-icon>keyboard_arrow_up</v-icon>
         </v-btn>
-        Quick Filter
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-text-field clearable ref="search" append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>
-    </v-toolbar>
+        <span class="subheading">Quick Filter</span>
+      </v-flex>
+      <v-flex xs6>
+        <v-text-field clearable ref="search" append-icon="search" label="Search" single-line hide-details v-model="search" class="pt-0 pb-0 pr-3" :color="color"></v-text-field>
+      </v-flex>
+      </v-layout>
+      </v-card-text>
+    </v-card>
   </v-slide-y-transition>
 
   <!-- Draggable Header -->
   <v-slide-y-transition>
-    <div v-show="showDraggableHeader">
-      <v-toolbar dense light class="mt-1">
-        <v-toolbar-title class="subheading">
-          <v-btn icon @click="showDraggableHeader=!showDraggableHeader" slot="activator">
+      <v-card v-show="showDraggableHeader" class="mt-1 mb-1 pt-1 pb-1">
+        <v-layout>
+        <v-flex xs12>
+        <v-btn icon @click="showDraggableHeader=!showDraggableHeader" slot="activator">
             <v-icon>keyboard_arrow_up</v-icon>
           </v-btn>
-          Move Columns</v-toolbar-title>
-        <v-spacer></v-spacer>
-
-      </v-toolbar>
-      <v-card>
+        <span class="subheading">Move Columns</span>
+      </v-flex>
+        </v-layout>
         <v-layout>
           <v-flex>
             <v-tooltip bottom>
@@ -273,7 +278,6 @@ Vue.component('data-table', {
           </v-flex>
         </v-layout>
       </v-card>
-    </div>
   </v-slide-y-transition>
 
   <!-- filter bar -->
@@ -593,6 +597,15 @@ Vue.component('data-table', {
             if (this.$refs.expandedTableId) {
                 this.$refs.expandedTableId.$el.style.width = width + "px";
             }
+        },
+        getButtonColor(flag) {
+          if (!flag) {
+            return "white";
+          }
+          if (this.iconActiveColor) {
+            return this.iconActiveColor;
+          }
+          return 'amber accent-2';
         },
         // Send an Ajax request to dataUrl and updates
         // headers and items so that the table updates itself
