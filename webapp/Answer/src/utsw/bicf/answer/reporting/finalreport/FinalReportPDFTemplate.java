@@ -458,9 +458,30 @@ public class FinalReportPDFTemplate {
 //			vusRow.setLabel(vusGenes);
 //			sortedValues.add(vusRow);
 //		}
+		//count and extract Tier 3 if too many
+		long tier3Count = sortedValues.stream()
+				.filter(r -> r.getUnknownClinicalSignificanceCount() > 0
+						&& r.getIndicatedTherapyCount() == 0)
+				.collect(Collectors.counting());
+		List<ReportNavigationRow> sortedValuesFiltered = new ArrayList<ReportNavigationRow>();
+		if (tier3Count > 10) {
+			//remove all tier 3 and replace with a single row
+			for (ReportNavigationRow navigationRow : sortedValues) {
+				if (navigationRow.getUnknownClinicalSignificanceCount() == 0
+						|| navigationRow.getIndicatedTherapyCount() > 0) {
+					sortedValuesFiltered.add(navigationRow);
+				}
+			}
+			ReportNavigationRow tier3Row = new ReportNavigationRow(tier3Count + " Additional Mutated Genes", tier3Count + " Additional Mutated Genes");
+			tier3Row.setUnknownClinicalSignificanceCount((int) tier3Count);
+			sortedValuesFiltered.add(tier3Row);
+		}
+		else {
+			sortedValuesFiltered = sortedValues;
+		}
 		
 		
-		for (ReportNavigationRow navigationRow : sortedValues) {
+		for (ReportNavigationRow navigationRow : sortedValuesFiltered) {
 			String gene = navigationRow.getLabel();
 			Color defaultColor = Color.WHITE;
 			if (grayBackground) {

@@ -409,6 +409,9 @@ Vue.component('existing-reports', {
             // return false;
         },
         finalizeButtonDisabled(report) {
+            if (this.readonly) {
+                return true;
+            }
             var currentReportLoaded = report._id['$oid'] == this.currentReportId;
             if (!currentReportLoaded) {
                 return true;
