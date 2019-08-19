@@ -145,7 +145,8 @@ Vue.component('fpkm-plot', {
                                     {
                                         "type":"mixed",
                                         "title":{
-                                          "text":"FPKM for cases diagnosed with " + chartData.oncotreeCode +"<br/> on gene " + this.getCurrentGeneName(),
+                                          "text":"FPKM for cases diagnosed with " + chartData.oncotreeCode +"<br/> on gene " + this.getCurrentGeneName()
+                                          + "<br/>(Demo only, not real data)",
                                         },
                                         plotarea: {
                                             marginTop: "100px",
@@ -161,7 +162,7 @@ Vue.component('fpkm-plot', {
                                             minValue: 0
                                         },
                                         legend: {
-                                            offsetY: "60px"
+                                            offsetY: "90px"
                                         },
                                         "series":this.createAllSeries(chartData)
                                     }
