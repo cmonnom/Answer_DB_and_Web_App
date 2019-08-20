@@ -30,6 +30,7 @@ Vue.component('data-table', {
         "additional-headers": {default: () => [], type: Array}, //for situations where add a new row needs more fields than in headers
         "icon-color": {default: "", type: String},
         "icon-active-color": {default: "", type: String},
+        "external-filtering-active": {default: false, type: Boolean}, //parent can control that the table is filtered externally (eg. advanced-filter)
 
     },
     template: `<div>
@@ -112,7 +113,7 @@ Vue.component('data-table', {
     </v-tooltip>
 
     <v-toolbar-title class="white--text ml-0">{{ tableTitle }}
-      <span v-if="showRowCount" v-html="getRowCount()"></span>
+      <span v-if="showRowCount" v-text="getRowCount()"></span>
     </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-fade-transition>
@@ -545,7 +546,8 @@ Vue.component('data-table', {
             savingHeaderConfig: false,
             isHeaderFixed: false,
             newRow: {},
-            headerLoadingColor: "blue-grey lighten-4"
+            headerLoadingColor: "blue-grey lighten-4",
+            filteringActive: false //preserves the previous value
         }
     },
     methods: {
@@ -1205,7 +1207,12 @@ Vue.component('data-table', {
         getRowCount() {
             if (this.$refs.dataTable) {
                 var rowCount = this.$refs.dataTable.itemsLength;
-                return "(" + rowCount + " row" + (rowCount > 1 ? "s" : "") + ")";
+                this.filteringActive = this.search != "" || this.externalFilteringActive;
+                return "(" + rowCount 
+                + (this.filteringActive ? " filtered" : "") //adds "filtered" if a filter is used (quick search or advanced filtering)
+                + " row" 
+                + (rowCount > 1 ? "s" : "") //adds "s" if more than 1 row
+                + ")";
             }
             return null;
         },

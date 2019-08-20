@@ -710,6 +710,15 @@ Vue.component('advanced-filter', {
             }
             return false;
         },
+        isAnyFilterUsedByType(filterType) {
+            for (var i = 0; i < this.filters.length; i++) {
+                var currentFilterType = this.filters[i].type;
+                if (currentFilterType == filterType && this.isFilterUsed(this.filters[i])) {
+                    return true;
+                }
+            }
+            return false;
+        },
         openSaveFiltersDialog() {
             if (this.currentFilterSet) {
                 this.saveFilterSetId = this.currentFilterSet.variantFilterListId;

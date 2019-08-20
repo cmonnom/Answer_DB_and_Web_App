@@ -793,7 +793,7 @@ const OpenCase = {
         <v-toolbar-title class="white--text ml-0">
         Working on case: {{ caseName }} 
         <v-tooltip bottom>
-              <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
+              <v-icon slot="activator" :size="caseTypeIconSize" class="icon-align-cancel"> {{ caseTypeIcon }} </v-icon>
             <span>{{caseType}} case</span>  
             </v-tooltip>
         </v-toolbar-title>
@@ -997,7 +997,7 @@ const OpenCase = {
                     <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
                         no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true"
                         @refresh-requested="handleRefresh()" :show-left-menu="true" @showing-buttons="toggleGeneVariantDetailsButtons"
-                        @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase"
+                        @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase" :external-filtering-active="isFilteringActiveForType('snp', 'geneVariantDetails')"
                         >
                         <v-fade-transition slot="action1">
                             <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
@@ -1023,7 +1023,7 @@ const OpenCase = {
                     <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
                         :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
                         :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase"
-                        :highlights="highlights">
+                        :highlights="highlights" :external-filtering-active="isFilteringActiveForType('cnv', 'cnvDetails')">
                         <v-fade-transition slot="action1">
                             <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
                                 <v-btn slot="activator" flat icon @click="toggleFilters('cnv')" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
@@ -1070,7 +1070,7 @@ const OpenCase = {
                 <v-tab-item value="tab-translocation">
                     <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
                         no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
-                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase">
+                        :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase" :external-filtering-active="isFilteringActiveForType('ftl', 'translocationDetails')">
                         <v-fade-transition slot="action1">
                         <v-tooltip bottom v-show="geneVariantDetailsTableHovering">
                             <v-btn slot="activator" flat icon @click="toggleFilters('ftl')" :color="isAdvancedFilteringVisible() ? 'amber accent-2' : 'white'">
@@ -1262,6 +1262,7 @@ const OpenCase = {
             waitingForGoodies: false,
             caseType: "",
             caseTypeIcon: "",
+            caseTypeIconSize: 20,
             showNormalSnackBar: true,
             waitingForAjaxCount: 0, //use this variable to wait for other Ajax calls to return. Each ajax call should decrease the amount by one
             waitingForAjaxMessage: "",
@@ -1376,9 +1377,11 @@ const OpenCase = {
                     this.caseOwnerId = response.data.caseOwnerId;
                     if (this.caseType == "Clinical") {
                         this.caseTypeIcon = "fa-user-md";
+                        this.caseTypeIconSize = 20;
                     }
                     else if (this.caseType == "Research" || this.caseType == "ClinicalResearch") {
                         this.caseTypeIcon = "fa-flask";
+                        this.caseTypeIconSize = 18;
                     }
                     this.labNotes = response.data.labNotes;
                     this.extractPatientDetailsInfo(response.data.caseName);
@@ -1494,6 +1497,7 @@ const OpenCase = {
                 this.loadingVariantDetails = false;
                 this.$refs.advancedFilter.loading = false;
                 this.$emit("get-case-details-done");
+                 this.$refs.advancedFilter.isAnyFilterUsed() && !this.$refs.advancedFilter.filterNeedsReload
             }
             ).catch(error => {
                 this.loadingVariantDetails = false;
@@ -3345,7 +3349,20 @@ const OpenCase = {
             // return (i.isSelected && (!i.selectionPerAnnotator || Object.keys(i.selectionPerAnnotator).length == 0));
         },
         simplifiedSelectedVariant(i) {
-            return {"oid": i.oid, "isSelected": i.isSelected, "selectionPerAnnotator": i.selectionPerAnnotator};
+            return {"oid": i.oid, "isSelected": i.isSelected, "selectionPerAnnotator": this.removeSelectedSince(i.selectionPerAnnotator)};
+        },
+        removeSelectedSince(i) {
+            for (var item in i) {
+                if (i[item].selectedSince != undefined) {
+                    i[item].selectedSince = ""; //handles regular cases
+                }
+                else {
+                   console.log(i[item]); 
+                   i[item] = ""; //handles the "latest" case
+                }
+                
+            }
+            return i;
         },
         getSelectedVariantIds(currentUserOnly) {
             return new Promise((resolve, reject) => {
@@ -4336,6 +4353,17 @@ const OpenCase = {
         },
         closeFPKMChart() {
             this.fpkmVisible = false;
+        },
+        isFilteringActiveForType(variantType, tableRef) {
+            if (this.$refs.advancedFilter && this.$refs[tableRef]) {
+                if (this.$refs.advancedFilter.filterNeedsReload) {
+                    return this.$refs[tableRef].filteringActive;
+                }
+                else {
+                    return this.$refs.advancedFilter.isAnyFilterUsedByType(variantType);
+                }
+            }
+            return false;
         }
 
     },

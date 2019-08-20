@@ -55,7 +55,7 @@ public class AOPAspect {
 	
 	public static final PolicyFactory HTML_POLICY = new HtmlPolicyBuilder().allowElements("br").toFactory();
 	
-	private static final Pattern SHORT_PATTERN = Pattern.compile("<\\\\s*[a-zA-Z]+[^>]*>");
+	private static final Pattern SHORT_PATTERN = Pattern.compile("<\\s*[a-zA-Z]+[^>]*>");
 	private static final Pattern LONG_PATTERN = Pattern.compile("<\\s*[a-zA-Z]+[^>]*>(.*?)<\\s*/\\s*[a-zA-Z]+>");
 	
 	@Autowired
@@ -123,6 +123,7 @@ public class AOPAspect {
 					if (!isValid) {
 						logger.info("The following string is invalid: <START>" + argString + "<END>");
 						logger.info("A blocked character was found among: <START>" + SHORT_PATTERN + "<END>");
+						break; //don't process the rest
 					}
 				}
 				else { //if string is not too long, do a replaceAll with a long pattern
@@ -131,6 +132,7 @@ public class AOPAspect {
 					if (!isValid) {
 						logger.info("The following string is invalid: <START>" + argString + "<END>");
 						logger.info("It was compared to: <START>" + removedXSS + "<END>");
+						break; //don't process the rest
 					}
 				}
 //				long endTime = System.currentTimeMillis();

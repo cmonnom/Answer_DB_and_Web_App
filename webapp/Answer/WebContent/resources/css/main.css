@@ -510,3 +510,7 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
 .alpha-54 {
     opacity: 0.54;
 }
+
+.icon-align-cancel {
+    vertical-align: inherit;
+}
