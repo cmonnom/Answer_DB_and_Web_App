@@ -464,7 +464,7 @@ table.table tbody td {
 }
 
 
-/* for vuetify 1.5.16*/
+/* for vuetify 1.5.17*/
 
 .v-toolbar__content {
     padding: 0px 12px;
@@ -513,4 +513,9 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
 
 .icon-align-cancel {
     vertical-align: inherit;
+}
+
+/* to get the correct padding for the navigation drawner minied*/
+.minied a {
+    padding-left: 0px;
 }

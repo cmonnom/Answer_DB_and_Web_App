@@ -40,7 +40,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 <link rel="stylesheet"  href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdn.materialdesignicons.com/3.6.95/css/materialdesignicons.min.css">
 <!-- <link rel="stylesheet" href="https://unpkg.com/vuetify@1.0.19/dist/vuetify.min.css" > -->
-<link href="https://unpkg.com/vuetify@1.5.16/dist/vuetify.min.css" rel="stylesheet">
+<link href="https://unpkg.com/vuetify@1.5.17/dist/vuetify.min.css" rel="stylesheet">
 
 <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="${pageContext.request.contextPath}/resources/css/main.css?timestamp=${timestamp}">
 <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="${pageContext.request.contextPath}/resources/css/goodies.css?timestamp=${timestamp}">
@@ -64,7 +64,8 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 <script src="https://unpkg.com/vue-router@3.0.2/dist/vue-router.min.js" integrity="sha384-EnzMJi5PirMz1dgUr9a4DUHwg7e71+fxk3jLLfJn1vljGydxX8c6bdDYdPDE8224" crossorigin="anonymous"></script>
 
 <!-- <script src="https://unpkg.com/vuetify@1.0.19/dist/vuetify.min.js" integrity="sha384-/tuDalDXfn0/mqH+c+VTK46EiVxKo0Vs3dSRyRLD7jaC1E1t+fhXsB3sB0m+jT5V" crossorigin="anonymous"></script> -->
-<script src="https://unpkg.com/vuetify@1.5.16/dist/vuetify.min.js" integrity="sha384-EYihXFVPjgT0rPZrN9wqg1D2+yJdATdXk8Wt9qVURsaUIEWSYO9beSiTJY9okdEZ" crossorigin="anonymous"></script>
+<!-- <script src="https://unpkg.com/vuetify@1.5.16/dist/vuetify.min.js" integrity="sha384-EYihXFVPjgT0rPZrN9wqg1D2+yJdATdXk8Wt9qVURsaUIEWSYO9beSiTJY9okdEZ" crossorigin="anonymous"></script> -->
+<script src="https://unpkg.com/vuetify@1.5.17/dist/vuetify.min.js" integrity="sha384-a/ZvnkJ3DbfDdfKPYp3euckkAtJXQBVIhyafc4J8/eVD3nBrkX4XVIwrXPsnr4t3" crossorigin="anonymous"></script>
 
 <script src="https://unpkg.com/axios@0.18.0/dist/axios.min.js" integrity="sha384-U/+EF1mNzvy5eahP9DeB32duTkAmXrePwnRWtuSh1C/bHHhyR1KZCr/aGZBkctpY" crossorigin="anonymous"></script>
 <!-- <script src="https://unpkg.com/vue-upload-component"></script> -->

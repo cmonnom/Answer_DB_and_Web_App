@@ -4,15 +4,17 @@ Vue.component('main-menu', {
 		baseUrl: { type: String, default: webAppRoot },
 		width: { type: Number, default: 200 }
 	},
-	template: `<v-navigation-drawer app permanent :width="width" :mini-variant.sync="isMinied">
-	<v-toolbar flat :extended="isMinied ? false : true" style="height:128px" class="menu-image">
-		<img alt="answer logo beta" v-if="isBetaVersion()" :src="baseUrl + '/resources/images/answer-logo-medium-beta.png'"  width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
-		<img alt="answer logo" v-if="isVersionOne()" :src="baseUrl + '/resources/images/answer-logo-medium.png'" width="100%" :class="['pl-2', 'pr-2', isMinied ? '' : 'pt-5 mt-2']"/>
+	template: `<v-navigation-drawer app permanent :width="width" :mini-variant.sync="isMinied" mini-variant-width="50" >
+	<v-toolbar flat :extended="isMinied ? false : true" style="height:128px" class="menu-image" disable-resize-watcher>
+		<img alt="answer logo beta" v-if="isBetaVersion()" :src="getFinalLogoUrl()"  width="100%" :class="['pl-2', 'pr-2', 'pt-5 mt-2']"/>
+		<img alt="answer logo" v-if="isVersionOne()" :src="getFinalLogoUrl()" width="100%" :class="['pl-2', 'pr-2', 'pt-5 mt-2']"/>
 	</v-toolbar>
 	<v-divider></v-divider>
-	<v-list dense class="pt-0">
-		<v-list-tile v-if="displayMenuItem(menuItem)" @click="menuItem.isButton ? menuItem.action : ''" v-for="menuItem in menuItems" :disabled="isMinied" :key="menuItem.title" :to="menuItem.skipRoute ? '' : { name: menuItem.name, params: {id: menuItem.id}}">
-			<v-list-tile-action v-if="menuItem.iconBefore && !menuItem.isButton">
+	<v-list dense class="pt-0" :class="isMinied ? 'minied': ''">
+		<v-list-tile v-if="displayMenuItem(menuItem)" @click="menuItem.isButton ? menuItem.action : ''" 
+		v-for="menuItem in menuItems" :disabled="isMinied" :key="menuItem.title" :to="menuItem.skipRoute ? '' : { name: menuItem.name, params: {id: menuItem.id}}"
+		>
+			<v-list-tile-action v-if="menuItem.iconBefore && !menuItem.isButton" >
 				<v-icon :class="getIconBeforeClass(menuItem)">{{ menuItem.iconBefore }}</v-icon>
 			</v-list-tile-action>
 
@@ -248,6 +250,20 @@ Vue.component('main-menu', {
 				.catch(error => {
 					alert(error);
 				});
+		},
+		getFinalLogoUrl() {
+			if (this.isVersionOne()) {
+				if (this.isMinied) {
+					return this.baseUrl + '/resources/images/answer-logo-vertical-medium.png';
+				}
+				return this.baseUrl + '/resources/images/answer-logo-medium.png';
+			}
+			else {
+				if (this.isMinied) {
+					return this.baseUrl + '/resources/images/answer-logo-vertical-medium.png';
+				}
+				return this.baseUrl + '/resources/images/answer-logo-medium-beta.png';
+			}
 		}
 	},
 	mounted() {
