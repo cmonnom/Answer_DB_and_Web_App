@@ -1,11 +1,15 @@
-version: "3.7"
+version: "2.2"
 
 services:
   shiny:
-    image: cmonnom/shinyapp_musica
-
+    image: cmonnom/shinyapp_musica_final
+    user: 999:58647
     ports:
       - "3838:3838"
     volumes:
+      - ./conf:/etc/shiny-server/
       - ./musica:/srv/shiny-server/musica
+      - /opt/answer/files/vcfs:/opt/answer/files/vcfs
+      - /opt/answer/links/vcfs:/opt/answer/links/vcfs
+      - /PHG_Clinical/cases:/PHG_Clinical/cases
 
