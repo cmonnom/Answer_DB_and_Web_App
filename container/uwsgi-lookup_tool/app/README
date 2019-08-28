@@ -1,4 +1,4 @@
 Copy the source files for Jeff's lookup tool directly under app (no sub directory).
 
-uwsgi.ini and wsgi will configure and launch the app when the container starts (via docker-compose)
+uwsgi.ini and wsgi.py will configure and launch the app when the container starts (via docker-compose)
 
