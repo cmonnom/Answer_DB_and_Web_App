@@ -2,7 +2,7 @@ version: "2.2"
 
 services:
   shiny:
-    image: cmonnom/shinyapp_musica_final
+    image: bioinformagicians/shinyapp_musica_final
     user: 999:58647
     ports:
       - "3838:3838"
