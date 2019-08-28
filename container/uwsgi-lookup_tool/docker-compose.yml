@@ -1,0 +1,10 @@
+version: "2.2"
+
+services:
+  lookup:
+    image: cmonnom/uwsgi-lookup_tool
+    ports:
+      - "29000:29000"
+    volumes:
+      - ./conf:/opt/conf
+      - ./app:/app
