@@ -1,0 +1,6 @@
+This directory contains the Docker files needed to deploy Jeff's lookup tool using docker-compose/
+
+conf has the requirements for recreating the python packages inside the image (via Dockerfile)
+app has the Flask application and uwsgi ini files needed to configure and launch the app
+When updating the app, place all source files directly inside the app directory (no sub directory).
+
