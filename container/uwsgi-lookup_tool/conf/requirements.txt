@@ -1,0 +1,8 @@
+pandas==0.24.2
+bokeh==1.1.0
+flask==1.0.2
+lxml==4.3.3
+requests==2.22.0
+biopython==1.73
+beautifulsoup4==4.7.1
+xlrd>=1.0.0
