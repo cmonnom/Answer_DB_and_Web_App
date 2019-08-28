@@ -2,7 +2,7 @@ version: "2.2"
 
 services:
   lookup:
-    image: cmonnom/uwsgi-lookup_tool
+    image: bioinformagicians/uwsgi-lookup_tool
     ports:
       - "29000:29000"
     volumes:
