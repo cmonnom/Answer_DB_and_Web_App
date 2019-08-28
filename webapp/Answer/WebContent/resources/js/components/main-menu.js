@@ -24,8 +24,8 @@ Vue.component('main-menu', {
 
 			<!-- Main menu item -->
 			<v-list-tile-content v-if="!menuItem.isButton">
-				<v-list-tile-title class="subheading">
-					{{ menuItem.title }}
+				<v-list-tile-title :class="['subheading', menuItem.activeColor]" >
+					<span :class="menuItem.activeColor">{{ menuItem.title }}</span>
 				</v-list-tile-title>
 			</v-list-tile-content>
 
@@ -36,20 +36,28 @@ Vue.component('main-menu', {
 		</v-list-tile-content>
 
 			<v-list-tile-action v-if="menuItem.iconAfter">
-				<!-- order search bar -->
-				<v-menu offset-x :close-on-content-click="false">
-					<v-btn flat icon slot="activator" color="primary" v-show="!isMinied">
+				<!-- case search bar -->
+				<v-menu offset-x :close-on-content-click="false" @input="updateActiveState($event, menuItem)">
+					<v-btn flat icon slot="activator" :color="menuItem.activeColor ? 'warning' : 'primary'" v-show="!isMinied">
 						<v-icon>{{ menuItem.iconAfter }}</v-icon>
 					</v-btn>
 
 					<v-card v-if="menuItem.caseSearch">
+						<v-card-text class="pl-2 pr-2">
+						<v-switch v-model="allCases" color="primary" label="See all cases" @change="populateCases"></v-switch>
 						<v-autocomplete hide-details v-on:input="loadOpenCase" v-bind:items="cases" v-model="caseItemSelected" item-text="name" clearable
-						 item-value="value" label="Case ID" single-line solo></v-autocomplete>
+						 item-value="value" label="Case ID" single-line
+						 no-data-text="No active cases assigned to you"></v-autocomplete>
+						</v-card-text>
 					</v-card>
 
 					<v-card v-if="menuItem.caseReportSearch">
-					<v-autocomplete hide-details v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
-					 item-value="value" label="Case ID" single-line solo></v-autocomplete>
+							<v-card-text class="pl-2 pr-2">
+								<v-switch v-model="allReports" color="primary" label="See all reports" @change="populateCasesWithReport"></v-switch>
+								<v-autocomplete hide-details v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
+								 item-value="value" label="Case ID" single-line
+								 no-data-text="No active reports assigned to you"></v-autocomplete>
+							</v-card-text>
 				</v-card>
 
 				</v-menu>
@@ -86,8 +94,8 @@ Vue.component('main-menu', {
 			menuItems: [
 				{ title: 'Hide Menu', name: 'HideMenu', regularItem: true, action: this.toggleMinied, skipRoute:true, iconBefore: 'eject', isButton: true, miniedRotation: true },
 				{ title: 'Home', iconBefore: 'home', name: 'Home', regularItem: true },
-				{ title: 'Open Case', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseSearch: true },
-				{ title: 'Open Report', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseReportSearch: true },
+				{ title: 'Open Case', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseSearch: true, activeColor:"" },
+				{ title: 'Open Report', skipRoute: true, regularItem: true, iconAfter: 'keyboard_arrow_right', caseReportSearch: true, activeColor:""  },
 				{ title: 'Annotations', name: 'AnnotationBrowser', regularItem: true, iconBefore: 'mdi-message-bulleted' }, // NOT READY YET
 				{ title: 'Admin', name: 'Admin', regularItem: true, adminOnly: true, iconBefore: 'settings' },
 				{ title: 'Preferences', name: 'UserPrefs', regularItem: true, iconBefore: 'account_circle' },
@@ -105,14 +113,18 @@ Vue.component('main-menu', {
 			statusMessage: "",
 			userLeaderBoardInfo: {},
 			userRankVisible: false,
-			versionName: "1.0"
+			versionName: "1.0",
+			allCases: false,
+			allReports: false,
 		}
 
 	},
 	methods: {
 		populateCases() {
 			axios.get(this.caseUpdateUrl, {
-				params: {}
+				params: {
+					allCases: this.allCases
+				}
 			})
 				.then(response => {
 					if (response.data.isAllowed) {
@@ -128,7 +140,9 @@ Vue.component('main-menu', {
 		},
 		populateCasesWithReport() {
 			axios.get(this.caseReportUpdateUrl, {
-				params: {}
+				params: {
+					allReports: this.allReports
+				}
 			})
 				.then(response => {
 					if (response.data.isAllowed) {
@@ -142,9 +156,40 @@ Vue.component('main-menu', {
 					alert(error);
 				});
 		},
+		isUserAssignedToCase() {
+			return new Promise((resolve, reject) => {
+				axios({
+					method: 'get',
+					url: webAppRoot + "/isUserAssignedToCase",
+					params: {
+						caseId: this.caseItemSelected,
+					},
+				}).then(response => {
+					resolve({
+						isAssigned: response.data.isAllowed && response.data.success,
+						caseId: response.data.payload
+					});
+				}).catch(error => {
+					this.handleAxiosError(error);
+				});
+			});
+		},
 		loadOpenCase() {
 			if (this.caseItemSelected) {
-				this.$router.push({ name: "OpenCase", params: { id: this.caseItemSelected } });
+				if (this.allCases) {
+					//need to check first if user is assigned to case
+					this.isUserAssignedToCase()
+					.then(response => {
+						var route = "OpenCaseReadOnly";
+						if (response.isAssigned) {
+							route = "OpenCase";
+						}
+						this.$router.push({ name: route, params: { id: response.caseId } });
+					}); 
+				}
+				else {
+					this.$router.push({ name: "OpenCase", params: { id: this.caseItemSelected } });
+				}
 			}
 			this.caseItemSelected = null;
 			this.caseReportItemSelected = null;
@@ -264,6 +309,9 @@ Vue.component('main-menu', {
 				}
 				return this.baseUrl + '/resources/images/answer-logo-medium-beta.png';
 			}
+		},
+		updateActiveState(event, menuItem) {
+			menuItem.activeColor = event ? "warning--text" : "";
 		}
 	},
 	mounted() {

@@ -31,7 +31,7 @@ var router = new VueRouter({
 		},
 		{
 			path: webAppRoot + '/openCaseReadOnly/:id',
-			name: 'OpenCase',
+			name: 'OpenCaseReadOnly',
 			component: () => new Promise(
 				resolve => resolve(OpenCase)),
 			// component: OpenCase,
@@ -53,7 +53,7 @@ var router = new VueRouter({
 		},
 		{
 			path: webAppRoot + '/openReportReadOnly/:id',
-			name: 'OpenReport',
+			name: 'OpenReportReadOnly',
 			component: () => new Promise(
 				resolve => resolve(OpenReport)),
 			// component: OpenReport,
