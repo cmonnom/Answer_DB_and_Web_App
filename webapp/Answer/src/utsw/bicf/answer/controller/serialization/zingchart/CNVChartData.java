@@ -22,6 +22,8 @@ public class CNVChartData extends ZingChartData {
 	public static final String cnrCN2Color = "#00204d"; //cividis blue100
 	public static final String cnrOtherColor = "#a39a76"; //cividis brown50
 	public static final String cnsColor = "#f9e04a"; //yellow5
+	public static final Double CR_MAX = 5d;
+	public static final Double CR_MIN = -5d;
 	
 	public static final List<String> highlightedGeneColors = new ArrayList<String>();
 	static {
@@ -82,12 +84,36 @@ public class CNVChartData extends ZingChartData {
 		valuesOther.setType("scatter");
 		valuesOther.setColor(cnrOtherColor);
 		valuesOther.setAlpha(0.2F);
+		
+		//for values outside of the expected range [-5, 5]
+		List<Object> dataOutliers = new ArrayList<Object>();
+		List<String> dataLabelsOutliers = new ArrayList<String>();
+		Values valuesOutliers = new Values(dataOutliers, "CNR Outliers (other)", dataLabelsOutliers);
+		valuesOutliers.setType("scatter");
+		valuesOutliers.setColor(cnrOtherColor);
+		valuesOutliers.setAlpha(0.2F);
+		valuesOutliers.setMarker(new Marker("cross"));
+		
 		for (CNRData cnr : cnrNotInSelectedGenes) {
+			if (cnr.getLog2() > CR_MAX || cnr.getLog2() < CR_MIN) {
+				Double ceilingValue = null;
+				if (cnr.getLog2() > CR_MAX) {
+					ceilingValue = CR_MAX;
+				}
+				else {
+					ceilingValue =  CR_MIN;
+				}
+				dataOutliers.add(new Object[] {cnr.getStart(), ceilingValue});
+				dataLabelsOutliers.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
+			}
 			dataOther.add(new Object[] {cnr.getStart(), cnr.getLog2()});
 			dataLabelsOther.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 			dataPointCount++;
 		}
 		valuesByGenes.add(valuesOther);
+		if (!dataOutliers.isEmpty()) {
+			valuesByGenes.add(valuesOutliers);
+		}
 		
 		//selected genes
 		List<String> sortedGenes = cnrByGene.keySet().stream().sorted().collect(Collectors.toList());
@@ -101,13 +127,37 @@ public class CNVChartData extends ZingChartData {
 				values.setColor(highlightedGeneColors.get(colorCounter % highlightedGeneColors.size()));
 				colorCounter++;
 				values.setAlpha(1F);
+				
+				//for values outside of the expected range [-5, 5]
+				List<Object> dataSelectedOutliers = new ArrayList<Object>();
+				List<String> dataLabelsSelectedOutliers = new ArrayList<String>();
+				Values valuesSelectedOutliers = new Values(dataSelectedOutliers, gene, dataLabelsSelectedOutliers);
+				valuesSelectedOutliers.setType("scatter");
+				valuesSelectedOutliers.setColor(highlightedGeneColors.get(colorCounter % highlightedGeneColors.size()));
+				valuesSelectedOutliers.setAlpha(1F);
+				valuesSelectedOutliers.setMarker(new Marker("cross"));
+				
 				List<CNRData> cnrList = cnrByGene.get(gene);
 				for (CNRData cnr : cnrList) {
+					if (cnr.getLog2() > CR_MAX || cnr.getLog2() < CR_MIN) {
+						Double ceilingValue = null;
+						if (cnr.getLog2() > CR_MAX) {
+							ceilingValue = CR_MAX;
+						}
+						else {
+							ceilingValue =  CR_MIN;
+						}
+						dataSelectedOutliers.add(new Object[] {cnr.getStart(), ceilingValue});
+						dataLabelsSelectedOutliers.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
+					}
 					data.add(new Object[] {cnr.getStart(), cnr.getLog2()});
 					dataLabels.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 					dataPointCount++;
 				}
 				valuesByGenes.add(values);
+				if (!dataSelectedOutliers.isEmpty()) {
+					valuesByGenes.add(valuesSelectedOutliers);
+				}
 			}
 		}
 		
@@ -198,12 +248,37 @@ public class CNVChartData extends ZingChartData {
 		values2.setType("scatter");
 		values2.setColor(cnrCN2Color);
 		values2.setAlpha(0.5F);
+		
+		//for values outside of the expected range [-5, 5]
+		List<Object> dataOutliers = new ArrayList<Object>();
+		List<String> dataLabelsOutliers = new ArrayList<String>();
+		Values valuesOutliers = new Values(dataOutliers, "CNR Outliers (CN=2)", dataLabelsOutliers);
+		valuesOutliers.setType("scatter");
+		valuesOutliers.setColor(cnrCN2Color);
+		valuesOutliers.setAlpha(0.5F);
+		valuesOutliers.setMarker(new Marker("cross"));
+		
+		
 		for (CNRData cnr : cnr2) {
+			if (cnr.getLog2() > CR_MAX || cnr.getLog2() < CR_MIN) {
+				Double ceilingValue = null;
+				if (cnr.getLog2() > CR_MAX) {
+					ceilingValue = CR_MAX;
+				}
+				else {
+					ceilingValue =  CR_MIN;
+				}
+				dataOutliers.add(new Object[] {cnr.getStart(), ceilingValue});
+				dataLabelsOutliers.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
+			}
 			data2.add(new Object[] {cnr.getStart(), cnr.getLog2()});
 			dataLabels2.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 			dataPointCount++;
 		}
 		valuesByCN.add(values2);
+		if (!dataOutliers.isEmpty()) {
+			valuesByCN.add(valuesOutliers);
+		}
 		
 		List<Object> dataOther = new ArrayList<Object>();
 		List<String> dataLabelsOther = new ArrayList<String>();
@@ -211,13 +286,36 @@ public class CNVChartData extends ZingChartData {
 		valuesOther.setType("scatter");
 		valuesOther.setColor(cnrOtherColor);
 		valuesOther.setAlpha(0.5F);
+		
+		//for values outside of the expected range [-5, 5]
+		List<Object> dataOtherOutliers = new ArrayList<Object>();
+		List<String> dataLabelsOtherOutliers = new ArrayList<String>();
+		Values valuesOtherOutliers = new Values(dataOtherOutliers, "CNR Outliers (others)", dataLabelsOtherOutliers);
+		valuesOtherOutliers.setType("scatter");
+		valuesOtherOutliers.setColor(cnrOtherColor);
+		valuesOtherOutliers.setAlpha(0.5F);
+		valuesOtherOutliers.setMarker(new Marker("cross"));
+		
 		for (CNRData cnr : cnrOther) {
+			if (cnr.getLog2() > CR_MAX || cnr.getLog2() < CR_MIN) {
+				Double ceilingValue = null;
+				if (cnr.getLog2() > CR_MAX) {
+					ceilingValue = CR_MAX;
+				}
+				else {
+					ceilingValue =  CR_MIN;
+				}
+				dataOtherOutliers.add(new Object[] {cnr.getStart(), ceilingValue});
+				dataLabelsOtherOutliers.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
+			}
 			dataOther.add(new Object[] {cnr.getStart(), cnr.getLog2()});
 			dataLabelsOther.add("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 			dataPointCount++;
 		}
 		valuesByCN.add(valuesOther);
-		
+		if (!dataOtherOutliers.isEmpty()) {
+			valuesByCN.add(valuesOtherOutliers);
+		}
 		return valuesByCN;
 	}
 	

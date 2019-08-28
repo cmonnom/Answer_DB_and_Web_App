@@ -116,6 +116,7 @@ public class AOPAspect {
 //				boolean currentArgIsValid = true;
 //				long startTime = System.currentTimeMillis();
 				String argString = (String) args[i];
+				argString = argString.replaceAll("<br/>", " "); //skip line return (for instance in trial)
 				if (argString.length() > 1000) { //just do detection. Faster. Block input if found
 					Matcher m = SHORT_PATTERN.matcher(argString);
 					boolean found = m.find();

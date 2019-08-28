@@ -519,3 +519,41 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
 .minied a {
     padding-left: 0px;
 }
+
+/* rotating loader when using an icon or image instead of default button loader */
+.custom-loader {
+    animation: loader 2s infinite;
+    display: flex;
+  }
+  @-moz-keyframes loader {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @-webkit-keyframes loader {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @-o-keyframes loader {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes loader {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }

@@ -462,7 +462,9 @@ Vue.component('variant-details', {
         applySeriesStyle(series) {
             series.forEach((serie, index) => {
                 if (serie.type == "scatter") {
-                    serie.marker = { backgroundColor: serie.color }
+                    if (!serie.marker) {
+                        serie.marker = { backgroundColor: serie.color }
+                    }
                     serie.hoverMarker = {
                         size: 4,
                         backgroundColor: this.cividisColors.blue90,
@@ -471,7 +473,9 @@ Vue.component('variant-details', {
                 }
                 else if (serie.type == "line") {
                     // serie.marker = { backgroundColor: this.cividisColors.blue90, lineColor: this.cividisColors.blue90 }
-                    serie.marker = { backgroundColor: serie.color, lineColor: serie.color }
+                    if (!serie.marker) {
+                        serie.marker = { backgroundColor: serie.color, lineColor: serie.color }
+                    }
                     serie.lineColor = serie.color;
                     serie.hoverMarker = {
                         size: 6,

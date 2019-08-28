@@ -13,6 +13,7 @@ public class Values {
 	String type;
 	String color;
 	Float alpha;
+	Marker marker;
 	
 	public Values() {
 		super();
@@ -71,6 +72,14 @@ public class Values {
 
 	public void setAlpha(Float alpha) {
 		this.alpha = alpha;
+	}
+
+	public Marker getMarker() {
+		return marker;
+	}
+
+	public void setMarker(Marker marker) {
+		this.marker = marker;
 	}
 
 

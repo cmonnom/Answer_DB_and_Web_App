@@ -4,8 +4,12 @@ Vue.component('splash-screen', {
     },
     template: `<div class="splash-screen" v-if="splashDialog">
     <v-layout align-center justify-center row fill-height class="splash-screen-item">
-	<span class="subheading">{{ splashTextCurrent }}</span>
-  </v-layout>
+    <span class="subheading">{{ splashTextCurrent }}</span>
+    <v-btn fixed dark fab top left flat color="primary" class="custom-loader">
+      <img
+      :src="loadingImageUrl()" alt="loading page" width="100%"/>
+    </v-btn>
+    </v-layout>
   </div>`,
     data() {
         return {
@@ -51,6 +55,9 @@ Vue.component('splash-screen', {
         getSplashScreenMaxHeightTopLeft() {
             return getDialogMaxHeightOuter(0) + "left: -200px;top: -96px";
         },
+        loadingImageUrl() {
+            return webAppRoot + "/resources/images/answer-logo-icon-small.png";
+        }
     },
     computed: {
     },

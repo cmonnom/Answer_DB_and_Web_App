@@ -2,6 +2,8 @@ package utsw.bicf.answer.security;
 
 import java.io.File;
 
+import com.jcraft.jsch.Session;
+
 public class FileProperties {
 
 	String mdaFilesPath;
@@ -333,6 +335,5 @@ public class FileProperties {
 	public void setIgvTemplateFilesDir(File igvTemplateFilesDir) {
 		this.igvTemplateFilesDir = igvTemplateFilesDir;
 	}
-	
 	
 }
