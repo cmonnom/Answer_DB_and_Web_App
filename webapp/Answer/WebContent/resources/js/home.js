@@ -2,8 +2,6 @@ const Home = {
     template:
         `<div>
 
-        <clippy v-if="showClippy()"></clippy>
-
         <v-snackbar :timeout="snackBarTimeout" :bottom="true" :value="snackBarVisible">
         {{ snackBarMessage }}
         <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
@@ -196,8 +194,9 @@ const Home = {
         </v-tabs-items>
     </v-tabs>
 
-
-  </v-container>
+    
+    </v-container>
+    <clippy v-if="showClippy()"></clippy>
 </div>`,
     data() {
         return {
@@ -527,12 +526,14 @@ const Home = {
             return tabTitle == defaultHomeTab;
         },
         showClippy() {
-            var today = moment().dayOfYear();
-            var dDay = moment("2019-08-22").dayOfYear();
-            if (today != dDay) {
+            var today = moment()
+            var start = moment("2019-10-04");
+            var end = moment("2019-10-11");
+            var activateClippy = today.isBetween(start, end);
+            if (!activateClippy) {
                 clippy = {}; //no need to keep it in memory
             }
-            return today == dDay;
+            return activateClippy;
         }
     },
     mounted: function () {

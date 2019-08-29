@@ -12,11 +12,12 @@ Vue.component('clippy', {
     direction="left"
     :open-on-hover="false"
     :absolute="true"
+    fixed
     transition="slide-y-reverse-transition"
         >
         <template v-slot:activator>
             <v-tooltip bottom>
-            <v-btn slot="activator" v-model="fab" color="primary" dark fab @click="toggleAgent">
+            <v-btn slot="activator" v-model="fab" color="warning" dark fab @click="toggleAgent">
               <v-icon large>mdi-clippy</v-icon>
               <v-icon>close</v-icon>
             </v-btn>

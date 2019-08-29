@@ -48,24 +48,7 @@ const AnnotationBrowser = {
             </v-list>
         </v-menu>
         <v-toolbar-title class="ml-0">
-        <v-layout row align-center>
-          <v-flex xs12>
             UTSW Annotations
-          </v-flex>
-          <v-flex xs12 offset-xs2 offset-md3 offset-lg5 offset-xl8>
-            <v-tabs grow slot="extension" dark slider-color="warning" color="primary" fixed-tabs v-model="annotationTabActive">
-            <v-tab href="#tab-trial" :ripple="false">
-                Clinical Trials
-            </v-tab>
-            <v-tab href="#tab-snp" :ripple="false">
-                SNP / Indel
-            </v-tab>
-            <v-tab href="#tab-genes" :ripple="false">
-                Gene Sets
-            </v-tab>
-            </v-tabs>
-          </v-flex>
-        </v-layout>
         </v-toolbar-title>
        
         <v-spacer></v-spacer>
@@ -77,6 +60,17 @@ const AnnotationBrowser = {
             <span>Create New Annotations</span>
         </v-tooltip>
     </v-toolbar>
+    <v-tabs grow slot="extension" fixed-tabs dark slider-color="amber accent-2" color="primary darken-1" v-model="annotationTabActive" hide-slider>
+    <v-tab href="#tab-trial" :ripple="false" active-class="v-tabs__item--active primary">
+        Clinical Trials
+    </v-tab>
+    <v-tab href="#tab-snp" :ripple="false" active-class="v-tabs__item--active primary">
+        SNP / Indel
+    </v-tab>
+    <v-tab href="#tab-genes" :ripple="false" active-class="v-tabs__item--active primary">
+        Gene Sets
+    </v-tab>
+    </v-tabs>
     
             <v-tabs-items v-model="annotationTabActive">
             <!-- Trials -->

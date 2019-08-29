@@ -760,6 +760,48 @@ const OpenCase = {
                     </v-list-tile-content>
                     </v-list-tile>
 
+                    <v-list-tile class="list-menu">
+                            <v-list-tile-content>
+                                <v-list-tile-title>
+                                    <v-menu offset-y offset-x close-delay="2000" open-on-hover>
+                                            <span slot="activator">
+                                                <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>IGV
+                                                <!-- This is a hack to extend the menu active area because the title is much shorter than other items -->
+                                                <span v-for="i in 30" :key="i">&nbsp;</span>
+                                            </span>
+                                            <v-list>
+                                    <v-list-tile v-if="isSNP()" avatar @click="openBamViewerLinkWebFLT3()">
+                                            <v-list-tile-avatar>
+                                                <v-icon>mdi-web</v-icon>
+                                            </v-list-tile-avatar>
+                                            <v-list-tile-content class="mb-2">
+                                                <v-list-tile-title>Open FLT3 locus (web)</v-list-tile-title>
+                                            </v-list-tile-content>
+                                        </v-list-tile>
+
+                                        <v-list-tile v-if="isSNP()" avatar @click="downloadIGVFile('jnlp', flt3ITDLocus)">
+                                        <v-list-tile-avatar>
+                                            <v-icon>mdi-desktop-mac-dashboard</v-icon>
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content  class="mb-2">
+                                            <v-list-tile-title>Open FLT3 locus (desktop)</v-list-tile-title>
+                                        </v-list-tile-content>
+                                        </v-list-tile>
+
+                                        <v-list-tile v-if="isSNP()" avatar @click="downloadIGVFile('session', flt3ITDLocus)">
+                                        <v-list-tile-avatar>
+                                            <v-icon>mdi-file-xml</v-icon>
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content  class="mb-2">
+                                            <v-list-tile-title>Download IGV Session for FLT3 locus</v-list-tile-title>
+                                        </v-list-tile-content>
+                                        </v-list-tile>
+                                    </v-list>
+                                </v-menu> 
+                            </v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>   
+
                     <v-list-tile avatar @click="openReviewSelectionDialog()">
                         <v-list-tile-avatar>
                             <v-icon>mdi-clipboard-check</v-icon>
@@ -831,6 +873,34 @@ const OpenCase = {
         </v-btn>
         <span>Open FPKM Plot</span>
     </v-tooltip>
+
+    <v-menu origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y v-if="isSNP()">
+    <v-btn icon flat slot="activator">IGV
+    </v-btn>
+    <v-card color="primary">
+    <v-tooltip bottom v-if="isSNP()">
+        <v-btn ref="bamViewerLinkFLT3" dark icon flat slot="activator" :href="createBamViewerLinkFLT3()" target="_blank" rel="noreferrer">
+            <v-icon>mdi-web</v-icon> 
+        </v-btn>
+        <span>Open FLT3 locus (web)</span>
+    </v-tooltip>
+    <br/>
+    <v-tooltip bottom v-if="isSNP()">
+        <v-btn ref="bamViewerLinkDesktop" dark icon flat slot="activator" @click="downloadIGVFile('jnlp', flt3ITDLocus)">
+            <v-icon>mdi-desktop-mac-dashboard</v-icon>
+        </v-btn>
+        <span>Open FLT3 locus (desktop)</span>
+    </v-tooltip>
+    <br/>
+    <v-tooltip bottom v-if="isSNP()">
+        <v-btn ref="bamViewerLinkDesktop" dark icon flat slot="activator" @click="downloadIGVFile('session', flt3ITDLocus)">
+            <v-icon>mdi-file-xml</v-icon>
+        </v-btn>
+        <span>Download IGV Session for FLT3 locus</span>
+    </v-tooltip>
+    </v-card>
+    </v-menu>
+
             <v-tooltip bottom>
                 <v-btn flat icon @click="openReviewSelectionDialog()" slot="activator" :color="reviewDialogVisible ? 'amber accent-2' : ''">
                     <v-icon>mdi-clipboard-check</v-icon>
@@ -1296,6 +1366,7 @@ const OpenCase = {
             fpkmPositionx: 0,
             fpkmPositiony: 0,
             snpItemsTemp: [], //a temp list of selected variants
+            flt3ITDLocus: "chr13:28,033,867-28,034,235"
         }
     }, methods: {
         
@@ -3269,6 +3340,9 @@ const OpenCase = {
         openBamViewerLinkWeb() {
             this.$refs.bamViewerLink.$el.click();
         },
+        openBamViewerLinkWebFLT3() {
+            this.$refs.bamViewerLinkFLT3.$el.click();
+        },
         createBamViewerLink() {
             var igvRange = this.currentVariant.chrom + ":";
             igvRange += this.currentVariant.pos - 100;
@@ -3279,11 +3353,24 @@ const OpenCase = {
             link += "&caseId=" + this.$route.params.id;
             return link;
         },
-        downloadIGVFile(igvType) {
-            var igvRange = this.currentVariant.chrom + ":";
-            igvRange += this.currentVariant.pos - 100;
-            igvRange += "-";
-            igvRange += this.currentVariant.pos + 99;
+        createBamViewerLinkFLT3() {
+            var igvRange = "chr13:28,033,867-28,034,235";
+            link = "../bamViewer?";
+            link += "locus=" + igvRange;
+            link += "&caseId=" + this.$route.params.id;
+            return link;
+        },
+        downloadIGVFile(igvType, igvRangeBypass) {
+            var igvRange = "";
+            if (igvRangeBypass) {
+                igvRange = igvRangeBypass;
+            }
+            else {
+                igvRange = this.currentVariant.chrom + ":";
+                igvRange += this.currentVariant.pos - 100;
+                igvRange += "-";
+                igvRange += this.currentVariant.pos + 99;
+            }
             axios.get(
                 webAppRoot + "/downloadLocalIGVFile",
                 {
