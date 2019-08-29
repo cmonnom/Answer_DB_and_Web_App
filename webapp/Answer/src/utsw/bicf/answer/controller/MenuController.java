@@ -91,7 +91,7 @@ public class MenuController {
 						response.setPayload(caseId);
 					}
 					else {
-						response.setSuccess(false);
+						response.setSuccess(true);
 						response.setIsAllowed(false);
 						response.setPayload(caseId);
 					}

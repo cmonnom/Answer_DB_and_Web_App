@@ -47,7 +47,12 @@ Vue.component('main-menu', {
 						<v-switch v-model="allCases" color="primary" label="See all cases" @change="populateCases"></v-switch>
 						<v-autocomplete hide-details v-on:input="loadOpenCase" v-bind:items="cases" v-model="caseItemSelected" item-text="name" clearable
 						 item-value="value" label="Case ID" single-line
-						 no-data-text="No active cases assigned to you"></v-autocomplete>
+						 no-data-text="No active cases assigned to you">
+						<template v-slot:item="data">
+							<v-icon class="pb-2 pr-3">{{ data.item.iconAvatar }}</v-icon>
+							<span>{{ data.item.name }}</span>
+						</template>
+						</v-autocomplete>
 						</v-card-text>
 					</v-card>
 
@@ -56,7 +61,12 @@ Vue.component('main-menu', {
 								<v-switch v-model="allReports" color="primary" label="See all reports" @change="populateCasesWithReport"></v-switch>
 								<v-autocomplete hide-details v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
 								 item-value="value" label="Case ID" single-line
-								 no-data-text="No active reports assigned to you"></v-autocomplete>
+								 no-data-text="No active reports assigned to you">
+								 <template v-slot:item="data">
+							<v-icon class="pb-2 pr-3">{{ data.item.iconAvatar }}</v-icon>
+							<span>{{ data.item.name }}</span>
+						</template>
+								 </v-autocomplete>
 							</v-card-text>
 				</v-card>
 
@@ -131,7 +141,7 @@ Vue.component('main-menu', {
 						this.cases = response.data.items;
 					}
 					else {
-						this.handleDialogs(response);
+						this.handleDialogs(response.data, this.populateCases);
 					}
 				})
 				.catch(error => {
@@ -149,7 +159,7 @@ Vue.component('main-menu', {
 						this.casesWithReport = response.data.items;
 					}
 					else {
-						this.handleDialogs(response);
+						this.handleDialogs(response.data, this.populateCasesWithReport);
 					}
 				})
 				.catch(error => {
@@ -165,10 +175,15 @@ Vue.component('main-menu', {
 						caseId: this.caseItemSelected,
 					},
 				}).then(response => {
-					resolve({
-						isAssigned: response.data.isAllowed && response.data.success,
-						caseId: response.data.payload
-					});
+					if (response.data.success) {
+						resolve({
+							isAssigned: response.data.isAllowed,
+							caseId: response.data.payload
+						});
+					}
+					else {
+						this.handleDialogs(response.data, this.isUserAssignedToCase);
+					}
 				}).catch(error => {
 					this.handleAxiosError(error);
 				});
@@ -185,6 +200,8 @@ Vue.component('main-menu', {
 							route = "OpenCase";
 						}
 						this.$router.push({ name: route, params: { id: response.caseId } });
+					}).catch(error => {
+						this.handleAxiosError(error);
 					}); 
 				}
 				else {
@@ -206,15 +223,28 @@ Vue.component('main-menu', {
 			this.caseItemSelected = null;
 			this.caseReportItemSelected = null;
 		},
-		handleDialogs(response) {
-			// alert(response.data.reason);
-			if (response.data.isXss) {
-				console.log("xss detected:" + response.data.reason);
-				this.showErrorDialog = true;
-			}
-			else {
-				this.showLoginDialog = true;
-			}
+		handleDialogs(response, callback) {
+			// // alert(response.data.reason);
+			// if (response.data.isXss) {
+			// 	console.log("xss detected:" + response.data.reason);
+			// 	this.showErrorDialog = true;
+			// }
+			// else {
+			// 	this.showLoginDialog = true;
+			// }
+			if (response == "not-allowed") {
+                bus.$emit("not-allowed", [this.response]);
+            }
+            if (response.isXss) {
+                bus.$emit("xss-error",
+                    [this, response.reason]);
+            }
+            else if (response.isLogin) {
+                bus.$emit("login-needed", [this, callback])
+            }
+            else if (response.success === false) {
+                bus.$emit("some-error", [this, response.message]);
+            }
 		},
 		displayMenuItem(menuItem) {
 			var isVisible = menuItem.regularItem;
@@ -312,7 +342,7 @@ Vue.component('main-menu', {
 		},
 		updateActiveState(event, menuItem) {
 			menuItem.activeColor = event ? "warning--text" : "";
-		}
+		},
 	},
 	mounted() {
 		// this.getUserLeaderBoardInfo();
