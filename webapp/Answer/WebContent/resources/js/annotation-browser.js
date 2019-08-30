@@ -60,7 +60,7 @@ const AnnotationBrowser = {
             <span>Create New Annotations</span>
         </v-tooltip>
     </v-toolbar>
-    <v-tabs grow slot="extension" fixed-tabs dark slider-color="amber accent-2" color="primary darken-1" v-model="annotationTabActive" hide-slider>
+    <v-tabs slot="extension" fixed-tabs dark slider-color="amber accent-2" color="primary darken-1" v-model="annotationTabActive" hide-slider>
     <v-tab href="#tab-trial" :ripple="false" active-class="v-tabs__item--active primary">
         Clinical Trials
     </v-tab>
@@ -386,8 +386,8 @@ const AnnotationBrowser = {
         annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isGeneSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
         annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
         "Gene " + (annotations[i].isGeneSpecific ? annotations[i].geneId : ''),
-        "Variant " + (annotations[i].isVariantSpecific ? annotations[i].notation : ''),
-          "Diagnosis"];
+        "Variant " + (annotations[i].isVariantSpecific ? (annotations[i].notation ? annotations[i].notation : '') : ''),
+          "Diagnosis " + (annotations[i].isTumorSpecific ? annotations[i].oncotreeDiagnosis : ''),];
         annotation.category = annotations[i].category;
         annotation.createdDate = annotations[i].createdDate;
         annotation.createdSince = annotations[i].createdSince;

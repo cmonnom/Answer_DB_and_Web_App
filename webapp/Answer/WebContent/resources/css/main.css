@@ -557,3 +557,14 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
       transform: rotate(360deg);
     }
   }
+
+  .highlight-active {
+    animation: highlight 1s ease-out 2 alternate;
+    opacity: 1;
+  }
+
+  @keyframes highlight {
+    100% {
+      opacity: 0.2;
+    }
+  }

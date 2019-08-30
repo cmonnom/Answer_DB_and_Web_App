@@ -53,7 +53,7 @@ Vue.component('splash-screen', {
             }
         },
         getSplashScreenMaxHeightTopLeft() {
-            return getDialogMaxHeightOuter(0) + "left: -200px;top: -96px";
+            return getDialogMaxHeightOuter(-200) + "left: -200px;top: -96px";
         },
         loadingImageUrl() {
             return webAppRoot + "/resources/images/answer-logo-icon-small.png";

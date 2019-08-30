@@ -651,7 +651,10 @@ const OpenCase = {
                                                 <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in utswAnnotationsFormatted" :key="index" v-show="annotation.visible">
                                                     <utsw-annotation-card :annotation="annotation" :variant-type="currentVariantType"
                                                     :no-edit="!canProceed('canAnnotate') || readonly"
-                                                    @annotation-selection-changed="handleAnnotationSelectionChanged()"></utsw-annotation-card>
+                                                    :can-copy="canCopyAnnotation && canProceed('canAnnotate') && !readonly && !loadingVariant"
+                                                    @annotation-selection-changed="handleAnnotationSelectionChanged()"
+                                                    @copy-annotation="copyAnnotation"
+                                                    :class="getHighlightClass(index)"></utsw-annotation-card>
                                                 </v-flex>
                                             </v-layout>
                                         </v-container>
@@ -1366,7 +1369,9 @@ const OpenCase = {
             fpkmPositionx: 0,
             fpkmPositiony: 0,
             snpItemsTemp: [], //a temp list of selected variants
-            flt3ITDLocus: "chr13:28,033,867-28,034,235"
+            flt3ITDLocus: "chr13:28,033,867-28,034,235",
+            highlightLatestAnnotation: false,
+            canCopyAnnotation: true
         }
     }, methods: {
         
@@ -2145,6 +2150,8 @@ const OpenCase = {
 
                         this.tryGoodies();
 
+                       
+
                     } else {
                         this.loadingVariantDetails = false;
                         this.loadingVariant = false;
@@ -2688,7 +2695,7 @@ const OpenCase = {
                 annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
                 "Gene " + (annotations[i].isGeneSpecific ? annotations[i].geneId : ''),
                 "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.notation : ''),
-                    "Diagnosis"];
+                    "Diagnosis "+ (annotations[i].isTumorSpecific ? annotations[i].oncotreeDiagnosis : '')];
                 annotation.category = annotations[i].category;
                 annotation.createdDate = annotations[i].createdDate;
                 annotation.createdSince = annotations[i].createdSince;
@@ -2840,12 +2847,14 @@ const OpenCase = {
             this.updateSplashProgress();
         },
         formatAnnotations() {
+            this.highlightLatestAnnotation = true;
             this.utswAnnotationsFormatted = this.formatLocalAnnotations(this.utswAnnotations, true);
             if (this.mdaAnnotations) {
                 this.mdaAnnotationsFormatted = this.formatMDAAnnotations(this.mdaAnnotations);
             }
             // this.userAnnotationsFormatted = this.formatLocalAnnotations(this.userAnnotations, false);
             this.matchAnnotationFilter();
+            this.stopHighlightAnimation();
         },
         formatMDAAnnotations(annotations) {
             var formatted = [];
@@ -2947,15 +2956,19 @@ const OpenCase = {
             return text;
         },
         formatCNVAnnotations() {
+            this.highlightLatestAnnotation = true;
             this.utswAnnotationsFormatted = this.formatLocalCNVAnnotations(this.utswAnnotations, true);
             if (this.mdaAnnotations) {
                 this.mdaAnnotationsFormatted = this.formatMDAAnnotations(this.mdaAnnotations);
             }
             this.matchAnnotationFilter();
+            this.stopHighlightAnimation();
         },
         formatTranslocationAnnotations() {
+            this.highlightLatestAnnotation = true;
             this.utswAnnotationsFormatted = this.formatLocalTranslocationAnnotations(this.utswAnnotations, true);
             this.matchAnnotationFilter();
+            this.stopHighlightAnimation();
         },
         commitAnnotations(userAnnotations) {
             this.userAnnotations = userAnnotations;
@@ -2997,6 +3010,7 @@ const OpenCase = {
                         }
                         this.$nextTick(() => {
                             this.cancelAnnotations();
+                            this.canCopyAnnotation = true;
                             this.snackBarTimeout = 4000;
                             setTimeout(() => {
                                 this.snackBarVisible = true;
@@ -4303,6 +4317,47 @@ const OpenCase = {
             this.userAnnotations.push(utswAnnotation);
             this.commitAnnotations(this.userAnnotations);
         },
+        copyAnnotation(annotation, variantType) {
+            if (!this.canProceed('canAnnotate') || this.readonly || !this.canCopyAnnotation || this.loadingVariant) {
+                return;
+            }
+            this.canCopyAnnotation = false;
+            var annotationString = JSON.stringify(annotation);
+            var newAnnotation = JSON.parse(annotationString);
+            newAnnotation._id = null;
+            newAnnotation.text = "(copy) " + annotation.text;
+            newAnnotation.origin = "UTSW";
+            newAnnotation.createdDate = null;
+            newAnnotation.modifiedDate = null;
+            newAnnotation.userId = this.userId;
+            newAnnotation.fullName = null;
+            newAnnotation.type = variantType;
+            newAnnotation.isCaseSpecific = newAnnotation.scopes[0];
+            if (newAnnotation.type == "snp") {
+            newAnnotation.isGeneSpecific = newAnnotation.scopes[1];
+            newAnnotation.isVariantSpecific = newAnnotation.scopes[2];
+            newAnnotation.isTumorSpecific = newAnnotation.scopes[3];
+            }
+            else if (newAnnotation.type == "cnv") {
+                newAnnotation.cnvGenes = (annotation.cnvGenes == "") ? [] : annotation.cnvGenes;
+                newAnnotation.isGeneSpecific = true;
+                newAnnotation.isVariantSpecific = newAnnotation.scopes[1];
+                newAnnotation.isTumorSpecific = newAnnotation.scopes[2];
+                newAnnotation.category = annotation.category ? annotation.category.split(" ")[0] : null;
+                newAnnotation.cnvGenes = annotation.cnvGenes ? annotation.category.split(" ") : [];
+            }
+            else if (newAnnotation.type == "translocation") {
+                newAnnotation.isGeneSpecific = true;
+                newAnnotation.isVariantSpecific = newAnnotation.scopes[1];
+                newAnnotation.isTumorSpecific = newAnnotation.scopes[2];
+                newAnnotation.isLeftSpecific = newAnnotation.scopes[3];
+                newAnnotation.isRightSpecific = newAnnotation.scopes[4];
+            }
+            console.log(annotation);
+            console.log(newAnnotation);
+            this.userAnnotations.push(newAnnotation);
+            this.commitAnnotations(this.userAnnotations);
+        },
         setDefaultTranscript(item) {
             axios({
                 method: 'post',
@@ -4451,6 +4506,17 @@ const OpenCase = {
                 }
             }
             return false;
+        },
+        getHighlightClass(index) {
+            return (this.highlightLatestAnnotation && index == 0 && !this.canCopyAnnotation) ? 'highlight-active' : '';
+        },
+        stopHighlightAnimation() {
+            //stop animation of latest card
+            if (this.highlightLatestAnnotation) {
+               setTimeout(() => {
+                   this.highlightLatestAnnotation = false;
+               }, 2000);
+           }
         }
 
     },

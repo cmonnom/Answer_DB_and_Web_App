@@ -6,16 +6,27 @@ Vue.component('utsw-annotation-card', {
         "variantType": {default: "snp", type: String},
         noEdit: { default: true, type: Boolean },
         caseAgnostic: { default: false, type: Boolean },
-        currentUserId: { default: null, type: Number}
+        currentUserId: { default: null, type: Number},
+        canCopy: { default: false, type: Boolean },
     },
     template: `<div>
     <v-card>
     <v-card-text :class="['subheading', !annotation.canEdit && caseAgnostic ? 'blue-grey lighten-3' : '']">
         <v-container grid-list-md fluid class="white" pl-2 pr-2 pt-2 pb-2>
             <v-layout row wrap>
-                <v-flex xs11>
+                <v-flex xs10 class="pt-2">
                     From {{ annotation.fullName }}
                     <span v-text="parseDate(annotation)" :class="annotation.warningLevel == 2 ? 'error--text font-weight-bold' : ''"></span>
+                </v-flex>
+                <v-flex xs1 class="pt-0">
+                <!-- TODO disable copying for CNV annotations for now. Need to handle Chomosomal vs focal -->
+                <v-tooltip bottom>
+                <v-btn color="primary" slot="activator" @click="copyAnnotation" flat icon
+                :disabled="noEdit || !canCopy">
+                <v-icon>mdi-content-copy</v-icon>
+                </v-btn>
+                    <span>Create a copy of this annotation</span>
+                    </v-tooltip>
                 </v-flex>
                 <v-flex xs1>
                 <v-tooltip bottom v-if="!caseAgnostic">
@@ -143,6 +154,11 @@ Vue.component('utsw-annotation-card', {
         },
         startUserAnnotation(annotation) {
             this.$emit("start-user-annotation", annotation);
+        },
+        copyAnnotation() {
+            if (this.canCopy) {
+                this.$emit("copy-annotation", this.annotation, this.variantType);
+            }
         }
     },
     computed: {
