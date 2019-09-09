@@ -562,7 +562,21 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
     animation: highlight 1s ease-out 2 alternate;
     opacity: 1;
   }
-
+  @-moz-keyframes highlight {
+    100% {
+      opacity: 0.2;
+    }
+  }
+  @-webkit-keyframes highlight {
+    100% {
+      opacity: 0.2;
+    }
+  }
+  @-o-keyframes highlight {
+    100% {
+      opacity: 0.2;
+    }
+  }
   @keyframes highlight {
     100% {
       opacity: 0.2;

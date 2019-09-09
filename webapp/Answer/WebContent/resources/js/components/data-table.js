@@ -232,7 +232,7 @@ Vue.component('data-table', {
         <span class="subheading">Quick Filter</span>
       </v-flex>
       <v-flex xs6>
-        <v-text-field clearable ref="search" append-icon="search" label="Search" single-line hide-details v-model="search" class="pt-0 pb-0 pr-3" :color="color"></v-text-field>
+        <v-text-field clearable ref="search" append-icon="search" label="Search" single-line hide-details v-model="pendingSearch" class="pt-0 pb-0 pr-3" :color="color"></v-text-field>
       </v-flex>
       </v-layout>
       </v-card-text>
@@ -547,7 +547,9 @@ Vue.component('data-table', {
             isHeaderFixed: false,
             newRow: {},
             headerLoadingColor: "blue-grey lighten-4",
-            filteringActive: false //preserves the previous value
+            filteringActive: false, //preserves the previous value
+            currentSeachTimeout: null,
+            pendingSearch: null
         }
     },
     methods: {
@@ -989,6 +991,12 @@ Vue.component('data-table', {
             }
             ))
         },
+        delaySearch() {
+          clearTimeout(this.currentSeachTimeout);
+          this.currentSeachTimeout = setTimeout(() => {
+            this.search = this.pendingSearch;
+          }, 501);
+        },
         //returns the page number (base 0) for the highlighted row
         //Can be used to jump to the page the highlighted row is on
         findPageForHiglightedItem() {
@@ -1394,7 +1402,8 @@ Vue.component('data-table', {
         }
     },
     watch: {
-        "selected": 'selectionChanged'
+        "selected": 'selectionChanged',
+        pendingSearch: "delaySearch"
     }
 
 
