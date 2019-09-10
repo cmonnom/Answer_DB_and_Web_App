@@ -81,7 +81,7 @@ public class TranslocationRow {
 				icons.add(new VuetifyIcon("check_circle", "green", "Passed QC"));
 			}
 		}
-		if (utswAnnotated) {
+		if (utswAnnotated != null && utswAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 		}
 		iconFlags = new FlagValue(icons);

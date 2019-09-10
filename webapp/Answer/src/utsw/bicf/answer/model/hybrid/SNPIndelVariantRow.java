@@ -204,7 +204,7 @@ public class SNPIndelVariantRow {
 //		else {
 //			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No MDA Annotations"));
 //		}
-		if (utswAnnotated) {
+		if (utswAnnotated != null && utswAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 		}
 //		else {

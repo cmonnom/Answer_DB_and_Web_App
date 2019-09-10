@@ -49,7 +49,7 @@ public class CNVRow {
 		if (mdaAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "green", "MDA Annotations"));
 		}
-		if (utswAnnotated) {
+		if (utswAnnotated != null && utswAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 		}
 //		else {

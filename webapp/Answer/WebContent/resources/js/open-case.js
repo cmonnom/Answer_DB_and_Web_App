@@ -1543,9 +1543,10 @@ const OpenCase = {
                     if (this.firstTimeLoading) {
                         this.firstTimeLoading = false;
                         this.patientDetailsVisible = true;
-                        setTimeout(() => {
-                            this.caseAnnotationsVisible = true;
-                        }, 200);
+                        this.caseAnnotationsVisible = true;
+                        // setTimeout(() => {
+                        //     this.caseAnnotationsVisible = true;
+                        // }, 200);
                         setTimeout(() => {
                             this.variantTabsVisible = true;
                         }, 400);
@@ -3965,7 +3966,8 @@ const OpenCase = {
         },
         handleRouteChanged(newRoute, oldRoute) {
             if (newRoute.path != oldRoute.path) { //prevent reloading data if only changing the query router.push({query: {test:"hello3"}})
-                this.getAjaxData();
+                window.location = newRoute.path; //do a hard reload because things are too difficult to reset
+                // this.getAjaxData();
             }
             else { //look at the query
                 // console.log(newRoute.query, oldRoute.query);
@@ -4517,8 +4519,7 @@ const OpenCase = {
                    this.highlightLatestAnnotation = false;
                }, 2000);
            }
-        }
-
+        },
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",
@@ -4569,7 +4570,7 @@ const OpenCase = {
         '$route': 'handleRouteChanged',
         variantTabActive: "handleTabChanged",
         splashProgress: "handleSplashVisibility",
-        waitingForAjaxCount: "handleWaitingForAjaxCount"
+        waitingForAjaxCount: "handleWaitingForAjaxCount",
     }
 
 };
