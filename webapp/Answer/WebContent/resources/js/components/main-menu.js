@@ -38,11 +38,7 @@ Vue.component('main-menu', {
 			<v-list-tile-action v-if="menuItem.iconAfter">
 				<!-- case search bar -->
 				<v-menu offset-x :close-on-content-click="false" @input="updateActiveState($event, menuItem)" v-model="isMenuOpen[menuItem.title]">
-<<<<<<< HEAD
 					<v-btn flat icon slot="activator" :color="isMenuOpen[menuItem.title] ? 'warning' : 'primary'" v-show="!isMinied">
-=======
-					<v-btn flat icon slot="activator" :color="menuItem.activeColor ? 'warning' : 'primary'" v-show="!isMinied">
->>>>>>> 1595e776b81a79c64c7c65037272fad3fdbd16e9
 						<v-icon>{{ menuItem.iconAfter }}</v-icon>
 					</v-btn>
 
