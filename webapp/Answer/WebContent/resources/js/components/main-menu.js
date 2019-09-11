@@ -350,7 +350,6 @@ Vue.component('main-menu', {
 		},
 		closeOpenMenu(menuItem) {
 			this.isMenuOpen[menuItem.title] = false;
-<<<<<<< HEAD
 			menuItem.activeColor = this.getRouteColor(menuItem);
 		},
 		getRouteColor(menuItem) {
@@ -366,9 +365,6 @@ Vue.component('main-menu', {
 					menuItem.activeColor = this.getRouteColor(menuItem);
 				}
 			}
-=======
-			menuItem.activeColor = "";
->>>>>>> 1595e776b81a79c64c7c65037272fad3fdbd16e9
 		}
 	},
 	mounted() {
