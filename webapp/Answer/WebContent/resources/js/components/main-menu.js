@@ -37,8 +37,8 @@ Vue.component('main-menu', {
 
 			<v-list-tile-action v-if="menuItem.iconAfter">
 				<!-- case search bar -->
-				<v-menu offset-x :close-on-content-click="false" @input="updateActiveState($event, menuItem)">
-					<v-btn flat icon slot="activator" :color="menuItem.activeColor ? 'warning' : 'primary'" v-show="!isMinied">
+				<v-menu offset-x :close-on-content-click="false" @input="updateActiveState($event, menuItem)" v-model="isMenuOpen[menuItem.title]">
+					<v-btn flat icon slot="activator" :color="isMenuOpen[menuItem.title] ? 'warning' : 'primary'" v-show="!isMinied">
 						<v-icon>{{ menuItem.iconAfter }}</v-icon>
 					</v-btn>
 
@@ -46,9 +46,9 @@ Vue.component('main-menu', {
 						<v-card-text class="pl-2 pr-2">
 						<v-switch v-model="allCases" color="primary" label="See all cases" @change="populateCases"></v-switch>
 						<v-autocomplete hide-details v-on:input="loadOpenCase" v-bind:items="cases" v-model="caseItemSelected" item-text="name" clearable
-						 item-value="value" label="Case ID" single-line
+						 item-value="value" label="Case ID" single-line  @change="closeOpenMenu(menuItem)"
 						 no-data-text="No active cases assigned to you">
-						<template v-slot:item="data">
+						<template v-slot:item="data" >
 							<v-icon class="pb-2 pr-3">{{ data.item.iconAvatar }}</v-icon>
 							<span>{{ data.item.name }}</span>
 						</template>
@@ -60,7 +60,7 @@ Vue.component('main-menu', {
 							<v-card-text class="pl-2 pr-2">
 								<v-switch v-model="allReports" color="primary" label="See all reports" @change="populateCasesWithReport"></v-switch>
 								<v-autocomplete hide-details v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
-								 item-value="value" label="Case ID" single-line
+								 item-value="value" label="Case ID" single-line  @change="closeOpenMenu(menuItem)"
 								 no-data-text="No active reports assigned to you">
 								 <template v-slot:item="data">
 							<v-icon class="pb-2 pr-3">{{ data.item.iconAvatar }}</v-icon>
@@ -126,6 +126,7 @@ Vue.component('main-menu', {
 			versionName: "1.0",
 			allCases: false,
 			allReports: false,
+			isMenuOpen: { 'Open Case': false, 'Open Report': false} //to control open/closing a menu
 		}
 
 	},
@@ -341,8 +342,26 @@ Vue.component('main-menu', {
 			}
 		},
 		updateActiveState(event, menuItem) {
-			menuItem.activeColor = event ? "warning--text" : "";
+			menuItem.activeColor = event ? "warning--text" : this.getRouteColor(menuItem);
 		},
+		closeOpenMenu(menuItem) {
+			this.isMenuOpen[menuItem.title] = false;
+			menuItem.activeColor = this.getRouteColor(menuItem);
+		},
+		getRouteColor(menuItem) {
+			if (this.$route.name.indexOf(menuItem.title.replace(" ", "")) > -1) {
+				return "primary--text";
+			}
+			return "";
+		},
+		handleRouteChanged() {
+			for (let i = 0; i < this.menuItems.length; i++) {
+				let menuItem = this.menuItems[i];
+				if (menuItem.skipRoute) {
+					menuItem.activeColor = this.getRouteColor(menuItem);
+				}
+			}
+		}
 	},
 	mounted() {
 		// this.getUserLeaderBoardInfo();
@@ -394,6 +413,7 @@ Vue.component('main-menu', {
 	},
 	watch: {
 		// isMinied: 'emitMenuChanged'
+		'$route': 'handleRouteChanged'
 	}
 
 

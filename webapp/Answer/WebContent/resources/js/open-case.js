@@ -1,6 +1,58 @@
 const OpenCase = {
     props: {
-        "readonly": { default: true, type: Boolean }
+        "readonly": { default: true, type: Boolean },
+        variantTiers: [
+            '1A',
+            '1B',
+            '2C',
+            '2D',
+            '3',
+            '4'
+            ],
+        annotationCategories: [
+            'Gene Function',
+            'Epidemiology',
+            'Variant Function',
+            'Prognosis',
+            'Diagnosis',
+            'Therapy',
+            'Likely Artifact'],
+        annotationCategoriesCNV: [
+            'Epidemiology',
+            'Prognosis',
+            'Diagnosis',
+            'Therapy'],
+        annotationBreadth: [
+            'Chromosomal',
+            'Focal'],
+        annotationClassifications: [
+            'VUS',
+            'Benign',
+            'Likely benign',
+            'Likely pathogenic',
+            'Pathogenic'],
+        annotationPhases: ["Phase 1", "Phase 2", "Phase 3", "Phase 4"],
+        scopesSNP: [
+            'Case', 'Gene', 'Variant', 'Tumor'
+        ],
+        scopesCNV: [
+            'Case', 'Tumor'
+        ],
+        scopesTranslocation: [
+            'Case', 'Tumor'
+        ],
+        aberrationTypes: [
+            'amplification',
+            'gain',
+            'hemizygous loss',
+            'homozygous loss',
+            'ITD'
+        ],
+        loadingColor: {default:"blue-grey lighten-4", type: String},
+        flt3ITDLocus: {default:"chr13:28,033,867-28,034,235", type: String},
+        confirmationMessage: {default:"Unsaved selected variants will be discarded.<br/>Are you sure?", type: String},
+        confirmationProceedButton: {default:"Proceed", type: String},
+        confirmationCancelButton: {default:"Cancel", type: String},
 
     },
     template: `<div>
@@ -43,7 +95,7 @@ const OpenCase = {
   </v-dialog>
 
     <div>
-    <v-dialog v-model="confirmationDialogVisible" max-width="300px">
+    <v-dialog v-model="confirmationDialogVisible" max-width="500px">
         <v-card>
             <v-card-text v-html="confirmationMessage" class="pl-2 pr-2 subheading">
 
@@ -1167,212 +1219,7 @@ const OpenCase = {
     </v-slide-y-transition>
 </div>
 </div>`, data() {
-        return {
-            oncotreeIconUrl: oncotreeIconUrl,
-            firstTimeLoading: true,
-            loading: true,
-            loadingVariantDetails: false,
-            // breadcrumbs: [{text: "You are here:  Case", disabled: true}],
-            breadcrumbItemVariantDetails: { text: "Variant Details", disabled: false, params: ["variantId", "variantType"] },
-            breadcrumbItemReview: { text: "Review", disabled: false, params: ["showReview"] },
-            breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: false, params: ["edit"] },
-            breadcrumbItemWorkOnCase: { text: "Case Overview", disabled: false, params: [] },
-            breadcrumbs: [],
-            patientTables: [],
-            patientDetailsVisible: false,
-            caseAnnotationsVisible: false,
-            variantTabsVisible: true,
-            caseName: "",
-            caseId: "",
-            variantDetailsVisible: false,
-            currentVariant: {},
-            currentRow: {},
-            currentVariantFlags: [],
-            variantDataTables: [],
-            linkTable: [],
-            reviewDialogVisible: false,
-            annotationVariantDetailsVisible: true,
-            annotationVariantRelatedVisible: true,
-            annotationCNVRelatedVisible: true,
-            annotationVariantCanonicalVisible: true,
-            annotationVariantOtherVisible: true,
-            saveVariantDisabled: false,
-            variantUnSaved: false,
-            // annotationDialogVisible: false,
-            userAnnotations: [],
-            snackBarMessage: "",
-            snackBarVisible: false,
-            snackBarLink: "",
-            snackBarLinkIcon: "",
-            snackBarTimeout: 4000,
-            utswAnnotations: [],
-            utswAnnotationsFormatted: [],
-            mdaAnnotations: "",
-            mdaAnnotationsFormatted: [],
-            mdaAnnotationsVisible: true,
-            utswAnnotationsVisible: true,
-            bamViewerVisible: false,
-            externalWindow: null,
-            externalWindowOpen: false,
-            exportLoading: false,
-            saveLoading: false,
-            sendToMDALoading: false,
-            caseAnnotation: { caseAnnotation: "" },
-            caseAnnotationOriginalText: "", //to verify if there has been a modification
-            currentVariantType: "snp",
-            //confirmation dialog
-            confirmationDialogVisible: false,
-            confirmationMessage: "Unsaved selected variants will be discarded.<br/>Are you sure?",
-            confirmationProceedButton: "Proceed",
-            confirmationCancelButton: "Cancel",
-            reportGroups: [],
-            geneVariantDetailsTableHovering: true,
-            variantTabActive: null,
-            wasAdvancedFilteringVisibleBeforeTabChange: false,
-            currentVariantHasRelatedVariants: false,
-            currentVariantHasRelatedCNV: false,
-            isFirstVariant: false,
-            isLastVariant: false,
-            variantTiers: [
-                '1A',
-                '1B',
-                '2C',
-                '2D',
-                '3',
-                '4'
-                ],
-            annotationCategories: [
-                'Gene Function',
-                'Epidemiology',
-                'Variant Function',
-                'Prognosis',
-                'Diagnosis',
-                'Therapy',
-                'Likely Artifact'],
-            annotationCategoriesCNV: [
-                'Epidemiology',
-                'Prognosis',
-                'Diagnosis',
-                'Therapy'],
-            annotationBreadth: [
-                'Chromosomal',
-                'Focal'],
-            annotationClassifications: [
-                'VUS',
-                'Benign',
-                'Likely benign',
-                'Likely pathogenic',
-                'Pathogenic'],
-            annotationPhases: ["Phase 1", "Phase 2", "Phase 3", "Phase 4"],
-            scopesSNP: [
-                'Case', 'Gene', 'Variant', 'Tumor'
-            ],
-            scopesCNV: [
-                'Case', 'Tumor'
-            ],
-            scopesTranslocation: [
-                'Case', 'Tumor'
-            ],
-            aberrationTypes: [
-                'amplification',
-                'gain',
-                'hemizygous loss',
-                'homozygous loss',
-                'ITD'
-            ],
-            variantDetailsUnSaved: false,
-            patientDetailsUnSaved: false,
-            savingVariantDetails: false,
-            savingPatientDetails: false,
-            tempSelectedSNPVariants: [],
-            tempSelectedCNVs: [],
-            tempSelectedTranslocations: [],
-            topMostDialog: "",
-            patientDetailsOncoTreeDiagnosis: "",
-            patientDetailsTumorTissue: "",
-            patientDetailsICD10: "",
-            qcUrl: "",
-            mutationalSignatureUrl: "",
-            editAnnotationVariantDetailsVisible: true,
-            urlQuery: {
-                showReview: false,
-                variantId: null,
-                variantType: null,
-                edit: false
-            },
-            // colors: {
-            //     openCase: "primary",
-            //     variantDetails: "teal lighten-1",
-            //     saveReview: "teal",
-            //     editAnnotation: "teal darken-1"
-            // },
-            colors: {
-                openCase: "primary",
-                variantDetails: "primary",
-                saveReview: "primary",
-                editAnnotation: "primary"
-            },
-            searchAnnotations: "",
-            searchAnnotationsVisible: false,
-            searchAnnotationClassification: [],
-            searchAnnotationCategory: [],
-            searchAnnotationBreadth: [],
-            searchAnnotationTier: [],
-            searchAnnotationScope: [],
-            annotationSelectionUnSaved: false,
-            savingAnnotationSelection: false,
-            splashDialog: splashDialog,
-           
-            splashProgress: 0,
-            splashSteps: 0,
-            splashTextVisible: true,
-            annotationIdsForReporting: [], //save the state of the selection in case the user close/open another page
-            currentFilterType: "snp",
-            highlights: {
-                genes: []
-            },
-            oncotree: [],
-            waitingForGoodies: false,
-            caseType: "",
-            caseTypeIcon: "",
-            caseTypeIconSize: 20,
-            showNormalSnackBar: true,
-            waitingForAjaxCount: 0, //use this variable to wait for other Ajax calls to return. Each ajax call should decrease the amount by one
-            waitingForAjaxMessage: "",
-            waitingForAjaxActive: false,
-            saveAllNeeded: false,
-            caseNotesChanged: false,
-            autoSaveInterval: null,
-            cnvChromList: [],
-            addCNVDialogVisible: false,
-            showGoodiesPanel: false,
-            patientDetailsDedupPctOver100X: "",
-            patientDetailsDedupAvgDepth: "",
-            patientDetailsTumorPercent: "",
-            numberRules: [(v) => { return !isNaN(v) || 'Invalid value' }],
-            currentListOfCNVVisibleGenes: [],
-            reportReady: false,
-            labNotes: null,
-            snpIndelUnfilteredItems: null,
-            cnvUnfilteredItems: null,
-            ftlUnfilteredItems: null,
-            itdDialogVisible: false,
-            loadingVariant: false,
-            currentSelectedVariantIds: {},
-            creatingOtherTissueTypes: false,
-            updatingSelectedVariantTable: false,
-            loadingColor: "blue-grey lighten-4",
-            userId: null,
-            caseOwnerId: null,
-            currentItem: null,
-            fpkmVisible: false,
-            fpkmPositionx: 0,
-            fpkmPositiony: 0,
-            snpItemsTemp: [], //a temp list of selected variants
-            flt3ITDLocus: "chr13:28,033,867-28,034,235",
-            highlightLatestAnnotation: false,
-            canCopyAnnotation: true
-        }
+        return this.initData();
     }, methods: {
         
         canProceed(field) {
@@ -3966,7 +3813,9 @@ const OpenCase = {
         },
         handleRouteChanged(newRoute, oldRoute) {
             if (newRoute.path != oldRoute.path) { //prevent reloading data if only changing the query router.push({query: {test:"hello3"}})
-                window.location = newRoute.path; //do a hard reload because things are too difficult to reset
+                // window.location = newRoute.path; //do a hard reload because things are too difficult to reset
+                Object.assign(this.$data, this.initData(true));
+                this.mountComponent();
                 // this.getAjaxData();
             }
             else { //look at the query
@@ -4520,22 +4369,182 @@ const OpenCase = {
                }, 2000);
            }
         },
+        mountComponent() {
+            this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",
+            this.snackBarLink = "";
+            this.snackBarVisible = this.readonly;
+            
+            this.collectOncoTreeDiagnosis();
+            this.getAjaxData();
+            this.loadUserFilterSets();
+            bus.$emit("clear-item-selected", [this]);
+            this.getVariantFilters();
+            this.loadCaseAnnotations();
+
+            this.$refs.geneVariantDetails.headerOptionsVisible = true;
+            this.$refs.splashScreen.manageSplashScreen();
+            this.getCNVChromList();
+        },
+        initData(fromCaseSwitch) {
+            return {
+                oncotreeIconUrl: oncotreeIconUrl,
+                firstTimeLoading: !fromCaseSwitch,
+                loading: true,
+                loadingVariantDetails: false,
+                // breadcrumbs: [{text: "You are here:  Case", disabled: true}],
+                breadcrumbItemVariantDetails: { text: "Variant Details", disabled: false, params: ["variantId", "variantType"] },
+                breadcrumbItemReview: { text: "Review", disabled: false, params: ["showReview"] },
+                breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: false, params: ["edit"] },
+                breadcrumbItemWorkOnCase: { text: "Case Overview", disabled: false, params: [] },
+                breadcrumbs: [],
+                patientTables: [],
+                patientDetailsVisible: !fromCaseSwitch ? false : this.patientDetailsVisible,
+                caseAnnotationsVisible: !fromCaseSwitch ? false : this.caseAnnotationsVisible,
+                variantTabsVisible: true,
+                caseName: "",
+                caseId: "",
+                variantDetailsVisible: false,
+                currentVariant: {},
+                currentRow: {},
+                currentVariantFlags: [],
+                variantDataTables: [],
+                linkTable: [],
+                reviewDialogVisible: false,
+                annotationVariantDetailsVisible: true,
+                annotationVariantRelatedVisible: true,
+                annotationCNVRelatedVisible: true,
+                annotationVariantCanonicalVisible: true,
+                annotationVariantOtherVisible: true,
+                saveVariantDisabled: false,
+                variantUnSaved: false,
+                // annotationDialogVisible: false,
+                userAnnotations: [],
+                snackBarMessage: "",
+                snackBarVisible: false,
+                snackBarLink: "",
+                snackBarLinkIcon: "",
+                snackBarTimeout: 4000,
+                utswAnnotations: [],
+                utswAnnotationsFormatted: [],
+                mdaAnnotations: "",
+                mdaAnnotationsFormatted: [],
+                mdaAnnotationsVisible: true,
+                utswAnnotationsVisible: true,
+                bamViewerVisible: false,
+                externalWindow: null,
+                externalWindowOpen: false,
+                exportLoading: false,
+                saveLoading: false,
+                sendToMDALoading: false,
+                caseAnnotation: { caseAnnotation: "" },
+                caseAnnotationOriginalText: "", //to verify if there has been a modification
+                currentVariantType: "snp",
+                //confirmation dialog
+                confirmationDialogVisible: false,
+                reportGroups: [],
+                geneVariantDetailsTableHovering: true,
+                variantTabActive: null,
+                wasAdvancedFilteringVisibleBeforeTabChange: false,
+                currentVariantHasRelatedVariants: false,
+                currentVariantHasRelatedCNV: false,
+                isFirstVariant: false,
+                isLastVariant: false,
+               
+                variantDetailsUnSaved: false,
+                patientDetailsUnSaved: false,
+                savingVariantDetails: false,
+                savingPatientDetails: false,
+                tempSelectedSNPVariants: [],
+                tempSelectedCNVs: [],
+                tempSelectedTranslocations: [],
+                topMostDialog: "",
+                patientDetailsOncoTreeDiagnosis: "",
+                patientDetailsTumorTissue: "",
+                patientDetailsICD10: "",
+                qcUrl: "",
+                mutationalSignatureUrl: "",
+                editAnnotationVariantDetailsVisible: true,
+                urlQuery: {
+                    showReview: false,
+                    variantId: null,
+                    variantType: null,
+                    edit: false
+                },
+                // colors: {
+                //     openCase: "primary",
+                //     variantDetails: "teal lighten-1",
+                //     saveReview: "teal",
+                //     editAnnotation: "teal darken-1"
+                // },
+                colors: {
+                    openCase: "primary",
+                    variantDetails: "primary",
+                    saveReview: "primary",
+                    editAnnotation: "primary"
+                },
+                searchAnnotations: "",
+                searchAnnotationsVisible: false,
+                searchAnnotationClassification: [],
+                searchAnnotationCategory: [],
+                searchAnnotationBreadth: [],
+                searchAnnotationTier: [],
+                searchAnnotationScope: [],
+                annotationSelectionUnSaved: false,
+                savingAnnotationSelection: false,
+                splashDialog: splashDialog,
+               
+                splashProgress: 0,
+                splashSteps: 0,
+                splashTextVisible: true,
+                annotationIdsForReporting: [], //save the state of the selection in case the user close/open another page
+                currentFilterType: "snp",
+                highlights: {
+                    genes: []
+                },
+                oncotree: [],
+                waitingForGoodies: false,
+                caseType: "",
+                caseTypeIcon: "",
+                caseTypeIconSize: 20,
+                showNormalSnackBar: true,
+                waitingForAjaxCount: 0, //use this variable to wait for other Ajax calls to return. Each ajax call should decrease the amount by one
+                waitingForAjaxMessage: "",
+                waitingForAjaxActive: false,
+                saveAllNeeded: false,
+                caseNotesChanged: false,
+                autoSaveInterval: null,
+                cnvChromList: [],
+                addCNVDialogVisible: false,
+                showGoodiesPanel: false,
+                patientDetailsDedupPctOver100X: "",
+                patientDetailsDedupAvgDepth: "",
+                patientDetailsTumorPercent: "",
+                numberRules: [(v) => { return !isNaN(v) || 'Invalid value' }],
+                currentListOfCNVVisibleGenes: [],
+                reportReady: false,
+                labNotes: null,
+                snpIndelUnfilteredItems: null,
+                cnvUnfilteredItems: null,
+                ftlUnfilteredItems: null,
+                itdDialogVisible: false,
+                loadingVariant: false,
+                currentSelectedVariantIds: {},
+                creatingOtherTissueTypes: false,
+                updatingSelectedVariantTable: false,
+                userId: null,
+                caseOwnerId: null,
+                currentItem: null,
+                fpkmVisible: false,
+                fpkmPositionx: 0,
+                fpkmPositiony: 0,
+                snpItemsTemp: [], //a temp list of selected variants
+                highlightLatestAnnotation: false,
+                canCopyAnnotation: true
+            }
+        }
     },
     mounted() {
-        this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",
-            this.snackBarLink = "";
-        this.snackBarVisible = this.readonly;
-        
-        this.collectOncoTreeDiagnosis();
-        this.getAjaxData();
-        this.loadUserFilterSets();
-        bus.$emit("clear-item-selected", [this]);
-        this.getVariantFilters();
-        this.loadCaseAnnotations();
-
-        this.$refs.geneVariantDetails.headerOptionsVisible = true;
-        this.$refs.splashScreen.manageSplashScreen();
-        this.getCNVChromList();
+       this.mountComponent();
     },
     created() {
         bus.$on('bam-viewer-closed', () => {
