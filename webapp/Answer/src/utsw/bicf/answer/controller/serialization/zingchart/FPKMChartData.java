@@ -34,9 +34,9 @@ public class FPKMChartData extends ZingChartData {
 		this.series = new ArrayList<Values>(); //4 series (stock, scatter, median, current case scatter) per oncotree root code. Only one at a time for now -> 1 box plot
 		
 		//need all to calculate boxplot
-		List<Integer> fpkmsAll = fpkmData.getFpkms().stream().map(d -> d.getFpkmValue()).collect(Collectors.toList());
+		List<Double> fpkmsAll = fpkmData.getFpkms().stream().map(d -> d.getFpkmValue()).collect(Collectors.toList());
 		//need to filter out current case for scatter plot
-		List<Integer> fpkmsWithoutCurrentCase = fpkmData.getFpkms().stream().filter(d -> !d.getCaseId().equals(caseId)).map(d -> d.getFpkmValue()).collect(Collectors.toList());
+		List<Double> fpkmsWithoutCurrentCase = fpkmData.getFpkms().stream().filter(d -> !d.getCaseId().equals(caseId)).map(d -> d.getFpkmValue()).collect(Collectors.toList());
 		
 		//extract the current case FPKM data. Need to make sure it's in the data set 
 		List<FPKMPerCaseData> currentCases = fpkmData.getFpkms().stream().filter(d -> d.getCaseId().equals(caseId)).collect(Collectors.toList());
@@ -45,7 +45,7 @@ public class FPKMChartData extends ZingChartData {
 			currentCase = currentCases.get(0); 
 		}
 		
-		maxValue = fpkmsAll.stream().max(Integer::compare).get() * 1.05;
+		maxValue = fpkmsAll.stream().max(Double::compare).get() * 1.05;
 		
 		this.initBoxPlot(fpkmData, fpkmsAll, fpkmsWithoutCurrentCase, caseId, showOtherPlots);
 		
@@ -63,7 +63,7 @@ public class FPKMChartData extends ZingChartData {
 		
 	}
 	
-	private void initBoxPlot(FPKMData fpkmData, List<Integer> fpkmsAll, List<Integer> fpkmsWithoutCurrentCase, String caseId, boolean includeOtherCases) {
+	private void initBoxPlot(FPKMData fpkmData, List<Double> fpkmsAll, List<Double> fpkmsWithoutCurrentCase, String caseId, boolean includeOtherCases) {
 		BoxPlotData boxData = new BoxPlotData(fpkmsAll);
 		List<Object> stockSerie = new ArrayList<Object>();
 		stockSerie.add(boxData.getQ1());
@@ -83,7 +83,7 @@ public class FPKMChartData extends ZingChartData {
 		if (includeOtherCases) {
 			//scatter plot. Skip current case
 			List<String> caseNames = new ArrayList<String>();
-			List<Integer> fkpmOthers = new ArrayList<Integer>();
+			List<Double> fkpmOthers = new ArrayList<Double>();
 			for (FPKMPerCaseData d : fpkmData.getFpkms()) {
 				if (!d.getCaseId().equals(caseId) 
 					&& d.getFpkmValue() <= boxData.getUpperFence()
@@ -93,7 +93,7 @@ public class FPKMChartData extends ZingChartData {
 				}
 			}
 			List<List<Double>> markerCoords = new ArrayList<List<Double>>();
-			for (Integer fpkm : fkpmOthers) {
+			for (Double fpkm : fkpmOthers) {
 				List<Double> marker = this.markerCoordsWithJitter(fpkm);
 				markerCoords.add(marker);
 			}
@@ -103,7 +103,7 @@ public class FPKMChartData extends ZingChartData {
 		//outliers
 		//scatter plot. Skip current case
 		List<String> outliersCaseNames = new ArrayList<String>();
-		List<Integer> outliersFkpmOthers = new ArrayList<Integer>();
+		List<Double> outliersFkpmOthers = new ArrayList<Double>();
 		for (FPKMPerCaseData d : fpkmData.getFpkms()) {
 			if (!d.getCaseId().equals(caseId) 
 				&& (d.getFpkmValue() > boxData.getUpperFence()
@@ -113,7 +113,7 @@ public class FPKMChartData extends ZingChartData {
 			}
 		}
 		List<List<Double>> outliersMarkerCoords = new ArrayList<List<Double>>();
-		for (Integer fpkm : outliersFkpmOthers) {
+		for (Double fpkm : outliersFkpmOthers) {
 			List<Double> marker = new ArrayList<Double>();
 			marker.add(0d);
 			marker.add(fpkm.doubleValue());
@@ -139,7 +139,7 @@ public class FPKMChartData extends ZingChartData {
 	 * @param fpkmValue
 	 * @return
 	 */
-	private List<Double> markerCoordsWithJitter(Integer fpkmValue) {
+	private List<Double> markerCoordsWithJitter(Double fpkmValue) {
 		List<Double> marker = new ArrayList<Double>();
 		double jitter = RandomUtils.nextDouble(0, 0.45);
 		boolean negative = RandomUtils.nextBoolean();

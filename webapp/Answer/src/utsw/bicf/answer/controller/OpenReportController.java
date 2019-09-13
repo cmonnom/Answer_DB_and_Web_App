@@ -3,6 +3,7 @@ package utsw.bicf.answer.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -40,11 +42,15 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVReport;
+import utsw.bicf.answer.model.extmapping.CommitAnnotationResponse;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
+import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
+import utsw.bicf.answer.model.extmapping.Trial;
+import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
@@ -81,6 +87,10 @@ public class OpenReportController {
 		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".selectByPassCNVWarningAnnotation",
 				IndividualPermission.CAN_REVIEW);
 		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".createPubMedFromId",
+				IndividualPermission.CAN_REVIEW);
+		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".commitCNVAnnotationsBatch",
+				IndividualPermission.CAN_REVIEW);
+		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".selectByPassCNVWarningAnnotationBatch",
 				IndividualPermission.CAN_REVIEW);
 //		PermissionUtils.addPermission(OpenReportController.class.getCanonicalName() + ".getPubmedDetails",
 //				IndividualPermission.CAN_VIEW);
@@ -750,6 +760,58 @@ public class OpenReportController {
 		return response.createObjectJSON();
 	}
 	
+	/**
+	 * When a user chose to bypass the CNV warning,
+	 * use this method to toggle the proper annotation
+	 * to go into the report
+	 * @throws URISyntaxException 
+	 * @throws IOException 
+	 * @throws ClientProtocolException 
+	 */
+	@RequestMapping(value = "/selectByPassCNVWarningAnnotationBatch", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String selectByPassCNVWarningAnnotationBatch(Model model, HttpSession session,
+			@RequestParam String caseId, @RequestBody String data) throws ClientProtocolException, IOException, URISyntaxException {
+		
+		AjaxResponse response = new AjaxResponse();
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User currentUser = ControllerUtil.getSessionUser(session);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(caseSummary, currentUser);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, caseSummary)) {
+			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+		}
+		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
+		response.setIsAllowed(canProceed);
+		if (canProceed) {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode dataNodes = mapper.readTree(data);
+			for (JsonNode annotationNode : dataNodes.get("variantIds")) {
+				String variantId = annotationNode.textValue();
+				CNV cnv = utils.getCNVDetails(variantId);
+				for (Annotation annotation : cnv.getReferenceCnv().getUtswAnnotations()) {
+					if (annotation.getText().equals("Uncertain Clinical Significance")) {
+						//add the proper annotation to annotationIdsForReporting
+						List<MongoDBId> selectedAnnotations = new ArrayList<MongoDBId>();
+						selectedAnnotations.add(annotation.getMongoDBId());
+						cnv.setAnnotationIdsForReporting(selectedAnnotations);
+						break; //only need the first auto generated annotation
+					}
+				}
+				//save selectedAnnotations
+				utils.saveSelectedAnnotations(response, cnv, "cnv", variantId);
+				if (!response.getSuccess()) {
+					return response.createObjectJSON();
+				}
+			}
+		}
+		else {
+			response.setMessage("You're not assigned to this case");
+		}
+		return response.createObjectJSON();
+	}
+	
 	@RequestMapping(value = "/createPubMedFromId", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String createPubMedFromId(Model model, HttpSession session, @RequestParam String pubmedIds) throws Exception {
@@ -789,5 +851,74 @@ public class OpenReportController {
 //		PubmedSummary summary = new PubmedSummary(pubmeds);
 //		return summary.createObjectJSON();
 //	}
+	@RequestMapping(value = "/commitCNVAnnotationsBatch", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
+	@ResponseBody
+	public String commitCNVAnnotationsBatch(Model model, HttpSession session, @RequestBody String data,
+			@RequestParam String caseId) throws Exception {
+		User user = ControllerUtil.getSessionUser(session);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		AjaxResponse response = new AjaxResponse();
+		if (!caseId.equals("")) { //for annotations within a case
+			if (!ControllerUtil.isUserAssignedToCase(caseSummary, user)) {
+				// user is not assigned to this case
+				response.setIsAllowed(false);
+				response.setSuccess(false);
+				response.setMessage(user.getFullName() + " is not assigned to this case");
+				return response.createObjectJSON();
+			}
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+				return ControllerUtil.returnFailedGroupCheck();
+			}
+		}
+		
+		response.setIsAllowed(true);
 
+		List<Annotation> userAnnotations = new ArrayList<Annotation>();
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode dataNodes = mapper.readTree(data);
+		for (JsonNode annotationNode : dataNodes.get("annotations")) {
+			Annotation userAnnotation = mapper.readValue(annotationNode.toString(), Annotation.class);
+			if (userAnnotation.getUserId() != null 
+					&& !userAnnotation.getUserId().equals(user.getUserId())) {
+				response.setSuccess(false);
+				response.setMessage("You cannot modify someone else's annotation");
+				return response.createObjectJSON();
+			}
+			userAnnotation.setUserId(user.getUserId());
+			if (userAnnotation.getIsCaseSpecific() && !caseId.equals("")) {
+				userAnnotation.setCaseId(caseId);
+			}
+			if (userAnnotation.getIsVariantSpecific()) {
+				userAnnotation.setVariantId(userAnnotation.getVariantId());
+			}
+			if (userAnnotation.getIsTumorSpecific()) {
+				if (caseSummary != null) {
+					if (caseSummary.getOncotreeDiagnosis() != null && !caseSummary.getOncotreeDiagnosis().equals("")) {
+						userAnnotation.setOncotreeDiagnosis(caseSummary.getOncotreeDiagnosis());
+					}
+					else {
+						response.setSuccess(false);
+						response.setMessage("You need to set an Oncotree Diagnosis in Patient Details");
+						return response.createObjectJSON();
+					}
+				}
+				else {
+					response.setSuccess(false);
+					response.setMessage("No Case with id: " + caseId);
+					return response.createObjectJSON();
+				}
+			}
+			if (userAnnotation.getCnvGenes() != null && !userAnnotation.getCnvGenes().isEmpty() ) {
+				Collections.sort(userAnnotation.getCnvGenes()); //sort genes alphabetically
+			}
+			userAnnotations.add(userAnnotation);
+		}
+		response = utils.commitAnnotation(response, userAnnotations);
+		if (response.getSuccess()) {
+			response.setPayload(userAnnotations.stream().map(a -> a.getVariantId()).collect(Collectors.toSet())); //to pass the variant ids back to the UI
+		}
+		return response.createObjectJSON();
+
+	}
 }

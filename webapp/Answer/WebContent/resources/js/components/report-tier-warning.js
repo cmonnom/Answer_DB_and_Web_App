@@ -2,7 +2,8 @@
 
 Vue.component('report-tier-warning', {
     props: {
-        variantsMissingTier: {default: () => [], type: Array}
+        variantsMissingTier: {default: () => [], type: Array},
+        commitingAnnotations: {default: false, type: Boolean}
     },
     template: `<div v-show="variantsMissingTier.length > 0">
     <v-toolbar dense dark color="error">
@@ -15,6 +16,11 @@ Vue.component('report-tier-warning', {
        The following variants have been selected for this report but none of their annotation cards have tiers.<br/>
        Check if all annotations have been selected for this variant.
        Check if the variant has more than just a Therapy card.<br/>
+       <div v-if="anyCNV()" class="pt-2">
+        <v-btn slot="activator" @click="bypassAllCNVWarnings()" :disabled="commitingAnnotations">
+        Include all <span class="pl-1 pr-1" v-text="missingCNVCount()"></span> CNV annotations below <v-icon class="pl-2">mdi-auto-fix</v-icon>
+        </v-btn>
+       </div>
        <v-layout row wrap align-end>
        <v-flex xs12 v-for="variant in variantsMissingTier" :key="variant.id">
        <v-icon color="error">warning</v-icon>
@@ -55,6 +61,15 @@ Vue.component('report-tier-warning', {
         },
         bypassCNVWarning(variant) {
             this.$emit("bypass-cnv-warning", variant.id);
+        },
+        bypassAllCNVWarnings() {
+            this.$emit("bypass-cnv-all");
+        },
+        anyCNV() {
+            return this.missingCNVCount() > 0;
+        },
+        missingCNVCount() {
+            return this.variantsMissingTier.filter(i => { return i.type === "CNV";}).length;
         }
     },
     computed: {

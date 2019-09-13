@@ -4,7 +4,7 @@ Vue.component('splash-screen', {
     },
     template: `<div class="splash-screen" v-if="splashDialog">
     <v-layout align-center justify-center row fill-height class="splash-screen-item">
-    <span class="subheading">{{ splashTextCurrent }}</span>
+    <span class="subheading splash-text">{{ splashTextCurrent }}</span>
     <v-btn fixed dark fab top left flat color="primary" class="custom-loader">
       <img
       :src="loadingImageUrl()" alt="loading page" width="100%"/>

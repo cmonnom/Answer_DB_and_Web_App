@@ -55,8 +55,9 @@ import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CNVPlotDataRaw;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
-import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.ExistingReports;
+import utsw.bicf.answer.model.extmapping.FPKMData;
+import utsw.bicf.answer.model.extmapping.FPKMPerCaseData;
 import utsw.bicf.answer.model.extmapping.ITD;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -1695,6 +1696,37 @@ public class RequestUtils {
 					variants.add(annotation);
 				}
 				return variants;
+			}
+			else {
+				return null;
+			}
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+			return null;
+		}
+	}
+	
+	public List<FPKMPerCaseData> getFPKMChartData(AjaxResponse ajaxResponse, String caseId, String geneId) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/fpkm/");
+		sbUrl.append(geneId);
+		URI uri = new URI(sbUrl.toString());
+
+		HttpResponse response = null;
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+		response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			ajaxResponse.setSuccess(mongoDBResponse.getSuccess());
+			ajaxResponse.setMessage(mongoDBResponse.getMessage());
+			if (ajaxResponse.getSuccess()) {
+				FPKMPerCaseData[] result = mapper.convertValue(mongoDBResponse.getPayload(), FPKMPerCaseData[].class);
+				List<FPKMPerCaseData> fpkms = Arrays.asList(result);
+				return fpkms;
 			}
 			else {
 				return null;

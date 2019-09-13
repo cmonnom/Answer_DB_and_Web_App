@@ -39,7 +39,7 @@ public class CNVReport {
 
 	public CNVReport(String text, CNV c) {
 		this.mongoDBId = c.mongoDBId;
-		this.genes = c.getGenes().stream().collect(Collectors.joining(" "));
+		this.genes = c.getGenes().stream().sorted().collect(Collectors.joining(" "));
 		this.chrom = c.chrom;
 		this.start = c.start;
 		this.end = c.end;
@@ -64,10 +64,10 @@ public class CNVReport {
 	public CNVReport(Annotation a, CNV c, String highestAnnotationTier, String breadth, String comment) {
 		this.mongoDBId = c.mongoDBId;
 		if (CNV.BREADTH_CHROM.equals(breadth)) {
-			this.genes = c.getGenes().stream().collect(Collectors.joining(" "));
+			this.genes = c.getGenes().stream().sorted().collect(Collectors.joining(" "));
 		}
 		else if (CNV.BREADTH_FOCAL.equals(breadth)) {
-			this.genes = a.getCnvGenes().stream().collect(Collectors.joining(" "));
+			this.genes = a.getCnvGenes().stream().sorted().collect(Collectors.joining(" "));
 		}
 		this.chrom = c.chrom;
 		this.start = c.start;

@@ -60,8 +60,10 @@ const OpenReport = {
     <v-slide-y-transition>
         <report-tier-warning v-show="variantsMissingTier.length > 0"
         :variants-missing-tier="variantsMissingTier"
+        :commitingAnnotations="commitingAnnotations"
         @get-report-details="getReportDetails"
-        @bypass-cnv-warning="bypassCNVWarning">
+        @bypass-cnv-warning="bypassCNVWarning"
+        @bypass-cnv-all="bypassAllCNVWarnings">
         </report-tier-warning>
     </v-slide-y-transition>
 
@@ -549,8 +551,8 @@ const OpenReport = {
                     value: "aberrationType",
                     width: "200px",
                     hint: ""
-                },]
-
+                },],
+                commitingAnnotations: false
         }
     }, methods: {
         readOnlyReportNotes() {
@@ -723,10 +725,12 @@ const OpenReport = {
                         this.copyNumberAlterationsVisible = true;
                         this.geneFusionVisible = true;
                         this.pmidPanelVisible = true;
+                        this.commitingAnnotations = false;
                     }
                     else {
                         this.handleDialogs(response.data, this.getReportDetails.bind(null, reportId));
                         this.loadingReportDetails = false;
+                        this.commitingAnnotations = false;
                     }
                 }).catch(error => {
                     this.handleAxiosError(error);
@@ -1086,10 +1090,8 @@ const OpenReport = {
                 });
             this.getReportDetails();
         },
-        //To create a tier 3 annotation without going back to the variant
-        bypassCNVWarning(variantId) {
-            var annotations = [];
-            annotations.push({
+        createEmptyCNVAnnotation(variantId) {
+            return {
                 origin: "UTSW",
                 text: "Uncertain Clinical Significance",
                 markedForDeletion: false,
@@ -1122,7 +1124,15 @@ const OpenReport = {
                 drugResistant: false,
                 breadth: "Chromosomal",
                 isSelected: true
-            });
+            }
+        },
+        //To create a tier 3 annotation without going back to the variant
+        bypassCNVWarning(variantId) {
+            var annotations = [];
+            annotations.push(this.createEmptyCNVAnnotation(variantId));
+            this.commitCNVAnnotations(annotations, variantId);
+        },
+        commitCNVAnnotations(annotations, variantId) {
             axios({
                 method: 'post',
                 url: webAppRoot + "/commitAnnotations",
@@ -1165,6 +1175,58 @@ const OpenReport = {
                 }
             }).catch(error => {
                 this.handleAxiosError(error);
+            });
+        },
+        bypassAllCNVWarnings() {
+            this.commitingAnnotations = true;
+            let annotations = this.fullReport.missingTierCNVs.map(i => this.createEmptyCNVAnnotation(i._id.$oid));
+            this.commitCNVAnnotationsBatch(annotations);
+        },
+        commitCNVAnnotationsBatch(annotations) {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/commitCNVAnnotationsBatch",
+                params: {
+                    caseId: this.$route.params.id,
+                },
+                data: {
+                    annotations: annotations
+                }
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        this.saveBypassCNVSelectionBatch(response.data.payload);
+                    } else {
+                        this.handleDialogs(response.data, this.bypassAllCNVWarnings);
+                        this.commitingAnnotations = false;
+                    }
+                })
+                .catch(error => {
+                    this.handleAxiosError(error);
+                    this.commitingAnnotations = false;
+                });
+        },
+        saveBypassCNVSelectionBatch(variantIds) {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/selectByPassCNVWarningAnnotationBatch",
+                params: {
+                    caseId: this.$route.params.id,
+                },
+                data: {
+                    variantIds: variantIds
+                }
+            }).then(response => {
+                if (response.data.isAllowed) {
+                    this.getReportDetails();
+                }
+                else {
+                    this.handleDialogs(response.data, this.saveBypassCNVSelectionBatch.bind(null, variantIds));
+                    this.commitingAnnotations = false;
+                }
+            }).catch(error => {
+                this.handleAxiosError(error);
+                this.commitingAnnotations = false;
             });
         },
         openCase() {

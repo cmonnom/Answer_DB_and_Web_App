@@ -582,3 +582,8 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
       opacity: 0.2;
     }
   }
+
+  .splash-text {
+      position: absolute;
+      top: 5%;
+  }

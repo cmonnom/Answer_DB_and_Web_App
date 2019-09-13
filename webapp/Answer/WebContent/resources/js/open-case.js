@@ -1,53 +1,53 @@
 const OpenCase = {
     props: {
         "readonly": { default: true, type: Boolean },
-        variantTiers: [
+        variantTiers: {default: () => [
             '1A',
             '1B',
             '2C',
             '2D',
             '3',
             '4'
-            ],
-        annotationCategories: [
+            ], type: Array},
+        annotationCategories: {default: () => [
             'Gene Function',
             'Epidemiology',
             'Variant Function',
             'Prognosis',
             'Diagnosis',
             'Therapy',
-            'Likely Artifact'],
-        annotationCategoriesCNV: [
+            'Likely Artifact'], type: Array},
+        annotationCategoriesCNV: {default: () => [
             'Epidemiology',
             'Prognosis',
             'Diagnosis',
-            'Therapy'],
-        annotationBreadth: [
+            'Therapy'], type: Array},
+        annotationBreadth: {default: () => [
             'Chromosomal',
-            'Focal'],
-        annotationClassifications: [
+            'Focal'], type: Array},
+        annotationClassifications: {default: () => [
             'VUS',
             'Benign',
             'Likely benign',
             'Likely pathogenic',
-            'Pathogenic'],
-        annotationPhases: ["Phase 1", "Phase 2", "Phase 3", "Phase 4"],
-        scopesSNP: [
+            'Pathogenic'], type: Array},
+        annotationPhases: {default:() => ["Phase 1", "Phase 2", "Phase 3", "Phase 4"], type: Array},
+        scopesSNP: {default: () => [
             'Case', 'Gene', 'Variant', 'Tumor'
-        ],
-        scopesCNV: [
+        ], type: Array},
+        scopesCNV: {default: () => [
             'Case', 'Tumor'
-        ],
-        scopesTranslocation: [
+        ], type: Array},
+        scopesTranslocation: {default: () => [
             'Case', 'Tumor'
-        ],
-        aberrationTypes: [
+        ], type: Array},
+        aberrationTypes: {default: () => [
             'amplification',
             'gain',
             'hemizygous loss',
             'homozygous loss',
             'ITD'
-        ],
+        ], type: Array},
         loadingColor: {default:"blue-grey lighten-4", type: String},
         flt3ITDLocus: {default:"chr13:28,033,867-28,034,235", type: String},
         confirmationMessage: {default:"Unsaved selected variants will be discarded.<br/>Are you sure?", type: String},
@@ -119,6 +119,7 @@ const OpenCase = {
       >
       <fpkm-plot ref="fpkmPlot"
       :can-plot="patientDetailsOncoTreeDiagnosis.text != null"
+      :oncotree="oncotree"
       @hide-fpkm-plot="closeFPKMChart"
       ></fpkm-plot>
       </v-menu>  

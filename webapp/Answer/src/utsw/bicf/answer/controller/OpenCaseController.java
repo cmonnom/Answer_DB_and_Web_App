@@ -1757,38 +1757,41 @@ public class OpenCaseController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		FPKMData data = new FPKMData(); 
 		
-		//create fake data here for testing
-		data.setOncotreeCode("COAD");
-		List<FPKMPerCaseData> fpkms = new ArrayList<FPKMPerCaseData>();
-		for (int i = 0; i < 50; i++) {
-			FPKMPerCaseData d = new FPKMPerCaseData();
-			d.setCaseId("ORD" + RandomUtils.nextInt(100, 1000));
-			if (d.getCaseId().equals(caseId)) {
-				d.setCaseId("ORD1001");
-			}
-			d.setCaseName("ZZTEST, SOMEONE");
-			d.setFpkmValue(RandomUtils.nextInt(0, 2500));
-			fpkms.add(d);
-		}
-		//currentCase
-		FPKMPerCaseData d = new FPKMPerCaseData();
-		d.setCaseId(caseId);
-		d.setCaseName("ZZTEST, SOMEONE");
-		d.setFpkmValue(RandomUtils.nextInt(0, 6000));
-		fpkms.add(d);
-		
-		//add some outliers
-		for (int i = 0; i < 5; i++) {
-			d = new FPKMPerCaseData();
-			d.setCaseId("ORD Outlier");
-			d.setCaseName("ZZTEST, SOMEONE");
-			d.setFpkmValue(RandomUtils.nextInt(4500, 5900));
-			fpkms.add(d);
-		}
-		
-		data.setFpkms(fpkms);
-		data.setOncotreeCode("COAD");
-		if (data != null) {
+//		//create fake data here for testing
+//		data.setOncotreeCode("COAD");
+//		List<FPKMPerCaseData> fpkms = new ArrayList<FPKMPerCaseData>();
+//		for (int i = 0; i < 50; i++) {
+//			FPKMPerCaseData d = new FPKMPerCaseData();
+//			d.setCaseId("ORD" + RandomUtils.nextInt(100, 1000));
+//			if (d.getCaseId().equals(caseId)) {
+//				d.setCaseId("ORD1001");
+//			}
+//			d.setCaseName("ZZTEST, SOMEONE");
+//			d.setFpkmValue(RandomUtils.nextInt(0, 2500));
+//			fpkms.add(d);
+//		}
+//		//currentCase
+//		FPKMPerCaseData d = new FPKMPerCaseData();
+//		d.setCaseId(caseId);
+//		d.setCaseName("ZZTEST, SOMEONE");
+//		d.setFpkmValue(RandomUtils.nextInt(0, 6000));
+//		fpkms.add(d);
+//		
+//		//add some outliers
+//		for (int i = 0; i < 5; i++) {
+//			d = new FPKMPerCaseData();
+//			d.setCaseId("ORD Outlier");
+//			d.setCaseName("ZZTEST, SOMEONE");
+//			d.setFpkmValue(RandomUtils.nextInt(4500, 5900));
+//			fpkms.add(d);
+//		}
+		AjaxResponse ajaxResponse = new AjaxResponse();
+		ajaxResponse.setIsAllowed(true);
+		ajaxResponse.setSuccess(true);
+		List<FPKMPerCaseData> fpkms = utils.getFPKMChartData(ajaxResponse, caseId, geneParam);
+		if (fpkms != null) {
+			data.setFpkms(fpkms);
+			data.setOncotreeCode(fpkms.get(0).getOncotreeDiagnosis());
 			return new FPKMChartData(data, caseId, showOtherPlots).createObjectJSON();
 		}
 		else {

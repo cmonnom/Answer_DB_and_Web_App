@@ -1,13 +1,16 @@
 package utsw.bicf.answer.model.extmapping;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FPKMPerCaseData {
 	
 	String caseId;
-	String caseName;
-	Integer fpkmValue;
+	String caseName = "";
+	@JsonProperty("fpkm")
+	Double fpkmValue;
+	String oncotreeDiagnosis;
 	
 	public FPKMPerCaseData() {
 		super();
@@ -29,12 +32,20 @@ public class FPKMPerCaseData {
 		this.caseName = caseName;
 	}
 
-	public Integer getFpkmValue() {
+	public Double getFpkmValue() {
 		return fpkmValue;
 	}
 
-	public void setFpkmValue(Integer fpkmValue) {
+	public void setFpkmValue(Double fpkmValue) {
 		this.fpkmValue = fpkmValue;
+	}
+
+	public String getOncotreeDiagnosis() {
+		return oncotreeDiagnosis;
+	}
+
+	public void setOncotreeDiagnosis(String oncotreeDiagnosis) {
+		this.oncotreeDiagnosis = oncotreeDiagnosis;
 	}
 
 	

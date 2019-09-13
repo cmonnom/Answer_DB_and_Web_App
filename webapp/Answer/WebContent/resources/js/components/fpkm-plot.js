@@ -1,6 +1,7 @@
 Vue.component('fpkm-plot', {
     props: {
         canPlot: { default: false, type: Boolean },
+        oncotree: {default: () => [], type:Array }
     },
     template: `
    
@@ -85,7 +86,7 @@ Vue.component('fpkm-plot', {
             hardCodedItems: [{name: "CRLF2", value: "CRLF2"},
                 {name: "BCL2", value: "BCL2"},
                 {name: "BCL6", value: "BCL6"},
-                {name: "MYC ", value: "MYC "},
+                {name: "MYC", value: "MYC"},
             ],
             items: [],
             search: null,
@@ -119,6 +120,12 @@ Vue.component('fpkm-plot', {
             console.log(error);
             bus.$emit("some-error", [this, error]);
         },
+        getTissueFromOncotreeCode(code) {
+            return this.oncotree.filter( i => {return i.text === code;})[0].tissue;
+        },
+        createPlotTitle(code) {
+            return "FPKM from " + this.getTissueFromOncotreeCode(code) +" tissue<br/> on gene " + this.getCurrentGeneName();
+        },
         updateFPKMPlot() {
             if (!this.currentGene) {
                 return;
@@ -127,7 +134,7 @@ Vue.component('fpkm-plot', {
             axios.get(webAppRoot + "/getFPKMChartData", {
                 params: {
                     caseId: this.$route.params.id,
-                    geneParam: this.currentGene.value,
+                    geneParam: this.currentGene.value.trim(),
                     showOtherPlots: this.showOtherPlots
                 }
             })
@@ -145,13 +152,14 @@ Vue.component('fpkm-plot', {
                                     {
                                         "type":"mixed",
                                         "title":{
-                                          "text":"FPKM for cases diagnosed with " + chartData.oncotreeCode +"<br/> on gene " + this.getCurrentGeneName()
-                                          + "<br/>(Demo only, not real data)",
+                                        //   "text":"FPKM for cases diagnosed with " + chartData.oncotreeCode +"<br/> on gene " + this.getCurrentGeneName()
+                                        //   + "<br/>(Demo only, not real data)",
+                                        "text": this.createPlotTitle(chartData.oncotreeCode)
                                         },
                                         plotarea: {
                                             marginTop: "100px",
-                                            backgroundImage: webAppRoot + "/resources/images/draft-watermark.png",
-                                            backgroundFit: "xy"
+                                            // backgroundImage: webAppRoot + "/resources/images/draft-watermark.png",
+                                            // backgroundFit: "xy"
                                         }, 
                                         "scale-x": {
                                           "values": "-0.5:0.5:1",
@@ -159,10 +167,16 @@ Vue.component('fpkm-plot', {
                                         },
                                         "scale-y": {
                                             maxValue: chartData.maxValue,
-                                            minValue: 0
+                                            minValue: 0,
+                                            progression: "log",
+                                            'log-base': 2,
+                                            zooming: true,
                                         },
                                         legend: {
                                             offsetY: "90px"
+                                        },
+                                        scrollY: {
+
                                         },
                                         "series":this.createAllSeries(chartData)
                                     }
@@ -338,7 +352,14 @@ Vue.component('fpkm-plot', {
             zingchart.exec('fpkmPlot', 'modify', {
                 data: {
                     title: {
-                        "text":"FPKM for cases diagnosed with " + chartData.oncotreeCode +"<br/> on gene " + this.getCurrentGeneName()
+                        "text": this.createPlotTitle(chartData.oncotreeCode)
+                    },
+                    scaleY: {
+                        minValue: 0,
+                        maxValue: chartData.maxValue,
+                        progression: "log",
+                        'log-base': 2,
+                        zooming: true,
                     }
                 }
             });

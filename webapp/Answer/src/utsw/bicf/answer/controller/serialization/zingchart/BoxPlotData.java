@@ -5,8 +5,8 @@ import java.util.List;
 
 public class BoxPlotData {
 
-	Integer min;
-	Integer max;
+	Double min;
+	Double max;
 	double median;
 	double q1;
 	double q3;
@@ -14,9 +14,9 @@ public class BoxPlotData {
 	double lowerFence;
 	double upperFence;
 
-	List<Integer> values;
+	List<Double> values;
 
-	public BoxPlotData(List<Integer> values) {
+	public BoxPlotData(List<Double> values) {
 		super();
 		this.values = values;
 		if (values == null || values.isEmpty()) {
@@ -39,7 +39,7 @@ public class BoxPlotData {
 
 	private double calcMedian() {
 		int middle = values.size() / 2;
-		if (values.size() % 2 == 1) {
+		if (values.size() % 2 == 1 || values.size() < 3) {
 			return values.get(middle);
 		}
 		return (values.get(middle - 1) + values.get(middle + 1)) / 2;
@@ -47,19 +47,22 @@ public class BoxPlotData {
 
 	private double calcQ(double lowerPercent) {
 		int n = (int) Math.round(values.size() * lowerPercent / 100);
+		if (n >= values.size()) {
+			return values.get(values.size() - 1);
+		}
 		return values.get(n);
 	}
 
-	public Integer getMin() {
+	public Double getMin() {
 		return min;
 	}
 
-	public Integer getMax() {
+	public Double getMax() {
 		return max;
 	}
 
 
-	public List<Integer> getValues() {
+	public List<Double> getValues() {
 		return values;
 	}
 
