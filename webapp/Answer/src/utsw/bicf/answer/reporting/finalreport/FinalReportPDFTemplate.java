@@ -1325,7 +1325,6 @@ public class FinalReportPDFTemplate {
 			if (report.getLabTestName() != null) {
 				testName = report.getLabTestName();
 			}
-			
 			List<FooterColor> colors = colorPerPage.get(i);
 			if (colors == null) { //don't change color until the next page has an entry
 				colors = colorPerPage.get(i - 1);
@@ -1334,6 +1333,16 @@ public class FinalReportPDFTemplate {
 			while (colors == null && pageNb > 0) {
 				colors = colorPerPage.get(pageNb -1);
 				pageNb--;
+			}
+			//when the navigation table is pushed to page 2 (because of text above too big)
+			//the colors for page 1 might be null
+			//add a white color for page 1
+			if (colors == null) {
+				colors = new ArrayList<FooterColor>();
+				FooterColor fColor = new FooterColor(Color.WHITE, FinalReportTemplateConstants.NO_BORDER_ZERO);
+				if (!colors.contains(fColor)) {
+					colors.add(fColor);
+				}
 			}
 			
 //			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);

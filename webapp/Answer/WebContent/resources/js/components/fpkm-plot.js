@@ -37,6 +37,21 @@ Vue.component('fpkm-plot', {
                 >Close
                 </v-btn>
                 </v-flex>
+                <v-flex xs12>
+                    <v-layout row wrap justify-end>
+                        <v-flex>
+                            <v-btn icon flat @click="zoomIn" :disabled="!currentGene || !canPlot">
+                                   <v-icon>zoom_in</v-icon>
+                               </v-btn>
+                               <v-btn icon flat @click="zoomOut" :disabled="!currentGene || !canPlot">
+                               <v-icon>zoom_out</v-icon>
+                               </v-btn>
+                        </v-flex>
+                        <v-flex class="pl-2">
+                            <v-switch color="primary" @change="updateFPKMPlot" :disabled="!currentGene || !canPlot" class="no-margin-top-controls" hide-details v-model="useLog2" label=" Use Log2"></v-switch>
+                        </v-flex>
+                    </v-layout>
+                </v-flex>
             </v-layout>
             </v-card-actions>
             <v-card-text class="pt-3 pl-3 pr-4 pb-3 subheading"
@@ -92,7 +107,8 @@ Vue.component('fpkm-plot', {
             search: null,
             showOtherPlots: false,
             loading: false,
-            currentOncotreeCode: null
+            currentOncotreeCode: null,
+            useLog2: true
 
         }
 
@@ -135,7 +151,8 @@ Vue.component('fpkm-plot', {
                 params: {
                     caseId: this.$route.params.id,
                     geneParam: this.currentGene.value.trim(),
-                    showOtherPlots: this.showOtherPlots
+                    showOtherPlots: this.showOtherPlots,
+                    useLog2: this.useLog2
                 }
             })
                 .then(response => {
@@ -161,16 +178,18 @@ Vue.component('fpkm-plot', {
                                             // backgroundImage: webAppRoot + "/resources/images/draft-watermark.png",
                                             // backgroundFit: "xy"
                                         }, 
-                                        "scale-x": {
+                                        scaleX: {
                                           "values": "-0.5:0.5:1",
                                           "visible": false,
+                                          label: { text:  "Tissue: " + this.getTissueFromOncotreeCode(chartData.oncotreeCode) }
                                         },
-                                        "scale-y": {
+                                        scaleY: {
                                             maxValue: chartData.maxValue,
-                                            minValue: 0,
-                                            progression: "log",
-                                            'log-base': 2,
+                                            // minValue: 0,
+                                            // progression: "log",
+                                            // 'log-base': 2,
                                             zooming: true,
+                                            label: { text:  this.getCurrentGeneName() + ": FPKM" + (this.useLog2 ? " (log2)": "") }
                                         },
                                         legend: {
                                             offsetY: "90px"
@@ -355,13 +374,20 @@ Vue.component('fpkm-plot', {
                         "text": this.createPlotTitle(chartData.oncotreeCode)
                     },
                     scaleY: {
-                        minValue: 0,
+                        // minValue: 0,
                         maxValue: chartData.maxValue,
-                        progression: "log",
-                        'log-base': 2,
+                        // progression: "log",
+                        // 'log-base': 2,
                         zooming: true,
+                        label: { text:  this.getCurrentGeneName() + ": FPKM" + (this.useLog2 ? " (log2)": "") }
+                    },
+                    scaleX: {
+                        label: { text:  "Tissue: " + this.getTissueFromOncotreeCode(chartData.oncotreeCode) }
                     }
                 }
+            });
+            zingchart.exec('fpkmPlot', 'viewall', {
+
             });
         },
         searchGene(value) {
@@ -413,6 +439,16 @@ Vue.component('fpkm-plot', {
                 this.items.push(this.hardCodedItems[i]);
             }
             this.items.sort((a,b) => { return this.geneItemCompare(a,b)});
+        },
+        zoomIn() {
+            zingchart.exec('fpkmPlot', 'zoomin', {
+                zoomy: true
+            });
+        },
+        zoomOut() {
+            zingchart.exec('fpkmPlot', 'zoomout', {
+                zoomy: true
+            });
         }
     },
     computed: {

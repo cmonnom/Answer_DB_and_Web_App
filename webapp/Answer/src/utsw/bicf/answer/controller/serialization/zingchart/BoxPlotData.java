@@ -33,8 +33,8 @@ public class BoxPlotData {
 		q1 = calcQ(25);
 		q3 = calcQ(75);
 		iqr = q3 - q1;
-		lowerFence = Math.max(0, q1 - 1.5 * iqr); //avoid negative values
-		upperFence = q3 + 1.5 * iqr;
+		lowerFence = Math.max(0,Math.round((q1 - 1.5 * iqr) * 100) * 1.0d / 100); 
+		upperFence = Math.max(0,Math.round((q3 + 1.5 * iqr) * 100) * 1.0d / 100); 
 	}
 
 	private double calcMedian() {

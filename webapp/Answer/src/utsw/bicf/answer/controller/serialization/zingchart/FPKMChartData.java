@@ -22,9 +22,12 @@ public class FPKMChartData extends ZingChartData {
 	Values currentCaseSerie;
 	Values outliersSerie;
 	
+	List<Double> fpkms = new ArrayList<Double>();
 	
-	public FPKMChartData(FPKMData fpkmData, String caseId, Boolean showOtherPlots) {
+	
+	public FPKMChartData(FPKMData fpkmData, String caseId, Boolean showOtherPlots, Boolean useLog2) {
 		
+		this.fpkms = fpkmData.getFpkms().stream().map(i -> i.getFpkmValue()).collect(Collectors.toList());
 		this.oncotreeCode = fpkmData.getOncotreeCode();
 		
 		//Populate labels
@@ -47,7 +50,7 @@ public class FPKMChartData extends ZingChartData {
 		
 		maxValue = fpkmsAll.stream().max(Double::compare).get() * 1.05;
 		
-		this.initBoxPlot(fpkmData, fpkmsAll, fpkmsWithoutCurrentCase, caseId, showOtherPlots);
+		this.initBoxPlot(fpkmData, fpkmsAll, fpkmsWithoutCurrentCase, caseId, showOtherPlots, useLog2);
 		
 		//current Case
 		if (currentCase != null) {
@@ -61,9 +64,59 @@ public class FPKMChartData extends ZingChartData {
 			this.currentCaseSerie = new Values(currentMarkerCoords.stream().map(Object.class::cast).collect(Collectors.toList()), "Current Case", caseName);
 		}
 		
+		
+//		for (FPKMPerCaseData fpkm : fpkmData.getFpkms()) {
+//			Double fpkmValue = fpkm.getFpkmValue();
+//			if (useLog2) {
+//				if (fpkmValue == 0d) {
+//					fpkmValue = 0.01d;
+//				}
+//				fpkmValue = Math.log(fpkmValue) / Math.log(2);
+//			}
+//			fpkmValue = Math.round(fpkmValue * 100)  * 1.0d / 100d;
+//			fpkm.setFpkmValue(fpkmValue);
+//		}
+		
+		if (useLog2) {
+			this.stockSerie.values = this.stockSerie.values.stream().map(v -> convertToLog2(v)).collect(Collectors.toList());
+			this.medianSerie.values = this.medianSerie.values.stream().map(v -> convertToLog2(v)).collect(Collectors.toList());
+			if (this.scatterSerie != null) {
+				this.scatterSerie.values = this.scatterSerie.values.stream().map(v -> convertToLog2(v)).collect(Collectors.toList());
+			}
+			this.currentCaseSerie.values = this.currentCaseSerie.values.stream().map(v -> convertToLog2(v)).collect(Collectors.toList());
+			this.outliersSerie.values = this.outliersSerie.values.stream().map(v -> convertToLog2(v)).collect(Collectors.toList());
+			this.maxValue = (Double) this.convertToLog2(this.maxValue);
+		}
+	
 	}
 	
-	private void initBoxPlot(FPKMData fpkmData, List<Double> fpkmsAll, List<Double> fpkmsWithoutCurrentCase, String caseId, boolean includeOtherCases) {
+	@SuppressWarnings("unchecked")
+	private Object convertToLog2(Object value) {
+		Double valueDouble = null;
+		if (value instanceof Double) {
+			valueDouble = (Double) value;
+		}
+		else {
+			valueDouble = ((List<Double>) value).get(1);
+		}
+		if (valueDouble == 0d) {
+			valueDouble = 0.01d;
+		}
+		valueDouble = Math.log(valueDouble) / Math.log(2);
+		valueDouble = Math.round(valueDouble * 100)  * 1.0d / 100d; 
+		
+		if (value instanceof Double) {
+			return valueDouble;
+		}
+		else {
+			List<Double> array = (List<Double>) value;
+			array.set(1, valueDouble);
+			return array;
+		}
+	}
+	
+	private void initBoxPlot(FPKMData fpkmData, List<Double> fpkmsAll, List<Double> fpkmsWithoutCurrentCase, String caseId, boolean includeOtherCases,
+			Boolean useLog2) {
 		BoxPlotData boxData = new BoxPlotData(fpkmsAll);
 		List<Object> stockSerie = new ArrayList<Object>();
 		stockSerie.add(boxData.getQ1());
@@ -73,11 +126,21 @@ public class FPKMChartData extends ZingChartData {
 		this.stockSerie = new Values(stockSerie, "Box Plot", null);
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append("Upper: ").append(boxData.getUpperFence()).append("<br/>");
-		sb.append("Q3: ").append(boxData.getQ3()).append("<br/>");
-		sb.append("Median: ").append(boxData.getMedian()).append("<br/>");
-		sb.append("Q1: ").append(boxData.getQ1()).append("<br/>");
-		sb.append("Lower: ").append(boxData.getLowerFence());
+		if (useLog2) {
+			sb.append("Upper: ").append(this.convertToLog2(boxData.getUpperFence())).append("<br/>");
+			sb.append("Q3: ").append(this.convertToLog2(boxData.getQ3())).append("<br/>");
+			sb.append("Median: ").append(this.convertToLog2(boxData.getMedian())).append("<br/>");
+			sb.append("Q1: ").append(this.convertToLog2(boxData.getQ1())).append("<br/>");
+			sb.append("Lower: ").append(this.convertToLog2(boxData.getLowerFence()));
+		}
+		else{
+			sb.append("Upper: ").append(boxData.getUpperFence()).append("<br/>");
+			sb.append("Q3: ").append(boxData.getQ3()).append("<br/>");
+			sb.append("Median: ").append(boxData.getMedian()).append("<br/>");
+			sb.append("Q1: ").append(boxData.getQ1()).append("<br/>");
+			sb.append("Lower: ").append(boxData.getLowerFence());
+		}
+		
 		this.boxPlotTooltip = sb.toString();
 		
 		if (includeOtherCases) {
@@ -107,7 +170,8 @@ public class FPKMChartData extends ZingChartData {
 		for (FPKMPerCaseData d : fpkmData.getFpkms()) {
 			if (!d.getCaseId().equals(caseId) 
 				&& (d.getFpkmValue() > boxData.getUpperFence()
-				|| d.getFpkmValue() < boxData.getLowerFence())) {
+				|| d.getFpkmValue() < boxData.getLowerFence())
+				) {
 				outliersCaseNames.add(d.getCaseId() + " " + d.getCaseName());
 				outliersFkpmOthers.add(d.getFpkmValue());
 			}
@@ -130,7 +194,9 @@ public class FPKMChartData extends ZingChartData {
 		this.medianSerie = new Values(lineCoords.stream().map(Object.class::cast).collect(Collectors.toList()), "Median", null);
 		
 		
-		
+		if (boxData.getUpperFence() >= this.maxValue) {
+			this.maxValue = boxData.getUpperFence() * 1.05;
+		}
 	}
 	
 	/**
@@ -213,6 +279,14 @@ public class FPKMChartData extends ZingChartData {
 
 	public void setOutliersSerie(Values outliersSerie) {
 		this.outliersSerie = outliersSerie;
+	}
+
+	public List<Double> getFpkms() {
+		return fpkms;
+	}
+
+	public void setFpkms(List<Double> fpkms) {
+		this.fpkms = fpkms;
 	}
 
 }

@@ -1752,29 +1752,30 @@ public class OpenCaseController {
 	@RequestMapping(value = "/getFPKMChartData", produces= "application/json; charset=utf-8")
 	@ResponseBody
 	public String getFPKMChartData(Model model, HttpSession session, @RequestParam String caseId,
-			@RequestParam String geneParam, @RequestParam(defaultValue="false", required=false) Boolean showOtherPlots) throws Exception {
+			@RequestParam String geneParam, 
+			@RequestParam(defaultValue="false", required=false) Boolean showOtherPlots,
+			@RequestParam(defaultValue="false", required=false) Boolean useLog2) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
 		FPKMData data = new FPKMData(); 
-		
+//		
 //		//create fake data here for testing
-//		data.setOncotreeCode("COAD");
 //		List<FPKMPerCaseData> fpkms = new ArrayList<FPKMPerCaseData>();
 //		for (int i = 0; i < 50; i++) {
 //			FPKMPerCaseData d = new FPKMPerCaseData();
-//			d.setCaseId("ORD" + RandomUtils.nextInt(100, 1000));
+//			d.setCaseId("ORD" + RandomUtils.nextDouble(100, 1000));
 //			if (d.getCaseId().equals(caseId)) {
 //				d.setCaseId("ORD1001");
 //			}
 //			d.setCaseName("ZZTEST, SOMEONE");
-//			d.setFpkmValue(RandomUtils.nextInt(0, 2500));
+//			d.setFpkmValue(RandomUtils.nextDouble(0, 2500));
 //			fpkms.add(d);
 //		}
 //		//currentCase
 //		FPKMPerCaseData d = new FPKMPerCaseData();
 //		d.setCaseId(caseId);
 //		d.setCaseName("ZZTEST, SOMEONE");
-//		d.setFpkmValue(RandomUtils.nextInt(0, 6000));
+//		d.setFpkmValue(RandomUtils.nextDouble(0, 6000));
 //		fpkms.add(d);
 //		
 //		//add some outliers
@@ -1782,7 +1783,7 @@ public class OpenCaseController {
 //			d = new FPKMPerCaseData();
 //			d.setCaseId("ORD Outlier");
 //			d.setCaseName("ZZTEST, SOMEONE");
-//			d.setFpkmValue(RandomUtils.nextInt(4500, 5900));
+//			d.setFpkmValue(RandomUtils.nextDouble(4500, 5900));
 //			fpkms.add(d);
 //		}
 		AjaxResponse ajaxResponse = new AjaxResponse();
@@ -1792,7 +1793,8 @@ public class OpenCaseController {
 		if (fpkms != null) {
 			data.setFpkms(fpkms);
 			data.setOncotreeCode(fpkms.get(0).getOncotreeDiagnosis());
-			return new FPKMChartData(data, caseId, showOtherPlots).createObjectJSON();
+//			data.setOncotreeCode("AML"); //for testing only
+			return new FPKMChartData(data, caseId, showOtherPlots, useLog2).createObjectJSON();
 		}
 		else {
 			AjaxResponse response = new AjaxResponse();
