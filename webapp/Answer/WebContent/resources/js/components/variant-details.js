@@ -393,6 +393,9 @@ Vue.component('variant-details', {
                 else if (id.value.indexOf('COSN') == 0) {
                     link = "https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + id.value.replace("COSN", "");
                 }
+                else if (id.value.indexOf('COSV') == 0) {
+                    return;
+                }
                 else if (!isNaN(id.value)) { //Clinvar
                     link = "https://www.ncbi.nlm.nih.gov/clinvar/variation/" + id.value;
                 }
@@ -414,6 +417,9 @@ Vue.component('variant-details', {
                 }
                 else if (id.value.indexOf('COSM') == 0 || id.value.indexOf('COSN') == 0) {
                     return "Open in COSMIC";
+                }
+                else if (id.value.indexOf('COSV') == 0) {
+                    return "COSMIC hasn't implemented referencing COSV ids yet. Please use the COSM or COSN id";
                 }
                 else if (!isNaN(id.value)) { //Clinvar
                     return "Open in ClinVar";

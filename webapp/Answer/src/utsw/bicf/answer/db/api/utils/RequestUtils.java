@@ -115,6 +115,24 @@ public class RequestUtils {
 	private void addAuthenticationHeader(HttpPut requestMethod) {
 		requestMethod.setHeader(HttpHeaders.AUTHORIZATION, createAuthHeader());
 	}
+	
+	private void closeGetRequest() {
+		if (requestGet != null) {
+			requestGet.releaseConnection();
+		}
+	}
+	
+	private void closePostRequest() {
+		if (requestPost != null) {
+			requestPost.releaseConnection();
+		}
+	}
+	
+	private void closePutRequest() {
+		if (requestPut != null) {
+			requestPut.releaseConnection();
+		}
+	}
 
 	private String createAuthHeader() {
 		String auth = dbProps.getUsername() + ":" + dbProps.getPassword();
@@ -136,28 +154,13 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			OrderCase[] cases = mapper.readValue(response.getEntity().getContent(), OrderCase[].class);
+			this.closeGetRequest();
 			return cases;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 	
-	public void test() throws URISyntaxException, ClientProtocolException, IOException {
-//		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-//		sbUrl.append("cases");
-		URI uri = new URI("https://clinicaltrials.gov/ct2/show/" + "NCT02674568" + "?displayxml=true");
-		requestGet = new HttpGet(uri);
-
-		addAuthenticationHeader(requestGet);
-
-		HttpResponse response = client.execute(requestGet);
-
-		int statusCode = response.getStatusLine().getStatusCode();
-		if (statusCode == HttpStatus.SC_OK) {
-			Object test = mapper.readValue(response.getEntity().getContent(), OrderCase[].class);
-			System.out.println(test);
-		}
-	}
-
 	public AjaxResponse assignCaseToUser(List<User> users, String caseId, User caseOwner)
 			throws ClientProtocolException, IOException, URISyntaxException {
 		String userIds = users.stream().map(user -> user.getUserId().toString()).collect(Collectors.joining(","));
@@ -184,6 +187,7 @@ public class RequestUtils {
 			//set the case owner
 			ajaxResponse = this.assignCaseOwner(caseId, caseOwner);
 		}
+		this.closePutRequest();
 		return ajaxResponse;
 	}
 	
@@ -217,7 +221,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
-		
+		this.closePostRequest();
 		return ajaxResponse;
 	}
 	
@@ -242,6 +246,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
+		this.closePutRequest();
 		return ajaxResponse;
 	}
 
@@ -279,8 +284,10 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			OrderCase orderCase = mapper.readValue(response.getEntity().getContent(), OrderCase.class);
+			this.closePostRequest();
 			return orderCase;
 		}
+		this.closePostRequest();
 		return null;
 	}
 
@@ -307,10 +314,11 @@ public class RequestUtils {
 
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
-			
 			Variant variant = mapper.readValue(response.getEntity().getContent(), Variant.class);
+			this.closeGetRequest();
 			return variant;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 	
@@ -339,8 +347,10 @@ public class RequestUtils {
 		if (statusCode == HttpStatus.SC_OK) {
 			CNV cnv = mapper.readValue(response.getEntity().getContent(), CNV.class);
 			cnv.setType("cnv");
+			this.closeGetRequest();
 			return cnv;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 	
@@ -358,8 +368,10 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			Translocation translocation = mapper.readValue(response.getEntity().getContent(), Translocation.class);
+			this.closeGetRequest();
 			return translocation;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 
@@ -388,6 +400,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
+		this.closePostRequest();
 	}
 
 	public AjaxResponse commitAnnotation(AjaxResponse ajaxResponse, List<Annotation> annotations) throws URISyntaxException, ClientProtocolException, IOException {
@@ -405,10 +418,12 @@ public class RequestUtils {
 		if (statusCode != HttpStatus.SC_OK) {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
+			this.closePostRequest();
 			return ajaxResponse;
 		}
 		else {
 			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			this.closePostRequest();
 			return mongoDBResponse;
 		}
 	}
@@ -435,8 +450,10 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			OrderCase orderCase = mapper.readValue(response.getEntity().getContent(), OrderCase.class);
+			this.closeGetRequest();
 			return orderCase;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 	
@@ -463,8 +480,10 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			OrderCase orderCase = mapper.readValue(response.getEntity().getContent(), OrderCase.class);
+			this.closePostRequest();
 			return orderCase;
 		}
+		this.closePostRequest();
 		return null;
 	}
 
@@ -481,8 +500,10 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			CaseAnnotation caseAnnotation = mapper.readValue(response.getEntity().getContent(), CaseAnnotation.class);
+			this.closeGetRequest();
 			return caseAnnotation;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 
@@ -515,7 +536,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(true);
 			ajaxResponse.setIsAllowed(true);
 		}
-
+		this.closePostRequest();
 		
 	}
 
@@ -556,7 +577,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(true);
 			ajaxResponse.setIsAllowed(true);
 		}
-
+		this.closePostRequest();
 	}
 	
 	public void saveSelectedAnnotations(AjaxResponse ajaxResponse, Object variant, String variantType, String oid) throws URISyntaxException, ClientProtocolException, IOException {
@@ -592,6 +613,7 @@ public class RequestUtils {
 				ajaxResponse.setSuccess(true);
 				ajaxResponse.setIsAllowed(true);
 			}
+			this.closePostRequest();
 		
 	}
 
@@ -618,7 +640,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
-		
+		this.closePostRequest();
 	}
 	
 	/**
@@ -655,6 +677,7 @@ public class RequestUtils {
 			apiResponse.setSuccess(false);
 			apiResponse.setMessage("Something went wrong");
 		}
+		this.closeGetRequest();
 		return apiResponse;
 	}
 
@@ -676,8 +699,10 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			AnnotationSearchResult result = mapper.readValue(response.getEntity().getContent(), AnnotationSearchResult.class);
+			this.closePostRequest();
 			return result;
 		}
+		this.closePostRequest();
 		return null;
 	}
 
@@ -699,7 +724,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(true);
 			ajaxResponse.setIsAllowed(true);
 		}
-		
+		this.closePostRequest();
 	}
 	
 	public void caseReadyForReport(AjaxResponse ajaxResponse, String caseId) throws URISyntaxException, ClientProtocolException, IOException  {
@@ -720,7 +745,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(true);
 			ajaxResponse.setIsAllowed(true);
 		}
-		
+		this.closePostRequest();
 	}
 	
 	public Set<String> getCNVChromomosomes(String caseId) throws URISyntaxException, ClientProtocolException, IOException{
@@ -752,8 +777,10 @@ public class RequestUtils {
 				}
 				
 			}
+			this.closeGetRequest();
 			return uniqItems;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 
@@ -821,8 +848,10 @@ public class RequestUtils {
 			plotData.setCaseId(plotDataRaw.getCaseId());
 			plotData.setCnrData(cnrDataList);
 			plotData.setCnsData(cnsDataList);
+			this.closeGetRequest();
 			return plotData;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 
@@ -874,8 +903,10 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			Report report = mapper.readValue(response.getEntity().getContent(), Report.class);
+			this.closeGetRequest();
 			return report;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 	
@@ -894,8 +925,10 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			MDAReportTemplate mdaEmail = mapper.readValue(response.getEntity().getContent(), MDAReportTemplate.class);
+			this.closeGetRequest();
 			return mdaEmail;
 		}
+		this.closeGetRequest();
 		return null;
 	}
 
@@ -1424,6 +1457,8 @@ public class RequestUtils {
 			ajaxResponse.setMessage("Something went wrong");
 		}
 		
+		this.closePostRequest();
+		this.closePutRequest();
 	}
 	
 	public void saveCNV(AjaxResponse ajaxResponse, CNV cnvToSave, String caseId) throws ClientProtocolException, IOException, URISyntaxException {
@@ -1452,7 +1487,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
-		
+		this.closePostRequest();
 	}
 
 	public List<Report> getExistingReports(String caseId) throws JsonParseException, JsonMappingException, UnsupportedOperationException, IOException, URISyntaxException {
@@ -1469,8 +1504,10 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			ExistingReports reports = mapper.readValue(response.getEntity().getContent(), ExistingReports.class);
+			this.closeGetRequest();
 			return reports.getResult();
 		}
+		this.closeGetRequest();
 		return null;
 	}
 
@@ -1494,6 +1531,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
+		this.closePutRequest();
 	}
 	
 	public void markAsSentToEpic(AjaxResponse ajaxResponse, String caseId) throws URISyntaxException, ClientProtocolException, IOException {
@@ -1516,6 +1554,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
+		this.closePostRequest();
 	}
 
 	public Trial getNCTData(AjaxResponse ajaxResponse, String nctId) throws ClientProtocolException, IOException, URISyntaxException {
@@ -1544,14 +1583,17 @@ public class RequestUtils {
 				}
 				trial.setContact(itemsLineReturns.stream().collect(Collectors.joining("<br/>")));
 				trial.setNctId(nctId);
+				this.closeGetRequest();
 				return trial;
 			}
 			else {
+				this.closeGetRequest();
 				return null;
 			}
 		} else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
+			this.closeGetRequest();
 			return null;
 		}
 	}
@@ -1573,10 +1615,12 @@ public class RequestUtils {
 			mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
 			mongoDBResponse.setSuccess(mongoDBResponse.getSuccess());
 			mongoDBResponse.setMessage(mongoDBResponse.getMessage());
+			this.closeGetRequest();
 			return mongoDBResponse;
 		} else {
 			mongoDBResponse.setSuccess(false);
 			mongoDBResponse.setMessage("Something went wrong");
+			this.closeGetRequest();
 			return mongoDBResponse;
 		}
 	}
@@ -1604,6 +1648,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
+		this.closePutRequest();
 	}
 
 	public List<Annotation> getAllClinicalTrials(AjaxResponse ajaxResponse) throws ClientProtocolException, IOException, URISyntaxException {
@@ -1627,14 +1672,17 @@ public class RequestUtils {
 				for (Annotation annotation : result) {
 					annotations.add(annotation);
 				}
+				this.closeGetRequest();
 				return annotations;
 			}
 			else {
+				this.closeGetRequest();
 				return null;
 			}
 		} else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
+			this.closeGetRequest();
 			return null;
 		}
 	}
@@ -1661,14 +1709,17 @@ public class RequestUtils {
 				for (Annotation annotation : result) {
 					annotations.add(annotation);
 				}
+				this.closeGetRequest();
 				return annotations;
 			}
 			else {
+				this.closeGetRequest();
 				return null;
 			}
 		} else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
+			this.closeGetRequest();
 			return null;
 		}
 	}
@@ -1695,14 +1746,17 @@ public class RequestUtils {
 				for (Variant annotation : result) {
 					variants.add(annotation);
 				}
+				this.closeGetRequest();
 				return variants;
 			}
 			else {
+				this.closeGetRequest();
 				return null;
 			}
 		} else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
+			this.closeGetRequest();
 			return null;
 		}
 	}
@@ -1726,14 +1780,17 @@ public class RequestUtils {
 			if (ajaxResponse.getSuccess()) {
 				FPKMPerCaseData[] result = mapper.convertValue(mongoDBResponse.getPayload(), FPKMPerCaseData[].class);
 				List<FPKMPerCaseData> fpkms = Arrays.asList(result);
+				this.closeGetRequest();
 				return fpkms;
 			}
 			else {
+				this.closeGetRequest();
 				return null;
 			}
 		} else {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
+			this.closeGetRequest();
 			return null;
 		}
 	}
@@ -1767,6 +1824,7 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Something went wrong");
 		}
+		this.closePostRequest();
 	}
 
 }

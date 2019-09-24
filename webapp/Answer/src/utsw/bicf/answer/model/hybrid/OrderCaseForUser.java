@@ -112,7 +112,7 @@ public class OrderCaseForUser {
 		if (orderCase.getCaseHistory() != null) {
 			for (CaseHistory hist : orderCase.getCaseHistory()) {
 				if (hist.getStep().equals(CaseHistory.STEP_NOT_ASSIGNED)) {
-					OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+					OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).withOffsetSameInstant(TypeUtils.offset);
 					uploadedDate = date.format(TypeUtils.monthFormatter);
 					break;
 				}
@@ -120,7 +120,7 @@ public class OrderCaseForUser {
 			if (uploadedDate == null) { //no uploaded date for old cases
 				for (CaseHistory hist : orderCase.getCaseHistory()) {
 					if (hist.getStep().equals(CaseHistory.STEP_ASSIGNED)) {
-						OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+						OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).withOffsetSameInstant(TypeUtils.offset);
 						uploadedDate = date.format(TypeUtils.monthFormatter);
 						break;
 					}

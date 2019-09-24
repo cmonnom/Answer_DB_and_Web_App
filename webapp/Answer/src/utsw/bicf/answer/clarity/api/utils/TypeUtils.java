@@ -32,6 +32,8 @@ public class TypeUtils {
 	static final NumberFormat pctFormatter = NumberFormat.getPercentInstance();
 	static final DateFormat sqlDateFormatter = DateFormat.getDateTimeInstance();
 	
+	public static final ZoneOffset offset = ZoneOffset.systemDefault().getRules().getOffset(LocalDateTime.now());
+	
 	static {
 		pctFormatter.setMaximumFractionDigits(2);
 	}

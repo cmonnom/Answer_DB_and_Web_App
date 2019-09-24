@@ -526,14 +526,22 @@ const Home = {
             return tabTitle == defaultHomeTab;
         },
         showClippy() {
-            var today = moment()
-            var start = moment("2019-10-04");
-            var end = moment("2019-10-11");
-            var activateClippy = today.isBetween(start, end);
-            if (!activateClippy) {
-                clippy = {}; //no need to keep it in memory
+            if (userFullName == "Guillaume Jimenez"
+            || userFullName == "Brandi Cantarel"
+            || userFullName == "Benjamin Wakeland"
+            || userFullName == "Jeffrey Gagan"
+            || userFullName == "Erika Villa") {
+                var today = moment()
+                var start = moment("2019-10-04");
+                var end = moment("2019-10-11");
+                var activateClippy = today.isBetween(start, end);
+                if (!activateClippy) {
+                    clippy = {}; //no need to keep it in memory
+                }
+                return activateClippy;
             }
-            return activateClippy;
+            clippy = {}; //no need to keep it in memory
+            return false;
         }
     },
     mounted: function () {

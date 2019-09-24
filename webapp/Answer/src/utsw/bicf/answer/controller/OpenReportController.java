@@ -5,7 +5,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,24 +34,18 @@ import utsw.bicf.answer.controller.serialization.vuetify.ExistingReportsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
-import utsw.bicf.answer.db.api.utils.NCBIRequestUtils;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVReport;
-import utsw.bicf.answer.model.extmapping.CommitAnnotationResponse;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
-import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
-import utsw.bicf.answer.model.extmapping.Trial;
-import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
-import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.reporting.parse.EncodingGlyphException;
@@ -812,45 +805,6 @@ public class OpenReportController {
 		return response.createObjectJSON();
 	}
 	
-	@RequestMapping(value = "/createPubMedFromId", produces= "application/json; charset=utf-8")
-	@ResponseBody
-	public String createPubMedFromId(Model model, HttpSession session, @RequestParam String pubmedIds) throws Exception {
-		NCBIRequestUtils utils = new NCBIRequestUtils(ncbiProps, otherProps);
-		Set<String> ids = new HashSet<String>();
-		for (String id : pubmedIds.split("[, ]+")) {
-			ids.add(id);
-		}
-		AjaxResponse response = new AjaxResponse();
-		List<PubMed> pubmeds = utils.getPubmedDetails(ids);
-		if (pubmeds != null && !pubmeds.isEmpty()) {
-			response.setIsAllowed(true);
-			response.setSuccess(true);
-			response.setPayload(pubmeds);
-		}
-		else {
-			response.setSuccess(false);
-			response.setMessage("Some pubmed ids might be invalid.");
-		}
-		return response.createObjectJSON();
-	}
-	
-//	@SuppressWarnings("unchecked")
-//	@RequestMapping(value = "/getPubmedDetails")
-//	@ResponseBody
-//	public String getPubmedDetails(Model model, HttpSession session, @RequestBody String data) throws Exception {
-//		ObjectMapper mapper = new ObjectMapper();
-//		JsonNode nodeData = mapper.readTree(data);
-//		List<String> pmids =  mapper.readValue(nodeData.get("pmids").toString(), List.class);
-//		NCBIRequestUtils utils = new NCBIRequestUtils(ncbiProps, otherProps);
-//		List<PubMed> pubmeds = utils.getPubmedDetails(pmids);
-////		List<PubMed> pubmeds = new ArrayList<PubMed>();
-////		for (String pmId : pmids) {
-////			PubmedArticle pubmedArticle = utils.getPubmedDetails(pmId);
-////			pubmeds.add(new PubMed(pubmedArticle, pmId));
-////		}
-//		PubmedSummary summary = new PubmedSummary(pubmeds);
-//		return summary.createObjectJSON();
-//	}
 	@RequestMapping(value = "/commitCNVAnnotationsBatch", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String commitCNVAnnotationsBatch(Model model, HttpSession session, @RequestBody String data,

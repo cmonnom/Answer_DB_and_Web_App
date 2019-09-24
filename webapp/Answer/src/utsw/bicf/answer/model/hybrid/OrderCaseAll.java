@@ -2,7 +2,9 @@ package utsw.bicf.answer.model.hybrid;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -128,7 +130,7 @@ public class OrderCaseAll {
 		if (orderCase.getCaseHistory() != null) {
 			for (CaseHistory hist : orderCase.getCaseHistory()) {
 				if (hist.getStep().equals(CaseHistory.STEP_NOT_ASSIGNED)) {
-					OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+					OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).withOffsetSameInstant(TypeUtils.offset);
 					uploadedDate = date.format(TypeUtils.monthFormatter);
 					break;
 				}
@@ -136,7 +138,7 @@ public class OrderCaseAll {
 			if (uploadedDate == null) { //no uploaded date for old cases
 				for (CaseHistory hist : orderCase.getCaseHistory()) {
 					if (hist.getStep().equals(CaseHistory.STEP_ASSIGNED)) {
-						OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+						OffsetDateTime date = OffsetDateTime.parse(hist.getTime(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).withOffsetSameInstant(TypeUtils.offset);
 						uploadedDate = date.format(TypeUtils.monthFormatter);
 						break;
 					}

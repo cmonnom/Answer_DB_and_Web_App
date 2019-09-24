@@ -3307,7 +3307,6 @@ const OpenCase = {
                     i[item].selectedSince = ""; //handles regular cases
                 }
                 else {
-                   console.log(i[item]); 
                    i[item] = ""; //handles the "latest" case
                 }
                 
@@ -4205,8 +4204,6 @@ const OpenCase = {
                 newAnnotation.isLeftSpecific = newAnnotation.scopes[3];
                 newAnnotation.isRightSpecific = newAnnotation.scopes[4];
             }
-            console.log(annotation);
-            console.log(newAnnotation);
             this.userAnnotations.push(newAnnotation);
             this.commitAnnotations(this.userAnnotations);
         },

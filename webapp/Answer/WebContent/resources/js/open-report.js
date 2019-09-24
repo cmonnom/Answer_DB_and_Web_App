@@ -1311,6 +1311,23 @@ const OpenReport = {
             var html = document.querySelector("html");
             html.style.overflow = "";
         },
+        test() {
+            axios.get(
+                webAppRoot + "/test",
+                {
+                    params: {
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        console.log("success");
+                    }
+                    else {
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                });
+        },
     },
     mounted() {
         this.snackBarMessage = this.readonly ? "View Only Mode: some actions have been disabled" : "",
