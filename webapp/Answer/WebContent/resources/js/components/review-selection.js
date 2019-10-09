@@ -12,6 +12,8 @@ Vue.component('review-selection', {
         caseTypeIcon: {default: "", type: String},
         saveTooltip: {default: "", type: String},
         reportReady: {default: false, type: Boolean},
+        caseOwnerId: { default: "-1", type: String},
+        userId: { default: "-2", type: String}
     },
     template: `<v-card class="soft-grey-background">
     <v-toolbar dense dark color="primary">
@@ -175,14 +177,28 @@ Vue.component('review-selection', {
             <v-tabs-items v-model="variantTabActive">
             <!-- SNP / Indel table -->
         <v-tab-item value="tab-selected-snp" class="pt-1">
+        
             <data-table disable-sticky-header ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from Case Owner"
             initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
-            </data-table>        
+            </data-table>  
+
+            <v-tooltip top v-for="(otherAnnotator, index) in otherAnnotatorSNPs" :key="otherAnnotator.userId" class="pr-2" v-if="userId == caseOwnerId">
+            <v-btn @click="acceptSelectionFrom('snp', otherAnnotator.userId)" slot="activator" :loading="waitingForAjaxActive" class="mr-0 ml-0"
+            :disabled="noNewVariantFromAnnotator('snp', otherAnnotator)">
+                Add Selection From {{ otherAnnotator.userFullName }}
+            <v-icon right dark>mdi-check-all</v-icon>
+            </v-btn>
+            <span v-if="!noNewVariantFromAnnotator('snp', otherAnnotator)">Add {{ otherAnnotator.userFullName }}'s SNP selection to yours ({{ calcSelectionDiff('snp', otherAnnotator.userId).length }} more)</span>
+            <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s SNPs</span>
+            </v-tooltip>
+
             <data-table disable-sticky-header ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
                 initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
+
+
         </v-tab-item>
         <!-- CNV table -->
         <v-tab-item value="tab-selected-cnv"  class="pt-1">
@@ -190,6 +206,17 @@ Vue.component('review-selection', {
             no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
+
+            <v-tooltip top v-for="(otherAnnotator, index) in otherAnnotatorCNVs" :key="otherAnnotator.userId" class="pr-2" v-if="userId == caseOwnerId">
+            <v-btn @click="acceptSelectionFrom('cnv', otherAnnotator.userId)" slot="activator" :loading="waitingForAjaxActive" class="mr-0 ml-0"
+            :disabled="noNewVariantFromAnnotator('cnv', otherAnnotator)">
+                Add Selection From {{ otherAnnotator.userFullName }}
+            <v-icon right dark>mdi-check-all</v-icon>
+            </v-btn>
+            <span v-if="!noNewVariantFromAnnotator('cnv', otherAnnotator)">Add {{ otherAnnotator.userFullName }}'s CNV selection to yours ({{ calcSelectionDiff('cnv', otherAnnotator.userId).length }} more)</span>
+            <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s CNVs</span>
+            </v-tooltip>
+
             <data-table disable-sticky-header ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
                 no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
                 @refresh-requested="handleRefresh()">
@@ -201,6 +228,17 @@ Vue.component('review-selection', {
             initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
+
+            <v-tooltip top v-for="(otherAnnotator, index) in otherAnnotatorFTLs" :key="otherAnnotator.userId" class="pr-2" v-if="userId == caseOwnerId">
+            <v-btn @click="acceptSelectionFrom('ftl', otherAnnotator.userId)" slot="activator" :loading="waitingForAjaxActive" class="mr-0 ml-0"
+            :disabled="noNewVariantFromAnnotator('ftl', otherAnnotator)">
+                Add Selection From {{ otherAnnotator.userFullName }}
+            <v-icon right dark>mdi-check-all</v-icon>
+            </v-btn>
+            <span v-if="!noNewVariantFromAnnotator('ftl', otherAnnotator)">Add {{ otherAnnotator.userFullName }}'s Fusion/Translocation selection to yours ({{ calcSelectionDiff('ftl', otherAnnotator.userId).length }} more)</span>
+            <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s Fusions/Translocations</span>
+            </v-tooltip>
+
             <data-table disable-sticky-header ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
                 initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
                 @refresh-requested="handleRefresh()">
@@ -249,7 +287,16 @@ Vue.component('review-selection', {
             requiredReportGroups: [],
             markingForReview: false,
             markingForReport: false,
-            variantTabActive: null
+            variantTabActive: null,
+            otherAnnotatorSNPs: [],
+            variantIdSNPPerAnnotator: {},
+            variantIdsSNPForCaseOwner: {},
+            otherAnnotatorCNVs: [],
+            variantIdCNVPerAnnotator: {},
+            variantIdsCNVForCaseOwner: {},
+            otherAnnotatorFTLs: [],
+            variantIdFTLPerAnnotator: {},
+            variantIdsFTLForCaseOwner: {}
         }
     },
     methods: {
@@ -456,6 +503,9 @@ Vue.component('review-selection', {
                 { items: selectedTranslocations, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderAll });
             this.$refs.translocationVariantsSelectedReviewer.manualDataFiltered(
                 { items: selectedTranslocationsReviewer, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer });
+            this.populateOtherAnnotators('snp', selectedSNPVariants); 
+            this.populateOtherAnnotators('cnv', selectedCNVs); 
+            this.populateOtherAnnotators('ftl', selectedTranslocations);    
             this.stopLoading();    
         },
         getSnpTable() {
@@ -474,15 +524,94 @@ Vue.component('review-selection', {
             this.$refs.snpVariantsSelected.startLoading();
             this.$refs.snpVariantsSelectedReviewer.startLoading();
             this.$refs.cnvVariantsSelected.startLoading();
+            this.$refs.cnvVariantsSelectedReviewer.startLoading();
             this.$refs.translocationVariantsSelected.startLoading();
+            this.$refs.translocationVariantsSelectedReviewer.startLoading();
         },
         stopLoading() {
             this.$refs.snpVariantsSelected.stopLoading();
             this.$refs.snpVariantsSelectedReviewer.stopLoading();
+            this.$refs.cnvVariantsSelected.stopLoading();
+            this.$refs.cnvVariantsSelectedReviewer.stopLoading();
+            this.$refs.translocationVariantsSelected.stopLoading();
+            this.$refs.translocationVariantsSelectedReviewer.stopLoading();
         },
         handleRefresh() {
             this.$emit("review-selection-refresh");
         },
+        acceptSelectionFrom(type, userId) {
+            let diffIds = this.calcSelectionDiff(type, userId);
+            this.$emit("accept-selection-from", type, diffIds);
+        },
+        calcSelectionDiff(type, userId) {
+            //remove ids in variantIds if they are in ownerVariantIds
+            let diffIds = [];
+            let variantIds = [];
+            let caseOwnerVariantIds = [];
+            if (type == "snp") {
+                variantIds = this.variantIdSNPPerAnnotator[userId + "_"];
+                caseOwnerVariantIds = this.variantIdsSNPForCaseOwner;
+            }
+            else if (type == "cnv") {
+            variantIds = this.variantIdCNVPerAnnotator[userId + "_"];
+            caseOwnerVariantIds = this.variantIdsCNVForCaseOwner;
+            }
+            else if (type == "ftl") {
+                variantIds = this.variantIdFTLPerAnnotator[userId + "_"];
+                caseOwnerVariantIds = this.variantIdsFTLForCaseOwner;
+            }
+            for (let i =0; i < variantIds.length; i++) {
+                if (caseOwnerVariantIds.indexOf(variantIds[i]) == -1) {
+                    diffIds.push(variantIds[i]);
+                }
+            }
+            return diffIds;
+        },
+        populateOtherAnnotators(type, selectedVariants) {
+            let variantIdPerAnnotator = {};
+            let variantIdsForCaseOwner = [];
+            let otherAnnotators = [];
+            for (let i=0; i < selectedVariants.length; i++) {
+                selectionPerAnnotator = selectedVariants[i].selectionPerAnnotator;
+                let currentSelections = Object.entries(selectionPerAnnotator);
+                for (let j=0; j < currentSelections.length; j++) {
+                    let userId = currentSelections[j][0] + "_";
+                    if (currentSelections[j][0] != (this.caseOwnerId + "")) {
+                        let ids = variantIdPerAnnotator[userId];
+                        if (!ids) {
+                            ids = [];
+                        }
+                        ids.push(selectedVariants[i].oid)
+                        variantIdPerAnnotator[userId] = ids;
+                        if (otherAnnotators.filter(a => a.userId == currentSelections[j][0]).length == 0) {
+                            otherAnnotators.push({userId: currentSelections[j][1].userId, userFullName: currentSelections[j][1].userFullName});
+                        }
+                    }
+                    else {
+                        variantIdsForCaseOwner.push(selectedVariants[i].oid);
+                    }
+                }
+            }
+            if (type == "snp") {
+                this.variantIdSNPPerAnnotator = variantIdPerAnnotator;
+                this.variantIdsSNPForCaseOwner = variantIdsForCaseOwner;
+                this.otherAnnotatorSNPs = otherAnnotators;
+            }
+            else if (type == "cnv") {
+                this.variantIdCNVPerAnnotator = variantIdPerAnnotator;
+                this.variantIdsCNVForCaseOwner = variantIdsForCaseOwner;
+                this.otherAnnotatorCNVs = otherAnnotators;
+            }
+            else if (type == "ftl") {
+                this.variantIdFTLPerAnnotator = variantIdPerAnnotator;
+                this.variantIdsFTLForCaseOwner = variantIdsForCaseOwner;
+                this.otherAnnotatorFTLs = otherAnnotators;
+            }
+        },
+        noNewVariantFromAnnotator(type, otherAnnotator) {
+            let diffIds = this.calcSelectionDiff(type, otherAnnotator.userId);
+            return diffIds.length == 0;
+        }
     },
     computed: {
 

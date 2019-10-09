@@ -172,7 +172,7 @@ const Home = {
                   <v-slide-x-transition>
                     <v-flex xs12>
                       <data-table ref="casesAllTable" :fixed="false" :fetch-on-created="false" table-title="All Cases" :initial-sort="'epicOrderDate'"
-                        no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search" @refresh-requested="handleRefresh()">
+                      :sort-descending="true" no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search" @refresh-requested="handleRefresh()">
                       </data-table>
                     </v-flex>
                   </v-slide-x-transition>

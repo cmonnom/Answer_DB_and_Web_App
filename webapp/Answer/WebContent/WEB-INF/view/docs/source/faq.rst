@@ -10,13 +10,13 @@ Assign a case to a pathologist
 
 To work on a case, a user needs to have annotation permissions and the case needs to be assigned to her.
 
-#. go to the homepage and find the case you want to assign (use the Quick Filter button if needed) in the **All Cases** table.
+#. go to the homepage and find the case you want to assign (use the Quick Filter button if needed) in the **My Cases** or the **All Cases** table.
 #. click on |assign| 
 #. toggle the button next to all the pathologists who need to work on the case.
 #. click **SAVE**.
 #. all new pathologists assigned to a case will receive an email informing them that a case is ready.
 
-.. |assign| image:: img/baseline_assignment_ind_black_18dp.png 
+.. |assign| image:: img/account-arrow-left_48.png 
    :width: 20
 
 .. image:: img/homepage/assign-case.png 

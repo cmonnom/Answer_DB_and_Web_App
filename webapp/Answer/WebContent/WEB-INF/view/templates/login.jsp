@@ -26,7 +26,7 @@ response.setDateHeader ("Expires", 0);
 	var authType = "${authType}";
 </script>
 </head>
-<body>
+<body >
 <div id="app">
 <v-app >
 		<main>
@@ -34,7 +34,8 @@ response.setDateHeader ("Expires", 0);
 				<v-container>
 					<!-- 		ADDING PAGE SPECIFIC CONTENT HERE BY POPULATING ${content} with the name of the jsp file
 	from the controller-->
-					<login-full-page :popup="false"></login-full-page>
+						test login.jsp
+					<login-full-page2></login-full-page2>
 				</v-container>	
 			</v-content>
 		</main>

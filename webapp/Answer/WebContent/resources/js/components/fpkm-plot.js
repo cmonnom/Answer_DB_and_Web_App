@@ -139,8 +139,15 @@ Vue.component('fpkm-plot', {
         getTissueFromOncotreeCode(code) {
             return this.oncotree.filter( i => {return i.text === code;})[0].tissue;
         },
-        createPlotTitle(code) {
-            return "FPKM from " + this.getTissueFromOncotreeCode(code) +" tissue<br/> on gene " + this.getCurrentGeneName();
+        createPlotTitle(code, nbOfCases) {
+            let caseString = nbOfCases ? nbOfCases : 0;
+            if (nbOfCases > 1) {
+                caseString += " cases";
+            }
+            else {
+                caseString += " case";
+            }
+            return "FPKM from " + this.getTissueFromOncotreeCode(code) +" tissue<br/> on gene " + this.getCurrentGeneName() + " (" + caseString + ")";
         },
         updateFPKMPlot() {
             if (!this.currentGene) {
@@ -171,7 +178,7 @@ Vue.component('fpkm-plot', {
                                         "title":{
                                         //   "text":"FPKM for cases diagnosed with " + chartData.oncotreeCode +"<br/> on gene " + this.getCurrentGeneName()
                                         //   + "<br/>(Demo only, not real data)",
-                                        "text": this.createPlotTitle(chartData.oncotreeCode)
+                                        "text": this.createPlotTitle(chartData.oncotreeCode, chartData.nbOfCases)
                                         },
                                         plotarea: {
                                             marginTop: "100px",
@@ -371,7 +378,7 @@ Vue.component('fpkm-plot', {
             zingchart.exec('fpkmPlot', 'modify', {
                 data: {
                     title: {
-                        "text": this.createPlotTitle(chartData.oncotreeCode)
+                        "text": this.createPlotTitle(chartData.oncotreeCode, chartData.nbOfCases)
                     },
                     scaleY: {
                         // minValue: 0,

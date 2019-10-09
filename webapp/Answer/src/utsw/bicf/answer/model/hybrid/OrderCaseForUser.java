@@ -30,6 +30,7 @@ public class OrderCaseForUser {
 	
 	List<Button> buttons = new ArrayList<Button>();
 	FlagValue progressFlags;
+	String caseOwnerId;
 	
 	List<String> assignedToIds;
 	List<String> groupIds;
@@ -46,6 +47,10 @@ public class OrderCaseForUser {
 		this.groupIds = orderCase.getGroupIds();
 		this.patientName = orderCase.getPatientName();
 		this.active = orderCase.getActive();
+		this.caseOwnerId = orderCase.getCaseOwner();
+		if (currentUser.getIndividualPermission().getCanAssign()) {
+			buttons.add(new Button("mdi-account-arrow-left", "assignToUser", "Assign To", "info"));
+		}
 		buttons.add(new Button("mdi-file-document-edit", "open", "Work on Case", "info"));
 		if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)
 				|| CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
@@ -199,6 +204,14 @@ public class OrderCaseForUser {
 
 	public String getAssignedTo() {
 		return assignedTo;
+	}
+
+	public String getCaseOwnerId() {
+		return caseOwnerId;
+	}
+
+	public void setCaseOwnerId(String caseOwnerId) {
+		this.caseOwnerId = caseOwnerId;
 	}
 
 

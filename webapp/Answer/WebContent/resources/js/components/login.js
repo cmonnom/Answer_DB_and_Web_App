@@ -5,7 +5,7 @@ Vue.component('login', {
         message: { default: "Please log in using UTSW credentials", type: String },
         authType: { default: "ldap", type: String },
         popup: { default: true, type: Boolean },
-        dataUrlRoot: { default: webAppRoot, type: String }
+        dataUrlRoot: { default: webAppRoot, type: String },
     },
     template: `<div>
             <v-container pl-3 pr-3 pt-3 pb-3>
@@ -20,7 +20,7 @@ Vue.component('login', {
                         <div class="text-xs-center white--text">
                             {{ message }}
                         </div>
-
+                        
                     <div class="text-xs-center">
                         <v-text-field label="Username" 
                         v-model="username"
@@ -41,12 +41,12 @@ Vue.component('login', {
                         {{ errorReason }}
                     </v-alert>
                     <div class="text-xs-center">
-                        <v-btn type="submit"
+                        <v-btn type="submit" light
                         :loading="loading"
                         :disabled="loading || !formValid">
                             Submit
                         </v-btn>
-                        <v-btn @click="clear">Clear</v-btn>
+                        <v-btn @click="clear" light>Clear</v-btn>
                     </div>
                 </v-form>
             </v-container>

@@ -2,9 +2,7 @@ package utsw.bicf.answer.model.hybrid;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +13,6 @@ import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
-import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -41,7 +38,7 @@ public class OrderCaseAll {
 	FlagValue progressFlags;
 	String caseOwnerId;
 	
-	public OrderCaseAll(ModelDAO modelDAO, OrderCase orderCase, List<User> users, User currentUser) {
+	public OrderCaseAll(OrderCase orderCase, List<User> users, User currentUser) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
 		this.epicOrderDate =orderCase.getEpicOrderDate();
 		this.oncotreeDiagnosis = orderCase.getOncotreeDiagnosis();

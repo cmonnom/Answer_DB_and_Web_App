@@ -49,7 +49,8 @@ Vue.component('advanced-filter', {
                                 </v-tooltip>
                             </v-chip>
                             <v-chip v-if="isCheckBoxFilterUsed(filter.checkBoxes) && filter.isCheckBox" v-for="(filter, index3) in filters" :key="index3" class="no-left-padding multi-line-chip" label color="primary" text-color="white" disabled>
-                                <span v-html="getFilterCheckBoxChip(filter)" class="pl-2"></span>
+                            <v-avatar class="pl-4" v-text="getFormattedType(filter.type)"></v-avatar>
+                            <span v-html="getFilterCheckBoxChip(filter)" class="pl-2"></span>
                                 <v-tooltip bottom>
                                 <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(filter)" :disabled="disableFiltering" class="mr-0">
                                     <v-icon>close</v-icon>
@@ -257,6 +258,7 @@ Vue.component('advanced-filter', {
                 </v-chip>
 
                 <v-chip v-if="isCheckBoxFilterUsed(filter.checkBoxes) && filter.isCheckBox"  v-for="(filter, index3) in filters" :key="index3" class="no-left-padding multi-line-chip" label color="primary" text-color="white" disabled>
+                <v-avatar class="pl-4" v-text="getFormattedType(filter.type)"></v-avatar>
                     <span v-html="getFilterCheckBoxChip(filter)" class="pl-2"></span>
                     <v-tooltip bottom>
                     <v-btn slot="activator" dark flat icon small @click="clearCheckBoxFilter(filter)"  class="mr-0" :disabled="disableFiltering">
@@ -336,7 +338,7 @@ Vue.component('advanced-filter', {
 
 
                     <!-- filter flags -->
-                    <v-layout row :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'mr-3']" v-if="getFiltersByType(flagFilters).length > 0">
+                    <v-layout row :class="[getFilterColor(), 'pl-3', 'mr-3']" v-if="getFiltersByType(flagFilters).length > 0">
                         <v-expansion-panel expand class="expandable-filter elevation-0"  :value="flagExpansion">
                             <v-expansion-panel-content>
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">Flags</div>
@@ -416,13 +418,13 @@ Vue.component('advanced-filter', {
                         </v-flex>
                     </v-layout>
                     <!-- checkbox -->
-                    <v-layout row v-for="filter in getFiltersByType(checkboxFilters)" :key="filter.headerText" :class="[disableFiltering ? 'grey' : 'primary', 'pl-3', 'pr-3', 'mt-2', 'mr-3']">
+                    <v-layout row v-for="filter in getFiltersByType(checkboxFilters)" :key="filter.headerText" :class="[getFilterColor(filter), 'pl-3', 'pr-3', 'mt-2', 'mr-3']">
                         <v-expansion-panel expand v-if="filter.isCheckBox" class="expandable-filter elevation-0" :value="checkboxExpansion">
                             <v-expansion-panel-content>
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">
                                     {{ filter.headerText }}
                                     <v-tooltip right>
-                                    <v-btn small slot="activator" :disabled="disableFiltering" flat @click.stop="toggleAllCheckBoxes(filter)" icon>
+                                    <v-btn small slot="activator" :disabled="disableFiltering" flat @click.stop="toggleAllCheckBoxes(filter)" icon >
                                         <v-icon>done_all</v-icon>
                                     </v-btn>
                                     <span>Select/Unselect All</span>
@@ -928,6 +930,27 @@ Vue.component('advanced-filter', {
                 bus.$emit("some-error", [this, response.message]);
             }
         },
+        isCheckboxFilterActive(filter) {
+            return filter.isCheckBox && this.isCheckBoxFilterUsed(filter.checkBoxes);
+        },
+        isFlagFilterActive() {
+            let flags = this.getFiltersByType(this.flagFilters);
+            for (let i=0; i < flags.length; i++) {
+                if (flags[i].valueTrue || flags[i].valueFalse) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        getFilterColor(filter) {
+            if (this.disableFiltering) {
+                return 'grey';
+            }
+            if ((filter && this.isCheckboxFilterActive(filter)) || (!filter && this.isFlagFilterActive())) {
+                return 'amber accent-2';
+            }
+            return "primary";
+        }
     },
     created: function () {
     },

@@ -255,16 +255,7 @@ public class OpenCaseController {
 		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
-		OrderCase[] cases = utils.getActiveCases();
-		OrderCase detailedCase = null;
-		if (cases != null) {
-			for (OrderCase c : cases) {
-				if (c.getCaseId().equals(caseId)) {
-					detailedCase = utils.getCaseDetails(caseId, filters);
-					break; // found that the case exists
-				}
-			}
-		}
+		OrderCase detailedCase = utils.getCaseDetails(caseId, filters);
 		if (detailedCase == null) { // the case does not exist
 			AjaxResponse response = new AjaxResponse();
 			response.setIsAllowed(false);

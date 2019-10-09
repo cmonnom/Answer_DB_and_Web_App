@@ -15,7 +15,7 @@ response.setDateHeader ("Expires", 0);
 <head>
 <title>Answer</title>
 <%@include file="/WEB-INF/view/templates/header.jsp" %>
-<script src="${pageContext.request.contextPath}/resources/js/components/login-full-page.js"></script>
+<script src="${pageContext.request.contextPath}/resources/js/components/login-full-page2.js"></script>
 
 <!-- Just for the launch of the final version -->
 <script src="${pageContext.request.contextPath}/resources/js/goodies/sketch.min.js"></script>
@@ -24,14 +24,14 @@ response.setDateHeader ("Expires", 0);
 
 </head>
 <body>
-<div id="app">
+<div id="app" >
 <v-app >
-		<main>
+		<main >
 			<v-content>
 				<v-container>
 					<!-- 		ADDING PAGE SPECIFIC CONTENT HERE BY POPULATING ${content} with the name of the jsp file
 	from the controller-->
-					<login-full-page :popup="false"></login-full-page>
+					<login-full-page2></login-full-page2>
 				</v-container>	
 			</v-content>
 		</main>

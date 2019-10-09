@@ -126,7 +126,7 @@ public class HomeController {
 			List<OrderCaseAll> casesAll = 
 					caseList.stream()
 					.filter(c -> c.getActive() != null && c.getActive())
-					.map(c -> new OrderCaseAll(modelDAO, c, users, user))
+					.map(c -> new OrderCaseAll(c, users, user))
 					.collect(Collectors.toList());
 			List<OrderCaseFinalized> casesFinalized = 
 					caseList.stream()

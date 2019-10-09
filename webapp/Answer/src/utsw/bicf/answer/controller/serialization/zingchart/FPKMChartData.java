@@ -24,11 +24,15 @@ public class FPKMChartData extends ZingChartData {
 	
 	List<Double> fpkms = new ArrayList<Double>();
 	
+	int nbOfCases;
+	
 	
 	public FPKMChartData(FPKMData fpkmData, String caseId, Boolean showOtherPlots, Boolean useLog2) {
 		
 		this.fpkms = fpkmData.getFpkms().stream().map(i -> i.getFpkmValue()).collect(Collectors.toList());
 		this.oncotreeCode = fpkmData.getOncotreeCode();
+		
+		
 		
 		//Populate labels
 		this.labels = new ArrayList<String>();
@@ -43,6 +47,7 @@ public class FPKMChartData extends ZingChartData {
 		
 		//extract the current case FPKM data. Need to make sure it's in the data set 
 		List<FPKMPerCaseData> currentCases = fpkmData.getFpkms().stream().filter(d -> d.getCaseId().equals(caseId)).collect(Collectors.toList());
+		this.nbOfCases = currentCases.size();
 		FPKMPerCaseData currentCase = null;
 		if (currentCases != null && !currentCases.isEmpty()) {
 			currentCase = currentCases.get(0); 
@@ -287,6 +292,14 @@ public class FPKMChartData extends ZingChartData {
 
 	public void setFpkms(List<Double> fpkms) {
 		this.fpkms = fpkms;
+	}
+
+	public int getNbOfCases() {
+		return nbOfCases;
+	}
+
+	public void setNbOfCases(int nbOfCases) {
+		this.nbOfCases = nbOfCases;
 	}
 
 }

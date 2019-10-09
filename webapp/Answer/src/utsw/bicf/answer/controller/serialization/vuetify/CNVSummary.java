@@ -74,7 +74,7 @@ public class CNVSummary extends Summary<CNVRow> {
 		chrom.setIsSafe(true);
 		headers.add(chrom);
 		Header gene = new Header("Genes", "genes");
-		gene.setWidth("200px");
+//		gene.setWidth("200px");
 		gene.setAlign("left");
 		gene.setCanHighlight(true);
 		gene.setIsSafe(true);

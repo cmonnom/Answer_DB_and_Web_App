@@ -146,7 +146,10 @@ const OpenCase = {
         :is-save-badge-visible="isSaveNeededBadgeVisible()" :save-variant-disabled="saveVariantDisabled"
         @save-all="handleSaveAll" :waiting-for-ajax-active="waitingForAjaxActive" @show-snackbar="showSnackBarMessageWithParams"
         :save-tooltip="createSaveTooltip()"
-        @review-selection-refresh="updateSelectedVariantTable()"></review-selection>
+        :case-owner-id="caseOwnerId"
+        :user-id="userId + ''"
+        @review-selection-refresh="updateSelectedVariantTable()"
+        @accept-selection-from="addOtherAnnotatorSelection"></review-selection>
     </v-dialog>
 
     <!-- annotation dialog -->
@@ -2953,8 +2956,18 @@ const OpenCase = {
         createTempSelectionPerAnnotator() {
             return "<span tabindex='-1' class='v-chip v-chip--disabled v-chip--label warning v-chip--small white--text'><span class='v-chip__content'><i aria-hidden='true' class='icon material-icons mdi mdi-checkbox-marked' style='font-size: 16px; vertical-align: bottom'></i><span class='pl-2'>latest</span></span></span>";
         },
-        isVariantTempSelected(item) {
-            return this.snpItemsTemp.filter(i => i.oid == item.oid && i.isSelected).length > 0;
+        isVariantTempSelected(type, item) {
+            let itemsTemp = [];
+            if (type == 'snp') {
+                itemsTemp = this.snpItemsTemp;
+            }
+            else if (type == 'snp') {
+                itemsTemp = this.cnvItemsTemp;
+            }
+            else if (type == 'snp') {
+                itemsTemp = this.ftlItemsTemp;
+            }
+            return itemsTemp.filter(i => i.oid == item.oid && i.isSelected).length > 0;
         },
         isSelectionPerAnnotatorReal(selectionPerAnnotator) {
             //check if it's a real object or a html string (temp v-chip)
@@ -2979,7 +2992,7 @@ const OpenCase = {
                     this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
                     //populate the selected variants but not yet saved by creating fake selectionPerAnnotator objects
                     for (var i= 0; i < selectedSNPVariants.length; i++) {
-                        if (!this.isSelectionPerAnnotatorReal(selectedSNPVariants[i].selectionPerAnnotator[this.userId]) && this.isVariantTempSelected(selectedSNPVariants[i])) {
+                        if (!this.isSelectionPerAnnotatorReal(selectedSNPVariants[i].selectionPerAnnotator[this.userId]) && this.isVariantTempSelected('snp', selectedSNPVariants[i])) {
                             selectedSNPVariants[i]["dateSince" + this.userId] = this.createTempSelectionPerAnnotator();
                         }
                     }
@@ -2992,8 +3005,8 @@ const OpenCase = {
 
                     
                     for (var i= 0; i < selectedCNVs.length; i++) {
-                        if (!selectedCNVs[i].selectionPerAnnotator[this.userId]) {
-                            selectedCNVs[i].selectionPerAnnotator[this.userId] = this.createTempSelectionPerAnnotator();
+                        if (!this.isSelectionPerAnnotatorReal(selectedCNVs[i].selectionPerAnnotator[this.userId]) && this.isVariantTempSelected('cnv', selectedCNVs[i])) {
+                            selectedCNVs[i]["dateSince" + this.userId] = this.createTempSelectionPerAnnotator();
                         }
                     }
                     
@@ -3005,8 +3018,8 @@ const OpenCase = {
 
                     
                     for (var i= 0; i < selectedTranslocations.length; i++) {
-                        if (!selectedTranslocations[i].selectionPerAnnotator[this.userId]) {
-                            selectedTranslocations[i].selectionPerAnnotator[this.userId] = this.createTempSelectionPerAnnotator();
+                        if (!this.isSelectionPerAnnotatorReal(selectedTranslocations[i].selectionPerAnnotator[this.userId]) && this.isVariantTempSelected('ftl', selectedTranslocations[i])) {
+                            selectedTranslocations[i]["dateSince" + this.userId] = this.createTempSelectionPerAnnotator();
                         }
                     }
                     
@@ -3024,7 +3037,7 @@ const OpenCase = {
                     this.addCurrentUserSelectionColumnToHeaders(snpAllHeaderOrder, cnvAllHeaderOrder, ftlAllHeaderOrder);
 
                     this.$refs.reviewDialog.updateSelectedVariantTable(
-                    selectedSNPVariants, selectedSNPVariantsReviewer, 
+                    selectedSNPVariants, selectedSNPVariantsReviewer,
                     this.$refs.geneVariantDetails.headers, snpAllHeaderOrder, this.$refs.geneVariantDetails.headerOrder, 
                     selectedCNVs, selectedCNVsReviewer,
                     this.$refs.cnvDetails.headers, cnvAllHeaderOrder, this.$refs.cnvDetails.headerOrder, 
@@ -3056,6 +3069,9 @@ const OpenCase = {
             // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
             // Use a flag to disable the action in the meantime
             if (this.saveVariantDisabled) {
+                return;
+            }
+            if (this.saveLoading) {
                 return;
             }
             this.saveLoading = true;
@@ -3319,14 +3335,23 @@ const OpenCase = {
                 var filteredSNPItemsTemp = this.$refs.geneVariantDetails.items.filter(i => this.selectedIdsPreFilteringTempOnly(i)).map(i => (this.simplifiedSelectedVariant(i)));
                 var unfilteredSNPItems = this.snpIndelUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
                 var unfilteredSNPItemsTemp = this.snpIndelUnfilteredItems.filter(i => this.selectedIdsPreFilteringTempOnly(i)).map(i => (this.simplifiedSelectedVariant(i)));
+
                 var filteredCNVItems = this.$refs.cnvDetails.items.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+                var filteredCNVItemsTemp = this.$refs.cnvDetails.items.filter(i => this.selectedIdsPreFilteringTempOnly(i)).map(i => (this.simplifiedSelectedVariant(i)));
                 var unfilteredCNVItems = this.cnvUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+                var unfilteredCNVItemsTemp = this.cnvUnfilteredItems.filter(i => this.selectedIdsPreFilteringTempOnly(i)).map(i => (this.simplifiedSelectedVariant(i)));
+
                 var filteredFTLItems = this.$refs.translocationDetails.items.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+                var filteredFTLItemsTemp = this.$refs.translocationDetails.items.filter(i => this.selectedIdsPreFilteringTempOnly(i)).map(i => (this.simplifiedSelectedVariant(i)));
                 var unfilteredFTLItems = this.ftlUnfilteredItems.filter(i => this.selectedIdsPreFiltering(i, currentUserOnly)).map(i => (this.simplifiedSelectedVariant(i)));
+                var unfilteredFTLItemsTemp = this.ftlUnfilteredItems.filter(i => this.selectedIdsPreFilteringTempOnly(i)).map(i => (this.simplifiedSelectedVariant(i)));
 
                 this.snpItemsTemp = filteredSNPItemsTemp.concat(unfilteredSNPItemsTemp);
+                this.cnvItemsTemp = filteredCNVItemsTemp.concat(unfilteredCNVItemsTemp);
+                this.ftlItemsTemp = filteredFTLItemsTemp.concat(unfilteredFTLItemsTemp);
 
-
+                console.log("before ajax:", filteredSNPItems);
+                console.log("before ajax:", filteredSNPItemsTemp);
                 axios({
                     method: 'post',
                     url: webAppRoot + "/getSelectedVariantIds",
@@ -3372,6 +3397,8 @@ const OpenCase = {
                             selectedTranslocationIds = response.data.payload.ftlIdsAll;
                             selectedTranslocationIdsReviewer = response.data.payload.ftlIdsReviewer;
                         }
+                        console.log("after ajax:", selectedSNPVariantIds);
+                        console.log("after ajax:", selectedSNPVariantIdsReviewer);
                         resolve({
                             selectedSNPVariantIds: selectedSNPVariantIds ? selectedSNPVariantIds : null,
                             selectedSNPVariantIdsReviewer: selectedSNPVariantIdsReviewer ? selectedSNPVariantIdsReviewer : null,
@@ -3459,6 +3486,26 @@ const OpenCase = {
                         if (!item.isSelected) {
                             delete this.snpIndelUnfilteredItems[i].selectionPerAnnotator[this.userId];
                             this.snpIndelUnfilteredItems[i]["dateSince" + this.userId] = "";
+                        }
+                        break;
+                    }
+                }
+                for (var i = 0; i < this.cnvUnfilteredItems.length; i++){
+                    if (this.cnvUnfilteredItems[i].oid == item.oid) {
+                        this.cnvUnfilteredItems[i].isSelected = item.isSelected;
+                        if (!item.isSelected) {
+                            delete this.cnvUnfilteredItems[i].selectionPerAnnotator[this.userId];
+                            this.cnvUnfilteredItems[i]["dateSince" + this.userId] = "";
+                        }
+                        break;
+                    }
+                }
+                for (var i = 0; i < this.ftlUnfilteredItems.length; i++){
+                    if (this.ftlUnfilteredItems[i].oid == item.oid) {
+                        this.ftlUnfilteredItems[i].isSelected = item.isSelected;
+                        if (!item.isSelected) {
+                            delete this.ftlUnfilteredItems[i].selectionPerAnnotator[this.userId];
+                            this.ftlUnfilteredItems[i]["dateSince" + this.userId] = "";
                         }
                         break;
                     }
@@ -4536,9 +4583,44 @@ const OpenCase = {
                 fpkmPositionx: 0,
                 fpkmPositiony: 0,
                 snpItemsTemp: [], //a temp list of selected variants
+                cnvItemsTemp: [], //a temp list of selected variants
+                ftlItemsTemp: [], //a temp list of selected variants
                 highlightLatestAnnotation: false,
                 canCopyAnnotation: true
             }
+        },
+        addOtherAnnotatorSelection(type, diffIds) {
+            if (!this.canProceed('canSelect') || this.readonly) {
+                return;
+            }
+            if (type == 'snp') {
+                for (let i=0; i < this.snpIndelUnfilteredItems.length; i++) {
+                    let variant = this.snpIndelUnfilteredItems[i];
+                    if (diffIds.indexOf(variant.oid) > -1) {
+                        this.$refs.geneVariantDetails.addToSelection(variant);
+                        this.handleSelectionChanged(null, variant);
+                    }
+                }
+            }
+            if (type == 'cnv') {
+                for (let i=0; i < this.cnvUnfilteredItems.length; i++) {
+                    let variant = this.cnvUnfilteredItems[i];
+                    if (diffIds.indexOf(variant.oid) > -1) {
+                        this.$refs.cnvDetails.addToSelection(variant);
+                        this.handleSelectionChanged(null, variant);
+                    }
+                }
+            }
+            if (type == 'ftl') {
+                for (let i=0; i < this.ftlUnfilteredItems.length; i++) {
+                    let variant = this.ftlUnfilteredItems[i];
+                    if (diffIds.indexOf(variant.oid) > -1) {
+                        this.$refs.translocationDetails.addToSelection(variant);
+                        this.handleSelectionChanged(null, variant);
+                    }
+                }
+            }
+            this.updateSelectedVariantTable();
         }
     },
     mounted() {
