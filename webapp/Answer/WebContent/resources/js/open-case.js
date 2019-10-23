@@ -132,9 +132,13 @@ const OpenCase = {
         </v-tooltip>
         <v-btn flat color="primary" @click="snackBarVisible = false">Close</v-btn>
     </v-snackbar>
+
+    <!-- advanced filter-->
     <advanced-filter ref="advancedFilter" @refresh-data="filterData" @save-filters="saveCurrentFilters" @delete-filter="deleteFilterSet"
         :type="currentFilterType"
         @update-highlight="updateHighlights" @filter-action-success="showSnackBarMessage"></advanced-filter>
+
+    <!-- review selection dialog -->
     <v-dialog v-model="reviewDialogVisible" scrollable fullscreen hide-overlay persistent transition="dialog-bottom-transition">
         <review-selection ref="reviewDialog"
         @open-report="openReport"
@@ -1757,7 +1761,7 @@ const OpenCase = {
             else {
                 table = this.$refs.geneVariantDetails;
             }
-            var currentIndex = table.getCurrentItemIdex(this.currentRow.oid);
+            var currentIndex = table.getCurrentItemIndex(this.currentRow.oid);
             this.isFirstVariant = table.isFirstItem(currentIndex);
             this.isLastVariant = table.isLastItem(currentIndex);
 
@@ -2031,7 +2035,7 @@ const OpenCase = {
             else {
                 table = this.$refs.cnvDetails;
             }
-            var currentIndex = table.getCurrentItemIdex(this.currentRow.oid);
+            var currentIndex = table.getCurrentItemIndex(this.currentRow.oid);
             this.isFirstVariant = table.isFirstItem(currentIndex);
             this.isLastVariant = table.isLastItem(currentIndex);
 

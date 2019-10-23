@@ -9,9 +9,11 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,10 +52,13 @@ import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVChromosomeItems;
+import utsw.bicf.answer.controller.serialization.vuetify.CNVDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVRelatedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.GenesInPanelItems;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.SNPIndelVariantSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
+import utsw.bicf.answer.controller.serialization.vuetify.TranslocationDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterItems;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListItems;
@@ -88,11 +93,14 @@ import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Trial;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.CNVRow;
 import utsw.bicf.answer.model.hybrid.CurrentSelectedVariantIds;
 import utsw.bicf.answer.model.hybrid.HeaderConfigData;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
+import utsw.bicf.answer.model.hybrid.SNPIndelVariantRow;
+import utsw.bicf.answer.model.hybrid.TranslocationRow;
 import utsw.bicf.answer.model.hybrid.VCFAnnotationRow;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
 import utsw.bicf.answer.security.EmailProperties;
@@ -579,6 +587,8 @@ public class OpenCaseController {
 			return ControllerUtil.returnFailedGroupCheck();
 		}
 		Variant variantDetails = utils.getVariantDetails(variantId);
+		//To access the same data as in the variant table
+		SNPIndelVariantRow item =new SNPIndelVariantRow(variantDetails, null, caseSummary.getTotalCases(), null);
 		VariantRelatedSummary summaryRelated = null;
 		CNVRelatedSummary cnvSummaryRelated = null;
 		VariantVcfAnnotationSummary summaryCanonical = null;
@@ -624,7 +634,8 @@ public class OpenCaseController {
 				summaryCanonical = new VariantVcfAnnotationSummary(canonicalAnnotation, "proteinPosition", false, headerOrdersCanonical);
 				List<HeaderOrder> headerOrdersOther = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, OpenCaseController.class.getName() + "|" + "Other VCF Annotations");
 				summaryOthers = new VariantVcfAnnotationSummary(otherAnnotations, "proteinPosition", true, headerOrdersOther);
-				summary = new VariantDetailsSummary(variantDetails, summaryRelated, cnvSummaryRelated, summaryCanonical, summaryOthers);
+				SearchItemString patientDetailsOncoTreeDiagnosis = new SearchItemString("", caseSummary.getOncotreeDiagnosis());
+				summary = new VariantDetailsSummary(variantDetails, item, summaryRelated, cnvSummaryRelated, summaryCanonical, summaryOthers, user.getUserId(), patientDetailsOncoTreeDiagnosis);
 			}
 			return summary.createVuetifyObjectJSON();
 		}
@@ -655,8 +666,22 @@ public class OpenCaseController {
 				}
 				
 			});
-			ObjectMapper mapper = new ObjectMapper();
-			return mapper.writeValueAsString(variantDetails);
+			Map<Integer, AnnotatorSelection> selectionPerAnnotator = new HashMap<Integer, AnnotatorSelection>();
+			if (variantDetails.getAnnotatorSelections() != null) {
+				variantDetails.setSelected(false);
+				for (Integer userId : variantDetails.getAnnotatorSelections().keySet()) {
+					boolean isSelected = variantDetails.getAnnotatorSelections().get(userId) != null && variantDetails.getAnnotatorSelections().get(userId);
+					if (isSelected) {
+						if (userId.equals(user.getUserId())) {
+							variantDetails.setSelected(true); //this is the selection of the current user
+						}
+					}
+				}
+			}
+			CNVRow item = new CNVRow(variantDetails, selectionPerAnnotator);
+			SearchItemString patientDetailsOncoTreeDiagnosis = new SearchItemString("", caseSummary.getOncotreeDiagnosis());
+			CNVDetailsSummary summary = new CNVDetailsSummary(variantDetails, item, user.getUserId(), patientDetailsOncoTreeDiagnosis);
+			return summary.createVuetifyObjectJSON();
 		}
 		return null;
 
@@ -719,8 +744,24 @@ public class OpenCaseController {
 				}
 				
 			});
-			ObjectMapper mapper = new ObjectMapper();
-			return mapper.writeValueAsString(variantDetails);
+			Map<Integer, AnnotatorSelection> selectionPerAnnotator = new HashMap<Integer, AnnotatorSelection>();
+			if (variantDetails.getAnnotatorSelections() != null) {
+				variantDetails.setSelected(false);
+				for (Integer userId : variantDetails.getAnnotatorSelections().keySet()) {
+					boolean isSelected = variantDetails.getAnnotatorSelections().get(userId) != null && variantDetails.getAnnotatorSelections().get(userId);
+					if (isSelected) {
+						String date = variantDetails.getAnnotatorDates().get(userId);
+						if (userId.equals(user.getUserId())) {
+							variantDetails.setSelected(true); //this is the selection of the current user
+						}
+					}
+				}
+			}
+			
+			TranslocationRow item = new TranslocationRow(variantDetails, selectionPerAnnotator);
+			SearchItemString patientDetailsOncoTreeDiagnosis = new SearchItemString("", caseSummary.getOncotreeDiagnosis());
+			TranslocationDetailsSummary summary = new TranslocationDetailsSummary(variantDetails, item, user.getUserId(), patientDetailsOncoTreeDiagnosis);
+			return summary.createVuetifyObjectJSON();
 		}
 		return null;
 

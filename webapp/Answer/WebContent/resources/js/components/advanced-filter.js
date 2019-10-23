@@ -447,6 +447,15 @@ Vue.component('advanced-filter', {
             </v-container>
         </v-navigation-drawer>
     </div>
+
+    <v-snackbar :timeout="snackBarTimeout" :bottom="true" v-model="snackBarVisible">
+    {{ snackBarMessage }}
+    <v-tooltip top>
+    <a slot="activator" :href="snackBarLink"><v-icon dark>{{ snackBarLinkIcon }}</v-icon></a>
+    <span>Open Link</span>
+    </v-tooltip>
+    <v-btn flat color="primary" @click="snackBarVisible = false">Close</v-btn>
+</v-snackbar>
 </div>`, data() {
         return {
             filters: [],
@@ -474,6 +483,11 @@ Vue.component('advanced-filter', {
             checkboxExpansion: [true, true, true, true], //controls the open state of each panel. Add more items here when creating new expandable panels
             flagExpansion: [true],
             checkBoxCategories: [],
+            snackBarVisible: false,
+            snackBarLinkIcon: "",
+            snackBarLink: "",
+            snackBarTimeout: 2000,
+            snackBarMessage: "",
             checkBoxFiltersByCategory: {},
             checkBoxLabelsByValue: {} //dict to map a saved filter checkboxes when loading it's fields
         }
@@ -735,15 +749,6 @@ Vue.component('advanced-filter', {
         isNameValid() {
             return this.saveFilterSetName && this.filterNameRules[0](this.saveFilterSetName) === true;
         },
-        saveCurrentFilters() {
-            this.$emit("save-filters", null);
-        },
-        deleteFilterSet(filterSetId) {
-            if (this.currentFilterSet && filterSetId == this.currentFilterSet.variantFilterListId) {
-                this.currentFilterSet = "";
-            }
-            this.$emit("delete-filter", filterSetId);
-        },
         // used in the filter tooltip to inform user of the implication
         //of the selected criteria
         isBooleanFilterAllOrNone(filter) {
@@ -903,6 +908,7 @@ Vue.component('advanced-filter', {
                             this.messageDialogVisible = true;
                         }
                         else {
+                            this.sho
                             this.$emit("filter-action-success", "All genes are valid.");
                         }
                     } else {
@@ -950,7 +956,110 @@ Vue.component('advanced-filter', {
                 return 'amber accent-2';
             }
             return "primary";
-        }
+        },
+        saveCurrentFilters() {
+            this.loading = true;
+            axios({
+                method: 'post',
+                url: webAppRoot + "/saveCurrentFilters",
+                params: {
+                    filterListId: this.saveFilterSetId,
+                    filterListName: this.saveFilterSetName
+                },
+                data: {
+                    filters: this.filters
+                }
+            }).then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    this.loadUserFilterSets();
+                    this.currentFilterSet = response.data.savedFilterSet;
+                    this.saveFilterSetDialogVisible = false;
+                    this.snackBarMessage = "Filter Set Saved";
+                    this.snackBarLink = "";
+                    this.snackBarVisible = true;
+                }
+                else {
+                    this.handleDialogs(response.data, this.saveCurrentFilters);
+                }
+                this.loading = false;
+            }
+            ).catch(error => {
+                this.loading = false;
+                this.handleAxiosError(error);
+            }
+            );
+        },
+        deleteFilterSet(filterSetId) {
+            if (this.currentFilterSet && filterSetId == this.currentFilterSet.variantFilterListId) {
+                this.currentFilterSet = "";
+            }
+            axios({
+                method: 'post',
+                url: webAppRoot + "/deleteFilterSet",
+                params: {
+                    filterSetId: filterSetId,
+                }
+            }).then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    this.loadUserFilterSets();
+                    this.saveFilterSetDialogVisible = false;
+                    this.snackBarMessage = "Filter Set Deleted";
+                    this.snackBarLink = "";
+                    this.snackBarVisible = true;
+                }
+                else {
+                    this.handleDialogs(response.data, this.deleteFilterSet.bind(null, filterSetId));
+                }
+            }
+            ).catch(error => {
+                this.handleAxiosError(error);
+            }
+            );
+        },
+        loadUserFilterSets() {
+            axios.get(
+                webAppRoot + "/loadUserFilterSets",
+                {
+                    params: {
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed) {
+                        this.filterSets = response.data.filters;
+                        this.filterSetItems = response.data.items;
+                    }
+                    else {
+                        this.handleDialogs(response, this.loadUserFilterSets);
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                });
+        },
+        showSnackBarMessage(message) {
+            this.snackBarMessage = message;
+            this.snackBarLink = "";
+            this.snackBarVisible = true;
+        },
+        getVariantFilters() {
+            axios.get(
+                webAppRoot + "/getVariantFilters",
+                {
+                    params: {
+                        caseId: this.$route.params.id
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed) {
+                        this.createFilters(response.data.filters);
+                    }
+                    else {
+                        this.handleDialogs(response, this.getVariantFilters);
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                });
+        },
+        
     },
     created: function () {
     },

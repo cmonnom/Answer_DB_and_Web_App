@@ -22,7 +22,7 @@ var router = new VueRouter({
 			path: webAppRoot + '/openCase/:id',
 			name: 'OpenCase',
 			component: () => new Promise(
-				resolve => resolve(OpenCase)),
+				resolve => resolve(OpenCase2)),
 			// component: OpenCase,
 			meta: {
 				title: 'Open Case '
@@ -33,7 +33,7 @@ var router = new VueRouter({
 			path: webAppRoot + '/openCaseReadOnly/:id',
 			name: 'OpenCaseReadOnly',
 			component: () => new Promise(
-				resolve => resolve(OpenCase)),
+				resolve => resolve(OpenCase2)),
 			// component: OpenCase,
 			meta: {
 				title: 'Open Case '

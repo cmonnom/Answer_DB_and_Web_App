@@ -31,7 +31,7 @@ Vue.component('data-table', {
         "icon-color": {default: "", type: String},
         "icon-active-color": {default: "", type: String},
         "external-filtering-active": {default: false, type: Boolean}, //parent can control that the table is filtered externally (eg. advanced-filter)
-
+        "id-type": {default: "", type: String}, //can be used to know which table an event came from. Should be unique to some extend
     },
     template: `<div>
     <!-- Comment above and uncomment below to use the buttons on hover feature -->
@@ -999,6 +999,7 @@ Vue.component('data-table', {
         },
         //returns the page number (base 0) for the highlighted row
         //Can be used to jump to the page the highlighted row is on
+        //can freeze the UI for large tables. Use with care
         findPageForHiglightedItem() {
             var sortedItems = this.items.sort((a,b) => {return this.customSort(this.items, this.pagination.sortBy, this.pagination.descending)});
             var index = sortedItems.map(i => i[this.uniqueIdField]).indexOf(this.highlight);
@@ -1007,6 +1008,15 @@ Vue.component('data-table', {
                 return pageNb;
             }
             return -1;
+        },
+        findPageForCurrentUniqueId(uniqueId) {
+          var sortedItems = this.items.sort((a,b) => {return this.customSort(this.items, this.pagination.sortBy, this.pagination.descending)});
+          var index = sortedItems.map(i => i[this.uniqueIdField]).indexOf(uniqueId);
+          if (index > -1) {
+              var pageNb = Math.floor(index / this.pagination.rowsPerPage);
+              return pageNb;
+          }
+          return -1;
         },
         alignHeader(header) {
             //go with the align property first
@@ -1225,12 +1235,12 @@ Vue.component('data-table', {
             return null;
         },
         selectionChanged(item) {
-            this.$emit('datatable-selection-changed', this.selected.length, item);
+            this.$emit('datatable-selection-changed', this.selected.length, item, this.idType);
         },
         getFilteredItems() {
             return this.$refs.dataTable.filteredItems;
         },
-        getCurrentItemIdex(currentUniqueId) {
+        getCurrentItemIndex(currentUniqueId) {
             var length = this.getFilteredItems().length;
             for (var i = 0; i < length; i++) {
                 var item = this.getFilteredItems()[i];
@@ -1248,9 +1258,12 @@ Vue.component('data-table', {
             return currentIndex == this.getFilteredItems().length - 1
                 && lastPage;
         },
-        getPreviousItem(currentRow) {
-            if (currentRow[this.uniqueIdField] != null) {
-                var currentIndex = this.getCurrentItemIdex(currentRow[this.uniqueIdField]);
+        //could pass the currentRow or the currentId. usingUniqueId is true if currentRowOrId is a uniqueId
+        //and false if it's currentRow
+        getPreviousItem(currentRowOrId, usingUniqueId) {
+            let uniqueId = usingUniqueId ? currentRowOrId : currentRowOrId[this.uniqueIdField];
+            if (uniqueId != null) {
+                var currentIndex = this.getCurrentItemIndex(uniqueId);
                 if (currentIndex > -1) { //found the current item
                     if (currentIndex == 0 && this.pagination.page > 1) { //could need to load the previous table page
                         this.pagination.page = this.pagination.page - 1;
@@ -1261,9 +1274,10 @@ Vue.component('data-table', {
             }
             return null;
         },
-        getNextItem(currentRow) {
-            if (currentRow[this.uniqueIdField] != null) {
-                var currentIndex = this.getCurrentItemIdex(currentRow[this.uniqueIdField]);
+        getNextItem(currentRowOrId, usingUniqueId) {
+          let uniqueId = usingUniqueId ? currentRowOrId : currentRowOrId[this.uniqueIdField];
+          if (uniqueId != null) {
+                var currentIndex = this.getCurrentItemIndex(uniqueId);
                 if (currentIndex > -1) { //found the current item
                     var lastPage = this.pagination.page * this.pagination.rowsPerPage >= this.pagination.totalItems;
                     if (currentIndex == this.getFilteredItems().length - 1 && !lastPage) { //could need to load the next table page

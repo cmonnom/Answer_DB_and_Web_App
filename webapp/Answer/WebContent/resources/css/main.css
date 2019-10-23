@@ -298,8 +298,8 @@ table.table tbody td {
 .splash-screen {
     z-index: 1000 !important;
     width: calc(100% + 200px);
-    /* height:100%; */
-    position: absolute;
+    height:100%;
+    position: fixed;
     background: rgb(254,254,254);
     left: 0px;
     top: 0px;
@@ -586,7 +586,7 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
   }
 
   .splash-text {
-      position: absolute;
+      position: fixed;
       top: 5%;
   }
 

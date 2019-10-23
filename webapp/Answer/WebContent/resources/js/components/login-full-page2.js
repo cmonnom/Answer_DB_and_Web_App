@@ -4,27 +4,29 @@ Vue.component('login-full-page2', {
     props: {
         dataUrlRoot: {default: webAppRoot, type: String}
     },
-    template: `<div >
-    <v-toolbar fixed app flat>
-        <div class="toolbar-image">
-        <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'"/>
-        </div>
-      <v-toolbar-title class="headline">
+    template: `<div>
+  <v-toolbar fixed app flat>
+    <div class="toolbar-image">
+      <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" />
+    </div>
+    <v-toolbar-title class="headline">
       Answer
-        </v-toolbar-title>
-        <v-spacer></v-spacer>
-        <div class="toolbar-image">
-            <img class="toolbar-image pt-2 pb-2" alt="ngs logo" :src="dataUrlRoot + '/resources/images/screenshots/NGS_Lab_Color.png'">
-            <img class="toolbar-image" alt="utsw master logo" :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'">
-        </div>
-        <v-btn flat @click="showLoginDialog = true" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
-    </v-toolbar>
-    <v-snackbar :timeout="0" :bottom="true" :value="snackBarVisible">
+    </v-toolbar-title>
+    <v-spacer></v-spacer>
+    <div class="toolbar-image">
+      <img class="toolbar-image pt-2 pb-2" alt="ngs logo"
+        :src="dataUrlRoot + '/resources/images/screenshots/NGS_Lab_Color.png'">
+      <img class="toolbar-image" alt="utsw master logo"
+        :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'">
+    </div>
+    <v-btn flat @click="showLoginDialog = true" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
+  </v-toolbar>
+  <v-snackbar :timeout="0" :bottom="true" :value="snackBarVisible">
     {{ snackBarMessage }}
     <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
   </v-snackbar>
 
-    <v-dialog v-model="showResetPasswordDialog" max-width="50%" scrollable>
+  <v-dialog v-model="showResetPasswordDialog" max-width="50%" scrollable>
     <v-card>
       <v-toolbar dense dark color="teal lighten-2">
         <v-toolbar-title class="white--text">Reset Your Password</v-toolbar-title>
@@ -32,16 +34,13 @@ Vue.component('login-full-page2', {
       <v-card-title>Send a reset link to this email address:</v-card-title>
       <v-card-text>
         <v-layout row wrap class="pl-2">
-          <v-flex xs12 lg6 >
-          <v-text-field label="email" 
-          v-model="email"
-          required></v-text-field>
+          <v-flex xs12 lg6>
+            <v-text-field label="email" v-model="email" required></v-text-field>
           </v-flex>
         </v-layout>
       </v-card-text>
       <v-card-actions>
-        <v-btn class="mr-2" color="success" @click="sendResetPasswordEmail()" slot="activator"
-        :disabled="!email">Send
+        <v-btn class="mr-2" color="success" @click="sendResetPasswordEmail()" slot="activator" :disabled="!email">Send
           <v-icon right dark>email</v-icon>
         </v-btn>
         <v-btn class="mr-2" color="error" @click="cancelReset()">Cancel
@@ -50,44 +49,64 @@ Vue.component('login-full-page2', {
       </v-card-actions>
     </v-card>
   </v-dialog>
-    <v-container fluid grid-list-xl>
-    <v-layout row wrap justify-center pb-3>
-    <v-flex class="display-1 text-xs-center" xs8>
-      {{ headerText }}
-    </v-flex>
+  <v-container fluid grid-list-xl pt-0>
+    <v-layout row wrap justify-center align-center pb-3 pt-0>
+      <v-flex class="display-1 text-xs-center" xs12 pt-0>
+      <v-img alt="answer title" max-height="150px"
+      gradient="to top right, rgba(255,255,255,.75), rgba(255,255,255,.35)"
+      :src="dataUrlRoot + '/resources/images/screenshots/banner.jpg'">
+        <v-layout row wrap justify-center align-center fill-height mt-0>
+            <v-flex class="display-1 text-xs-center" xs8>
+            {{ headerText }}
+            </v-flex>
+        </v-layout>
+      </v-img>  
+      </v-flex>
+    </v-layout>
     <v-layout row wrap pb-5>
-    <v-flex v-for="(card, index) in cards" :key="index" xs12 md4 lg4 xl4>
-    <v-hover>
-    <v-card slot-scope="{ hover }"  :class="[hover ? showScreenshotsAndHighlight(index) : 'elevation-0', 'no-background pl-2 pr-2 pt-2 pb-2']" >
-            <div class="title pb-3"> <v-icon>{{ icons[index] }} </v-icon><span class="pl-2">{{ card }}<span></div>
-            <div class="subheading" color="blue-grey lighten-2">
-            {{ subTexts[index] }}</div>
-            <v-card>   
-            </v-hover>  
-    </v-flex>
-    </v-layout> 
-
-    <v-layout row wrap justify-center pb-5>
-    <v-flex :class="currentFlex" v-for="img in currentImgs" :key="img">
-    <v-card flat tile class="no-background">
-          <v-img alt="snp filtering" :src="dataUrlRoot + '/resources/images/screenshots/' + img"></v-img>
-          <v-card>
-          </v-flex>
-          </v-layout> 
-     
-    </v-container>
-      <v-layout row justify-center pt-3 v-if="allowResetPwd">
-        <v-flex xs12 md6 lg6 xl6 class="text-xs-center">
-          <a @click="openResetPasswordDialog">Reset Password</a>
+      <v-flex v-for="(card, index) in cards" :key="index" xs12 md4 lg4 xl4 @mouseenter="handleMouseHover(index)"> 
+          <v-hover v-model="card.hover">
+            <v-card
+            :class="[card.hover ? 'elevation-6' : 'elevation-0', 'no-background pl-2 pr-2 pt-2 pb-2']">
+              <div class="title pb-3">
+                <v-icon>{{ icons[index] }} </v-icon><span class="pl-2">{{ card.text }}</span>
+              </div>
+              <div class="subheading" color="blue-grey lighten-2">
+                {{ subTexts[index] }}
+                <v-tooltip bottom v-if="card.link" >
+                <v-btn slot="activator" flat icon :href="links[index].url" class="table-btn pb-1">
+                    <v-icon>{{ links[index].icon }}</v-icon>
+                  </v-btn>
+                <span>{{ links[index].tooltip }} </span>  
+                </v-tooltip>  
+                </div>
+              </v-card>
+          </v-hover>
         </v-flex>
       </v-layout>
-      <v-dialog v-model="showLoginDialog" max-width="300px">
-          <v-card dark class="teal darken-2">
-          <v-card-content class="text-xs-center">
-              <login :message="message" :popup="false" :authType="authType"></login>
-          </v-card-content>
+      
+      <v-slide-x-transition>
+    <v-layout row wrap justify-center pb-5 v-show="showCarousel">
+      <v-flex :class="currentFlex" v-for="img in currentImgs" :key="img">
+        <v-card flat tile class="no-background">
+            <v-img alt="snp filtering" :src="dataUrlRoot + '/resources/images/screenshots/' + img"></v-img>
           </v-card>
-      </v-dialog>
+        </v-flex>
+      </v-layout>
+    </v-slide-x-transition>
+  </v-container>
+  <v-layout row justify-center pt-3 v-if="allowResetPwd">
+    <v-flex xs12 md6 lg6 xl6 class="text-xs-center">
+      <a @click="openResetPasswordDialog">Reset Password</a>
+    </v-flex>
+  </v-layout>
+  <v-dialog v-model="showLoginDialog" max-width="300px">
+    <v-card dark class="teal darken-2">
+      <v-card-text class="text-xs-center">
+        <login :message="message" :popup="false" :authType="authType"></login>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </div>`,
     data() {
         return {
@@ -109,13 +128,13 @@ Vue.component('login-full-page2', {
             annotationImgs: ["trials.png", "annotations.png"],
             variantsCNVsImgs: ["snps.png", "cnv.png"],
             reportImgs: ["report_html_1.png", "report_html_2.png", "report_pdf_1.png", "report_pdf_2.png"],
-            headerText: "Answer is comprehensive tool to visualize and annotate variants for Clinical Reporting",
+            headerText: "Answer is a comprehensive tool to visualize and annotate variants for Clinical Reporting",
             cards:   [
-                "Filter thousands of variants",
-                "Connect to outside resources",
-                "Get detailed insights about each variant",
-                "Annotations and Collaborations",
-                "Meaningful Reports"
+                {text: "Filter thousands of variants", hover: false},
+                {text: "Connect to outside resources", hover: false},
+                {text: "Get detailed insights about each variant", hover: false},
+                {text: "Annotations and Collaborations", hover: false},
+                {text: "Meaningful Reports", hover: false, link: true},
             ],
             subTexts: [
                 "Focus on impactful mutations with simple yet powerful filters.",
@@ -132,11 +151,21 @@ Vue.component('login-full-page2', {
                 "mdi-pdf-box",
 
             ],
+            links: [
+              {},
+              {},
+              {},
+              {},
+              {url: this.dataUrlRoot + '/resources/files/PMF_Report_Redacted.pdf/',
+               icon: "cloud_download", tooltip: "Download a report sample (PDF)"}
+            ],
             carousel: [],
             currentIndex: -1,
             currentImgs: ["answer-logo-large.png"],
             currentFlex: "xs6 md6 lg3 xl3",
-            currentVisibility: [true]
+            currentVisibility: [true],
+            timeoutId: -1,
+            showCarousel: true
         }
     },
     methods: {
@@ -258,10 +287,13 @@ Vue.component('login-full-page2', {
             );
         },
         showScreenshotsAndHighlight(index) {
+          this.showCarousel = false;
+          setTimeout(() => {
             this.currentIndex = index;
             this.currentImgs = this.carousel[index].imgs;
             this.currentFlex = this.carousel[index].flex;
-            return "elevation-6";
+            this.showCarousel = true;
+          }, 250);
         },
         populateCarousel() {
             this.carousel = [
@@ -272,9 +304,33 @@ Vue.component('login-full-page2', {
                 {imgs: this.reportImgs, flex: "xs12 md12 lg6 xl6"}, 
             ];
         },
+        startCarousel() {
+          this.timeoutId = setInterval(() => {
+            let newIndex = 0;
+            if (this.currentIndex != -1) {
+              this.$nextTick(() => {this.cards[this.currentIndex].hover = false;})
+              newIndex = (this.currentIndex + 1) % this.carousel.length;
+            }
+            this.$nextTick(() => {this.cards[newIndex].hover = true; this.showScreenshotsAndHighlight(newIndex)})
+          }, 4000);
+        },
+        stopCarousel() {
+          if (this.timeoutId) {
+            clearInterval(this.timeoutId);
+            this.timeoutId = null;
+            for (let i = 0; i < this.cards.length; i++) {
+              this.cards[i].hover = false;
+            }
+          }
+        },
+        handleMouseHover(index) {
+          this.stopCarousel();
+          this.showScreenshotsAndHighlight(index);
+        }
     },
     mounted: function () {
        this.populateCarousel();
+       this.startCarousel();
     },
     computed: {
 

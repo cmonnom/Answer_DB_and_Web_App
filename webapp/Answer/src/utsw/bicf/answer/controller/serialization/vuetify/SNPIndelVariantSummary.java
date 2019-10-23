@@ -27,7 +27,7 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		super(createRows(modelDAO, aCase, reportGroups, headerOrders, currentUser), uniqueIdField, headerOrders, modelDAO);
 	}
 
-	private static List<SNPIndelVariantRow> createRows(ModelDAO modelDAO, OrderCase aCase, 
+	public static List<SNPIndelVariantRow> createRows(ModelDAO modelDAO, OrderCase aCase, 
 			List<ReportGroupForDisplay> reportGroups, List<HeaderOrder> headerOrders, User currentUser) {
 		List<SNPIndelVariantRow> rows = new ArrayList<SNPIndelVariantRow>();
 		List<User> allUsers = modelDAO.getAllUsers();

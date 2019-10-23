@@ -34,7 +34,6 @@ response.setDateHeader ("Expires", 0);
 				<v-container>
 					<!-- 		ADDING PAGE SPECIFIC CONTENT HERE BY POPULATING ${content} with the name of the jsp file
 	from the controller-->
-						test login.jsp
 					<login-full-page2></login-full-page2>
 				</v-container>	
 			</v-content>

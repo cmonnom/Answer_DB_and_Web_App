@@ -20,7 +20,9 @@ Vue.component('edit-annotations', {
         backColor: {default: "orange lighten-4", type: String},
         caseIcon: {default: "", type: String},
         caseType: {default: "", type: String},
+        userAnnotations: { default: () => [], type: Array },
         single: {default: false, type: Boolean}, //only one annotation at a time (for editing outside of a case)
+        outsideACase: {default: true, type: Boolean} //to display the variant details or not
     },
     template: `<div>
     <!-- annotation dialog -->
@@ -33,7 +35,7 @@ Vue.component('edit-annotations', {
                             <v-icon>more_vert</v-icon>
                         </v-btn>
                         <v-list>
-                        <v-list-tile avatar @click="togglePanel()" v-if="!isOutsideACase()">
+                        <v-list-tile avatar @click="togglePanel()" v-if="!outsideACase">
                             <v-list-tile-avatar>
                                 <v-icon>zoom_in</v-icon>
                             </v-list-tile-avatar>
@@ -90,7 +92,7 @@ Vue.component('edit-annotations', {
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
                     <v-btn icon flat :color="annotationVariantDetailsVisible ? 'amber accent-2' : ''" @click="togglePanel()"
-                    v-if="!isOutsideACase()"
+                    v-if="!outsideACase"
                     slot="activator">
                         <v-icon>zoom_in</v-icon>
                     </v-btn>
@@ -182,13 +184,13 @@ Vue.component('edit-annotations', {
                                                                 cases/genes/variants:
                                                             </div>
                                                             <v-tooltip bottom>
-                                                                <v-switch hide-details slot="activator" class="no-height mt-0" :disabled="annotation.markedForDeletion || noLevelSelected(annotation) || isOutsideACase()" label="Case Specific"
+                                                                <v-switch hide-details slot="activator" class="no-height mt-0" :disabled="annotation.markedForDeletion || noLevelSelected(annotation) || outsideACase" label="Case Specific"
                                                                     v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
                                                                 <span>Select if this annotation only applies to this case
                                                                     <br/>(need to select Gene or Variant Specific first)</span>
                                                             </v-tooltip>
                                                             <v-layout row wrap>
-                                                            <v-flex :class="[isOutsideACase() ? 'xs6' : 'xs12', 'pl-0']">
+                                                            <v-flex :class="[outsideACase ? 'xs6' : 'xs12', 'pl-0']">
                                                             <v-tooltip bottom>
                                                                 <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion" label="Gene Specific" v-model="annotation.isGeneSpecific"
                                                                     @change="selectBreadth(annotation, 'Gene Function')"></v-switch>
@@ -196,7 +198,7 @@ Vue.component('edit-annotations', {
                                                                 <span v-if="annotation.isGeneSpecific && annotation.isVariantSpecific">Uncheck Variant Specific first</span>
                                                             </v-tooltip>
                                                             </v-flex>
-                                                            <v-flex xs6 v-if="isOutsideACase()">
+                                                            <v-flex xs6 v-if="outsideACase">
                                                                 <v-tooltip right>
                                                                 <v-autocomplete slot="activator" clearable :value="annotation.geneId" :items="allGenes" v-model="annotation.geneId"
                                                                     label="Gene Symbol" single-line hide-details clearable
@@ -208,26 +210,26 @@ Vue.component('edit-annotations', {
                                                             </v-flex>
                                                             </v-layout>
                                                             <v-layout row wrap>
-                                                            <v-flex :class="[isOutsideACase() ? 'xs6' : 'xs12', 'pl-0']">
+                                                            <v-flex :class="[outsideACase ? 'xs6' : 'xs12', 'pl-0']">
                                                             <v-tooltip bottom>
-                                                                <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion || isOutsideACase()" label="Variant Specific" v-model="annotation.isVariantSpecific"
+                                                                <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion || outsideACase" label="Variant Specific" v-model="annotation.isVariantSpecific"
                                                                     @change="selectBreadth(annotation, 'Variant Function')"></v-switch>
                                                                 <span>Select either Gene or Variant Specific or both</span>
                                                             </v-tooltip>
                                                             </v-flex>
-                                                            <v-flex xs6 v-if="isOutsideACase()">
+                                                            <v-flex xs6 v-if="outsideACase">
                                                                 <v-tooltip right>
                                                                 <v-autocomplete slot="activator" clearable :value="annotation.geneId" :items="annotation.variantItems" v-model="annotation.variantId"
                                                                     label="Variant Notation" single-line hide-details clearable
                                                                     item-text="name" item-value="value"
                                                                     class="no-height-select"
-                                                                    :disabled="annotation.markedForDeletion || !annotation.isVariantSpecific || isOutsideACase()"></v-autocomplete>
+                                                                    :disabled="annotation.markedForDeletion || !annotation.isVariantSpecific || outsideACase"></v-autocomplete>
                                                                     <span v-if="annotation.variantItems">Select a variant</span>
                                                                     <span v-else>Select a gene first</span>
                                                                 </v-tooltip>
                                                             </v-flex>
                                                             </v-layout>
-                                                            <v-switch hide-details class="no-height" :disabled="annotation.markedForDeletion || isOutsideACase()" 
+                                                            <v-switch hide-details class="no-height" :disabled="annotation.markedForDeletion || outsideACase" 
                                                             label="Diagnosis Specific" v-model="annotation.isTumorSpecific"
                                                             ></v-switch>
                                                         </v-card-text>
@@ -532,7 +534,6 @@ Vue.component('edit-annotations', {
         return {
             // breadcrumbs: [],
             annotationDialogVisible: false,
-            userAnnotations: [],
             userEditingAnnotations: [],
             numberRules: [(v) => { return this.isNumberList(v) || 'Only numbers, separated by comma' }],
             nctRules: [(v) => { return this.isNCTNumberList(v) || 'Must start with NCT + number. If more than one, use a comma' }],
@@ -661,7 +662,7 @@ Vue.component('edit-annotations', {
             }
             this.saving = true;
             // this.annotationDialogVisible = false;
-            this.userAnnotations = [];
+            this.userAnnotations.length = 0;
             for (var i = 0; i < this.userEditingAnnotations.length; i++) {
                 var annotation = JSON.parse(JSON.stringify(this.userEditingAnnotations[i]));
                 //make sure ids are unique
@@ -760,11 +761,11 @@ Vue.component('edit-annotations', {
                     }
                 }
                 if (this.userEditingAnnotations[i].isGeneSpecific && 
-                    this.isOutsideACase() && !this.userEditingAnnotations[i].geneId) { //need to select a gene if outside a case
+                    this.outsideACase && !this.userEditingAnnotations[i].geneId) { //need to select a gene if outside a case
                         caseAgnosticHasGeneSymbol = false
                 }
                 if (this.userEditingAnnotations[i].isVariantSpecific && 
-                    this.isOutsideACase() && !this.userEditingAnnotations[i].variantId) { //need to select a gene if outside a case
+                    this.outsideACase && !this.userEditingAnnotations[i].variantId) { //need to select a gene if outside a case
                         caseAgnosticHasVariant = false
                 }
             }
@@ -957,10 +958,10 @@ Vue.component('edit-annotations', {
             return this.type == "translocation";
         },
         createTitle() {
-            if (this.isOutsideACase() && !this.single) {
+            if (this.outsideACase && !this.single) {
                 return "Create Annotations";
             }
-            if (this.isOutsideACase() && this.single) {
+            if (this.outsideACase && this.single) {
                 return "Edit Annotation";
             }
             if (this.limitScopeGene) {
@@ -990,9 +991,6 @@ Vue.component('edit-annotations', {
         },
         breadcrumbNavigation(index) {
             this.$emit("breadcrumb-navigation", index);
-        },
-        isOutsideACase() {
-            return this.currentVariant._id == null;
         },
         getAllGenes() { 
             axios.get(webAppRoot + "/getGenesInPanel", {

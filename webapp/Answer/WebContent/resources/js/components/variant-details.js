@@ -132,7 +132,7 @@ Vue.component('variant-details', {
                                           <span class="subheading warning--text" v-show="cnvPlotNeedsReload" >Click on <span v-text="getChrButtonName()"></span> to refresh the CNV Plot.</span>
                                                 <v-btn-toggle v-model="genesSelected" multiple class="elevation-0" @change="handleGeneSelectionChanged">
                                                 <v-layout row wrap>
-                                                    <v-flex pl-0 pr-0 pt-0 pb-0 v-for="chip in item.value" :key="chip.name">
+                                                    <v-flex pl-0 pr-0 pt-0 pb-0 v-for="(chip, index) in item.value" :key="index">
                                                          <v-btn flat class="selectable-pointer">
                                                         {{ chip.name }}
                                                         </v-btn>
@@ -264,7 +264,7 @@ Vue.component('variant-details', {
                                         <v-flex xs12 md12 lg12>
                                         <v-layout row wrap v-if="visibleGenesCN2OrSelected || visibleGenesOther" 
                                         class="subheading elevation-1 mb-4" >
-                                        <v-flex xs12 pl-2><b>Genes visible at this zoom level:</b></v-flex>
+                                        <v-flex xs12 pl-2><b>Genes visible at this zoom level ({{ currentPlotTitle }}):</b></v-flex>
                                         <v-flex xs12>
                                               <v-tooltip bottom>
                                               <v-btn slot="activator" @click="openNewCNVForm" 
@@ -282,14 +282,16 @@ Vue.component('variant-details', {
                                               <span v-text="genesVisibleBottomLabel"></span>
                                               <span class="blue-grey--text text--lighten-1">{{ visibleGenesOther }}</span>
                                         </v-flex>
+                                        <v-flex xs12>
+                                            <div :style="cnvPlotDataConfig ? fullSizeChart : ''">
+                                            <div :id="cnvPlotId" style="height: 100%"></div>
+                                            </div>
+                                        </v-flex>
                                         </v-layout>
                                         </v-flex>
                                       </v-layout>
 
 
-                                          <div :style="cnvPlotDataConfig ? fullSizeChart : ''">
-                                          <div :id="cnvPlotId" style="height: 100%"></div>
-                                            </div>
                                       </v-flex>
       </v-layout>
       <v-layout row wrap>
@@ -357,7 +359,8 @@ Vue.component('variant-details', {
             genesVisibleBottomLabel: "Others: ",
             chartHelpVisible: false,
             loadingVariantColor: "blue-grey lighten-4",
-            loadingVariantTextColor: "blue-grey--text text--lighten-4"
+            loadingVariantTextColor: "blue-grey--text text--lighten-4",
+            currentPlotTitle: ""
         }
 
     },
@@ -374,6 +377,12 @@ Vue.component('variant-details', {
         hidePanel() {
             this.$emit("hide-panel", this);
             zingchart.exec(this.cnvPlotId, 'destroy'); //kill the chart if variant details is closed
+            this.resetCNVChart();
+        },
+        resetCNVChart() {
+             //remove lists of visible genes
+            this.visibleGenesCN2OrSelected = "";
+            this.visibleGenesOther = "";
         },
         togglePanel() {
             this.$emit("toggle-panel", this);
@@ -496,6 +505,19 @@ Vue.component('variant-details', {
                 }
             });
         },
+        // getGenesSelected() {
+        //     let genesSelected = [];
+        //     if (!(this.currentVariant._id.$oid in this.genesSelectedPerVariantId)) {
+        //         this.genesSelectedPerVariantId[this.currentVariant._id.$oid] = genesSelected;
+        //     }
+        //     else {
+        //         genesSelected = this.genesSelectedPerVariantId[this.currentVariant._id.$oid];
+        //     }
+        //     return genesSelected;
+        // },
+        updateGenesSelected() {
+            this.genesSelected.length = 0;
+        },
         updateCNVPlot(chrom) {
             var genesParam = [];
             this.visibleGenesCN2OrSelected = "Counting genes...";
@@ -503,7 +525,9 @@ Vue.component('variant-details', {
             this.currentListOfVisibleGenes = [];
             this.createCNVDisabled = true;
             for (var i = 0; i < this.genesSelected.length; i++) {
-                genesParam.push(this.currentVariant.geneChips[this.genesSelected[i]].name);
+                if (this.currentVariant.geneChips[this.genesSelected[i]]) {
+                    genesParam.push(this.currentVariant.geneChips[this.genesSelected[i]].name);
+                }
             }
             axios.get(webAppRoot + "/getCNVChartData", {
                 params: {
@@ -720,18 +744,24 @@ Vue.component('variant-details', {
             // var labelsCN2 = zingchart.exec(this.cnvPlotId, 'getseriesdata')[0]["data-labels"]; //just item 0 for testing for now
             // var seriesOther = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[1];
             // var labelsOther = zingchart.exec(this.cnvPlotId, 'getseriesdata')[1]["data-labels"]; //just item 0 for testing for now
+            // let start = moment();
+            // console.log("before scanning for genes", start.format("h:mm:ss"));
             var visibleGenesCN2OrSelected = this.getUniqueLabelsFromSeries(kmin, kmax, seriesCN2OrSelected, labelsCN2OrSelected);
             var visibleGenesOther = this.getUniqueLabelsFromSeries(kmin, kmax, seriesOther, labelsOther);
+            let genesSet = new Set();
             for (var i = 0; i < visibleGenesCN2OrSelected.length; i++) {
-                this.currentListOfVisibleGenes.push(visibleGenesCN2OrSelected[i]);
+                genesSet.add(visibleGenesCN2OrSelected[i]);
             }
             for (var i = 0; i < visibleGenesOther.length; i++) {
-                this.currentListOfVisibleGenes.push(visibleGenesOther[i]);
+                genesSet.add(visibleGenesOther[i]);
             }
+            this.currentListOfVisibleGenes = [...genesSet];
             this.createCNVDisabled = visibleGenesCN2OrSelected.length == 0 && visibleGenesOther.length == 0;
             this.visibleGenesCN2OrSelected = this.getVisibleGeneStringFromUniqueList(visibleGenesCN2OrSelected);
             this.visibleGenesOther = this.getVisibleGeneStringFromUniqueList(visibleGenesOther);
-            
+            // let end = moment();
+            // console.log("after scanning for genes", end.format("h:mm:ss"));
+            // console.log("time spent: ", end.diff(start))
         },
         getUniqueLabelsFromSeries(kmin, kmax, series, labels) {
             var visibleGenes = [];
@@ -807,7 +837,7 @@ Vue.component('variant-details', {
         createCnvPlotTitle() {
             var title = 'CNV Plot for ';
             if (this.cnvPlotLoadingAllChrom) {
-                title += 'all Chromosomes (CN=<b>2</b> VS Others)';
+                title += 'all Chromosomes (CN=2 VS Others)';
             }
             else if (this.genesSelected.length > 0) {
                 title += formatChrom(this.currentVariant.chrom) + " (selected genes in dark blue)";
@@ -819,6 +849,7 @@ Vue.component('variant-details', {
                 }
                 title += formatChrom(chrName) + " (CN=2 VS Others)";
             }
+            this.currentPlotTitle = title;
             return title;
         },
         handleGeneSelectionChanged() {
@@ -831,7 +862,7 @@ Vue.component('variant-details', {
                 for (var j = 0; j < items.length; j++) {
                     var item = items[j];
                     if (item.type == "chip") {
-                        this.genesSelected = [];
+                        this.genesSelected.length = 0;
                         var newSelectedState = !item.value[0].selected;
                         for (var k = 0; k < item.value.length; k++) {
                             item.value[k].selected = newSelectedState;
@@ -898,6 +929,7 @@ Vue.component('variant-details', {
 
     },
     created: function () {
+      
     },
     destroyed: function () {
 
@@ -909,10 +941,19 @@ Vue.component('variant-details', {
                 height: "500px"
                 // height: window.innerHeight - 120 + "px"
             }
-        }
+        },
+        // genesSelected: {
+        //     get: function() {
+        //         return this.getGenesSelected();
+        //     },
+        //     set: function(newValue) {
+        //        this.genesSelectedPerVariantId[this.currentVariant._id.$oid] = newValue;
+        //     }
+        // }
     },
     watch: {
         //   variantDetailsUnSaved: this.handleVariantDetailsChanged()
+        currentVariant: "updateGenesSelected"
     }
 
 

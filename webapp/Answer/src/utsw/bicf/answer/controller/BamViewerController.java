@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.controller.serialization.IGVPayload;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.igv.Global;
@@ -208,9 +209,14 @@ public class BamViewerController {
 			JNLPTemplate template = new JNLPTemplate(sessionUrl, fileProps, sessionUrl);
 			response.setPayload(template.getTemplateOutput().getName());
 		}
+		else if (type.equals("sessionLink")) {
+			IGVPayload payload = new IGVPayload(type, sessionUrl);
+			response.setPayload(payload);
+		}
 		else {
 			response.setPayload(igvSessionFile.getName());
 		}
+		
 		return response.createObjectJSON(); 
 	}
 
