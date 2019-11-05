@@ -69,8 +69,13 @@ public class OpenCaseSummary {
 		this.assignedToIds = aCase.getAssignedTo();
 		this.type = aCase.getType();
 		this.caseOwnerId = aCase.getCaseOwner();
-		User caseOwner = modelDAO.getUserByUserId(Integer.parseInt(this.caseOwnerId));
-		this.caseOwnerName = caseOwner.getFullName();
+		if (this.caseOwnerId != null) {
+			User caseOwner = modelDAO.getUserByUserId(Integer.parseInt(this.caseOwnerId));
+			this.caseOwnerName = caseOwner.getFullName();
+		}
+		else {
+			this.caseOwnerName = "";
+		}
 		
 		this.checkBoxLabelsByValue = Variant.CHECKBOX_FILTERS_MAP;
 //		for (String formattedValue : Variant.CHECKBOX_FILTERS_MAP.keySet()) {

@@ -13,6 +13,40 @@ const OpenCase2 = {
     <!-- splash screen dialog -->
     <splash-screen ref="splashScreen" :splash-dialog="splashDialog" ></splash-screen>
 
+    <!-- copy to clipboard dialog -->
+    <v-dialog v-model="copyDialogVisible" max-width="50%">
+    <v-card>
+    <v-card-title class="title primary white--text">
+    Link to the IGV Session File
+    </v-card-title>
+        <v-card-text class="pl-3 pr-3 pt-3 subheading">
+        <div class="font-weight-bold pb-3">
+            <span>Use the link below in IGV </span>
+            <v-icon class="align-bottom">mdi-chevron-right</v-icon>
+            <span>File </span>
+            <v-icon class="align-bottom">mdi-chevron-right</v-icon>
+            <span>Load From URL</span>
+        </div>
+                <v-text-field 
+                ref="copyTextField" 
+                :value="textToCopy" 
+                @focus="$event.target.select()"
+                single-line readonly outline hide-details></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+            <v-tooltip bottom>
+                <v-btn class="mr-2" color="primary" slot="activator" @click="copyLink">
+                Copy
+                </v-btn>
+                <span>Copy to clipboard</span>
+            </v-tooltip>
+            <v-btn color="error" @click="closeCopyDialog">
+                Close
+            </v-btn>
+        </v-card-actions>
+    </v-card>
+    </v-dialog>
+
 
     <v-dialog v-model="confirmationDialogVisible" max-width="500px">
         <v-card>
@@ -685,6 +719,8 @@ const OpenCase2 = {
                 cnvUnfilteredItems: null,
                 ftlUnfilteredItems: null,
                 itdDialogVisible: false,
+                copyDialogVisible: false,
+                textToCopy: ""
             }
         },
         openIDTCreationDialog() {
@@ -780,7 +816,8 @@ const OpenCase2 = {
                 .then(response => {
                     if (response.data.isAllowed) {
                         if (response.data.payload.sessionType == "sessionLink") {
-                            console.log(response.data.payload.link);
+                            this.textToCopy = response.data.payload.link;
+                            this.copyDialogVisible = true;
                         }
                         else {
                             var hiddenElement = document.createElement('a');
@@ -1171,6 +1208,13 @@ const OpenCase2 = {
             }
         },
         updateRoute() {
+            if (!this.urlQuery.variantId && !this.urlQuery.variantType
+                && !this.urlQuery.showReview && !this.urlQuery.edit
+                && JSON.stringify(router.currentRoute.query) == "{}") {
+                    //no params is the same as all params are false/null
+                    //ignore this step from the route history
+                    return;
+            }
             router.push({ query: this.urlQuery });
         },
         openVariant(item) {
@@ -1239,6 +1283,12 @@ const OpenCase2 = {
             this.urlQuery.showReview = true;
             this.updateRoute();
             this.updateSelectedVariantTable();
+        },
+        openReviewSelectionDialogFromNavigation() {
+            this.reviewDialogVisible = true;
+            this.urlQuery.showReview = true;
+            // this.updateRoute();
+            // this.updateSelectedVariantTable();
         },
         closeReviewDialog() {
             this.reviewDialogVisible = false;
@@ -1317,6 +1367,8 @@ const OpenCase2 = {
                     this.updateSelectedVariantTable();
                 }
                 this.closeSplashScreen();
+            }).catch(error => {
+                this.handleDialogs(error.data, this.mountComponent);
             });
             if (this.$refs.advancedFilter) {
                 this.$refs.advancedFilter.loadUserFilterSets();
@@ -1450,6 +1502,9 @@ const OpenCase2 = {
             }
             if (!this.urlQuery.showReview) {
                 this.closeReviewDialog();
+            }
+            else {
+                this.openReviewSelectionDialogFromNavigation();
             }
             //then open variant details
             if (this.urlQuery.variantId && this.urlQuery.variantType) {
@@ -2079,7 +2134,6 @@ const OpenCase2 = {
         addOtherAnnotatorSelection(type, annotatorId, variantIds) {
             this.$refs.reviewDialog.startLoading();
             this.waitingForAjaxActive = true;
-            //TODO
             //update dicts of selected from selectionPerAnnotator
             if (type == "snp") {
                 for (let i=0; i < variantIds.length; i++) {
@@ -2103,7 +2157,18 @@ const OpenCase2 = {
                 this.updateSelectedVariantTable();
                 this.variantUnSaved = true;
                 this.waitingForAjaxActive = false;
+            }).catch(error => {
+                this.handleDialogs(error.data, this.addOtherAnnotatorSelection.bind(this, type, annotatorId, variantIds));
             });
+        },
+        copyLink() {
+            this.$refs.copyTextField.focus();
+            document.execCommand("copy");
+            this.showSnackBarMessage("Text copied!");
+        },
+        closeCopyDialog() {
+            this.copyDialogVisible = false;
+            this.toggleHTMLOverlay();
         }
     },
     mounted() {

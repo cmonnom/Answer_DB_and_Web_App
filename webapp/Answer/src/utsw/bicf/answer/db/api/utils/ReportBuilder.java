@@ -55,6 +55,7 @@ public class ReportBuilder {
 	private static final String CAT_CLINICAL_TRIAL = "Clinical Trial";
 	private static final String CAT_THERAPY = "Therapy";
 	private static final String TIER_2D = "2D";
+	private static final String TIER_2C = "2D";
 	
 
 	ModelDAO modelDAO;
@@ -231,7 +232,7 @@ public class ReportBuilder {
 			if (!isEmptyList(vDetails.getReferenceVariant().getUtswAnnotations())) {
 				vDetails.getReferenceVariant().getUtswAnnotations().stream().forEach(a -> Annotation.init(a, vDetails.getAnnotationIdsForReporting(), modelDAO));
 				List<Annotation> selectedAnnotations = vDetails.getReferenceVariant().getUtswAnnotations().stream().filter(a -> a.getIsSelected()).collect(Collectors.toList());
-				selectedAnnotations.stream().filter(a -> a.getClassification() != null).forEach(a -> this.overrideTier(a));
+				selectedAnnotations.stream().filter(a -> a.getClassification() != null || a.getCategory() != null).forEach(a -> this.overrideTier(a));
 				//set Uncategorized if needed
 				selectedAnnotations.stream().forEach(a -> a.setCategory(a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory()));
 				long tiersFound = selectedAnnotations.stream().filter(a -> a.getTier() != null).count();
@@ -267,6 +268,11 @@ public class ReportBuilder {
 				a.setTier(classTier);
 			}
 		}
+		//clinical trial is at least tier 2C
+		if (isStringEqual(a.getCategory(), CAT_CLINICAL_TRIAL) &&
+		 (a.getTier() == null || TIER_2C.compareTo(a.getTier()) < 0)) { //current tier is less than 2C
+			a.setTier(TIER_2C);
+		}
 	}
 	
 	/**
@@ -286,7 +292,7 @@ public class ReportBuilder {
 			if (!isEmptyList(vDetails.getReferenceCnv().getUtswAnnotations())) {
 				vDetails.getReferenceCnv().getUtswAnnotations().stream().forEach(a -> Annotation.init(a, vDetails.getAnnotationIdsForReporting(), modelDAO));
 				List<Annotation> selectedAnnotations = vDetails.getReferenceCnv().getUtswAnnotations().stream().filter(a -> a.getIsSelected()).collect(Collectors.toList());
-				selectedAnnotations.stream().filter(a -> a.getClassification() != null).forEach(a -> this.overrideTier(a));
+				selectedAnnotations.stream().filter(a -> a.getClassification() != null || a.getCategory() != null).forEach(a -> this.overrideTier(a));
 				//set Uncategorized if needed
 				selectedAnnotations.stream().forEach(a -> a.setCategory(a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory()));
 				long tiersFound = selectedAnnotations.stream().filter(a -> a.getTier() != null).count();
@@ -333,7 +339,7 @@ public class ReportBuilder {
 			if (!isEmptyList(vDetails.getReferenceTranslocation().getUtswAnnotations())) {
 				vDetails.getReferenceTranslocation().getUtswAnnotations().stream().forEach(a -> Annotation.init(a, vDetails.getAnnotationIdsForReporting(), modelDAO));
 				List<Annotation> selectedAnnotations = vDetails.getReferenceTranslocation().getUtswAnnotations().stream().filter(a -> a.getIsSelected()).collect(Collectors.toList());
-				selectedAnnotations.stream().filter(a -> a.getClassification() != null).forEach(a -> this.overrideTier(a));
+				selectedAnnotations.stream().filter(a -> a.getClassification() != null || a.getCategory() != null).forEach(a -> this.overrideTier(a));
 				//set Uncategorized if needed
 				selectedAnnotations.stream().forEach(a -> a.setCategory(a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory()));
 				long tiersFound = selectedAnnotations.stream().filter(a -> a.getTier() != null).count();
