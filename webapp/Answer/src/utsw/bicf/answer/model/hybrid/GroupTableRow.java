@@ -21,7 +21,7 @@ public class GroupTableRow {
 	public GroupTableRow(Group group) {
 		this.groupId = group.getGroupId();
 		this.name = group.getName();
-		this.usersConcat = group.getUsers() != null ? group.getUsers().stream().map(u -> u.getFullName()).collect(Collectors.joining("<br/>")) : "";
+		this.usersConcat = group.getUsers() != null ? group.getUsers().stream().map(u -> u.getFirst() + "&nbsp;" + u.getLast()).collect(Collectors.joining(", ")) : "";
 		this.userIds = group.getUsers() != null ? group.getUsers().stream().map(u -> u.getUserId() + "").collect(Collectors.toList()) : null;
 		this.description = group.getDescription();
 		

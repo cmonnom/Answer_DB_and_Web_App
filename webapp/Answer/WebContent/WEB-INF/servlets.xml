@@ -39,6 +39,7 @@
 	<mvc:resources location="file:/opt/answer/links/pdfs/" mapping="/pdfs/**" />
 	<mvc:resources location="file:/opt/answer/links/igv/" mapping="/igv/**" />
 	<mvc:resources location="file:/opt/answer/docs/html/" mapping="/help/**" />
+	<mvc:resources location="file:/opt/answer/links/media/" mapping="/media/**" />
 
 	<!-- Define Spring MVC view resolver -->
 	<bean	id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">

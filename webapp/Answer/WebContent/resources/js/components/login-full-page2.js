@@ -5,6 +5,22 @@ Vue.component('login-full-page2', {
         dataUrlRoot: {default: webAppRoot, type: String}
     },
     template: `<div>
+
+    <v-dialog v-model="videoVisible" max-width="728">
+  <v-card>
+  <v-card-text class="black">
+  <video id='demo-video' class='video-js' controls preload='auto' width='720' height='405'
+  data-setup='{}'>
+    <source :src='currentVideoUrl' type='video/mp4'>
+    <p class='vjs-no-js'>
+      To view this video please enable JavaScript, and consider upgrading to a web browser that
+      <a href='https://videojs.com/html5-video-support/' target='_blank'>supports HTML5 video</a>
+    </p>
+  </video>
+   </v-card-text>
+   </v-card>
+  </v-dialog>  
+
   <v-toolbar fixed app flat>
     <div class="toolbar-image">
       <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" />
@@ -50,7 +66,7 @@ Vue.component('login-full-page2', {
     </v-card>
   </v-dialog>
   <v-container fluid grid-list-xl pt-0>
-    <v-layout row wrap justify-center align-center pb-3 pt-0>
+    <v-layout row wrap justify-center  pb-3 pt-0>
       <v-flex class="display-1 text-xs-center" xs12 pt-0>
       <v-img alt="answer title" max-height="150px"
       gradient="to top right, rgba(255,255,255,.75), rgba(255,255,255,.35)"
@@ -63,7 +79,7 @@ Vue.component('login-full-page2', {
       </v-img>  
       </v-flex>
     </v-layout>
-    <v-layout row wrap pb-5>
+    <v-layout row wrap pb-5 align-center justify-center>
       <v-flex v-for="(card, index) in cards" :key="index" xs12 md4 lg4 xl4 @mouseenter="handleMouseHover(index)"> 
           <v-hover v-model="card.hover">
             <v-card
@@ -83,10 +99,30 @@ Vue.component('login-full-page2', {
               </v-card>
           </v-hover>
         </v-flex>
+        <v-flex xs12 md4 lg4 xl4 @mouseenter="stopCarousel">
+        <v-hover v-model="hoverVideo">
+        <v-card
+        :class="[hoverVideo ? 'elevation-6' : 'elevation-0', 'no-background pl-2 pr-2 pt-2 pb-2']">
+          <div class="title">
+          <v-icon>mdi-play-box-outline </v-icon><span class="pl-2">Discover Answer's Features</span>
+            </div>
+          <v-layout row wrap justify-center pb-3>
+          <v-flex xs pt-0>
+            <v-tooltip bottom>
+            <v-btn block slot="activator" large icon flat @click="playVideo">
+              <v-icon x-large>mdi-youtube</v-icon>
+            </v-btn>
+            <span>Play a Demo Video</span>
+            </v-tooltip>
+          </v-flex>
+          </v-layout>
+          </v-card>
+          </v-hover>
+        </v-flex>
       </v-layout>
       
       <v-slide-x-transition>
-    <v-layout row wrap justify-center pb-5 v-show="showCarousel">
+    <v-layout row wrap justify-center align-center pb-5 v-show="showCarousel">
       <v-flex :class="currentFlex" v-for="img in currentImgs" :key="img">
         <v-card flat tile class="no-background">
             <v-img alt="snp filtering" :src="dataUrlRoot + '/resources/images/screenshots/' + img"></v-img>
@@ -107,6 +143,11 @@ Vue.component('login-full-page2', {
       </v-card-text>
     </v-card>
   </v-dialog>
+
+  <v-btn fab bottom right fixed @click="$vuetify.goTo(9999)">
+    <v-icon>mdi-chevron-down</v-icon>
+  </v-btn>
+
 </div>`,
     data() {
         return {
@@ -165,7 +206,11 @@ Vue.component('login-full-page2', {
             currentFlex: "xs6 md6 lg3 xl3",
             currentVisibility: [true],
             timeoutId: -1,
-            showCarousel: true
+            showCarousel: true,
+            hoverVideo: false,
+            videoVisible: false,
+            currentVideoUrl: "./media/demo.mp4",
+            videoPlayer: null
         }
     },
     methods: {
@@ -326,11 +371,32 @@ Vue.component('login-full-page2', {
         handleMouseHover(index) {
           this.stopCarousel();
           this.showScreenshotsAndHighlight(index);
+        },
+        playVideo() {
+          console.log("TODO: make a video!");
+          this.videoVisible = true;
+        },
+        updateVideoLink() {
+          if (!this.videoVisible) {
+            this.videoPlayer.pause();
+          }
+          else {
+            this.videoPlayer.play();
+          }
         }
     },
     mounted: function () {
        this.populateCarousel();
        this.startCarousel();
+       window.HELP_IMPROVE_VIDEOJS = false;
+       this.videoPlayer = videojs("demo-video", {}, function onPlayerReady() {
+         console.log("ready");
+       });
+    },
+    beforeDestroy() {
+      if (this.videoPlayer) {
+          this.videoPlayer.dispose();
+      }
     },
     computed: {
 
@@ -339,4 +405,7 @@ Vue.component('login-full-page2', {
         this.checkAlreadyLoggedIn();
         this.getVersion();
     },
+    watch: {
+      videoVisible: "updateVideoLink"
+    }
 })
