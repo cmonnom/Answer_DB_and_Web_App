@@ -732,7 +732,9 @@ const OpenCase2 = {
         },
         proceedWithConfirmation() {
             this.confirmationDialogVisible = false;
-            this.getAjaxData();
+            this.getAjaxData().catch(error => {
+                this.handleDialogs(error.data, this.proceedWithConfirmation);
+            });;
         },
         cancelConfirmation() {
             this.confirmationDialogVisible = false;
@@ -987,7 +989,9 @@ const OpenCase2 = {
             }
         },
         filterData() {
-            this.getAjaxData();
+            this.getAjaxData().catch(error => {
+                this.handleDialogs(error.data, this.filterData);
+            });
         },
         showSnackBarMessage(message) {
             this.snackBarMessage = message;

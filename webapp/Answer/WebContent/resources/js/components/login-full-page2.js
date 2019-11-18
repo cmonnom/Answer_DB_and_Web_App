@@ -115,6 +115,23 @@ Vue.component('login-full-page2', {
             <span>Play a Demo Video</span>
             </v-tooltip>
           </v-flex>
+          <v-flex xs pt-1>
+          <v-menu slot="activator" offset-y>
+          <template v-slot:activator="{ on }">
+          <v-tooltip right>
+            <v-btn slot="activator" icon flat v-on="on">
+            <v-icon>copyright</v-icon>
+            </v-btn>
+            <span>Copyright Info</span>
+            </v-tooltip>
+            </template>
+            <v-card class="pt-2 pb-2 pr-2 pl-2">
+            <v-card-tex>Music from <a href="https://filmmusic.io">https://filmmusic.io</a> <br/>
+            "Climb" by Alexander Nakarada (<a href="https://www.serpentsoundstudios.com/">https://www.serpentsoundstudios.com/</a>) <br/>
+            License: CC BY (<a href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</a>) <br/>
+            </v-card-tex></v-card>
+          </v-menu>
+          </v-flex>
           </v-layout>
           </v-card>
           </v-hover>
@@ -144,8 +161,8 @@ Vue.component('login-full-page2', {
     </v-card>
   </v-dialog>
 
-  <v-btn fab bottom right fixed @click="$vuetify.goTo(9999)">
-    <v-icon>mdi-chevron-down</v-icon>
+  <v-btn fab bottom right fixed @click="scrollTo">
+    <v-icon :class="scrollBarAtBottom ? 'rotate180' : ''">mdi-chevron-down</v-icon>
   </v-btn>
 
 </div>`,
@@ -205,12 +222,13 @@ Vue.component('login-full-page2', {
             currentImgs: ["answer-logo-large.png"],
             currentFlex: "xs6 md6 lg3 xl3",
             currentVisibility: [true],
-            timeoutId: -1,
+            timeoutId: null,
             showCarousel: true,
             hoverVideo: false,
             videoVisible: false,
             currentVideoUrl: "./media/demo.mp4",
-            videoPlayer: null
+            videoPlayer: null,
+            scrollBarAtBottom: true
         }
     },
     methods: {
@@ -351,6 +369,7 @@ Vue.component('login-full-page2', {
         },
         startCarousel() {
           this.timeoutId = setInterval(() => {
+            this.$vuetify.goTo(0);
             let newIndex = 0;
             if (this.currentIndex != -1) {
               this.$nextTick(() => {this.cards[this.currentIndex].hover = false;})
@@ -383,6 +402,20 @@ Vue.component('login-full-page2', {
           else {
             this.videoPlayer.play();
           }
+        },
+        onScroll(e) {
+          if (this.timeoutId) {
+            return;
+          }
+          this.scrollBarAtBottom = document.documentElement.scrollHeight <=  (document.documentElement.clientHeight + document.documentElement.scrollTop) * 1.10;
+        },
+        scrollTo() {
+          if (this.scrollBarAtBottom) {
+            this.$vuetify.goTo(0);
+          }
+          else {
+            this.$vuetify.goTo(9999);
+          }
         }
     },
     mounted: function () {
@@ -392,18 +425,21 @@ Vue.component('login-full-page2', {
        this.videoPlayer = videojs("demo-video", {}, function onPlayerReady() {
          console.log("ready");
        });
+       
     },
-    beforeDestroy() {
+    destroyed() {
       if (this.videoPlayer) {
           this.videoPlayer.dispose();
       }
+      window.onscroll = null;
     },
     computed: {
-
+      
     },
     created: function () {
         this.checkAlreadyLoggedIn();
         this.getVersion();
+        window.onscroll = this.onScroll;
     },
     watch: {
       videoVisible: "updateVideoLink"
