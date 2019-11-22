@@ -46,7 +46,13 @@ public class PatientInfo {
 				dabDate = LocalDate.parse(dab, TypeUtils.monthFormatter);
 			}
 			if (dab.contains("/")) {
-				dabDate = LocalDate.parse(dab, TypeUtils.localDateFormatter);
+				String firstItem = dab.split("/")[0];
+				if (firstItem.length() == 2) {
+					dabDate = LocalDate.parse(dab, TypeUtils.localDateFormatter);
+				}
+				else {
+					dabDate = LocalDate.parse(dab, TypeUtils.localDateFormatterYearFirst);
+				}
 			}
 			if (dabDate != null) { //only calculate the age if the date if formatted properly
 				LocalDate now = LocalDate.now();
