@@ -244,7 +244,7 @@ table.table tbody td:first-child, table.table tbody td:not(:first-child), table.
 } */
 
 .margin-auto {
-    margin: auto;
+    margin: auto !important;
 }
 
 /* When using a menu as a list item (submenu) */

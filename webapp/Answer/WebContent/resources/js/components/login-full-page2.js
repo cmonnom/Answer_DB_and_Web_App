@@ -6,11 +6,11 @@ Vue.component('login-full-page2', {
     },
     template: `<div>
 
-    <v-dialog v-model="videoVisible" max-width="728">
+    <v-dialog v-model="videoVisible" :max-width="isXSWidth() ? '100%' :'728'">
   <v-card>
   <v-card-text class="black">
-  <video id='demo-video' class='video-js' controls preload='auto' width='720' height='405'
-  data-setup='{}'>
+  <video id='demo-video' class='video-js' controls preload='auto' 
+  data-setup='{"fluid": true}'>
     <source :src='currentVideoUrl' type='video/mp4'>
     <p class='vjs-no-js'>
       To view this video please enable JavaScript, and consider upgrading to a web browser that
@@ -21,22 +21,40 @@ Vue.component('login-full-page2', {
    </v-card>
   </v-dialog>  
 
-  <v-toolbar fixed app flat>
+  <v-toolbar fixed app flat extended class="hidden-sm-and-up" >
     <div class="toolbar-image">
       <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" />
     </div>
     <v-toolbar-title class="headline">
       Answer
     </v-toolbar-title>
-    <v-spacer></v-spacer>
-    <div class="toolbar-image">
+    <div class="toolbar-image margin-auto" slot="extension">
       <img class="toolbar-image pt-2 pb-2" alt="ngs logo"
         :src="dataUrlRoot + '/resources/images/screenshots/NGS_Lab_Color.png'">
       <img class="toolbar-image" alt="utsw master logo"
         :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'">
     </div>
+    <v-spacer></v-spacer>
     <v-btn flat @click="showLoginDialog = true" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
   </v-toolbar>
+
+  <v-toolbar fixed app flat ref="regularToolbar" class="hidden-xs-only">
+  <div class="toolbar-image">
+    <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" />
+  </div>
+  <v-toolbar-title class="headline">
+    Answer
+  </v-toolbar-title>
+  <v-spacer></v-spacer>
+  <div class="toolbar-image">
+    <img class="toolbar-image pt-2 pb-2" alt="ngs logo"
+      :src="dataUrlRoot + '/resources/images/screenshots/NGS_Lab_Color.png'">
+    <img class="toolbar-image" alt="utsw master logo"
+      :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'">
+  </div>
+  <v-btn flat @click="showLoginDialog = true" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
+</v-toolbar>
+
   <v-snackbar :timeout="0" :bottom="true" :value="snackBarVisible">
     {{ snackBarMessage }}
     <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
@@ -65,14 +83,17 @@ Vue.component('login-full-page2', {
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-container fluid grid-list-xl pt-0>
+  <v-container fluid grid-list-xl class="pt-0">
     <v-layout row wrap justify-center  pb-3 pt-0>
-      <v-flex class="display-1 text-xs-center" xs12 pt-0>
+      <v-flex class="text-xs-center" xs12 pt-0>
       <v-img alt="answer title" max-height="150px"
       gradient="to top right, rgba(255,255,255,.75), rgba(255,255,255,.35)"
       :src="dataUrlRoot + '/resources/images/screenshots/banner.jpg'">
         <v-layout row wrap justify-center align-center fill-height mt-0>
-            <v-flex class="display-1 text-xs-center" xs8>
+            <v-flex class="title text-xs-center hidden-sm-and-up" xs12>
+            {{ headerText }}
+            </v-flex>
+            <v-flex class="display-1 text-xs-center hidden-xs-only" xs8>
             {{ headerText }}
             </v-flex>
         </v-layout>
@@ -392,7 +413,6 @@ Vue.component('login-full-page2', {
           this.showScreenshotsAndHighlight(index);
         },
         playVideo() {
-          console.log("TODO: make a video!");
           this.videoVisible = true;
         },
         updateVideoLink() {
@@ -416,11 +436,16 @@ Vue.component('login-full-page2', {
           else {
             this.$vuetify.goTo(9999);
           }
+        },
+        isXSWidth() {
+          return window.outerWidth < 600;
         }
     },
     mounted: function () {
        this.populateCarousel();
-       this.startCarousel();
+       if (!this.isXSWidth()) {
+         this.startCarousel();
+       }
        window.HELP_IMPROVE_VIDEOJS = false;
        this.videoPlayer = videojs("demo-video", {}, function onPlayerReady() {
          console.log("ready");

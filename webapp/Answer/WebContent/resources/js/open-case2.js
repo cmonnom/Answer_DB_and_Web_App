@@ -676,7 +676,7 @@ const OpenCase2 = {
                 snackBarVisible: false,
                 snackBarLinkIcon: "",
                 snackBarLink: "",
-                snackBarTimeout: 2000,
+                snackBarTimeout: 4000,
                 snackBarMessage: "",
                 fpkmVisible: false,
                 fpkmPositionx: 0,
@@ -997,7 +997,7 @@ const OpenCase2 = {
             this.snackBarMessage = message;
             this.snackBarLink = "";
             this.snackBarLinkIcon = "";
-            this.snackBarTimeout = 2000;
+            this.snackBarTimeout = 4000;
             this.snackBarVisible = true;
         },
         showSnackBarMessageWithParams(snackBarMessage, snackBarLink, snackBarLinkIcon, snackBarTimeout) {

@@ -904,7 +904,7 @@ Vue.component('variant-details-dialog', {
                 return 'xs6';
             }
         },
-        revertVariant() {
+        revertVariant(keepSaveState) {
             if (this.isSNP()) {
                 this.getVariantDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
             }
@@ -914,7 +914,9 @@ Vue.component('variant-details-dialog', {
             else if (this.isTranslocation()) {
                 this.getTranslocationDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
             }
-            this.$refs.variantDetailsPanel.variantDetailsUnSaved = false;  //update badge on save button
+            if (!keepSaveState) {
+                this.$refs.variantDetailsPanel.variantDetailsUnSaved = false;  //update badge on save button
+            }
         },
         getVariantDetails(variantId, isFirstVariant, isLastVariant) {
             return new Promise((resolve, reject) => {
@@ -2286,6 +2288,56 @@ Vue.component('variant-details-dialog', {
             this.userAnnotations.push(newAnnotation);
             this.commitAnnotations(this.userAnnotations);
         },
+        setDefaultTranscript(item) {
+            axios({
+                method: 'post',
+                url: webAppRoot + "/setDefaultTranscript",
+                params: {
+                    variantId: this.currentVariant._id["$oid"],
+                },
+                data: item
+            })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        //reload the variant
+                        // console.log("success");
+                        this.revertVariant(true);
+                        // var variantId = this.currentVariant._id["$oid"];
+                        // if (this.isSNP()) {
+                        //     for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
+                        //         if (this.$refs.geneVariantDetails.items[i].oid == variantId) {
+                        //                 this.$nextTick(this.getVariantDetails(this.$refs.geneVariantDetails.items[i]));
+                        //                 break;
+                        //         }
+                        //     }
+                        // }
+                        // else if (this.isCNV()) {
+                        //     for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
+                        //         if (this.$refs.cnvDetails.items[i].oid == variantId) {
+                        //                 this.$nextTick(this.getCNVDetails(this.$refs.cnvDetails.items[i]));
+                        //                 break;
+                        //         }
+                        //     }
+                        // }
+                        // else if (this.isTranslocation()) {
+                        //     for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
+                        //         if (this.$refs.translocationDetails.items[i].oid == variantId) {
+                        //                 this.$nextTick(this.getTranslocationDetails(this.$refs.translocationDetails.items[i]));
+                        //                 break;
+                        //         }
+                        //     }
+                        // }
+                        // this.showSnackBarMessageWithParams(response.data.message, null, null, 4000);
+                        this.showSnackBarMessage(response.data.message);
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.setDefaultTranscript.bind(null, item));
+                    }
+                })
+                .catch(error => {
+                    alert(error);
+                });
+        },
         handleSaveAll() {
             this.$emit("handle-save-all");
         },
@@ -2380,9 +2432,13 @@ Vue.component('variant-details-dialog', {
         bus.$on('create-new-cnv', (genes) => {
             this.openAddCNVDialog(genes);
         });
+        bus.$on('setDefaultTranscript', (item) => {
+            this.setDefaultTranscript(item);
+        });
     },
     destroyed() {
         bus.$off('create-new-cnv');
+        bus.$off('setDefaultTranscript');
     },
     watch: {
     }
