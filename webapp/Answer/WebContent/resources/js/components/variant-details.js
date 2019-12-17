@@ -34,7 +34,6 @@ Vue.component('variant-details', {
     - Right-Click on the chart to display more actions<br/>
     - Click on the legend to show/hide series<br/>
     - Mouse over a data point to get more information (tooltip)<br/>
-    - The chart with ALL chromosomes doesn't have tooltips for faster loading.<br/>
     - You can highlight specific genes by clicking on the list in the CNV Variant Details panel.</span>
     </v-card-text>
     </v-card>
@@ -243,12 +242,6 @@ Vue.component('variant-details', {
                                             <v-btn slot="activator" @click="handleCNVAllChromPlot()" :loading="cnvPlotLoadingAllChrom" :disabled="cnvPlotLoadingAllChrom">All</v-btn>
                                             <span>Plot all chromosomes (slower)</span>
                                           </v-tooltip>
-                                          <v-tooltip bottom>
-                                            <v-btn slot="activator" @click="resetZoom()" :disabled="cnvPlotReady()">
-                                            <v-icon>zoom_out</v-icon>
-                                            </v-btn>
-                                            <span>Reset Zoom Level</span>
-                                            </v-tooltip>
                                             <v-tooltip top content-clas="subheading">
                                                 <v-btn slot="activator" @click="chartHelpVisible = true" flat icon>
                                                 <v-icon color="primary">help</v-icon>
@@ -345,7 +338,7 @@ Vue.component('variant-details', {
                 blue75: "#38486b",
                 brown50: "#a39a76",
                 yellow25: "#e4cf5b",
-                yellow5: "#f9e04a"
+                yellow5: "#f7edb2"
             },
             genesSelected: [],
             cnvPlotNeedsReload: false,
@@ -360,7 +353,18 @@ Vue.component('variant-details', {
             chartHelpVisible: false,
             loadingVariantColor: "blue-grey lighten-4",
             loadingVariantTextColor: "blue-grey--text text--lighten-4",
-            currentPlotTitle: ""
+            currentPlotTitle: "",
+            plotlyConfig: {
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['sendDataToCloud', 'editInChartStudio', 'select2d',
+                'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian',
+                'toggleSpikelines', 'autoScale2d'],
+                responsive: true
+            },
+            cnvData: {},
+            lastKmin: null,
+            lastKMax: null
         }
 
     },
@@ -376,13 +380,14 @@ Vue.component('variant-details', {
         },
         hidePanel() {
             this.$emit("hide-panel", this);
-            zingchart.exec(this.cnvPlotId, 'destroy'); //kill the chart if variant details is closed
+            Plotly.purge(this.cnvPlotId);
             this.resetCNVChart();
         },
         resetCNVChart() {
              //remove lists of visible genes
             this.visibleGenesCN2OrSelected = "";
             this.visibleGenesOther = "";
+            this.cnvData = null;
         },
         togglePanel() {
             this.$emit("toggle-panel", this);
@@ -518,6 +523,22 @@ Vue.component('variant-details', {
         updateGenesSelected() {
             this.genesSelected.length = 0;
         },
+        createScatterTrace(data, color) {
+            return {
+                x: data.x,
+                y: data.y,
+                name: data.name,
+                mode: "markers",
+                type: "scattergl",
+                marker: {
+                    color: color,
+                    opacity: 0.5,
+                    size: 4
+                },
+                text: data.labels,
+                hovertemplate: "%{text}"
+            }
+        },
         updateCNVPlot(chrom) {
             var genesParam = [];
             this.visibleGenesCN2OrSelected = "Counting genes...";
@@ -539,150 +560,143 @@ Vue.component('variant-details', {
             })
                 .then(response => {
                     if (response.data.isAllowed) {
-                        // startTime = new Date();
-                        this.applySeriesStyle(response.data.series);
-                        var chrMarkers = [];
-                        for (var i = 0; i < response.data.maxChroms.length; i++) {
-                            // for (var i = 0; i < 1; i++) {
-                            chrMarkers.push(
-                                {
-                                    type: "area",
-                                    range: [i == 0 ? response.data.minChrom : response.data.maxChroms[i - 1], response.data.maxChroms[i]],
-                                    backgroundColor: this.getMarkerColor(i, response.data.maxChroms.length),
-                                    alpha: 0.2,
-                                    label: {
-                                        text: response.data.sortedChrs[i],
-                                        angle: this.cnvPlotLoadingAllChrom ? 270 : 0, //only rotate for ALL chromosomes
-                                        "offset-x": 0,
-                                        "offset-y": -10,
-                                        color: "black"
-                                    },
-                                    valueRange: true
-                                });
+                        var cnr2Trace = this.createScatterTrace(response.data.cnr2, "#00204d");
+                        var cnrOthersTrace = this.createScatterTrace(response.data.cnrOthers, "#a39a76");
+
+                    var geneSelectedTraces = [];
+                    for (var i = 0; i < response.data.genesSelected.length; i++) {
+                        var trace = this.createScatterTrace(response.data.genesSelected[i], "#00204d");
+                        geneSelectedTraces.push(trace);
+                    }
+
+                    var cnsTraces = [];
+                    for (var i = 0; i < response.data.cns.y.length; i++) {
+                        var cnsTrace = {
+                            x: response.data.cns.x[i],
+                            y: response.data.cns.y[i],
+                            name: response.data.cnsTitles[i],
+                            mode: "lines",
+                            type: "scattergl",	
+                            text: [response.data.cns.labels[i], response.data.cns.labels[i]],
+                            hovertemplate: "%{text}",
+                            line: {
+                            color: '#f9e04a',
+                            width: 4
+                            }
                         }
-                        // console.log(chrMarkers);
-                        // console.log(response.data.series.length);
-                        this.cnvPlotDataConfig = {
-                            gui: this.gui,
-                            graphset: [{
-                                type: 'mixed',
+                        cnsTraces.push(cnsTrace);
+                    }
 
-                                plot: {
-                                    mode: "fast",
-                                    exact: false,
-                                    smartSampling: true,
-                                    maxNodes: 0,
-                                    maxTrackers: response.data.dataPointCount + 100, //need amount bigger than nb of data points
-                                    lineWidth: 4,
-                                    shadow: false,
-                                    marker: {
-                                        borderColor: "none",
-                                        type: "circle",
-                                        shadow: false,
-                                        size: 2,
-                                        alpha: 0.5,
 
-                                    },
-                                    tooltip: {
-                                        visible: true,
-                                        text: "%data-labels"
-                                        // rules: [
-                                        //     {
-                                        //         rule: "'%data-labels' != %v",
-                                        //         text: "Gene: %data-labels Copy Ratio: %v"
+                    var chrs = [];
+                    for (let i =0;i<response.data.chr.start.length; i+=2) {
+                        let shape = {
+                                type: 'rect',
+                                xref: 'x',
+                                yref: 'paper',
+                                x0: response.data.chr.start[i],
+                                y0: 0,
+                                x1: response.data.chr.end[i],
+                                y1: 1,
+                                fillcolor: this.getMarkerColor(i, response.data.chr.end.length, cnsTraces),
+                                opacity: 0.2,
+                                line: {
+                                    width: 0
+                                },
+                                layer: "below"
+                        }
+                        chrs.push(shape);
+                    }
 
-                                        //     },
-                                        //     {
-                                        //         rule: "'%data-labels' == %v",
-                                        //         text: "Copy Ratio: %v %data-labels"
+                    var genes = [];
+                    for (let i =0;i<response.data.genes.start.length; i++) {
+                        let shape = {
+                                type: 'rect',
+                                xref: 'x',
+                                yref: 'paper',
+                                x0: response.data.genes.start[i],
+                                y0: 0,
+                                x1: response.data.genes.end[i],
+                                y1: 1,
+                                fillcolor: this.cividisColors.blue75,
+                                opacity: 0.2,
+                                line: {
+                                    width: 0
+                                },
+                                layer: "below"
+                        }
+                        genes.push(shape);
+                    }
+                    chrs = chrs.concat(genes);
 
-                                        //     }
-                                        // ]
-                                    },
-                                    highlightMarker: {
-                                        size: 4,
-                                        backgroundColor: this.cividisColors.yellow25
-                                    },
-                                    highlightState: {
-                                        lineWidth: 4,
-                                        lineColor: this.cividisColors.blue100
-                                    }
-                                },
-                                plotArea: {
-                                    adjustLayout: false,
-                                    // "margin-left":"0%",
-                                    // "margin-right":"0%",
-                                    "margin-top": "0%",
-                                    "margin-bottom": "0%",
-                                },
-                                series: response.data.series,
-                                //// very slow preview at the moment. Try to fix this
-                                // "preview":{
+                    var chrLabelsAnnotations = [];
+                    for (let i =0;i<response.data.chr.labels.length; i++) {
+                        let annotation = {
+                            showarrow: false,
+                            text: response.data.chr.labels[i],
+                            align: "right",
+                            x: response.data.chr.start[i],
+                            xanchor: "left",
+                            y: -4.8,
+                            yanchor: "bottom",
+                            textangle: this.cnvPlotLoadingAllChrom ? 270 : 0
+                        }
+                        chrLabelsAnnotations.push(annotation);
+                    }
 
-                                title: {
-                                    text: this.createCnvPlotTitle(),
-                                    fontSize: 12,
-                                    adjustLayout: false,
-                                    "margin-left": "0%",
-                                    "margin-right": "0%",
-                                    "margin-top": "0%",
-                                    "margin-bottom": "0%",
-                                },
-                                legend: this.getLegend(),
-                                scaleX: {
-                                    zooming: true,
-                                    // labels: response.data.labels,
-                                    // label: {
-                                    //     text: "Chromosomes"
-                                    // },
-                                    // minValue: 0,
-                                    // maxValue: 10000,
-                                    // step: 10,
-                                    maxTicks: 0,
-                                    maxItems: 0,
-                                    markers: chrMarkers,
-                                    tick: {
-                                        visible: false
-                                    },
-                                    item: {
-                                        visible: false
-                                    }
-                                },
-                                scrollX: {
+                    data = [cnr2Trace, cnrOthersTrace, ...geneSelectedTraces, ...cnsTraces ];
+                    this.cnvData = {
+                        "cnr2": cnr2Trace,
+                        "cnrOthers": cnrOthersTrace,
+                        "cns": cnsTraces,
+                        "genesSelected": geneSelectedTraces
+                    };
 
-                                },
-                                scaleY: {
-                                    // zooming: true,
-                                    label: {
-                                        text: "Copy Ratio (log2)"
-                                    },
-                                    minValue: -5,
-                                    maxValue: 5
-                                },
-                            }]
-                        };
+                    var layout = {
+                        title: this.createCnvPlotTitle(),
+                        yaxis: {
+                            title: "Copy Ratio (log2)",
+                            zeroline: false,
+                            range: [-5, 5],
+                            fixedrange: true,
+                            dtick:1
+                        },
+                        xaxis: {
+                            zeroline: false,
+                            showticklabels: false,
+                            showgrid: false,
+                            range: [0, response.data.chr.end[response.data.chr.end.length - 1]],
+                        },
+                        margin: {
+                            l: 40,
+                            r: 20,
+                            b: 20,
+                            t: 30,
+                            pad: 4
+                        },
+                        hovermode: 'closest',
+                        shapes: chrs,
+                        annotations: chrLabelsAnnotations,
+                        legend: {
+                            itemsizing: "constant"
+                        }
+                    }
+
+                    
                         this.$nextTick(() => {
-                            zingchart.render({
-                                id: this.cnvPlotId,
-                                data: this.cnvPlotDataConfig,
-                                height: "90%",
-                                output: 'canvas'
+                            Plotly.newPlot(this.cnvPlotId, data, layout, this.plotlyConfig);
+                            document.getElementById(this.cnvPlotId).on('plotly_relayout', (eventdata) => {
+                                this.handleChartZoom({
+                                    kmin: eventdata["xaxis.range[0]"],
+                                    kmax: eventdata["xaxis.range[1]"]
+                                });
                             });
-
-                            zingchart.zoom = this.handleChartZoom;
-
                             this.cnvPlotLoadingCurrentChrom = false;
                             this.cnvPlotLoadingAllChrom = false;
                             this.cnvPlotLoadingOtherChrom = false;
-                            // var endTime = new Date();
-                            // var timeDiff = endTime - startTime;
-                            // console.log((timeDiff / 1000) + "s");
                             this.cnvPlotNeedsReload = false;
                             this.toggleAllLoading = false;
-                            var kmax = zingchart.exec(this.cnvPlotId, 'getobjectinfo', {
-                                object : 'scale',
-                                name : 'scale-x'
-                            }).maxValue;
+                            var kmax = response.data.chr.end[response.data.chr.end.length - 1];
                             if (this.genesSelected.length > 0) {
                                 this.genesVisibleTopLabel =  "Gene" + (this.genesSelected.length == 1 ? "" : "s") + " selected:";
                                 this.genesVisibleBottomLabel =  "Others: ";
@@ -716,36 +730,29 @@ Vue.component('variant-details', {
             var kmin = p.kmin;
             var kmax = p.kmax;
             if (!kmin && !kmax) {
-                kmin = 0;
-                kmax = zingchart.exec(this.cnvPlotId, 'getobjectinfo', {
-                    object : 'scale',
-                    name : 'scale-x'
-                }).maxValue;
+                kmin = this.lastKmin;
+                kmax = this.lastKMax;
+            }
+            else {
+                this.lastKmin = kmin ;
+                this.lastKMax = kmax;
             }
             var seriesCN2OrSelected = [];
             var labelsCN2OrSelected = [];
             var seriesOther = [];
             var labelsOther = [];
-            if (this.genesSelected.length > 0) {
-                for (var i = 1; i <= this.genesSelected.length; i++) {
-                    seriesCN2OrSelected = seriesCN2OrSelected.concat(zingchart.exec(this.cnvPlotId, 'getseriesvalues')[i]);
-                    labelsCN2OrSelected = labelsCN2OrSelected.concat(zingchart.exec(this.cnvPlotId, 'getseriesdata')[i]["data-labels"]);
+            if (this.genesSelected.length > 0 && this.cnvData["genesSelected"].length > 0) {
+                for (var i = 0; i < this.genesSelected.length; i++) {
+                    seriesCN2OrSelected = this.cnvData["genesSelected"][i].x;
+                    labelsCN2OrSelected = this.cnvData["genesSelected"][i].text;
                 }
-                seriesOther = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[0];
-                labelsOther = zingchart.exec(this.cnvPlotId, 'getseriesdata')[0]["data-labels"];
             }
             else {
-                seriesCN2OrSelected = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[0];
-                labelsCN2OrSelected = zingchart.exec(this.cnvPlotId, 'getseriesdata')[0]["data-labels"];
-                seriesOther = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[1];
-                labelsOther = zingchart.exec(this.cnvPlotId, 'getseriesdata')[1]["data-labels"];
+                seriesCN2OrSelected = this.cnvData["cnr2"].x;
+                labelsCN2OrSelected = this.cnvData["cnr2"].text;
             }
-            // var seriesCN2 = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[0];
-            // var labelsCN2 = zingchart.exec(this.cnvPlotId, 'getseriesdata')[0]["data-labels"]; //just item 0 for testing for now
-            // var seriesOther = zingchart.exec(this.cnvPlotId, 'getseriesvalues')[1];
-            // var labelsOther = zingchart.exec(this.cnvPlotId, 'getseriesdata')[1]["data-labels"]; //just item 0 for testing for now
-            // let start = moment();
-            // console.log("before scanning for genes", start.format("h:mm:ss"));
+            seriesOther = this.cnvData["cnrOthers"].x;
+            labelsOther = this.cnvData["cnrOthers"].text;
             var visibleGenesCN2OrSelected = this.getUniqueLabelsFromSeries(kmin, kmax, seriesCN2OrSelected, labelsCN2OrSelected);
             var visibleGenesOther = this.getUniqueLabelsFromSeries(kmin, kmax, seriesOther, labelsOther);
             let genesSet = new Set();
@@ -759,14 +766,11 @@ Vue.component('variant-details', {
             this.createCNVDisabled = visibleGenesCN2OrSelected.length == 0 && visibleGenesOther.length == 0;
             this.visibleGenesCN2OrSelected = this.getVisibleGeneStringFromUniqueList(visibleGenesCN2OrSelected);
             this.visibleGenesOther = this.getVisibleGeneStringFromUniqueList(visibleGenesOther);
-            // let end = moment();
-            // console.log("after scanning for genes", end.format("h:mm:ss"));
-            // console.log("time spent: ", end.diff(start))
         },
         getUniqueLabelsFromSeries(kmin, kmax, series, labels) {
             var visibleGenes = [];
             for (var i = 0; i < series.length; i++) {
-                var value = series[i][0];
+                var value = series[i];
                 if (value >= kmin && value <= kmax) {
                     var regex = /(Gene: )(.*)( Log2: [0-9.-]*)/g;
                     var match = regex.exec(labels[i]);
@@ -796,17 +800,13 @@ Vue.component('variant-details', {
         cnvPlotReady() {
             return !this.cnvPlotLoadingCurentChrom && !this.cnvPlotLoadingAllChrom && !this.cnvPlotDataConfig && !this.cnvPlotLoadingOtherChrom;
         },
-        getMarkerColor(index, size) {
-            if (size == 1) {
-                return ""; //default color because only one
+        getMarkerColor(index, size, cnsData) {
+            if (size == 1 && cnsData[0]) {
+                var length = cnsData[0].name.length;
+                var chrNumber = Number.parseInt(cnsData[0].name.substring(length - 1, length)) - 1;
+                return chrNumber % 2 == 0 ? this.cividisColors.yellow5 : ""; //same color as all chrom plot
             }
-            // return index % 2 == 0 ? "" : "gray";
             return index % 2 == 0 ? this.cividisColors.yellow5 : "";
-        },
-        resetZoom() {
-            zingchart.exec(this.cnvPlotId, 'viewall', {
-                graphid: 0
-            });
         },
         handleDialogs(response, callback) {
             if (response == "not-allowed") {

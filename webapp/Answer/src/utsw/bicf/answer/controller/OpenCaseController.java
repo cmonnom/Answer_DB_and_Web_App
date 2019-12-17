@@ -1470,7 +1470,7 @@ public class OpenCaseController {
 		}
 		CNVPlotData cnvPlotData = utils.getCnvPlotData(caseId, chrom);
 		if (cnvPlotData != null) {
-			return new CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData(), selectedGenes).createObjectJSON();
+			return new utsw.bicf.answer.controller.serialization.plotly.CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData(), selectedGenes).createObjectJSON();
 		}
 		else {
 			AjaxResponse response = new AjaxResponse();
@@ -1826,7 +1826,7 @@ public class OpenCaseController {
 			data.setFpkms(fpkms);
 			data.setOncotreeCode(fpkms.get(0).getOncotreeDiagnosis());
 //			data.setOncotreeCode("AML"); //for testing only
-			return new FPKMChartData(data, caseId, showOtherPlots, useLog2).createObjectJSON();
+			return new utsw.bicf.answer.controller.serialization.plotly.FPKMChartData(data, caseId, useLog2).createObjectJSON();
 		}
 		else {
 			AjaxResponse response = new AjaxResponse();

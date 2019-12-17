@@ -147,10 +147,10 @@ Vue.component('login-full-page2', {
             </v-tooltip>
             </template>
             <v-card class="pt-2 pb-2 pr-2 pl-2">
-            <v-card-tex>Music from <a href="https://filmmusic.io">https://filmmusic.io</a> <br/>
+            <v-card-text>Music from <a href="https://filmmusic.io">https://filmmusic.io</a> <br/>
             "Climb" by Alexander Nakarada (<a href="https://www.serpentsoundstudios.com/">https://www.serpentsoundstudios.com/</a>) <br/>
             License: CC BY (<a href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</a>) <br/>
-            </v-card-tex></v-card>
+            </v-card-text></v-card>
           </v-menu>
           </v-flex>
           </v-layout>
@@ -450,6 +450,9 @@ Vue.component('login-full-page2', {
        this.videoPlayer = videojs("demo-video", {}, function onPlayerReady() {
          console.log("ready");
        });
+       if (this.$route.query.urlRedirect) {
+         this.showLoginDialog = true;
+       }
        
     },
     destroyed() {

@@ -6,7 +6,6 @@ const OpenCase2 = {
         confirmationMessage: {default:"Unsaved selected variants will be discarded.<br/>Are you sure?", type: String},
         confirmationProceedButton: {default:"Proceed", type: String},
         confirmationCancelButton: {default:"Cancel", type: String},
-
     },
     template: `<div>
 
@@ -113,6 +112,7 @@ const OpenCase2 = {
       >
       <fpkm-plot ref="fpkmPlot"
       :can-plot="patientDetailsOncoTreeDiagnosis.text != null"
+      :oncotreeCode="patientDetailsOncoTreeDiagnosis.text"
       :oncotree="oncotree"
       @hide-fpkm-plot="closeFPKMChart"
       ></fpkm-plot>
@@ -720,7 +720,7 @@ const OpenCase2 = {
                 ftlUnfilteredItems: null,
                 itdDialogVisible: false,
                 copyDialogVisible: false,
-                textToCopy: ""
+                textToCopy: "",
             }
         },
         openIDTCreationDialog() {
@@ -781,6 +781,7 @@ const OpenCase2 = {
             this.fpkmPositionx = event.clientX;
             this.fpkmPositiony = event.clientY;
             this.fpkmVisible = true;
+            this.$refs.fpkmPlot.loadDefaultFPKMPlot();
         },
         closeFPKMChart() {
             this.fpkmVisible = false;

@@ -1,7 +1,8 @@
 Vue.component('fpkm-plot', {
     props: {
         canPlot: { default: false, type: Boolean },
-        oncotree: {default: () => [], type:Array }
+        oncotree: {default: () => [], type:Array },
+        oncotreeCode: {default: null, type: String}
     },
     template: `
    
@@ -39,14 +40,6 @@ Vue.component('fpkm-plot', {
                 </v-flex>
                 <v-flex xs12>
                     <v-layout row wrap justify-end>
-                        <v-flex>
-                            <v-btn icon flat @click="zoomIn" :disabled="!currentGene || !canPlot">
-                                   <v-icon>zoom_in</v-icon>
-                               </v-btn>
-                               <v-btn icon flat @click="zoomOut" :disabled="!currentGene || !canPlot">
-                               <v-icon>zoom_out</v-icon>
-                               </v-btn>
-                        </v-flex>
                         <v-flex class="pl-2">
                             <v-switch color="primary" @change="updateFPKMPlot" :disabled="!currentGene || !canPlot" class="no-margin-top-controls" hide-details v-model="useLog2" label=" Use Log2"></v-switch>
                         </v-flex>
@@ -77,38 +70,108 @@ Vue.component('fpkm-plot', {
 `,
     data() {
         return {
-            fpkmPlotDataConfig: null,
-            gui: {
-                behaviors: [
-                    { id: 'DownloadSVG', enabled: 'none' },
-                    { id: 'ViewSource', enabled: 'none' },
-                    { id: 'HideGuide', enabled: 'none' },
-                    { id: 'ShowGuide', enabled: 'none' }
-                ],
-                watermark: {
-                    position: "br" //br (default), bl, tr, tl
-                },
-                cividisColors: {
-                    blue100: "#00204d",
-                    blue90: "#00306f",
-                    blue75: "#38486b",
-                    brown50: "#a39a76",
-                    yellow25: "#e4cf5b",
-                    yellow5: "#f9e04a"
-                }, 
-            },
+            cividisColors: {
+                blue100: "#00204d",
+                blue90: "#00306f",
+                blue75: "#38486b",
+                brown50: "#a39a76",
+                yellow25: "#e4cf5b",
+                yellow5: "#f9e04a"
+            }, 
             currentGene: null,
             hardCodedItems: [{name: "CRLF2", value: "CRLF2"},
                 {name: "BCL2", value: "BCL2"},
                 {name: "BCL6", value: "BCL6"},
                 {name: "MYC", value: "MYC"},
             ],
+            plotlyConfig: {
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['sendDataToCloud', 'editInChartStudio', 'select2d',
+                'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian',
+                'toggleSpikelines', 'autoScale2d'],
+                responsive: true
+            },
             items: [],
             search: null,
             showOtherPlots: false,
             loading: false,
             currentOncotreeCode: null,
-            useLog2: true
+            useLog2: true,
+            openedOnce: false,
+            oncotreeAMLCodes: ["AML",
+            "AMLNOS",
+            "AMKL",
+            "AMML",
+            "APMF",
+            "AWM",
+            "AMOL",
+            "PERL",
+            "ABL",
+            "AM",
+            "AMLMD",
+            "TMN",
+            "TAML",
+            "TMDS",
+            "MPRDS",
+            "TAM",
+            "MLADS",
+            "AMLMRC",
+            "MS",
+            "AMLRGA",
+            "AMLGATA2MECOM",
+            "AMLBCRABL1",
+            "AMLCBFBMYH11",
+            "AMLRBM15MKL1",
+            "AMLRUNX1",
+            "AMLMLLT3KMT2A",
+            "AMLDEKNUP214",
+            "AMLNPM1",
+            "AMLRUNX1RUNX1T1",
+            "AMLCEBPA",
+            "APLPMLRARA"],
+            oncotreeBLLCodes: ["BLL",
+            "BLLRGA",
+            "BLLBCRABL1L",
+            "BLLKMT2A",
+            "BLLTCF3PBX1",
+            "BLLIL3IGH",
+            "BLLIAMP21",
+            "BLLHYPER",
+            "BLLHYPO",
+            "BLLBCRABL1",
+            "BLLETV6RUNX1",
+            "BLLNOS",
+            "AMLNOS",
+            "AMKL",
+            "AMML",
+            "APMF",
+            "AWM",
+            "AMOL",
+            "PERL",
+            "ABL",
+            "AM",
+            "AMLMD",
+            "TMN",
+            "TAML",
+            "TMDS",
+            "MPRDS",
+            "TAM",
+            "MLADS",
+            "AMLMRC",
+            "MS",
+            "AMLRGA",
+            "AMLGATA2MECOM",
+            "AMLBCRABL1",
+            "AMLCBFBMYH11",
+            "AMLRBM15MKL1",
+            "AMLRUNX1",
+            "AMLMLLT3KMT2A",
+            "AMLDEKNUP214",
+            "AMLNPM1",
+            "AMLRUNX1RUNX1T1",
+            "AMLCEBPA",
+            "APLPMLRARA"]
 
         }
 
@@ -147,7 +210,7 @@ Vue.component('fpkm-plot', {
             else {
                 caseString += " case";
             }
-            return "FPKM from " + this.getTissueFromOncotreeCode(code) +" tissue<br/> on gene " + this.getCurrentGeneName() + " (" + caseString + ")";
+            return "FPKM from " + this.getTissueFromOncotreeCode(code) +" tissue<br> on gene " + this.getCurrentGeneName() + " (" + caseString + ")";
         },
         updateFPKMPlot() {
             if (!this.currentGene) {
@@ -166,58 +229,58 @@ Vue.component('fpkm-plot', {
                     if (response.data.isAllowed) {
                         var chartData = response.data;
                         this.currentOncotreeCode = chartData.oncotreeCode;
-                        if (this.fpkmPlotDataConfig) {
-                            this.refreshPlot(chartData);
+                        var allDataTrace = {
+                            y: chartData.boxData,
+                            type: 'box',
+                              name: "All Cases",
+                              marker: {
+                                  color: this.cividisColors.brown50
+                              },
+                              
+                          };
+                        var currentCaseTrace = {
+                            y: [chartData.currentCaseData],
+                            x: ["All Cases"],
+                            name: "Current Case",
+                            mode: "markers",
+                            type: "scatter",
+                            text: [chartData.currentCaseLabel],
+                            marker: {
+                                color: this.cividisColors.blue100
+                            },
+                            hovertemplate: "%{text}: %{y}"
+                        }  
+                        var outliersTrace = {
+                            y: chartData.outliersData,
+                            x: chartData.outliersData.map(i => "All Cases"),
+                            name: "Outliers",
+                            mode: "markers",
+                            type: "scatter",
+                            text: chartData.outliersLabels,
+                            marker: {
+                                color: this.cividisColors.brown50
+                            },
+                            hovertemplate: "%{text}: %{y}"
                         }
-                        else {
-                            this.fpkmPlotDataConfig = {
-                                gui: this.gui,
-                                graphset: [
-                                    {
-                                        "type":"mixed",
-                                        "title":{
-                                        //   "text":"FPKM for cases diagnosed with " + chartData.oncotreeCode +"<br/> on gene " + this.getCurrentGeneName()
-                                        //   + "<br/>(Demo only, not real data)",
-                                        "text": this.createPlotTitle(chartData.oncotreeCode, chartData.nbOfCases)
-                                        },
-                                        plotarea: {
-                                            marginTop: "100px",
-                                            // backgroundImage: webAppRoot + "/resources/images/draft-watermark.png",
-                                            // backgroundFit: "xy"
-                                        }, 
-                                        scaleX: {
-                                          "values": "-0.5:0.5:1",
-                                          "visible": false,
-                                          label: { text:  "Tissue: " + this.getTissueFromOncotreeCode(chartData.oncotreeCode) }
-                                        },
-                                        scaleY: {
-                                            maxValue: chartData.maxValue,
-                                            // minValue: 0,
-                                            // progression: "log",
-                                            // 'log-base': 2,
-                                            zooming: true,
-                                            label: { text:  this.getCurrentGeneName() + ": FPKM" + (this.useLog2 ? " (log2)": "") }
-                                        },
-                                        legend: {
-                                            offsetY: "90px"
-                                        },
-                                        scrollY: {
-
-                                        },
-                                        "series":this.createAllSeries(chartData)
-                                    }
-                                ]
-                            };
-                            this.$nextTick(() => {
-                                zingchart.render({
-                                    id: "fpkmPlot",
-                                    data: this.fpkmPlotDataConfig,
-                                    height: "60%",
-                                    // output: 'canvas'
-                                });
-    
+                        var data = [allDataTrace, currentCaseTrace, outliersTrace];
+                        var layout = {
+                            title: this.createPlotTitle(chartData.oncotreeCode, chartData.nbOfCases),
+                            yaxis: {
+                                title: this.getCurrentGeneName() + ": FPKM" + (this.useLog2 ? " (log2)": ""),
+                                zeroline: false,
+                                range: [chartData.min, chartData.max],
+                            },
+                            xaxis: {
+                                showticklabels: false,
+                            },
+                            hovermode: 'closest',
+                            font: {
+                                family: 'Roboto,sans-serif',
+                            }
+                        }
+                        this.$nextTick(() => {
+                            Plotly.newPlot('fpkmPlot', data, layout, this.plotlyConfig);
                             });
-                        }
                     }
                     else {
                         this.handleDialogs(response.data, this.updateFPKMPlot);
@@ -249,153 +312,6 @@ Vue.component('fpkm-plot', {
                 series.push(currentCase);
             }
             return series;
-        },
-        createScatterSeries(chartData) {
-            if (chartData.scatterSerie) {
-                return {
-                    type: "scatter",
-                    "data-labels": chartData.scatterSerie["data-labels"],
-                    "marker": {
-                        "background-color": this.gui.cividisColors.brown50
-                    },
-                    values: chartData.scatterSerie.values,
-                      "tooltip": {
-                        "text": "%data-labels: %v",
-                        "background-color": this.gui.cividisColors.brown50,
-                        alpha: 0.75
-                    }
-                  };
-            }
-            return null;
-        },
-        createOutliersSeries(chartData) {
-            if (chartData.outliersSerie) {
-                return {
-                    type: "scatter",
-                    text: chartData.outliersSerie.text,
-                    "data-labels": chartData.outliersSerie["data-labels"],
-                    "marker": {
-                        "background-color": this.gui.cividisColors.brown50
-                    },
-                    values: chartData.outliersSerie.values,
-                      "tooltip": {
-                        "text": "%data-labels: %v",
-                        "background-color": this.gui.cividisColors.brown50,
-                        alpha: 0.75
-                    },
-                    "legend-marker": {
-                        "background-color": this.gui.cividisColors.brown50,
-                        type: "circle",
-                        size: 5
-                    }
-                  };
-            }
-            return null;
-        },
-        createCurrentCaseSeries(chartData) {
-            if (chartData.currentCaseSerie) {
-                return {
-                    type: "scatter",
-                    text: chartData.currentCaseSerie.text,
-                    "data-labels": chartData.currentCaseSerie["data-labels"],
-                    "marker": {
-                        "background-color": this.gui.cividisColors.blue100
-                    },
-                    values: chartData.currentCaseSerie.values,
-                    "tooltip": {
-                        "text": "%data-labels: %v",
-                        "background-color": this.gui.cividisColors.blue100,
-                        alpha: 0.75
-                    },
-                    "legend-marker": {
-                        "background-color": this.gui.cividisColors.blue100,
-                        type: "circle",
-                        size: 5
-                    }
-                }
-            } 
-              return null;
-        },
-        createBoxPlotSeries(chartData) {
-            var series = [];
-            if (chartData.stockSerie) {
-                series.push({
-                type: "stock",
-                text: chartData.stockSerie.text,
-                backgroundColor: "none",
-                "line-color": this.gui.cividisColors.brown50,
-                "border-color": this.gui.cividisColors.brown50,
-                "border-width": 2,
-                "line-width": 2,
-                "values":[
-                  //[Q1, Max, Min, Q3]
-                  [0,chartData.stockSerie.values]
-                ],
-                "tooltip": {
-                  "text": chartData.boxPlotTooltip,
-                  "background-color": this.gui.cividisColors.brown50,
-                  alpha: 0.75
-                },
-                "legend-marker": {
-                    visible: false
-                },
-                "legend-item": {
-                    visible: false
-                }
-              });
-            }
-            if (chartData.medianSerie) {
-                series.push({
-                //median
-                type: "line",
-                text: chartData.medianSerie.text,
-                marker: {
-                    "visible": false
-                },
-                values: chartData.medianSerie.values,
-                "line-color": this.gui.cividisColors.brown50,
-                "line-width": 2,
-                //hardcoded tooltip. Need to create it on back-end
-                "tooltip": { 
-                    "text": chartData.boxPlotTooltip,
-                    "background-color": this.gui.cividisColors.brown50,
-                    alpha: 0.75
-                },
-                "legend-marker": {
-                    visible: false
-                },
-                "legend-item": {
-                    visible: false
-                }
-                });
-            }
-            return (series.length > 0) ? series : null;
-        },
-        refreshPlot(chartData) {
-            zingchart.exec('fpkmPlot', 'setseriesdata', {
-                data : this.createAllSeries(chartData)
-            });
-            zingchart.exec('fpkmPlot', 'modify', {
-                data: {
-                    title: {
-                        "text": this.createPlotTitle(chartData.oncotreeCode, chartData.nbOfCases)
-                    },
-                    scaleY: {
-                        // minValue: 0,
-                        maxValue: chartData.maxValue,
-                        // progression: "log",
-                        // 'log-base': 2,
-                        zooming: true,
-                        label: { text:  this.getCurrentGeneName() + ": FPKM" + (this.useLog2 ? " (log2)": "") }
-                    },
-                    scaleX: {
-                        label: { text:  "Tissue: " + this.getTissueFromOncotreeCode(chartData.oncotreeCode) }
-                    }
-                }
-            });
-            zingchart.exec('fpkmPlot', 'viewall', {
-
-            });
         },
         searchGene(value) {
             if (!value || value.length < 3) {
@@ -447,21 +363,27 @@ Vue.component('fpkm-plot', {
             }
             this.items.sort((a,b) => { return this.geneItemCompare(a,b)});
         },
-        zoomIn() {
-            zingchart.exec('fpkmPlot', 'zoomin', {
-                zoomy: true
-            });
-        },
-        zoomOut() {
-            zingchart.exec('fpkmPlot', 'zoomout', {
-                zoomy: true
-            });
+        loadDefaultFPKMPlot() {
+            if (this.openedOnce) {
+                return;
+            }
+            if (this.oncotreeAMLCodes.indexOf(this.oncotreeCode) > -1
+            || this.oncotreeBLLCodes.indexOf(this.oncotreeCode) > -1) {
+                this.currentGene = {"name":"CRLF2","value":"CRLF2"};
+                this.openedOnce = true;
+                this.$nextTick(() => {
+                    this.updateFPKMPlot();
+                    });
+            }
         }
     },
     computed: {
         webAppRoot() {
             return webAppRoot;
         }
+    },
+    mounted: function () {
+        this.loadDefaultFPKMPlot();
     },
     created() {
         this.populateItems();
