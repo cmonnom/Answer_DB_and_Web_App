@@ -78,11 +78,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 
 <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.2/js/msal.js"></script>
 
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
-<script src="https://unpkg.com/vue-chartjs/dist/vue-chartjs.min.js"></script> -->
 
-<!-- <script async src="https://cdn.zingchart.com/2.8.5/zingchart.min.js" integrity="sha384-oWBkRCZg0u6cwzWuI23vlFiZ+cHp/4/Kfsxwoad5I22glKztML64zepK4raEOsRy" crossorigin="anonymous"></script> -->
-<!-- <script async src="${pageContext.request.contextPath}/resources/js/zingchart.min.js"></script> -->
 <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>

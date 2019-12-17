@@ -1909,7 +1909,6 @@ const OpenCase2 = {
             this.urlQuery.variantId = null;
             this.urlQuery.variantType = null;
             this.urlQuery.edit = false; //also close edit but it should have been done earlier
-            zingchart.exec("cnvPlotDetails", 'destroy'); //kill the chart if variant details is closed
             this.$refs.variantDetailsDialog.resetCNVChart();
         },
         handleTabChanged(newValue, oldValue) {
@@ -2090,7 +2089,6 @@ const OpenCase2 = {
         },
         updateEditAnnotationBreadcrumbs(visible) {
             this.urlQuery.edit = visible;
-            zingchart.exec("cnvPlotEdit", 'destroy'); //kill the chart if edit annotation is closed
             // console.log("killing cnv plot");
             this.updateRoute();
         },
