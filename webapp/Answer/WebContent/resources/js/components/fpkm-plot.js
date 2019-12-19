@@ -292,27 +292,6 @@ Vue.component('fpkm-plot', {
                     console.log(error);
                 });
         },
-        createAllSeries(chartData) {
-            var series = [];
-            var scatter = this.createScatterSeries(chartData);
-            var outlier = this.createOutliersSeries(chartData);
-            var currentCase = this.createCurrentCaseSeries(chartData);
-            var boxplot = this.createBoxPlotSeries(chartData);
-            if (scatter) {
-                series.push(scatter);
-            }
-            if (outlier) {
-                series.push(outlier);
-            }
-            if (boxplot) {
-                series.push(boxplot[0]);
-                series.push(boxplot[1]);
-            }
-            if (currentCase) {
-                series.push(currentCase);
-            }
-            return series;
-        },
         searchGene(value) {
             if (!value || value.length < 3) {
                 return;

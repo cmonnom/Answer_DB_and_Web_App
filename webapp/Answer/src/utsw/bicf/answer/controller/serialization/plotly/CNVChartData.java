@@ -1,6 +1,7 @@
 package utsw.bicf.answer.controller.serialization.plotly;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +52,7 @@ public class CNVChartData extends PlotlyChartData {
 	List<Trace> genesSelectedOutliers = new ArrayList<Trace>();
 	
 	Trace genes = new Trace();
+	List<String> geneLabels = new ArrayList<String>();
 	
 	public CNVChartData(List<CNSData> cnsData, List<CNRData> cnrData, List<String> selectedGenes) {
 		
@@ -195,6 +197,10 @@ public class CNVChartData extends PlotlyChartData {
 			this.cnr2.addY(cnr.getLog2());
 			this.cnr2.addLabel("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 		}
+		//add fake outliers
+//			this.cnr2Outliers.addX(1000000000);
+//			this.cnr2Outliers.addY(CR_MAX);
+//			this.cnr2Outliers.addLabel("Gene: " + "CRAZY" + " Log2: " + 8.5);
 		
 		for (CNRData cnr : cnrOther) {
 			if (cnr.getLog2() > CR_MAX || cnr.getLog2() < CR_MIN) {
@@ -264,13 +270,20 @@ public class CNVChartData extends PlotlyChartData {
 	
 	private void getGeneBoudaries(List<CNRData> cnrData) {
 		Map<String, List<CNRData>> cnrByGene = cnrData.stream().collect(Collectors.groupingBy(c -> c.getGene()));
+		List<Object[]> genesToSort = new ArrayList<Object[]>();
 		for (String gene : cnrByGene.keySet()) {
 			List<CNRData> dataPoints = cnrByGene.get(gene);
 			Long start = dataPoints.stream().map(d -> d.getStart()).sorted().findFirst().get();
-			List<Long> ends = dataPoints.stream().map(d -> d.getEnd()).sorted().collect(Collectors.toList());
-			Long end = ends.get(ends.size() - 1);
-			this.genes.addStart(start - 50); //expand gene's edges a bit
-			this.genes.addEnd(end + 50);
+			Long end = dataPoints.stream().map(d -> d.getEnd()).sorted(Comparator.reverseOrder()).findFirst().get();
+			genesToSort.add(new Object[]{start - 50, end + 50, gene});
+//			this.genes.addStart(start - 50); //expand gene's edges a bit
+//			this.genes.addEnd(end + 50);
+		}
+		genesToSort = genesToSort.stream().sorted(Comparator.comparing(se -> (long)se[0])).collect(Collectors.toList());
+		for (Object[] startEnd : genesToSort) {
+			this.genes.addStart((long) startEnd[0] - 50);
+			this.genes.addEnd((long) startEnd[1] + 50);
+			this.geneLabels.add((String) startEnd[2]);
 		}
 	}
 
@@ -353,6 +366,14 @@ public class CNVChartData extends PlotlyChartData {
 
 	public void setGenes(Trace genes) {
 		this.genes = genes;
+	}
+
+	public List<String> getGeneLabels() {
+		return geneLabels;
+	}
+
+	public void setGeneLabels(List<String> geneLabels) {
+		this.geneLabels = geneLabels;
 	}
 
 }

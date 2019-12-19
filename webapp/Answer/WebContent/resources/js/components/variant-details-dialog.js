@@ -1680,7 +1680,7 @@ Vue.component('variant-details-dialog', {
                 this.$refs.annotationDialog.startUserAnnotations();
             }
             else if (this.isCNV() && this.$refs.cnvAnnotationDialog) {
-                this.$refs.cnvAnnotationDialog.cnvGeneItems = this.currentItem.genes;
+                this.$refs.cnvAnnotationDialog.cnvGeneItems = this.currentItem.genes.split(" ");
                 this.$refs.cnvAnnotationDialog.startUserAnnotations();
             }
             else if (this.isTranslocation() && this.$refs.translocationAnnotationDialog) {
