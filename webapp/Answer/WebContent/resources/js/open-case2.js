@@ -72,7 +72,7 @@ const OpenCase2 = {
     <!-- variant details dialog -->
         <variant-details-dialog :colors="colors" ref="variantDetailsDialog" 
         :isSaveNeededOverall="saveAllNeeded"
-        :saveTooltip="saveTooltip"
+        :saveTooltip="createSaveTooltip()"
         :caseName="caseName"
         :caseTypeIcon="caseTypeIcon"
         :caseType="caseType"
@@ -376,7 +376,7 @@ const OpenCase2 = {
         <v-btn flat icon @click="handleSaveAll()" slot="activator" :disabled="!isSaveNeededBadgeVisible()">
             <v-icon>save</v-icon>
         </v-btn>
-        <span v-html="saveTooltip"></span>
+        <span v-html="createSaveTooltip()"></span>
     </v-tooltip>
     </v-badge>
     <v-progress-linear class="ml-4 mr-4" :slot="loadingVariantDetails ? 'extension' : ''" v-show="(!caseName || loadingVariantDetails) && !splashDialog"
@@ -867,7 +867,7 @@ const OpenCase2 = {
                 this.saveAllNeeded = this.annotationSelectionUnSaved 
                 || this.variantUnSaved 
                 || this.patientDetailsUnSaved 
-                || ((this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.variantDetailsPanel) ? this.$refs.variantDetailsDialog.variantDetailsPanel.variantDetailsUnSaved : false)
+                || ((this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel) ? this.$refs.variantDetailsDialog.$refs.variantDetailsPanel.variantDetailsUnSaved : false)
                 || this.isCaseAnnotationChanged();
             }
             return this.saveAllNeeded && !this.readonly;
@@ -892,7 +892,7 @@ const OpenCase2 = {
             if (this.isCaseAnnotationChanged()) {
                 tooltip.push("- Case Notes");
             }
-            if (this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.variantDetailsPanel && this.$refs.variantDetailsDialog.variantDetailsPanel.variantDetailsUnSaved) {
+            if (this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel.variantDetailsUnSaved) {
                 tooltip.push("- Variant Details");
             }
             if (tooltip.length > 1) {
@@ -1055,7 +1055,6 @@ const OpenCase2 = {
                         this.extractPatientDetailsInfo(response.data.caseName);
                         this.caseId = response.data.caseId;
                         this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true&primary=true";
-                        response.data.tumorVcf = "delete this";
                         this.mutationalSignatureUrl = response.data.tumorVcf ? webAppRoot + "/mutationalSignatureViewer?caseId=" + this.caseId : null;
                         this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
                         this.addOtherAnnotatorsValues(response.data.snpIndelVariantSummary);
@@ -1965,7 +1964,7 @@ const OpenCase2 = {
                 this.createAutoSaveInterval();
             }
             this.waitingForAjaxCount = 0;
-            if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
+            if (this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel.variantDetailsUnSaved) {
                 this.waitingForAjaxCount++;
             }
             if (this.annotationSelectionUnSaved) {
@@ -1983,11 +1982,20 @@ const OpenCase2 = {
 
             if (this.waitingForAjaxCount > 0) {
                 this.waitingForAjaxActive = true;
-                if (this.$refs.variantDetailsPanel && this.$refs.variantDetailsPanel.variantDetailsUnSaved) {
-                    this.saveVariant(true);
+                if (this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel.variantDetailsUnSaved) {
+                    this.$refs.variantDetailsDialog.saveVariant(true);
+                    //TODO change into a promise
+                    setTimeout(() => {
+                        this.waitingForAjaxCount--;
+                    }, 2000);
+                  
                 }
                 if (this.annotationSelectionUnSaved) {
                     this.$refs.variantDetailsDialog.saveAnnotationSelection(true);
+                    //TODO change into a promise
+                    setTimeout(() => {
+                        this.waitingForAjaxCount--;
+                    }, 2000);
                 }
                 if (this.variantUnSaved) {
                     this.saveSelection(false, true)
@@ -2172,7 +2180,10 @@ const OpenCase2 = {
         closeCopyDialog() {
             this.copyDialogVisible = false;
             this.toggleHTMLOverlay();
-        }
+        },
+        openLink(link) {
+            window.open(link, "_blank", 'noopener');
+        },
     },
     mounted() {
         this.mountComponent();
@@ -2187,9 +2198,9 @@ const OpenCase2 = {
         webAppRoot() {
             return webAppRoot;
         },
-        saveTooltip() {
-            return this.createSaveTooltip();
-        }
+        // saveTooltip() {
+        //     return this.createSaveTooltip();
+        // }
     },
     destroyed: function () {
         clearInterval(this.autoSaveInterval);

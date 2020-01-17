@@ -196,7 +196,6 @@ const Home = {
 
     
     </v-container>
-    <clippy v-if="showClippy()"></clippy>
 </div>`,
     data() {
         return {
@@ -525,24 +524,6 @@ const Home = {
         isDefaultTab(tabTitle) {
             return tabTitle == defaultHomeTab;
         },
-        showClippy() {
-            if (userFullName == "Guillaume Jimenez"
-            || userFullName == "Brandi Cantarel"
-            || userFullName == "Benjamin Wakeland"
-            || userFullName == "Jeffrey Gagan"
-            || userFullName == "Erika Villa") {
-                var today = moment()
-                var start = moment("2019-10-04");
-                var end = moment("2019-10-11");
-                var activateClippy = today.isBetween(start, end);
-                if (!activateClippy) {
-                    clippy = {}; //no need to keep it in memory
-                }
-                return activateClippy;
-            }
-            clippy = {}; //no need to keep it in memory
-            return false;
-        }
     },
     mounted: function () {
         this.getAllUsers();

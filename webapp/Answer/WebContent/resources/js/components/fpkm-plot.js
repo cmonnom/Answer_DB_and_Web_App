@@ -268,7 +268,7 @@ Vue.component('fpkm-plot', {
                             yaxis: {
                                 title: this.getCurrentGeneName() + ": FPKM" + (this.useLog2 ? " (log2)": ""),
                                 zeroline: false,
-                                range: [chartData.min, chartData.max],
+                                range: [0, chartData.max],
                             },
                             xaxis: {
                                 showticklabels: false,

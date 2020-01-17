@@ -97,6 +97,10 @@ Vue.component('main-menu', {
 		</v-list-tile>
 		</v-slide-x-transition>
 
+				<v-btn icon v-if="showXmas()" flat @click="activateXMas">
+					<v-icon color="#c54245">mdi-snowman</v-icon>
+				</v-btn>
+
 	</v-list>
 </v-navigation-drawer>`,
 	data() {
@@ -361,7 +365,25 @@ Vue.component('main-menu', {
 					menuItem.activeColor = this.getRouteColor(menuItem);
 				}
 			}
-		}
+		},
+		//remove after Xmas
+		activateXMas() {
+			// this.$vuetify.theme.primary = "#c54245";
+			// document.getElementById("main-app").style.background = "#0F8A5F";
+			// document.getElementsByClassName("v-navigation-drawer v-navigation-drawer--fixed v-navigation-drawer--open theme--light")[0].style.background = "#0F8A5F";
+			// makeItSnow();
+		},
+		showXmas() {
+			return false;
+            if (userFullName == "Guillaume Jimenez"
+            || userFullName == "Brandi Cantarel"
+            || userFullName == "Benjamin Wakeland"
+            || userFullName == "Jeffrey Gagan"
+            || userFullName == "Erika Villa") {
+                return true;
+            }
+            return false;
+        }
 	},
 	mounted() {
 		// this.getUserLeaderBoardInfo();

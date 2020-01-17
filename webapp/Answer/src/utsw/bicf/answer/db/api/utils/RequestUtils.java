@@ -23,17 +23,21 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -56,7 +60,6 @@ import utsw.bicf.answer.model.extmapping.CNVPlotDataRaw;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.ExistingReports;
-import utsw.bicf.answer.model.extmapping.FPKMData;
 import utsw.bicf.answer.model.extmapping.FPKMPerCaseData;
 import utsw.bicf.answer.model.extmapping.ITD;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
@@ -1510,6 +1513,44 @@ public class RequestUtils {
 		this.closeGetRequest();
 		return null;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public Map<String, List<Report>> getAllExistingReports(AjaxResponse ajaxResponse) throws JsonParseException, JsonMappingException, UnsupportedOperationException, IOException, URISyntaxException {
+		Map<String, List<Report>> reportsPerCase = null;
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("allreports"); 
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			if (mongoDBResponse.getSuccess()) {
+				ajaxResponse.setSuccess(true);
+				reportsPerCase = mapper.convertValue(mongoDBResponse.getPayload(), new TypeReference<Map<String, List<Report>>>() {});
+//				for (String caseId: reportsPerCase.keySet()) {
+//					
+//					List<Report> reports = mapper.convertValue(reportsPerCase.get(caseId), ExistingReports.class);
+//					List<Report> reportsCast = new ArrayList<Report>();
+//					for (Report report : reports) {
+//						Report reportCast = new Report();
+//					}
+//				}
+				
+			}
+			this.closeGetRequest();
+		}
+		else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		this.closeGetRequest();
+		return reportsPerCase;
+	}
 
 	public void finalizeReport(AjaxResponse ajaxResponse, Report reportDetails) throws URISyntaxException, ClientProtocolException, IOException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
@@ -1534,7 +1575,7 @@ public class RequestUtils {
 		this.closePutRequest();
 	}
 	
-	public void markAsSentToEpic(AjaxResponse ajaxResponse, String caseId) throws URISyntaxException, ClientProtocolException, IOException {
+	public void markAsSentToEpic(AjaxResponse ajaxResponse, String caseId, QcAPIAuthentication qcAPI) throws URISyntaxException, ClientProtocolException, IOException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/"); 
 		sbUrl.append(caseId);
@@ -1548,7 +1589,29 @@ public class RequestUtils {
 
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
-			ajaxResponse.setSuccess(true);
+			//update NuCLIA
+			if (qcAPI != null && qcAPI.getEpic() != null && !qcAPI.getEpic().equals("")) {
+				requestPost = new HttpPost(qcAPI.getEpic());
+				 List<NameValuePair> params = new ArrayList<NameValuePair>();
+				 params.add(new BasicNameValuePair("orderId", caseId));
+				 params.add(new BasicNameValuePair("token", qcAPI.getToken()));
+				StringEntity entity = new UrlEncodedFormEntity(params);
+				requestPost.setEntity(entity);
+//				requestPost.setHeader("Accept", "application/json");
+//				requestPost.setHeader("Content-type", "application/json");
+				response = client.execute(requestPost);
+				statusCode = response.getStatusLine().getStatusCode();
+				if (statusCode == HttpStatus.SC_OK) {
+					ajaxResponse.setSuccess(true);
+				}
+				else {
+					ajaxResponse.setSuccess(false);
+					ajaxResponse.setMessage("Something went wrong on the QC side");
+				}
+			}
+			else { //skip NuCLIA update if not available
+				ajaxResponse.setSuccess(true);
+			}
 		}
 		else {
 			ajaxResponse.setSuccess(false);

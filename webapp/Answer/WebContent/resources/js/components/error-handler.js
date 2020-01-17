@@ -25,7 +25,12 @@ Vue.component('error-handler', {
     },
     methods: {
         handleError(args) {
-            this.errorMessage = args[1].message ? args[1].message : args[1];
+            if (args == null || args[1] == null) {
+                this.errorMessage = "Something went wrong";
+            }
+            else {
+                this.errorMessage = args[1].message ? args[1].message : args[1];
+            }
             this.showDialog = true;
         },
         handleLoginNeeded(args) {

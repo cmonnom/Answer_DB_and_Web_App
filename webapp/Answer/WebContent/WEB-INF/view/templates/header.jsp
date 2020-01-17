@@ -44,7 +44,6 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 
 <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="${pageContext.request.contextPath}/resources/css/main.css?timestamp=${timestamp}">
 <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="${pageContext.request.contextPath}/resources/css/goodies.css?timestamp=${timestamp}">
-<link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="${pageContext.request.contextPath}/resources/css/clippy.css?timestamp=${timestamp}">
 
 <!-- <link rel="shortcut icon" type="image/x-icon" href="https://www.utsouthwestern.net/favicon.ico" /> -->
 <link rel="shortcut icon" type="image/x-icon" href="${pageContext.request.contextPath}/resources/images/answer-logo-icon-xsmall.png" />

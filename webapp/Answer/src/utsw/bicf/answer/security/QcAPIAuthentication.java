@@ -5,6 +5,7 @@ public class QcAPIAuthentication {
 	String url;
 //	String api;
 	String token;
+	String epic;
 	
 	public String getUrl() {
 		return url;
@@ -23,6 +24,12 @@ public class QcAPIAuthentication {
 	}
 	public void setToken(String token) {
 		this.token = token;
+	}
+	public String getEpic() {
+		return epic;
+	}
+	public void setEpic(String epic) {
+		this.epic = epic;
 	}
 	
 

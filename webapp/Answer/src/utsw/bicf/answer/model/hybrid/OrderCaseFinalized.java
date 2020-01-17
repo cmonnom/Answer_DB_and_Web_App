@@ -1,18 +1,19 @@
 package utsw.bicf.answer.model.hybrid;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
+
+import utsw.bicf.answer.aop.AOPAspect;
 import utsw.bicf.answer.controller.serialization.Button;
 import utsw.bicf.answer.controller.serialization.FlagValue;
 import utsw.bicf.answer.controller.serialization.VuetifyIcon;
 import utsw.bicf.answer.dao.ModelDAO;
-import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
@@ -33,10 +34,12 @@ public class OrderCaseFinalized {
 	String reportId;
 	String oncotreeDiagnosis;
 	
+//	private static final Logger logger = Logger.getLogger(AOPAspect.class);
+	
 	List<Button> buttons = new ArrayList<Button>();
 //	FlagValue progressFlags;
 	
-	public OrderCaseFinalized(ModelDAO modelDAO, OrderCase orderCase, List<User> users, User currentUser) {
+	public OrderCaseFinalized(ModelDAO modelDAO, OrderCase orderCase, List<User> users, User currentUser, Map<String, List<Report>> reportsPerCase) {
 		this.epicOrderNumber = orderCase.getEpicOrderNumber();
 		this.epicOrderDate =orderCase.getEpicOrderDate();
 		this.oncotreeDiagnosis = orderCase.getOncotreeDiagnosis();
@@ -45,6 +48,7 @@ public class OrderCaseFinalized {
 		this.dateReceived = orderCase.getReceivedDate();
 		this.assignedToIds = orderCase.getAssignedTo();
 		this.patientName = orderCase.getPatientName();
+//		long start = System.currentTimeMillis();
 		List<String> userNames = new ArrayList<String>();
 		for (String userId : orderCase.getAssignedTo()) {
 			for (User user : users) {
@@ -58,16 +62,23 @@ public class OrderCaseFinalized {
 				}
 			}
 		}
+//		long end = System.currentTimeMillis();
+//		logger.info("Time to build userNames: " + (end - start) + "ms");
 		this.assignedTo = userNames.stream().collect(Collectors.joining("<br/>"));
 //		if (currentUser.getIndividualPermission().getCanAssign()) {
 //			buttons.add(new Button("assignment_ind", "assignToUser", "Assign To", "info"));
 //		}
+//		start = System.currentTimeMillis();
 		if (currentUser.getIndividualPermission().getCanView() 
 				&& CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
-			RequestUtils utils = new RequestUtils(modelDAO);
+//			RequestUtils utils = new RequestUtils(modelDAO);
 			List<Report> allReports;
 			try {
-				allReports = utils.getExistingReports(caseId);
+//				allReports = utils.getExistingReports(caseId);
+				allReports = reportsPerCase.get(caseId).stream().map(i -> (Report) i ).collect(Collectors.toList());
+//				end = System.currentTimeMillis();
+//				logger.info("Time to fetch all report for case: " + caseId + " "  + (end - start) + "ms");
+//				start = System.currentTimeMillis();
 				Report lastFinalized = null;
 				if (allReports != null) {
 					for (Report r : allReports) {
@@ -85,6 +96,9 @@ public class OrderCaseFinalized {
 						}
 					}
 				}
+//				end = System.currentTimeMillis();
+//				logger.info("Time to fetch finalized report for case: " + caseId + " "  + (end - start) + "ms");
+//				start = System.currentTimeMillis();
 				if (lastFinalized != null) {
 					this.reportId = lastFinalized.getMongoDBId().getOid();
 					buttons.add(new Button("picture_as_pdf", "downloadPDFReport", "Download Finalized Report", "info"));
@@ -93,7 +107,7 @@ public class OrderCaseFinalized {
 						buttons.add(new Button("mdi-check", "sent-to-epic", "Report was sent to Epic", "info"));
 					}
 				}
-			} catch (UnsupportedOperationException | IOException | URISyntaxException e) {
+			} catch (UnsupportedOperationException e) {
 				e.printStackTrace();
 			}
 		}

@@ -35,6 +35,7 @@ Vue.component('variant-details', {
     - Click on the legend to show/hide series<br/>
     - Mouse over a data point to get more information (tooltip)<br/>
     - You can highlight specific genes by clicking on the list in the CNV Variant Details panel.</span>
+    <img width="100%" :src="getCNVPlotImage()"></img>
     </v-card-text>
     </v-card>
     </v-dialog>
@@ -372,7 +373,14 @@ Vue.component('variant-details', {
                 modeBarButtonsToRemove: ['sendDataToCloud', 'editInChartStudio', 'select2d',
                     'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian',
                     'toggleSpikelines', 'autoScale2d'],
-                responsive: true
+                responsive: true,
+                toImageButtonOptions: {
+                    format: 'png', // one of png, svg, jpeg, webp
+                    filename: 'cnv_plot',
+                    height: 600,
+                    width: 1600,
+                    scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
+                  }
             },
             cnvData: {},
             lastKMin: null,
@@ -496,51 +504,10 @@ Vue.component('variant-details', {
             this.variantDetailsUnSaved = true;
             // this.$emit("variant-details-changed");
         },
-        applySeriesStyle(series) {
-            series.forEach((serie, index) => {
-                if (serie.type == "scatter") {
-                    if (!serie.marker) {
-                        serie.marker = { backgroundColor: serie.color }
-                    }
-                    serie.hoverMarker = {
-                        size: 4,
-                        backgroundColor: this.cividisColors.blue90,
-                        alpha: 1
-                    }
-                }
-                else if (serie.type == "line") {
-                    // serie.marker = { backgroundColor: this.cividisColors.blue90, lineColor: this.cividisColors.blue90 }
-                    if (!serie.marker) {
-                        serie.marker = { backgroundColor: serie.color, lineColor: serie.color }
-                    }
-                    serie.lineColor = serie.color;
-                    serie.hoverMarker = {
-                        size: 6,
-                        backgroundColor: this.cividisColors.blue90,
-                        alpha: 1
-                    }
-                    // if (index != series.length - 1) {
-                    //     serie.legendItem = {
-                    //         visible:false // turn off legend item
-                    //     }
-                    // }
-                }
-            });
-        },
-        // getGenesSelected() {
-        //     let genesSelected = [];
-        //     if (!(this.currentVariant._id.$oid in this.genesSelectedPerVariantId)) {
-        //         this.genesSelectedPerVariantId[this.currentVariant._id.$oid] = genesSelected;
-        //     }
-        //     else {
-        //         genesSelected = this.genesSelectedPerVariantId[this.currentVariant._id.$oid];
-        //     }
-        //     return genesSelected;
-        // },
         updateGenesSelected() {
             this.genesSelected.length = 0;
         },
-        createScatterTrace(data, color) {
+        createScatterTrace(data, color, symbol, size) {
             return {
                 x: data.x,
                 y: data.y,
@@ -549,19 +516,22 @@ Vue.component('variant-details', {
                 type: "scattergl",
                 marker: {
                     color: color,
-                    opacity: 0.5,
-                    size: 4
+                    opacity: symbol ? 1 : 0.5,
+                    size: size ? size: 4,
+                    symbol: symbol ? symbol : "circle"
                 },
                 text: data.labels,
                 hovertemplate: "%{text}"
             }
+        },
+        getCNVPlotImage() {
+            return webAppRoot + '/resources/images/screenshots/cnv-plot-details.png';
         },
         createAChromGeneTrace(x, y, color, opacity) {
             return {
                 x: x,
                 y: y,
                 fill: 'tozeroy',
-                mode: 'none',
                 connectgap: false,
                 hoverinfo: 'skip',
                 name: "",
@@ -575,19 +545,19 @@ Vue.component('variant-details', {
                 showlegend: false,
             }
         },
-        createChromGeneTraces(start, end, color, opacity) {
+        createChromGeneTraces(start, end, color, opacity, minY, maxY) {
             let x = [];
             let yTop = [];
             let yBottom = [];
             for (let i = 0; i < start.length; i++) {
                 if (i % 2 == 0) {
                     x.push(start[i]);
-                    yTop.push(5);
-                    yBottom.push(-5);
+                    yTop.push(maxY);
+                    yBottom.push(minY);
 
                     x.push(end[i]);
-                    yTop.push(5);
-                    yBottom.push(-5);
+                    yTop.push(maxY);
+                    yBottom.push(minY);
 
                     x.push(null);
                     yTop.push(null);
@@ -630,15 +600,22 @@ Vue.component('variant-details', {
             })
                 .then(response => {
                     if (response.data.isAllowed) {
+                        var outlierSymbol = "triangle-up";
+                        var outlierSize = 8;
                         var cnr2Trace = this.createScatterTrace(response.data.cnr2, "#00204d");
                         var cnrOthersTrace = this.createScatterTrace(response.data.cnrOthers, "#a39a76");
-                        var cnr2OutliersTrace = this.createScatterTrace(response.data.cnr2Outliers, "#00204d");
-                        var cnrOthersOutliersTrace = this.createScatterTrace(response.data.cnrOtherOutliers, "#a39a76");
+                        var cnr2OutliersTrace = this.createScatterTrace(response.data.cnr2Outliers, "#00204d", outlierSymbol, outlierSize);
+                        var cnrOthersOutliersTrace = this.createScatterTrace(response.data.cnrOtherOutliers, "#a39a76", outlierSymbol, outlierSize);
 
                         var geneSelectedTraces = [];
                         for (var i = 0; i < response.data.genesSelected.length; i++) {
                             var trace = this.createScatterTrace(response.data.genesSelected[i], "#00204d");
                             geneSelectedTraces.push(trace);
+                        }
+                        var geneSelectedOutliersTraces = [];
+                        for (var i = 0; i < response.data.genesSelectedOutliers.length; i++) {
+                            var trace = this.createScatterTrace(response.data.genesSelected[i], "#00204d", outlierSymbol, outlierSize);
+                            geneSelectedOutliersTraces.push(trace);
                         }
 
                         var cnsTraces = [];
@@ -655,7 +632,8 @@ Vue.component('variant-details', {
                                 line: {
                                     color: '#f9e04a',
                                     width: 4
-                                }
+                                },
+                                showlegend: false,
                             }
                             cnsTraces.push(cnsTrace);
                         }
@@ -676,17 +654,19 @@ Vue.component('variant-details', {
                                 genesEndOdd.push(response.data.genes.end[i]);
                             }
                         }
+                        var minY = -5.2;
+                        var maxY = 5.2;
                         chrGenesTraces.push(...this.createChromGeneTraces(
-                            response.data.chr.start, response.data.chr.end, '#f9e04a', 0.4));
+                            response.data.chr.start, response.data.chr.end, '#f9e04a', 0.4, minY, maxY));
                         chrGenesTraces.push(...this.createChromGeneTraces(
-                            genesStartEven, genesEndEven, this.cividisColors.blue75, 0.25));
+                            genesStartEven, genesEndEven, this.cividisColors.blue75, 0.25, minY, maxY));
                         chrGenesTraces.push(...this.createChromGeneTraces(
-                            genesStartEven.slice(1), genesEndEven.slice(1), this.cividisColors.blue75, 0.25)); 
+                            genesStartEven.slice(1), genesEndEven.slice(1), this.cividisColors.blue75, 0.25, minY, maxY)); 
 
                         chrGenesTraces.push(...this.createChromGeneTraces(
-                            genesStartOdd, genesEndOdd, this.cividisColors.blue75, 0.4));
+                            genesStartOdd, genesEndOdd, this.cividisColors.blue75, 0.4, minY, maxY));
                         chrGenesTraces.push(...this.createChromGeneTraces(
-                            genesStartOdd.slice(1), genesEndOdd.slice(1), this.cividisColors.blue75, 0.1));
+                            genesStartOdd.slice(1), genesEndOdd.slice(1), this.cividisColors.blue75, 0.1, minY, maxY));
 
                         var chrLabelsAnnotations = [];
                         for (let i = 0; i < response.data.chr.labels.length; i++) {
@@ -734,7 +714,7 @@ Vue.component('variant-details', {
                             yaxis: {
                                 title: "Copy Ratio (log2)",
                                 zeroline: false,
-                                range: [-5, 5],
+                                range: [-5.2, 5.2],
                                 fixedrange: true,
                                 dtick: 1
                             },

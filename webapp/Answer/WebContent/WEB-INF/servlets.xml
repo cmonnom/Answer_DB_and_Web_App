@@ -97,6 +97,7 @@
 		<property name="url" value="${qc.data.url}" />
 <!-- 		<property name="api" value="${qc.api.url}" /> -->
 		<property name="token" value="${qc.token}" />
+		<property name="epic" value="${qc.api.epic}" />
 	</bean>
 	
 	<bean id="requestUtils" class="utsw.bicf.answer.clarity.api.utils.RequestUtils">

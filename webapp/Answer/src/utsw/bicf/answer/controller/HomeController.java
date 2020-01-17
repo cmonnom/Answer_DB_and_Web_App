@@ -3,6 +3,7 @@ package utsw.bicf.answer.controller;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
@@ -49,6 +50,7 @@ import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
 import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
+import utsw.bicf.answer.security.QcAPIAuthentication;
 
 @Controller
 @RequestMapping("/")
@@ -76,6 +78,10 @@ public class HomeController {
 	OtherProperties otherProps;
 	@Autowired
 	LoginDAO loginDAO;
+	@Autowired
+	QcAPIAuthentication qcAPI;
+	
+//	private static final Logger logger = Logger.getLogger(AOPAspect.class);
 
 	@RequestMapping("/home")
 	public String home(Model model, HttpSession session) throws IOException {
@@ -89,14 +95,16 @@ public class HomeController {
 	@ResponseBody
 	public String getWorklists(Model model, HttpSession session)
 			throws Exception {
-
+//		long start = System.currentTimeMillis();
 		User user = ControllerUtil.getSessionUser(session);
-		
+//		long end = System.currentTimeMillis();
+//		logger.info("Time to fetch user: " + (end - start) + "ms");
 		//send user to Ben's API to retrieve all active cases
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase[] cases = utils.getActiveCases();
 		List<OrderCase> caseList = new ArrayList<OrderCase>();
 		
+//		start = System.currentTimeMillis();
 		if (cases != null) {
 			List<User> users  = modelDAO.getAllUsers();
 			for (OrderCase c : cases) {
@@ -104,7 +112,10 @@ public class HomeController {
 					caseList.add(c);
 				}
 			}
+//			end = System.currentTimeMillis();
+//			logger.info("Time to build caseList: " + (end - start) + "ms");
 			//filter by assigned/user/available
+//			start = System.currentTimeMillis();
 			List<OrderCaseForUser> casesForUser = 
 					caseList.stream()
 					.filter(c -> c.getAssignedTo() != null && c.getAssignedTo().contains(user.getUserId().toString())
@@ -113,7 +124,9 @@ public class HomeController {
 							&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC))
 					.map(c -> new OrderCaseForUser(c, users, user))
 					.collect(Collectors.toList());
-			
+//			end = System.currentTimeMillis();
+//			logger.info("Time to build casesForUser: " + (end - start) + "ms");
+//			start = System.currentTimeMillis();
 			List<OrderCaseForUser> casesForUserCompleted = 
 					caseList.stream()
 					.filter(c -> c.getAssignedTo() != null && c.getAssignedTo().contains(user.getUserId().toString())
@@ -122,19 +135,33 @@ public class HomeController {
 									|| CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC)))
 					.map(c -> new OrderCaseForUser(c, users, user))
 					.collect(Collectors.toList());
-			
+//			end = System.currentTimeMillis();
+//			logger.info("Time to build casesForUserCompleted: " + (end - start) + "ms");
+//			start = System.currentTimeMillis();
 			List<OrderCaseAll> casesAll = 
 					caseList.stream()
 					.filter(c -> c.getActive() != null && c.getActive())
 					.map(c -> new OrderCaseAll(c, users, user))
 					.collect(Collectors.toList());
-			List<OrderCaseFinalized> casesFinalized = 
-					caseList.stream()
-					.filter(c -> CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
-							&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC)
-							&& c.getActive() != null && c.getActive())
-					.map(c -> new OrderCaseFinalized(modelDAO, c, users, user))
-					.collect(Collectors.toList());
+//			end = System.currentTimeMillis();
+//			logger.info("Time to build casesAll: " + (end - start) + "ms");
+//			start = System.currentTimeMillis();
+			
+			AjaxResponse ajaxResponse = new AjaxResponse();
+			Map<String, List<Report>> reportsPerCase = utils.getAllExistingReports(ajaxResponse);
+			List<OrderCaseFinalized> casesFinalized = new ArrayList<OrderCaseFinalized>();
+			if (reportsPerCase != null && ajaxResponse.getSuccess()) {
+				casesFinalized = 
+						caseList.stream()
+						.filter(c -> CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
+								&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC)
+								&& c.getActive() != null && c.getActive())
+						.map(c -> new OrderCaseFinalized(modelDAO, c, users, user, reportsPerCase))
+						.collect(Collectors.toList());
+			}
+//			end = System.currentTimeMillis();
+//			logger.info("Time to build casesFinalized: " + (end - start) + "ms");
+//			start = System.currentTimeMillis();
 //			List<OrderCaseArchived> casesArchived = 
 //					caseList.stream()
 //					.filter(c -> !c.getActive())
@@ -158,6 +185,9 @@ public class HomeController {
 			
 			AllOrderCasesSummary summary = new AllOrderCasesSummary(allSummary, forUserSummary, forUserCompletedSummary, finalizedSummary);
 			summary.setSuccess(true);
+//			end = System.currentTimeMillis();
+//			logger.info("Time to build summaries: " + (end - start) + "ms");
+//			start = System.currentTimeMillis();
 			return summary.createVuetifyObjectJSON();
 		}
 		AjaxResponse response = new AjaxResponse();
@@ -354,7 +384,7 @@ public class HomeController {
 					return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 				}
 				else {
-					utils.markAsSentToEpic(response, caseId);
+					utils.markAsSentToEpic(response, caseId, qcAPI);
 				}
 			}
 			else {

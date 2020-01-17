@@ -103,6 +103,13 @@ public class CNVChartData extends PlotlyChartData {
 			cnrOthers.addY(cnr.getLog2());
 			cnrOthers.addLabel("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 		}
+		//add fake outliers
+//		this.cnr2Outliers.addX(10000000);
+//		this.cnr2Outliers.addY(CR_MAX);
+//		this.cnr2Outliers.addLabel("Gene: " + "CRAZY" + " Log2: " + 8.5);
+//		this.cnrOtherOutliers.addX(15000000);
+//		this.cnrOtherOutliers.addY(CR_MAX);
+//		this.cnrOtherOutliers.addLabel("Gene: " + "CRAZY" + " Log2: " + 8.5);
 		
 		//selected genes
 		List<String> sortedGenes = cnrByGene.keySet().stream().sorted().collect(Collectors.toList());
@@ -198,7 +205,7 @@ public class CNVChartData extends PlotlyChartData {
 			this.cnr2.addLabel("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 		}
 		//add fake outliers
-//			this.cnr2Outliers.addX(1000000000);
+//			this.cnr2Outliers.addX(10000000);
 //			this.cnr2Outliers.addY(CR_MAX);
 //			this.cnr2Outliers.addLabel("Gene: " + "CRAZY" + " Log2: " + 8.5);
 		
@@ -219,6 +226,11 @@ public class CNVChartData extends PlotlyChartData {
 			this.cnrOthers.addY(cnr.getLog2());
 			this.cnrOthers.addLabel("Gene: " + cnr.getGene() + " Log2: " + cnr.getLog2());
 		}
+		
+		//add fake outliers
+//		this.cnrOtherOutliers.addX(15000000);
+//		this.cnrOtherOutliers.addY(CR_MAX);
+//		this.cnrOtherOutliers.addLabel("Gene: " + "CRAZY" + " Log2: " + 8.5);
 	}
 	
 	private void updateStartEnd(List<CNSData> cnsData, List<CNRData> cnrData) {

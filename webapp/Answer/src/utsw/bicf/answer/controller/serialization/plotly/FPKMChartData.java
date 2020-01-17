@@ -16,7 +16,7 @@ public class FPKMChartData extends PlotlyChartData {
 	List<Double> boxData;
 	List<Double> outliersData;
 	List<String> outliersLabels;
-	Double min = 0d, max = 0d;
+	Double min = 1000000d, max = -1000000d;
 	
 	List<Double> fpkms = new ArrayList<Double>();
 	
@@ -59,7 +59,7 @@ public class FPKMChartData extends PlotlyChartData {
 			this.outliersData = outliersData.stream().map(v -> convertToLog2(v)).collect(Collectors.toList());
 			this.currentCaseData = convertToLog2(this.currentCaseData);
 		}
-		this.min = Math.min(this.max, this.currentCaseData);
+		this.min = Math.min(this.min, this.currentCaseData);
 		this.min = 1.05d * this.min;
 		this.max = Math.max(this.max, this.currentCaseData);
 		this.max = 1.05d * this.max;
@@ -108,16 +108,16 @@ public class FPKMChartData extends PlotlyChartData {
 				this.outliersLabels.add(d.getCaseId() + " " + d.getCaseName());
 				this.outliersData.add(d.getFpkmValue());
 				if (this.min == null) {
-					this.min = d.getFpkmValue();
+					this.min = useLog2 ? this.convertToLog2(d.getFpkmValue()) : d.getFpkmValue();
 				}
 				else {
-					this.min = Math.min(this.max, d.getFpkmValue());
+					this.min = Math.min(this.max, useLog2 ? this.convertToLog2(d.getFpkmValue()) : d.getFpkmValue());
 				}
 				if (this.max == null) {
-					this.max = d.getFpkmValue();
+					this.max = useLog2 ? this.convertToLog2(d.getFpkmValue()) : d.getFpkmValue();
 				}
 				else {
-					this.max = Math.max(this.max, d.getFpkmValue());
+					this.max = Math.max(this.max, useLog2 ? this.convertToLog2(d.getFpkmValue()) : d.getFpkmValue());
 				}
 			}
 		}
