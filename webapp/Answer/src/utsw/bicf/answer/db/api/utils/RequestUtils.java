@@ -1404,7 +1404,7 @@ public class RequestUtils {
 		
 		//convert pmids to PubMed objects
 		NCBIRequestUtils utils = new NCBIRequestUtils(ncbiProps, otherProps);
-		List<PubMed> pubmeds = utils.getPubmedDetails(pmIds);
+		List<PubMed> pubmeds = utils.getPubmedDetails(pmIds, modelDAO);
 		report.setPubmeds(pubmeds);
 		
 		return report;

@@ -11,6 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.w3c.dom.Document;
 
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.GeneToReport;
@@ -390,6 +391,19 @@ public class ModelDAO {
 		return session.createNativeQuery(sql, HeaderConfig.class)
 				.setParameter("userId", user.getUserId())
 				.list();
+	}
+
+	@Transactional
+	/**
+	 * Quick and dirty bypass of PubMed API until we know what's going on
+	 * @return
+	 */
+	public String getPubmedContent() {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "SELECT xml_content FROM temp_pubmed" 
+		+" where temp_pubmed_id = 1 ";
+		return (String) session.createNativeQuery(sql)
+				.uniqueResult();
 	}
 
 
