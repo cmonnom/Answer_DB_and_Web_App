@@ -1,5 +1,6 @@
 package utsw.bicf.answer.db.api.utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -20,6 +21,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -52,6 +54,7 @@ import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.AnnotationSearchResult;
+import utsw.bicf.answer.model.extmapping.BAlleleFrequencyData;
 import utsw.bicf.answer.model.extmapping.CNRData;
 import utsw.bicf.answer.model.extmapping.CNSData;
 import utsw.bicf.answer.model.extmapping.CNV;
@@ -59,6 +62,7 @@ import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CNVPlotDataRaw;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
+import utsw.bicf.answer.model.extmapping.CloudBams;
 import utsw.bicf.answer.model.extmapping.ExistingReports;
 import utsw.bicf.answer.model.extmapping.FPKMPerCaseData;
 import utsw.bicf.answer.model.extmapping.ITD;
@@ -75,6 +79,7 @@ import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
+import utsw.bicf.answer.security.AzureOAuth;
 import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.QcAPIAuthentication;
@@ -787,7 +792,7 @@ public class RequestUtils {
 		return null;
 	}
 
-	public CNVPlotData getCnvPlotData(String caseId, String chrom) throws URISyntaxException, ClientProtocolException, IOException {
+	public CNVPlotData getCnvPlotData(String caseId, String chrom, boolean isProduction) throws URISyntaxException, ClientProtocolException, IOException {
 		List<String> toSkip = new ArrayList<String>();
 		toSkip.add("chrX");
 		toSkip.add("chrY");
@@ -807,9 +812,17 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			CNVPlotDataRaw plotDataRaw = mapper.readValue(response.getEntity().getContent(), CNVPlotDataRaw.class);
+			//TODO until ready, only answer-test should see the new VAF plot
+			if (isProduction) {
+			plotDataRaw.setbAll(new ArrayList<List<String>>());
+			}
+			else {
+				plotDataRaw.setbAll(createBAlleleFreqManualData());
+			}
 			CNVPlotData plotData = new CNVPlotData();
 			List<CNRData> cnrDataList = new ArrayList<CNRData>();
 			List<CNSData> cnsDataList = new ArrayList<CNSData>();
+			List<BAlleleFrequencyData> bAllFDataList = new ArrayList<BAlleleFrequencyData>();
 			
 			for (List<String> items : plotDataRaw.getCnr()) {
 				if (items.get(0).equals("Gene")) {
@@ -847,10 +860,31 @@ public class RequestUtils {
 				
 			}
 			
+			for (List<String> items : plotDataRaw.getbAll()) {
+				if (items.get(0).equals("CHROM")) {
+					continue; //skip the 1st row
+				}
+				String cnrChrom = items.get(0);
+				if (chrom == null || cnrChrom.equals(chrom)) {
+					String chr = items.get(0);
+					Long pos = Long.parseLong(items.get(1));
+					Long ao = Long.parseLong(items.get(2));
+					Long ro = Long.parseLong(items.get(3));
+					Double depth = Double.parseDouble(items.get(4));
+					Double log2 = Double.parseDouble(items.get(5));
+					if (!toSkip.contains(cnrChrom)) { //skip chromosomes in the toSkip list
+						bAllFDataList.add(new BAlleleFrequencyData(chr, pos, ao, ro, depth, log2));
+					}
+				}
+				
+			}
+			
+			
 			
 			plotData.setCaseId(plotDataRaw.getCaseId());
 			plotData.setCnrData(cnrDataList);
 			plotData.setCnsData(cnsDataList);
+			plotData.setBAllData(bAllFDataList);
 			this.closeGetRequest();
 			return plotData;
 		}
@@ -858,8 +892,25 @@ public class RequestUtils {
 		return null;
 	}
 
+	/**
+	 * Currently using a manual file until API is in place
+	 * @param plotDataRaw
+	 * @return
+	 * @throws IOException
+	 */
+	private List<List<String>> createBAlleleFreqManualData() throws IOException {
+		List<String> lines = FileUtils.readLines(new File("/opt/answer/files/ballelefreq.txt"));
+		List<List<String>> parsedLines = new ArrayList<List<String>>();
+		for (String line : lines) {
+			List<String> parsedLine = Arrays.asList(line.split("\t"));
+			parsedLines.add(parsedLine);
+		}
+		return parsedLines;
+	}
+
 //	private CNVPlotData test(String chromFilter) throws IOException {
 //		List<String> cnrRows = FileUtils.readLines(new File("/opt/answer/files/cnr2.csv"));
+	
 //		List<String> cnsRows = FileUtils.readLines(new File("/opt/answer/files/cns2.csv"));
 //		
 //		List<CNRData> cnrDataList = new ArrayList<CNRData>();
@@ -1661,32 +1712,60 @@ public class RequestUtils {
 		}
 	}
 	
-	public AjaxResponse getAzureBams(String caseId) throws ClientProtocolException, IOException, URISyntaxException {
-		AjaxResponse mongoDBResponse = new AjaxResponse();
+	public AjaxResponse getAzureBams(OrderCase caseSummary, AzureOAuth azureProps) {
+		AjaxResponse azureResponse = new AjaxResponse();
+		CloudBams cloudBams = new CloudBams();
+		//TODO bai
 		
-		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("azure/").append(caseId); //TODO need the real API endpoint
-		URI uri = new URI(sbUrl.toString());
-
-		HttpResponse response = null;
-		requestGet = new HttpGet(uri);
-		addAuthenticationHeader(requestGet);
-		response = client.execute(requestGet);
-
-		int statusCode = response.getStatusLine().getStatusCode();
-		if (statusCode == HttpStatus.SC_OK) {
-			mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
-			mongoDBResponse.setSuccess(mongoDBResponse.getSuccess());
-			mongoDBResponse.setMessage(mongoDBResponse.getMessage());
-			this.closeGetRequest();
-			return mongoDBResponse;
-		} else {
-			mongoDBResponse.setSuccess(false);
-			mongoDBResponse.setMessage("Something went wrong");
-			this.closeGetRequest();
-			return mongoDBResponse;
+		if (caseSummary.getNormalBam() != null && !caseSummary.getNormalBam().equals("")) {
+			String directoryName = caseSummary.getNormalBam().substring(0, caseSummary.getNormalBam().length() - 4);
+			cloudBams.setNormalBam(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getNormalBam()));
+			cloudBams.setNormalBai(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getNormalBam() + ".bai"));
 		}
+		
+		if (caseSummary.getTumorBam() != null && !caseSummary.getTumorBam().equals("")) {
+			String directoryName = caseSummary.getTumorBam().substring(0, caseSummary.getTumorBam().length() - 4);
+			cloudBams.setTumorBam(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getTumorBam()));
+			cloudBams.setTumorBai(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getTumorBam() + ".bai"));
+		}
+		
+		if (caseSummary.getRnaBam() != null && !caseSummary.getRnaBam().equals("")) {
+			String directoryName = caseSummary.getRnaBam().substring(0, caseSummary.getRnaBam().length() - 4);
+			cloudBams.setRnaBam(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getRnaBam()));
+			cloudBams.setRnaBai(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getRnaBam() + ".bai"));
+		}
+		azureResponse.setPayload(cloudBams);
+		azureResponse.setIsAllowed(true);
+		azureResponse.setSuccess(true);
+		return azureResponse;
+		
 	}
+	
+//	public AjaxResponse getAzureVcf(OrderCase caseSummary, AzureOAuth azureProps) {
+//		AjaxResponse azureResponse = new AjaxResponse();
+//		
+//		if (caseSummary.getTumorVcf() != null && !caseSummary.getTumorVcf().equals("")) {
+//			String directoryName = caseSummary.getNormalBam().substring(0, caseSummary.getNormalBam().length() - 4);
+//			cloudBams.setNormalBam(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getNormalBam()));
+//			cloudBams.setNormalBai(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getNormalBam() + ".bai"));
+//		}
+//		
+//		if (caseSummary.getTumorBam() != null && !caseSummary.getTumorBam().equals("")) {
+//			String directoryName = caseSummary.getTumorBam().substring(0, caseSummary.getTumorBam().length() - 4);
+//			cloudBams.setTumorBam(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getTumorBam()));
+//			cloudBams.setTumorBai(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getTumorBam() + ".bai"));
+//		}
+//		
+//		if (caseSummary.getRnaBam() != null && !caseSummary.getRnaBam().equals("")) {
+//			String directoryName = caseSummary.getRnaBam().substring(0, caseSummary.getRnaBam().length() - 4);
+//			cloudBams.setRnaBam(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getRnaBam()));
+//			cloudBams.setRnaBai(azureProps.getFileSAS(caseSummary.getCaseName(), directoryName, caseSummary.getRnaBam() + ".bai"));
+//		}
+//		azureResponse.setPayload(cloudBams);
+//		azureResponse.setIsAllowed(true);
+//		azureResponse.setSuccess(true);
+//		return azureResponse;
+//	}
 
 	public void setDefaultTranscript(AjaxResponse ajaxResponse, String row, String variantId) throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
@@ -1889,5 +1968,7 @@ public class RequestUtils {
 		}
 		this.closePostRequest();
 	}
+
+
 
 }

@@ -33,6 +33,8 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 
         var defaultHomeTab = "${prefs.homeTab}";
 
+        var version = "${version}";
+
 </script>
 
 <link rel="stylesheet"  href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700">
@@ -77,6 +79,9 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 
 <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.2/js/msal.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/hmac-sha256.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/enc-base64.min.js"></script>
 
 <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />

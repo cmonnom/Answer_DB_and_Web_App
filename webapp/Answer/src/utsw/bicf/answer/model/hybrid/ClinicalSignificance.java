@@ -1,7 +1,5 @@
 package utsw.bicf.answer.model.hybrid;
 
-import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
-
 public class ClinicalSignificance {
 	
 	String geneVariant;

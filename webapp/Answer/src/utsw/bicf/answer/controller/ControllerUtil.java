@@ -2,11 +2,15 @@ package utsw.bicf.answer.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
@@ -32,6 +36,7 @@ import utsw.bicf.answer.security.OtherProperties;
 public class ControllerUtil {
 	
 	private static long timestamp = new Date().getTime();
+	private static String version;
 	
 	public static User getSessionUser(HttpSession httpSession) {
 		User user = null;
@@ -54,7 +59,6 @@ public class ControllerUtil {
 			model.addAttribute("userFullName", user.getFullName());
 			model.addAttribute("lastName", user.getLast());
 			model.addAttribute("firstName", user.getFirst());
-			ObjectMapper mapper = new ObjectMapper();
 			model.addAttribute("prefs", user.getUserPref());
 			model.addAttribute("showLastLogin", false); //this should allow to only display
 			if (loginDAO != null) { //null for error pages
@@ -68,6 +72,8 @@ public class ControllerUtil {
 			}
 		}
 		model.addAttribute("timestamp", timestamp);
+		setAppVersion(servletContext);
+		model.addAttribute("version", version);
 		return "main-template";
 	}
 	
@@ -202,5 +208,31 @@ public class ControllerUtil {
 		response.setSuccess(false);
 		response.setMessage("This case does not belong to your group.");
 		return response.createObjectJSON();
+	}
+	
+	/**
+	 * Ant write to MANIFEST.MF the compilation date
+	 * which is used as the application version number
+	 * This method reads the correct manifest file and extracts
+	 * the correct field to be passed to the model.
+	 * If the webapp is not compiled with the ant script
+	 * the current date will be used.
+	 * @param servletContext
+	 */
+	private static void setAppVersion(ServletContext servletContext) {
+		if (version != null) {
+			return;
+		}
+		try {
+			InputStream inputStream = servletContext.getResourceAsStream("/META-INF/MANIFEST.MF");
+			Manifest manifest = new Manifest(inputStream);
+			Attributes mainAttributes = manifest.getMainAttributes();
+			version = mainAttributes.getValue("Implementation-Version");
+			if (version == null) {
+				version = LocalDateTime.now().format(TypeUtils.localDateTimeFormatter);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

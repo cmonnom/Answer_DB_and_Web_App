@@ -10,6 +10,7 @@ public class CNVPlotDataRaw {
 	String caseId;
 	List<List<String>> cns;
 	List<List<String>> cnr;
+	List<List<String>> bAll;
 	
 	
 	
@@ -51,6 +52,18 @@ public class CNVPlotDataRaw {
 
 	public void setCnr(List<List<String>> cnr) {
 		this.cnr = cnr;
+	}
+
+
+
+	public List<List<String>> getbAll() {
+		return bAll;
+	}
+
+
+
+	public void setbAll(List<List<String>> bAll) {
+		this.bAll = bAll;
 	}
 
 

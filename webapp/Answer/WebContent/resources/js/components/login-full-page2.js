@@ -35,7 +35,7 @@ Vue.component('login-full-page2', {
         :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'">
     </div>
     <v-spacer></v-spacer>
-    <v-btn flat @click="showLoginDialog = true" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
+    <v-btn flat @click="doShowLoginDialog()" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
   </v-toolbar>
 
   <v-toolbar fixed app flat ref="regularToolbar" class="hidden-xs-only">
@@ -52,7 +52,7 @@ Vue.component('login-full-page2', {
     <img class="toolbar-image" alt="utsw master logo"
       :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'">
   </div>
-  <v-btn flat @click="showLoginDialog = true" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
+  <v-btn flat @click="doShowLoginDialog()" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
 </v-toolbar>
 
   <v-snackbar :timeout="0" :bottom="true" :value="snackBarVisible">
@@ -177,7 +177,7 @@ Vue.component('login-full-page2', {
   <v-dialog v-model="showLoginDialog" max-width="300px">
     <v-card dark class="teal darken-2">
       <v-card-text class="text-xs-center">
-        <login :message="message" :popup="false" :authType="authType"></login>
+        <login ref="loginBox" :message="message" :popup="false" :authType="authType"></login>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -439,6 +439,11 @@ Vue.component('login-full-page2', {
         },
         isXSWidth() {
           return window.outerWidth < 600;
+        },
+        doShowLoginDialog() {
+          this.showLoginDialog = true;
+          this.$nextTick(() => { this.stopCarousel();
+          this.$refs.loginBox.userNameFocus()});
         }
     },
     mounted: function () {
@@ -451,7 +456,7 @@ Vue.component('login-full-page2', {
          console.log("ready");
        });
        if (this.$route.query.urlRedirect) {
-         this.showLoginDialog = true;
+        this.doShowLoginDialog();
        }
        
     },
@@ -473,3 +478,4 @@ Vue.component('login-full-page2', {
       videoVisible: "updateVideoLink"
     }
 })
+

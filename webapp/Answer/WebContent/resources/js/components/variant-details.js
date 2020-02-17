@@ -507,10 +507,11 @@ Vue.component('variant-details', {
         updateGenesSelected() {
             this.genesSelected.length = 0;
         },
-        createScatterTrace(data, color, symbol, size) {
+        createScatterTrace(data, color, symbol, size, isBottomPlot) {
             return {
                 x: data.x,
                 y: data.y,
+                yaxis: isBottomPlot ? "y2" : "y",
                 name: data.name,
                 mode: "markers",
                 type: "scattergl",
@@ -527,10 +528,11 @@ Vue.component('variant-details', {
         getCNVPlotImage() {
             return webAppRoot + '/resources/images/screenshots/cnv-plot-details.png';
         },
-        createAChromGeneTrace(x, y, color, opacity) {
+        createAChromGeneTrace(x, y, color, opacity, isbottomSubPlot) {
             return {
                 x: x,
                 y: y,
+                yaxis: isbottomSubPlot ? "y2" : "y",
                 fill: 'tozeroy',
                 connectgap: false,
                 hoverinfo: 'skip',
@@ -545,7 +547,7 @@ Vue.component('variant-details', {
                 showlegend: false,
             }
         },
-        createChromGeneTraces(start, end, color, opacity, minY, maxY) {
+        createChromGeneTraces(start, end, color, opacity, minY, maxY, isbottomSubPlot) {
             let x = [];
             let yTop = [];
             let yBottom = [];
@@ -574,8 +576,8 @@ Vue.component('variant-details', {
                 }
 
             }
-            var chrTraceTop = this.createAChromGeneTrace(x, yTop, color, opacity);
-            var chrTraceBottom = this.createAChromGeneTrace(x, yBottom, color, opacity);
+            var chrTraceTop = this.createAChromGeneTrace(x, yTop, color, opacity, isbottomSubPlot);
+            var chrTraceBottom = this.createAChromGeneTrace(x, yBottom, color, opacity, isbottomSubPlot);
             return [chrTraceTop, chrTraceBottom];
         },
         updateCNVPlot(chrom) {
@@ -606,7 +608,8 @@ Vue.component('variant-details', {
                         var cnrOthersTrace = this.createScatterTrace(response.data.cnrOthers, "#a39a76");
                         var cnr2OutliersTrace = this.createScatterTrace(response.data.cnr2Outliers, "#00204d", outlierSymbol, outlierSize);
                         var cnrOthersOutliersTrace = this.createScatterTrace(response.data.cnrOtherOutliers, "#a39a76", outlierSymbol, outlierSize);
-
+                        var showVAF = response.data.bAlleles.x.length > 0 ;
+                        var bAllelesTrace = showVAF ? this.createScatterTrace(response.data.bAlleles, "#00204d", null, null, true) : null;
                         var geneSelectedTraces = [];
                         for (var i = 0; i < response.data.genesSelected.length; i++) {
                             var trace = this.createScatterTrace(response.data.genesSelected[i], "#00204d");
@@ -656,8 +659,11 @@ Vue.component('variant-details', {
                         }
                         var minY = -5.2;
                         var maxY = 5.2;
-                        chrGenesTraces.push(...this.createChromGeneTraces(
-                            response.data.chr.start, response.data.chr.end, '#f9e04a', 0.4, minY, maxY));
+                        var chrTraceTop = this.createChromGeneTraces(
+                            response.data.chr.start, response.data.chr.end, '#f9e04a', 0.4, minY, maxY, false);
+                        var chrTraceBottom = this.createChromGeneTraces(
+                            response.data.chr.start, response.data.chr.end, '#f9e04a', 0.4, 0, 1, true);
+                        chrGenesTraces.push(...chrTraceTop);
                         chrGenesTraces.push(...this.createChromGeneTraces(
                             genesStartEven, genesEndEven, this.cividisColors.blue75, 0.25, minY, maxY));
                         chrGenesTraces.push(...this.createChromGeneTraces(
@@ -699,7 +705,31 @@ Vue.component('variant-details', {
                             geneLabelsAnnotations.push(annotation);
                         }
                          */
+
+                         if (showVAF) {
+                             //TODO remove this for real data
+                            let annotation = {
+                                showarrow: false,
+                                text: "FOR DEMO ONLY. NOT REAL DATA",
+                                align: "center",
+                                x: response.data.chr.start[i],
+                                xanchor: "center",
+                                y: 0.7,
+                                yanchor: "bottom",
+                                yref: "y2",
+                                font: {
+                                    size: 26,
+                                    color: '#ff7f0e'
+                                  },
+                            }
+                            chrLabelsAnnotations.push(annotation);
+                         }
+
                         data = [...chrGenesTraces, cnr2Trace, cnrOthersTrace, cnr2OutliersTrace, cnrOthersOutliersTrace, ...geneSelectedTraces, ...cnsTraces];
+                        if (showVAF) {
+                            data.push(...chrTraceBottom);
+                            data.push(bAllelesTrace);
+                        }
                         this.cnvData = {
                             "cnr2": cnr2Trace,
                             "cnrOthers": cnrOthersTrace,
@@ -709,6 +739,11 @@ Vue.component('variant-details', {
                             "chrAnnotations": chrLabelsAnnotations
                         };
 
+                        var topSubPlotAxes = [];
+                        for (var i = 0; i < data.length - 1; i++) {
+                            topSubPlotAxes.push("xy");
+                        }
+
                         var layout = {
                             title: this.createCnvPlotTitle(),
                             yaxis: {
@@ -716,7 +751,14 @@ Vue.component('variant-details', {
                                 zeroline: false,
                                 range: [-5.2, 5.2],
                                 fixedrange: true,
-                                dtick: 1
+                                dtick: 1,
+                                domain: [showVAF ? 0.7 : 0, 1]
+                                
+                            },
+                            yaxis2: {
+                                title: "VAF",
+                                zeroline: false,
+                                domain: [0,0.3]
                             },
                             xaxis: {
                                 zeroline: false,
@@ -731,6 +773,7 @@ Vue.component('variant-details', {
                                 t: 30,
                                 pad: 4
                             },
+                            height: showVAF? 700 : 400,
                             hovermode: 'closest',
                             // shapes: chrs,
                             annotations: chrLabelsAnnotations,
@@ -1012,7 +1055,7 @@ Vue.component('variant-details', {
         fullSizeChart: function () {
             return {
                 position: "relative",
-                height: "500px"
+                height: "900px"
                 // height: window.innerHeight - 120 + "px"
             }
         },

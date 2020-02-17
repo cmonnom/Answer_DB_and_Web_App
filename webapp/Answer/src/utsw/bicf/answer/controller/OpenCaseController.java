@@ -3,12 +3,18 @@ package utsw.bicf.answer.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,13 +22,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +49,16 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.StorageCredentialsAccountAndKey;
+import com.microsoft.azure.storage.blob.BlobContainerPermissions;
+import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
+import com.microsoft.azure.storage.blob.CloudBlob;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.Button;
@@ -51,12 +67,12 @@ import utsw.bicf.answer.controller.serialization.DataTableFilter;
 import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
 import utsw.bicf.answer.controller.serialization.Utils;
+import utsw.bicf.answer.controller.serialization.plotly.CNVChartData;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVChromosomeItems;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVRelatedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.GenesInPanelItems;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
-import utsw.bicf.answer.controller.serialization.vuetify.SNPIndelVariantSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
 import utsw.bicf.answer.controller.serialization.vuetify.TranslocationDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
@@ -65,8 +81,6 @@ import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListItems;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListSaved;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantRelatedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSummary;
-import utsw.bicf.answer.controller.serialization.zingchart.CNVChartData;
-import utsw.bicf.answer.controller.serialization.zingchart.FPKMChartData;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
@@ -103,6 +117,7 @@ import utsw.bicf.answer.model.hybrid.SNPIndelVariantRow;
 import utsw.bicf.answer.model.hybrid.TranslocationRow;
 import utsw.bicf.answer.model.hybrid.VCFAnnotationRow;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
+import utsw.bicf.answer.security.AzureOAuth;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
@@ -206,6 +221,7 @@ public class OpenCaseController {
 	OtherProperties otherProps;
 	@Autowired
 	LoginDAO loginDAO;
+
 
 	@RequestMapping("/openCase/{caseId}")
 	public String openCase(Model model, HttpSession session, @PathVariable String caseId,
@@ -1468,9 +1484,9 @@ public class OpenCaseController {
 				selectedGenes.add(gene.trim());
 			}
 		}
-		CNVPlotData cnvPlotData = utils.getCnvPlotData(caseId, chrom);
+		CNVPlotData cnvPlotData = utils.getCnvPlotData(caseId, chrom, otherProps.getProductionEnv());
 		if (cnvPlotData != null) {
-			return new utsw.bicf.answer.controller.serialization.plotly.CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData(), selectedGenes).createObjectJSON();
+			return new CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData(), cnvPlotData.getBAllData(), selectedGenes).createObjectJSON();
 		}
 		else {
 			AjaxResponse response = new AjaxResponse();
@@ -1836,4 +1852,5 @@ public class OpenCaseController {
 		}
 
 	}
+	
 }

@@ -101,7 +101,7 @@ public class OrderCaseFinalized {
 //				start = System.currentTimeMillis();
 				if (lastFinalized != null) {
 					this.reportId = lastFinalized.getMongoDBId().getOid();
-					buttons.add(new Button("picture_as_pdf", "downloadPDFReport", "Download Finalized Report", "info"));
+					buttons.add(new Button("mdi-pdf-box", "downloadPDFReport", "Download Finalized Report", "info"));
 					if (orderCase.getActive() != null && orderCase.getActive()) {
 						//TODO uncomment this when ready
 						buttons.add(new Button("mdi-check", "sent-to-epic", "Report was sent to Epic", "info"));
@@ -128,7 +128,7 @@ public class OrderCaseFinalized {
 			iconName = "fa-flask";
 			tooltip = OrderCase.TYPE_CLINICAL_RESEARCH + " case";
 		}
-		typeIcons.add(new VuetifyIcon(iconName, "grey", tooltip));
+		typeIcons.add(new VuetifyIcon(iconName, "grey", tooltip, 20));
 		typeFlags = new FlagValue(typeIcons);
 		
 		this.caseType = orderCase.getType();

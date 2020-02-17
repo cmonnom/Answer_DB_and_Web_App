@@ -963,7 +963,11 @@ const OpenCase2 = {
 
         },
         openOncoTree() {
-            var oncotreeWindow = window.open("http://oncotree.mskcc.org", "_blank");
+            var leaf = "";
+            if (this.patientDetailsOncoTreeDiagnosis.text) {
+                leaf = "?version=oncotree_2019_03_01&search_term=(" + this.patientDetailsOncoTreeDiagnosis.text + ")";
+            }
+            var oncotreeWindow = window.open("http://oncotree.mskcc.org/#/home" + leaf, "_blank");
          },
          openOncoKBGeniePortalCancer() {
              var url = oncoKBGeniePortalUrl + "Cancer/?Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
@@ -1983,19 +1987,14 @@ const OpenCase2 = {
             if (this.waitingForAjaxCount > 0) {
                 this.waitingForAjaxActive = true;
                 if (this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel.variantDetailsUnSaved) {
-                    this.$refs.variantDetailsDialog.saveVariant(true);
-                    //TODO change into a promise
-                    setTimeout(() => {
+                    this.$refs.variantDetailsDialog.saveVariant(true).then(() => {
                         this.waitingForAjaxCount--;
-                    }, 2000);
-                  
+                    });
                 }
                 if (this.annotationSelectionUnSaved) {
-                    this.$refs.variantDetailsDialog.saveAnnotationSelection(true);
-                    //TODO change into a promise
-                    setTimeout(() => {
+                    this.$refs.variantDetailsDialog.saveAnnotationSelection(true).then(() => {
                         this.waitingForAjaxCount--;
-                    }, 2000);
+                    });
                 }
                 if (this.variantUnSaved) {
                     this.saveSelection(false, true)

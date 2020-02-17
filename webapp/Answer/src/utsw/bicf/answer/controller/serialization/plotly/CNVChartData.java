@@ -1,14 +1,13 @@
 package utsw.bicf.answer.controller.serialization.plotly;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.model.extmapping.BAlleleFrequencyData;
 import utsw.bicf.answer.model.extmapping.CNRData;
 import utsw.bicf.answer.model.extmapping.CNSData;
 
@@ -19,33 +18,15 @@ public class CNVChartData extends PlotlyChartData {
 	
 	Trace cnr2 = new Trace();
 	Trace cnrOthers = new Trace();
-//	List<Object> cnrData2X = new ArrayList<Object>();
-//	List<Object> cnrData2Y = new ArrayList<Object>();
-//	List<String> cnrLabels2 = new ArrayList<String>();
-//	List<Object> cnrDataOthersX = new ArrayList<Object>();
-//	List<Object> cnrDataOthersY = new ArrayList<Object>();
-//	List<String> cnrLabelsOthers = new ArrayList<String>();
 	
 	//for values outside of the expected range [-5, 5]
 	Trace cnr2Outliers = new Trace();
 	Trace cnrOtherOutliers = new Trace();
-//	List<Object> cnrData2OutliersX = new ArrayList<Object>();
-//	List<Object> cnrData2OutliersY = new ArrayList<Object>();
-//	List<String> cnrLabels2Outliers = new ArrayList<String>();
-//	List<Object> cnrDataOtherOutliersX = new ArrayList<Object>();
-//	List<Object> cnrDataOtherOutliersY = new ArrayList<Object>();
-//	List<String> cnrLabelsOtherOutliers = new ArrayList<String>();
 	
 	Trace chr = new Trace();
-//	List<Long> chrEnd = new ArrayList<Long>();
-//	List<Long> chrStart = new ArrayList<Long>();
-//	List<String> chrLabels = new ArrayList<String>();
 	long minChrom = -1;
 	
 	Trace cns = new Trace();
-//	List<Object[]> cnsDataX = new ArrayList<Object[]>();
-//	List<Object[]> cnsDataY = new ArrayList<Object[]>();
-//	List<String> cnsLabels = new ArrayList<String>();
 	List<String> cnsTitles = new ArrayList<String>();
 	
 	List<Trace> genesSelected = new ArrayList<Trace>();
@@ -54,9 +35,13 @@ public class CNVChartData extends PlotlyChartData {
 	Trace genes = new Trace();
 	List<String> geneLabels = new ArrayList<String>();
 	
-	public CNVChartData(List<CNSData> cnsData, List<CNRData> cnrData, List<String> selectedGenes) {
+	//B Allele Frequency
+	Trace bAlleles = new Trace();
+	List<String> bAllLabels = new ArrayList<String>();
+	
+	public CNVChartData(List<CNSData> cnsData, List<CNRData> cnrData, List<BAlleleFrequencyData> bAllData, List<String> selectedGenes) {
 		
-		this.updateStartEnd(cnsData, cnrData);
+		this.updateStartEnd(cnsData, cnrData, bAllData);
 		
 		if (!selectedGenes.isEmpty()) {
 			//separate series by genes
@@ -65,6 +50,7 @@ public class CNVChartData extends PlotlyChartData {
 			this.cnrOthers.setName("CNR (others)");
 			this.cnr2Outliers.setName("CNR Outliers (CN=2)");
 			this.cnrOtherOutliers.setName("CNR Outliers (others)");
+			
 		}
 		else {
 			createCNRSeriesByCN(cnsData, cnrData); //separate series for CN == 2 and Others
@@ -75,6 +61,9 @@ public class CNVChartData extends PlotlyChartData {
 		}
 		for (CNSData c : cnsData) {
 			createCNSSeries(c);
+		}
+		for (BAlleleFrequencyData b : bAllData) {
+			createBAlleleFrequencySeries(b);
 		}
 		
 		getGeneBoudaries(cnrData);
@@ -149,6 +138,14 @@ public class CNVChartData extends PlotlyChartData {
 		this.cns.addY(new Object[] {cns.getLog2(), cns.getLog2()});
 		this.cns.addLabel("Log2: " + cns.getLog2() + " CN:" + cns.getCn());
 		this.cnsTitles.add("CNS " + cns.getChr());
+	}
+	
+	private void createBAlleleFrequencySeries(BAlleleFrequencyData b) {
+		this.bAlleles.addX(b.getPos());
+		this.bAlleles.addY(b.getLog2());
+		this.bAlleles.setName("VAF");
+		this.bAlleles.addLabel("VAF Log2: " + b.getLog2());
+		this.bAllLabels.add("VAF Log2: " + b.getLog2());
 	}
 	
 	/**
@@ -233,9 +230,10 @@ public class CNVChartData extends PlotlyChartData {
 //		this.cnrOtherOutliers.addLabel("Gene: " + "CRAZY" + " Log2: " + 8.5);
 	}
 	
-	private void updateStartEnd(List<CNSData> cnsData, List<CNRData> cnrData) {
+	private void updateStartEnd(List<CNSData> cnsData, List<CNRData> cnrData, List<BAlleleFrequencyData> bAllData) {
 		Map<String, Long> chrMax = new HashMap<String, Long>();
 		Map<String, List<CNRData>> byChr = new HashMap<String, List<CNRData>>();
+		
 		for (CNRData cnr : cnrData) {
 			List<CNRData> list = null;
 			if (byChr.containsKey(cnr.getChr())) {
@@ -247,7 +245,7 @@ public class CNVChartData extends PlotlyChartData {
 			list.add(cnr);
 			byChr.put(cnr.getChr(), list);
 		}
-
+		
 		this.chr.setLabels(byChr.keySet().stream().sorted().collect(Collectors.toList()));
 		this.chr.addStart(0L);
 		Long max = 0L;
@@ -277,6 +275,15 @@ public class CNVChartData extends PlotlyChartData {
 			}
 			cns.setStart(cns.getStart() + max);
 			cns.setEnd(cns.getEnd() + max);
+		}
+		
+		//adjust start and end for B allele Freq
+		for (BAlleleFrequencyData b : bAllData) {
+			max = chrMax.get(b.getChr());
+			if (max == null) {
+				continue;
+			}
+			b.setPos(b.getPos() + max);
 		}
 	}
 	
@@ -386,6 +393,22 @@ public class CNVChartData extends PlotlyChartData {
 
 	public void setGeneLabels(List<String> geneLabels) {
 		this.geneLabels = geneLabels;
+	}
+
+	public Trace getbAlleles() {
+		return bAlleles;
+	}
+
+	public void setbAlleles(Trace bAlleles) {
+		this.bAlleles = bAlleles;
+	}
+
+	public List<String> getbAllLabels() {
+		return bAllLabels;
+	}
+
+	public void setbAllLabels(List<String> bAllLabels) {
+		this.bAllLabels = bAllLabels;
 	}
 
 }

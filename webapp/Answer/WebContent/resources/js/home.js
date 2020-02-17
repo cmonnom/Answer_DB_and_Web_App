@@ -529,6 +529,7 @@ const Home = {
         this.getAllUsers();
         this.getAllGroups();
         this.getWorklists();
+
     },
     destroyed: function () {
         bus.$off('assignToUser');

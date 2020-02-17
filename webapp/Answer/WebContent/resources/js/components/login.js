@@ -22,7 +22,8 @@ Vue.component('login', {
                         </div>
                         
                     <div class="text-xs-center">
-                        <v-text-field label="Username" 
+                        <v-text-field label="Username"
+                        ref="username" 
                         v-model="username"
                         required
                         autofocus
@@ -225,6 +226,9 @@ Vue.component('login', {
             }).catch(function (error) {
                 console.log(error);
             });
+        },
+        userNameFocus() {
+            this.$refs.username.focus();
         }
         ///Azure///
 

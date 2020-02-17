@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.microsoft.azure.storage.StorageException;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.IGVPayload;
@@ -36,6 +37,7 @@ import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CloudBams;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.security.AzureOAuth;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
@@ -58,10 +60,12 @@ public class BamViewerController {
 	FileProperties fileProps;
 	@Autowired
 	OtherProperties otherProps;
+	@Autowired
+	AzureOAuth azureProps;
 
 	@RequestMapping("/bamViewer")
 	public String bamViewer(Model model, HttpSession session, HttpServletRequest request, @RequestParam String locus, @RequestParam String caseId)
-			throws IOException, URISyntaxException {
+			throws Exception {
 		model.addAttribute("urlRedirect", "bamViewer?locus=" + locus + "%26caseId=" + caseId);
 		model.addAttribute("locus", locus);
 		model.addAttribute("caseId", caseId);
@@ -85,12 +89,12 @@ public class BamViewerController {
 
 	}
 
-	private AjaxResponse populateModel(Model model, RequestUtils utils, OrderCase caseSummary, String caseId) throws ClientProtocolException, IOException, URISyntaxException {
+	private AjaxResponse populateModel(Model model, RequestUtils utils, OrderCase caseSummary, String caseId) throws IOException {
 		//check if local storage or cloud
 		model.addAttribute("storageType", caseSummary.getStorageType());
 		AjaxResponse response = new AjaxResponse();
 		if ("azure".equals(caseSummary.getStorageType())) {
-			response = utils.getAzureBams(caseId);
+			response = utils.getAzureBams(caseSummary, azureProps);
 			if (!response.getSuccess()) {
 				return response;
 			}
@@ -182,23 +186,26 @@ public class BamViewerController {
 
 		Object normalLabel = attributes.get("normalLabel");
 		Object normalBam = attributes.get("normalBam");
+		Object normalBai = attributes.get("normalBai");
 		if (normalLabel != null && normalBam != null) {
-			Resource normalBamResource = new Resource(normalLabel.toString(), bamsRoot + normalBam.toString());
+			Resource normalBamResource = new Resource(normalLabel.toString(), bamsRoot + normalBam.toString(), bamsRoot + normalBai.toString());
 			resources.add(normalBamResource);
 		}
 		Object tumorLabel = attributes.get("tumorLabel");
 		Object tumorBam = attributes.get("tumorBam");
+		Object tumorBai = attributes.get("tumorBai");
 		if (tumorLabel != null && tumorBam != null) {
-			Resource tumorBamResource = new Resource(tumorLabel.toString(), bamsRoot + tumorBam.toString());
+			Resource tumorBamResource = new Resource(tumorLabel.toString(), bamsRoot + tumorBam.toString(), bamsRoot + tumorBai.toString());
 			resources.add(tumorBamResource);
 		}
 		Object rnaLabel = attributes.get("rnaLabel");
 		Object rnaBam = attributes.get("rnaBam");
+		Object rnaBai = attributes.get("rnaBai");
 		if (rnaLabel != null && rnaBam != null) {
-			Resource rnaBamResource = new Resource(rnaLabel.toString(), bamsRoot + rnaBam.toString());
+			Resource rnaBamResource = new Resource(rnaLabel.toString(), bamsRoot + rnaBam.toString(), bamsRoot + rnaBai.toString());
 			resources.add(rnaBamResource);
 		}
-		Resource rnaBamResource = new Resource("Gencode v24", "https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz");
+		Resource rnaBamResource = new Resource("Gencode v24", "https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz", null);
 		resources.add(rnaBamResource);
 		Global igvSession = new Global(locus, resources);
 		XmlMapper mapper = new XmlMapper();

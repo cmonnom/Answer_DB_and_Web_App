@@ -1,11 +1,24 @@
 package utsw.bicf.answer.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -19,8 +32,20 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.azure.storage.blob.BlobContainerClient;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.StorageCredentialsAccountAndKey;
+import com.microsoft.azure.storage.blob.BlobContainerPermissions;
+import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
+import com.microsoft.azure.storage.blob.CloudBlob;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.ListBlobItem;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.AllOrderCasesSummary;
@@ -62,7 +87,7 @@ public class HomeController {
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".assignToUser", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".getAllUsersToAssign", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".createPDFReport", IndividualPermission.CAN_VIEW);
-		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".toggleSentToEpicStatusForCase", IndividualPermission.CAN_REVIEW);
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".toggleSentToEpicStatusForCase", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".saveTabPreference", IndividualPermission.CAN_VIEW);
 	}
 
@@ -155,6 +180,7 @@ public class HomeController {
 						caseList.stream()
 						.filter(c -> CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
 								&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC)
+								&& c.getType().equals(OrderCase.TYPE_CLINICAL)
 								&& c.getActive() != null && c.getActive())
 						.map(c -> new OrderCaseFinalized(modelDAO, c, users, user, reportsPerCase))
 						.collect(Collectors.toList());
@@ -487,4 +513,5 @@ public class HomeController {
 		response.setIsAllowed(true);
 		return response.createObjectJSON();
 	}
+	
 }

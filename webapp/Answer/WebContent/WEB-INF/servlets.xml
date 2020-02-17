@@ -85,6 +85,9 @@
 	
 	<bean id="azureOAuth" class="utsw.bicf.answer.security.AzureOAuth">
 		<property name="msGraphUrl" value="${azure.graph.url}" />
+		<property name="accountName" value="${azure.account.name}" />
+		<property name="accountKey" value="${azure.account.key}" />
+		<property name="containerName" value="${azure.container.name}" />
 	</bean>
 	
 	<bean id="clarityAPIAuthentication" class="utsw.bicf.answer.security.ClarityAPIAuthentication">
@@ -100,8 +103,8 @@
 		<property name="epic" value="${qc.api.epic}" />
 	</bean>
 	
-	<bean id="requestUtils" class="utsw.bicf.answer.clarity.api.utils.RequestUtils">
-	</bean>
+<!-- 	<bean id="requestUtils" class="utsw.bicf.answer.clarity.api.utils.RequestUtils"> -->
+<!-- 	</bean> -->
 	
 	<!-- Setup Hibernate session factory -->
 	<bean id="sessionFactory"

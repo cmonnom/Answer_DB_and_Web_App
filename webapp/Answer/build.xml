@@ -15,6 +15,8 @@
 	<property name="web.xml.path" location="${web.dir}/WEB-INF/web.xml" />
 	<property name="docs.output.dir" location="/Users/Guillaume/Downloads/war/html" />
 	<property name="docs.source.dir" location="${webcontent.dir}/WEB-INF/view/docs/build/html" />
+	<property name="manifest.path" location="${web.dir}/META-INF/MANIFEST.MF" />
+	
 
 
 	<!-- Create folders -->
@@ -54,7 +56,8 @@
 
 	<target name="compile" depends="init" description="compile source code">
 		<mkdir dir="${web.classes.dir}" />
-		<javac destdir="${web.classes.dir}" source="${jdk.version}" target="${jdk.version}" debug="true" includeantruntime="false">
+		<javac destdir="${web.classes.dir}" source="${jdk.version}" target="${jdk.version}" debug="true" 
+			includeantruntime="false">
 			<src path="${src.dir}" />
 			<classpath refid="Answer.classpath" />
 		</javac>
@@ -99,7 +102,7 @@
 	</target>
 	
 	<!-- Create the final WAR file for deployment -->
-		<target name="package" depends="final-clean, compile, copy-resources" description="create a war file">
+		<target name="package" depends="final-clean, compile, version, copy-resources" description="create a war file">
 			<zip destfile="${target.dir}/Answer.war" basedir="${web.dir}">
 			</zip>
 		</target>
@@ -111,6 +114,17 @@
 
        <target name="war-docs-clean" depends="package, zip-docs, final-clean" description="Create war and clean temp files">
        	</target>
+	
+	<tstamp>
+	    <format property="VERSION_DATE" pattern="yyyy-MM-dd" locale="en,US"/>
+	</tstamp>
+	
+    <target name="version" description="Create version number in manifest">
+    	<mkdir dir="${web.dir}/META-INF" />
+    	<manifest file="${manifest.path}">
+    		 <attribute name="Implementation-Version" value="${VERSION_DATE}"/>
+    		</manifest>
+    	</target>
 	
 	<target name="war-clean-scp-test" depends="war-docs-clean, scp-test" description="Create war and clean temp files and copy to server">
 	</target>

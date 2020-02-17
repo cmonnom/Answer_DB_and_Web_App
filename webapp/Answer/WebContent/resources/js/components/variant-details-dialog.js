@@ -1169,6 +1169,7 @@ Vue.component('variant-details-dialog', {
                 }).catch(error => {
                     this.loadingVariant = false;
                     this.handleAxiosError(error);
+                    reject(error);
                 });
             });
         },
@@ -1299,6 +1300,7 @@ Vue.component('variant-details-dialog', {
                 }).catch(error => {
                     this.loadingVariant = false;
                     this.handleAxiosError(error);
+                    reject(error);
                 });
             });
         },
@@ -1622,32 +1624,38 @@ Vue.component('variant-details-dialog', {
             lightVariant["tier"] = this.currentVariant.tier;
             lightVariant["aberrationType"] = this.currentVariant.aberrationType;
             lightVariant["notation"] = this.currentVariant.notation;
-            axios({
-                method: 'post',
-                url: webAppRoot + "/saveVariant",
-                params: {
-                    variantType: this.currentVariantType,
-                    caseId: this.$route.params.id,
-                    skipSnackBar: skipSnackBar
-                },
-                data: {
-                    // filters: this.$refs.advancedFilter.filters,
-                    variant: lightVariant
-                }
-            }).then(response => {
-                this.waitingForAjaxCount--;
-                if (response.data.isAllowed) {
-                    if (!response.data.skipSnackBar) {
-                        this.revertVariant();
-                        this.showSnackBarMessage("Variant Saved");
+            return new Promise((resolve, reject) => {
+                axios({
+                    method: 'post',
+                    url: webAppRoot + "/saveVariant",
+                    params: {
+                        variantType: this.currentVariantType,
+                        caseId: this.$route.params.id,
+                        skipSnackBar: skipSnackBar
+                    },
+                    data: {
+                        // filters: this.$refs.advancedFilter.filters,
+                        variant: lightVariant
                     }
-                    this.$refs.variantDetailsPanel.variantDetailsUnSaved = false; //update badge on save button
-                }
-                else {
-                    this.handleDialogs(response.data, this.saveVariant.bind(null, response.data.skipSnackBar));
-                }
-            }).catch(error => {
-                this.handleAxiosError(error);
+                }).then(response => {
+                    this.waitingForAjaxCount--;
+                    if (response.data.isAllowed) {
+                        if (!response.data.skipSnackBar) {
+                            this.revertVariant();
+                            this.showSnackBarMessage("Variant Saved");
+                        }
+                        this.$refs.variantDetailsPanel.variantDetailsUnSaved = false; //update badge on save button
+                        resolve({success: true});
+                       
+                    }
+                    else {
+                        reject(response);
+                        this.handleDialogs(response.data, this.saveVariant.bind(null, response.data.skipSnackBar));
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                    reject(error);
+                });
             });
         },
         showSnackBarMessage(message) {
@@ -1836,6 +1844,7 @@ Vue.component('variant-details-dialog', {
                     lightVariant["annotationIdsForReporting"].push(this.utswAnnotationsFormatted[i]._id);
                 }
             }
+            return new Promise((resolve, reject) => {
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveSelectedAnnotationsForVariant",
@@ -1858,6 +1867,7 @@ Vue.component('variant-details-dialog', {
                         this.snackBarVisible = true;
                         this.annotationSelectionUnSaved = false;
                     }
+                    resolve({success: true});
                 }
                 else {
                     this.handleDialogs(response.data, this.saveVasaveAnnotationSelectionriant.bind(null, response.data.skipSnackBar));
@@ -1867,7 +1877,9 @@ Vue.component('variant-details-dialog', {
             }).catch(error => {
                 this.savingAnnotationSelection = false;
                 this.handleAxiosError(error);
+                reject(error);
             });
+        });
         },
         revertAnnotationSelection() {
             this.annotationIdsForReporting = []; //reset the unsaved list of ids

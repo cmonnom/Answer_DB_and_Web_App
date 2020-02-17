@@ -96,7 +96,7 @@ public class OrderCaseForUser {
 			iconName = "fa-flask";
 			tooltip = OrderCase.TYPE_CLINICAL_RESEARCH + " case";
 		}
-		typeIcons.add(new VuetifyIcon(iconName, "grey", tooltip));
+		typeIcons.add(new VuetifyIcon(iconName, "grey", tooltip, 20));
 		typeFlags = new FlagValue(typeIcons);
 		
 		this.caseType = orderCase.getType();
@@ -109,8 +109,18 @@ public class OrderCaseForUser {
 		}
 		
 		for (int i = 0; i < totalSteps; i++) {
-			String color = i <= step ? "info" : "grey";
-			icons.add(new VuetifyIcon("mdi-numeric-" + i + "-box", color, OrderCase.getStepTooltip(i)));
+			String color = "info";
+			String when = "after";
+			if (i == step) {
+				color = "info";
+				when = "during";
+			}
+			else if (i > step) {
+				color = "grey";
+				when = "before";
+			}
+			String icon = "mdi-numeric-" + i + "-box";
+			icons.add(new VuetifyIcon(icon, color, OrderCase.getStepTooltip(when, i)));
 		}
 		
 		progressFlags = new FlagValue(icons);

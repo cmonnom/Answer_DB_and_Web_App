@@ -86,7 +86,7 @@ public class OrderCaseArchived {
 				}
 				if (lastFinalized != null) {
 					this.reportId = lastFinalized.getMongoDBId().getOid();
-					buttons.add(new Button("picture_as_pdf", "downloadPDFReport", "Download Finalized Report", "info"));
+					buttons.add(new Button("mdi-pdf-box", "downloadPDFReport", "Download Finalized Report", "info"));
 				}
 			} catch (UnsupportedOperationException | IOException | URISyntaxException e) {
 				e.printStackTrace();
@@ -109,7 +109,7 @@ public class OrderCaseArchived {
 			iconName = "fa-flask";
 			tooltip = OrderCase.TYPE_CLINICAL_RESEARCH + " case";
 		}
-		typeIcons.add(new VuetifyIcon(iconName, "grey", tooltip));
+		typeIcons.add(new VuetifyIcon(iconName, "grey", tooltip, 20));
 		typeFlags = new FlagValue(typeIcons);
 		
 		this.caseType = orderCase.getType();

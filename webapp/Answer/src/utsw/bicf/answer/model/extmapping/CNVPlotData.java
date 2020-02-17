@@ -13,6 +13,7 @@ public class CNVPlotData {
 	String caseId;
 	List<CNSData> cnsData;
 	List<CNRData> cnrData;
+	List<BAlleleFrequencyData> bAllData;
 	
 	
 	
@@ -78,6 +79,29 @@ public class CNVPlotData {
 
 	public void setCnrData(List<CNRData> cnrData) {
 		this.cnrData = cnrData;
+	}
+
+
+
+	public List<BAlleleFrequencyData> getbAllData() {
+		return bAllData;
+	}
+	
+	public List<BAlleleFrequencyData> getBAllData() {
+		return bAllData;
+	}
+
+
+
+	public void setbAllData(List<BAlleleFrequencyData> bAllData) {
+		this.bAllData = bAllData;
+	}
+
+
+
+	public void setBAllData(List<BAlleleFrequencyData> bAllData) {
+		this.bAllData = bAllData;
+		
 	}
 
 

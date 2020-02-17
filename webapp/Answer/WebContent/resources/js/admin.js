@@ -126,7 +126,7 @@ const Admin = {
 
   <v-toolbar dense dark color="primary" fixed app>
     <v-toolbar-title class="white--text">
-      Manage Application
+      Manage Application <span v-text="getAppVersion()"></span>
     </v-toolbar-title>
     <v-spacer></v-spacer>
   </v-toolbar>
@@ -414,6 +414,9 @@ const Admin = {
         .catch(error => {
           alert(error);
         });
+    },
+    getAppVersion() {
+      return "(version: " + version + ")";
     }
   },
   mounted: function () {

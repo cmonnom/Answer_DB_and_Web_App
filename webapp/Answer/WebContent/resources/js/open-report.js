@@ -191,7 +191,7 @@ const OpenReport = {
 
                     <v-list-tile avatar @click="previewReport()"  :disabled="isPreviewDisabled()" :loading="savingReport">
                     <v-list-tile-avatar>
-                        <v-icon>picture_as_pdf</v-icon>
+                        <v-icon>mdi-pdf-box</v-icon>
                     </v-list-tile-avatar>
                     <v-list-tile-content>
                         <v-list-tile-title>Preview Report as PDF</v-list-tile-title>
@@ -246,7 +246,7 @@ const OpenReport = {
 
         <v-tooltip bottom>
         <v-btn flat icon @click="previewReport" slot="activator" :disabled="isPreviewDisabled()" :loading="savingReport">
-            <v-icon>picture_as_pdf</v-icon>
+            <v-icon>mdi-pdf-box</v-icon>
         </v-btn>
         <span>Preview Report as PDF</span>
        </v-tooltip>

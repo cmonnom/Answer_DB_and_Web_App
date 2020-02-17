@@ -27,8 +27,11 @@ public class TranslocationReport {
 		this.leftGene = t.getLeftGene();
 		this.rightGene = t.getRightGene();
 		this.fusionName = t.getFusionName();
-		this.firstExon = t.getFirstExon();
-		this.lastExon = t.getLastExon();
+//		this.firstExon = t.getFirstExon();
+//		this.lastExon = t.getLastExon();
+		//reverse the 2 exons for the report
+		this.firstExon = t.getLastExon();
+		this.lastExon = t.getFirstExon();
 		this.comment = text;
 	}
 

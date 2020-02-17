@@ -430,7 +430,7 @@ Vue.component('data-table', {
                 text-color="white" label small disabled style="vertical-align: bottom">
                 {{ icon.iconName }}
                 </v-chip>
-                <v-icon v-if="!icon.chip" slot="activator" :color="props.item.active === false ? 'blue-grey lighten-2' : icon.color">
+                <v-icon v-if="!icon.chip" :size="icon.size ? icon.size : ''" slot="activator" :color="props.item.active === false ? 'blue-grey lighten-2' : icon.color">
                 {{ icon.iconName }}
               </v-icon>
               <span> {{ icon.tooltip }}</span>

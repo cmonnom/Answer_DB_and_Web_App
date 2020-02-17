@@ -14,14 +14,30 @@ public class OrderCase {
 	public static final String TYPE_RESEARCH = "Research";
 	public static final String TYPE_CLINICAL_RESEARCH = "ClinicalResearch";
 	
-	private static final Map<Integer, String> stepTooltip = new HashMap<Integer, String>();
+	private static final Map<Integer, String> stepTooltipBefore = new HashMap<Integer, String>();
+	private static final Map<Integer, String> stepTooltipDuring = new HashMap<Integer, String>();
+	private static final Map<Integer, String> stepTooltipAfter = new HashMap<Integer, String>();
 	static {
-		stepTooltip.put(0, "Not assigned");
-		stepTooltip.put(1, "Working on annotations");
-		stepTooltip.put(2, "Variant selection under review");
-		stepTooltip.put(3, "Creating the report");
-		stepTooltip.put(4, "Finalized");
-		stepTooltip.put(5, "Uploaded to Epic");
+		stepTooltipBefore.put(0, "Case not assigned yet");
+		stepTooltipBefore.put(1, "Waiting for annotations");
+		stepTooltipBefore.put(2, "Not being reviewed yet");
+		stepTooltipBefore.put(3, "Report not created yet");
+		stepTooltipBefore.put(4, "Report not finalized yet");
+		stepTooltipBefore.put(5, "Not uploaded to Epic yet");
+		
+		stepTooltipDuring.put(0, "Case assigned");
+		stepTooltipDuring.put(1, "Working on annotations");
+		stepTooltipDuring.put(2, "Variant selection under review");
+		stepTooltipDuring.put(3, "Creating the report");
+		stepTooltipDuring.put(4, "Finalized");
+		stepTooltipDuring.put(5, "Uploaded to Epic");
+		
+		stepTooltipAfter.put(0, "Case Assigned");
+		stepTooltipAfter.put(1, "Annotations done");
+		stepTooltipAfter.put(2, "Variant selection reviewed");
+		stepTooltipAfter.put(3, "Report created");
+		stepTooltipAfter.put(4, "Finalized");
+		stepTooltipAfter.put(5, "Uploaded to Epic");
 	}
 	
 	Boolean active;
@@ -379,12 +395,17 @@ public class OrderCase {
 
 
 
-	public static String getStepTooltip(int i) {
-		return stepTooltip.get(i);
+	public static String getStepTooltip(String when, int i) {
+		switch(when) {
+		case "before": return stepTooltipBefore.get(i); 
+		case "during": return stepTooltipDuring.get(i); 
+		case "after": return stepTooltipAfter.get(i);
+		}
+		return "";
 	}
 	
 	public static int getTotalSteps() {
-		return stepTooltip.size();
+		return stepTooltipBefore.size();
 	}
 
 
