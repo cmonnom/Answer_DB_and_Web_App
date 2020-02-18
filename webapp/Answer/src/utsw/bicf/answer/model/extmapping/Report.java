@@ -488,7 +488,13 @@ public class Report {
 		navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
 		navigationRowsPerGeneVUS = new HashMap<String, ReportNavigationRow>();
 		for (IndicatedTherapy it : this.getIndicatedTherapies()) {
-			this.incrementIndicatedTherapyCount(it.getBiomarkers());
+			String biomarkers = it.getBiomarkers();
+			if (biomarkers == null) {
+				biomarkers = it.getVariant();
+			}
+			if (biomarkers != null) {
+				this.incrementIndicatedTherapyCount(biomarkers);
+			}
 		}
 		//This is handled during the creation of the PDF
 //		for (BiomarkerTrialsRow trial : report.getClinicalTrials()) {

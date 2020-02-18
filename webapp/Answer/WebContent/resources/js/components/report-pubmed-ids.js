@@ -3,7 +3,8 @@
 Vue.component('report-pubmed-ids', {
     props: {
         pubmeds: {default: () => [], type: Array},
-        color: {default: "primary", type: String}
+        color: {default: "primary", type: String},
+        addButton: {default: false, type: Boolean}
     },
     template: `<v-card>
     <v-toolbar class="elevation-0" dense dark :color="color">
@@ -11,7 +12,7 @@ Vue.component('report-pubmed-ids', {
             <v-btn slot="activator" flat icon dark>
                 <v-icon color="amber accent-2">mdi-book-open-page-variant</v-icon>
             </v-btn>
-            <v-list>
+            <v-list v-if="addButton">
                 <v-list-tile avatar @click="addNewPubMed()">
                     <v-list-tile-avatar>
                         <v-icon>add</v-icon>
@@ -34,7 +35,7 @@ Vue.component('report-pubmed-ids', {
         </v-menu>
         <v-toolbar-title>PubMed References</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-tooltip bottom>
+        <v-tooltip bottom v-if="addButton">
             <v-btn flat icon @click="addNewVisible = !addNewVisible" slot="activator">
                 <v-icon>add</v-icon>
             </v-btn>

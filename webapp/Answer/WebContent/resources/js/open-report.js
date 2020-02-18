@@ -359,7 +359,7 @@ const OpenReport = {
             <div>
                 <data-table ref="indicatedTherapies" :fixed="false" :fetch-on-created="false" table-title="Indicated Therapies"
                     initial-sort="gene" no-data-text="No Data" :show-pagination="true" title-icon="mdi-pill" :color="colors.openReport"
-                    :disable-sticky-header="true" :add-row-button="true"
+                    :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
                     add-row-description="(for this report only. Unsaved changes will be discarded)"
                     @adding-new-row="handleNewIndicatedTherapyRow">
                 </data-table>
@@ -373,7 +373,7 @@ const OpenReport = {
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
                 :enable-select-all="!fullReport.finalized"
                     initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="mdi-scale-balance"
-                    :color="colors.trials" icon-color="white" icon-active-color="error" :disable-sticky-header="true" :add-row-button="true"
+                    :color="colors.trials" icon-color="white" icon-active-color="error" :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
                     :enable-selection="canProceed('canReview') && !readonly"
                     @datatable-selection-changed="handleSelectionChanged"
                     add-row-description="(for this report only. Unsaved changes will be discarded)"
@@ -388,7 +388,7 @@ const OpenReport = {
         <div>
             <data-table ref="strongCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Strong Clinical Significance"
                 initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
-                :disable-sticky-header="true" :add-row-button="true"
+                :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
                 add-row-description="(for this report only. Unsaved changes will be discarded)"
                 @adding-new-row="handleNewStrongCSRow"
                 :additional-headers="additionalCSHeaders">
@@ -402,7 +402,7 @@ const OpenReport = {
     <div>
         <data-table ref="possibleCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Possible Clinical Significance"
             initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
-            :disable-sticky-header="true" :add-row-button="true"
+            :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
             add-row-description="(for this report only. Unsaved changes will be discarded)"
             @adding-new-row="handleNewPossibleCSRow"
             :additional-headers="additionalCSHeaders">
@@ -416,7 +416,7 @@ const OpenReport = {
     <div>
         <data-table ref="unknownCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Unknown Clinical Significance"
             initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
-            :disable-sticky-header="true" :add-row-button="true"
+            :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
             add-row-description="(for this report only. Unsaved changes will be discarded)"
             @adding-new-row="handleNewUnknownCSRow">
         </data-table>
@@ -429,7 +429,7 @@ const OpenReport = {
             <div>
                 <data-table ref="copyNumberAlterations" :fixed="false" :fetch-on-created="false" table-title="Copy Number Alterations"
                     initial-sort="gene" no-data-text="No Data" :show-pagination="true" title-icon="assignment" :color="colors.cnvs"
-                    :disable-sticky-header="true" :add-row-button="true"
+                    :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
                     add-row-description="(for this report only. Unsaved changes will be discarded)"
                     @adding-new-row="handleNewCNVRow"             >
                 </data-table>
@@ -442,7 +442,7 @@ const OpenReport = {
             <div>
                 <data-table ref="geneFusions" :fixed="false" :fetch-on-created="false" table-title="Gene Fusions"
                     initial-sort="fusionName" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
-                    :color="colors.fusions" :disable-sticky-header="true" :add-row-button="true"
+                    :color="colors.fusions" :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
                     add-row-description="(for this report only. Unsaved changes will be discarded)"
                     @adding-new-row="handleNewFTLRow">
                 </data-table>
@@ -455,6 +455,7 @@ const OpenReport = {
         <report-pubmed-ids :color="colors.pubmeds" ref="pubmedTable"
         :pubmeds="fullReport.pubmeds"
         @close-pmid-panel="pmidPanelVisible = false"
+        :addButton="canProceed('canReview') && !readonly"
         @add-pubmed-reference="addPubMedReference"></report-pubmed-ids>
     </v-flex>
 </v-slide-y-transition>
