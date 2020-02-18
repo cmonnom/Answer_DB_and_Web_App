@@ -22,6 +22,7 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.Report;
+import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
@@ -70,6 +71,7 @@ public class ReportSummary {
 	
 	List<Variant> missingTierVariants = new ArrayList<Variant>();
 	List<CNV> missingTierCNVs = new ArrayList<CNV>();
+	List<Translocation> missingTierFTLs = new ArrayList<Translocation>();
 	Boolean finalized;
 	
 	String labTestName;
@@ -178,6 +180,7 @@ public class ReportSummary {
 	
 		this.missingTierVariants = reportDetails.getMissingTierVariants();
 		this.missingTierCNVs = reportDetails.getMissingTierCNVs();
+		this.missingTierFTLs = reportDetails.getMissingTierFTLs();
 		this.finalized = reportDetails.getFinalized();
 		
 		this.snpIds = reportDetails.getSnpIds();
@@ -617,6 +620,14 @@ public class ReportSummary {
 
 	public void setNavigationRowsPerGeneVUS(Map<String, ReportNavigationRow> navigationRowsPerGeneVUS) {
 		this.navigationRowsPerGeneVUS = navigationRowsPerGeneVUS;
+	}
+
+	public List<Translocation> getMissingTierFTLs() {
+		return missingTierFTLs;
+	}
+
+	public void setMissingTierFTLs(List<Translocation> missingTierFTLs) {
+		this.missingTierFTLs = missingTierFTLs;
 	}
 
 

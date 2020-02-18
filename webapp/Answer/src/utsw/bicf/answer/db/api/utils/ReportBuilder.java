@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -343,7 +344,7 @@ public class ReportBuilder {
 				//set Uncategorized if needed
 				selectedAnnotations.stream().forEach(a -> a.setCategory(a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory()));
 				long tiersFound = selectedAnnotations.stream().filter(a -> a.getTier() != null).count();
-				long moreThanTherapy = selectedAnnotations.stream().filter(a -> !a.getCategory().equals(CAT_THERAPY)).count();
+				long moreThanTherapy = selectedAnnotations.stream().filter(a -> !a.getCategory().equals(CAT_THERAPY) && !a.getCategory().equals(CAT_CLINICAL_TRIAL)).count();
 				if (tiersFound == 0 || moreThanTherapy == 0) { //at least one annotation should have a tier
 					annotationsAreValid = false;
 				}
@@ -465,8 +466,11 @@ public class ReportBuilder {
 		List<TranslocationReport> ftls = new ArrayList<TranslocationReport>();
 		for (Translocation ftl : annotationsPerFTL.keySet()) {
 			String concatText = annotationsPerFTL.get(ftl).stream().filter(a -> annotationGoesInFTLTable(a)).map(a -> a.getText()).collect(Collectors.joining(" "));
-			TranslocationReport ftlCard = annotationsPerFTL.get(ftl).stream().filter(a -> annotationGoesInFTLTable(a)).map(a -> new TranslocationReport(concatText, ftl)).collect(Collectors.toList()).get(0);
-			ftls.add(ftlCard);
+			long itemCount = annotationsPerFTL.get(ftl).stream().filter(a -> annotationGoesInFTLTable(a)).count();
+			if (itemCount != 0) {
+				TranslocationReport ftlCard = annotationsPerFTL.get(ftl).stream().filter(a -> annotationGoesInFTLTable(a)).map(a -> new TranslocationReport(concatText, ftl)).collect(Collectors.toList()).get(0);
+				ftls.add(ftlCard);
+			}
 		}
 		return ftls;
 	}

@@ -26,6 +26,7 @@ Vue.component('report-tier-warning', {
        <v-icon color="error">warning</v-icon>
        <span  v-if="variant.type == 'SNP'">{{variant.type}} {{ variant.chrom }}:{{ variant.name}} {{variant.notation }}</span>
        <span  v-if="variant.type == 'CNV'">{{variant.type}} {{ variant.chrom }}</span>
+       <span  v-if="variant.type == 'TRANSLOCATION'">FTL {{ variant.name }}</span>
        <v-tooltip bottom>
        <v-btn class="mr-0" icon flat slot="activator" :href="createVariantEditLink(variant)" target="_blank" rel="noreferrer">
        <v-icon>zoom_in</v-icon>

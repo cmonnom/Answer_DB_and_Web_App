@@ -46,11 +46,18 @@ public class PatientInfo {
 				dabDate = LocalDate.parse(dab, TypeUtils.monthFormatter);
 			}
 			if (dab.contains("/")) {
-				String firstItem = dab.split("/")[0];
-				if (firstItem.length() == 2) {
+				String[] dateItems = dab.split("/");
+				if (dateItems[0].length() == 1) { //fix single digit dates
+					dateItems[0] = 0 + dateItems[0]; 
+				}
+				if (dateItems[1].length() == 1) { //fix single digit dates
+					dateItems[1] = 0 + dateItems[1]; 
+				}
+				if (dateItems[0].length() == 2) { //format like MM/dd/YYYY
+					dab = dateItems[0] + "/" + dateItems[1] + "/" + dateItems[2];
 					dabDate = LocalDate.parse(dab, TypeUtils.localDateFormatter);
 				}
-				else {
+				else { //format like YYYY/MM/dd
 					dabDate = LocalDate.parse(dab, TypeUtils.localDateFormatterYearFirst);
 				}
 			}

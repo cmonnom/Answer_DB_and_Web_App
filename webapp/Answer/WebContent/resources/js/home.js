@@ -150,7 +150,7 @@ const Home = {
             <v-layout row wrap>
             <v-slide-x-transition>
               <v-flex xs12 >
-                <data-table ref="casesForUserTable" :fixed="false" :fetch-on-created="false" table-title="Active Cases" :initial-sort="'epicOrderDate'"
+                <data-table ref="casesForUserTable" :fixed="false" :fetch-on-created="false" table-title="Active Cases" initial-sort="epicOrderDate"
                   no-data-text="No Data" :show-pagination="true" title-icon="star" @refresh-requested="handleRefresh()">
                 </data-table>
               </v-flex>
@@ -158,7 +158,7 @@ const Home = {
     
             <v-slide-x-transition>
             <v-flex xs12 >
-              <data-table ref="casesForUserCompletedTable" :fixed="false" :fetch-on-created="false" table-title="Completed Cases" :initial-sort="'epicOrderDate'"
+              <data-table ref="casesForUserCompletedTable" :fixed="false" :fetch-on-created="false" table-title="Completed Cases" initial-sort="epicOrderDate"
                 no-data-text="No Data" :show-pagination="true" title-icon="star" @refresh-requested="handleRefresh()">
               </data-table>
             </v-flex>
@@ -171,7 +171,7 @@ const Home = {
                 <v-layout row wrap>
                   <v-slide-x-transition>
                     <v-flex xs12>
-                      <data-table ref="casesAllTable" :fixed="false" :fetch-on-created="false" table-title="All Cases" :initial-sort="'epicOrderDate'"
+                      <data-table ref="casesAllTable" :fixed="false" :fetch-on-created="false" table-title="All Cases" initial-sort="epicOrderDate"
                       :sort-descending="true" no-data-text="No Data" :show-pagination="true" title-icon="mdi-table-search" @refresh-requested="handleRefresh()">
                       </data-table>
                     </v-flex>

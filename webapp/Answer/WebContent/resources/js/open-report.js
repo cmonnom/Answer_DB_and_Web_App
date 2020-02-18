@@ -666,6 +666,14 @@ const OpenReport = {
                                 chrom: formatChrom(variant.chrom),
                             });
                         }
+                        for (var i = 0; i < this.fullReport.missingTierFTLs.length; i++) {
+                            var variant = this.fullReport.missingTierFTLs[i];
+                            this.variantsMissingTier.push({
+                                id: variant._id.$oid,
+                                type: "TRANSLOCATION",
+                                name: variant.fusionName
+                            });
+                        }
                         this.originalFullReportSummary = this.fullReport.summary;
                         this.$refs.patientDetails.patientTables = this.fullReport.patientInfo.patientTables;
                         this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
