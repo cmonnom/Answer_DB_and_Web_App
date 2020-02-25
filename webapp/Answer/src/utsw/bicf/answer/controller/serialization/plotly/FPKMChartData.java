@@ -59,13 +59,18 @@ public class FPKMChartData extends PlotlyChartData {
 			this.outliersData = outliersData.stream().map(v -> convertToLog2(v)).collect(Collectors.toList());
 			this.currentCaseData = convertToLog2(this.currentCaseData);
 		}
-		this.min = Math.min(this.min, this.currentCaseData);
+		if (this.currentCaseData != null) {
+			this.min = Math.min(this.min, this.currentCaseData);
+			this.max = Math.max(this.max, this.currentCaseData);
+		}
 		this.min = 1.05d * this.min;
-		this.max = Math.max(this.max, this.currentCaseData);
 		this.max = 1.05d * this.max;
 	}
 	
 	private Double convertToLog2(Double value) {
+		if (value == null) {
+			return null;
+		}
 		if (value == 0d) {
 			value = 0.01d;
 		}

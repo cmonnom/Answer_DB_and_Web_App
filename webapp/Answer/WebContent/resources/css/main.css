@@ -609,3 +609,14 @@ table.v-table tbody td:first-child, table.v-table tbody td:not(:first-child), ta
 .no-background {
     background: none !important;
 }
+
+/**
+Slow down the fullscreen dialog
+**/
+.v-dialog {
+    transition: 0.75s cubic-bezier(.25,.8,.25,1);
+  }
+
+.hidden {
+    visibility: hidden;
+}

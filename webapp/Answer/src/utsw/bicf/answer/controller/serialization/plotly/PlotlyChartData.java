@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class PlotlyChartData {
 	
 	Boolean isAllowed = true;
+	boolean success = true;
 	
 	public PlotlyChartData() {
 	}
@@ -21,6 +22,14 @@ public class PlotlyChartData {
 
 	public void setIsAllowed(Boolean isAllowed) {
 		this.isAllowed = isAllowed;
+	}
+
+	public boolean isSuccess() {
+		return success;
+	}
+
+	public void setSuccess(boolean success) {
+		this.success = success;
 	}
 
 

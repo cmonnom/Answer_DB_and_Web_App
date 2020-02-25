@@ -2,15 +2,21 @@ Vue.component('splash-screen', {
     props: {
         splashDialog: { default: true, type: Boolean },
     },
-    template: `<div class="splash-screen" v-if="splashDialog">
-    <v-layout align-center justify-center row fill-height class="splash-screen-item">
+    template: `
+    <v-fade-transition >
+    <div class="splash-screen" v-if="splashDialog">
+    <v-fade-transition >
+    <v-layout align-center justify-center row fill-height class="splash-screen-item"  v-show="showFab">
     <span class="subheading splash-text">{{ splashTextCurrent }}</span>
-    <v-btn fixed dark fab top left flat color="primary" class="custom-loader">
+    <v-btn fixed dark fab top left flat color="primary" class="custom-loader"
+    >
       <img
       :src="loadingImageUrl()" alt="loading page" width="100%"/>
     </v-btn>
     </v-layout>
-  </div>`,
+    </v-fade-transition >
+  </div>
+  </v-fade-transition >`,
     data() {
         return {
             splashTextCurrent: "Warming Up...",
@@ -29,6 +35,7 @@ Vue.component('splash-screen', {
                 "Loading Environment...",
                 "Almost There..."
             ],
+            showFab: false
         }
 
     },
@@ -60,6 +67,9 @@ Vue.component('splash-screen', {
         }
     },
     computed: {
+    },
+    mounted() {
+        this.showFab = true;
     },
     created() {
     },

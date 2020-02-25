@@ -56,7 +56,8 @@ public class MenuController {
 			if (cases != null) {
 				List<OrderCase> assignedCases = new ArrayList<OrderCase>();
 				for (OrderCase c : cases) {
-					if (allCases || (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && ControllerUtil.isUserAssignedToCase(c, user)
+					if ((allCases && c.getActive() != null && c.getActive()) 
+						|| (c.getAssignedTo() != null && !c.getAssignedTo().isEmpty() && ControllerUtil.isUserAssignedToCase(c, user)
 							&& c.getActive() != null && c.getActive()
 							&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
 							&& !CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC))) {
@@ -116,7 +117,7 @@ public class MenuController {
 				List<OrderCase> casesWithReports = new ArrayList<OrderCase>();
 				for (OrderCase c : cases) {
 					if (CaseHistory.lastStepMatches(c, CaseHistory.STEP_REPORTING)
-							&& (allReports || ControllerUtil.isUserAssignedToCase(c, user)
+							&& ((allReports && c.getActive() != null && c.getActive())  || ControllerUtil.isUserAssignedToCase(c, user)
 							&& c.getActive() != null && c.getActive())) {
 						casesWithReports.add(c);
 					}

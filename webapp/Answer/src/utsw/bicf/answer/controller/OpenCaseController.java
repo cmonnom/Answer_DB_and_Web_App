@@ -301,6 +301,10 @@ public class OpenCaseController {
 		
 		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, qcAPI, detailedCase, "oid", user,
 				reportGroupsForDisplay);
+//		SNPIndelVariantRow row = summary.getSnpIndelVariantSummary().getItems().get(0);
+//		List<SNPIndelVariantRow> rows = new ArrayList<SNPIndelVariantRow>();
+//		rows.add(row);
+//		summary.getSnpIndelVariantSummary().setItems(rows);
 		return summary.createVuetifyObjectJSON();
 
 	}
@@ -1838,18 +1842,21 @@ public class OpenCaseController {
 		ajaxResponse.setIsAllowed(true);
 		ajaxResponse.setSuccess(true);
 		List<FPKMPerCaseData> fpkms = utils.getFPKMChartData(ajaxResponse, caseId, geneParam);
-		if (fpkms != null) {
+		if (fpkms != null && !fpkms.isEmpty()) {
 			data.setFpkms(fpkms);
 			data.setOncotreeCode(fpkms.get(0).getOncotreeDiagnosis());
 //			data.setOncotreeCode("AML"); //for testing only
 			return new utsw.bicf.answer.controller.serialization.plotly.FPKMChartData(data, caseId, useLog2).createObjectJSON();
 		}
-		else {
-			AjaxResponse response = new AjaxResponse();
-			response.setIsAllowed(false);
-			response.setSuccess(false);
-			return response.createObjectJSON();
+		else if (fpkms != null && fpkms.isEmpty()) {
+			ajaxResponse.setIsAllowed(true);
+			ajaxResponse.setSuccess(false);
 		}
+		else {
+			ajaxResponse.setIsAllowed(false);
+			ajaxResponse.setSuccess(false);
+		}
+		return ajaxResponse.createObjectJSON();
 
 	}
 	

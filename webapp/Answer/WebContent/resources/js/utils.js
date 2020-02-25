@@ -41,3 +41,18 @@ function formatChrom(chrom) {
 function sanitize(text) {
    return text.split("<br/>");
 }
+
+var start;
+function setStart() {
+    start = moment();
+}
+
+/**
+ * After using setStart(), you can display
+ * the number of seconds (decimal) passed since
+ */
+function displayDuration() {
+    var end = moment();
+    var duration = moment.duration(end.diff(start));
+    console.log(duration.asSeconds());
+}

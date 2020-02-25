@@ -54,8 +54,11 @@ Vue.component('fpkm-plot', {
             FPKM for cases diagnosed with {{ currentOncotreeCode }}
             <br/> on gene {{ getCurrentGeneName() }}</div> 
             -->
-            <div id="fpkmPlot" v-if="canPlot"></div>
-            <div v-else class="subheading">
+            <div v-if="showNoDataMessage" class="centered subheading pb-2">
+            {{ noDataMessage }}
+            </div>
+            <div id="fpkmPlot" v-show="canPlot"></div>
+            <div v-show="!canPlot" class="subheading">
                 <v-layout fill-height align-center justify-center row>
                     <v-flex xs12>
                     This case doesn't have an OncoTree Diagnosis yet.<br/>
@@ -99,6 +102,8 @@ Vue.component('fpkm-plot', {
             currentOncotreeCode: null,
             useLog2: true,
             openedOnce: false,
+            noDataMessage: "No FPKM Data could be found",
+            showNoDataMessage: false,
             oncotreeAMLCodes: ["AML",
             "AMLNOS",
             "AMKL",
@@ -213,10 +218,12 @@ Vue.component('fpkm-plot', {
             return "FPKM from " + this.getTissueFromOncotreeCode(code) +" tissue<br> on gene " + this.getCurrentGeneName() + " (" + caseString + ")";
         },
         updateFPKMPlot() {
+
             if (!this.currentGene) {
                 return;
             }
             this.loading = true;
+            this.showNoDataMessage = false;
             axios.get(webAppRoot + "/getFPKMChartData", {
                 params: {
                     caseId: this.$route.params.id,
@@ -226,7 +233,7 @@ Vue.component('fpkm-plot', {
                 }
             })
                 .then(response => {
-                    if (response.data.isAllowed) {
+                    if (response.data.isAllowed && response.data.success) {
                         var chartData = response.data;
                         this.currentOncotreeCode = chartData.oncotreeCode;
                         var allDataTrace = {
@@ -281,6 +288,9 @@ Vue.component('fpkm-plot', {
                         this.$nextTick(() => {
                             Plotly.newPlot('fpkmPlot', data, layout, this.plotlyConfig);
                             });
+                    }
+                    else if (response.data.isAllowed && !response.data.success) {
+                        this.showNoDataMessage = true;
                     }
                     else {
                         this.handleDialogs(response.data, this.updateFPKMPlot);
@@ -366,6 +376,11 @@ Vue.component('fpkm-plot', {
     },
     created() {
         this.populateItems();
+    },
+    destroyed() {
+        if (document.getElementById('fpkmPlot')) {
+            Plotly.purge('fpkmPlot');
+        }
     },
     watch: {
         search(value) {

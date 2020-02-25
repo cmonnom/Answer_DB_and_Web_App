@@ -77,14 +77,14 @@ const OpenReport = {
                     <v-list-tile class="list-menu">
                         <v-list-tile-content>
                             <v-list-tile-title>
-                                <v-menu offset-y offset-x open-on-hover>
+                                <v-menu offset-x open-on-hover close-delay="500">
                                     <span slot="activator">
                                         <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide
                                         <!-- This is a hack to extend the menu active area because the title is much shorter than other items -->
                                         <span v-for="i in 30" :key="i">&nbsp;</span>
                                     </span>
                                     <v-list>
-                                    <v-list-tile avatar @click="existingReportsVisible = !existingReportsVisible">
+                                    <v-list-tile :class="!existingReportsVisible ? 'grey--text' : ''" avatar @click="existingReportsVisible = !existingReportsVisible">
                                     <v-list-tile-avatar>
                                         <v-icon>assignment</v-icon>
                                         <v-icon class="multi-icon">assignment</v-icon>
@@ -94,7 +94,7 @@ const OpenReport = {
                                     </v-list-tile-content>
                                     </v-list-tile>
 
-                                        <v-list-tile avatar @click="patientDetailsVisible = !patientDetailsVisible">
+                                        <v-list-tile :class="!patientDetailsVisible ? 'grey--text' : ''" avatar @click="patientDetailsVisible = !patientDetailsVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>assignment_ind</v-icon>
                                             </v-list-tile-avatar>
@@ -103,7 +103,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="reportNotesVisible = !reportNotesVisible">
+                                        <v-list-tile :class="!reportNotesVisible ? 'grey--text' : ''" avatar @click="reportNotesVisible = !reportNotesVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>edit</v-icon>
                                             </v-list-tile-avatar>
@@ -112,7 +112,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="indicatedTherapiesVisible = !indicatedTherapiesVisible">
+                                        <v-list-tile :class="!indicatedTherapiesVisible ? 'grey--text' : ''" avatar @click="indicatedTherapiesVisible = !indicatedTherapiesVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>mdi-pill</v-icon>
                                             </v-list-tile-avatar>
@@ -121,7 +121,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="clinicalTrialsVisible = !clinicalTrialsVisible">
+                                        <v-list-tile :class="!clinicalTrialsVisible ? 'grey--text' : ''" avatar @click="clinicalTrialsVisible = !clinicalTrialsVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>mdi-scale-balance</v-icon>
                                             </v-list-tile-avatar>
@@ -130,7 +130,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="strongClinicalSignificanceVisible = !strongClinicalSignificanceVisible">
+                                        <v-list-tile :class="!strongClinicalSignificanceVisible ? 'grey--text' : ''" avatar @click="strongClinicalSignificanceVisible = !strongClinicalSignificanceVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>mdi-message-bulleted</v-icon>
                                             </v-list-tile-avatar>
@@ -139,7 +139,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="possibleClinicalSignificanceVisible = !possibleClinicalSignificanceVisible">
+                                        <v-list-tile :class="!possibleClinicalSignificanceVisible ? 'grey--text' : ''" avatar @click="possibleClinicalSignificanceVisible = !possibleClinicalSignificanceVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>mdi-message-bulleted</v-icon>
                                             </v-list-tile-avatar>
@@ -148,7 +148,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="unknownClinicalSignificanceVisible = !unknownClinicalSignificanceVisible">
+                                        <v-list-tile :class="!unknownClinicalSignificanceVisible ? 'grey--text' : ''" avatar @click="unknownClinicalSignificanceVisible = !unknownClinicalSignificanceVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>mdi-message-bulleted</v-icon>
                                             </v-list-tile-avatar>
@@ -157,7 +157,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="copyNumberAlterationsVisible = !copyNumberAlterationsVisible">
+                                        <v-list-tile :class="!copyNumberAlterationsVisible ? 'grey--text' : ''" avatar @click="copyNumberAlterationsVisible = !copyNumberAlterationsVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>assignment</v-icon>
                                             </v-list-tile-avatar>
@@ -166,7 +166,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="geneFusionVisible = !geneFusionVisible">
+                                        <v-list-tile :class="!geneFusionVisible ? 'grey--text' : ''" avatar @click="geneFusionVisible = !geneFusionVisible">
                                             <v-list-tile-avatar>
                                                 <v-icon>assignment</v-icon>
                                             </v-list-tile-avatar>
@@ -175,7 +175,7 @@ const OpenReport = {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                        <v-list-tile avatar @click="pmidPanelVisible = !pmidPanelVisible">
+                                        <v-list-tile :class="!pmidPanelVisible ? 'grey--text' : ''" avatar @click="pmidPanelVisible = !pmidPanelVisible">
                                         <v-list-tile-avatar>
                                             <v-icon>mdi-book-open-page-variant</v-icon>
                                         </v-list-tile-avatar>

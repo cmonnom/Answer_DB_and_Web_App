@@ -154,14 +154,14 @@ const OpenCase2 = {
     </v-dialog>
 
 
-    <v-toolbar dense dark :color="colors.openCase" fixed app :extended="loadingVariantDetails">
+    <v-toolbar dense dark :color="colors.openCase" fixed app>
     <v-tooltip class="ml-0" bottom>
         <v-menu offset-y offset-x slot="activator" class="ml-0">
             <v-btn slot="activator" flat icon dark>
                 <v-icon>more_vert</v-icon>
             </v-btn>
             <v-list>
-                <v-list-tile avatar @click="patientDetailsVisible = !patientDetailsVisible" :disabled="patientTables.length == 0">
+                <v-list-tile :class="!patientDetailsVisible ? 'grey--text' : ''" avatar @click="patientDetailsVisible = !patientDetailsVisible" :disabled="patientTables.length == 0">
                     <v-list-tile-avatar>
                         <v-icon>assignment_ind</v-icon>
                     </v-list-tile-avatar>
@@ -170,7 +170,7 @@ const OpenCase2 = {
                     </v-list-tile-content>
                 </v-list-tile>
 
-                <v-list-tile avatar @click="caseAnnotationsVisible = !caseAnnotationsVisible" :disabled="patientTables.length == 0">
+                <v-list-tile :class="!caseAnnotationsVisible ? 'grey--text' : ''"  avatar @click="caseAnnotationsVisible = !caseAnnotationsVisible" :disabled="patientTables.length == 0">
                     <v-list-tile-avatar>
                         <v-icon>mdi-message-bulleted</v-icon>
                     </v-list-tile-avatar>
@@ -294,8 +294,12 @@ const OpenCase2 = {
           <v-icon slot="activator" :size="caseTypeIconSize" class="icon-align-cancel"> {{ caseTypeIcon }} </v-icon>
         <span>{{caseType}} case</span>  
         </v-tooltip>
-    </v-toolbar-title>
-    <v-spacer></v-spacer>
+        </v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-fade-transition>
+        <v-progress-linear class="ml-4 mr-4" v-if="(!caseName || loadingVariantDetails) && !splashDialog"
+        :indeterminate="true" color="white" style="max-width:200px"></v-progress-linear>
+        </v-fade-transition>    
     <v-tooltip bottom>
         <v-btn :disabled="patientTables.length == 0" flat icon @click="patientDetailsVisible = !patientDetailsVisible" slot="activator"
             :color="patientDetailsVisible ? 'amber accent-2' : ''">
@@ -379,8 +383,6 @@ const OpenCase2 = {
         <span v-html="createSaveTooltip()"></span>
     </v-tooltip>
     </v-badge>
-    <v-progress-linear class="ml-4 mr-4" :slot="loadingVariantDetails ? 'extension' : ''" v-show="(!caseName || loadingVariantDetails) && !splashDialog"
-        :indeterminate="true" color="white"></v-progress-linear>
 </v-toolbar>
 
 <v-breadcrumbs class="pt-2">
@@ -520,7 +522,9 @@ const OpenCase2 = {
 </v-slide-y-transition>
 
 <v-slide-y-transition>
-    <v-tabs slot="extension" dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="variantTabActive" v-show="variantTabsVisible" hide-slider>
+    <v-tabs slot="extension" dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs 
+    v-model="variantTabActive" hide-slider
+    :class="variantTabsVisible ? '' : 'hidden'">
         <v-tab href="#tab-snp" :ripple="false" active-class="v-tabs__item--active primary">SNP / Indel</v-tab>
         <v-tab href="#tab-cnv" :ripple="false" active-class="v-tabs__item--active primary">CNV</v-tab>
         <v-tab href="#tab-translocation" :ripple="false" active-class="v-tabs__item--active primary">Fusion / Translocation</v-tab>
@@ -662,7 +666,7 @@ const OpenCase2 = {
                 caseNotesChanged: false,
                 splashDialog: splashDialog,
                 breadcrumbs: [],
-                variantTabsVisible: true,
+                variantTabsVisible: fromCaseSwitch,
                 variantTabActive: null,
                 highlights: {
                     genes: []
@@ -1013,7 +1017,6 @@ const OpenCase2 = {
             this.snackBarVisible = true;
         },
         getAjaxData() {
-            //TODO
             if (this.loadingVariantDetails) {
                 return new Promise((resolve, reject) => {
                     resolve({success: true});
@@ -1141,6 +1144,7 @@ const OpenCase2 = {
                             this.patientDetailsVisible = true;
                             this.caseAnnotationsVisible = true;
                         }
+                        this.variantTabsVisible = true;
                         this.loadingVariantDetails = false;
                         this.$refs.advancedFilter.loading = false;
                         this.isVariantOpening = false;

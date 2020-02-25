@@ -162,7 +162,7 @@ Vue.component('variant-details-dialog', {
                                             <span v-for="i in 30" :key="i">&nbsp;</span>
                                         </span>
                                         <v-list>
-                                            <v-list-tile avatar @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible">
+                                            <v-list-tile :class="!annotationVariantDetailsVisible ? 'grey--text' : ''" avatar @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible">
                                                 <v-list-tile-avatar>
                                                     <v-icon>zoom_in</v-icon>
                                                 </v-list-tile-avatar>
@@ -171,7 +171,7 @@ Vue.component('variant-details-dialog', {
                                                 </v-list-tile-content>
                                             </v-list-tile>
 
-                                            <v-list-tile v-if="isSNP()" avatar :disabled="!currentVariantHasRelatedVariants" @click="toggleRelatedVariants()">
+                                            <v-list-tile v-if="isSNP()" :class="!currentVariantHasRelatedVariants ? 'grey--text' : ''" avatar :disabled="!currentVariantHasRelatedVariants" @click="toggleRelatedVariants()">
                                                 <v-list-tile-avatar>
                                                     <v-icon>link</v-icon>
                                                 </v-list-tile-avatar>
@@ -180,7 +180,7 @@ Vue.component('variant-details-dialog', {
                                                 </v-list-tile-content>
                                             </v-list-tile>
 
-                                            <v-list-tile v-if="isSNP()" avatar :disabled="!currentVariantHasRelatedCNV" @click="toggleRelatedCNV()">
+                                            <v-list-tile v-if="isSNP()" :class="!currentVariantHasRelatedCNV ? 'grey--text' : ''" avatar :disabled="!currentVariantHasRelatedCNV" @click="toggleRelatedCNV()">
                                             <v-list-tile-avatar>
                                                 <v-icon>link</v-icon>
                                             </v-list-tile-avatar>
@@ -189,7 +189,7 @@ Vue.component('variant-details-dialog', {
                                             </v-list-tile-content>
                                         </v-list-tile>
 
-                                            <v-list-tile v-if="isSNP()" avatar @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible">
+                                            <v-list-tile v-if="isSNP()" :class="!annotationVariantCanonicalVisible ? 'grey--text' : ''" avatar @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible">
                                                 <v-list-tile-avatar>
                                                     <v-icon>mdi-table-search</v-icon>
                                                 </v-list-tile-avatar>
@@ -198,7 +198,7 @@ Vue.component('variant-details-dialog', {
                                                 </v-list-tile-content>
                                             </v-list-tile>
 
-                                            <v-list-tile v-if="isSNP()" avatar @click="annotationVariantOtherVisible = !annotationVariantOtherVisible">
+                                            <v-list-tile v-if="isSNP()" :class="!annotationVariantOtherVisible ? 'grey--text' : ''" avatar @click="annotationVariantOtherVisible = !annotationVariantOtherVisible">
                                                 <v-list-tile-avatar>
                                                     <v-icon>mdi-table-search</v-icon>
                                                 </v-list-tile-avatar>
@@ -207,8 +207,8 @@ Vue.component('variant-details-dialog', {
                                                 </v-list-tile-content>
                                             </v-list-tile>
 
-
-                                            <v-list-tile v-if="isSNP() || isCNV()" avatar @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" :disabled="!mdaAnnotationsExists()">
+                                            <!--
+                                            <v-list-tile v-if="isSNP() || isCNV()" :class="!mdaAnnotationsVisible ? 'grey--text' : ''" avatar @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" :disabled="!mdaAnnotationsExists()">
                                                 <v-list-tile-avatar>
                                                     <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
                                                     <v-icon v-else>mdi-message-bulleted-off</v-icon>
@@ -218,8 +218,9 @@ Vue.component('variant-details-dialog', {
                                                     <v-list-tile-title v-else>No MDA Annotations</v-list-tile-title>
                                                 </v-list-tile-content>
                                             </v-list-tile>
+                                            -->
 
-                                            <v-list-tile avatar @click="utswAnnotationsVisible = !utswAnnotationsVisible" :disabled="!utswAnnotationsExists()">
+                                            <v-list-tile avatar :class="!utswAnnotationsVisible ? 'grey--text' : ''" avatar @click="utswAnnotationsVisible = !utswAnnotationsVisible" :disabled="!utswAnnotationsExists()">
                                                 <v-list-tile-avatar>
                                                     <v-icon v-if="utswAnnotationsExists()">mdi-message-bulleted</v-icon>
                                                     <v-icon v-else>mdi-message-bulleted-off</v-icon>
@@ -371,6 +372,7 @@ Vue.component('variant-details-dialog', {
                     </v-btn>
                     <span>Show/Hide Canonical VCF Annotations</span>
                 </v-tooltip>
+                <!--
                 <v-tooltip bottom v-if="isSNP || isCNV()">
                     <v-btn :disabled="!mdaAnnotationsExists()" icon flat :color="(mdaAnnotationsVisible && mdaAnnotationsExists()) ? 'amber accent-2' : ''"
                         @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" slot="activator">
@@ -380,6 +382,7 @@ Vue.component('variant-details-dialog', {
                     <span v-if="mdaAnnotationsExists()">Show/Hide MDA Annotations</span>
                     <span v-else>No MDA Annotations</span>
                 </v-tooltip>
+                -->
                 <v-tooltip bottom>
                     <v-btn :disabled="!utswAnnotationsExists()" icon flat :color="(utswAnnotationsVisible && utswAnnotationsExists()) ? 'amber accent-2' : ''"
                         @click="utswAnnotationsVisible = !utswAnnotationsVisible" slot="activator">
@@ -515,6 +518,7 @@ Vue.component('variant-details-dialog', {
                             </v-flex>
                         </v-slide-y-transition>
                         <!-- MDA Annotation card -->
+                        <!--
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
                                 <v-card class="soft-grey-background">
@@ -531,12 +535,6 @@ Vue.component('variant-details-dialog', {
                                             <span>Close</span>
                                         </v-tooltip>
                                     </v-toolbar>
-                                    <!-- <v-card-text v-for="(annotationCategory, index) in mdaAnnotations.annotationCategories" :key="index">
-                                        <v-card flat v-if="annotationCategory">
-                                            <v-card-title class="subheading">{{ annotationCategory.title }}:</v-card-title>
-                                            <v-card-text class="pl-2 pr-2">{{ annotationCategory.text }} </v-card-text>
-                                        </v-card>
-                                    </v-card-text> -->
                                     <v-card-text>
                                         <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
                                     <v-layout row wrap>
@@ -552,6 +550,7 @@ Vue.component('variant-details-dialog', {
                                 </v-card>
                             </v-flex>
                         </v-slide-y-transition>
+                        -->
                         <v-slide-y-transition>
                             <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
                                 <v-card class="soft-grey-background">
