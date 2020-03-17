@@ -792,11 +792,11 @@ public class RequestUtils {
 		return null;
 	}
 
-	public CNVPlotData getCnvPlotData(String caseId, String chrom, boolean isProduction) throws URISyntaxException, ClientProtocolException, IOException {
-		List<String> toSkip = new ArrayList<String>();
-		toSkip.add("chrX");
-		toSkip.add("chrY");
-		toSkip.add("chr22_KI270879v1_alt");
+	private boolean skipChrom(String chr) {
+		return ("chrX".equals(chr) || "chrY".equals(chr) || (chr != null && chr.contains("_")));
+	}
+	
+	public CNVPlotData getCnvPlotData(String caseId, String chrom) throws URISyntaxException, ClientProtocolException, IOException {
 		
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/cnvplot");
@@ -812,13 +812,6 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			CNVPlotDataRaw plotDataRaw = mapper.readValue(response.getEntity().getContent(), CNVPlotDataRaw.class);
-			//TODO until ready, only answer-test should see the new VAF plot
-			if (isProduction) {
-			plotDataRaw.setbAll(new ArrayList<List<String>>());
-			}
-			else {
-				plotDataRaw.setbAll(createBAlleleFreqManualData());
-			}
 			CNVPlotData plotData = new CNVPlotData();
 			List<CNRData> cnrDataList = new ArrayList<CNRData>();
 			List<CNSData> cnsDataList = new ArrayList<CNSData>();
@@ -836,7 +829,7 @@ public class RequestUtils {
 					Double depth = Double.parseDouble(items.get(5));
 					Double log2 = Double.parseDouble(items.get(4));
 					Double weight = Double.parseDouble(items.get(6));
-					if (!toSkip.contains(cnrChrom)) { //skip chromosomes in the toSkip list
+					if (!skipChrom(cnrChrom) && !gene.equals("Antitarget")) { //skip chromosomes in the toSkip list
 						cnrDataList.add(new CNRData(cnrChrom, start, end, gene, log2, weight));
 					}
 				}
@@ -853,30 +846,43 @@ public class RequestUtils {
 					Long end = Long.parseLong(items.get(2));
 					Double log2 = Double.parseDouble(items.get(3));
 					Integer cn = Integer.parseInt(items.get(4));
-					if (!toSkip.contains(cnrChrom)) { //skip chromosomes in the toSkip list
+					if (!skipChrom(cnrChrom)) { //skip chromosomes in the toSkip list
 						cnsDataList.add(new CNSData(cnrChrom, start, end, log2, cn));
 					}
 				}
 				
 			}
-			
-			for (List<String> items : plotDataRaw.getbAll()) {
-				if (items.get(0).equals("CHROM")) {
-					continue; //skip the 1st row
-				}
-				String cnrChrom = items.get(0);
-				if (chrom == null || cnrChrom.equals(chrom)) {
-					String chr = items.get(0);
-					Long pos = Long.parseLong(items.get(1));
-					Long ao = Long.parseLong(items.get(2));
-					Long ro = Long.parseLong(items.get(3));
-					Double depth = Double.parseDouble(items.get(4));
-					Double log2 = Double.parseDouble(items.get(5));
-					if (!toSkip.contains(cnrChrom)) { //skip chromosomes in the toSkip list
-						bAllFDataList.add(new BAlleleFrequencyData(chr, pos, ao, ro, depth, log2));
+			boolean test = false;
+			if (test) {
+				List<List<String>> bAll = createBAlleleFreqManualData();
+				for (List<String> items : bAll) {
+					if (items.get(0).equals("CHROM")) {
+						continue; //skip the 1st row
 					}
+					String cnrChrom = items.get(0);
+					if (chrom == null || cnrChrom.equals(chrom)) {
+						String chr = items.get(0);
+						Long pos = Long.parseLong(items.get(1));
+						Long ao = Long.parseLong(items.get(2));
+						Long ro = Long.parseLong(items.get(3));
+						Double depth = Double.parseDouble(items.get(4));
+						Double log2 = Double.parseDouble(items.get(5));
+						if (!skipChrom(cnrChrom)) { //skip chromosomes in the toSkip list
+							bAllFDataList.add(new BAlleleFrequencyData(chr, pos, ao, ro, depth, log2));
+						}
+					}
+					
 				}
 				
+			}
+			
+			else {
+				for (BAlleleFrequencyData bAllItem : plotDataRaw.getBallelefreqs()) {
+					String chr = bAllItem.getChrom();
+					if ((chrom == null || chr.equals(chrom)) && !skipChrom(chr)) {
+						bAllFDataList.add(bAllItem);
+					}
+				}
 			}
 			
 			
@@ -885,6 +891,7 @@ public class RequestUtils {
 			plotData.setCnrData(cnrDataList);
 			plotData.setCnsData(cnsDataList);
 			plotData.setBAllData(bAllFDataList);
+//			plotData.setBAllData(new ArrayList<BAlleleFrequencyData>());
 			this.closeGetRequest();
 			return plotData;
 		}
@@ -1565,7 +1572,6 @@ public class RequestUtils {
 		return null;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Map<String, List<Report>> getAllExistingReports(AjaxResponse ajaxResponse) throws JsonParseException, JsonMappingException, UnsupportedOperationException, IOException, URISyntaxException {
 		Map<String, List<Report>> reportsPerCase = null;
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
@@ -1970,5 +1976,26 @@ public class RequestUtils {
 	}
 
 
+	public List<BAlleleFrequencyData> getBAlleleFreq(String caseId) throws JsonParseException, JsonMappingException, UnsupportedOperationException, IOException, URISyntaxException {
+		List<BAlleleFrequencyData> balleleFreqs = new ArrayList<BAlleleFrequencyData>();
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/ballelefreq"); 
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			if (mongoDBResponse.getSuccess()) {
+				balleleFreqs = mapper.convertValue(mongoDBResponse.getPayload(), new TypeReference<List<BAlleleFrequencyData>>() {});
+			}
+		}
+		this.closeGetRequest();
+		return balleleFreqs;
+	}
 
 }

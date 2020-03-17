@@ -764,7 +764,7 @@ Vue.component('variant-details-dialog', {
             isLastVariant: true,
             currentVariantType: "snp",
             patientDetailsOncoTreeDiagnosis: {},
-            currentlySelected: this.isSelected(),
+            currentlySelected: false,
             currentListOfCNVVisibleGenes: [],
             addCNVDialogVisible: false
         }
@@ -1802,15 +1802,15 @@ Vue.component('variant-details-dialog', {
                 this.$refs.translocationAnnotationDialog.cancelAnnotations();
             }
         },
-        isSelected() {
+        setSelected() {
             if (this.isSNP() && this.urlQuery.variantId in this.unfilteredSNPsDict) {
-                return this.unfilteredSNPsDict[this.urlQuery.variantId].selected;
+                this.currentlySelected = this.unfilteredSNPsDict[this.urlQuery.variantId].selected;
             }
             if (this.isCNV() && this.urlQuery.variantId in this.unfilteredCNVsDict) {
-                return this.unfilteredCNVsDict[this.urlQuery.variantId].selected;
+                this.currentlySelected = this.unfilteredCNVsDict[this.urlQuery.variantId].selected;
             }
             if (this.isTranslocation() && this.urlQuery.variantId in this.unfilteredFTLsDict) {
-                return this.unfilteredFTLsDict[this.urlQuery.variantId].selected;
+                this.currentlySelected = this.unfilteredFTLsDict[this.urlQuery.variantId].selected;
             }
         },
         handleAnnotationSelectionChanged() {
@@ -2434,7 +2434,7 @@ Vue.component('variant-details-dialog', {
         },
         refreshVariantTables() {
             this.$emit("refresh-variant-tables");
-        }
+        },
         
     },
     computed: {
@@ -2446,6 +2446,9 @@ Vue.component('variant-details-dialog', {
         bus.$on('setDefaultTranscript', (item) => {
             this.setDefaultTranscript(item);
         });
+    },
+    mounted() {
+        this.setSelected();
     },
     destroyed() {
         bus.$off('create-new-cnv');

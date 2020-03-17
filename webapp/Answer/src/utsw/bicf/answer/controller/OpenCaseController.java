@@ -95,6 +95,7 @@ import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.AnnotatorSelection;
+import utsw.bicf.answer.model.extmapping.BAlleleFrequencyData;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
@@ -1488,7 +1489,7 @@ public class OpenCaseController {
 				selectedGenes.add(gene.trim());
 			}
 		}
-		CNVPlotData cnvPlotData = utils.getCnvPlotData(caseId, chrom, otherProps.getProductionEnv());
+		CNVPlotData cnvPlotData = utils.getCnvPlotData(caseId, chrom);
 		if (cnvPlotData != null) {
 			return new CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData(), cnvPlotData.getBAllData(), selectedGenes).createObjectJSON();
 		}

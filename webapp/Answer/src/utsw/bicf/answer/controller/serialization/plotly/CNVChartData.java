@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.model.extmapping.BAlleleFrequencyData;
 import utsw.bicf.answer.model.extmapping.CNRData;
 import utsw.bicf.answer.model.extmapping.CNSData;
@@ -279,7 +280,8 @@ public class CNVChartData extends PlotlyChartData {
 		
 		//adjust start and end for B allele Freq
 		for (BAlleleFrequencyData b : bAllData) {
-			max = chrMax.get(b.getChr());
+			b.setChrom(TypeUtils.formatChromosome(b.getChrom()));
+			max = chrMax.get(b.getChrom());
 			if (max == null) {
 				continue;
 			}

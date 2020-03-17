@@ -10,7 +10,7 @@ public class CNVPlotDataRaw {
 	String caseId;
 	List<List<String>> cns;
 	List<List<String>> cnr;
-	List<List<String>> bAll;
+	List<BAlleleFrequencyData> ballelefreqs;
 	
 	
 	
@@ -56,15 +56,18 @@ public class CNVPlotDataRaw {
 
 
 
-	public List<List<String>> getbAll() {
-		return bAll;
+	public List<BAlleleFrequencyData> getBallelefreqs() {
+		return ballelefreqs;
 	}
 
 
 
-	public void setbAll(List<List<String>> bAll) {
-		this.bAll = bAll;
+	public void setBallelefreqs(List<BAlleleFrequencyData> ballelefreqs) {
+		this.ballelefreqs = ballelefreqs;
 	}
+
+
+
 
 
 

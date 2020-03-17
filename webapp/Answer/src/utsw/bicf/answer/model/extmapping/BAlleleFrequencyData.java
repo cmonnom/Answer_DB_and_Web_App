@@ -1,17 +1,20 @@
 package utsw.bicf.answer.model.extmapping;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BAlleleFrequencyData {
 	
-	String chr;
+	String chrom;
 	Long ao;
 	Long ro;
 	Long pos;
+	@JsonProperty("maf")
 	Double log2;
+	@JsonProperty("dp")
 	Double depth;
 	
 	public BAlleleFrequencyData() {
@@ -19,7 +22,7 @@ public class BAlleleFrequencyData {
 	}
 	public BAlleleFrequencyData(String chr, Long pos, Long ao, Long ro, Double depth, Double log2) {
 		super();
-		this.chr = TypeUtils.formatChromosome(chr);
+		this.chrom = TypeUtils.formatChromosome(chr);
 		this.pos = pos;
 		this.ao = ao;
 		this.ro = ro;
@@ -27,12 +30,6 @@ public class BAlleleFrequencyData {
 		this.depth = depth;
 	}
 	
-	public String getChr() {
-		return chr;
-	}
-	public void setChr(String chr) {
-		this.chr = chr;
-	}
 	public Long getAo() {
 		return ao;
 	}
@@ -62,6 +59,12 @@ public class BAlleleFrequencyData {
 	}
 	public void setDepth(Double depth) {
 		this.depth = depth;
+	}
+	public String getChrom() {
+		return chrom;
+	}
+	public void setChrom(String chrom) {
+		this.chrom = chrom;
 	}
 
 	

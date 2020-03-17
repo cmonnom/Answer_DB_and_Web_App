@@ -21,7 +21,8 @@ response.setDateHeader ("Expires", 0);
 								<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"
 								/>
 								
-								<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/igv@2.2.5/dist/igv.min.js"></script>
+								<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/igv@2.2.5/dist/igv.min.js"></script> -->
+								<script src="https://cdn.jsdelivr.net/npm/igv@2.4.0/dist/igv.min.js" integrity="sha384-BzBUWTCtRcjC4nWXiyKFbrzTtsl2VbdZQneyaQtiRKOaeycZbQKYixzQccsVGAOm" crossorigin="anonymous"></script>
 							</head>
 		
 							<body>

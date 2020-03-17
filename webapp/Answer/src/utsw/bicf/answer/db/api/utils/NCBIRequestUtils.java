@@ -147,6 +147,9 @@ public class NCBIRequestUtils {
 					doc = builder.parse(response2.getEntity().getContent());
 
 				}
+				else {
+					logger.info("Something went wrong NCBIRequest:152 HTTP_STATUS: " + statusCode);
+				}
 			}
 			NodeList docSums = doc.getElementsByTagName("DocSum");
 			for (int i = 0; i < docSums.getLength(); i++) {
@@ -221,6 +224,10 @@ public class NCBIRequestUtils {
 				}
 			}
 		}
+		else {
+			logger.info("Something went wrong NCBIRequest:229 HTTP_STATUS: " + statusCode);
+		}
+		logger.info("Pubmeds count: " + pubmeds.size());
 		return pubmeds;
 	}
 

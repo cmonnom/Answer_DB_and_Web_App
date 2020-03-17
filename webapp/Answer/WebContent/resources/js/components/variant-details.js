@@ -706,25 +706,6 @@ Vue.component('variant-details', {
                         }
                          */
 
-                         if (showVAF) {
-                             //TODO remove this for real data
-                            let annotation = {
-                                showarrow: false,
-                                text: "FOR DEMO ONLY. NOT REAL DATA",
-                                align: "center",
-                                x: response.data.chr.start[i],
-                                xanchor: "center",
-                                y: 0.7,
-                                yanchor: "bottom",
-                                yref: "y2",
-                                font: {
-                                    size: 26,
-                                    color: '#ff7f0e'
-                                  },
-                            }
-                            chrLabelsAnnotations.push(annotation);
-                         }
-
                         data = [...chrGenesTraces, cnr2Trace, cnrOthersTrace, cnr2OutliersTrace, cnrOthersOutliersTrace, ...geneSelectedTraces, ...cnsTraces];
                         if (showVAF) {
                             data.push(...chrTraceBottom);
@@ -752,7 +733,7 @@ Vue.component('variant-details', {
                                 range: [-5.2, 5.2],
                                 fixedrange: true,
                                 dtick: 1,
-                                domain: [showVAF ? 0.7 : 0, 1]
+                                domain: [showVAF ? 0.3 : 0, 1]
                                 
                             },
                             yaxis2: {

@@ -951,7 +951,7 @@ const OpenCase2 = {
             //idType is used to know which table the event came from.
             if (idType == "SNP") {
                 this.unfilteredSNPsDict[item.oid] = {oid: item.oid, selected: item.isSelected}
-                
+               
             }
             else if (idType == "CNV") {
                 this.unfilteredCNVsDict[item.oid] = {oid: item.oid, selected: item.isSelected}
@@ -1135,6 +1135,7 @@ const OpenCase2 = {
                                 this.unfilteredFTLsDict[item.oid] = {oid: item.oid, selected: item.isSelected}
                             }
                         }
+                        this.$refs.variantDetailsDialog.setSelected();
 
                         //TODo might need to handle currentRow
 
@@ -1238,7 +1239,7 @@ const OpenCase2 = {
             this.urlQuery.variantId = item.oid;
             item.loading = true;
             this.currentItem = item;
-            this.$refs.variantDetailsDialog.currentlySelected = this.$refs.variantDetailsDialog.isSelected();
+            this.$refs.variantDetailsDialog.setSelected();
             this.updateRoute();
         },
         openCNV(item) {
@@ -1530,6 +1531,7 @@ const OpenCase2 = {
                                 this.getVariantDetails(this.urlQuery.variantId)
                                 .then((response) => {
                                     if (response.success) {
+                                        this.$refs.variantDetailsDialog.setSelected();
                                         this.isVariantOpening = false;
                                         //open other dialogs if needed
                                         if (this.urlQuery.edit) {
@@ -1550,6 +1552,7 @@ const OpenCase2 = {
                                 this.getCNVDetails(this.urlQuery.variantId)
                                 .then((response) => {
                                     if (response.success) {
+                                        this.$refs.variantDetailsDialog.setSelected();
                                         this.isVariantOpening = false;
                                         //open other dialogs if needed
                                         if (this.urlQuery.edit) {
@@ -1566,6 +1569,7 @@ const OpenCase2 = {
                                 this.getTranslocationDetails(this.urlQuery.variantId)
                                 .then((response) => {
                                     if (response.success) {
+                                        this.$refs.variantDetailsDialog.setSelected();
                                         this.isVariantOpening = false;
                                         //open other dialogs if needed
                                         if (this.urlQuery.edit) {
