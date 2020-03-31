@@ -132,6 +132,10 @@ const OpenCase2 = {
         :type="currentFilterType"
         @update-highlight="updateHighlights"></advanced-filter>
 
+    <!-- lookup tools-->
+        <lookup-panel ref="lookupTool" 
+           ></lookup-panel>
+
     <!-- review selection dialog -->
     <v-dialog v-model="reviewDialogVisible" scrollable fullscreen hide-overlay persistent transition="dialog-bottom-transition">
         <review-selection ref="reviewDialog"
@@ -273,6 +277,15 @@ const OpenCase2 = {
                 </v-list-tile-avatar>
                 <v-list-tile-content>
                     <v-list-tile-title>Open Report</v-list-tile-title>
+                </v-list-tile-content>
+                </v-list-tile>
+
+                <v-list-tile avatar @click="toggleLookupTool()">
+                <v-list-tile-avatar>
+                    <v-icon>mdi-dna</v-icon>
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                    <v-list-tile-title>Toggle Lookup Tool</v-list-tile-title>
                 </v-list-tile-content>
                 </v-list-tile>
 
@@ -1089,7 +1102,10 @@ const OpenCase2 = {
 
                         this.$refs.advancedFilter.effects = response.data.effects;
                         this.$refs.advancedFilter.failedFilters = response.data.failedFilters;
+                        //TODO populate ftlFilters
+                        this.$refs.advancedFilter.ftlFilters = response.data.ftlFilters;
                         this.$refs.advancedFilter.checkBoxLabelsByValue = response.data.checkBoxLabelsByValue;
+                        this.$refs.advancedFilter.checkBoxFTLLabelsByValue = response.data.checkBoxFTLLabelsByValue;
                         this.userId = response.data.userId;
                         this.$refs.advancedFilter.populateCheckBoxes();
 
@@ -2148,6 +2164,9 @@ const OpenCase2 = {
             }
             path += "/" + this.$route.params.id;
             router.push({path : path});
+        },
+        toggleLookupTool() {
+            this.$refs.lookupTool.panelVisible = !this.$refs.lookupTool.panelVisible;
         },
         addOtherAnnotatorSelection(type, annotatorId, variantIds) {
             this.$refs.reviewDialog.startLoading();

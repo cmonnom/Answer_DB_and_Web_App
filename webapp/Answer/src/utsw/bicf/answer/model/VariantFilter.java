@@ -19,6 +19,8 @@ import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import utsw.bicf.answer.model.extmapping.Variant;
+
 @Entity
 @Table(name="variant_filter")
 public class VariantFilter {
@@ -79,6 +81,12 @@ public class VariantFilter {
 		this.stringValues = new ArrayList<FilterStringValue>();
 		if (VariantFilterList.filtersType.containsKey(field)) {
 			this.type = VariantFilterList.filtersType.get(field); //TODO only cnv filters for now
+			if (this.type.equals("ftl") && this.field.equals(Variant.FIELD_FTL_FILTERS)) {
+				this.field = Variant.FIELD_FILTERS; //override "ftlFilters" because Mongo stores it as "filters"
+			}
+			if (this.type.equals("ftl") && this.field.equals(Variant.FIELD_FTL_SOMATIC_STATUS)) {
+				this.field = Variant.FIELD_SOMATIC_STATUS; //override "ftlSomaticStatus" because Mongo stores it as "somaticStatus"
+			}
 		}
 		else { //TODO for now, there are only 2 types but if we filter on translocations, we'll need to add all snp filters to  VariantFilterList.filtersType
 			this.type = "snp";

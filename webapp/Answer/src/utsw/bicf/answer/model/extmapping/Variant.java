@@ -35,11 +35,13 @@ public class Variant {
 	public static final String FIELD_IN_CLINVAR = "inClinvar";
 	public static final String FIELD_OLD_BUILDS = "oldBuilds";
 	public static final String FIELD_SOMATIC_STATUS = "somaticStatus";
+	public static final String FIELD_FTL_SOMATIC_STATUS = "ftlSomaticStatus";
 	
 	public static final String FIELD_CNV_GENE_NAME = "cnvGeneName";
 	public static final String FIELD_CNV_COPY_NUMBER = "cnvCopyNumber";
 	
 	public static final String FIELD_FTL_FILTERS = "ftlFilters";
+	public static final String FIELD_FTL_NORMAL_DNA_READS = "normalDnaReads";
 	
 	//Some values like filter pass/fail need to be translated into boolean
 	//keep the values expected in the JSON string here
@@ -56,6 +58,7 @@ public class Variant {
 	
 	//keep track of the mapping between the value in the VCF and the displayed value
 	public static final Map<String, String> CHECKBOX_FILTERS_MAP = new HashMap<String, String>();
+	public static final Map<String, String> CHECKBOX_FTL_FILTERS_MAP = new HashMap<String, String>();
 	
 	Boolean isAllowed = true;
 	

@@ -96,6 +96,12 @@ public class Utils {
 						if (fieldName != null) {
 							vf.getStringValues().add(new FilterStringValue(fieldName));
 						}
+						else {
+							fieldName = Variant.CHECKBOX_FTL_FILTERS_MAP.get(cb.getName());
+							if (fieldName != null) {
+								vf.getStringValues().add(new FilterStringValue(fieldName));
+							}
+						}
 					}
 				}
 				if (!vf.getStringValues().isEmpty() && !activeFilters.contains(vf) ) {

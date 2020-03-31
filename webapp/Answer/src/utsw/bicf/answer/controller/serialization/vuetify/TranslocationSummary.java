@@ -12,6 +12,7 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.AnnotatorSelection;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
+import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.TranslocationRow;
 
@@ -82,6 +83,16 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 		iconFlags.setIsSafe(true);
 		headers.add(iconFlags);
 		
+		Header filters = new Header("QC Tags", "filters");
+//		leftGene.setWidth("100px");
+		filters.setIsSafe(true);
+		headers.add(filters);
+		
+		Header ftlSomaticStatus = new Header(new String[] {"Somatic", "Status"}, "ftlSomaticStatus");
+//		leftGene.setWidth("100px");
+		ftlSomaticStatus.setIsSafe(true);
+		headers.add(ftlSomaticStatus);
+		
 		Header leftGene = new Header(new String[] {"Left", "Gene"}, "leftGene");
 //		leftGene.setWidth("100px");
 		leftGene.setIsSafe(true);
@@ -140,6 +151,12 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 //		dnaReads.setWidth("100px");
 		dnaReads.setIsSafe(true);
 		headers.add(dnaReads);
+		
+		Header normalDnaReads = new Header(new String[] {"Normal", "DNA Reads"}, Variant.FIELD_FTL_NORMAL_DNA_READS);
+//		dnaReads.setWidth("100px");
+		normalDnaReads.setIsSafe(true);
+		headers.add(normalDnaReads);
+		
 		
 		Header fusionType = new Header(new String[] {"Fusion", "Type"}, "fusionType");
 		fusionType.setWidth("100px");

@@ -52,10 +52,12 @@ public class VariantFilterList {
 		filtersType.put(Variant.FIELD_CNV_GENE_NAME, "cnv");
 		
 		filtersType.put(Variant.FIELD_FTL_FILTERS, "ftl");
+		filtersType.put(Variant.FIELD_FTL_NORMAL_DNA_READS, "ftl");
 		
 		filtersType.put(Variant.FIELD_CHROM, "snp");
 		filtersType.put(Variant.FIELD_GENE_NAME, "snp");
 		filtersType.put(Variant.FIELD_SOMATIC_STATUS, "snp");
+		filtersType.put(Variant.FIELD_FTL_SOMATIC_STATUS, "ftl");
 		filtersType.put(Variant.FIELD_FILTERS, "snp");
 		filtersType.put(Variant.FIELD_TUMOR_ALT_FREQUENCY, "snp");
 		filtersType.put(Variant.FIELD_TUMOR_TOTAL_DEPTH, "snp");

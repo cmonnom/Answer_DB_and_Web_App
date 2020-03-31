@@ -89,7 +89,7 @@ Vue.component('advanced-filter', {
     <!-- save selection dialog -->
 
     <div v-if="advancedFilteringVisible">
-        <v-navigation-drawer app width="500" class="elevation-5">
+        <v-navigation-drawer app permanent width="500" class="elevation-5">
             <v-toolbar dense>
                 <v-tooltip class="ml-0" bottom>
                     <v-menu offset-y offset-x slot="activator" class="ml-0">
@@ -241,7 +241,7 @@ Vue.component('advanced-filter', {
                 </v-tooltip>
             </v-toolbar>
         </v-navigation-drawer>
-        <v-navigation-drawer app width="500" class="mt-5" height="calc(100% - 48px)">
+        <v-navigation-drawer app permanent width="500" class="mt-5" height="calc(100% - 48px)">
             <!-- displays which filters are active -->
             <div v-if="currentFilterSet" class="pl-2 pt-2 subheading">Current Filter Set: {{ currentFilterSet.listName }}</div>
             <div class="pt-2 pb-2">
@@ -461,6 +461,7 @@ Vue.component('advanced-filter', {
             filters: [],
             effects: null,
             failedFilters: null,
+            ftlFilters: null,
             flagFilters: [],
             checkboxFilters: [],
             numberFilters: [],
@@ -489,7 +490,8 @@ Vue.component('advanced-filter', {
             snackBarTimeout: 2000,
             snackBarMessage: "",
             checkBoxFiltersByCategory: {},
-            checkBoxLabelsByValue: {} //dict to map a saved filter checkboxes when loading it's fields
+            checkBoxLabelsByValue: {}, //dict to map a saved filter checkboxes when loading it's fields
+            checkBoxFTLLabelsByValue: {} //dict to map a saved filter checkboxes when loading it's fields
         }
 
     },
@@ -529,9 +531,21 @@ Vue.component('advanced-filter', {
                             continue;
                         }
                         filter.checkBoxes = [];
-                        if (this.failedFilters) {
+                        if (this.failedFilters) { //add a check on type between snp and ftl
                             for (var j = 0; j < this.failedFilters.length; j++) {
                                 filter.checkBoxes.push({ name: this.failedFilters[j], value: false});
+                            }
+                        }
+                        filter.checkBoxes.sort((a,b) => {return this.checkBoxCompare(a,b)});
+                    }
+                    else if (filter.fieldName == 'ftlFilters') {
+                        if (filter.checkBoxes.length > 0) {
+                            continue;
+                        }
+                        filter.checkBoxes = [];
+                        if (this.ftlFilters) { //add a check on type between snp and ftl
+                            for (var j = 0; j < this.ftlFilters.length; j++) {
+                                filter.checkBoxes.push({ name: this.ftlFilters[j], value: false});
                             }
                         }
                         filter.checkBoxes.sort((a,b) => {return this.checkBoxCompare(a,b)});
@@ -792,8 +806,12 @@ Vue.component('advanced-filter', {
             filterToPopulate.valueTrue = loadedFilter.valueTrue;
             filterToPopulate.valueFalse = loadedFilter.valueFalse;
             if (filterToPopulate.isCheckBox) {
+                var checkboxMap = this.checkBoxLabelsByValue;
+                if (filterToPopulate.type == 'ftl') {
+                    checkboxMap = this.checkBoxFTLLabelsByValue;
+                }
                 for (var i = 0; i < filterToPopulate.checkBoxes.length; i++) {
-                    var field = this.checkBoxLabelsByValue[filterToPopulate.checkBoxes[i].name];
+                    var field = this.checkboxMap[filterToPopulate.checkBoxes[i].name];
                     var checkboxHasValue = false;
                     for (var j = 0; j < loadedFilter.stringValues.length; j++) {
                         var currentCheckBoxValue = loadedFilter.stringValues[j].filterString;
@@ -908,7 +926,6 @@ Vue.component('advanced-filter', {
                             this.messageDialogVisible = true;
                         }
                         else {
-                            this.sho
                             this.$emit("filter-action-success", "All genes are valid.");
                         }
                     } else {

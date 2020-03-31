@@ -21,6 +21,7 @@ import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.HeaderOrder;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
@@ -34,6 +35,7 @@ public class OpenCaseSummary {
 	String caseName;
 	Map<String, Set<String>> effects; //unique list of effects. Used for filtering by checking which effects should be included
 	Set<String> failedFilters; //unique list of failed QC filters. Used for filtering by checking which failed reason should be included
+	Set<String> ftlFilters; //unique list of failed QC filters. Used for filtering by checking which failed reason should be included
 	Integer userId;
 	SNPIndelVariantSummary snpIndelVariantSummary;
 	CNVSummary cnvSummary;
@@ -46,6 +48,7 @@ public class OpenCaseSummary {
 	String type;
 	boolean reportReady;
 	Map<String, String> checkBoxLabelsByValue;
+	Map<String, String> checkBoxFTLLabelsByValue;
 	String caseOwnerId;
 	String caseOwnerName;
 
@@ -62,6 +65,7 @@ public class OpenCaseSummary {
 		this.userId = user.getUserId();
 		this.effects = getUniqueEffects(aCase);
 		this.failedFilters = getUniqueFailedFilters(aCase);
+		this.ftlFilters = getUniqueFTLFilters(aCase);
 		this.isAllowed = true;
 		this.reportGroups = reportGroups;
 		this.qcUrl = qcAPI.getUrl();
@@ -78,6 +82,7 @@ public class OpenCaseSummary {
 		}
 		
 		this.checkBoxLabelsByValue = Variant.CHECKBOX_FILTERS_MAP;
+		this.checkBoxFTLLabelsByValue = Variant.CHECKBOX_FTL_FILTERS_MAP;
 //		for (String formattedValue : Variant.CHECKBOX_FILTERS_MAP.keySet()) {
 //			this.checkBoxLabelsByValue.put(Variant.CHECKBOX_FILTERS_MAP.get(formattedValue), formattedValue);
 //		}
@@ -138,6 +143,27 @@ public class OpenCaseSummary {
 			}
 		}
 		return failedFilters;
+		
+	}
+	
+	/**
+	 * Create a unique list of effects in the current case.
+	 * Sort alphabetically and tries to make the string prettier
+	 * @param aCase
+	 * @return
+	 */
+	private static Set<String> getUniqueFTLFilters(OrderCase aCase) {
+		Set<String> ftlFilters = new HashSet<String>(); 
+		for (Translocation variant : aCase.getTranslocations()) {
+			for (String filter : variant.getFtlFilters()) {
+				String filterFormatted = TypeUtils.splitCamelCaseString(filter);
+				Variant.CHECKBOX_FTL_FILTERS_MAP.put(filterFormatted, filter);
+				if (!Variant.VALUE_FAIL.equals(filter) && !Variant.VALUE_PASS.equals(filter)) {
+					ftlFilters.add(filterFormatted);
+				}
+			}
+		}
+		return ftlFilters;
 		
 	}
 
@@ -325,6 +351,26 @@ public class OpenCaseSummary {
 
 	public void setCaseOwnerName(String caseOwnerName) {
 		this.caseOwnerName = caseOwnerName;
+	}
+
+
+	public Set<String> getFtlFilters() {
+		return ftlFilters;
+	}
+
+
+	public void setFtlFilters(Set<String> ftlFilters) {
+		this.ftlFilters = ftlFilters;
+	}
+
+
+	public Map<String, String> getCheckBoxFTLLabelsByValue() {
+		return checkBoxFTLLabelsByValue;
+	}
+
+
+	public void setCheckBoxFTLLabelsByValue(Map<String, String> checkBoxFTLLabelsByValue) {
+		this.checkBoxFTLLabelsByValue = checkBoxFTLLabelsByValue;
 	}
 
 

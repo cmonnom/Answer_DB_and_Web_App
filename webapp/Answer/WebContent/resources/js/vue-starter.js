@@ -101,7 +101,16 @@ var router = new VueRouter({
 			meta: {
 				title: 'Log Out'
 			}
-		}
+		},
+		{
+			path: webAppRoot + '/sandbox',
+			name: 'Sandbox',
+			component: () => new Promise(
+				resolve => resolve(Sandbox)),
+			meta: {
+				title: 'Sandbox'
+			}
+		},
 		]
 });
 

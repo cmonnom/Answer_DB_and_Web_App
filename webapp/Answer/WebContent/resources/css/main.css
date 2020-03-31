@@ -620,3 +620,7 @@ Slow down the fullscreen dialog
 .hidden {
     visibility: hidden;
 }
+
+.error--text input {
+    color: rgb(255, 82, 82) !important;
+}

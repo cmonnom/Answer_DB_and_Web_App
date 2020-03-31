@@ -34,12 +34,16 @@ public class TranslocationRow {
 	String annotations;
 	
 	List<String> ftlFilters; //list of filers
+	String filters;
 	
 	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
 	
 	String chrType;
 	String chrDistance;
 	String percentSupportingReads;
+	
+	String ftlSomaticStatus;
+	Integer normalDnaReads;
 	
 	public TranslocationRow(Translocation translocation, Map<Integer, AnnotatorSelection> selectionPerAnnotator) {
 		this.oid = translocation.getMongoDBId().getOid();
@@ -66,16 +70,22 @@ public class TranslocationRow {
 			//remove outer brackets, remove quotes, replace comma with new line
 			this.annotations = this.annotations.replaceAll("\"", "").replaceAll(",", "<br/>");
 		}
+		this.ftlSomaticStatus = translocation.getFtlSomaticStatus();
+		this.normalDnaReads = translocation.getNormalDnaReads();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 		if (ftlFilters != null) {
+			filters = ftlFilters.stream()
+					.filter(f -> !Variant.VALUE_FAIL.equals(f))
+					.map(f -> TypeUtils.splitCamelCaseString(f))
+					.collect(Collectors.joining(", "));
 			boolean failed = ftlFilters.contains(Variant.VALUE_FAIL);
 			if (failed) {
-				String failedReasons = ftlFilters.stream()
-						.filter(f -> !Variant.VALUE_FAIL.equals(f))
-						.map(f -> TypeUtils.splitCamelCaseString(f))
-						.collect(Collectors.joining(", "));
-				icons.add(new VuetifyIcon("cancel", "red", "Failed QC: " + failedReasons));
+//				String failedReasons = ftlFilters.stream()
+//						.filter(f -> !Variant.VALUE_FAIL.equals(f))
+//						.map(f -> TypeUtils.splitCamelCaseString(f))
+//						.collect(Collectors.joining(", "));
+				icons.add(new VuetifyIcon("cancel", "red", "Failed QC: " + filters));
 			}
 			else {
 				icons.add(new VuetifyIcon("check_circle", "green", "Passed QC"));
@@ -198,6 +208,26 @@ public class TranslocationRow {
 
 	public String getPercentSupportingReads() {
 		return percentSupportingReads;
+	}
+
+
+	public String getFilters() {
+		return filters;
+	}
+
+
+	public void setFilters(String filters) {
+		this.filters = filters;
+	}
+
+
+	public String getFtlSomaticStatus() {
+		return ftlSomaticStatus;
+	}
+
+
+	public Integer getNormalDnaReads() {
+		return normalDnaReads;
 	}
 
 

@@ -106,20 +106,24 @@ Vue.component('variant-details', {
                                           </v-btn>
                                           <span>Toggle all genes for CNV Plot</span>
                                           </v-tooltip>
-                                          <!-- Notation (label + textfield + link) -->
-                                          <v-layout row wrap v-if="item.type == 'notation'">
-                                            <v-flex xs class="pl-0 pt-2 mt-1"> 
+
+                                          <!-- Notation (label + textfield + link)  or Fusion Name / Left Gene / Right Gene
+                                          TODO textfield disabled for now until Ben is ready on the backend -->
+                                          <v-layout row wrap v-if="item.type == 'notation' || item.type == 'textfield'">
+                                            <v-flex xs  class="pt-2 pl-0 mt-1">
                                             <span :class="[loadingVariant ? loadingVariantTextColor : '','selectable']">{{ item.label }}:</span>
                                             </v-flex>
                                             <v-flex xs6 > 
-                                            <v-text-field hide-details class="no-height-select"
+                                            <v-text-field hide-details :class="['no-height-select', 'pb-1']"
+                                            @change="checkForErrors(item)"
+                                            :error="item.isValid === false"
                                             v-model="currentVariant[item.fieldName]"
                                             :value="currentVariant[item.fieldName]"
-                                            :disabled="noEdit"
+                                            :disabled="noEdit || (item.type == 'textfield')"
                                              @input="variantDetailsChanged">
                                             </v-text-field>
                                             </v-flex>
-                                            <v-flex xs> 
+                                            <v-flex xs v-if="item.url"> 
                                             <v-tooltip bottom>
                                                 <v-btn slot="activator" color="primary" icon flat @click="openUrl(item)" class="mt-0 mb-0">
                                                     <v-icon>{{ item.linkIcon }}</v-icon>
@@ -127,7 +131,15 @@ Vue.component('variant-details', {
                                                 <span>{{ item.tooltip }}</span>
                                             </v-tooltip>  
                                             </v-flex>
+                                            <v-flex xs v-if="item.isValid === false" align-self-center> 
+                                            <v-tooltip bottom>
+                                                <v-icon color="error" slot="activator">mdi-cancel</v-icon>
+                                                <span>{{ item.tooltipInvalid }}</span>
+                                            </v-tooltip>  
+                                            </v-flex>
+
                                           </v-layout>
+                                          
                                           <span v-if="item.type == 'chip'">
                                           <span class="subheading warning--text" v-show="cnvPlotNeedsReload" >Click on <span v-text="getChrButtonName()"></span> to refresh the CNV Plot.</span>
                                                 <v-btn-toggle v-model="genesSelected" multiple class="elevation-0" @change="handleGeneSelectionChanged">
@@ -380,14 +392,16 @@ Vue.component('variant-details', {
                     height: 600,
                     width: 1600,
                     scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
-                  }
+                }
             },
             cnvData: {},
             lastKMin: null,
             lastKMax: null,
             showingGeneLabels: false,
-            maxGenesForLabels: 150
+            maxGenesForLabels: 150,
+            fieldsWithGeneRules: ["leftGene", "rightGene"]
         }
+
 
     },
     methods: {
@@ -518,7 +532,7 @@ Vue.component('variant-details', {
                 marker: {
                     color: color,
                     opacity: symbol ? 1 : 0.5,
-                    size: size ? size: 4,
+                    size: size ? size : 4,
                     symbol: symbol ? symbol : "circle"
                 },
                 text: data.labels,
@@ -576,6 +590,12 @@ Vue.component('variant-details', {
                 }
 
             }
+            if (start.length == 1 && this.selectedCNVChrom) {
+                var chrNumber = Number.parseInt(this.selectedCNVChrom.substring(3, this.selectedCNVChrom.length)) - 1;
+                if (chrNumber % 2 != 0) {
+                    color = "white";
+                }
+            }
             var chrTraceTop = this.createAChromGeneTrace(x, yTop, color, opacity, isbottomSubPlot);
             var chrTraceBottom = this.createAChromGeneTrace(x, yBottom, color, opacity, isbottomSubPlot);
             return [chrTraceTop, chrTraceBottom];
@@ -608,7 +628,7 @@ Vue.component('variant-details', {
                         var cnrOthersTrace = this.createScatterTrace(response.data.cnrOthers, "#a39a76");
                         var cnr2OutliersTrace = this.createScatterTrace(response.data.cnr2Outliers, "#00204d", outlierSymbol, outlierSize);
                         var cnrOthersOutliersTrace = this.createScatterTrace(response.data.cnrOtherOutliers, "#a39a76", outlierSymbol, outlierSize);
-                        var showVAF = response.data.bAlleles.x.length > 0 ;
+                        var showVAF = response.data.bAlleles.x.length > 0;
                         var bAllelesTrace = showVAF ? this.createScatterTrace(response.data.bAlleles, "#00204d", null, null, true) : null;
                         var geneSelectedTraces = [];
                         for (var i = 0; i < response.data.genesSelected.length; i++) {
@@ -640,14 +660,14 @@ Vue.component('variant-details', {
                             }
                             cnsTraces.push(cnsTrace);
                         }
-                        
+
                         var chrGenesTraces = [];
                         //odd and even gene traces to have 2 shades of colors alternating    
                         var genesStartEven = [];
                         var genesStartOdd = [];
                         var genesEndEven = [];
                         var genesEndOdd = [];
-                        for (var i = 0 ; i < response.data.genes.start.length; i++) {
+                        for (var i = 0; i < response.data.genes.start.length; i++) {
                             if (i % 2 == 0) {
                                 genesStartEven.push(response.data.genes.start[i]);
                                 genesEndEven.push(response.data.genes.end[i]);
@@ -667,7 +687,7 @@ Vue.component('variant-details', {
                         chrGenesTraces.push(...this.createChromGeneTraces(
                             genesStartEven, genesEndEven, this.cividisColors.blue75, 0.25, minY, maxY));
                         chrGenesTraces.push(...this.createChromGeneTraces(
-                            genesStartEven.slice(1), genesEndEven.slice(1), this.cividisColors.blue75, 0.25, minY, maxY)); 
+                            genesStartEven.slice(1), genesEndEven.slice(1), this.cividisColors.blue75, 0.25, minY, maxY));
 
                         chrGenesTraces.push(...this.createChromGeneTraces(
                             genesStartOdd, genesEndOdd, this.cividisColors.blue75, 0.4, minY, maxY));
@@ -688,7 +708,7 @@ Vue.component('variant-details', {
                             }
                             chrLabelsAnnotations.push(annotation);
                         }
-                        
+
                         //experimental. don't implement for now
                         var geneLabelsAnnotations = [];
                         /**
@@ -734,12 +754,14 @@ Vue.component('variant-details', {
                                 fixedrange: true,
                                 dtick: 1,
                                 domain: [showVAF ? 0.3 : 0, 1]
-                                
+
                             },
                             yaxis2: {
                                 title: "VAF",
                                 zeroline: false,
-                                domain: [0,0.3]
+                                domain: [0, 0.3],
+                                fixedrange: true,
+                                range: [-0.1, 1.1]
                             },
                             xaxis: {
                                 zeroline: false,
@@ -754,7 +776,7 @@ Vue.component('variant-details', {
                                 t: 30,
                                 pad: 4
                             },
-                            height: showVAF? 700 : 400,
+                            height: showVAF ? 700 : 400,
                             hovermode: 'closest',
                             // shapes: chrs,
                             annotations: chrLabelsAnnotations,
@@ -1021,6 +1043,50 @@ Vue.component('variant-details', {
         },
         openNewCNVForm() {
             bus.$emit("create-new-cnv", this.currentListOfVisibleGenes);
+        },
+        verifyGeneInput(input) {
+            return this.verifyGeneNames(input).then(success => {
+                console.log(success);
+            }
+            );
+        },
+        checkForErrors(item) {
+            if (this.fieldsWithGeneRules.indexOf(item.fieldName) > -1) {
+                this.verifyGeneNamesAPI(this.currentVariant[item.fieldName]).then(response => {
+                    item.isValid = response.success;
+                });
+            }
+        },
+        verifyGeneNamesAPI(input) {
+            return new Promise((resolve, reject) => {
+                if (input == "Intergenic") {
+                    resolve({
+                        success: true
+                    });
+                }
+                else {
+                    axios({
+                        method: 'post',
+                        url: "http://rest.genenames.org/search/symbol/" + input,
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        params: {
+                        },
+                    })
+                        .then(response => {
+                            resolve({
+                                success: response.data.response.numFound > 0
+                            })
+                        })
+                        .catch(error => {
+                            console.log(error);
+                            bus.$emit("some-error", [this, error]);
+                        });
+
+                }
+
+            })
         },
     },
     mounted: function () {

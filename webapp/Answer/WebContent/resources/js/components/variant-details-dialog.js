@@ -1373,13 +1373,34 @@ Vue.component('variant-details-dialog', {
                                 type: "flag"
                             },
                             {
-                                label: "Fusion Name", value: this.currentVariant.fusionName
+                                label: "Fusion Name",
+                                type: "textfield",
+                                fieldName: "fusionName",
+                                value: this.currentVariant.fusionName,
+                                tooltip: "Edit the Fusion Name"
                             },
                             {
-                                label: "Left Gene", value: this.currentVariant.leftGene
+                                label: "QC Tags", value: this.currentVariant.filtersFormatted
                             },
                             {
-                                label: "Right Gene", value: this.currentVariant.rightGene
+                                label: "Left Gene",
+                                type: "textfield",
+                                fieldName: "leftGene",
+                                value: this.currentVariant.leftGene,
+                                tooltip: "Edit Left Gene",
+                                needsValidation: true,
+                                isValid: true,
+                                tooltipInvalid: "Not a valid gene"
+                            },
+                            {
+                                label: "Right Gene",
+                                type: "textfield",
+                                fieldName: "rightGene",
+                                value: this.currentVariant.rightGene,
+                                tooltip: "Edit Right Gene",
+                                needsValidation: true,
+                                isValid: true,
+                                tooltipInvalid: "Not a valid gene"
                             },
                             {
                                 label: "Left Exons", value: this.currentVariant.leftExons
@@ -1623,6 +1644,9 @@ Vue.component('variant-details-dialog', {
             lightVariant["tier"] = this.currentVariant.tier;
             lightVariant["aberrationType"] = this.currentVariant.aberrationType;
             lightVariant["notation"] = this.currentVariant.notation;
+            lightVariant["fusionName"] = this.currentVariant.fusionName;
+            lightVariant["leftGene"] = this.currentVariant.leftGene;
+            lightVariant["rightGene"] = this.currentVariant.rightGene;
             return new Promise((resolve, reject) => {
                 axios({
                     method: 'post',

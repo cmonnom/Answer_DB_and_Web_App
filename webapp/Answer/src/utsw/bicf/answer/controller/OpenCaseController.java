@@ -589,6 +589,23 @@ public class OpenCaseController {
 		passQCFilterFTL.setBoolean(true);
 		filters.add(passQCFilterFTL);
 		
+		DataTableFilter ftlNormalDNAReadsFilter = new DataTableFilter("Normal DNA Reads", Variant.FIELD_FTL_NORMAL_DNA_READS);
+		ftlNormalDNAReadsFilter.setType("ftl");
+		ftlNormalDNAReadsFilter.setNumber(true);
+		filters.add(ftlNormalDNAReadsFilter);
+		
+		DataTableFilter ftlSomaticFilter = new DataTableFilter("Somatic Status", Variant.FIELD_FTL_SOMATIC_STATUS);
+		ftlSomaticFilter.setType("ftl");
+		ftlSomaticFilter.setSelect(true);
+		filters.add(ftlSomaticFilter);
+		ftlSomaticFilter.setSelectItems(somaticSelectItems);
+		
+		DataTableFilter ftlFilters = new DataTableFilter("QC Tags", Variant.FIELD_FTL_FILTERS);
+		ftlFilters.setType("ftl");
+		ftlFilters.setCheckBox(true);
+		ftlFilters.setCategory("FILTER");
+		filters.add(ftlFilters);
+		
 
 		VariantFilterItems items = new VariantFilterItems();
 		items.setFilters(filters);
@@ -1491,7 +1508,7 @@ public class OpenCaseController {
 		}
 		CNVPlotData cnvPlotData = utils.getCnvPlotData(caseId, chrom);
 		if (cnvPlotData != null) {
-			return new CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData(), cnvPlotData.getBAllData(), selectedGenes).createObjectJSON();
+			return new CNVChartData(cnvPlotData.getCnsData(), cnvPlotData.getCnrData(), cnvPlotData.getBAllData(), selectedGenes, caseId).createObjectJSON();
 		}
 		else {
 			AjaxResponse response = new AjaxResponse();

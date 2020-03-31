@@ -25,7 +25,6 @@ public class CNVChartData extends PlotlyChartData {
 	Trace cnrOtherOutliers = new Trace();
 	
 	Trace chr = new Trace();
-	long minChrom = -1;
 	
 	Trace cns = new Trace();
 	List<String> cnsTitles = new ArrayList<String>();
@@ -40,8 +39,10 @@ public class CNVChartData extends PlotlyChartData {
 	Trace bAlleles = new Trace();
 	List<String> bAllLabels = new ArrayList<String>();
 	
-	public CNVChartData(List<CNSData> cnsData, List<CNRData> cnrData, List<BAlleleFrequencyData> bAllData, List<String> selectedGenes) {
-		
+	String caseId;
+	
+	public CNVChartData(List<CNSData> cnsData, List<CNRData> cnrData, List<BAlleleFrequencyData> bAllData, List<String> selectedGenes, String caseId) {
+		this.caseId = caseId;
 		this.updateStartEnd(cnsData, cnrData, bAllData);
 		
 		if (!selectedGenes.isEmpty()) {
@@ -233,59 +234,126 @@ public class CNVChartData extends PlotlyChartData {
 	
 	private void updateStartEnd(List<CNSData> cnsData, List<CNRData> cnrData, List<BAlleleFrequencyData> bAllData) {
 		Map<String, Long> chrMax = new HashMap<String, Long>();
-		Map<String, List<CNRData>> byChr = new HashMap<String, List<CNRData>>();
+		Map<String, List<CNSData>> byChrCNS = new HashMap<String, List<CNSData>>();
+		Map<String, List<CNRData>> byChrCNR = new HashMap<String, List<CNRData>>();
+		Map<String, List<BAlleleFrequencyData>> byChrBAll = new HashMap<String, List<BAlleleFrequencyData>>();
+		
+		for (CNSData cns : cnsData) {
+			List<CNSData> list = null;
+			if (byChrCNR.containsKey(cns.getChr())) {
+				list = byChrCNS.get(cns.getChr());
+			}
+			else {
+				list = new ArrayList<CNSData>();
+			}
+			list.add(cns);
+			byChrCNS.put(cns.getChr(), list);
+		}
 		
 		for (CNRData cnr : cnrData) {
 			List<CNRData> list = null;
-			if (byChr.containsKey(cnr.getChr())) {
-				list = byChr.get(cnr.getChr());
+			if (byChrCNR.containsKey(cnr.getChr())) {
+				list = byChrCNR.get(cnr.getChr());
 			}
 			else {
 				list = new ArrayList<CNRData>();
 			}
 			list.add(cnr);
-			byChr.put(cnr.getChr(), list);
+			byChrCNR.put(cnr.getChr(), list);
 		}
 		
-		this.chr.setLabels(byChr.keySet().stream().sorted().collect(Collectors.toList()));
+		for (BAlleleFrequencyData cnr : bAllData) {
+			List<BAlleleFrequencyData> list = null;
+			if (byChrBAll.containsKey(cnr.getChrom())) {
+				list = byChrBAll.get(cnr.getChrom());
+			}
+			else {
+				list = new ArrayList<BAlleleFrequencyData>();
+			}
+			list.add(cnr);
+			byChrBAll.put(TypeUtils.formatChromosome(cnr.getChrom()), list);
+		}
+		
+		this.chr.setLabels(byChrCNR.keySet().stream().sorted().collect(Collectors.toList()));
 		this.chr.addStart(0L);
 		Long max = 0L;
+		Long previousMax = 0L;
+		
+		//find the max across all data sets for each chromosome
 		for (String chr : this.chr.getLabels()) {
-			List<CNRData> list = byChr.get(chr);
-			for (CNRData item : list) {
-				if (minChrom == -1) {
-					minChrom = item.getStart();
-				}
-				item.setStart(item.getStart() + max);
-				item.setEnd(item.getEnd() + max);
+			List<CNSData> listCNS = byChrCNS.get(chr);
+			List<CNRData> listCNR = byChrCNR.get(chr);
+			List<BAlleleFrequencyData> listBAll = byChrBAll.get(chr);
+			
+			List<Long> maxes = new ArrayList<Long>();
+			if (listCNS != null && !listCNS.isEmpty()) {
+				Long maxCNS = listCNS.stream().map(c -> c.getStart()).max(Comparator.comparing(Long::valueOf)).get();
+				maxes.add(maxCNS);
 			}
-			chrMax.put(chr, max);
-			max = list.stream().map(c -> c.getStart()).max(Comparator.comparing(Long::valueOf)).get();
-			this.chr.addEnd(max);
-			this.chr.addStart(max);
+			if (listCNR != null && !listCNR.isEmpty()) {
+				Long maxCNR = listCNR.stream().map(c -> c.getStart()).max(Comparator.comparing(Long::valueOf)).get();
+				maxes.add(maxCNR);
+			}
+			if (listBAll != null && !listBAll.isEmpty()) {
+				Long maxBAll = listBAll.stream().map(c -> c.getPos()).max(Comparator.comparing(Long::valueOf)).get();
+				maxes.add(maxBAll);
+			}
+			max = maxes.stream().max(Comparator.comparing(Long::valueOf)).get();
+		
+			Long newMax = previousMax + max;
+			chrMax.put(chr, previousMax);
+			previousMax = newMax + 0;
+			this.chr.addEnd(newMax);
+			this.chr.addStart(newMax);
 		}
 		this.chr.removeLastStart(); //remove the last one
 		
+//		for (String chr : this.chr.getLabels()) {
+//			List<CNRData> list = byChrCNR.get(chr);
+//			for (CNRData item : list) {
+//				if (minChrom == -1) {
+//					minChrom = item.getStart();
+//				}
+//				item.setStart(item.getStart() + max);
+//				item.setEnd(item.getEnd() + max);
+//			}
+//			chrMax.put(chr, max);
+//			max = list.stream().map(c -> c.getStart()).max(Comparator.comparing(Long::valueOf)).get();
+//			this.chr.addEnd(max);
+//			this.chr.addStart(max);
+//		}
+//		this.chr.removeLastStart(); //remove the last one
+		
 		//adjust start and end for CNS
 		for (CNSData cns : cnsData) {
-			max = chrMax.get(cns.getChr());
-			if (max == null) {
+			Long maxValue = chrMax.get(cns.getChr());
+			if (maxValue == null) {
 				continue; //skip this CNS
 //				max = missingMax + 1;
 //				missingMax += cns.getEnd();
 			}
-			cns.setStart(cns.getStart() + max);
-			cns.setEnd(cns.getEnd() + max);
+			cns.setStart(cns.getStart() + maxValue);
+			cns.setEnd(cns.getEnd() + maxValue);
+		}
+		
+		//adjust start and end for CNR
+		for (CNRData cnr : cnrData) {
+			Long maxValue = chrMax.get(cnr.getChr());
+			if (maxValue == null) {
+				continue; //skip this CNR
+			}
+			cnr.setStart(cnr.getStart() + maxValue);
+			cnr.setEnd(cnr.getEnd() + maxValue);
 		}
 		
 		//adjust start and end for B allele Freq
 		for (BAlleleFrequencyData b : bAllData) {
 			b.setChrom(TypeUtils.formatChromosome(b.getChrom()));
-			max = chrMax.get(b.getChrom());
-			if (max == null) {
+			Long maxValue = chrMax.get(b.getChrom());
+			if (maxValue == null) {
 				continue;
 			}
-			b.setPos(b.getPos() + max);
+			b.setPos(b.getPos() + maxValue);
 		}
 	}
 	
@@ -411,6 +479,14 @@ public class CNVChartData extends PlotlyChartData {
 
 	public void setbAllLabels(List<String> bAllLabels) {
 		this.bAllLabels = bAllLabels;
+	}
+
+	public String getCaseId() {
+		return caseId;
+	}
+
+	public void setCaseId(String caseId) {
+		this.caseId = caseId;
 	}
 
 }

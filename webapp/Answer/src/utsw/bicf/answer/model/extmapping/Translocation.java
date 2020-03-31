@@ -3,9 +3,12 @@ package utsw.bicf.answer.model.extmapping;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Translocation {
@@ -35,6 +38,7 @@ public class Translocation {
 	String annot;
 	@JsonProperty("filters")
 	List<String> ftlFilters; //list of filters
+	String filtersFormatted;
 	List<MongoDBId> annotationIdsForReporting;
 	
 	AbstractReference referenceTranslocation;
@@ -46,6 +50,10 @@ public class Translocation {
 	
 	Map<Integer, Boolean> annotatorSelections = new HashMap<Integer, Boolean>();
 	Map<Integer, String> annotatorDates = new HashMap<Integer, String>();
+	
+	@JsonProperty("somaticStatus")
+	String ftlSomaticStatus;
+	Integer normalDnaReads;
 	
 	public Translocation() {
 		
@@ -269,6 +277,38 @@ public class Translocation {
 
 	public void setPercentSupportingReads(String percentSupportingReads) {
 		this.percentSupportingReads = percentSupportingReads;
+	}
+
+	public String getFiltersFormatted() {
+		return filtersFormatted;
+	}
+
+	public void setFiltersFormatted(String filtersFormatted) {
+		this.filtersFormatted = filtersFormatted;
+	}
+
+	public void formatFilters() {
+		filtersFormatted = ftlFilters.stream()
+		.filter(f -> !Variant.VALUE_FAIL.equals(f))
+		.map(f -> TypeUtils.splitCamelCaseString(f))
+		.collect(Collectors.joining(", "));
+		
+	}
+
+	public String getFtlSomaticStatus() {
+		return ftlSomaticStatus;
+	}
+
+	public void setFtlSomaticStatus(String ftlSomaticStatus) {
+		this.ftlSomaticStatus = ftlSomaticStatus;
+	}
+
+	public Integer getNormalDnaReads() {
+		return normalDnaReads;
+	}
+
+	public void setNormalDnaReads(Integer normalDnaReads) {
+		this.normalDnaReads = normalDnaReads;
 	}
 
 

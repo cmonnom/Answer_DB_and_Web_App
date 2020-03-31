@@ -43,6 +43,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.controller.serialization.Utils;
@@ -376,6 +377,7 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			Translocation translocation = mapper.readValue(response.getEntity().getContent(), Translocation.class);
+			translocation.formatFilters();
 			this.closeGetRequest();
 			return translocation;
 		}
@@ -792,7 +794,10 @@ public class RequestUtils {
 		return null;
 	}
 
-	private boolean skipChrom(String chr) {
+	private boolean skipChrom(String chr, boolean keepX) {
+		if (keepX) {
+			return ("chrY".equals(chr) || (chr != null && chr.contains("_")));
+		}
 		return ("chrX".equals(chr) || "chrY".equals(chr) || (chr != null && chr.contains("_")));
 	}
 	
@@ -812,91 +817,99 @@ public class RequestUtils {
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			CNVPlotDataRaw plotDataRaw = mapper.readValue(response.getEntity().getContent(), CNVPlotDataRaw.class);
-			CNVPlotData plotData = new CNVPlotData();
-			List<CNRData> cnrDataList = new ArrayList<CNRData>();
-			List<CNSData> cnsDataList = new ArrayList<CNSData>();
-			List<BAlleleFrequencyData> bAllFDataList = new ArrayList<BAlleleFrequencyData>();
-			
-			for (List<String> items : plotDataRaw.getCnr()) {
-				if (items.get(0).equals("Gene")) {
-					continue; //skip the 1st row
-				}
-				String cnrChrom = items.get(1);
-				if (chrom == null || cnrChrom.equals(chrom)) {
-					String gene = items.get(0);
-					Long start = Long.parseLong(items.get(2));
-					Long end = Long.parseLong(items.get(3));
-					Double depth = Double.parseDouble(items.get(5));
-					Double log2 = Double.parseDouble(items.get(4));
-					Double weight = Double.parseDouble(items.get(6));
-					if (!skipChrom(cnrChrom) && !gene.equals("Antitarget")) { //skip chromosomes in the toSkip list
-						cnrDataList.add(new CNRData(cnrChrom, start, end, gene, log2, weight));
-					}
-				}
-				
-			}
-			
-			for (List<String> items : plotDataRaw.getCns()) {
-				if (items.get(0).equals("Chromosome")) {
-					continue; //skip the 1st row
-				}
-				String cnrChrom = items.get(0);
-				if (chrom == null || cnrChrom.equals(chrom)) {
-					Long start = Long.parseLong(items.get(1));
-					Long end = Long.parseLong(items.get(2));
-					Double log2 = Double.parseDouble(items.get(3));
-					Integer cn = Integer.parseInt(items.get(4));
-					if (!skipChrom(cnrChrom)) { //skip chromosomes in the toSkip list
-						cnsDataList.add(new CNSData(cnrChrom, start, end, log2, cn));
-					}
-				}
-				
-			}
-			boolean test = false;
-			if (test) {
-				List<List<String>> bAll = createBAlleleFreqManualData();
-				for (List<String> items : bAll) {
-					if (items.get(0).equals("CHROM")) {
-						continue; //skip the 1st row
-					}
-					String cnrChrom = items.get(0);
-					if (chrom == null || cnrChrom.equals(chrom)) {
-						String chr = items.get(0);
-						Long pos = Long.parseLong(items.get(1));
-						Long ao = Long.parseLong(items.get(2));
-						Long ro = Long.parseLong(items.get(3));
-						Double depth = Double.parseDouble(items.get(4));
-						Double log2 = Double.parseDouble(items.get(5));
-						if (!skipChrom(cnrChrom)) { //skip chromosomes in the toSkip list
-							bAllFDataList.add(new BAlleleFrequencyData(chr, pos, ao, ro, depth, log2));
-						}
-					}
-					
-				}
-				
-			}
-			
-			else {
-				for (BAlleleFrequencyData bAllItem : plotDataRaw.getBallelefreqs()) {
-					String chr = bAllItem.getChrom();
-					if ((chrom == null || chr.equals(chrom)) && !skipChrom(chr)) {
-						bAllFDataList.add(bAllItem);
-					}
-				}
-			}
-			
-			
-			
-			plotData.setCaseId(plotDataRaw.getCaseId());
-			plotData.setCnrData(cnrDataList);
-			plotData.setCnsData(cnsDataList);
-			plotData.setBAllData(bAllFDataList);
-//			plotData.setBAllData(new ArrayList<BAlleleFrequencyData>());
+			CNVPlotData plotData = parseRawData(chrom, plotDataRaw, false);
 			this.closeGetRequest();
 			return plotData;
 		}
 		this.closeGetRequest();
 		return null;
+	}
+	
+	public CNVPlotData parseRawData(String chrom, CNVPlotDataRaw plotDataRaw, boolean keepX) throws IOException {
+		CNVPlotData plotData = new CNVPlotData();
+		List<CNRData> cnrDataList = new ArrayList<CNRData>();
+		List<CNSData> cnsDataList = new ArrayList<CNSData>();
+		List<BAlleleFrequencyData> bAllFDataList = new ArrayList<BAlleleFrequencyData>();
+		
+		for (List<String> items : plotDataRaw.getCnr()) {
+			if (items.get(0).equals("Gene")) {
+				continue; //skip the 1st row
+			}
+			String cnrChrom = items.get(1);
+			if (chrom == null || cnrChrom.equals(chrom)) {
+				String gene = items.get(0);
+				Long start = Long.parseLong(items.get(2));
+				Long end = Long.parseLong(items.get(3));
+				Double depth = Double.parseDouble(items.get(5));
+				Double log2 = Double.parseDouble(items.get(4));
+				Double weight = Double.parseDouble(items.get(6));
+				if (!skipChrom(cnrChrom, keepX) && !gene.equals("Antitarget")) { //skip chromosomes in the toSkip list
+					cnrDataList.add(new CNRData(cnrChrom, start, end, gene, log2, weight));
+				}
+			}
+			
+		}
+		
+		for (List<String> items : plotDataRaw.getCns()) {
+			if (items.get(0).equals("Chromosome")) {
+				continue; //skip the 1st row
+			}
+			String cnrChrom = items.get(0);
+			if (chrom == null || cnrChrom.equals(chrom)) {
+				Long start = Long.parseLong(items.get(1));
+				Long end = Long.parseLong(items.get(2));
+				Double log2 = Double.parseDouble(items.get(3));
+				Integer cn = Integer.parseInt(items.get(4));
+				if (!skipChrom(cnrChrom, keepX)) { //skip chromosomes in the toSkip list
+					cnsDataList.add(new CNSData(cnrChrom, start, end, log2, cn));
+				}
+			}
+			
+		}
+		boolean test = false;
+		if (test) {
+			List<List<String>> bAll = createBAlleleFreqManualData();
+			for (List<String> items : bAll) {
+				if (items.get(0).equals("CHROM")) {
+					continue; //skip the 1st row
+				}
+				String cnrChrom = items.get(0);
+				if (chrom == null || cnrChrom.equals(chrom)) {
+					String chr = items.get(0);
+					Long pos = Long.parseLong(items.get(1));
+					Long ao = Long.parseLong(items.get(2));
+					Long ro = Long.parseLong(items.get(3));
+					Double depth = Double.parseDouble(items.get(4));
+					Double log2 = Double.parseDouble(items.get(5));
+					if (!skipChrom(cnrChrom, keepX)) { //skip chromosomes in the toSkip list
+						bAllFDataList.add(new BAlleleFrequencyData(chr, pos, ao, ro, depth, log2));
+					}
+				}
+				
+			}
+			
+		}
+		
+		else {
+			if (plotDataRaw.getBallelefreqs() == null) {
+				plotDataRaw.setBallelefreqs(new ArrayList<BAlleleFrequencyData>());
+			}
+			for (BAlleleFrequencyData bAllItem : plotDataRaw.getBallelefreqs()) {
+				String chr = bAllItem.getChrom();
+				if ((chrom == null || chr.equals(chrom) || chr.equals(TypeUtils.formatChromosome(chrom))) && !skipChrom(chr, keepX)) {
+					bAllFDataList.add(bAllItem);
+				}
+			}
+		}
+		
+		
+		
+		plotData.setCaseId(plotDataRaw.getCaseId());
+		plotData.setCnrData(cnrDataList);
+		plotData.setCnsData(cnsDataList);
+		plotData.setBAllData(bAllFDataList);
+//		plotData.setBAllData(new ArrayList<BAlleleFrequencyData>());
+		return plotData;
 	}
 
 	/**
