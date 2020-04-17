@@ -119,7 +119,7 @@ Vue.component('variant-details', {
                                             :error="item.isValid === false"
                                             v-model="currentVariant[item.fieldName]"
                                             :value="currentVariant[item.fieldName]"
-                                            :disabled="noEdit || (item.type == 'textfield')"
+                                            :disabled="noEdit"
                                              @input="variantDetailsChanged">
                                             </v-text-field>
                                             </v-flex>
@@ -300,6 +300,13 @@ Vue.component('variant-details', {
                                               <span v-text="genesVisibleBottomLabel"></span>
                                               <span class="blue-grey--text text--lighten-1">{{ visibleGenesOther }}</span>
                                         </v-flex>
+
+                                        <v-flex xs6 lg4 pl-2>
+                                        <v-autocomplete multiple chips deletable-chips hide-details v-bind:items="currentListOfVisibleGenes" clearable v-model="searchForGene"
+                                        label="Find any genes in this plot" @input="highlightDots"
+                                        auto clearable :disabled="createCNVDisabled"></v-autocomplete>
+                                    </v-flex>
+
                                         <v-flex xs12>
                                             <div :style="cnvPlotDataConfig ? fullSizeChart : ''">
                                             <div :id="cnvPlotId" style="height: 100%"></div>
@@ -399,7 +406,8 @@ Vue.component('variant-details', {
             lastKMax: null,
             showingGeneLabels: false,
             maxGenesForLabels: 150,
-            fieldsWithGeneRules: ["leftGene", "rightGene"]
+            fieldsWithGeneRules: ["leftGene", "rightGene"],
+            searchForGene: null
         }
 
 
@@ -737,7 +745,9 @@ Vue.component('variant-details', {
                             "cns": cnsTraces,
                             "genesSelected": geneSelectedTraces,
                             "geneAnnotations": geneLabelsAnnotations,
-                            "chrAnnotations": chrLabelsAnnotations
+                            "chrAnnotations": chrLabelsAnnotations,
+                            "cnr2Outliers": cnr2OutliersTrace,
+                            "cnrOthersOutliers": cnrOthersOutliersTrace
                         };
 
                         var topSubPlotAxes = [];
@@ -809,6 +819,9 @@ Vue.component('variant-details', {
                                 this.genesVisibleBottomLabel = "Others: ";
                             }
                             this.handleChartZoom({ kmin: 0, kmax });
+                            if (this.searchForGene) {
+                                this.highlightDots();
+                            }
                         });
                     }
                     else {
@@ -827,6 +840,46 @@ Vue.component('variant-details', {
                     this.cnvPlotLoadingOtherChrom = false;
                     this.toggleAllLoading = false;
                 });
+        },
+        /**
+         * Makes the highlighted dots "flash" in a regular interval
+         */
+        highlightDots() {
+            this.clearHighlight();
+            var newData = {x: [], y:[], labels:[]};
+            var traces = [this.cnvData.cnr2, this.cnvData.cnrOthers, this.cnvData.cnr2Outliers, this.cnvData.cnrOthersOutliers];
+            for (var j = 0; j < traces.length; j++) {
+                for (var i = 0; i < traces[j].text.length; i++) {
+                    var text = traces[j].text[i];
+                    for (var k = 0; k < this.searchForGene.length; k++) {
+                        if (text.indexOf(" " + this.searchForGene[k] + " ") > -1) {
+                            newData.x.push(traces[j].x[i]);
+                            newData.y.push(traces[j].y[i]);
+                            newData.labels.push(text);
+                        }
+                    }
+                }
+            }
+            var newTrace = this.createScatterTrace(newData, "#00204d");
+            newTrace.marker.size = 10;
+            newTrace.marker.color = "red";
+            newTrace.name = this.searchForGene.join(" ");
+            newTrace.canDelete = true;
+            this.doHighlightDots(newTrace);
+            
+        },
+        doHighlightDots(newTrace) {
+            Plotly.addTraces(this.cnvPlotId, newTrace);
+        },
+        clearHighlight() {
+            var indicesToDelete = [];
+            var graph = document.getElementById(this.cnvPlotId);
+            for (var i = 0; i < graph.data.length; i++) {
+                if (graph.data[i].canDelete) {
+                    indicesToDelete.push(i);
+                }
+            }
+            Plotly.deleteTraces(this.cnvPlotId, indicesToDelete);
         },
         handleChartZoom(p) {
             this.currentListOfVisibleGenes = [];
@@ -1067,7 +1120,7 @@ Vue.component('variant-details', {
                 else {
                     axios({
                         method: 'post',
-                        url: "http://rest.genenames.org/search/symbol/" + input,
+                        url: "https://rest.genenames.org/search/symbol/" + input,
                         headers: {
                             'Content-Type': 'application/json; charset=utf-8'
                         },

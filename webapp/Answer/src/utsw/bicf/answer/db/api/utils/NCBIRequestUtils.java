@@ -41,6 +41,8 @@ import org.xml.sax.SAXException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.extmapping.lookup.LookupSummary;
+import utsw.bicf.answer.model.extmapping.ncbigene.ESearch;
 import utsw.bicf.answer.model.extmapping.pubmed.EPost;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.security.NCBIProperties;
@@ -223,12 +225,115 @@ public class NCBIRequestUtils {
 					pubmeds.add(pubmed);
 				}
 			}
+			reader.close();
 		}
 		else {
 			logger.info("Something went wrong NCBIRequest:229 HTTP_STATUS: " + statusCode);
 		}
 		logger.info("Pubmeds count: " + pubmeds.size());
 		return pubmeds;
+	}
+	
+	public LookupSummary getGeneSummary(String geneTerm, ModelDAO modelDAO)
+			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
+			UnsupportedOperationException, SAXException, ParserConfigurationException {
+		LookupSummary summary = new LookupSummary();
+		StringBuilder sbUrl = new StringBuilder(ncbiProps.getUrl());
+		sbUrl.append(ncbiProps.getEsearchGene()).append(geneTerm);
+		sbUrl.append(this.getAPIKey());
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+		HttpClientContext context = HttpClientContext.create();
+		HttpResponse response = client.execute(requestGet, context);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			InputStreamReader isReader = new InputStreamReader(response.getEntity().getContent());
+			// Creating a BufferedReader object
+			BufferedReader reader = new BufferedReader(isReader);
+			StringBuffer sb1 = new StringBuffer();
+			String str;
+			while ((str = reader.readLine()) != null) {
+				sb1.append(str);
+			}
+			Document doc = null;
+//			If for some reason NCBI is returning an error page (could be because our IP got blocked)
+//			the code will switch to a local copy of PubMed which need to be manually curated
+//			see MySQL table temp_pubmed
+			if (sb1.toString().contains("DOCTYPE html")) { // something is wrong (NBCI is blocking us?)
+				logger.info("using local cache");
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();
+				String xmlDoc = modelDAO.getPubmedContent().trim();
+				InputStream targetStream = new ByteArrayInputStream(xmlDoc.getBytes());
+				doc = builder.parse(targetStream);
+			} else {
+				ESearch eSearch = mapper.readValue(sb1.toString(), ESearch.class);
+				if ( eSearch.getIdList() != null && ! eSearch.getIdList().isEmpty()) {
+					summary.setMoreInfoUrl(ncbiProps.getNcbiGeneUrl() + eSearch.getIdList().get(0));
+					sbUrl = new StringBuilder(ncbiProps.getUrl());
+					sbUrl.append(ncbiProps.getEsummaryGene()).append("id=")
+					.append(eSearch.getIdList().get(0)).append("&retype=xml");
+					sbUrl.append(this.getAPIKey());
+					uri = new URI(sbUrl.toString());
+					requestGet = new HttpGet(uri);
+					HttpResponse response2 = client.execute(requestGet);
+					statusCode = response2.getStatusLine().getStatusCode();
+					if (statusCode == HttpStatus.SC_OK) {
+						
+						DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+						DocumentBuilder builder = factory.newDocumentBuilder();
+						
+						doc = builder.parse(response2.getEntity().getContent());
+						
+					}
+				}
+				else {
+					logger.info("Something went wrong NCBIRequest:152 HTTP_STATUS: " + statusCode);
+				}
+			}
+			NodeList docSums = doc.getElementsByTagName("Summary");
+			for (int i = 0; i < docSums.getLength(); i++) {
+				summary.setSummary(docSums.item(i).getTextContent());
+			}
+			reader.close();
+		}
+		else {
+			logger.info("Something went wrong NCBIRequest:229 HTTP_STATUS: " + statusCode);
+		}
+		
+		return summary;
+	}
+
+	public LookupSummary getGeneSummary(String entrezId)
+			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
+			UnsupportedOperationException, SAXException, ParserConfigurationException {
+		LookupSummary summary = new LookupSummary();
+		StringBuilder sbUrl = new StringBuilder(ncbiProps.getUrl());
+		sbUrl.append(ncbiProps.getEsummaryGene()).append("id=")
+		.append(entrezId).append("&retype=xml");
+		sbUrl.append(this.getAPIKey());
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+		HttpClientContext context = HttpClientContext.create();
+		HttpResponse response = client.execute(requestGet, context);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			
+			Document doc = builder.parse(response.getEntity().getContent());
+			NodeList docSums = doc.getElementsByTagName("Summary");
+			for (int i = 0; i < docSums.getLength(); i++) {
+				summary.setSummary(docSums.item(i).getTextContent());
+				summary.setMoreInfoUrl(ncbiProps.getNcbiGeneUrl() + entrezId);
+			}
+		}
+		else {
+			logger.info("Something went wrong NCBIRequest:152 HTTP_STATUS: " + statusCode);
+		}
+		return summary;
 	}
 
 	private String getNodeValue(Element elt) {

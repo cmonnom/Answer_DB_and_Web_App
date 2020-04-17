@@ -187,7 +187,20 @@ public class PatientInfo {
 		tumorPercentItem.setField("tumorPercent");
 		tumorPercentItem.setType(CellItem.TYPE_TEXT_FIELD);
 		items.add(tumorPercentItem);
-		items.add(new CellItem("Tumor Mutation Burden (Mutations/MB)", orderCase.getTumorMutationBurden() + ""));
+		String tmb = orderCase.getTumorMutationBurden() == null ? "Not calculated" : orderCase.getTumorMutationBurden() + "";
+		CellItem tmbItem = new CellItem("Tumor Mutation Burden (Mutations/MB)", tmb);
+		tmbItem.setField("tmb");
+		tmbItem.setValue2(orderCase.getTumorMutationBurdenClass());
+//		tmbItem.setValue2("Medium"); //TODO for testing only
+		items.add(tmbItem);
+//		orderCase.setMsiClass("MSI"); //TODO for testing only
+//		orderCase.setMsi(0.14f); //TODO for testing only
+		String msiClass = orderCase.getMsiClass() == null ? "" : orderCase.getMsiClass();
+		String msi = orderCase.getMsi() == null ? "Not calculated" : orderCase.getMsi() + "";
+		CellItem msiItem = new CellItem("Microsatellite Instability", msi);
+		msiItem.setField("msi");
+		msiItem.setValue2(msiClass);
+		items.add(msiItem);
 		patientTables.add(table);
 		
 	}

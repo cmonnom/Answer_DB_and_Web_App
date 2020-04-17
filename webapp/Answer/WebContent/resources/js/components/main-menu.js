@@ -96,11 +96,11 @@ Vue.component('main-menu', {
 		</v-list-tile-content>
 		</v-list-tile>
 		</v-slide-x-transition>
-
-				<v-btn icon v-if="showXmas()" flat @click="activateXMas">
-					<v-icon color="#c54245">mdi-snowman</v-icon>
+<!--
+				<v-btn icon v-if="showGoodies()" flat @click="activateGoodies" :class="goodiesActive ? 'error' : ''">
+					<v-icon>mdi-egg-easter</v-icon>
 				</v-btn>
-
+				-->
 	</v-list>
 </v-navigation-drawer>`,
 	data() {
@@ -114,6 +114,7 @@ Vue.component('main-menu', {
 				{ title: 'Admin', name: 'Admin', regularItem: true, adminOnly: true, iconBefore: 'settings' },
 				{ title: 'Preferences', name: 'UserPrefs', regularItem: true, iconBefore: 'account_circle' },
 				{ title: 'Help', name: 'Help', regularItem: true, action: this.openHelp, skipRoute:true, iconBefore: 'mdi-lifebuoy', isButton: true },
+				{ title: 'Lookup Tool', name: 'LookupTool', regularItem: true, iconBefore: 'mdi-dna' },
 				{ title: 'Logout', name: 'LogOut', iconBefore: 'mdi-logout', regularItem: true }
 			],
 			caseItemSelected: null,
@@ -130,7 +131,8 @@ Vue.component('main-menu', {
 			versionName: "1.0",
 			allCases: false,
 			allReports: false,
-			isMenuOpen: { 'Open Case': false, 'Open Report': false} //to control open/closing a menu
+			isMenuOpen: { 'Open Case': false, 'Open Report': false}, //to control open/closing a menu
+			goodiesActive: false
 		}
 
 	},
@@ -365,23 +367,31 @@ Vue.component('main-menu', {
 					menuItem.activeColor = this.getRouteColor(menuItem);
 				}
 			}
+			this.goodiesActive = false;
 		},
 		//remove after Xmas
-		activateXMas() {
+		activateGoodies() {
 			// this.$vuetify.theme.primary = "#c54245";
 			// document.getElementById("main-app").style.background = "#0F8A5F";
 			// document.getElementsByClassName("v-navigation-drawer v-navigation-drawer--fixed v-navigation-drawer--open theme--light")[0].style.background = "#0F8A5F";
 			// makeItSnow();
+			this.goodiesActive = !this.goodiesActive;
+			bus.$emit("showEaster");
 		},
-		showXmas() {
-			return false;
+		showGoodies() {
+			var now = moment();
+			if (now.isBefore("2020-04-09") || now.isAfter("2020-04-14")) {
+				return false;
+			}
+			// return false;
             if (userFullName == "Guillaume Jimenez"
             || userFullName == "Brandi Cantarel"
             || userFullName == "Benjamin Wakeland"
             || userFullName == "Jeffrey Gagan"
             || userFullName == "Erika Villa") {
-                return true;
-            }
+                return this.$route.name == "Home";
+			}
+			this.goodiesActive = false;
             return false;
         }
 	},

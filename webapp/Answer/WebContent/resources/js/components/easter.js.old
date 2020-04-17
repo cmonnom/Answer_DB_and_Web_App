@@ -1,0 +1,112 @@
+Vue.component('easter', {
+  props: {
+    baseUrl: { type: String, default: webAppRoot },
+  },
+  template: `
+  <div id="easter-div" class="easter" @mousemove="updateDist">
+  <img v-if="currentGif" :src="baseUrl + '/resources/images/goodies/easter/' + currentGif" class="easter-gif"/>
+    <img :src="baseUrl + '/resources/images/goodies/easter/easter_banner.png'" class="easter-top-center"/>
+    <img :src="baseUrl + '/resources/images/goodies/easter/easter_corner1.png'" class="easter-bottom-left"/>
+    <img :src="baseUrl + '/resources/images/goodies/easter/easter_corner1.png'" class="easter-bottom-right"/>
+    <v-tooltip top  v-for="egg in eggs" :key="egg.name">
+      <img slot="activator" :src="baseUrl + '/resources/images/goodies/easter/' + egg.name" class="egg"
+      @click="foundEgg(egg)"
+      width="64px" @mouseenter="egg.opacity = 1"
+      :style="getStyle(egg)"/>
+      <span>Click Me!</span>
+    </v-tooltip>
+    <div class="subheading egg-message" v-text="eggMessage()"></div>
+    <div class="easter-progress" v-show="progressVisible">
+    <v-icon v-for="egg in 10" :key="egg"
+    v-show="showProgressEgg(egg)">mdi-egg-easter</v-icon>
+    </div>
+  </div>
+  `,
+  data() {
+    return {
+      eggs: [],
+      dist: 0,
+      progressVisible: true,
+      calculating: false,
+      currentGif: ""
+    }
+
+  },
+  methods: {
+    getStyle(egg) {
+      return "position: absolute;"
+      + "top: " + egg.y + "px;"
+      + "left: " + egg.x + "px;"
+      + "opacity: " + egg.opacity
+    },
+    init() {
+      this.eggs = [];
+      for (var i = 1; i <= 8; i++) {
+        this.eggs.push({name: "egg" + i + ".png", gif: "easter" + i + ".gif", 
+        x: Math.random() * (this.$el.clientWidth - 64), 
+        y: Math.random() * (window.innerHeight - 128),
+        opacity: 0,})
+      }
+    },
+    updateDist(event) {
+      if (this.calculating) {
+        return;
+      }
+      else {
+        var div = document.getElementById("easter-div").getBoundingClientRect();
+        var dists = [];
+        var mouseX = event.clientX - div.left;
+        var mouseY = event.clientY - div.top;
+        var allFound = true;
+        for (var i = 0; i < 8; i++) {
+          if (this.eggs[i].opacity != 1) {
+            allFound = false;
+            var dist = Math.sqrt(Math.pow(this.eggs[i].x - mouseX, 2) + Math.pow(this.eggs[i].y - mouseY, 2));
+            dists.push(dist);
+          }
+        }
+        var min =  dists.sort((a,b) => a - b)[0];
+        if (min > 500) {
+          this.dist = 0;
+        }
+        else {
+          this.dist = 100 - (min / 500 * 100)
+        }
+        if (allFound) {
+          this.progressVisible = false;
+        }
+        this.calculating = false;
+      }
+    },
+    foundEgg(egg) {
+      if (this.currentGif == egg.gif) {
+        this.currentGif = ""; //2nd click cancel
+      }
+      else {
+        this.currentGif = egg.gif;
+      }
+    },
+    showProgressEgg(index) {
+      return index * 10 <= this.dist;
+    },
+    eggMessage() {
+      var left = this.eggs.filter(e => e.opacity != 1).length;
+      if (left == 0) {
+        return "Happy Easter!";
+      }
+      var plural = left == 1 ? '' : 's';
+      return left + " egg" + plural + " left!";
+    }
+  },
+  mounted: function () {
+    this.init();
+  },
+  created: function () {
+  },
+  destroyed: function () {
+  },
+  watch: {
+  }
+
+
+});

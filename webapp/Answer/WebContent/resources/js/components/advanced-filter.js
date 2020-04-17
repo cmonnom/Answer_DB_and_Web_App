@@ -93,7 +93,7 @@ Vue.component('advanced-filter', {
             <v-toolbar dense>
                 <v-tooltip class="ml-0" bottom>
                     <v-menu offset-y offset-x slot="activator" class="ml-0">
-                        <v-btn slot="activator" flat icon dark>
+                        <v-btn slot="activator" flat icon>
                             <v-icon color="amber accent-2">filter_list</v-icon>
                         </v-btn>
                         <v-list>

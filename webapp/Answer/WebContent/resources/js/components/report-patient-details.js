@@ -45,8 +45,8 @@ Vue.component('report-patient-details', {
                                                     item.label }}:</span>
                                             </v-flex>
                                             <v-flex :class="['xs','text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
-                                                <span class="selectable">{{
-                                                    item.value }}</span>
+                                                <span v-if="!item.value2" class="selectable">{{ item.value }}</span>    
+                                                <span v-else>{{ item.value2 }}&nbsp;{{ item.value }}</span>
                                             </v-flex>
                                         </v-layout>
                                     </v-list-tile-content>
@@ -78,6 +78,9 @@ Vue.component('report-patient-details', {
                     }
                     else if (item.field == "dedupPctOver100X") {
                         item.value = (Math.round(parseFloat(item.value * 100)) / 100) + "%";
+                    }
+                    else if (item.value != "Not calculated" && (item.field == "tumorPercent" || item.field == "msi")) {
+                        item.value += "%";
                     }
                 }
             }

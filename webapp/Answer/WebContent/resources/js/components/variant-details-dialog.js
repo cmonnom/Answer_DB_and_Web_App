@@ -63,6 +63,7 @@ Vue.component('variant-details-dialog', {
         unfilteredSNPsDict: {default: () => {}, type: Object},
         unfilteredCNVsDict: {default: () => {}, type: Object},
         unfilteredFTLsDict: {default: () => {}, type: Object},
+        oncotree: {default: () => [], type: Array},
     },
     template: `<div>
 
@@ -144,583 +145,602 @@ Vue.component('variant-details-dialog', {
             </v-slide-y-transition>
         </edit-annotations>
 
-        <v-dialog v-model="variantDetailsVisible"  scrollable fullscreen persistent hide-overlay transition="dialog-bottom-transition" content-class="variantDetailsDialog">
-        <v-card class="soft-grey-background">
-            <v-toolbar dense dark :color="colors.variantDetails">
-                <v-menu offset-y offset-x class="ml-0">
-                    <v-btn slot="activator" flat icon dark>
-                        <v-icon>more_vert</v-icon>
-                    </v-btn>
-                    <v-list>
-                        <v-list-tile class="list-menu">
-                            <v-list-tile-content>
-                                <v-list-tile-title>
-                                    <v-menu offset-y offset-x close-delay="500" open-on-hover>
-                                        <span slot="activator">
-                                            <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide
-                                            <!-- This is a hack to extend the menu active area because the title is much shorter than other items -->
-                                            <span v-for="i in 30" :key="i">&nbsp;</span>
-                                        </span>
-                                        <v-list>
-                                            <v-list-tile :class="!annotationVariantDetailsVisible ? 'grey--text' : ''" avatar @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible">
-                                                <v-list-tile-avatar>
-                                                    <v-icon>zoom_in</v-icon>
-                                                </v-list-tile-avatar>
-                                                <v-list-tile-content>
-                                                    <v-list-tile-title>Variant Details</v-list-tile-title>
-                                                </v-list-tile-content>
-                                            </v-list-tile>
-
-                                            <v-list-tile v-if="isSNP()" :class="!currentVariantHasRelatedVariants ? 'grey--text' : ''" avatar :disabled="!currentVariantHasRelatedVariants" @click="toggleRelatedVariants()">
+        <v-dialog v-model="variantDetailsVisible" scrollable fullscreen persistent hide-overlay transition="dialog-bottom-transition" content-class="variantDetailsDialog">
+            <v-card class="soft-grey-background">
+                <v-toolbar dense dark :color="colors.variantDetails">
+                    <v-menu offset-y offset-x class="ml-0">
+                        <v-btn slot="activator" flat icon dark>
+                            <v-icon>more_vert</v-icon>
+                        </v-btn>
+                        <v-list>
+                            <v-list-tile class="list-menu">
+                                <v-list-tile-content>
+                                    <v-list-tile-title>
+                                        <v-menu offset-y offset-x close-delay="500" open-on-hover>
+                                            <span slot="activator">
+                                                <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Show / Hide
+                                                <!-- This is a hack to extend the menu active area because the title is much shorter than other items -->
+                                                <span v-for="i in 30" :key="i">&nbsp;</span>
+                                            </span>
+                                            <v-list>
+                                                <v-list-tile :class="!annotationVariantDetailsVisible ? 'grey--text' : ''" avatar @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>zoom_in</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Variant Details</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+    
+                                                <v-list-tile v-if="isSNP()" :class="!currentVariantHasRelatedVariants ? 'grey--text' : ''" avatar :disabled="!currentVariantHasRelatedVariants" @click="toggleRelatedVariants()">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>link</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Related Variants</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+    
+                                                <v-list-tile v-if="isSNP()" :class="!currentVariantHasRelatedCNV ? 'grey--text' : ''" avatar :disabled="!currentVariantHasRelatedCNV" @click="toggleRelatedCNV()">
                                                 <v-list-tile-avatar>
                                                     <v-icon>link</v-icon>
                                                 </v-list-tile-avatar>
                                                 <v-list-tile-content>
-                                                    <v-list-tile-title>Related Variants</v-list-tile-title>
+                                                    <v-list-tile-title>Related CNV</v-list-tile-title>
                                                 </v-list-tile-content>
                                             </v-list-tile>
-
-                                            <v-list-tile v-if="isSNP()" :class="!currentVariantHasRelatedCNV ? 'grey--text' : ''" avatar :disabled="!currentVariantHasRelatedCNV" @click="toggleRelatedCNV()">
-                                            <v-list-tile-avatar>
-                                                <v-icon>link</v-icon>
-                                            </v-list-tile-avatar>
-                                            <v-list-tile-content>
-                                                <v-list-tile-title>Related CNV</v-list-tile-title>
-                                            </v-list-tile-content>
-                                        </v-list-tile>
-
-                                            <v-list-tile v-if="isSNP()" :class="!annotationVariantCanonicalVisible ? 'grey--text' : ''" avatar @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible">
+    
+                                                <v-list-tile v-if="isSNP()" :class="!annotationVariantCanonicalVisible ? 'grey--text' : ''" avatar @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>mdi-table-search</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title> Canonical VCF Annotations</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+    
+                                                <v-list-tile v-if="isSNP()" :class="!annotationVariantOtherVisible ? 'grey--text' : ''" avatar @click="annotationVariantOtherVisible = !annotationVariantOtherVisible">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>mdi-table-search</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title>Other VCF Annotations</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+    
+                                                <!--
+                                                <v-list-tile v-if="isSNP() || isCNV()" :class="!mdaAnnotationsVisible ? 'grey--text' : ''" avatar @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" :disabled="!mdaAnnotationsExists()">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
+                                                        <v-icon v-else>mdi-message-bulleted-off</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title v-if="mdaAnnotationsExists()">MDA Annotations</v-list-tile-title>
+                                                        <v-list-tile-title v-else>No MDA Annotations</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+                                                -->
+    
+                                                <v-list-tile avatar :class="!utswAnnotationsVisible ? 'grey--text' : ''" avatar @click="utswAnnotationsVisible = !utswAnnotationsVisible" :disabled="!utswAnnotationsExists()">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon v-if="utswAnnotationsExists()">mdi-message-bulleted</v-icon>
+                                                        <v-icon v-else>mdi-message-bulleted-off</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title v-if="utswAnnotationsExists()">UTSW Annotations</v-list-tile-title>
+                                                        <v-list-tile-title v-else>No UTSW Annotations</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+    
+                                            </v-list>
+                                        </v-menu>
+                                    </v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+    
+                            <v-list-tile class="list-menu" v-if="isSNP()">
+                                <v-list-tile-content>
+                                    <v-list-tile-title>
+                                        <v-menu offset-y offset-x close-delay="500" open-on-hover>
+                                            <span slot="activator">
+                                                <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>IGV
+                                                <!-- This is a hack to extend the menu active area because the title is much shorter than other items -->
+                                                <span v-for="i in 30" :key="i">&nbsp;</span>
+                                            </span>
+                                            <v-list>
+                                                <v-list-tile  avatar @click="openBamViewerLinkWeb()">
+                                                    <v-list-tile-avatar>
+                                                        <v-icon>mdi-web</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content class="mb-2">
+                                                        <v-list-tile-title>Open IGV (web)</v-list-tile-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+    
+                                                <v-list-tile avatar @click="downloadIGVFile('jnlp')">
                                                 <v-list-tile-avatar>
-                                                    <v-icon>mdi-table-search</v-icon>
+                                                <v-icon>mdi-desktop-mac-dashboard</v-icon>
                                                 </v-list-tile-avatar>
-                                                <v-list-tile-content>
-                                                    <v-list-tile-title> Canonical VCF Annotations</v-list-tile-title>
+                                                <v-list-tile-content  class="mb-2">
+                                                    <v-list-tile-title>Open IGV (desktop)</v-list-tile-title>
                                                 </v-list-tile-content>
-                                            </v-list-tile>
-
-                                            <v-list-tile v-if="isSNP()" :class="!annotationVariantOtherVisible ? 'grey--text' : ''" avatar @click="annotationVariantOtherVisible = !annotationVariantOtherVisible">
+                                                </v-list-tile>
+    
+                                                <v-list-tile  avatar @click="downloadIGVFile('session')">
                                                 <v-list-tile-avatar>
-                                                    <v-icon>mdi-table-search</v-icon>
+                                                    <v-icon>mdi-file-xml</v-icon>
                                                 </v-list-tile-avatar>
-                                                <v-list-tile-content>
-                                                    <v-list-tile-title>Other VCF Annotations</v-list-tile-title>
+                                                <v-list-tile-content  class="mb-2">
+                                                    <v-list-tile-title>Download IGV Session</v-list-tile-title>
                                                 </v-list-tile-content>
-                                            </v-list-tile>
-
-                                            <!--
-                                            <v-list-tile v-if="isSNP() || isCNV()" :class="!mdaAnnotationsVisible ? 'grey--text' : ''" avatar @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" :disabled="!mdaAnnotationsExists()">
+                                                </v-list-tile>
+    
+                                                <v-list-tile avatar @click="getIGVSessionLink()">
                                                 <v-list-tile-avatar>
-                                                    <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
-                                                    <v-icon v-else>mdi-message-bulleted-off</v-icon>
+                                                    <v-icon>mdi-link-variant</v-icon>
                                                 </v-list-tile-avatar>
-                                                <v-list-tile-content>
-                                                    <v-list-tile-title v-if="mdaAnnotationsExists()">MDA Annotations</v-list-tile-title>
-                                                    <v-list-tile-title v-else>No MDA Annotations</v-list-tile-title>
+                                                <v-list-tile-content  class="mb-2">
+                                                    <v-list-tile-title>Show IGV Session Link</v-list-tile-title>
                                                 </v-list-tile-content>
-                                            </v-list-tile>
-                                            -->
-
-                                            <v-list-tile avatar :class="!utswAnnotationsVisible ? 'grey--text' : ''" avatar @click="utswAnnotationsVisible = !utswAnnotationsVisible" :disabled="!utswAnnotationsExists()">
-                                                <v-list-tile-avatar>
-                                                    <v-icon v-if="utswAnnotationsExists()">mdi-message-bulleted</v-icon>
-                                                    <v-icon v-else>mdi-message-bulleted-off</v-icon>
-                                                </v-list-tile-avatar>
-                                                <v-list-tile-content>
-                                                    <v-list-tile-title v-if="utswAnnotationsExists()">UTSW Annotations</v-list-tile-title>
-                                                    <v-list-tile-title v-else>No UTSW Annotations</v-list-tile-title>
-                                                </v-list-tile-content>
-                                            </v-list-tile>
-
-                                        </v-list>
+                                                </v-list-tile>
+    
+                                    </v-list>
                                     </v-menu>
                                 </v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
-
-                        <v-list-tile class="list-menu" v-if="isSNP()">
-                            <v-list-tile-content>
-                                <v-list-tile-title>
-                                    <v-menu offset-y offset-x close-delay="500" open-on-hover>
-                                        <span slot="activator">
-                                            <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>IGV
-                                            <!-- This is a hack to extend the menu active area because the title is much shorter than other items -->
-                                            <span v-for="i in 30" :key="i">&nbsp;</span>
-                                        </span>
-                                        <v-list>
-                                            <v-list-tile  avatar @click="openBamViewerLinkWeb()">
-                                                <v-list-tile-avatar>
-                                                    <v-icon>mdi-web</v-icon>
-                                                </v-list-tile-avatar>
-                                                <v-list-tile-content class="mb-2">
-                                                    <v-list-tile-title>Open IGV (web)</v-list-tile-title>
-                                                </v-list-tile-content>
-                                            </v-list-tile>
-
-                                            <v-list-tile avatar @click="downloadIGVFile('jnlp')">
-                                            <v-list-tile-avatar>
-                                            <v-icon>mdi-desktop-mac-dashboard</v-icon>
-                                            </v-list-tile-avatar>
-                                            <v-list-tile-content  class="mb-2">
-                                                <v-list-tile-title>Open IGV (desktop)</v-list-tile-title>
-                                            </v-list-tile-content>
-                                            </v-list-tile>
-
-                                            <v-list-tile  avatar @click="downloadIGVFile('session')">
-                                            <v-list-tile-avatar>
-                                                <v-icon>mdi-file-xml</v-icon>
-                                            </v-list-tile-avatar>
-                                            <v-list-tile-content  class="mb-2">
-                                                <v-list-tile-title>Download IGV Session</v-list-tile-title>
-                                            </v-list-tile-content>
-                                            </v-list-tile>
-
-                                            <v-list-tile avatar @click="getIGVSessionLink()">
-                                            <v-list-tile-avatar>
-                                                <v-icon>mdi-link-variant</v-icon>
-                                            </v-list-tile-avatar>
-                                            <v-list-tile-content  class="mb-2">
-                                                <v-list-tile-title>Show IGV Session Link</v-list-tile-title>
-                                            </v-list-tile-content>
-                                            </v-list-tile>
-
-                                </v-list>
-                                </v-menu>
-                            </v-list-tile-title>
-                        </v-list-tile-content>
-                    </v-list-tile>
-
-                        <v-list-tile avatar @click="startUserAnnotations()" :disabled="!canProceed('canAnnotate')">
+    
+                            <v-list-tile avatar @click="toggleLookupTool()">
                             <v-list-tile-avatar>
-                                <v-icon>create</v-icon>
+                                <v-icon>mdi-dna</v-icon>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
-                                <v-list-tile-title>Create/Edit Your Annotations</v-list-tile-title>
+                                <v-list-tile-title>Toggle Lookup Tool (Beta)</v-list-tile-title>
                             </v-list-tile-content>
-                        </v-list-tile>
-
-                        <v-list-tile avatar @click="selectVariantForReport()" v-if="!currentlySelected" :disabled="!canProceed('canSelect')">
+                            </v-list-tile>
+    
+                            <v-list-tile avatar @click="startUserAnnotations()" :disabled="!canProceed('canAnnotate')">
+                                <v-list-tile-avatar>
+                                    <v-icon>create</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Create/Edit Your Annotations</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+    
+                            <v-list-tile avatar @click="selectVariantForReport()" v-if="!currentlySelected" :disabled="!canProceed('canSelect')">
+                                <v-list-tile-avatar>
+                                    <v-icon>done</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Select Variant</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+    
+                            <v-list-tile avatar @click="removeVariantFromReport()" v-else :disabled="!canProceed('canSelect')">
+                                <v-list-tile-avatar>
+                                    <v-icon>done</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Deselect Variant</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+    
+                            <v-list-tile avatar @click="handleSaveAll()" :disabled="!isSaveNeededBadgeVisible()">
                             <v-list-tile-avatar>
-                                <v-icon>done</v-icon>
+                                <v-icon>save</v-icon>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
-                                <v-list-tile-title>Select Variant</v-list-tile-title>
+                                <v-list-tile-title>Save Current Work</v-list-tile-title>
                             </v-list-tile-content>
-                        </v-list-tile>
-
-                        <v-list-tile avatar @click="removeVariantFromReport()" v-else :disabled="!canProceed('canSelect')">
-                            <v-list-tile-avatar>
-                                <v-icon>done</v-icon>
-                            </v-list-tile-avatar>
-                            <v-list-tile-content>
-                                <v-list-tile-title>Deselect Variant</v-list-tile-title>
-                            </v-list-tile-content>
-                        </v-list-tile>
-
-                        <v-list-tile avatar @click="handleSaveAll()" :disabled="!isSaveNeededBadgeVisible()">
-                        <v-list-tile-avatar>
-                            <v-icon>save</v-icon>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>Save Current Work</v-list-tile-title>
-                        </v-list-tile-content>
-                        </v-list-tile>
-
-                        <v-list-tile avatar @click="closeVariantDetails()">
-                            <v-list-tile-avatar>
-                                <v-icon>cancel</v-icon>
-                            </v-list-tile-avatar>
-                            <v-list-tile-content>
-                                <v-list-tile-title>Close Variant</v-list-tile-title>
-                            </v-list-tile-content>
-                        </v-list-tile>
-
-
-                    </v-list>
-                </v-menu>
-                <v-toolbar-title class="ml-0">
-          Annotations for 
-          <span v-if="isSNP()">SNP</span>
-          <span v-else-if="isCNV()">CNV</span>
-          <span v-else-if="isTranslocation()">FTL</span>
-          Variant:
-              <v-tooltip bottom v-if="variantNameIsTooLong() && isSNP()">
-              <span slot="activator" v-text="createVariantName()"></span>
-              <span>{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
-              </v-tooltip>  
-              <span v-if="!variantNameIsTooLong() && isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
-              <span v-else-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
-              <span v-else-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
-              <span> -- {{ caseName }} -- </span> 
-            <v-tooltip bottom>
-              <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
-            <span>{{caseType}} case</span>  
-            </v-tooltip>
-
-                </v-toolbar-title>
-                <v-spacer></v-spacer>
+                            </v-list-tile>
+    
+                            <v-list-tile avatar @click="closeVariantDetails()">
+                                <v-list-tile-avatar>
+                                    <v-icon>cancel</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Close Variant</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+    
+    
+                        </v-list>
+                    </v-menu>
+                    <v-toolbar-title class="ml-0">
+              Annotations for 
+              <span v-if="isSNP()">SNP</span>
+              <span v-else-if="isCNV()">CNV</span>
+              <span v-else-if="isTranslocation()">FTL</span>
+              Variant:
+                  <v-tooltip bottom v-if="variantNameIsTooLong() && isSNP()">
+                  <span slot="activator" v-text="createVariantName()"></span>
+                  <span>{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
+                  </v-tooltip>  
+                  <span v-if="!variantNameIsTooLong() && isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
+                  <span v-else-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
+                  <span v-else-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
+                  <span> -- {{ caseName }} -- </span> 
                 <v-tooltip bottom>
-                    <v-btn icon flat :color="annotationVariantDetailsVisible ? 'amber accent-2' : ''" @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible"
-                        slot="activator">
-                        <v-icon>zoom_in</v-icon>
+                  <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
+                <span>{{caseType}} case</span>  
+                </v-tooltip>
+    
+                    </v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-tooltip bottom>
+                        <v-btn icon flat :color="annotationVariantDetailsVisible ? 'amber accent-2' : ''" @click="annotationVariantDetailsVisible = !annotationVariantDetailsVisible"
+                            slot="activator">
+                            <v-icon>zoom_in</v-icon>
+                        </v-btn>
+                        <span>Show/Hide Variant Details</span>
+                    </v-tooltip>
+                    <v-tooltip bottom v-if="isSNP()">
+                        <v-btn icon flat :color="annotationVariantCanonicalVisible ? 'amber accent-2' : ''" @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible"
+                            slot="activator">
+                            <v-icon>mdi-table-search</v-icon>
+                        </v-btn>
+                        <span>Show/Hide Canonical VCF Annotations</span>
+                    </v-tooltip>
+                    <!--
+                    <v-tooltip bottom v-if="isSNP || isCNV()">
+                        <v-btn :disabled="!mdaAnnotationsExists()" icon flat :color="(mdaAnnotationsVisible && mdaAnnotationsExists()) ? 'amber accent-2' : ''"
+                            @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" slot="activator">
+                            <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
+                            <v-icon v-else>mdi-message-bulleted-off</v-icon>
+                        </v-btn>
+                        <span v-if="mdaAnnotationsExists()">Show/Hide MDA Annotations</span>
+                        <span v-else>No MDA Annotations</span>
+                    </v-tooltip>
+                    -->
+                    <v-tooltip bottom>
+                        <v-btn :disabled="!utswAnnotationsExists()" icon flat :color="(utswAnnotationsVisible && utswAnnotationsExists()) ? 'amber accent-2' : ''"
+                            @click="utswAnnotationsVisible = !utswAnnotationsVisible" slot="activator">
+                            <v-icon v-if="utswAnnotationsExists()">mdi-message-bulleted</v-icon>
+                            <v-icon v-else>mdi-message-bulleted-off</v-icon>
+                        </v-btn>
+                        <span v-if="utswAnnotationsExists()">Show/Hide UTSW Annotations</span>
+                        <span v-else>No UTSW Annotations</span>
+                    </v-tooltip>
+                    <v-menu origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y v-if="isSNP()">
+                    <v-btn icon flat slot="activator">IGV
                     </v-btn>
-                    <span>Show/Hide Variant Details</span>
-                </v-tooltip>
-                <v-tooltip bottom v-if="isSNP()">
-                    <v-btn icon flat :color="annotationVariantCanonicalVisible ? 'amber accent-2' : ''" @click="annotationVariantCanonicalVisible = !annotationVariantCanonicalVisible"
-                        slot="activator">
-                        <v-icon>mdi-table-search</v-icon>
+                    <v-card color="primary">
+                    <v-tooltip bottom v-if="isSNP()">
+                        <v-btn ref="bamViewerLink" dark icon flat slot="activator" :href="createBamViewerLink()" target="_blank" rel="noreferrer">
+                            <v-icon>mdi-web</v-icon> 
+                        </v-btn>
+                        <span>Open IGV (web)</span>
+                    </v-tooltip>
+                    <br/>
+                    <v-tooltip bottom v-if="isSNP()">
+                        <v-btn  dark icon flat slot="activator" @click="downloadIGVFile('jnlp')">
+                            <v-icon>mdi-desktop-mac-dashboard</v-icon>
+                        </v-btn>
+                        <span>Open IGV (desktop)</span>
+                    </v-tooltip>
+                    <br/>
+                    <v-tooltip bottom v-if="isSNP()">
+                        <v-btn dark icon flat slot="activator" @click="downloadIGVFile('session')">
+                            <v-icon>mdi-file-xml</v-icon>
+                        </v-btn>
+                        <span>Download IGV Session</span>
+                    </v-tooltip>
+                    <br/>
+                    <v-tooltip bottom v-if="isSNP()">
+                    <v-btn dark icon flat slot="activator" @click="getIGVSessionLink()">
+                        <v-icon>mdi-link-variant</v-icon>
                     </v-btn>
-                    <span>Show/Hide Canonical VCF Annotations</span>
-                </v-tooltip>
-                <!--
-                <v-tooltip bottom v-if="isSNP || isCNV()">
-                    <v-btn :disabled="!mdaAnnotationsExists()" icon flat :color="(mdaAnnotationsVisible && mdaAnnotationsExists()) ? 'amber accent-2' : ''"
-                        @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" slot="activator">
-                        <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
-                        <v-icon v-else>mdi-message-bulleted-off</v-icon>
+                    <span>Show IGV Session Link</span>
+                    </v-tooltip>
+                    </v-card>
+                    </v-menu>
+    
+                    <v-badge color="red" right bottom overlap v-model="isSaveNeededBadgeVisible()" class="mini-badge">
+                    <v-icon slot="badge"></v-icon>
+                    <v-tooltip bottom offset-overflow nudge-left="100px" min-width="200px">
+                    <v-btn flat icon @click="handleSaveAll()" slot="activator" :loading="isSaveLoading" :disabled="!isSaveNeededBadgeVisible()">
+                        <v-icon>save</v-icon>
                     </v-btn>
-                    <span v-if="mdaAnnotationsExists()">Show/Hide MDA Annotations</span>
-                    <span v-else>No MDA Annotations</span>
+                    <span v-html="saveTooltip"></span>
                 </v-tooltip>
-                -->
-                <v-tooltip bottom>
-                    <v-btn :disabled="!utswAnnotationsExists()" icon flat :color="(utswAnnotationsVisible && utswAnnotationsExists()) ? 'amber accent-2' : ''"
-                        @click="utswAnnotationsVisible = !utswAnnotationsVisible" slot="activator">
-                        <v-icon v-if="utswAnnotationsExists()">mdi-message-bulleted</v-icon>
-                        <v-icon v-else>mdi-message-bulleted-off</v-icon>
-                    </v-btn>
-                    <span v-if="utswAnnotationsExists()">Show/Hide UTSW Annotations</span>
-                    <span v-else>No UTSW Annotations</span>
-                </v-tooltip>
-                <v-menu origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y v-if="isSNP()">
-                <v-btn icon flat slot="activator">IGV
-                </v-btn>
-                <v-card color="primary">
-                <v-tooltip bottom v-if="isSNP()">
-                    <v-btn ref="bamViewerLink" dark icon flat slot="activator" :href="createBamViewerLink()" target="_blank" rel="noreferrer">
-                        <v-icon>mdi-web</v-icon> 
-                    </v-btn>
-                    <span>Open IGV (web)</span>
-                </v-tooltip>
-                <br/>
-                <v-tooltip bottom v-if="isSNP()">
-                    <v-btn  dark icon flat slot="activator" @click="downloadIGVFile('jnlp')">
-                        <v-icon>mdi-desktop-mac-dashboard</v-icon>
-                    </v-btn>
-                    <span>Open IGV (desktop)</span>
-                </v-tooltip>
-                <br/>
-                <v-tooltip bottom v-if="isSNP()">
-                    <v-btn dark icon flat slot="activator" @click="downloadIGVFile('session')">
-                        <v-icon>mdi-file-xml</v-icon>
-                    </v-btn>
-                    <span>Download IGV Session</span>
-                </v-tooltip>
-                <br/>
-                <v-tooltip bottom v-if="isSNP()">
-                <v-btn dark icon flat slot="activator" @click="getIGVSessionLink()">
-                    <v-icon>mdi-link-variant</v-icon>
-                </v-btn>
-                <span>Show IGV Session Link</span>
-                </v-tooltip>
-                </v-card>
-                </v-menu>
-
-                <v-badge color="red" right bottom overlap v-model="isSaveNeededBadgeVisible()" class="mini-badge">
-                <v-icon slot="badge"></v-icon>
-                <v-tooltip bottom offset-overflow nudge-left="100px" min-width="200px">
-                <v-btn flat icon @click="handleSaveAll()" slot="activator" :loading="isSaveLoading" :disabled="!isSaveNeededBadgeVisible()">
-                    <v-icon>save</v-icon>
-                </v-btn>
-                <span v-html="saveTooltip"></span>
-            </v-tooltip>
-            </v-badge>
-
-                <v-tooltip bottom>
-                    <v-btn icon @click="closeVariantDetails()" slot="activator">
-                        <v-icon>close</v-icon>
-                    </v-btn>
-                    <span v-if="!isSaveNeededBadgeVisible()">Save & Close Variant</span>
-                    <span v-else>Save & Close Variant</span>
-                </v-tooltip>
-
-            </v-toolbar>
-
-            <v-card-text :style="getDialogMaxHeight(120)" class="pl-2 pr-2">
-
-                <v-breadcrumbs class="pt-2 pb-2">
-                    <v-icon slot="divider">forward</v-icon>
-                    <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"
-                        @click.native="breadcrumbNavigation(index)">
-                        {{ item.text }}
-                    </v-breadcrumbs-item>
-                </v-breadcrumbs>
-
-                <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
-                    <v-layout row wrap>
-                        <v-slide-y-transition>
-                            <v-flex xs12 v-show="annotationAllHidden()">
-                                <p class="text-xs-right subheading">
-                                    <v-icon style="transform: rotate(90deg) translateX(-5px);">keyboard_return</v-icon>
-                                    <span>Click on a icon to show variant details.</span>
-                                </p>
-                            </v-flex>
-                        </v-slide-y-transition>
-                        <!-- card showing the same data as the summary row -->
-                        <v-slide-y-transition>
-                            <v-flex xs12 md12 lg12 xl11 v-show="annotationVariantDetailsVisible">
-
-                                <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType"
-                                    :width-class="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
-                                    @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
-                                    @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel" @variant-details-changed=""
-                                    :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails" :cnv-chrom-list="cnvChromList"
-                                    :loading-variant="loadingVariant"
-                                    @open-lookup-link="openLookupLink"
-                                    >
-                                </variant-details>
-
-                            </v-flex>
-                        </v-slide-y-transition>
-                        <v-slide-y-transition>
-                            <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedVariantsVisible()">
-                                <div>
-                                    <data-table ref="relatedVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related Variants" initial-sort="geneId"
-                                        no-data-text="No Data" :show-pagination="false" title-icon="link" :color="colors.variantDetails">
+                </v-badge>
+    
+                    <v-tooltip bottom>
+                        <v-btn icon @click="closeVariantDetails()" slot="activator">
+                            <v-icon>close</v-icon>
+                        </v-btn>
+                        <span v-if="!isSaveNeededBadgeVisible()">Save & Close Variant</span>
+                        <span v-else>Save & Close Variant</span>
+                    </v-tooltip>
+    
+                </v-toolbar>
+                <v-card-text :style="getDialogMaxHeight(120)" class="pl-2 pr-2">
+                <v-layout row wrap>
+                <v-flex :class="isLookupVisible() ? 'xs8' : 'xs12'">
+    
+                    <v-breadcrumbs class="pt-2 pb-2">
+                        <v-icon slot="divider">forward</v-icon>
+                        <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"
+                            @click.native="breadcrumbNavigation(index)">
+                            {{ item.text }}
+                        </v-breadcrumbs-item>
+                    </v-breadcrumbs>
+    
+                    <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
+                        <v-layout row wrap>
+                            <v-slide-y-transition>
+                                <v-flex xs12 v-show="annotationAllHidden()">
+                                    <p class="text-xs-right subheading">
+                                        <v-icon style="transform: rotate(90deg) translateX(-5px);">keyboard_return</v-icon>
+                                        <span>Click on a icon to show variant details.</span>
+                                    </p>
+                                </v-flex>
+                            </v-slide-y-transition>
+                            <!-- card showing the same data as the summary row -->
+                            <v-slide-y-transition>
+                                <v-flex xs12 md12 lg12 xl11 v-show="annotationVariantDetailsVisible">
+    
+                                    <variant-details :no-edit="!canProceed('canAnnotate') || readonly" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType"
+                                        :width-class="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
+                                        @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
+                                        @save-variant="saveVariant" :color="colors.variantDetails" ref="variantDetailsPanel" @variant-details-changed=""
+                                        :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails" :cnv-chrom-list="cnvChromList"
+                                        :loading-variant="loadingVariant"
+                                        @open-lookup-link="openLookupLink"
+                                        >
+                                    </variant-details>
+    
+                                </v-flex>
+                            </v-slide-y-transition>
+                            <v-slide-y-transition>
+                                <v-flex :class="isLookupVisible() ? ['xs12','sm12','md12','lg9','xl7'] : ['xs12','sm12','md9','lg7','xl5']" v-show="isRelatedVariantsVisible()">
+                                    <div>
+                                        <data-table ref="relatedVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related Variants" initial-sort="geneId"
+                                            no-data-text="No Data" :show-pagination="false" title-icon="link" :color="colors.variantDetails">
+                                        </data-table>
+                                    </div>
+                                </v-flex>
+                            </v-slide-y-transition>
+                            <v-slide-y-transition>
+                                <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedCNVVisible()">
+                                    <div>
+                                        <data-table ref="relatedCNVAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related CNV" initial-sort="geneId"
+                                            no-data-text="No Data" :show-pagination="false" title-icon="link" :color="colors.variantDetails">
+                                        </data-table>
+                                    </div>
+                                </v-flex>
+                            </v-slide-y-transition>
+                            <v-slide-y-transition>
+                                <v-flex xs12 v-show="annotationVariantCanonicalVisible && isSNP()">
+                                    <div>
+                                        <data-table ref="canonicalVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Canonical VCF Annotations"
+                                            initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="mdi-table-search"
+                                            :color="colors.variantDetails">
+                                        </data-table>
+                                    </div>
+                                </v-flex>
+                            </v-slide-y-transition>
+                            <v-slide-y-transition>
+                                <v-flex xs12 v-show="annotationVariantOtherVisible  && isSNP()">
+                                    <data-table ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false" table-title="Other VCF Annotations" initial-sort="geneId"
+                                        no-data-text="No Data" :show-row-count="true" title-icon="mdi-table-search" :color="colors.variantDetails">
                                     </data-table>
-                                </div>
-                            </v-flex>
-                        </v-slide-y-transition>
-                        <v-slide-y-transition>
-                            <v-flex xs12 sm12 md9 lg7 xl5 v-show="isRelatedCNVVisible()">
-                                <div>
-                                    <data-table ref="relatedCNVAnnotation" :fixed="false" :fetch-on-created="false" table-title="Related CNV" initial-sort="geneId"
-                                        no-data-text="No Data" :show-pagination="false" title-icon="link" :color="colors.variantDetails">
-                                    </data-table>
-                                </div>
-                            </v-flex>
-                        </v-slide-y-transition>
-                        <v-slide-y-transition>
-                            <v-flex xs12 v-show="annotationVariantCanonicalVisible && isSNP()">
-                                <div>
-                                    <data-table ref="canonicalVariantAnnotation" :fixed="false" :fetch-on-created="false" table-title="Canonical VCF Annotations"
-                                        initial-sort="geneId" no-data-text="No Data" :show-pagination="false" title-icon="mdi-table-search"
-                                        :color="colors.variantDetails">
-                                    </data-table>
-                                </div>
-                            </v-flex>
-                        </v-slide-y-transition>
-                        <v-slide-y-transition>
-                            <v-flex xs12 v-show="annotationVariantOtherVisible  && isSNP()">
-                                <data-table ref="otherVariantAnnotations" :fixed="false" :fetch-on-created="false" table-title="Other VCF Annotations" initial-sort="geneId"
-                                    no-data-text="No Data" :show-row-count="true" title-icon="mdi-table-search" :color="colors.variantDetails">
-                                </data-table>
-                            </v-flex>
-                        </v-slide-y-transition>
-                        <!-- MDA Annotation card -->
-                        <!--
-                        <v-slide-y-transition>
-                            <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
-                                <v-card class="soft-grey-background">
-                                    <v-toolbar class="elevation-0" dense dark :color="colors.variantDetails">
-                                        <v-toolbar-title>
-                                            <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
-                                            MD Anderson Annotations
-                                        </v-toolbar-title>
-                                        <v-spacer></v-spacer>
-                                        <v-tooltip bottom>
-                                            <v-btn icon @click="mdaAnnotationsVisible = false" slot="activator">
-                                                <v-icon>close</v-icon>
-                                            </v-btn>
-                                            <span>Close</span>
-                                        </v-tooltip>
-                                    </v-toolbar>
-                                    <v-card-text>
-                                        <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
-                                    <v-layout row wrap>
-                                    <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in mdaAnnotationsFormatted" :key="index" v-show="annotation.visible">
-                                        <mda-annotation-card :annotation="annotation" :variant-type="currentVariantType"
-                                        :no-edit="!canProceed('canAnnotate') || readonly"
-                                        @copy-mda-annotation="copyMDAAnnotation"
-                                        ></mda-annotation-card>
-                                    </v-flex>
-                                    </v-layout>
-                                    </v-container>
-                                    </v-card-text>
-                                </v-card>
-                            </v-flex>
-                        </v-slide-y-transition>
-                        -->
-                        <v-slide-y-transition>
-                            <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
-                                <v-card class="soft-grey-background">
-                                    <v-toolbar class="elevation-0" dense dark :color="loadingVariant ? loadingColor : colors.variantDetails">
-                                    <v-menu offset-y offset-x class="ml-0">
-                                    <v-btn slot="activator" flat icon dark>
+                                </v-flex>
+                            </v-slide-y-transition>
+                            <!-- MDA Annotation card -->
+                            <!--
+                            <v-slide-y-transition>
+                                <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
+                                    <v-card class="soft-grey-background">
+                                        <v-toolbar class="elevation-0" dense dark :color="colors.variantDetails">
+                                            <v-toolbar-title>
                                                 <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
-                                            </v-btn>
-                                            <v-list>
-                                                <v-list-tile avatar @click="searchAnnotationsVisible = !searchAnnotationsVisible">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>search</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Show/Hide Search Annotations</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-
-                                                <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="startUserAnnotations">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>create</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Create/Edit Your Annotations</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-
-                                                <v-list-tile avatar @click="utswAnnotationsVisible = false">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon>mdi-message-bulleted</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title>Close UTSW Annotations</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-                                            </v-list>
-                                </v-menu>
-                                        <v-toolbar-title class="ml-0">UTSW Annotations</v-toolbar-title>
-                                        <v-spacer></v-spacer>
-                                        <v-tooltip bottom>
-                                            <v-btn flat icon @click="searchAnnotationsVisible = !searchAnnotationsVisible" slot="activator" :color="searchAnnotationsVisible ? 'amber accent-2' : ''">
-                                                <v-icon>search</v-icon>
-                                            </v-btn>
-                                            <span>Show/Hide Search Annotations</span>
-                                        </v-tooltip>
-                                        <v-tooltip bottom>
-                                        <v-btn flat icon v-if="canProceed('canAnnotate') && !readonly" @click="startUserAnnotations()" slot="activator">
-                                            <v-icon>create</v-icon>
-                                        </v-btn>
-                                        <span>Create/Edit Your Annotations</span>
-                                        </v-tooltip>
-
-                                        <v-tooltip bottom>
-                                            <v-btn icon @click="utswAnnotationsVisible = false" slot="activator">
-                                                <v-icon>close</v-icon>
-                                            </v-btn>
-                                            <span>Close</span>
-                                        </v-tooltip>
-                                    </v-toolbar>
-                                    <v-card-text>
-                                        <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
-                                            <v-layout row wrap>
-                                            <v-slide-y-transition>
-                                                <v-flex xs12 v-show="searchAnnotationsVisible">
-                                                    <v-card>
-                                                        <v-card-title class="subheading">
-                                                            Search Annotation Cards
-                                                            <v-spacer></v-spacer>
-
-                                                        </v-card-title>
-                                                        <v-card-text class="pl-2 pr-2">
-                                                            <v-layout row wrap>
-                                                                <v-flex xs6 sm6 md3 lg3 xl2>
-                                                                    <v-text-field clearable append-icon="search" label="Search any text" v-model="searchAnnotations" @input="matchAnnotationFilter"></v-text-field>
-                                                                </v-flex>
-                                                                <v-flex xs6 sm6 md3 lg3 xl2>
-                                                                    <v-select v-if="isSNP() || isTranslocation()" clearable :value="searchAnnotationCategory" :items="annotationCategories" v-model="searchAnnotationCategory"
-                                                                        label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
-                                                                    <v-select v-else-if="isCNV()" clearable :value="searchAnnotationCategory" :items="annotationCategoriesCNV" v-model="searchAnnotationCategory"
-                                                                        label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
-                                                                </v-flex>
-
-                                                                <v-flex xs6 sm6 md3 lg3 xl2 v-if="isCNV()">
-                                                                    <v-select  clearable :value="searchAnnotationBreadth" :items="annotationBreadth" v-model="searchAnnotationBreadth"
-                                                                        label="Search by Breadth" multiple @input="matchAnnotationFilter"></v-select>
-                                                                </v-flex>
-
-                                                                <v-flex xs6 sm6 md3 lg3 xl2>
-                                                                    <v-select clearable :value="searchAnnotationClassification" :items="annotationClassifications" v-model="searchAnnotationClassification"
-                                                                        label="Search by Classification" multiple @input="matchAnnotationFilter"></v-select>
-                                                                </v-flex>
-
-                                                                <v-flex xs6 sm6 md3 lg3 xl2>
-                                                                    <v-select clearable :value="searchAnnotationTier" :items="variantTiers" v-model="searchAnnotationTier" label="Search by Tier"
-                                                                        multiple @input="matchAnnotationFilter"></v-select>
-                                                                </v-flex>
-
-                                                                <v-flex xs6 sm6 md3 lg3 xl2>
-                                                                    <v-select v-if="isSNP()" clearable :value="searchAnnotationScope" :items="scopesSNP" v-model="searchAnnotationScope" label="Search by Scope"
-                                                                        multiple @input="matchAnnotationFilter"></v-select>
-                                                                    <v-select v-else-if="isCNV()" clearable :value="searchAnnotationScope" :items="scopesCNV" v-model="searchAnnotationScope" label="Search by Scope"
-                                                                        multiple @input="matchAnnotationFilter"></v-select>
-                                                                    <v-select v-else-if="isTranslocation()" clearable :value="searchAnnotationScope" :items="scopesTranslocation" v-model="searchAnnotationScope"
-                                                                        label="Search by Scope" multiple @input="matchAnnotationFilter"></v-select>
-                                                                </v-flex>
-
-                                                            </v-layout>
-                                                        </v-card-text>
-                                                    </v-card>
-                                                </v-flex>
-                                                </v-slide-y-transition>    
-                                                <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in utswAnnotationsFormatted" :key="index" v-show="annotation.visible">
-                                                    <utsw-annotation-card :annotation="annotation" :variant-type="currentVariantType"
-                                                    :no-edit="!canProceed('canAnnotate') || readonly"
-                                                    :can-copy="canCopyAnnotation && canProceed('canAnnotate') && !readonly && !loadingVariant"
-                                                    @annotation-selection-changed="handleAnnotationSelectionChanged()"
-                                                    @copy-annotation="copyAnnotation"
-                                                    :class="getHighlightClass(index)"></utsw-annotation-card>
-                                                </v-flex>
-                                            </v-layout>
+                                                MD Anderson Annotations
+                                            </v-toolbar-title>
+                                            <v-spacer></v-spacer>
+                                            <v-tooltip bottom>
+                                                <v-btn icon @click="mdaAnnotationsVisible = false" slot="activator">
+                                                    <v-icon>close</v-icon>
+                                                </v-btn>
+                                                <span>Close</span>
+                                            </v-tooltip>
+                                        </v-toolbar>
+                                        <v-card-text>
+                                            <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
+                                        <v-layout row wrap>
+                                        <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in mdaAnnotationsFormatted" :key="index" v-show="annotation.visible">
+                                            <mda-annotation-card :annotation="annotation" :variant-type="currentVariantType"
+                                            :no-edit="!canProceed('canAnnotate') || readonly"
+                                            @copy-mda-annotation="copyMDAAnnotation"
+                                            ></mda-annotation-card>
+                                        </v-flex>
+                                        </v-layout>
                                         </v-container>
-                                    </v-card-text>
-                                </v-card>
-                            </v-flex>
-                        </v-slide-y-transition>
-                    </v-layout>
-                </v-container>
-            </v-card-text>
-            <v-card-actions class="card-actions-bottom">
-                <v-tooltip top class="pr-2">
-                    <v-btn color="primary" @click="startUserAnnotations()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">Add/Edit
-                        <v-icon right dark>create</v-icon>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-flex>
+                            </v-slide-y-transition>
+                            -->
+                            <v-slide-y-transition>
+                                <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
+                                    <v-card class="soft-grey-background">
+                                        <v-toolbar class="elevation-0" dense dark :color="loadingVariant ? loadingColor : colors.variantDetails">
+                                        <v-menu offset-y offset-x class="ml-0">
+                                        <v-btn slot="activator" flat icon dark>
+                                                    <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
+                                                </v-btn>
+                                                <v-list>
+                                                    <v-list-tile avatar @click="searchAnnotationsVisible = !searchAnnotationsVisible">
+                                                        <v-list-tile-avatar>
+                                                            <v-icon>search</v-icon>
+                                                        </v-list-tile-avatar>
+                                                        <v-list-tile-content>
+                                                            <v-list-tile-title>Show/Hide Search Annotations</v-list-tile-title>
+                                                        </v-list-tile-content>
+                                                    </v-list-tile>
+    
+                                                    <v-list-tile avatar v-if="canProceed('canAnnotate') && !readonly" @click="startUserAnnotations">
+                                                        <v-list-tile-avatar>
+                                                            <v-icon>create</v-icon>
+                                                        </v-list-tile-avatar>
+                                                        <v-list-tile-content>
+                                                            <v-list-tile-title>Create/Edit Your Annotations</v-list-tile-title>
+                                                        </v-list-tile-content>
+                                                    </v-list-tile>
+    
+                                                    <v-list-tile avatar @click="utswAnnotationsVisible = false">
+                                                        <v-list-tile-avatar>
+                                                            <v-icon>mdi-message-bulleted</v-icon>
+                                                        </v-list-tile-avatar>
+                                                        <v-list-tile-content>
+                                                            <v-list-tile-title>Close UTSW Annotations</v-list-tile-title>
+                                                        </v-list-tile-content>
+                                                    </v-list-tile>
+                                                </v-list>
+                                    </v-menu>
+                                            <v-toolbar-title class="ml-0">UTSW Annotations</v-toolbar-title>
+                                            <v-spacer></v-spacer>
+                                            <v-tooltip bottom>
+                                                <v-btn flat icon @click="searchAnnotationsVisible = !searchAnnotationsVisible" slot="activator" :color="searchAnnotationsVisible ? 'amber accent-2' : ''">
+                                                    <v-icon>search</v-icon>
+                                                </v-btn>
+                                                <span>Show/Hide Search Annotations</span>
+                                            </v-tooltip>
+                                            <v-tooltip bottom>
+                                            <v-btn flat icon v-if="canProceed('canAnnotate') && !readonly" @click="startUserAnnotations()" slot="activator">
+                                                <v-icon>create</v-icon>
+                                            </v-btn>
+                                            <span>Create/Edit Your Annotations</span>
+                                            </v-tooltip>
+    
+                                            <v-tooltip bottom>
+                                                <v-btn icon @click="utswAnnotationsVisible = false" slot="activator">
+                                                    <v-icon>close</v-icon>
+                                                </v-btn>
+                                                <span>Close</span>
+                                            </v-tooltip>
+                                        </v-toolbar>
+                                        <v-card-text>
+                                            <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
+                                                <v-layout row wrap>
+                                                <v-slide-y-transition>
+                                                    <v-flex xs12 v-show="searchAnnotationsVisible">
+                                                        <v-card>
+                                                            <v-card-title class="subheading">
+                                                                Search Annotation Cards
+                                                                <v-spacer></v-spacer>
+    
+                                                            </v-card-title>
+                                                            <v-card-text class="pl-2 pr-2">
+                                                                <v-layout row wrap>
+                                                                    <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                        <v-text-field clearable append-icon="search" label="Search any text" v-model="searchAnnotations" @input="matchAnnotationFilter"></v-text-field>
+                                                                    </v-flex>
+                                                                    <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                        <v-select v-if="isSNP() || isTranslocation()" clearable :value="searchAnnotationCategory" :items="annotationCategories" v-model="searchAnnotationCategory"
+                                                                            label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
+                                                                        <v-select v-else-if="isCNV()" clearable :value="searchAnnotationCategory" :items="annotationCategoriesCNV" v-model="searchAnnotationCategory"
+                                                                            label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
+                                                                    </v-flex>
+    
+                                                                    <v-flex xs6 sm6 md3 lg3 xl2 v-if="isCNV()">
+                                                                        <v-select  clearable :value="searchAnnotationBreadth" :items="annotationBreadth" v-model="searchAnnotationBreadth"
+                                                                            label="Search by Breadth" multiple @input="matchAnnotationFilter"></v-select>
+                                                                    </v-flex>
+    
+                                                                    <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                        <v-select clearable :value="searchAnnotationClassification" :items="annotationClassifications" v-model="searchAnnotationClassification"
+                                                                            label="Search by Classification" multiple @input="matchAnnotationFilter"></v-select>
+                                                                    </v-flex>
+    
+                                                                    <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                        <v-select clearable :value="searchAnnotationTier" :items="variantTiers" v-model="searchAnnotationTier" label="Search by Tier"
+                                                                            multiple @input="matchAnnotationFilter"></v-select>
+                                                                    </v-flex>
+    
+                                                                    <v-flex xs6 sm6 md3 lg3 xl2>
+                                                                        <v-select v-if="isSNP()" clearable :value="searchAnnotationScope" :items="scopesSNP" v-model="searchAnnotationScope" label="Search by Scope"
+                                                                            multiple @input="matchAnnotationFilter"></v-select>
+                                                                        <v-select v-else-if="isCNV()" clearable :value="searchAnnotationScope" :items="scopesCNV" v-model="searchAnnotationScope" label="Search by Scope"
+                                                                            multiple @input="matchAnnotationFilter"></v-select>
+                                                                        <v-select v-else-if="isTranslocation()" clearable :value="searchAnnotationScope" :items="scopesTranslocation" v-model="searchAnnotationScope"
+                                                                            label="Search by Scope" multiple @input="matchAnnotationFilter"></v-select>
+                                                                    </v-flex>
+    
+                                                                </v-layout>
+                                                            </v-card-text>
+                                                        </v-card>
+                                                    </v-flex>
+                                                    </v-slide-y-transition>    
+                                                    <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in utswAnnotationsFormatted" :key="index" v-show="annotation.visible">
+                                                        <utsw-annotation-card :annotation="annotation" :variant-type="currentVariantType"
+                                                        :no-edit="!canProceed('canAnnotate') || readonly"
+                                                        :can-copy="canCopyAnnotation && canProceed('canAnnotate') && !readonly && !loadingVariant"
+                                                        @annotation-selection-changed="handleAnnotationSelectionChanged()"
+                                                        @copy-annotation="copyAnnotation"
+                                                        :class="getHighlightClass(index)"></utsw-annotation-card>
+                                                    </v-flex>
+                                                </v-layout>
+                                            </v-container>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-flex>
+                            </v-slide-y-transition>
+                        </v-layout>
+                    </v-container>
+                    </v-flex>
+                    <v-flex v-show="isLookupVisible()" class="xs4">
+                        <!-- lookup tools-->
+                    <lookup-panel ref="lookupTool" :standalone="false"
+                    ></lookup-panel>
+                    </v-flex>
+                </v-layout>
+                </v-card-text>
+                <v-card-actions class="card-actions-bottom">
+                    <v-tooltip top class="pr-2">
+                        <v-btn color="primary" @click="startUserAnnotations()" slot="activator" :disabled="!canProceed('canAnnotate') || readonly">Add/Edit
+                            <v-icon right dark>create</v-icon>
+                        </v-btn>
+                        <span>Create/Edit Your Annotations</span>
+                    </v-tooltip>
+                    <v-btn class="mr-2" v-if="!currentlySelected" :disabled="!canProceed('canSelect') || readonly" color="success"
+                        @click="selectVariantForReport()" slot="activator">Select Variant
+                        <v-icon right dark>done</v-icon>
                     </v-btn>
-                    <span>Create/Edit Your Annotations</span>
-                </v-tooltip>
-                <v-btn class="mr-2" v-if="!currentlySelected" :disabled="!canProceed('canSelect') || readonly" color="success"
-                    @click="selectVariantForReport()" slot="activator">Select Variant
-                    <v-icon right dark>done</v-icon>
-                </v-btn>
-                <v-btn class="mr-2" v-else :disabled="!canProceed('canSelect') || readonly" color="warning"
-                    @click="removeVariantFromReport()" slot="activator">Deselect Variant
-                    <v-icon right dark>done</v-icon>
-                </v-btn>
-                <v-tooltip top class="pr-2">
-                    <v-btn :disabled="isFirstVariant" color="primary" @click="loadPrevVariant()" :loading="loadingVariant" slot="activator">Prev. Variant
-                        <v-icon right dark>chevron_left</v-icon>
+                    <v-btn class="mr-2" v-else :disabled="!canProceed('canSelect') || readonly" color="warning"
+                        @click="removeVariantFromReport()" slot="activator">Deselect Variant
+                        <v-icon right dark>done</v-icon>
                     </v-btn>
-                    <span>Show Previous Variant</span>
-                </v-tooltip>
-                <v-tooltip top class="pr-2">
-                    <v-btn :disabled="isLastVariant" color="primary" @click="loadNextVariant()" :loading="loadingVariant" slot="activator">
-                        <v-icon left dark>chevron_right</v-icon>
-                        Next Variant
+                    <v-tooltip top class="pr-2">
+                        <v-btn :disabled="isFirstVariant" color="primary" @click="loadPrevVariant()" :loading="loadingVariant" slot="activator">Prev. Variant
+                            <v-icon right dark>chevron_left</v-icon>
+                        </v-btn>
+                        <span>Show Previous Variant</span>
+                    </v-tooltip>
+                    <v-tooltip top class="pr-2">
+                        <v-btn :disabled="isLastVariant" color="primary" @click="loadNextVariant()" :loading="loadingVariant" slot="activator">
+                            <v-icon left dark>chevron_right</v-icon>
+                            Next Variant
+                        </v-btn>
+                        <span>Show Next Variant</span>
+                    </v-tooltip>
+                    <v-tooltip top class="pr-2">
+                    <v-btn color="success" @click="handleSaveAll()" slot="activator" :loading="isSaveLoading" :disabled="!isSaveNeededBadgeVisible()">
+                        Save Work
+                    <v-icon right dark>save</v-icon>
                     </v-btn>
-                    <span>Show Next Variant</span>
-                </v-tooltip>
-                <v-tooltip top class="pr-2">
-                <v-btn color="success" @click="handleSaveAll()" slot="activator" :loading="isSaveLoading" :disabled="!isSaveNeededBadgeVisible()">
-                    Save Work
-                <v-icon right dark>save</v-icon>
-                </v-btn>
-                <span>Save Current Work</span>
-            </v-tooltip class="pr-2">
-                <v-btn color="error" @click="closeVariantDetails()">
-                <span v-if="!isSaveNeededBadgeVisible()">Close</span>
-                <span v-else>Save & Close</span>
-                    <v-icon right dark>cancel</v-icon>
-                </v-btn>
-            </v-card-actions>
-        </v-card>
+                    <span>Save Current Work</span>
+                </v-tooltip class="pr-2">
+                    <v-btn color="error" @click="closeVariantDetails()">
+                    <span v-if="!isSaveNeededBadgeVisible()">Close</span>
+                    <span v-else>Save & Close</span>
+                        <v-icon right dark>cancel</v-icon>
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+
+        
         </v-dialog>
     </div>
 `,
@@ -2459,6 +2479,12 @@ Vue.component('variant-details-dialog', {
         refreshVariantTables() {
             this.$emit("refresh-variant-tables");
         },
+        toggleLookupTool() {
+            this.$refs.lookupTool.panelVisible = !this.$refs.lookupTool.panelVisible;
+        },
+        isLookupVisible() {
+            return this.$refs.lookupTool && this.$refs.lookupTool.panelVisible;
+        }
         
     },
     computed: {

@@ -246,13 +246,7 @@ public class FinalReportPDFTemplate {
 //		}
 //		leftTableItems.add(new CellItem("Report Electronically Signed By", signedByName));
 		for (CellItem item : leftTableItems) {
-			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
-				item.setValue(item.getValue() + "%");
-			}
-			else if (item.getField() != null && item.getField().equals("tumorPercent")) {
-				item.setValue(item.getValue() + "%");
-			}
-			this.createRow(leftTable, item.getLabel(), item.getValue(), defaultFont);
+			formatPatientCells(defaultFont, leftTable, item);
 		}
 //		try {
 //			leftTable.draw();
@@ -267,13 +261,7 @@ public class FinalReportPDFTemplate {
 		List<CellItem> middleTableItems = patientDetails.getPatientTables().get(1).getItems();
 		
 		for (CellItem item : middleTableItems) {
-			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
-				item.setValue(item.getValue() + "%");
-			}
-			else if (item.getField() != null && item.getField().equals("tumorPercent")) {
-				item.setValue(item.getValue() + "%");
-			}
-			this.createRow(middleTable, item.getLabel(), item.getValue(), defaultFont);
+			formatPatientCells(defaultFont, middleTable, item);
 		}
 //		try {
 //			middleTable.draw();
@@ -303,13 +291,7 @@ public class FinalReportPDFTemplate {
 //		}
 //		rightTableItems.add(new CellItem("Report Electronically Signed By", signedByName));
 		for (CellItem item : rightTableItems) {
-			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
-				item.setValue(item.getValue() + "%");
-			}
-			else if (item.getField() != null && item.getField().equals("tumorPercent")) {
-				item.setValue(item.getValue() + "%");
-			}
-			this.createRow(rightTable, item.getLabel(), item.getValue(), defaultFont);
+			formatPatientCells(defaultFont, rightTable, item);
 		}
 //		try {
 //			rightTable.draw();
@@ -388,6 +370,24 @@ public class FinalReportPDFTemplate {
 		
 		latestYPosition -= maxTableHeight + 10;
 		
+	}
+
+	public void formatPatientCells(float defaultFont, BaseTable rightTable, CellItem item) throws IOException {
+		if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
+			item.setValue(item.getValue() + "%");
+		}
+		else if (item.getField() != null && item.getField().equals("tumorPercent")) {
+			item.setValue(item.getValue() + "%");
+		}
+		else if (item.getField() != null && item.getField().equals("msi")) {
+			String value = item.getValue() == null || item.getValue().equals("Not calculated") ? "" : item.getValue() + "%";
+			item.setValue(value);
+		}
+		if (item.getValue2() != null && !item.getValue2().equals("")) {
+			item.setValue(item.getValue2() + "<br/>" + item.getValue());
+		}
+	
+		this.createRow(rightTable, item.getLabel(), item.getValue(), defaultFont);
 	}
 
 	private void applyPatientRecordTableBorderFormatting(Cell<PDPage> cell) {

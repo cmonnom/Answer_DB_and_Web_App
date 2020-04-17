@@ -111,6 +111,15 @@ var router = new VueRouter({
 				title: 'Sandbox'
 			}
 		},
+		{
+			path: webAppRoot + '/lookupTool',
+			name: 'LookupTool',
+			component: () => new Promise(
+				resolve => resolve(LookupTool)),
+			meta: {
+				title: 'LookupTool'
+			}
+		},
 		]
 });
 

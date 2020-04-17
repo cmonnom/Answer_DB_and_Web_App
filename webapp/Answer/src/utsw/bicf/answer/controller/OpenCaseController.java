@@ -751,7 +751,7 @@ public class OpenCaseController {
 	@ResponseBody
 	public String searchGenesInPanels(Model model, HttpSession session, @RequestParam(defaultValue="", required=false) String geneSearch) throws Exception {
 		List<String> genesFound = new ArrayList<String>();
-		if (!geneSearch.equals("") || geneSearch.length() >= 3) {
+		if (!geneSearch.equals("") || geneSearch.length() >= 3 || geneSearch.equals("AR")) {
 			genesFound = modelDAO.searchGenesInPanels(geneSearch);
 		}
 		GenesInPanelItems genes = new GenesInPanelItems(genesFound);
@@ -1188,6 +1188,7 @@ public class OpenCaseController {
 		}
 		else if (variantType.equals("translocation")) {
 			variant = mapper.readValue(nodeData.get("variant").toString(), Translocation.class);
+			response.setSkipSnackBar(false); //need to reload the variant to show new annotations
 		}
 		if (variant != null) {
 			OrderCase orderCase = utils.getCaseDetails(caseId, null);
@@ -1316,6 +1317,7 @@ public class OpenCaseController {
 			@RequestParam String dedupPctOver100X,
 			@RequestParam String tumorPercent,
 			@RequestParam String caseId,
+			@RequestParam(defaultValue="null") String tmbClass,
 			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
 		// send user to Ben's API
@@ -1360,6 +1362,9 @@ public class OpenCaseController {
 						response.setSuccess(false);
 						response.setMessage("Tumor Percent is not a valid number: " + tumorPercent);
 					}
+				}
+				if (tmbClass != null && OrderCase.TMB_CLASS_VALUES.contains(tmbClass)) {
+					caseSummary.setTumorMutationBurdenClass(tmbClass);
 				}
 				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);
 				if (savedCaseSummary != null) {

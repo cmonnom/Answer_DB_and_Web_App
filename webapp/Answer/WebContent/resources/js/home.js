@@ -193,8 +193,9 @@ const Home = {
     
         </v-tabs-items>
     </v-tabs>
-
-    
+    <!--
+    <easter v-if="showEaster" :baseUrl="getBaseUrl()"></easter>
+    -->
     </v-container>
 </div>`,
     data() {
@@ -223,7 +224,8 @@ const Home = {
             firstTime: true,
             positionx: 0,
             positiony: 0,
-            confirmSentToEpicDialogVisible: false
+            confirmSentToEpicDialogVisible: false,
+            showEaster: false
         }
     },
     methods: {
@@ -524,6 +526,9 @@ const Home = {
         isDefaultTab(tabTitle) {
             return tabTitle == defaultHomeTab;
         },
+        getBaseUrl() {
+            return webAppRoot;
+        }
     },
     mounted: function () {
         this.getAllUsers();
@@ -540,6 +545,7 @@ const Home = {
         bus.$off('open-report-read-only');
         bus.$off('sent-to-epic');
         bus.$off('downloadPDFReport');
+        bus.$off('showEaster');
        
     },
     created: function () {
@@ -615,10 +621,12 @@ const Home = {
             this.positiony = event.clientY;
             this.confirmSentToEpicDialogVisible = true;
         });
-        //TODO
         bus.$on('downloadPDFReport', (item) => {
             this.createPDFReport(item.reportId);
         });
+        // bus.$on('showEaster', (item) => {
+        //     this.showEaster = !this.showEaster;
+        // });
         this.showLastLoginAttempt();
     },
     computed: {

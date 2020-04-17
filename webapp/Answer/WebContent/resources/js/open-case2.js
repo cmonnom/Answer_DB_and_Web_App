@@ -98,6 +98,7 @@ const OpenCase2 = {
         :unfilteredFTLsDict="unfilteredFTLsDict"
         @download-igv-file="downloadIGVFile"
         @refresh-variant-tables="getAjaxData"
+        :oncotree="oncotree"
         >
         </variant-details-dialog>
 
@@ -131,10 +132,6 @@ const OpenCase2 = {
     <advanced-filter ref="advancedFilter" @refresh-data="filterData"
         :type="currentFilterType"
         @update-highlight="updateHighlights"></advanced-filter>
-
-    <!-- lookup tools-->
-        <lookup-panel ref="lookupTool" 
-           ></lookup-panel>
 
     <!-- review selection dialog -->
     <v-dialog v-model="reviewDialogVisible" scrollable fullscreen hide-overlay persistent transition="dialog-bottom-transition">
@@ -285,7 +282,7 @@ const OpenCase2 = {
                     <v-icon>mdi-dna</v-icon>
                 </v-list-tile-avatar>
                 <v-list-tile-content>
-                    <v-list-tile-title>Toggle Lookup Tool</v-list-tile-title>
+                    <v-list-tile-title>Toggle Lookup Tool (Beta)</v-list-tile-title>
                 </v-list-tile-content>
                 </v-list-tile>
 
@@ -398,6 +395,10 @@ const OpenCase2 = {
     </v-badge>
 </v-toolbar>
 
+<v-layout row wrap>
+    <v-flex :class="isLookupVisible() ? 'xs8' : 'xs12'">
+        
+
 <v-breadcrumbs class="pt-2">
     <v-icon slot="divider">forward</v-icon>
     <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"
@@ -408,7 +409,7 @@ const OpenCase2 = {
 
 <v-slide-y-transition>
     <v-layout v-if="patientDetailsVisible">
-        <v-flex xs12 md12 lg12 xl10>
+        <v-flex :class="isLookupVisible() ? ['xs12','md12','lg12','xl12'] : ['xs12','md12','lg12','xl10']">
             <div class="text-xs-center pb-3">
                 <v-card>
                     <v-toolbar class="elevation-0" dense dark :color="colors.openCase">
@@ -448,8 +449,14 @@ const OpenCase2 = {
                                                         <v-flex :class="[getPatientDetailsMarginClass(item), 'text-xs-left', 'xs']">
                                                             <span :class="[item.type == 'text' ? 'pt-4' : '', 'selectable']">{{ item.label }}:</span>
                                                         </v-flex>
+                                                        
+                                                        <v-flex xs4 v-if="item.field == 'tmb'" class="align-flex-right">
+                                                        <v-select :items="tmbClassItems" label="Class" v-model="tmbClass" hide-details @input="patientDetailsUnSaved = true" class="no-top-text-field"></v-select>
+                                                        </v-flex>
+                                                        
                                                         <v-flex :class="[getPatientDetailsFlexClass(item),'text-xs-right', '', 'blue-grey--text', 'text--lighten-1']">
-                                                            <span v-if="item.type == null" class="selectable">{{ item.value }}</span>
+                                                        <span v-if="item.type == null && item.field != 'tmb' && item.value2" class="selectable">{{ item.value2 }}</span>
+                                                        <span v-if="item.type == null" class="selectable">{{ item.value }}</span>
                                                             <v-tooltip bottom>
                                                             <v-autocomplete class="pt-0" slot="activator" :disabled="!canProceed('canAnnotate') || readonly" v-if="item.type == 'text' && item.field == 'oncotree'" 
                                                             v-model="patientDetailsOncoTreeDiagnosis" :items="oncotree" single-line return-object
@@ -487,6 +494,7 @@ const OpenCase2 = {
                                                             <span>Open Lookup Portal in New Tab</span>
                                                             </v-tooltip>
                                                         </v-flex>
+                                                       
                                                     </v-layout>
                                                 </v-list-tile-content>
                                             </v-list-tile>
@@ -506,7 +514,7 @@ const OpenCase2 = {
 
 <v-slide-y-transition>
     <v-layout v-if="caseAnnotationsVisible">
-        <v-flex xs12 md12 lg12 xl10 class="pb-3">
+        <v-flex :class="isLookupVisible() ? ['xs12','md12','lg12','xl12', 'pb-3'] : ['xs12','md12','lg12','xl10', 'pb-3']">
             <v-card>
                 <v-toolbar class="elevation-0" dense dark :color="colors.openCase">
                     <!-- <v-icon>perm_identity</v-icon> -->
@@ -645,6 +653,14 @@ const OpenCase2 = {
         </v-tabs-items>
     </v-tabs>
 </v-slide-y-transition>
+</v-flex>
+<v-flex v-show="isLookupVisible()" class="xs4">
+    <!-- lookup tools-->
+<lookup-panel ref="lookupTool" :standalone="false"
+:oncotree-items="oncotree"
+></lookup-panel>
+</v-flex>
+</v-layout>
 </div>
 `, data() {
         return this.initData();
@@ -738,6 +754,8 @@ const OpenCase2 = {
                 itdDialogVisible: false,
                 copyDialogVisible: false,
                 textToCopy: "",
+                tmbClassItems: ["High", "Medium", "Low"],
+                tmbClass: null
             }
         },
         openIDTCreationDialog() {
@@ -1302,6 +1320,9 @@ const OpenCase2 = {
                     }
                     else if (item.field == "tumorPercent") {
                         this.patientDetailsTumorPercent = item.value;
+                    }
+                    else if (item.field == "tmb") {
+                        this.tmbClass = item.value2;
                     }
                 }
             }
@@ -2098,6 +2119,7 @@ const OpenCase2 = {
                     dedupPctOver100X: this.patientDetailsDedupPctOver100X,
                     tumorPercent: this.patientDetailsTumorPercent,
                     caseId: this.$route.params.id,
+                    tmbClass: this.tmbClass,
                     skipSnackBar: skipSnackBar
                 }
             }).then(response => {
@@ -2167,6 +2189,15 @@ const OpenCase2 = {
         },
         toggleLookupTool() {
             this.$refs.lookupTool.panelVisible = !this.$refs.lookupTool.panelVisible;
+            this.$nextTick(() => {
+                this.$refs.lookupTool.currentlyActive = "Cancer";
+                this.$refs.lookupTool.currentOncotreeCode = this.patientDetailsOncoTreeDiagnosis;
+                if (this.$refs.lookupTool.isFormValid()) {
+                     this.$refs.lookupTool.submitForm();
+                }})
+        },
+        isLookupVisible() {
+            return this.$refs.lookupTool && this.$refs.lookupTool.panelVisible;
         },
         addOtherAnnotatorSelection(type, annotatorId, variantIds) {
             this.$refs.reviewDialog.startLoading();

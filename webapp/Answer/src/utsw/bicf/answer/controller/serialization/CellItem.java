@@ -9,6 +9,7 @@ public class CellItem {
 	String value;
 	String type;
 	String field;
+	String value2; //can be used when one element has extra info like TMB class
 	
 	public CellItem() {
 	}
@@ -40,6 +41,12 @@ public class CellItem {
 	}
 	public void setField(String field) {
 		this.field = field;
+	}
+	public String getValue2() {
+		return value2;
+	}
+	public void setValue2(String value2) {
+		this.value2 = value2;
 	}
 
 }

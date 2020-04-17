@@ -67,7 +67,7 @@ const OpenReport = {
         </report-tier-warning>
     </v-slide-y-transition>
 
-    <v-toolbar dense dark :color="colors.openReport" fixed app :extended="loadingReportDetails">
+    <v-toolbar dense dark :color="colors.openReport" fixed app>
         <v-tooltip class="ml-0" bottom>
             <v-menu offset-y offset-x slot="activator" class="ml-0">
                 <v-btn slot="activator" flat icon dark>
@@ -198,12 +198,12 @@ const OpenReport = {
                     </v-list-tile-content>
                     </v-list-tile>
 
-                    <v-list-tile avatar @click="openCase()">
+                    <v-list-tile avatar @click="openCase()" :disabled="!reportReady">
                     <v-list-tile-avatar>
-                        <v-icon>assignment_ind</v-icon>
+                        <v-icon>assignment</v-icon>
                     </v-list-tile-avatar>
                     <v-list-tile-content>
-                        <v-list-tile-title>Open Case</v-list-tile-title>
+                        <v-list-tile-title>Open Report</v-list-tile-title>
                     </v-list-tile-content>
                     </v-list-tile>
 
@@ -229,6 +229,10 @@ const OpenReport = {
             </v-tooltip>
         </v-toolbar-title>
         <v-spacer></v-spacer>
+        <v-fade-transition>
+        <v-progress-linear class="ml-4 mr-4" v-if="loadingReportDetails"
+        :indeterminate="true" color="white" style="max-width:200px"></v-progress-linear>
+        </v-fade-transition>
         <v-tooltip bottom>
             <v-btn flat icon @click="existingReportsVisible = !existingReportsVisible" slot="activator" :color="existingReportsVisible ? 'amber accent-2' : ''">
                 <v-icon>assignment</v-icon>
@@ -262,8 +266,7 @@ const OpenReport = {
        </v-tooltip>
        </v-badge>
  
-        <v-progress-linear class="ml-4 mr-4" :slot="loadingReportDetails ? 'extension' : ''" v-show="loadingReportDetails"
-            :indeterminate="true" color="white"></v-progress-linear>
+
     </v-toolbar>
 
     <!-- Existing Reports -->
@@ -890,39 +893,14 @@ const OpenReport = {
         },
         //populate all the fields from various parts of the form
         updateFullReport() {
-            // var strongLabels = Object.keys(this.fullReport.snpVariantsStrongClinicalSignificance);
-            // for (var i = 0; i < strongLabels.length; i++) {
-            //     for (var j = 0; j < this.strongClinicalSignificance.length; j++) {
-            //         if (this.strongClinicalSignificance[j].label.replace(".", "") == strongLabels[i]) {
-            //             this.fullReport.snpVariantsStrongClinicalSignificance[strongLabels[i]].annotation = this.strongClinicalSignificance[j].text;
-            //         }
-            //     }
-            // }
-            // var possibleLabels = Object.keys(this.fullReport.snpVariantsPossibleClinicalSignificance);
-            // for (var i = 0; i < possibleLabels.length; i++) {
-            //     for (var j = 0; j < this.possibleClinicalSignificance.length; j++) {
-            //         if (this.possibleClinicalSignificance[j].label.replace(".", "") == possibleLabels[i]) {
-            //             this.fullReport.snpVariantsPossibleClinicalSignificance[possibleLabels[i]].annotation = this.possibleClinicalSignificance[j].text;
-            //         }
-            //     }
-            // }
-            // var unknownLabels = Object.keys(this.fullReport.snpVariantsUnknownClinicalSignificance);
-            // for (var i = 0; i < unknownLabels.length; i++) {
-            //     for (var j = 0; j < this.unknownClinicalSignificance.length; j++) {
-            //         if (this.unknownClinicalSignificance[j].label.replace(".", "") == unknownLabels[i]) {
-            //             this.fullReport.snpVariantsUnknownClinicalSignificance[unknownLabels[i]].annotation = this.unknownClinicalSignificance[j].text;
-            //         }
-            //     }
-            // }
             this.fullReport.reportName = this.currentReportName;
             for (var i = 0; i < this.fullReport.patientInfo.patientTables.length; i++) {
                 for (var j = 0; j < this.fullReport.patientInfo.patientTables[i].items.length; j++) {
                     var item = this.fullReport.patientInfo.patientTables[i].items[j];
-                    if (item.field == "dedupPctOver100X") {
+                    if (item.value != "Not calculated" && (item.field == "dedupPctOver100X" || item.field == "msi" || item.field == "tumorPercent")) {
                         item.value = parseFloat((item.value + "").replace("%", ""));
                     }
-                } 
-
+                }
             }
         },
         saveReport() {
@@ -998,6 +976,7 @@ const OpenReport = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
+                        this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
                         window.open(webAppRoot + "/pdfs/" + response.data.message, "_blank");
                     } else {
                         this.handleDialogs(response.data, this.previewReport);
@@ -1006,6 +985,7 @@ const OpenReport = {
                 })
                 .catch(error => {
                     this.savingReport = false;
+                    this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
                     this.handleAxiosError(error);
                 });
         },

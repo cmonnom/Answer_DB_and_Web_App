@@ -26,6 +26,10 @@ a {
     text-decoration: none;
 }
 
+a.no-color-link {
+    color: inherit;
+}
+
 
 .hovering-tile {
     /*transition:background .3s cubic-bezier(.25,.8,.5,1);*/
@@ -623,4 +627,82 @@ Slow down the fullscreen dialog
 
 .error--text input {
     color: rgb(255, 82, 82) !important;
+}
+
+.lookup-panel {
+    position: fixed;
+    
+}
+
+.lookup-card-height {
+    height: calc(100% - 48px);
+}
+
+.v-expansion-panel__header {
+    padding-bottom: 0px;
+}
+
+/* .easter {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+.egg {
+    cursor: pointer;
+}
+
+.easter-progress {
+    position: absolute;
+}
+
+.egg-message {
+    background-color: #fafafa;
+    border-radius: 5px;
+    border: solid gold 2px;
+    width: 10%;
+    height: 30px;
+    text-align: center;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+.easter-bottom-left {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    width: 300px;
+}
+
+.easter-bottom-right {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 300px;
+    transform: rotateY(180deg);
+}
+
+.easter-top-center {
+    position: absolute;
+    top: 0px;
+    right: calc(50% - 250px);
+    width: 500px;
+}
+
+.easter-gif {
+    position: absolute;
+    top: calc(50% - 200px);
+    left: calc(50% - 200px);
+    max-width: 400px;
+} */
+
+
+.v-treeview-node__content {
+    max-width: calc(100% - 20px);
+}
+
+.v-treeview-node__label {
+    max-width: calc(100% - 20px);
 }

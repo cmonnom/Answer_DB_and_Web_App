@@ -303,7 +303,7 @@ Vue.component('fpkm-plot', {
                 });
         },
         searchGene(value) {
-            if (!value || value.length < 3) {
+            if (!value || (value.length < 3 && value != "AR")) {
                 return;
             }
             axios.get(webAppRoot + "/searchGenesInPanels", {

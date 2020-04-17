@@ -1,5 +1,6 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ public class OrderCase {
 	public static final String TYPE_CLINICAL = "Clinical";
 	public static final String TYPE_RESEARCH = "Research";
 	public static final String TYPE_CLINICAL_RESEARCH = "ClinicalResearch";
+	public static final List<String> TMB_CLASS_VALUES = Arrays.asList(new String[]{"High", "Medium", "Low"});
 	
 	private static final Map<Integer, String> stepTooltipBefore = new HashMap<Integer, String>();
 	private static final Map<Integer, String> stepTooltipDuring = new HashMap<Integer, String>();
@@ -87,6 +89,9 @@ public class OrderCase {
 	List<String> groupIds;
 	String storageType;
 	String caseOwner;
+	String tumorMutationBurdenClass;
+	Float msi;
+	String msiClass;
 	
 	public OrderCase() {
 		
@@ -569,6 +574,36 @@ public class OrderCase {
 
 	public void setCaseOwner(String caseOwner) {
 		this.caseOwner = caseOwner;
+	}
+
+
+	public String getTumorMutationBurdenClass() {
+		return tumorMutationBurdenClass;
+	}
+
+
+	public void setTumorMutationBurdenClass(String tumorMutationBurdenClass) {
+		this.tumorMutationBurdenClass = tumorMutationBurdenClass;
+	}
+
+
+	public Float getMsi() {
+		return msi;
+	}
+
+
+	public void setMsi(Float msi) {
+		this.msi = msi;
+	}
+
+
+	public String getMsiClass() {
+		return msiClass;
+	}
+
+
+	public void setMsiClass(String msiClass) {
+		this.msiClass = msiClass;
 	}
 
 

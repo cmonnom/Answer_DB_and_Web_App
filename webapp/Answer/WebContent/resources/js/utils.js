@@ -18,6 +18,14 @@ function getDialogMaxHeightOuter(offset) {
     return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: hidden;";
 }
 
+function getDialogMaxHeightNumber(offset) {
+    if (offset == null) {
+        offset = 130;
+    }
+    var height = window.innerHeight - offset;
+    return height;
+}
+
 //controls the visibility of the splash dialog
 //ths goal is to hide the page until it's ready
 var splashDialog = true;

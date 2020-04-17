@@ -8,6 +8,9 @@ public class NCBIProperties {
 	String queryKey;
 	String webEnv;
 	String apiKey;
+	String esearchGene;
+	String esummaryGene;
+	String ncbiGeneUrl;
 
 	public String getUrl() {
 		return url;
@@ -58,6 +61,30 @@ public class NCBIProperties {
 
 	public void setApiKey(String apiKey) {
 		this.apiKey = apiKey;
+	}
+
+	public String getEsearchGene() {
+		return esearchGene;
+	}
+
+	public void setEsearchGene(String esearchGene) {
+		this.esearchGene = esearchGene;
+	}
+
+	public String getEsummaryGene() {
+		return esummaryGene;
+	}
+
+	public void setEsummaryGene(String esummaryGene) {
+		this.esummaryGene = esummaryGene;
+	}
+
+	public String getNcbiGeneUrl() {
+		return ncbiGeneUrl;
+	}
+
+	public void setNcbiGeneUrl(String ncbiGeneUrl) {
+		this.ncbiGeneUrl = ncbiGeneUrl;
 	}
 
 	
