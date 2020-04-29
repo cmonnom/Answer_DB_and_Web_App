@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CivicResponse {
@@ -14,6 +13,7 @@ public class CivicResponse {
 	@JsonProperty("entrez_id")
 	String entrezId;
 	String description;
+	List<CivicVariant> variants;
 	
 	public CivicResponse() {
 		super();
@@ -49,6 +49,14 @@ public class CivicResponse {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public List<CivicVariant> getVariants() {
+		return variants;
+	}
+
+	public void setVariants(List<CivicVariant> variants) {
+		this.variants = variants;
 	}
 
 

@@ -10,6 +10,8 @@ public class CurrentSelectedVariantIds {
 	Set<String> cnvIdsReviewer;
 	Set<String> ftlIdsAll;
 	Set<String> ftlIdsReviewer;
+	Set<String> virIdsAll;
+	Set<String> virIdsReviewer;
 	
 	public CurrentSelectedVariantIds() {
 		super();
@@ -61,6 +63,22 @@ public class CurrentSelectedVariantIds {
 
 	public void setFtlIdsReviewer(Set<String> ftlIdsReviewer) {
 		this.ftlIdsReviewer = ftlIdsReviewer;
+	}
+
+	public Set<String> getVirIdsAll() {
+		return virIdsAll;
+	}
+
+	public void setVirIdsAll(Set<String> virIdsAll) {
+		this.virIdsAll = virIdsAll;
+	}
+
+	public Set<String> getVirIdsReviewer() {
+		return virIdsReviewer;
+	}
+
+	public void setVirIdsReviewer(Set<String> virIdsReviewer) {
+		this.virIdsReviewer = virIdsReviewer;
 	}
 
 	

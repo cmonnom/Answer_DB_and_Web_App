@@ -4,7 +4,7 @@ Vue.component('main-menu', {
 		baseUrl: { type: String, default: webAppRoot },
 		width: { type: Number, default: 200 }
 	},
-	template: `<v-navigation-drawer app permanent :width="width" :mini-variant.sync="isMinied" mini-variant-width="50" >
+	template: /*html*/`<v-navigation-drawer app permanent :width="width" :mini-variant.sync="isMinied" mini-variant-width="50" >
 	<v-toolbar flat :extended="isMinied ? false : true" style="height:128px" class="menu-image" disable-resize-watcher>
 		<img alt="answer logo beta" v-if="isBetaVersion()" :src="getFinalLogoUrl()"  width="100%" :class="['pl-2', 'pr-2', 'pt-5 mt-2']"/>
 		<img alt="answer logo" v-if="isVersionOne()" :src="getFinalLogoUrl()" width="100%" :class="['pl-2', 'pr-2', 'pt-5 mt-2']"/>
@@ -44,32 +44,51 @@ Vue.component('main-menu', {
 
 					<v-card v-if="menuItem.caseSearch">
 						<v-card-text class="pl-2 pr-2">
-						<v-switch v-model="allCases" color="primary" label="See all cases" @change="populateCases"></v-switch>
-						<v-autocomplete hide-details v-on:input="loadOpenCase" v-bind:items="cases" v-model="caseItemSelected" item-text="name" clearable
-						 item-value="value" label="Case ID" single-line  @change="closeOpenMenu(menuItem)"
+						<v-layout row wrap>
+							<v-flex xs12>
+							<v-switch v-model="allCases" color="primary" label="See all cases" @change="populateCases"></v-switch>
+							</v-flex>
+
+							<v-flex xs12>
+							<v-autocomplete hide-details v-bind:items="cases" v-model="caseItemSelected" item-text="name" clearable
+						 item-value="value" label="Case ID" single-line  @input="clearMenuItem" @change="closeOpenMenu(menuItem)"
 						 no-data-text="No active cases assigned to you">
 						<template v-slot:item="data" >
-							<v-icon class="pb-2 pr-3">{{ data.item.iconAvatar }}</v-icon>
-							<span>{{ data.item.name }}</span>
+						<v-icon class="pb-2 pr-3">{{ data.item.iconAvatar }}</v-icon>
+						<router-link slot="activator" :to="getOpenUrlFromItem(data.item)">
+							<span class="neutral-link">{{ data.item.name }}</span>
+						</router-link>	
 						</template>
 						</v-autocomplete>
+							</v-flex>
+						</v-layout>
+						
+						
 						</v-card-text>
 					</v-card>
 
 					<v-card v-if="menuItem.caseReportSearch">
-							<v-card-text class="pl-2 pr-2">
-								<v-switch v-model="allReports" color="primary" label="See all reports" @change="populateCasesWithReport"></v-switch>
-								<v-autocomplete hide-details v-on:input="loadOpenReport" v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
-								 item-value="value" label="Case ID" single-line  @change="closeOpenMenu(menuItem)"
-								 no-data-text="No active reports assigned to you">
-								 <template v-slot:item="data">
-							<v-icon class="pb-2 pr-3">{{ data.item.iconAvatar }}</v-icon>
-							<span>{{ data.item.name }}</span>
-						</template>
-								 </v-autocomplete>
-							</v-card-text>
-				</v-card>
+					<v-card-text class="pl-2 pr-2">
+					<v-layout row wrap>
+							<v-flex xs12>
+					<v-switch v-model="allReports" color="primary" label="See all reports" @change="populateCasesWithReport"></v-switch>
+					</v-flex>
 
+							<v-flex xs12>
+					<v-autocomplete hide-details v-bind:items="casesWithReport" v-model="caseReportItemSelected" item-text="name" clearable
+					 item-value="value" label="Case ID" single-line  @input="clearMenuItem" @change="closeOpenMenu(menuItem)"
+					 no-data-text="No active reports assigned to you">
+					<template v-slot:item="data" >
+					<v-icon class="pb-2 pr-3">{{ data.item.iconAvatar }}</v-icon>
+					<router-link slot="activator" :to="getOpenUrlFromItem(data.item)">
+						<span class="neutral-link">{{ data.item.name }}</span>
+					</router-link>	
+					</template>
+					</v-autocomplete>
+					</v-flex>
+						</v-layout>
+					</v-card-text>
+				</v-card>
 				</v-menu>
 			</v-list-tile-action>
 
@@ -196,25 +215,13 @@ Vue.component('main-menu', {
 				});
 			});
 		},
-		loadOpenCase() {
-			if (this.caseItemSelected) {
-				if (this.allCases) {
-					//need to check first if user is assigned to case
-					this.isUserAssignedToCase()
-					.then(response => {
-						var route = "OpenCaseReadOnly";
-						if (response.isAssigned) {
-							route = "OpenCase";
-						}
-						this.$router.push({ name: route, params: { id: response.caseId } });
-					}).catch(error => {
-						this.handleAxiosError(error);
-					}); 
-				}
-				else {
-					this.$router.push({ name: "OpenCase", params: { id: this.caseItemSelected } });
-				}
+		getOpenUrlFromItem(item) {
+			if (item) {
+				return webAppRoot + "/" + item.href;
 			}
+			return "error";
+		},
+		clearMenuItem() {
 			this.caseItemSelected = null;
 			this.caseReportItemSelected = null;
 		},
@@ -231,14 +238,6 @@ Vue.component('main-menu', {
 			this.caseReportItemSelected = null;
 		},
 		handleDialogs(response, callback) {
-			// // alert(response.data.reason);
-			// if (response.data.isXss) {
-			// 	console.log("xss detected:" + response.data.reason);
-			// 	this.showErrorDialog = true;
-			// }
-			// else {
-			// 	this.showLoginDialog = true;
-			// }
 			if (response == "not-allowed") {
                 bus.$emit("not-allowed", [this.response]);
             }
@@ -263,12 +262,6 @@ Vue.component('main-menu', {
 		},
 		emitMenuChanged() {
 			console.log("changed", this.isMinied);
-//			if (this.isMinied) {
-//				bus.$emit('menu-shrinked', [this, null]);
-//			}
-//			else {
-//				bus.$emit('menu-expanded', [this, null]);
-//			}
 		},
 		getIconBeforeClass(menuItem) {
 			var classArray = [];
@@ -409,6 +402,7 @@ Vue.component('main-menu', {
 //		});
 		bus.$on('clear-item-selected', args => {
 			this.caseItemSelected = "";
+			this.caseReportItemSelected = "";
 		});
 		//might not be needed anymore with vuetify 1.5.16
 		bus.$on('need-layout-resize', args => {

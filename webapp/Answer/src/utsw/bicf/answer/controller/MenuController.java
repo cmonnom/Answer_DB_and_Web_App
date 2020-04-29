@@ -64,7 +64,7 @@ public class MenuController {
 						assignedCases.add(c);
 					}
 				}
-				OrderCaseItems items = new OrderCaseItems(assignedCases);
+				OrderCaseItems items = new OrderCaseItems(assignedCases, user, "openCase", "openCaseReadOnly");
 				return items.createVuetifyObjectJSON();
 			}
 			return null;
@@ -116,13 +116,16 @@ public class MenuController {
 			if (cases != null) {
 				List<OrderCase> casesWithReports = new ArrayList<OrderCase>();
 				for (OrderCase c : cases) {
-					if (CaseHistory.lastStepMatches(c, CaseHistory.STEP_REPORTING)
+					if (
+							(CaseHistory.lastStepMatches(c, CaseHistory.STEP_REPORTING)
+									|| CaseHistory.lastStepMatches(c, CaseHistory.STEP_FINALIZED)
+									|| CaseHistory.lastStepMatches(c, CaseHistory.STEP_UPLOAD_TO_EPIC))
 							&& ((allReports && c.getActive() != null && c.getActive())  || ControllerUtil.isUserAssignedToCase(c, user)
 							&& c.getActive() != null && c.getActive())) {
 						casesWithReports.add(c);
 					}
 				}
-				OrderCaseItems items = new OrderCaseItems(casesWithReports);
+				OrderCaseItems items = new OrderCaseItems(casesWithReports, user, "openReport", "openReportReadOnly");
 				return items.createVuetifyObjectJSON();
 			}
 			return null;

@@ -4,15 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FPKMPerCaseData extends WhiskerPerCaseData {
+public class TMBPerCaseData extends WhiskerPerCaseData {
 	
 	String caseId;
 	String caseName = "";
-	@JsonProperty("fpkm")
-	Double fpkmValue;
+	@JsonProperty("tmb")
+	Double tmbValue;
 	String oncotreeDiagnosis;
 	
-	public FPKMPerCaseData() {
+	public TMBPerCaseData() {
 		super();
 	}
 
@@ -32,12 +32,23 @@ public class FPKMPerCaseData extends WhiskerPerCaseData {
 		this.caseName = caseName;
 	}
 
-	public Double getFpkmValue() {
-		return fpkmValue;
+
+	public Double getTmbValue() {
+		return tmbValue;
 	}
 
-	public void setFpkmValue(Double fpkmValue) {
-		this.fpkmValue = fpkmValue;
+	public void setTmbValue(Double tmbValue) {
+		this.tmbValue = tmbValue;
+	}
+
+	@Override
+	public Double getWhiskValue() {
+		return tmbValue;
+	}
+
+	@Override
+	public String getLabel() {
+		return oncotreeDiagnosis;
 	}
 
 	public String getOncotreeDiagnosis() {
@@ -47,20 +58,7 @@ public class FPKMPerCaseData extends WhiskerPerCaseData {
 	public void setOncotreeDiagnosis(String oncotreeDiagnosis) {
 		this.oncotreeDiagnosis = oncotreeDiagnosis;
 	}
-
-	@Override
-	public Double getWhiskValue() {
-		return fpkmValue;
-	}
-
-	@Override
-	public String getLabel() {
-		return oncotreeDiagnosis;
-	}
-
-	
 		
-
 
 
 

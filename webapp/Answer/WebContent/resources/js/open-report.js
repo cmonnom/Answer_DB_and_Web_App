@@ -198,12 +198,12 @@ const OpenReport = {
                     </v-list-tile-content>
                     </v-list-tile>
 
-                    <v-list-tile avatar @click="openCase()" :disabled="!reportReady">
+                    <v-list-tile avatar :to="getOpenCaseHref()">
                     <v-list-tile-avatar>
                         <v-icon>assignment</v-icon>
                     </v-list-tile-avatar>
                     <v-list-tile-content>
-                        <v-list-tile-title>Open Report</v-list-tile-title>
+                        <v-list-tile-title>Open Case</v-list-tile-title>
                     </v-list-tile-content>
                     </v-list-tile>
 
@@ -639,6 +639,9 @@ const OpenReport = {
                 })
                 .then(response => {
                     if (response.data.isAllowed) {
+                        if (!this.$refs.patientDetails) {
+                            return ; //could be because the ajax calls is returning after the user clicked away from the page.
+                        }
                         this.reportUnsaved = false;
                         this.strongClinicalSignificance = [];
                         this.possibleClinicalSignificance = [];
@@ -1218,14 +1221,22 @@ const OpenReport = {
                 this.commitingAnnotations = false;
             });
         },
-        openCase() {
+        getOpenCaseHref() {
             var path = webAppRoot + "/openCase";
             if (this.readonly) {
                 path += "ReadOnly"
             }
             path += "/" + this.$route.params.id;
-            router.push({path : path});
+            return path;
         },
+        // openCase() {
+        //     var path = webAppRoot + "/openCase";
+        //     if (this.readonly) {
+        //         path += "ReadOnly"
+        //     }
+        //     path += "/" + this.$route.params.id;
+        //     router.push({path : path});
+        // },
         handleNewIndicatedTherapyRow(table, newRow) {
             table.confirmAddingANewRow(newRow);
         },

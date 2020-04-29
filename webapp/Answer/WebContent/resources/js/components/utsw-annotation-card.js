@@ -149,6 +149,9 @@ Vue.component('utsw-annotation-card', {
         isTranslocation() {
             return this.variantType == "translocation";
         },
+        isVirus() {
+            return this.variantType == "virus";
+        },
         annotationSelectionChanged() {
             this.$emit("annotation-selection-changed");
         },

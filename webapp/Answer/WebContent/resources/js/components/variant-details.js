@@ -1077,6 +1077,9 @@ Vue.component('variant-details', {
             else if (this.isTranslocation()) {
                 return "FTL";
             }
+            else if (this.isVirus()) {
+                return "VIR";
+            }
         },
         isSNP() {
             return this.type == "snp";
@@ -1086,6 +1089,9 @@ Vue.component('variant-details', {
         },
         isTranslocation() {
             return this.type == "translocation";
+        },
+        isVirus() {
+            return this.type == "virus";
         },
         otherCNVChromChanged() {
             if (this.selectedCNVChrom) {

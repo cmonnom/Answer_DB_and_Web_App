@@ -4,6 +4,8 @@ public class CivicProperties {
 
 	String queryUrl;
 	String civicGeneUrl;
+	String variantServlet;
+	String variantUrl;
 	
 	public CivicProperties() {
 		super();
@@ -23,6 +25,22 @@ public class CivicProperties {
 
 	public void setCivicGeneUrl(String civicGeneUrl) {
 		this.civicGeneUrl = civicGeneUrl;
+	}
+
+	public String getVariantServlet() {
+		return variantServlet;
+	}
+
+	public void setVariantServlet(String variantServlet) {
+		this.variantServlet = variantServlet;
+	}
+
+	public String getVariantUrl() {
+		return variantUrl;
+	}
+
+	public void setVariantUrl(String variantUrl) {
+		this.variantUrl = variantUrl;
 	}
 
 

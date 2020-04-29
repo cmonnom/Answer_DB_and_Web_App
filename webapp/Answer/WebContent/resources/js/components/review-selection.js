@@ -18,8 +18,11 @@ Vue.component('review-selection', {
         unfilteredSNPsDict: {default: () => {}, type: Object},
         unfilteredCNVsDict: {default: () => {}, type: Object},
         unfilteredFTLsDict: {default: () => {}, type: Object},
+        unfilteredVIRsDict: {default: () => {}, type: Object},
+        readonly: {default: false, type: Boolean},
+        openReportUrl: {default: "", type: String}
     },
-    template: `<v-card class="soft-grey-background">
+    template: /*html*/`<v-card class="soft-grey-background">
     <v-toolbar dense dark color="primary">
         <v-menu offset-y offset-x class="ml-0">
             <v-btn slot="activator" flat icon dark>
@@ -63,7 +66,7 @@ Vue.component('review-selection', {
                 </v-list-tile-content>
                 </v-list-tile>
 
-                <v-list-tile avatar @click="openReport()" :disabled="!reportReady">
+                <v-list-tile avatar :to="openReportUrl" :disabled="!reportReady">
                 <v-list-tile-avatar>
                     <v-icon>assignment</v-icon>
                 </v-list-tile-avatar>
@@ -178,6 +181,9 @@ Vue.component('review-selection', {
             <v-tab href="#tab-selected-translocation" :ripple="false" active-class="v-tabs__item--active primary">
                Selected Fusion / Translocation
             </v-tab>
+            <v-tab href="#tab-selected-virus" :ripple="false" active-class="v-tabs__item--active primary">
+               Selected Virus
+            </v-tab>
             <v-tabs-items v-model="variantTabActive">
             <!-- SNP / Indel table -->
         <v-tab-item value="tab-selected-snp" class="pt-1">
@@ -248,6 +254,29 @@ Vue.component('review-selection', {
                 @refresh-requested="handleRefresh()">
             </data-table>
         </v-tab-item>
+
+        <!--  Virus table -->
+        <v-tab-item value="tab-selected-virus" class="pt-1">
+            <data-table disable-sticky-header ref="virusVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Virus from Case Owner '  + caseOwnerName"
+            initial-sort="virusName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            @refresh-requested="handleRefresh()">
+            </data-table>
+
+            <v-tooltip top v-for="(otherAnnotator, index) in otherAnnotatorVIRs" :key="otherAnnotator.userId" class="pr-2" v-if="userId == caseOwnerId">
+            <v-btn @click="acceptSelectionFrom('vir', otherAnnotator.userId)" slot="activator" class="mr-0 ml-0"
+            :disabled="noNewVariantFromAnnotator('vir', otherAnnotator)  || waitingForAjaxActive">
+                Add Selection From {{ otherAnnotator.userFullName }}
+            <v-icon right dark>mdi-check-all</v-icon>
+            </v-btn>
+            <span v-if="!noNewVariantFromAnnotator('vir', otherAnnotator)">Add {{ otherAnnotator.userFullName }}'s Virus selection to yours ({{ calcSelectionDiff('vir', otherAnnotator.userId).length }} more)</span>
+            <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s Viruses</span>
+            </v-tooltip>
+
+            <data-table disable-sticky-header ref="virusVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Viruses from All Annotators"
+                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+                @refresh-requested="handleRefresh()">
+            </data-table>
+        </v-tab-item>
         </v-tabs-items>
     </v-tabs>
 
@@ -300,19 +329,22 @@ Vue.component('review-selection', {
             variantIdsCNVForCaseOwner: {},
             otherAnnotatorFTLs: [],
             variantIdFTLPerAnnotator: {},
-            variantIdsFTLForCaseOwner: {}
+            variantIdsFTLForCaseOwner: {},
+            otherAnnotatorVIRs: [],
+            variantIdVIRPerAnnotator: {},
+            variantIdsVIRForCaseOwner: {}
         }
     },
     methods: {
         canProceed(field) {
             if (isAdmin) {
-                return true;
+                return true && !this.readonly;
             }
             switch (field) {
-                case "canAnnotate": return permissions.canAnnotate;
-                case "canSelect": return permissions.canSelect;
+                case "canAnnotate": return permissions.canAnnotate && !this.readonly;
+                case "canSelect": return permissions.canSelect && !this.readonly;
                 case "canView": return permissions.canView;
-                case "canReview": return permissions.canReview;
+                case "canReview": return permissions.canReview && !this.readonly;
                 default: return false;
             }
         },
@@ -357,7 +389,8 @@ Vue.component('review-selection', {
                     filters: [],
                     selectedSNPVariantIds: this.selectedIds.selectedSNPVariantIds,
                     selectedCNVIds: this.selectedIds.selectedCNVIds,
-                    selectedTranslocationIds: this.selectedIds.selectedTranslocationIds
+                    selectedTranslocationIds: this.selectedIds.selectedTranslocationIds,
+                    selectedVirusIds: this.selectedIds.selectedVirusIds
                 }
             }).then(response => {
                 this.sendToMDALoading = false;
@@ -493,7 +526,8 @@ Vue.component('review-selection', {
         },
         updateSelectedVariantTable(selectedSNPVariants, selectedSNPVariantsReviewer, snpHeaders, snpHeaderOrderAll, snpHeaderOrderReviewer,
             selectedCNVs, selectedCNVsReviewer, cnvHeaders, cnvHeaderOrderAll, cnvHeaderOrderReviewer,
-            selectedTranslocations, selectedTranslocationsReviewer, ftlHeaders, ftlHeaderOrderAll, ftlHeaderOrderReviewer) {
+            selectedTranslocations, selectedTranslocationsReviewer, ftlHeaders, ftlHeaderOrderAll, ftlHeaderOrderReviewer,
+            selectedViruses, selectedVirusesReviewer, virHeaders, virHeaderOrderAll, virHeaderOrderReviewer) {
             this.$refs.snpVariantsSelected.manualDataFiltered(
                 { items: selectedSNPVariants, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderAll });
             this.$refs.snpVariantsSelectedReviewer.manualDataFiltered(
@@ -508,9 +542,15 @@ Vue.component('review-selection', {
                 { items: selectedTranslocations, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderAll });
             this.$refs.translocationVariantsSelectedReviewer.manualDataFiltered(
                 { items: selectedTranslocationsReviewer, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer });
+
+            this.$refs.virusVariantsSelected.manualDataFiltered(
+                { items: selectedViruses, headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderAll });
+            this.$refs.virusVariantsSelectedReviewer.manualDataFiltered(
+                { items: selectedVirusesReviewer, headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderReviewer });
             this.populateOtherAnnotators('snp', selectedSNPVariants); 
             this.populateOtherAnnotators('cnv', selectedCNVs); 
-            this.populateOtherAnnotators('ftl', selectedTranslocations);    
+            this.populateOtherAnnotators('ftl', selectedTranslocations);  
+            this.populateOtherAnnotators('vir', selectedViruses);   
             this.stopLoading();    
         },
         getSnpTable() {
@@ -522,6 +562,9 @@ Vue.component('review-selection', {
         getFtlTable() {
             return this.$refs.translocationVariantsSelected;
         },
+        getVirTable() {
+            return this.$refs.virusVariantsSelected;
+        },
         openReport() {
             this.$emit("open-report");
         },
@@ -532,6 +575,8 @@ Vue.component('review-selection', {
             this.$refs.cnvVariantsSelectedReviewer.startLoading();
             this.$refs.translocationVariantsSelected.startLoading();
             this.$refs.translocationVariantsSelectedReviewer.startLoading();
+            this.$refs.virusVariantsSelected.startLoading();
+            this.$refs.virusVariantsSelectedReviewer.startLoading();
         },
         stopLoading() {
             this.$refs.snpVariantsSelected.stopLoading();
@@ -540,6 +585,8 @@ Vue.component('review-selection', {
             this.$refs.cnvVariantsSelectedReviewer.stopLoading();
             this.$refs.translocationVariantsSelected.stopLoading();
             this.$refs.translocationVariantsSelectedReviewer.stopLoading();
+            this.$refs.virusVariantsSelected.stopLoading();
+            this.$refs.virusVariantsSelectedReviewer.stopLoading();
         },
         handleRefresh() {
             this.$emit("review-selection-refresh");
@@ -555,6 +602,9 @@ Vue.component('review-selection', {
             }
             else if (type == "ftl") {
                 variantIds = this.variantIdFTLPerAnnotator[userId + "_"];
+            }
+            else if (type == "vir") {
+                variantIds = this.variantIdVIRPerAnnotator[userId + "_"];
             }
             this.$emit("accept-selection-from", type, userId, variantIds);
         },
@@ -578,6 +628,11 @@ Vue.component('review-selection', {
                 variantIds = this.variantIdFTLPerAnnotator[userId + "_"];
                 caseOwnerVariantIds = this.variantIdsFTLForCaseOwner;
                 dict = this.unfilteredFTLsDict;
+            }
+            else if (type == "vir") {
+                variantIds = this.variantIdVIRPerAnnotator[userId + "_"];
+                caseOwnerVariantIds = this.variantIdsVIRForCaseOwner;
+                dict = this.unfilteredVIRsDict;
             }
             for (let i =0; i < variantIds.length; i++) {
                 if (caseOwnerVariantIds.indexOf(variantIds[i]) == -1 && !dict[variantIds[i]].selected) {
@@ -625,6 +680,11 @@ Vue.component('review-selection', {
                 this.variantIdFTLPerAnnotator = variantIdPerAnnotator;
                 this.variantIdsFTLForCaseOwner = variantIdsForCaseOwner;
                 this.otherAnnotatorFTLs = otherAnnotators;
+            }
+            else if (type == "vir") {
+                this.variantIdVIRPerAnnotator = variantIdPerAnnotator;
+                this.variantIdsVIRForCaseOwner = variantIdsForCaseOwner;
+                this.otherAnnotatorVIRs = otherAnnotators;
             }
         },
         noNewVariantFromAnnotator(type, otherAnnotator) {

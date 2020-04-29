@@ -451,7 +451,14 @@ Vue.component('data-table', {
           </v-tooltip>
 
           <v-tooltip bottom v-if="header.buttons" v-for="(button, index) in props.item.buttons" :key="index">
-            <v-btn class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item, $event)" slot="activator"
+          <router-link v-if="button.link" slot="activator" :to="button.href">
+            <v-btn  class="table-btn" icon flat :href="button.href"
+            :color="props.item.active === false ? 'blue-grey lighten-2' : button.color">
+            <v-icon>{{ button.icon }}</v-icon>
+            </v-btn>
+          </router-link>
+                    
+            <v-btn v-else class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item, $event)" slot="activator"
              :color="props.item.active === false ? 'blue-grey lighten-2' : button.color">
               <v-icon>{{ button.icon }}</v-icon>
             </v-btn>

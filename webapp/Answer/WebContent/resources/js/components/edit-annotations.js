@@ -601,8 +601,8 @@ Vue.component('edit-annotations', {
                 isTumorSpecific: false,
                 userId: null,
                 variantId: null,
-                isGeneSpecific: this.limitScopeGene || (this.isCNV() || this.isTranslocation() ? true : false),
-                isVariantSpecific: this.isCNV() || this.isTranslocation() ? true : false,
+                isGeneSpecific: this.limitScopeGene || (this.isCNV() || this.isTranslocation() || this.isVirus() ? true : false),
+                isVariantSpecific: this.isCNV() || this.isTranslocation() || this.isVirus() ? true : false,
                 isCaseSpecific: false,
                 isLeftSpecific: false,
                 isRightSpecific: false,
@@ -957,6 +957,9 @@ Vue.component('edit-annotations', {
         isTranslocation() {
             return this.type == "translocation";
         },
+        isVirus() {
+            return this.type == "virus" || this.type == "VIR";
+        },
         createTitle() {
             if (this.outsideACase && !this.single) {
                 return "Create Annotations";
@@ -977,6 +980,9 @@ Vue.component('edit-annotations', {
                 }
                 else if (this.isTranslocation()) {
                     typeTitle = "FTL";
+                }
+                else if (this.isVirus()) {
+                    typeTitle = "VIR";
                 }
                 return "Create/Edit Annotations for " + typeTitle +
                 " Variant: " + this.title;

@@ -36,10 +36,12 @@ public class OpenCaseSummary {
 	Map<String, Set<String>> effects; //unique list of effects. Used for filtering by checking which effects should be included
 	Set<String> failedFilters; //unique list of failed QC filters. Used for filtering by checking which failed reason should be included
 	Set<String> ftlFilters; //unique list of failed QC filters. Used for filtering by checking which failed reason should be included
+	Set<String> virFilters;
 	Integer userId;
 	SNPIndelVariantSummary snpIndelVariantSummary;
 	CNVSummary cnvSummary;
 	TranslocationSummary translocationSummary;
+	VirusSummary virusSummary;
 	Boolean isAllowed;
 	List<ReportGroupForDisplay> reportGroups;
 	String qcUrl;
@@ -51,14 +53,17 @@ public class OpenCaseSummary {
 	Map<String, String> checkBoxFTLLabelsByValue;
 	String caseOwnerId;
 	String caseOwnerName;
+	String mutationalSignatureFileName;
 
 	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
 		List<HeaderOrder> snpOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "SNP/Indel Variants");
 		List<HeaderOrder> cnvOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "CNVs");
 		List<HeaderOrder> ftlOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Fusions / Translocations");
+		List<HeaderOrder> virOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Virus");
 		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups, snpOrders, user);
 		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField, cnvOrders, user);
 		this.translocationSummary = new TranslocationSummary(modelDAO, aCase, uniqueIdField, ftlOrders, user);
+		this.virusSummary = new VirusSummary(modelDAO, aCase, uniqueIdField, virOrders, user);
 		this.patientInfo = new PatientInfo(aCase);
 		this.caseId = aCase.getCaseId();
 		this.caseName = aCase.getCaseName();
@@ -88,8 +93,11 @@ public class OpenCaseSummary {
 //		}
 		
 		if (user.getIndividualPermission().getCanView()) {
-			reportReady = CaseHistory.lastStepMatches(aCase, CaseHistory.STEP_REPORTING);
+			reportReady = CaseHistory.lastStepMatches(aCase, CaseHistory.STEP_REPORTING)
+					|| CaseHistory.lastStepMatches(aCase, CaseHistory.STEP_FINALIZED)
+					|| CaseHistory.lastStepMatches(aCase, CaseHistory.STEP_UPLOAD_TO_EPIC);
 		}
+		this.mutationalSignatureFileName = aCase.getMutationalSignatureFileName();
 	}
 
 	
@@ -371,6 +379,36 @@ public class OpenCaseSummary {
 
 	public void setCheckBoxFTLLabelsByValue(Map<String, String> checkBoxFTLLabelsByValue) {
 		this.checkBoxFTLLabelsByValue = checkBoxFTLLabelsByValue;
+	}
+
+
+	public Set<String> getVirFilters() {
+		return virFilters;
+	}
+
+
+	public void setVirFilters(Set<String> virFilters) {
+		this.virFilters = virFilters;
+	}
+
+
+	public VirusSummary getVirusSummary() {
+		return virusSummary;
+	}
+
+
+	public void setVirusSummary(VirusSummary virusSummary) {
+		this.virusSummary = virusSummary;
+	}
+
+
+	public String getMutationalSignatureFileName() {
+		return mutationalSignatureFileName;
+	}
+
+
+	public void setMutationalSignatureFileName(String mutationalSignatureFileName) {
+		this.mutationalSignatureFileName = mutationalSignatureFileName;
 	}
 
 

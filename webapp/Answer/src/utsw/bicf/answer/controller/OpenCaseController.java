@@ -3,18 +3,13 @@ package utsw.bicf.answer.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,13 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,16 +44,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.StorageCredentialsAccountAndKey;
-import com.microsoft.azure.storage.blob.BlobContainerPermissions;
-import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
-import com.microsoft.azure.storage.blob.CloudBlob;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
-import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.Button;
@@ -68,6 +53,7 @@ import utsw.bicf.answer.controller.serialization.SearchItem;
 import utsw.bicf.answer.controller.serialization.SearchItemString;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.controller.serialization.plotly.CNVChartData;
+import utsw.bicf.answer.controller.serialization.plotly.WhiskChartData;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVChromosomeItems;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.CNVRelatedSummary;
@@ -95,7 +81,6 @@ import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.AnnotatorSelection;
-import utsw.bicf.answer.model.extmapping.BAlleleFrequencyData;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
@@ -104,10 +89,14 @@ import utsw.bicf.answer.model.extmapping.FPKMData;
 import utsw.bicf.answer.model.extmapping.FPKMPerCaseData;
 import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.TMBData;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Trial;
 import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.extmapping.Virus;
+import utsw.bicf.answer.model.extmapping.WhiskerData;
+import utsw.bicf.answer.model.extmapping.WhiskerPerCaseData;
 import utsw.bicf.answer.model.hybrid.CNVRow;
 import utsw.bicf.answer.model.hybrid.CurrentSelectedVariantIds;
 import utsw.bicf.answer.model.hybrid.HeaderConfigData;
@@ -118,7 +107,6 @@ import utsw.bicf.answer.model.hybrid.SNPIndelVariantRow;
 import utsw.bicf.answer.model.hybrid.TranslocationRow;
 import utsw.bicf.answer.model.hybrid.VCFAnnotationRow;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
-import utsw.bicf.answer.security.AzureOAuth;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
@@ -202,6 +190,8 @@ public class OpenCaseController {
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getSelectedVariantIds",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getFPKMChartData",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getTMBChartData",
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".searchGenesInPanels",
 				IndividualPermission.CAN_VIEW);
@@ -299,7 +289,9 @@ public class OpenCaseController {
 				.map(r -> new ReportGroupForDisplay(r))
 				.sorted()
 				.collect(Collectors.toList());
-		
+		String mutationalSignatureFileName = caseId + ".mutational_signature.png";
+		String mutationalSignatureLinkName = createRandomizedLink(fileProps.getImageFilesDir(), fileProps.getImageLinksDir(), mutationalSignatureFileName, ".png");
+		detailedCase.setMutationalSignatureFileName(mutationalSignatureLinkName);
 		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, qcAPI, detailedCase, "oid", user,
 				reportGroupsForDisplay);
 //		SNPIndelVariantRow row = summary.getSnpIndelVariantSummary().getItems().get(0);
@@ -308,6 +300,19 @@ public class OpenCaseController {
 //		summary.getSnpIndelVariantSummary().setItems(rows);
 		return summary.createVuetifyObjectJSON();
 
+	}
+	
+	private static String createRandomizedLink(File sourceDir, File destinationLinkDir, String targetName, String extension) throws IOException {
+		File target = new File(sourceDir, targetName);
+		if (!target.exists()) {
+			return null;
+		}
+		String random = RandomStringUtils.random(25, true, true);
+		String linkName = random + extension;
+		File link = new File(destinationLinkDir, linkName);
+		Files.createSymbolicLink(link.toPath(), target.toPath());
+
+		return linkName;
 	}
 
 	@RequestMapping(value = "/loadCaseAnnotations", produces= "application/json; charset=utf-8")
@@ -981,6 +986,14 @@ public class OpenCaseController {
 					lightVariant.setAnnotationIdsForReporting(annotationsToToggle);
 					variant = lightVariant;
 				}
+				else if (userAnnotations.get(0).getType().equals("virus")) {
+					Virus lightVariant = new Virus();
+					MongoDBId id = new MongoDBId();
+					id.setOid(variantId);
+					lightVariant.setMongoDBId(id);
+					lightVariant.setAnnotationIdsForReporting(annotationsToToggle);
+					variant = lightVariant;
+				}
 				utils.saveSelectedAnnotations(selectResponse, variant, userAnnotations.get(0).getType(), variantId);
 			}
 		}
@@ -1190,6 +1203,10 @@ public class OpenCaseController {
 			variant = mapper.readValue(nodeData.get("variant").toString(), Translocation.class);
 			response.setSkipSnackBar(false); //need to reload the variant to show new annotations
 		}
+		else if (variantType.equals("virus")) {
+			variant = mapper.readValue(nodeData.get("variant").toString(), Virus.class);
+			response.setSkipSnackBar(false); //need to reload the variant to show new annotations
+		}
 		if (variant != null) {
 			OrderCase orderCase = utils.getCaseDetails(caseId, null);
 			if (orderCase != null) {
@@ -1283,6 +1300,19 @@ public class OpenCaseController {
 				return response.createObjectJSON();
 			}
 		}
+		else if (variantType.equals("virus")) {
+			Virus variant = mapper.readValue(nodeData.get("variant").toString(), Virus.class);
+			if (variant != null) {
+//				stripVariantForAnnotations(variant);
+				variant.setType(variantType);
+				utils.saveSelectedAnnotations(response, variant, variantType, variant.getMongoDBId().getOid());
+				return response.createObjectJSON();
+			}
+			else { 
+				response.setMessage("Nothing to save");
+				return response.createObjectJSON();
+			}
+		}
 		return response.createObjectJSON();
 	}
 	
@@ -1318,6 +1348,7 @@ public class OpenCaseController {
 			@RequestParam String tumorPercent,
 			@RequestParam String caseId,
 			@RequestParam(defaultValue="null") String tmbClass,
+			@RequestParam(defaultValue="null") String msiClass,
 			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
 		// send user to Ben's API
@@ -1365,6 +1396,9 @@ public class OpenCaseController {
 				}
 				if (tmbClass != null && OrderCase.TMB_CLASS_VALUES.contains(tmbClass)) {
 					caseSummary.setTumorMutationBurdenClass(tmbClass);
+				}
+				if (msiClass != null && OrderCase.MSI_CLASS_VALUES.contains(tmbClass)) {
+					caseSummary.setMsiClass(msiClass);
 				}
 				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);
 				if (savedCaseSummary != null) {
@@ -1758,6 +1792,8 @@ public class OpenCaseController {
 		List<Set<String>> cnvItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId, currentUserOnly);
 		nodes = new String[] {"filteredFTLItems", "unfilteredFTLItems"};
 		List<Set<String>> ftlItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId, currentUserOnly);
+		nodes = new String[] {"filteredVIRItems", "unfilteredVIRItems"};
+		List<Set<String>> virItems = this.parseSelectedIdData(dataNodes, nodes, user, mapper, caseOwnerId, currentUserOnly);
 		
 		CurrentSelectedVariantIds selectedIds = new CurrentSelectedVariantIds();
 		selectedIds.setSnpIdsAll(snpItems.get(0));
@@ -1766,6 +1802,8 @@ public class OpenCaseController {
 		selectedIds.setCnvIdsReviewer(cnvItems.get(1));
 		selectedIds.setFtlIdsAll(ftlItems.get(0));
 		selectedIds.setFtlIdsReviewer(ftlItems.get(1));
+		selectedIds.setVirIdsAll(virItems.get(0));
+		selectedIds.setVirIdsReviewer(virItems.get(1));
 		
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
@@ -1832,7 +1870,7 @@ public class OpenCaseController {
 			@RequestParam(defaultValue="false", required=false) Boolean useLog2) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
-		FPKMData data = new FPKMData(); 
+		WhiskerData data = new WhiskerData(); 
 //		
 //		//create fake data here for testing
 //		List<FPKMPerCaseData> fpkms = new ArrayList<FPKMPerCaseData>();
@@ -1864,12 +1902,12 @@ public class OpenCaseController {
 		AjaxResponse ajaxResponse = new AjaxResponse();
 		ajaxResponse.setIsAllowed(true);
 		ajaxResponse.setSuccess(true);
-		List<FPKMPerCaseData> fpkms = utils.getFPKMChartData(ajaxResponse, caseId, geneParam);
+		List<WhiskerPerCaseData> fpkms = utils.getFPKMChartData(ajaxResponse, caseId, geneParam);
 		if (fpkms != null && !fpkms.isEmpty()) {
-			data.setFpkms(fpkms);
-			data.setOncotreeCode(fpkms.get(0).getOncotreeDiagnosis());
+			data.setPerCaseList(fpkms);
+			data.setLabel(fpkms.get(0).getLabel());
 //			data.setOncotreeCode("AML"); //for testing only
-			return new utsw.bicf.answer.controller.serialization.plotly.FPKMChartData(data, caseId, useLog2).createObjectJSON();
+			return new WhiskChartData(data, caseId, useLog2).createObjectJSON();
 		}
 		else if (fpkms != null && fpkms.isEmpty()) {
 			ajaxResponse.setIsAllowed(true);
@@ -1880,7 +1918,63 @@ public class OpenCaseController {
 			ajaxResponse.setSuccess(false);
 		}
 		return ajaxResponse.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/getTMBChartData", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String getTMBChartData(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestParam String oncotreeCode, 
+			@RequestParam(defaultValue="false", required=false) Boolean showOtherPlots,
+			@RequestParam(defaultValue="false", required=false) Boolean useLog2) throws Exception {
+
+		RequestUtils utils = new RequestUtils(modelDAO);
+		WhiskerData data = new WhiskerData(); 
+//		
+//		//create fake data here for testing
+//		List<FPKMPerCaseData> fpkms = new ArrayList<FPKMPerCaseData>();
+//		for (int i = 0; i < 50; i++) {
+//			FPKMPerCaseData d = new FPKMPerCaseData();
+//			d.setCaseId("ORD" + RandomUtils.nextDouble(100, 1000));
+//			if (d.getCaseId().equals(caseId)) {
+//				d.setCaseId("ORD1001");
+//			}
+//			d.setCaseName("ZZTEST, SOMEONE");
+//			d.setFpkmValue(RandomUtils.nextDouble(0, 2500));
+//			fpkms.add(d);
+//		}
+//		//currentCase
+//		FPKMPerCaseData d = new FPKMPerCaseData();
+//		d.setCaseId(caseId);
+//		d.setCaseName("ZZTEST, SOMEONE");
+//		d.setFpkmValue(RandomUtils.nextDouble(0, 6000));
+//		fpkms.add(d);
+//		
+//		//add some outliers
+//		for (int i = 0; i < 5; i++) {
+//			d = new FPKMPerCaseData();
+//			d.setCaseId("ORD Outlier");
+//			d.setCaseName("ZZTEST, SOMEONE");
+//			d.setFpkmValue(RandomUtils.nextDouble(4500, 5900));
+//			fpkms.add(d);
+//		}
+		AjaxResponse ajaxResponse = new AjaxResponse();
+		ajaxResponse.setIsAllowed(true);
+		ajaxResponse.setSuccess(true);
+		TMBData tmbResult = utils.getTMBChartData(ajaxResponse, caseId, oncotreeCode);
+		if (tmbResult != null && tmbResult.getTmbs() != null && !tmbResult.getTmbs().isEmpty()) {
+			return new WhiskChartData(tmbResult, caseId, useLog2).createObjectJSON();
+		}
+		else if (tmbResult != null && tmbResult.getTmbs() != null && tmbResult.getTmbs().isEmpty()) {
+			ajaxResponse.setIsAllowed(true);
+			ajaxResponse.setSuccess(false);
+		}
+		else {
+			ajaxResponse.setIsAllowed(false);
+			ajaxResponse.setSuccess(false);
+		}
+		return ajaxResponse.createObjectJSON();
 
 	}
+	
 	
 }

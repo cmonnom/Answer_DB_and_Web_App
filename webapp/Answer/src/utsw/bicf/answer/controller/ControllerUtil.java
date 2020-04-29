@@ -145,7 +145,7 @@ public class ControllerUtil {
 		
 	}
 	
-	public static boolean isUserAssignedToCase(OrderCase caseSummary, User user) throws ClientProtocolException, IOException, URISyntaxException {
+	public static boolean isUserAssignedToCase(OrderCase caseSummary, User user) {
 		return (caseSummary == null || caseSummary.getAssignedTo().contains(user.getUserId().toString()));
 	}
 	

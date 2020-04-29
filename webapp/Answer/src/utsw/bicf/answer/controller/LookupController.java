@@ -35,6 +35,7 @@ import utsw.bicf.answer.db.api.utils.NCBIRequestUtils;
 import utsw.bicf.answer.db.api.utils.OncoKBRequestUtils;
 import utsw.bicf.answer.db.api.utils.OncotreeRequestUtils;
 import utsw.bicf.answer.db.api.utils.ReactomeRequestUtils;
+import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.db.api.utils.UniProtRequestUtils;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
@@ -63,6 +64,7 @@ public class LookupController {
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getGeneSummary", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getOncotreeTumorType", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getReactomeLocations", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getVariantSummary", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 
@@ -276,6 +278,95 @@ public class LookupController {
 				response.setPayload(summary);
 				response.setSuccess(true);
 			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@RequestMapping("/getVariantSummary")
+	@ResponseBody
+	public String getVariantSummary(Model model, HttpSession session, @RequestParam String geneTerm,
+			@RequestParam String oncotreeCode, @RequestParam String hgvs, @RequestParam(defaultValue="") String originalVariant, 
+			@RequestParam(defaultValue="")  String oncokbVariantName,	@RequestParam String databases) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+
+			boolean needAnswerQuery = oncokbVariantName == null || oncokbVariantName.equals("")
+					|| originalVariant == null || originalVariant.equals("")
+					|| !hgvs.equals(originalVariant);
+			String variantName = null;
+			if (needAnswerQuery) {
+				//TODO build API to retrive oncokb variant from Answer
+//				variantName = "M918T"; //TODO remove this
+				RequestUtils utils = new RequestUtils(modelDAO);
+				utils.getOncoKbName(response, geneTerm, hgvs);
+				if (response.getSuccess() && response.getPayload() != null) {
+					variantName = (String) response.getPayload();
+				}
+			}
+			else {
+				variantName = oncokbVariantName;
+			}
+			final String finalVariantName = variantName;
+			
+			LookupGeneSummaries summaryResponse = new LookupGeneSummaries();
+			summaryResponse.setDatabases(Arrays.asList(databases.split(",")));
+			ExecutorService executor = Executors.newFixedThreadPool(summaryResponse.getDatabases().size());
+
+
+			Runnable civicWorker = new Runnable() {
+				@Override
+				public void run() {
+					CivicRequestUtils civicUtils = new CivicRequestUtils(civicProps, otherProps);
+					try {
+						LookupSummary civicSummary = null;
+						if (finalVariantName == null || finalVariantName.equals("")) {
+							civicSummary = new LookupSummary();
+						}
+						else {
+							civicSummary = civicUtils.getVariantSummary(geneTerm, finalVariantName);
+						}
+						summaryResponse.getSummaries().put("Civic DB", civicSummary);
+					} catch (UnsupportedOperationException | URISyntaxException | IOException | JAXBException
+							| SAXException | ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+				}
+			};
+			executor.execute(civicWorker);
+
+			Runnable jaxWorker = new Runnable() {
+				@Override
+				public void run() {
+					JaxCKBRequestUtils jaxUtils = new JaxCKBRequestUtils(jaxProps, otherProps);
+					try {
+						LookupSummary jaxSummary = null;
+						if (finalVariantName == null || finalVariantName.equals("")) {
+							jaxSummary = new LookupSummary();
+						}
+						else {
+							String query = null;
+							query = geneTerm + " " + finalVariantName;
+							jaxSummary = jaxUtils.getVariantSummary(query);
+						}
+						summaryResponse.getSummaries().put("Jackson Labs", jaxSummary);
+					} catch (UnsupportedOperationException | URISyntaxException | IOException | JAXBException
+							| SAXException | ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+				}
+			};
+			executor.execute(jaxWorker);
+
+			executor.shutdown();
+			executor.awaitTermination(10, TimeUnit.SECONDS);
+
+			response.setPayload(summaryResponse);
+			response.setSuccess(true);
 			return response.createObjectJSON();
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();

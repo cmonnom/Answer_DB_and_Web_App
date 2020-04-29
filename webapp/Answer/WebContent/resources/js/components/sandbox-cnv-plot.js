@@ -721,6 +721,9 @@ Vue.component('sandbox-cnv-plot', {
             else if (this.isTranslocation()) {
                 return "FTL";
             }
+            else if (this.isVirus()) {
+                return "VIR";
+            }
         },
         isSNP() {
             return this.type == "snp";
@@ -730,6 +733,9 @@ Vue.component('sandbox-cnv-plot', {
         },
         isTranslocation() {
             return this.type == "translocation";
+        },
+        isTranslocation() {
+            return this.type == "virus" || this.type == "VIR";
         },
         otherCNVChromChanged() {
             if (this.selectedCNVChrom) {

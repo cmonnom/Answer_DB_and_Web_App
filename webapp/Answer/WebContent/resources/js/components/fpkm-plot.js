@@ -235,7 +235,7 @@ Vue.component('fpkm-plot', {
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
                         var chartData = response.data;
-                        this.currentOncotreeCode = chartData.oncotreeCode;
+                        this.currentOncotreeCode = chartData.label;
                         var allDataTrace = {
                             y: chartData.boxData,
                             type: 'box',
@@ -271,7 +271,7 @@ Vue.component('fpkm-plot', {
                         }
                         var data = [allDataTrace, currentCaseTrace, outliersTrace];
                         var layout = {
-                            title: this.createPlotTitle(chartData.oncotreeCode, chartData.nbOfCases),
+                            title: this.createPlotTitle(chartData.label, chartData.nbOfCases),
                             yaxis: {
                                 title: this.getCurrentGeneName() + ": FPKM" + (this.useLog2 ? " (log2)": ""),
                                 zeroline: false,

@@ -639,6 +639,9 @@ public class OpenReportController {
 							else if (therapy.getType().equals("translocation")) {
 								reportToSave.getFtlIds().add(therapy.getOid());
 							}
+							else if (therapy.getType().equals("virus")) {
+								reportToSave.getVirusIds().add(therapy.getOid());
+							}
 						}
 					}
 //					Strong significance

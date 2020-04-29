@@ -53,6 +53,7 @@ public class Report {
 	Set<String> snpIds = new HashSet<String>();
 	Set<String> cnvIds = new HashSet<String>();
 	Set<String> ftlIds = new HashSet<String>();
+	Set<String> virusIds = new HashSet<String>();
 	
 	Map<String, ReportNavigationRow> navigationRowsPerGene = new HashMap<String, ReportNavigationRow>();
 	Map<String, ReportNavigationRow> navigationRowsPerGeneVUS = new HashMap<String, ReportNavigationRow>();
@@ -542,6 +543,14 @@ public class Report {
 			aberration = -1;
 		}
 		return aberration;
+	}
+
+	public Set<String> getVirusIds() {
+		return virusIds;
+	}
+
+	public void setVirusIds(Set<String> virusIds) {
+		this.virusIds = virusIds;
 	}
 
 }

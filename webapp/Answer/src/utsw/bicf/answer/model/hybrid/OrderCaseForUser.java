@@ -51,14 +51,14 @@ public class OrderCaseForUser {
 		if (currentUser.getIndividualPermission().getCanAssign()) {
 			buttons.add(new Button("mdi-account-arrow-left", "assignToUser", "Assign To", "info"));
 		}
-		buttons.add(new Button("mdi-file-document-edit", "open", "Work on Case", "info"));
+		buttons.add(new Button("mdi-file-document-edit", "./openCase/" + caseId, "Work on Case", "info", true));
 		if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)
 				|| CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
 			if (currentUser.getIndividualPermission().getCanReview()) {
-				buttons.add(new Button("assignment", "edit-report", "View/Edit Report", "info"));
+				buttons.add(new Button("assignment", "./openReport/" + caseId, "View/Edit Report", "info", true));
 			}
 			else {
-				buttons.add(new Button("assignment", "open-report-read-only", "Open Report in View Only Mode", "info"));
+				buttons.add(new Button("assignment", "./openReportReadOnly/" + caseId , "Open Report in View Only Mode", "info", true));
 			}
 		}
 		

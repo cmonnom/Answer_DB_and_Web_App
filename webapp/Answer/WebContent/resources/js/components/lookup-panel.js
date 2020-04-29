@@ -2,7 +2,8 @@ Vue.component('lookup-panel', {
     props: {
         title: {default: "Lookup Tool (Beta)", type: String},
         standalone: {default: true, type:Boolean},
-        oncotreeItems: {default: () => [], type:Array}
+        oncotreeItems: {default: () => [], type:Array},
+        originalVariant: {default: "", type:String}
     },
     template: `<div>
 
@@ -25,14 +26,24 @@ Vue.component('lookup-panel', {
                         </v-list-tile-content>
                     </v-list-tile>
 
-                            <v-list-tile avatar @click="togglePanel()">
+                            <v-list-tile avatar @click="reloadValues()">
                                 <v-list-tile-avatar>
-                                    <v-icon>close</v-icon>
+                                    <v-icon>refresh</v-icon>
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
-                                    <v-list-tile-title>Close Lookup Tool</v-list-tile-title>
+                                    <v-list-tile-title>Reload Current Variant Values</v-list-tile-title>
                                 </v-list-tile-content>
                             </v-list-tile>
+
+                            <v-list-tile avatar @click="togglePanel()">
+                            <v-list-tile-avatar>
+                                <v-icon>close</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>Close Lookup Tool</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
 
                    
 
@@ -54,11 +65,18 @@ Vue.component('lookup-panel', {
             </v-tooltip>
 
                 <v-tooltip bottom>
-                    <v-btn icon @click="togglePanel()" slot="activator">
-                        <v-icon>close</v-icon>
+                    <v-btn icon @click="reloadValues()" slot="activator">
+                        <v-icon>refresh</v-icon>
                     </v-btn>
-                    <span>Close Lookup Tool</span>
+                    <span>Reload Current Variant Values</span>
                 </v-tooltip>
+
+                <v-tooltip bottom>
+                <v-btn icon @click="togglePanel()" slot="activator">
+                    <v-icon>close</v-icon>
+                </v-btn>
+                <span>Close Lookup Tool</span>
+            </v-tooltip>
     
             </v-toolbar>
             <v-card flat class="html-scroll-auto lookup-card-height" :flat="standalone" :color="standalone ? 'rgba(0,0,0,0)' : ''">
@@ -74,17 +92,17 @@ Vue.component('lookup-panel', {
                         </v-tooltip>
                         <v-flex xs12  class="centered">
                         <v-icon class="error--text">mdi-alert-circle</v-icon>
-                        The data provided here is purely for research.<br/>You are responsible for the content of annotations you created.
+                        The data provided here is purely for research.<br/>You are responsible for the content of annotations you create.
                         </v-flex>
 
                         </v-layout>
                         <v-layout row wrap>
                         <v-flex xs12>
-                            <v-layout>
+                            <v-layout row wrap>
                             
                                 <!-- Gene/Variant Input -->
                                 <v-flex v-if="currentlyActive == 'Gene' || currentlyActive == 'Variant'" :class="['pl-2','pr-2', ...getFlexClasses()]">
-                                    <v-text-field
+                                    <v-text-field hide-details
                                     v-model="currentGene"
                                     :value="currentGene"
                                     label="Gene Symbol"
@@ -96,7 +114,7 @@ Vue.component('lookup-panel', {
                                 </v-flex>
 
                                 <!-- Variant Input -->
-                                <v-flex v-if="currentlyActive == 'Variant'" :class="['pl-2','pr-2', getFlexClasses()]">
+                                <v-flex v-if="currentlyActive == 'Variant'" :class="['pl-2','pr-2', ...getFlexClasses()]">
                                     <v-text-field hide-details 
                                     v-model="currentVariant"
                                     :value="currentVariant"
@@ -107,7 +125,7 @@ Vue.component('lookup-panel', {
                                 </v-flex>
 
                                 <!-- Cancer Input -->
-                                <v-flex v-if="currentlyActive == 'Cancer' || currentlyActive == 'Variant'" :class="['pl-2','pr-2', getCancerFlexClasses()]">
+                                <v-flex v-if="currentlyActive == 'Cancer' || currentlyActive == 'Variant'" :class="['pl-2','pr-2', ...getCancerFlexClasses()]">
                                     <v-autocomplete hide-details
                                     value="currentOncotreeCode"  v-model="currentOncotreeCode" :items="oncotreeItems" return-object
                                     label="Oncotree Code"
@@ -251,6 +269,53 @@ Vue.component('lookup-panel', {
                             </span>
                         </v-flex>
 
+                        <!-- Variant Results -->
+                        <v-flex :class="getGeneFlexClasses()" v-show="currentlyActive == 'Variant'">
+                        <v-card flat>
+                            <v-toolbar dense class="elevation-0" dark color="primary">
+                                <div class="title ml-0">Summary</div>
+                                <v-spacer></v-spacer>
+                
+                                <v-tooltip bottom>
+                                <v-btn icon @click="toggleAllVariantPanels(true)" slot="activator">
+                                    <v-icon>mdi-arrow-expand-vertical</v-icon>
+                                </v-btn>
+                                <span>Expand All</span>
+                            </v-tooltip>
+                
+                                <v-tooltip bottom>
+                                    <v-btn icon @click="toggleAllVariantPanels(false)" slot="activator">
+                                        <v-icon>mdi-arrow-collapse-vertical</v-icon>
+                                    </v-btn>
+                                    <span>Collapse All</span>
+                                </v-tooltip>
+                            </v-toolbar>
+                            <v-card-text class="pa-0">
+                                <v-expansion-panel v-model="variantPanel" expand>
+                                <v-expansion-panel-content v-for="item in variantPanelTitles" :key="item">
+                                <template v-slot:header >
+                                    <div>{{ item }}
+                                    <v-tooltip bottom v-show="variantSummaries[item].url">
+                                    <v-btn slot="activator" icon :href="variantSummaries[item].url" target="_blank" @click.stop class="primary--text"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                                    <span>Open {{ currentVariant }} in {{ item }} (new tab).</span>
+                                    </v-tooltip>
+                                    </div>
+
+                                </template>
+                                <v-card class="pa-2">
+                                <v-card-text class="pa-2">
+                                    <span v-for="(item, index) in variantSummaries[item].summary" :key="index">
+                                        <span v-if="item.type == 'text'">{{ item.text }}</span>
+                                        <a v-else :href="'https://www.ncbi.nlm.nih.gov/pubmed/?term=' + item.text" target="_blank">{{ item.text }}</a>
+                                    </span>
+                                </v-card-text>
+                                </v-card>
+                                </v-expansion-panel-content>
+                                </v-expansion-panel>
+                            </v-card-text>
+                        </v-card>    
+                        </v-flex>
+
 
                         </v-layout>
             </v-container>
@@ -277,16 +342,24 @@ Vue.component('lookup-panel', {
                 "Jackson Labs" : {summary: null, url: null, loading: false},
                 "Civic DB" : {summary: null, url: null, loading: false},
             },
+            variantPanelTitles: ["Jackson Labs", "Civic DB"],
+            variantSummaries: {
+                "Jackson Labs" : {summary: null, url: null, loading: false},
+                "Civic DB" : {summary: null, url: null, loading: false},
+            },
             loading: false,
             geneSummaryLoading: false,
             reactomeLoading: false,
             genePanel: [],
+            variantPanel: [],
             ensemblId: null,
             currentOncotreeCode: {},
             oncotree: {},
             currentVariant: "",
             geneSymbolErrorMessage: null,
-            reactomeItems: []
+            variantSymbolErrorMessage: null,
+            reactomeItems: [],
+            oncokbVariantName: null
         }
 
     },
@@ -360,6 +433,7 @@ Vue.component('lookup-panel', {
                         this.getOncotree();
                         break;
                     case "Variant":
+                        this.getVariantSummary();
                         break;    
                 }
             }
@@ -416,6 +490,9 @@ Vue.component('lookup-panel', {
         },
         toggleAllGenePanels(doOpen) {
             this.genePanel = this.genePanelTitles.map(i => doOpen);
+        },
+        toggleAllVariantPanels(doOpen) {
+            this.variantPanel = this.variantPanelTitles.map(i => doOpen);
         },
         calcMaxHeight() {
             if (this.standalone) {
@@ -526,7 +603,12 @@ Vue.component('lookup-panel', {
                 case "Cancer":
                     return ["xs12"]
                 case "Variant":
-                    return ["xs12","md6","lg4","xl3"]
+                    if (this.standalone) {
+                        return ["xs12","md6","lg4","xl3"];
+                    }
+                    else {
+                        return ["xs12","md6","lg6","xl6"];
+                    }
             }
         },
         getGeneFlexClasses() {
@@ -552,19 +634,61 @@ Vue.component('lookup-panel', {
             return textOne.indexOf(searchText) > -1 ||
               textTwo.indexOf(searchText) > -1
           },
-        // autoSelectButton() {
-        //     var button = null;
-        //     if (this.currentVariant) {
-        //         button = this.buttons.filter(b => b.label == "Variant")[0];
-        //     }
-        //     else if (this.currentOncotreeCode) {
-        //         button = this.buttons.filter(b => b.label == "Cancer")[0];
-        //     }
-        //     else if (this.currentGene) {
-        //         button = this.buttons.filter(b => b.label == "Gene")[0];
-        //     }
-        //     this.handleButton(button);
-        // }
+        getVariantSummary() {
+            this.loading = true;
+            for (var i = 0; i < this.variantPanelTitles.length; i++) {
+                this.variantSummaries[this.variantPanelTitles[i]].summary = "";
+            }
+            axios.get(webAppRoot + "/getVariantSummary", {
+                params: {
+                    geneTerm: this.currentGene,
+                    oncotreeCode: this.currentOncotreeCode.text,
+                    hgvs: this.currentVariant,
+                    originalVariant: this.originalVariant,
+                    oncokbVariantName: this.oncokbVariantName,
+                    databases: this.variantPanelTitles.join(","),
+                }
+            })
+            .then(response => {
+                var responseDatabases = response.data.payload ? response.data.payload.databases : "";
+                if (response.data.isAllowed && response.data.success) {
+                   for (var i = 0; i < responseDatabases.length; i++) {
+                       var database = responseDatabases[i];
+                       var payload = response.data.payload.summaries[database];
+                       var summary = this.formatPubMedLinks(payload && payload.summary ? payload.summary : "No summary found in " + database);
+                       this.variantSummaries[database].summary = summary;
+                       this.variantSummaries[database].url = payload && payload.moreInfoUrl ? payload.moreInfoUrl : null;
+                    }
+                    this.variantSymbolErrorMessage = this.ensemblId ? null : "No entry could be found.";
+                    this.toggleAllVariantPanels(true);
+                    this.loading = false;
+                }
+                else if (response.data.isAllowed && !response.data.success) {
+                    for (var i = 0; i < responseDatabases.length; i++) {
+                        var summary = this.formatPubMedLinks("Nothing found in " + database);
+                        this.variantSummaries[database].summary = summary;
+                        this.varianteSummaries[database].url = null;
+                    }
+                    this.toggleAllVariantPanels(true);
+                    this.loading = false;
+                }
+                else {
+                    this.loading = false;
+                    this.handleDialogs(response.data, this.getVariantSummary);
+                }
+            })
+            .catch(error => {
+                this.loading = false;
+                alert(error);
+            });
+            //also search gene and oncotree
+            this.geneAjaxSummary(this.genePanelTitles);
+            this.getReactomeLocations("Cell Cycle");
+            this.getOncotree();
+        },  
+        reloadValues() {
+            this.$emit("reload-values");
+        }
     },
     mounted() {
         this.toggleAllGenePanels(true);

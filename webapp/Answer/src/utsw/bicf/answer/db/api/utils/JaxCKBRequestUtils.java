@@ -3,6 +3,7 @@ package utsw.bicf.answer.db.api.utils;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -91,6 +92,43 @@ public class JaxCKBRequestUtils {
 		}
 		else {
 			logger.info("Something went wrong JaxCKBRequestUtils:90 HTTP_STATUS: " + statusCode);
+		}
+		return summary;
+	}
+	
+	/**
+	 * 
+	 * @param query needs to be HUGO + " " + oncokbVariantName (eg. NRAS Q61R)
+	 * @return
+	 * @throws URISyntaxException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JAXBException
+	 * @throws UnsupportedOperationException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 */
+	public LookupSummary getVariantSummary(String query)
+			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
+			UnsupportedOperationException, SAXException, ParserConfigurationException {
+		LookupSummary summary = new LookupSummary();
+		StringBuilder sbUrl = new StringBuilder(jaxCKBProps.getVariantServlet()).append(URLEncoder.encode(query, "UTF-8"));
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+		HttpClientContext context = HttpClientContext.create();
+		HttpResponse response = client.execute(requestGet, context);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ObjectMapper mapper = new ObjectMapper();
+			JaxCKBResponse[] jaxJson = mapper.readValue(response.getEntity().getContent(), JaxCKBResponse[].class);
+			for (JaxCKBResponse item : jaxJson) {
+				summary.setSummary(item.getVariantDescription());
+				summary.setMoreInfoUrl(jaxCKBProps.getVariantUrl() + item.getId());
+			}
+		}
+		else {
+			logger.info("Something went wrong JaxCKBRequestUtils:130 HTTP_STATUS: " + statusCode);
 		}
 		return summary;
 	}

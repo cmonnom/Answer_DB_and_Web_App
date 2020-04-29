@@ -1,6 +1,6 @@
 const Home = {
     template:
-        `<div>
+        /*html*/`<div>
 
         <v-snackbar :timeout="snackBarTimeout" :bottom="true" :value="snackBarVisible">
         {{ snackBarMessage }}
@@ -601,18 +601,18 @@ const Home = {
             }
             this.assignGroupDialogVisible = true;
         });
-        bus.$on('open', (item) => {
-            router.push("./openCase/" + item.caseId);
-        });
-        bus.$on('open-read-only', (item) => {
-            router.push("./openCaseReadOnly/" + item.caseId);
-        });
-        bus.$on('edit-report', (item) => {
-            router.push("./openReport/" + item.caseId);
-        });
-        bus.$on('open-report-read-only', (item) => {
-            router.push("./openReportReadOnly/" + item.caseId);
-        });
+        // bus.$on('open', (item) => {
+        //     router.push("./openCase/" + item.caseId);
+        // });
+        // bus.$on('open-read-only', (item) => {
+        //     router.push("./openCaseReadOnly/" + item.caseId);
+        // });
+        // bus.$on('edit-report', (item) => {
+        //     router.push("./openReport/" + item.caseId);
+        // });
+        // bus.$on('open-report-read-only', (item) => {
+        //     router.push("./openReportReadOnly/" + item.caseId);
+        // });
         bus.$on('sent-to-epic', (item, event) => {
             this.currentCaseId = item.caseId;
             this.currentEpicOrderNumber = item.epicOrderNumber;

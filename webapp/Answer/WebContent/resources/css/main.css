@@ -706,3 +706,13 @@ Slow down the fullscreen dialog
 .v-treeview-node__label {
     max-width: calc(100% - 20px);
 }
+
+.neutral-link {
+    color: rgba(0,0,0,.87);
+}
+
+.mut-sig-image-axis {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}

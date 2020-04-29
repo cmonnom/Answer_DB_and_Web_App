@@ -72,7 +72,7 @@ public class OncotreeRequestUtils {
 			UnsupportedOperationException, SAXException, ParserConfigurationException {
 		OncotreeTumorType summary = null;
 		StringBuilder sbUrl = new StringBuilder(oncotreeProps.getTumorTypeUrl()).append(oncotreeCode)
-				.append("?exactMatch=true&levels=2%2C3%2C4%2C5");
+				.append("?exactMatch=true&levels=1%2C2%2C3%2C4%2C5");
 		URI uri = new URI(sbUrl.toString());
 		requestGet = new HttpGet(uri);
 		HttpClientContext context = HttpClientContext.create();

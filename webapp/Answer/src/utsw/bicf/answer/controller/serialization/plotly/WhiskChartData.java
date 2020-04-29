@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import utsw.bicf.answer.model.extmapping.FPKMData;
-import utsw.bicf.answer.model.extmapping.FPKMPerCaseData;
+import utsw.bicf.answer.model.extmapping.WhiskerData;
+import utsw.bicf.answer.model.extmapping.WhiskerPerCaseData;
 
-public class FPKMChartData extends PlotlyChartData {
+public class WhiskChartData extends PlotlyChartData {
 	
-	String oncotreeCode;
+	String label;
 	
 	Double currentCaseData;
 	String currentCaseLabel;
@@ -23,10 +23,10 @@ public class FPKMChartData extends PlotlyChartData {
 	long nbOfCases;
 	
 	
-	public FPKMChartData(FPKMData fpkmData, String caseId, Boolean useLog2) {
+	public WhiskChartData(WhiskerData whiskData, String caseId, Boolean useLog2) {
 		
-		this.fpkms = fpkmData.getFpkms().stream().map(i -> i.getFpkmValue()).collect(Collectors.toList());
-		this.oncotreeCode = fpkmData.getOncotreeCode();
+		this.fpkms = whiskData.getPerCaseList().stream().map(i -> i.getWhiskValue()).collect(Collectors.toList());
+		this.label = whiskData.getLabel();
 		
 		
 		
@@ -37,21 +37,21 @@ public class FPKMChartData extends PlotlyChartData {
 		this.outliersData = new ArrayList<Double>(); //4 series (stock, scatter, median, current case scatter) per oncotree root code. Only one at a time for now -> 1 box plot
 		
 		//need all to calculate boxplot
-		List<Double> fpkmsAll = fpkmData.getFpkms().stream().map(d -> d.getFpkmValue()).collect(Collectors.toList());
+		List<Double> fpkmsAll = whiskData.getPerCaseList().stream().map(d -> d.getWhiskValue()).collect(Collectors.toList());
 		
 		//extract the current case FPKM data. Need to make sure it's in the data set 
-		List<FPKMPerCaseData> currentCases = fpkmData.getFpkms().stream().filter(d -> d.getCaseId().equals(caseId)).collect(Collectors.toList());
-		this.nbOfCases = fpkmData.getFpkms().stream().map(d -> d.getCaseId()).collect(Collectors.toSet()).size();
-		FPKMPerCaseData currentCase = null;
+		List<WhiskerPerCaseData> currentCases = whiskData.getPerCaseList().stream().filter(d -> d.getCaseId().equals(caseId)).collect(Collectors.toList());
+		this.nbOfCases = whiskData.getPerCaseList().stream().map(d -> d.getCaseId()).collect(Collectors.toSet()).size();
+		WhiskerPerCaseData currentCase = null;
 		if (currentCases != null && !currentCases.isEmpty()) {
 			currentCase = currentCases.get(0); 
 		}
 		
-		this.initBoxPlot(fpkmData, fpkmsAll, caseId, useLog2);
+		this.initBoxPlot(whiskData, fpkmsAll, caseId, useLog2);
 		
 		//current Case
 		if (currentCase != null) {
-			this.currentCaseData = currentCase.getFpkmValue().doubleValue();
+			this.currentCaseData = currentCase.getWhiskValue().doubleValue();
 			this.currentCaseLabel = currentCase.getCaseId() + " " + currentCase.getCaseName();
 		}
 		
@@ -79,7 +79,7 @@ public class FPKMChartData extends PlotlyChartData {
 		return value;
 	}
 	
-	private void initBoxPlot(FPKMData fpkmData, List<Double> fpkmsAll, String caseId, Boolean useLog2) {
+	private void initBoxPlot(WhiskerData fpkmData, List<Double> fpkmsAll, String caseId, Boolean useLog2) {
 		BoxPlotData boxPlotData = new BoxPlotData(fpkmsAll);
 		this.boxData = new ArrayList<Double>();
 		
@@ -105,36 +105,29 @@ public class FPKMChartData extends PlotlyChartData {
 		//scatter plot. Skip current case
 		this.outliersLabels = new ArrayList<String>();
 		this.outliersData = new ArrayList<Double>();
-		for (FPKMPerCaseData d : fpkmData.getFpkms()) {
+		for (WhiskerPerCaseData d : fpkmData.getPerCaseList()) {
 			if (!d.getCaseId().equals(caseId) 
-				&& (d.getFpkmValue() > boxPlotData.getUpperFence()
-				|| d.getFpkmValue() < boxPlotData.getLowerFence())
+				&& (d.getWhiskValue() > boxPlotData.getUpperFence()
+				|| d.getWhiskValue() < boxPlotData.getLowerFence())
 				) {
 				this.outliersLabels.add(d.getCaseId() + " " + d.getCaseName());
-				this.outliersData.add(d.getFpkmValue());
+				this.outliersData.add(d.getWhiskValue());
 				if (this.min == null) {
-					this.min = useLog2 ? this.convertToLog2(d.getFpkmValue()) : d.getFpkmValue();
+					this.min = useLog2 ? this.convertToLog2(d.getWhiskValue()) : d.getWhiskValue();
 				}
 				else {
-					this.min = Math.min(this.max, useLog2 ? this.convertToLog2(d.getFpkmValue()) : d.getFpkmValue());
+					this.min = Math.min(this.max, useLog2 ? this.convertToLog2(d.getWhiskValue()) : d.getWhiskValue());
 				}
 				if (this.max == null) {
-					this.max = useLog2 ? this.convertToLog2(d.getFpkmValue()) : d.getFpkmValue();
+					this.max = useLog2 ? this.convertToLog2(d.getWhiskValue()) : d.getWhiskValue();
 				}
 				else {
-					this.max = Math.max(this.max, useLog2 ? this.convertToLog2(d.getFpkmValue()) : d.getFpkmValue());
+					this.max = Math.max(this.max, useLog2 ? this.convertToLog2(d.getWhiskValue()) : d.getWhiskValue());
 				}
 			}
 		}
 	}
 	
-	public String getOncotreeCode() {
-		return oncotreeCode;
-	}
-
-	public void setOncotreeCode(String oncotreeCode) {
-		this.oncotreeCode = oncotreeCode;
-	}
 
 	public List<Double> getFpkms() {
 		return fpkms;
@@ -206,6 +199,14 @@ public class FPKMChartData extends PlotlyChartData {
 
 	public void setMax(Double max) {
 		this.max = max;
+	}
+
+	public String getLabel() {
+		return label;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
 	}
 
 }

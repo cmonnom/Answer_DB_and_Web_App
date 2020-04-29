@@ -40,6 +40,7 @@
 	<mvc:resources location="file:/opt/answer/links/igv/" mapping="/igv/**" />
 	<mvc:resources location="file:/opt/answer/docs/html/" mapping="/help/**" />
 	<mvc:resources location="file:/opt/answer/links/media/" mapping="/media/**" />
+	<mvc:resources location="file:/opt/answer/links/images/" mapping="/images/**" />
 
 	<!-- Define Spring MVC view resolver -->
 	<bean	id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
@@ -146,6 +147,8 @@
 		<property name="pdfNGSLogoName" value="${pdf.ngs.logo.name}" />
 		<property name="pdfUTSWLogoName" value="${pdf.utsw.logo.name}" />
 		<property name="pdfDraftWatermarkName" value="${pdf.draft.watermark.name}" />
+		<property name="imageLinksPath" value="${image.link.location}" />
+		<property name="imageFilesPath" value="${image.file.location}" />
 		
 	</bean>
 	
@@ -189,6 +192,8 @@
 	<bean id="civicProps" class="utsw.bicf.answer.security.CivicProperties">
 		<property name="queryUrl" value="${civic.gene.servlet}" />
 		<property name="civicGeneUrl" value="${civic.gene.url}" />
+		<property name="variantServlet" value="${civic.variant.servlet}" />
+		<property name="variantUrl" value="${civic.variant.url}" />
 	</bean>
 	
 	<bean id="oncoKBProps" class="utsw.bicf.answer.security.OncoKBProperties">
@@ -208,6 +213,8 @@
 	<bean id="jaxckbProps" class="utsw.bicf.answer.security.JaxCKBProperties">
 		<property name="geneServlet" value="${jaxckb.gene.servlet}" />
 		<property name="geneUrl" value="${jaxckb.gene.url}" />
+		<property name="variantServlet" value="${jaxckb.variant.servlet}" />
+		<property name="variantUrl" value="${jaxckb.variant.url}" />
 	</bean>	
 	
 	<bean id="reactomeProps" class="utsw.bicf.answer.security.ReactomeProperties">

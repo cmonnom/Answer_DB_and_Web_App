@@ -72,10 +72,14 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.SearchSNPAnnotation;
 import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
+import utsw.bicf.answer.model.extmapping.TMBData;
+import utsw.bicf.answer.model.extmapping.TMBPerCaseData;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.extmapping.Trial;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.extmapping.Virus;
+import utsw.bicf.answer.model.extmapping.WhiskerPerCaseData;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
@@ -554,20 +558,24 @@ public class RequestUtils {
 		ObjectMapper mapper = new ObjectMapper();
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		String oid = null;
-		if (variantType.equals("snp")) {
+		switch (variantType) {
+		case "snp":
 			oid = ((Variant) variant).getMongoDBId().getOid();
 			sbUrl.append("variant/");
-		}
-		if (variantType.equals("cnv")) {
-			oid = ((CNV) variant).getMongoDBId().getOid();
-			sbUrl.append("cnv/");
-		}
-		if (variantType.equals("translocation")) {
+			break;
+		case "cnv":
+			oid = ((Variant) variant).getMongoDBId().getOid();
+			sbUrl.append("variant/");
+			break;
+		case "translocation":
 			oid = ((Translocation) variant).getMongoDBId().getOid();
 			sbUrl.append("translocation/");
-		}
-		else {
-			ajaxResponse.setSuccess(false);
+			break;
+		case "virus":
+			oid = ((Virus) variant).getMongoDBId().getOid();
+			sbUrl.append("virus/");
+			break;
+		default: ajaxResponse.setSuccess(false);
 		}
 		sbUrl.append(oid);
 		URI uri = new URI(sbUrl.toString());
@@ -593,17 +601,20 @@ public class RequestUtils {
 	public void saveSelectedAnnotations(AjaxResponse ajaxResponse, Object variant, String variantType, String oid) throws URISyntaxException, ClientProtocolException, IOException {
 			ObjectMapper mapper = new ObjectMapper();
 			StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-			if (variantType.equals("snp")) {
+			switch(variantType) {
+			case "snp":
 				sbUrl.append("variant/");
-			}
-			else if (variantType.equals("cnv")) {
-				sbUrl.append("cnv/"); 
-			}
-			else if (variantType.equals("translocation")) {
-				sbUrl.append("translocation/");  
-			}
-			else {
-				ajaxResponse.setSuccess(false);
+				break;
+			case "cnv":
+				sbUrl.append("cnv/");
+				break;
+			case "translocation":
+				sbUrl.append("translocation/");
+				break;
+			case "virus":
+				sbUrl.append("virus/");
+				break;
+			default: ajaxResponse.setSuccess(false);
 			}
 			sbUrl.append(oid).append("/selectannotations");
 			URI uri = new URI(sbUrl.toString());
@@ -1922,7 +1933,7 @@ public class RequestUtils {
 		}
 	}
 	
-	public List<FPKMPerCaseData> getFPKMChartData(AjaxResponse ajaxResponse, String caseId, String geneId) throws ClientProtocolException, IOException, URISyntaxException {
+	public List<WhiskerPerCaseData> getFPKMChartData(AjaxResponse ajaxResponse, String caseId, String geneId) throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/fpkm/");
 		sbUrl.append(geneId);
@@ -1940,9 +1951,42 @@ public class RequestUtils {
 			ajaxResponse.setMessage(mongoDBResponse.getMessage());
 			if (ajaxResponse.getSuccess()) {
 				FPKMPerCaseData[] result = mapper.convertValue(mongoDBResponse.getPayload(), FPKMPerCaseData[].class);
-				List<FPKMPerCaseData> fpkms = Arrays.asList(result);
+				List<WhiskerPerCaseData> fpkms = Arrays.asList(result);
 				this.closeGetRequest();
 				return fpkms;
+			}
+			else {
+				this.closeGetRequest();
+				return null;
+			}
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+			this.closeGetRequest();
+			return null;
+		}
+	}
+	
+	public TMBData getTMBChartData(AjaxResponse ajaxResponse, String caseId, String oncotreeCode) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/tmb/");
+		sbUrl.append(oncotreeCode);
+		URI uri = new URI(sbUrl.toString());
+
+		HttpResponse response = null;
+		requestGet = new HttpGet(uri);
+		addAuthenticationHeader(requestGet);
+		response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			ajaxResponse.setSuccess(mongoDBResponse.getSuccess());
+			ajaxResponse.setMessage(mongoDBResponse.getMessage());
+			if (ajaxResponse.getSuccess()) {
+				TMBData result = mapper.convertValue(mongoDBResponse.getPayload(), TMBData.class);
+				this.closeGetRequest();
+				return result;
 			}
 			else {
 				this.closeGetRequest();
@@ -2009,6 +2053,36 @@ public class RequestUtils {
 		}
 		this.closeGetRequest();
 		return balleleFreqs;
+	}
+	
+	public void getOncoKbName(AjaxResponse ajaxResponse, String geneName, String notation) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("searchVariantNotation/");
+		URI uri = new URI(sbUrl.toString());
+		Variant tempVariant = new Variant();
+		tempVariant.setGeneName(geneName);
+		tempVariant.setNotation(notation);
+		HttpResponse response = null;
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		;
+		requestPost.setEntity(new StringEntity(mapper.writeValueAsString(tempVariant), ContentType.APPLICATION_JSON));
+		response = client.execute(requestPost);
+
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ajaxResponse.setSuccess(true);
+			AjaxResponse apiResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			ajaxResponse.setSuccess(apiResponse.getSuccess());
+			ajaxResponse.setPayload(apiResponse.getPayload());
+			ajaxResponse.setMessage(apiResponse.getMessage());
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		
+		this.closePostRequest();
 	}
 
 }

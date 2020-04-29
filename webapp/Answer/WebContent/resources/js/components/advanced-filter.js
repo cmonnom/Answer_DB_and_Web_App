@@ -861,7 +861,7 @@ Vue.component('advanced-filter', {
             return filters.filter(f => f.type == this.type);
         },
         getFormattedType(type) {
-            if (type == "snp" || type == "cnv" || type == "ftl") {
+            if (type == "snp" || type == "cnv" || type == "ftl" || type == "vir") {
                 return type.toUpperCase();
             }
             else if (type == "translocation") {

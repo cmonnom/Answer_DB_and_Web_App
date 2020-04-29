@@ -3,6 +3,7 @@ package utsw.bicf.answer.db.api.utils;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.aop.AOPAspect;
 import utsw.bicf.answer.model.extmapping.civic.CivicResponse;
+import utsw.bicf.answer.model.extmapping.civic.CivicVariant;
 import utsw.bicf.answer.model.extmapping.lookup.LookupSummary;
 import utsw.bicf.answer.security.CivicProperties;
 import utsw.bicf.answer.security.OtherProperties;
@@ -64,10 +66,7 @@ public class CivicRequestUtils {
 		}
 	}
 
-	public LookupSummary getGeneSummary(String geneTerm)
-			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
-			UnsupportedOperationException, SAXException, ParserConfigurationException {
-		LookupSummary summary = new LookupSummary();
+	private CivicResponse getGene(String geneTerm) throws URISyntaxException, ClientProtocolException, IOException {
 		StringBuilder sbUrl = new StringBuilder(civicProps.getQueryUrl());
 		sbUrl.append(geneTerm).append("?identifier_type=entrez_symbol");
 		URI uri = new URI(sbUrl.toString());
@@ -79,13 +78,63 @@ public class CivicRequestUtils {
 		if (statusCode == HttpStatus.SC_OK) {
 			ObjectMapper mapper = new ObjectMapper();
 			CivicResponse civicJson = mapper.readValue(response.getEntity().getContent(), CivicResponse.class);
-			summary.setSummary(civicJson.getDescription());
-			summary.setMoreInfoUrl(civicProps.getCivicGeneUrl() + civicJson.getId());
+			return civicJson;
 		}
 		else {
 			logger.info("Something went wrong UniProtRequest:114 HTTP_STATUS: " + statusCode);
 		}
+		return null;
+	}
+	
+	public LookupSummary getGeneSummary(String geneTerm)
+			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
+			UnsupportedOperationException, SAXException, ParserConfigurationException {
+		LookupSummary summary = new LookupSummary();
+		CivicResponse civicJson = this.getGene(geneTerm);
+		if (civicJson != null) {
+			summary.setSummary(civicJson.getDescription());
+			summary.setMoreInfoUrl(civicProps.getCivicGeneUrl() + civicJson.getId());
+		}
 		return summary;
+	}
+	
+	public LookupSummary getVariantSummary(String geneTerm, String oncokbVariantName)
+			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
+			UnsupportedOperationException, SAXException, ParserConfigurationException {
+		LookupSummary summary = new LookupSummary();
+		CivicResponse civicJson = this.getGene(geneTerm);
+		if (civicJson != null) {
+			List<CivicVariant> variants = civicJson.getVariants();
+			if (variants != null) {
+				for (CivicVariant v : variants) {
+					if (v.getName().equals(oncokbVariantName)) {
+						StringBuilder sbUrl = new StringBuilder(civicProps.getVariantServlet());
+						sbUrl.append(v.getId());
+						URI uri = new URI(sbUrl.toString());
+						requestGet = new HttpGet(uri);
+						HttpClientContext context = HttpClientContext.create();
+						HttpResponse response = client.execute(requestGet, context);
+
+						int statusCode = response.getStatusLine().getStatusCode();
+						if (statusCode == HttpStatus.SC_OK) {
+							ObjectMapper mapper = new ObjectMapper();
+							civicJson = mapper.readValue(response.getEntity().getContent(), CivicResponse.class);
+							summary.setSummary(civicJson.getDescription());
+							summary.setMoreInfoUrl(civicProps.getCivicGeneUrl() + v.getId() 
+							+ "/summary/variants/" + civicJson.getId()
+							+ "/summary#variant");
+						}
+						else {
+							logger.info("Something went wrong UniProtRequest:114 HTTP_STATUS: " + statusCode);
+						}
+						return summary;
+					}
+				}
+			}
+		}
+		return summary;
+		
+		
 	}
 
 }

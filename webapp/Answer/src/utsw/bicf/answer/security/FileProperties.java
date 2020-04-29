@@ -40,6 +40,10 @@ public class FileProperties {
 	File pdfFinalizedFilesDir;
 	String pdfFinalizedFilesBackupPath;
 	File pdfFinalizedFilesBackupDir;
+	String imageLinksPath;
+	File imageLinksDir;
+	File imageFilesDir;
+	String imageFilesPath;
 	
 	public String getMdaFilesPath() {
 		return mdaFilesPath;
@@ -334,6 +338,43 @@ public class FileProperties {
 	}
 	public void setIgvTemplateFilesDir(File igvTemplateFilesDir) {
 		this.igvTemplateFilesDir = igvTemplateFilesDir;
+	}
+	
+	public File getImageLinksDir() {
+		if (imageLinksPath == null) {
+			return null;
+		}
+		if (imageLinksDir == null) {
+			imageLinksDir = new File(imageLinksPath);
+		}
+		return imageLinksDir;
+	}
+	public void setImageLinksDir(File imageLinksDir) {
+		this.imageLinksDir = imageLinksDir;
+	}
+	public String getImageFilesPath() {
+		return imageFilesPath;
+	}
+	public void setImageFilesPath(String imageFilesPath) {
+		this.imageFilesPath = imageFilesPath;
+	}
+	public String getImageLinksPath() {
+		return imageLinksPath;
+	}
+	public void setImageLinksPath(String imageLinksPath) {
+		this.imageLinksPath = imageLinksPath;
+	}
+	public File getImageFilesDir() {
+		if (imageFilesPath == null) {
+			return null;
+		}
+		if (imageFilesDir == null) {
+			imageFilesDir = new File(imageFilesPath);
+		}
+		return imageFilesDir;
+	}
+	public void setImageFilesDir(File imageFilesDir) {
+		this.imageFilesDir = imageFilesDir;
 	}
 	
 }

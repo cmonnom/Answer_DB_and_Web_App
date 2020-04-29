@@ -1,5 +1,6 @@
 package utsw.bicf.answer.model.extmapping;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ public class OrderCase {
 	public static final String TYPE_RESEARCH = "Research";
 	public static final String TYPE_CLINICAL_RESEARCH = "ClinicalResearch";
 	public static final List<String> TMB_CLASS_VALUES = Arrays.asList(new String[]{"High", "Medium", "Low"});
+	public static final List<String> MSI_CLASS_VALUES = Arrays.asList(new String[]{"MSI", "MSS"});
 	
 	private static final Map<Integer, String> stepTooltipBefore = new HashMap<Integer, String>();
 	private static final Map<Integer, String> stepTooltipDuring = new HashMap<Integer, String>();
@@ -71,6 +73,7 @@ public class OrderCase {
 	String tumorVcf;
 	List<CNV> cnvs;
 	List<Translocation> translocations;
+	List<Virus> viruses = new ArrayList<Virus>();
 	String oncotreeDiagnosis;
 	Integer totalCases;
 	List<CaseHistory> caseHistory;
@@ -92,6 +95,7 @@ public class OrderCase {
 	String tumorMutationBurdenClass;
 	Float msi;
 	String msiClass;
+	String mutationalSignatureFileName;
 	
 	public OrderCase() {
 		
@@ -604,6 +608,26 @@ public class OrderCase {
 
 	public void setMsiClass(String msiClass) {
 		this.msiClass = msiClass;
+	}
+
+
+	public List<Virus> getViruses() {
+		return viruses;
+	}
+
+
+	public void setViruses(List<Virus> viruses) {
+		this.viruses = viruses;
+	}
+
+
+	public String getMutationalSignatureFileName() {
+		return mutationalSignatureFileName;
+	}
+
+
+	public void setMutationalSignatureFileName(String mutationalSignatureFileName) {
+		this.mutationalSignatureFileName = mutationalSignatureFileName;
 	}
 
 

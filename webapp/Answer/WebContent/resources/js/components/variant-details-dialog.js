@@ -53,6 +53,9 @@ Vue.component('variant-details-dialog', {
         scopesTranslocation: {default: () => [
             'Case', 'Tumor'
         ], type: Array},
+        scopesVirus: {default: () => [
+            'Case', 'Gene', 'Variant', 'Tumor'
+        ], type: Array},
         aberrationTypes: {default: () => [
             'amplification',
             'gain',
@@ -63,6 +66,7 @@ Vue.component('variant-details-dialog', {
         unfilteredSNPsDict: {default: () => {}, type: Object},
         unfilteredCNVsDict: {default: () => {}, type: Object},
         unfilteredFTLsDict: {default: () => {}, type: Object},
+        unfilteredVIRsDict: {default: () => {}, type: Object},
         oncotree: {default: () => [], type: Array},
     },
     template: `<div>
@@ -137,6 +141,28 @@ Vue.component('variant-details-dialog', {
                         :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
                         @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
                         cnv-plot-id="cnvPlotEditUnusedFTL"
+                        :variant-type="currentVariantType"
+                        :loading-variant="loadingVariant">
+
+                    </variant-details>
+            </v-flex>
+            </v-slide-y-transition>
+        </edit-annotations>
+
+        <edit-annotations type="virus" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
+        :color="colors.editAnnotation" ref="virusAnnotationDialog" :title="currentVariant.virusName"
+        :caseIcon="caseTypeIcon" :caseType="caseType" :outsideACase="false"
+        :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories="annotationCategories"
+        :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
+        :annotation-phases="annotationPhases"
+        :userAnnotations="userAnnotations"
+        :current-variant="currentVariant" @toggle-panel="handlePanelVisibility()">
+        <v-slide-y-transition slot="variantDetails">
+            <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
+                    <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :width-class="getWidthClassForVariantDetails()" :type="currentVariantType"
+                        :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)" @show-panel="handlePanelVisibility(true)"
+                        @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
+                        cnv-plot-id="cnvPlotEditUnusedVIR"
                         :variant-type="currentVariantType"
                         :loading-variant="loadingVariant">
 
@@ -352,6 +378,7 @@ Vue.component('variant-details-dialog', {
               <span v-if="isSNP()">SNP</span>
               <span v-else-if="isCNV()">CNV</span>
               <span v-else-if="isTranslocation()">FTL</span>
+              <span v-else-if="isVirus()">VIR</span>
               Variant:
                   <v-tooltip bottom v-if="variantNameIsTooLong() && isSNP()">
                   <span slot="activator" v-text="createVariantName()"></span>
@@ -360,6 +387,7 @@ Vue.component('variant-details-dialog', {
                   <span v-if="!variantNameIsTooLong() && isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
                   <span v-else-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
                   <span v-else-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
+                  <span v-else-if="isVirus()">{{ currentVariant.virusName }}</span>
                   <span> -- {{ caseName }} -- </span> 
                 <v-tooltip bottom>
                   <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
@@ -638,7 +666,7 @@ Vue.component('variant-details-dialog', {
                                                                         <v-text-field clearable append-icon="search" label="Search any text" v-model="searchAnnotations" @input="matchAnnotationFilter"></v-text-field>
                                                                     </v-flex>
                                                                     <v-flex xs6 sm6 md3 lg3 xl2>
-                                                                        <v-select v-if="isSNP() || isTranslocation()" clearable :value="searchAnnotationCategory" :items="annotationCategories" v-model="searchAnnotationCategory"
+                                                                        <v-select v-if="isSNP() || isTranslocation() || isVirus()" clearable :value="searchAnnotationCategory" :items="annotationCategories" v-model="searchAnnotationCategory"
                                                                             label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
                                                                         <v-select v-else-if="isCNV()" clearable :value="searchAnnotationCategory" :items="annotationCategoriesCNV" v-model="searchAnnotationCategory"
                                                                             label="Search by Category" multiple @input="matchAnnotationFilter"></v-select>
@@ -666,6 +694,8 @@ Vue.component('variant-details-dialog', {
                                                                             multiple @input="matchAnnotationFilter"></v-select>
                                                                         <v-select v-else-if="isTranslocation()" clearable :value="searchAnnotationScope" :items="scopesTranslocation" v-model="searchAnnotationScope"
                                                                             label="Search by Scope" multiple @input="matchAnnotationFilter"></v-select>
+                                                                        <v-select v-else-if="isVirus()" clearable :value="searchAnnotationScope" :items="scopesVirus" v-model="searchAnnotationScope"
+                                                                            label="Search by Scope" multiple @input="matchAnnotationFilter"></v-select>    
                                                                     </v-flex>
     
                                                                 </v-layout>
@@ -693,6 +723,9 @@ Vue.component('variant-details-dialog', {
                     <v-flex v-show="isLookupVisible()" class="xs4">
                         <!-- lookup tools-->
                     <lookup-panel ref="lookupTool" :standalone="false"
+                    :original-variant="currentVariant.notation"
+                    :oncotree-items="oncotree"
+                    @reload-values="reloadLookupValues"
                     ></lookup-panel>
                     </v-flex>
                 </v-layout>
@@ -821,6 +854,9 @@ Vue.component('variant-details-dialog', {
         isTranslocation() {
             return this.currentVariantType == "translocation";
         },
+        isVirus() {
+            return this.currentVariantType == "virus";
+        },
         isRelatedVariantsVisible() {
             return this.annotationVariantRelatedVisible && this.isSNP() && this.currentVariantHasRelatedVariants;
         },
@@ -922,6 +958,9 @@ Vue.component('variant-details-dialog', {
             if (this.isTranslocation()) {
                 return 'xs6';
             }
+            if (this.isVirus()) {
+                return 'xs12';
+            }
         },
         revertVariant(keepSaveState) {
             if (this.isSNP()) {
@@ -932,6 +971,9 @@ Vue.component('variant-details-dialog', {
             }
             else if (this.isTranslocation()) {
                 this.getTranslocationDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+            }
+            else if (this.isVirus()) {
+                this.getVirusDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
             }
             if (!keepSaveState) {
                 this.$refs.variantDetailsPanel.variantDetailsUnSaved = false;  //update badge on save button
@@ -1501,6 +1543,78 @@ Vue.component('variant-details-dialog', {
                 });
             });
         },
+        getVirusDetails(variantId, isFirstVariant, isLastVariant) {
+            return new Promise((resolve, reject) => {
+            this.currentVariantType = "virus";
+            this.currentVariantFlags = [];
+            this.loadingVariantDetails = true;
+            this.loadingVariant = true;
+
+            this.isFirstVariant = isFirstVariant;
+            this.isLastVariant = isLastVariant;
+
+
+            axios.get(
+                webAppRoot + "/getVirusDetails",
+                {
+                    params: {
+                        variantId: variantId,
+                        caseId: this.$route.params.id
+                    }
+                }).then(response => {
+                    if (response.data.isAllowed) {
+                        this.userId = response.data.userId;
+                        this.variantDetailsUnSaved = false;
+                        this.currentVariant = response.data.variantDetails;
+                        this.currentItem = response.data.item;
+                        this.addCustomWarningFlagsForItem(this.currentItem);
+                        this.patientDetailsOncoTreeDiagnosis = { text: response.data.patientDetailsOncoTreeDiagnosis.value, label: response.data.patientDetailsOncoTreeDiagnosis.text };
+                        this.variantDataTables = [];
+                        var infoTable = {
+                            name: "infoTable",
+                            items: [
+                            
+                           
+                            ]
+                        };
+                        this.variantDataTables.push(infoTable);
+
+                        var infoTable2 = {
+                            name: "infoTable2",
+                            items: [
+                           ]
+                        };
+                        this.variantDataTables.push(infoTable2);
+
+                        var infoTable3 = {
+                            name: "infoTable3",
+                            items: [
+                               ]
+                        };
+                        this.variantDataTables.push(infoTable3);
+
+                        this.linkTable = [];
+
+                        this.userAnnotations = this.currentVariant.referenceVirus.utswAnnotations.filter(a => a.userId == this.userId);
+                        this.utswAnnotations = this.currentVariant.referenceVirus.utswAnnotations;
+                        this.mdaAnnotations = "";
+                        this.reloadPreviousSelectedState();
+                        this.formatVirusAnnotations();
+                        this.loadingVariant = false;
+                        resolve({success: true});
+
+                    } else {
+                        this.loadingVariant = false;
+                        reject(response)
+                        this.handleDialogs(response.data, this.getVirusDetails.bind(null,
+                            variantId));
+                    }
+                }).catch(error => {
+                    this.loadingVariant = false;
+                    this.handleAxiosError(error);
+                });
+            });
+        },
         createOncoKBGeniePortalFusion() {
             return oncoKBGeniePortalUrl + "Fusion/?gene1=" + this.currentVariant.leftGene
             + "&gene2=" + this.currentVariant.rightGene + "&Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
@@ -1542,6 +1656,12 @@ Vue.component('variant-details-dialog', {
         formatTranslocationAnnotations() {
             this.highlightLatestAnnotation = true;
             this.utswAnnotationsFormatted = this.formatLocalTranslocationAnnotations(this.utswAnnotations, true);
+            this.matchAnnotationFilter();
+            this.stopHighlightAnimation();
+        },
+        formatVirusAnnotations() {
+            this.highlightLatestAnnotation = true;
+            this.utswAnnotationsFormatted = this.formatLocalVirusAnnotations(this.utswAnnotations, true);
             this.matchAnnotationFilter();
             this.stopHighlightAnimation();
         },
@@ -1737,6 +1857,9 @@ Vue.component('variant-details-dialog', {
             else if (this.isTranslocation() && this.$refs.translocationAnnotationDialog) {
                 this.$refs.translocationAnnotationDialog.startUserAnnotations();
             }
+            else if (this.isVirus() && this.$refs.virusAnnotationDialog) {
+                this.$refs.virusAnnotationDialog.startUserAnnotations();
+            }
         },
         commitAnnotations() {
             this.handleAnnotationSelectionChanged();
@@ -1774,6 +1897,9 @@ Vue.component('variant-details-dialog', {
                         }
                         else if (this.isTranslocation()) {
                             this.getTranslocationDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+                        }
+                        else if (this.isVirus()) {
+                            this.getVirusDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
                         }
                         this.$nextTick(() => {
                             this.cancelAnnotations();
@@ -1828,6 +1954,7 @@ Vue.component('variant-details-dialog', {
                         this.$refs.annotationDialog.saving = false; 
                         this.$refs.cnvAnnotationDialog.saving = false;
                         this.$refs.translocationAnnotationDialog.saving = false;
+                        this.$refs.virusAnnotationDialog.saving = false;
                     }
                 })
                 .catch(error => {
@@ -1845,6 +1972,9 @@ Vue.component('variant-details-dialog', {
             else if (this.isTranslocation()) {
                 this.$refs.translocationAnnotationDialog.cancelAnnotations();
             }
+            else if (this.isVirus()) {
+                this.$refs.virusAnnotationDialog.cancelAnnotations();
+            }
         },
         setSelected() {
             if (this.isSNP() && this.urlQuery.variantId in this.unfilteredSNPsDict) {
@@ -1855,6 +1985,9 @@ Vue.component('variant-details-dialog', {
             }
             if (this.isTranslocation() && this.urlQuery.variantId in this.unfilteredFTLsDict) {
                 this.currentlySelected = this.unfilteredFTLsDict[this.urlQuery.variantId].selected;
+            }
+            if (this.isVirus() && this.urlQuery.variantId in this.unfilteredVIRsDict) {
+                this.currentlySelected = this.unfilteredVIRsDict[this.urlQuery.variantId].selected;
             }
         },
         handleAnnotationSelectionChanged() {
@@ -2278,6 +2411,62 @@ Vue.component('variant-details-dialog', {
             }
             return formatted;
         },
+        formatLocalVirusAnnotations(annotations, showUser) {
+            var formatted = [];
+            for (var i = 0; i < annotations.length; i++) {
+                var annotation = {
+                    _id: "",
+                    fullName: "",
+                    text: "",
+                    scopes: [],
+                    scopeLevels: [],
+                    scopeTooltip: "",
+                    tumorSpecific: "",
+                    category: "",
+                    createdDate: "",
+                    createdSince: "",
+                    modifiedDate: "",
+                    modifiedSince: "",
+                    pmids: [],
+                    // nctIds: [],
+                    tier: "",
+                    classification: "",
+                    visible: true,
+                    isSelected: false,
+                    trial: null,
+                    drugs: "",
+                    warningLevel: 0,
+                    drugResistant: false
+                };
+                annotation._id = annotations[i]._id;
+                if (showUser) {
+                    annotation.fullName = annotations[i].fullName;
+                }
+                annotation.text = annotations[i].text.replace(/\n/g, "<br/>");
+                annotation.scopes = [annotations[i].isCaseSpecific, annotations[i].isGeneSpecific, annotations[i].isVariantSpecific, annotations[i].isTumorSpecific];
+                annotation.scopeLevels = ["Case " + (annotations[i].isCaseSpecific ? annotations[i].caseId : ''),
+                "Gene " + (annotations[i].isGeneSpecific ? annotations[i].geneId : ''),
+                "Variant " + (annotations[i].isVariantSpecific ? this.currentVariant.notation : ''),
+                    "Diagnosis "+ (annotations[i].isTumorSpecific ? annotations[i].oncotreeDiagnosis : '')];
+                annotation.category = annotations[i].category;
+                annotation.createdDate = annotations[i].createdDate;
+                annotation.createdSince = annotations[i].createdSince;
+                annotation.modifiedDate = annotations[i].modifiedDate;
+                annotation.modifiedSince = annotations[i].modifiedSince;
+                annotation.pmids = annotations[i].pmids;
+                // annotation.nctIds = annotations[i].nctIds;
+                annotation.scopeTooltip = this.$refs.annotationDialog ? this.$refs.annotationDialog.createLevelInformation(annotations[i]) : "";
+                annotation.tier = annotations[i].tier;
+                annotation.classification = annotations[i].classification;
+                annotation.isSelected = annotations[i].isSelected;
+                annotation.trial = annotations[i].trial;
+                annotation.drugs = annotations[i].drugs;
+                annotation.warningLevel = annotations[i].warningLevel;
+                annotation.drugResistant = annotations[i].drugResistant;
+                formatted.push(annotation);
+            }
+            return formatted;
+        },
         formatSNPCallers(callers) {
             var labels = ['Name:', 'Alt:', 'Tumor Total Depth:', 'Tumor Alt Percent:', 'Normal Total Depth:', 'Normal Alt Percent:'];
             var callerNames = callers.map(c => c.callerName);
@@ -2334,6 +2523,13 @@ Vue.component('variant-details-dialog', {
                 newAnnotation.cnvGenes = annotation.cnvGenes ? annotation.category.split(" ") : [];
             }
             else if (newAnnotation.type == "translocation") {
+                newAnnotation.isGeneSpecific = true;
+                newAnnotation.isVariantSpecific = newAnnotation.scopes[1];
+                newAnnotation.isTumorSpecific = newAnnotation.scopes[2];
+                newAnnotation.isLeftSpecific = newAnnotation.scopes[3];
+                newAnnotation.isRightSpecific = newAnnotation.scopes[4];
+            }
+            else if (newAnnotation.type == "virus") {
                 newAnnotation.isGeneSpecific = true;
                 newAnnotation.isVariantSpecific = newAnnotation.scopes[1];
                 newAnnotation.isTumorSpecific = newAnnotation.scopes[2];
@@ -2455,6 +2651,9 @@ Vue.component('variant-details-dialog', {
             else if (this.isTranslocation()) {
                 idType = "FTL";
             }
+            else if (this.isVirus()) {
+                idType = "VIR";
+            }
             this.currentlySelected = true;
             this.$emit("selection-changed", this.urlQuery.variantId, idType, this.currentlySelected);
         },
@@ -2465,6 +2664,9 @@ Vue.component('variant-details-dialog', {
             }
             else if (this.isTranslocation()) {
                 idType = "FTL";
+            }
+            else if (this.isVirus()) {
+                idType = "VIR";
             }
             this.currentlySelected = false;
             this.$emit("selection-changed", this.urlQuery.variantId, idType, this.currentlySelected);
@@ -2480,10 +2682,27 @@ Vue.component('variant-details-dialog', {
             this.$emit("refresh-variant-tables");
         },
         toggleLookupTool() {
+           this.reloadLookupValues();
             this.$refs.lookupTool.panelVisible = !this.$refs.lookupTool.panelVisible;
         },
         isLookupVisible() {
             return this.$refs.lookupTool && this.$refs.lookupTool.panelVisible;
+        },
+        reloadLookupValues() {
+            this.$refs.lookupTool.currentGene = this.currentVariant.geneName;
+            this.$refs.lookupTool.currentVariant = this.currentVariant.notation;
+            this.$refs.lookupTool.currentlyActive = "Variant";
+            this.$refs.lookupTool.oncokbVariantName = this.currentVariant.oncokbVariantName;
+            
+            var oncotreeItems = this.oncotree.filter(o => o.text == this.patientDetailsOncoTreeDiagnosis.text);
+            var oncotree = null;
+            if (oncotreeItems && oncotreeItems[0]) {
+                oncotree = oncotreeItems[0];
+            }
+            this.$refs.lookupTool.currentOncotreeCode = oncotree;
+            if (this.$refs.lookupTool.isFormValid()) {
+                 this.$refs.lookupTool.submitForm();
+             }
         }
         
     },

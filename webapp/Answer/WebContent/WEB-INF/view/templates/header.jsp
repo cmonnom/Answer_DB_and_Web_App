@@ -40,7 +40,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 <link rel="stylesheet"  href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700">
 <link rel="stylesheet"  href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <link rel="stylesheet"  href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdn.materialdesignicons.com/3.6.95/css/materialdesignicons.min.css">
+<link rel="stylesheet" href="https://cdn.materialdesignicons.com/4.5.95/css/materialdesignicons.min.css">
 <!-- <link rel="stylesheet" href="https://unpkg.com/vuetify@1.0.19/dist/vuetify.min.css" > -->
 <link href="https://unpkg.com/vuetify@1.5.17/dist/vuetify.min.css" rel="stylesheet">
 

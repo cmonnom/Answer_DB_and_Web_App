@@ -1,7 +1,5 @@
 package utsw.bicf.answer.model.hybrid;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -68,20 +66,15 @@ public class OrderCaseAll {
 			buttons.add(new Button("mdi-account-arrow-left", "assignToUser", "Assign To", "info"));
 		}
 		if (currentUser.getIndividualPermission().getCanView()) {
-			buttons.add(new Button("visibility", "open-read-only", "Open in View Only Mode", "info"));
+			buttons.add(new Button("visibility", "./openCaseReadOnly/" + caseId, "Open in View Only Mode", "info", true));
 			if (CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_REPORTING)
 					|| CaseHistory.lastStepMatches(orderCase, CaseHistory.STEP_FINALIZED)) {
-				boolean isAssigned = false;
-				try {
-					isAssigned = ControllerUtil.isUserAssignedToCase(orderCase, currentUser);
-				} catch (IOException | URISyntaxException e) {
-					e.printStackTrace();
-				}
+				boolean isAssigned = ControllerUtil.isUserAssignedToCase(orderCase, currentUser);
 				if (currentUser.getIndividualPermission().getCanReview() && isAssigned) {
-					buttons.add(new Button("assignment", "edit-report", "View/Edit Report", "info"));
+					buttons.add(new Button("assignment", "./openReport/" + caseId, "View/Edit Report", "info", true));
 				}
 				else {
-					buttons.add(new Button("assignment", "open-report-read-only", "Open Report in View Only Mode", "info"));
+					buttons.add(new Button("assignment", "./openReportReadOnly/" + caseId , "Open Report in View Only Mode", "info", true));
 				}
 			}
 		}

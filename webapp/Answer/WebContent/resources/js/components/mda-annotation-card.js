@@ -74,6 +74,9 @@ Vue.component('mda-annotation-card', {
         isTranslocation() {
             return this.variantType == "translocation";
         },
+        isVirus() {
+            return this.variantType == "virus";
+        },
         copyMDAAnnotation() {
             this.$emit("copy-mda-annotation", this.annotation, this.variantType);
         }

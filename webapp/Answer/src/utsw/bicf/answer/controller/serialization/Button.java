@@ -11,6 +11,8 @@ public class Button {
 	String action; //name of the javascript function to call when button is clicked
 	String tooltip;
 	String color; //name of the color (could be a Vuetify color like warning or info)
+	boolean isLink;
+	String href;
 	
 	public Button() {
 		
@@ -22,6 +24,14 @@ public class Button {
 		this.action = action;
 		this.tooltip = tooltip;
 		this.color = color;
+	}
+	public Button(String icon, String href, String tooltip, String color, boolean isLink) {
+		super();
+		this.icon = icon;
+		this.href = href;
+		this.tooltip = tooltip;
+		this.color = color;
+		this.isLink = isLink;
 	}
 	public String getIcon() {
 		return icon;
@@ -46,6 +56,22 @@ public class Button {
 	}
 	public void setColor(String color) {
 		this.color = color;
+	}
+
+	public boolean isLink() {
+		return isLink;
+	}
+
+	public void setLink(boolean isLink) {
+		this.isLink = isLink;
+	}
+
+	public String getHref() {
+		return href;
+	}
+
+	public void setHref(String href) {
+		this.href = href;
 	}
 
 }

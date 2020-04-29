@@ -6,10 +6,10 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FPKMData {
+public class FPKMData extends WhiskerData {
 	
 	String oncotreeCode;
-	List<FPKMPerCaseData> fpkms = new ArrayList<FPKMPerCaseData>();
+	List<WhiskerPerCaseData> fpkms = new ArrayList<WhiskerPerCaseData>();
 	
 	public FPKMData() {
 		super();
@@ -23,13 +23,24 @@ public class FPKMData {
 		this.oncotreeCode = oncotreeCode;
 	}
 
-	public List<FPKMPerCaseData> getFpkms() {
+	public List<WhiskerPerCaseData> getFpkms() {
 		return fpkms;
 	}
 
-	public void setFpkms(List<FPKMPerCaseData> fpkms) {
+	public void setFpkms(List<WhiskerPerCaseData> fpkms) {
 		this.fpkms = fpkms;
 	}
+
+	@Override
+	public String getLabel() {
+		return oncotreeCode;
+	}
+
+	@Override
+	public List<WhiskerPerCaseData> getPerCaseList() {
+		return fpkms;
+	}
+
 
 
 	
