@@ -157,6 +157,7 @@
 		<property name="signature" value="${email.signature}" />
 		<property name="rootUrl" value="${email.root.url}" />
 		<property name="doSend" value="${email.do.send}" />
+		<property name="remoteDesktopName" value="${email.remote.desktop.name}" />
 	</bean>
 	
 		<bean id="otherProps" class="utsw.bicf.answer.security.OtherProperties">
@@ -213,15 +214,23 @@
 	<bean id="jaxckbProps" class="utsw.bicf.answer.security.JaxCKBProperties">
 		<property name="geneServlet" value="${jaxckb.gene.servlet}" />
 		<property name="geneUrl" value="${jaxckb.gene.url}" />
+		<property name="genePaidUrl" value="${jaxckb.gene.paid.url}" />
 		<property name="variantServlet" value="${jaxckb.variant.servlet}" />
 		<property name="variantUrl" value="${jaxckb.variant.url}" />
+		<property name="variantPaidUrl" value="${jaxckb.variant.paid.url}" />
 	</bean>	
 	
 	<bean id="reactomeProps" class="utsw.bicf.answer.security.ReactomeProperties">
 		<property name="searchUrl" value="${reactome.search.url}" />
 		<property name="eventUrl" value="${reactome.event.url}" />
 		<property name="browserUrl" value="${reactome.pathway.browser.url}" />
+		<property name="contentDetailUrl" value="${reactome.content.detail.url}" />
 	</bean>	
+	
+		<bean id="interProProps" class="utsw.bicf.answer.security.InterProProperties">
+		<property name="apiUrl" value="${interpro.pfam.api}" />
+		<property name="webpageUrl" value="${interpro.pfam.url}" />
+	</bean>
 	
 	<!-- Setup Hibernate transaction manager -->
 	<bean id="transactionManager"

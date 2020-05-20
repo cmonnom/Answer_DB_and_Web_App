@@ -2,11 +2,17 @@ package utsw.bicf.answer.controller;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
@@ -17,6 +23,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.comparator.Comparators;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -25,11 +32,15 @@ import org.xml.sax.SAXException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
+import utsw.bicf.answer.controller.serialization.plotly.BarPlotData;
+import utsw.bicf.answer.controller.serialization.plotly.LollipopPlotData;
+import utsw.bicf.answer.controller.serialization.plotly.Trace;
 import utsw.bicf.answer.controller.serialization.vuetify.TreeViewSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.CivicRequestUtils;
 import utsw.bicf.answer.db.api.utils.EnsemblRequestUtils;
+import utsw.bicf.answer.db.api.utils.InterProRequestUtils;
 import utsw.bicf.answer.db.api.utils.JaxCKBRequestUtils;
 import utsw.bicf.answer.db.api.utils.NCBIRequestUtils;
 import utsw.bicf.answer.db.api.utils.OncoKBRequestUtils;
@@ -37,15 +48,26 @@ import utsw.bicf.answer.db.api.utils.OncotreeRequestUtils;
 import utsw.bicf.answer.db.api.utils.ReactomeRequestUtils;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.db.api.utils.UniProtRequestUtils;
+import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.ensembl.EnsemblResponse;
+import utsw.bicf.answer.model.extmapping.interpro.EntryProteinLocation;
+import utsw.bicf.answer.model.extmapping.interpro.Fragment;
+import utsw.bicf.answer.model.extmapping.interpro.InterProResponse;
+import utsw.bicf.answer.model.extmapping.interpro.Protein;
+import utsw.bicf.answer.model.extmapping.interpro.Result;
 import utsw.bicf.answer.model.extmapping.lookup.LookupGeneSummaries;
 import utsw.bicf.answer.model.extmapping.lookup.LookupSummary;
 import utsw.bicf.answer.model.extmapping.oncotree.OncotreeTumorType;
+import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
+import utsw.bicf.answer.model.hybrid.GenericBarPlotDataSummary;
+import utsw.bicf.answer.model.hybrid.GenericLollipopPlotData;
+import utsw.bicf.answer.model.hybrid.StringSortableByInteger;
 import utsw.bicf.answer.security.CivicProperties;
 import utsw.bicf.answer.security.EnsemblProperties;
 import utsw.bicf.answer.security.FileProperties;
+import utsw.bicf.answer.security.InterProProperties;
 import utsw.bicf.answer.security.JaxCKBProperties;
 import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.OncoKBProperties;
@@ -60,11 +82,14 @@ import utsw.bicf.answer.security.UniProtProperties;
 public class LookupController {
 	
 	static {
-		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".lookupTool", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".discovar", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getGeneSummary", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getOncotreeTumorType", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getReactomeLocations", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getVariantSummary", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getAlterationByCancer", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getCancerbyPercent", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getGenieGeneLollipop", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 
@@ -93,14 +118,16 @@ public class LookupController {
 	JaxCKBProperties jaxProps;
 	@Autowired
 	ReactomeProperties reactomeProps;
+	@Autowired
+	InterProProperties interProProps;
 	
-	@RequestMapping("/lookupTool")
-	public String lookupTool(Model model, HttpSession session,
+	@RequestMapping("/discovar")
+	public String discovar(Model model, HttpSession session,
 			@RequestParam(defaultValue="", required=false) String gene,
 			@RequestParam(defaultValue="", required=false) String variant,
 			@RequestParam(defaultValue="", required=false) String oncotree,
 			@RequestParam(defaultValue="", required=false) String button) throws IOException {
-		String url = "lookupTool?gene=" + gene
+		String url = "discovar?gene=" + gene
 				+ "%26variant=" + variant + "%26oncotree=" + oncotree
 				 + "%26button=" + button;
 		model.addAttribute("urlRedirect", url);
@@ -374,5 +401,200 @@ public class LookupController {
 		}
 	}
 	
+	@RequestMapping("/getAlterationByCancer")
+	@ResponseBody
+	public String getAlterationByCancer(Model model, HttpSession session, @RequestParam String hugoSymbol, 
+			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			List<GenericBarPlotData> data = modelDAO.getGenieVariantCountForGene(hugoSymbol);
+			if (data != null && !data.isEmpty()) {
+				BarPlotData chart = new BarPlotData();
+				chart.setPlotId(plotId);
+				Trace trace = new Trace();
+				for (int i = data.size() -1; i >=0; i--) {
+					GenericBarPlotData d = data.get(i);
+					trace.addX(d.getX());
+					trace.addY(d.getY());
+					trace.addLabel("<b>Cancer:</b> " + d.getY() + "<br><b>Variants:</b> " + d.getX());
+				}
+				chart.setTrace(trace);
+				return chart.createObjectJSON();
+			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 	
+	@RequestMapping("/getCancerbyPercent")
+	@ResponseBody
+	public String getCancerbyPercent(Model model, HttpSession session, @RequestParam String hugoSymbol, 
+			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			List<GenieSummary> dataAll = modelDAO.getGenieSummary(GenieSummary.CATEGORY_CANCER_COUNT);
+			List<GenericBarPlotData> dataGene = modelDAO.getGeniePatientCountForGene(hugoSymbol, dataAll.stream().map(d -> d.getLabel()).collect(Collectors.toList()));
+			Map<String, GenericBarPlotData> geneCountPerCancer = dataGene.stream().collect(Collectors.toMap(GenericBarPlotData::getY, Function.identity()));
+			if (dataAll != null && dataGene != null && !dataGene.isEmpty()) {
+				BarPlotData chart = new BarPlotData();
+				chart.setPlotId(plotId);
+				Trace trace = new Trace();
+				//need to sort by pct. Need a list too because there could be duplicate pct (key)
+				List<GenericBarPlotDataSummary> toSortData = new ArrayList<GenericBarPlotDataSummary>();
+				for (int i = dataAll.size() -1; i >=0; i--) {
+					GenieSummary dAll = dataAll.get(i);
+					GenericBarPlotData dGene = geneCountPerCancer.get(dAll.getLabel());
+					float pct = dGene.getX().floatValue() / dAll.getTally().floatValue() * 100;
+					toSortData.add(new GenericBarPlotDataSummary(dAll, dGene, pct));
+				}
+				toSortData = toSortData.stream().sorted(new Comparator<GenericBarPlotDataSummary>() {
+					@Override
+					public int compare(GenericBarPlotDataSummary o1, GenericBarPlotDataSummary o2) {
+						return o1.getKey().compareTo(o2.getKey());
+					}
+				}).collect(Collectors.toList());
+				for (GenericBarPlotDataSummary s : toSortData) {
+					trace.addX(s.getKey());
+					trace.addY(s.getdAll().getLabel());
+					trace.addLabel("<b>Cancer:</b> " + s.getdAll().getLabel() 
+					+ "<br><b>Altered Cases:</b> " + s.getdGene().getX()
+					+ "<br><b>Total Cases:</b> " + s.getdAll().getTally()
+					+ "<br><b>Percent:</b> " + String.format("%.2f", s.getKey()));
+				}
+				chart.setTrace(trace);
+				return chart.createObjectJSON();
+			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@RequestMapping("/getGenieGeneLollipop")
+	@ResponseBody
+	public String getGenieGeneLollipop(Model model, HttpSession session, @RequestParam String hugoSymbol, 
+			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(true);
+		response.setSuccess(false);
+
+		EnsemblRequestUtils utils = new EnsemblRequestUtils(ensemblProps, otherProps);
+		EnsemblResponse ensembl = utils.fetchEnsembl(hugoSymbol);
+		ensembl.init();
+		if (ensembl != null && ensembl.getUniProtId() != null) {
+			ExecutorService executor = Executors.newFixedThreadPool(2);
+			LollipopPlotData chart = new LollipopPlotData();
+
+			Runnable pfamWorker = new Runnable() {
+				@Override
+				public void run() {
+					InterProRequestUtils interProUtils = new InterProRequestUtils(interProProps, otherProps);
+					try {
+						InterProResponse response = interProUtils.getPfam(ensembl.getUniProtId());
+						if (response != null) {
+							List<Trace> pfamTraces = new ArrayList<Trace>();
+							List<String> annotations = new ArrayList<String>();
+							Trace bottomTrace = new Trace();
+							List<Fragment> fragmentsToSort = new ArrayList<Fragment>();
+							for (Result result : response.getResults()) {
+								String name = result.getMetadata().getName();
+								String shortName = result.getExtra_fields().getShortName();
+								//need to sort fragment by start value
+								//so that they can be displayed in a creneleded fashion _-_-_-
+								for (Protein protein : result.getProteins()) {
+									for (EntryProteinLocation epl : protein.getEntryProteinLocations()) {
+										for (Fragment fragment : epl.getFragments()) {
+											fragmentsToSort.add(fragment);
+											fragment.setName(name);
+											fragment.setShortName(shortName);
+										}
+									}
+								}
+							}
+							fragmentsToSort = fragmentsToSort.stream().sorted().collect(Collectors.toList());
+							for (Fragment fragment : fragmentsToSort) {
+								bottomTrace.addStart(fragment.getStart());
+								bottomTrace.addEnd(fragment.getEnd());
+								bottomTrace.addX((fragment.getStart() + fragment.getEnd()) / 2);
+								String label = "Domain: " + fragment.getName() + "<br>"
+										+ "Start: " + fragment.getStart() + "<br>"
+										+ "End: " + fragment.getEnd();
+								bottomTrace.addLabel(label);
+								annotations.add(fragment.getShortName().toUpperCase());
+							}
+							pfamTraces.add(bottomTrace);
+							chart.setUnderlineTraces(pfamTraces);
+							chart.setAnnotations(annotations);
+						}
+					} catch (UnsupportedOperationException | URISyntaxException | IOException e	) {
+						e.printStackTrace();
+					}
+				}
+			};
+			executor.execute(pfamWorker);
+
+			Runnable dbWorker = new Runnable() {
+				@Override
+				public void run() {
+					List<GenericLollipopPlotData> dataAll = modelDAO.getGeniePatientCountForGene(hugoSymbol);
+					if (dataAll != null && !dataAll.isEmpty()) {
+
+						chart.setPlotId(plotId);
+						Trace trace = new Trace();
+						//need to create the proper label and count the number of variants per row
+						for (GenericLollipopPlotData row : dataAll) {
+							StringBuilder sb = new StringBuilder();
+							if (row.getLabel2() != null) {
+								List<String> variants = Arrays.asList(row.getLabel2().split("/"));
+								Map<String, StringSortableByInteger> variantCount = new HashMap<String, StringSortableByInteger>();
+								for (String v : variants) {
+									StringSortableByInteger sortableString = variantCount.get(v);
+									if (sortableString  == null) {
+										sortableString = new StringSortableByInteger(v, 0, true);
+										variantCount.put(v, sortableString);
+									}
+									sortableString.setIntValue(sortableString.getIntValue() + 1);
+								}
+								sb.append("Amino Acid: ").append(row.getLabel1()).append("<br>")
+								.append("Variant Count: ").append(row.getY()).append("<br>");
+								if (!variantCount.isEmpty()) {
+									String sortedVariants = variantCount.values().stream().sorted().map(s -> s.getStringValue()).collect(Collectors.joining("/"));
+									sb.append("Variants: ").append(sortedVariants);
+								}
+							}
+							trace.addLabel(sb.toString());
+							trace.addX(row.getX());
+							trace.addY(row.getY());
+
+						}
+						chart.setTrace(trace);
+						Number maxY = (Number) chart.getTrace().getY().stream().max(Comparators.comparable()).get();
+						chart.setMaxY(maxY);
+					}
+				}
+			};
+			executor.execute(dbWorker);
+
+			executor.shutdown();
+			try {
+				executor.awaitTermination(10, TimeUnit.SECONDS);
+				response.setSuccess(true);
+				response.setPayload(chart);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+
+		return response.createObjectJSON();
+	}
+
 }

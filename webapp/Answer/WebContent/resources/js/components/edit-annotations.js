@@ -24,7 +24,7 @@ Vue.component('edit-annotations', {
         single: {default: false, type: Boolean}, //only one annotation at a time (for editing outside of a case)
         outsideACase: {default: true, type: Boolean} //to display the variant details or not
     },
-    template: `<div>
+    template: /*html*/`<div>
     <!-- annotation dialog -->
     <v-dialog v-model="annotationDialogVisible" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
         <v-card ref="annotationDialog" class="soft-grey-background">
@@ -271,12 +271,28 @@ Vue.component('edit-annotations', {
                                                         <span>Select if this annotation applies to the right gene</span>
                                                     </v-tooltip>
                                                     </v-card-text>
+                                                     <!-- Virus -->
+                                                    <v-card-text class="pl-3 pr-3 pt-3 pb-3" v-if="isVirus()  && !hideScope">
+                                                    <div class="subheading pb-2">
+                                                        The
+                                                        <span :class="noLevelSelected(annotation) ? 'warning--text' : ''">scope</span> determines if this annotation applies to other
+                                                        cases or diagnoses:
+                                                    </div>
+                                                    <v-tooltip bottom>
+                                                        <v-switch hide-details slot="activator" class="no-height" :disabled="annotation.markedForDeletion || noLevelSelected(annotation)" label="Case Specific"
+                                                            v-model="annotation.isCaseSpecific" @change="selectBreadth(annotation)"></v-switch>
+                                                        <span>Select if this annotation applies to this case only</span>
+                                                    </v-tooltip>
+                                                    <v-switch hide-details class="no-height" :disabled="annotation.markedForDeletion" label="Diagnosis Specific" v-model="annotation.isTumorSpecific"></v-switch>
+                                                </v-card-text>
+
+
                                                     </v-card>
                                                 </v-flex>
                                                 <v-flex xs12 sm6 md4>
                                                     <v-card :color="annotation.markedForDeletion ? 'blue-grey lighten-4' : ''">
-                                                        <!-- SNP  or fusion-->
-                                                        <v-card-text v-if="(isSNP() || isTranslocation()) && annotation.category != 'Clinical Trial'" class="pl-3 pr-3 pt-3 pb-3 subheading">
+                                                        <!-- SNP  or fusion or virus-->
+                                                        <v-card-text v-if="(isSNP() || isTranslocation() || isVirus()) && annotation.category != 'Clinical Trial'" class="pl-3 pr-3 pt-3 pb-3 subheading">
                                                             <v-layout row wrap>
                                                                 <v-flex xs5 class="mt-2">
                                                                     Annotation Category:
@@ -601,7 +617,7 @@ Vue.component('edit-annotations', {
                 isTumorSpecific: false,
                 userId: null,
                 variantId: null,
-                isGeneSpecific: this.limitScopeGene || (this.isCNV() || this.isTranslocation() || this.isVirus() ? true : false),
+                isGeneSpecific: this.limitScopeGene || (this.isCNV() || this.isTranslocation() ? true : false),
                 isVariantSpecific: this.isCNV() || this.isTranslocation() || this.isVirus() ? true : false,
                 isCaseSpecific: false,
                 isLeftSpecific: false,
@@ -808,7 +824,7 @@ Vue.component('edit-annotations', {
                 text = text + "this case";
                 commaNeeded = true;
             }
-            if (annotation.isGeneSpecific) {
+            if (annotation.isGeneSpecific && !this.isVirus()) {
                 if (commaNeeded) {
                     text = text + ", ";
                 }
@@ -907,7 +923,7 @@ Vue.component('edit-annotations', {
                 annotation.selectedBreadth = this.annotationCategories.filter(item => item == breadth)[0];
             }
             if (annotation.isVariantSpecific) {
-                annotation.isGeneSpecific = true;
+                annotation.isGeneSpecific = true && !this.isVirus();
                 if (annotation.geneId && this.single) {
                     this.getVariantsForGene(annotation.geneId, annotation);
                 }
@@ -982,7 +998,8 @@ Vue.component('edit-annotations', {
                     typeTitle = "FTL";
                 }
                 else if (this.isVirus()) {
-                    typeTitle = "VIR";
+                    return "Create/Edit Annotations for " +
+                " Virus: " + this.title;
                 }
                 return "Create/Edit Annotations for " + typeTitle +
                 " Variant: " + this.title;

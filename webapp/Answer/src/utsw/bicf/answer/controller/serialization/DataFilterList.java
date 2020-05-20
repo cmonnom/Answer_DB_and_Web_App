@@ -16,6 +16,7 @@ public class DataFilterList {
 	List<String> selectedSNPVariantIds;
 	List<String> selectedCNVIds;
 	List<String> selectedTranslocationIds;
+	List<String> selectedVirusIds;
 
 	public List<DataTableFilter> getFilters() {
 		return filters;
@@ -54,6 +55,16 @@ public class DataFilterList {
 
 	public void setSelectedTranslocationIds(List<String> selectedTranslocationIds) {
 		this.selectedTranslocationIds = selectedTranslocationIds;
+	}
+
+
+	public List<String> getSelectedVirusIds() {
+		return selectedVirusIds;
+	}
+
+
+	public void setSelectedVirusIds(List<String> selectedVirusIds) {
+		this.selectedVirusIds = selectedVirusIds;
 	}
 
 

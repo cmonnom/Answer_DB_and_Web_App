@@ -197,7 +197,7 @@ public class PatientInfo {
 //		orderCase.setMsi(0.14f); //TODO for testing only
 		String msiClass = orderCase.getMsiClass() == null ? "" : orderCase.getMsiClass();
 		String msi = orderCase.getMsi() == null ? "Not calculated" : orderCase.getMsi() + "";
-		CellItem msiItem = new CellItem("Microsatellite Instability", msi);
+		CellItem msiItem = new CellItem("Microsatellite Instability (%)", msi);
 		msiItem.setField("msi");
 		msiItem.setValue2(msiClass);
 		items.add(msiItem);

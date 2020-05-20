@@ -6,6 +6,7 @@ public class LookupSummary {
 	 * A manually set url to link back to NCBI
 	 */
 	String moreInfoUrl;
+	String moreInfoUrl2;
 	String summary;
 	String database; //name of the database in lookup-tool.js (RefSeq, OncoKB,...)
 	
@@ -32,5 +33,13 @@ public class LookupSummary {
 
 	public void setDatabase(String database) {
 		this.database = database;
+	}
+
+	public String getMoreInfoUrl2() {
+		return moreInfoUrl2;
+	}
+
+	public void setMoreInfoUrl2(String moreInfoUrl2) {
+		this.moreInfoUrl2 = moreInfoUrl2;
 	}
 }

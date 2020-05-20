@@ -1,10 +1,15 @@
 package utsw.bicf.answer.db.api.utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,6 +25,10 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.xml.sax.SAXException;
@@ -47,6 +56,7 @@ public class ReactomeRequestUtils {
 	OtherProperties otherProps;
 	PolicyFactory policy = new HtmlPolicyBuilder().toFactory();
 	private static final Logger logger = Logger.getLogger(AOPAspect.class);
+	private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
 	public ReactomeRequestUtils(ReactomeProperties reactomeProps, OtherProperties otherProps) {
 		this.reactomeProps = reactomeProps;
@@ -88,24 +98,29 @@ public class ReactomeRequestUtils {
 					SearchResult result = searchJson.getResults().get(0);
 					if (result != null && result.getEntries() != null && !result.getEntries().isEmpty()) {
 						String stId = result.getEntries().get(0).getStId();
-						String uniProtId = result.getEntries().get(0).getReferenceIdentifier();
-						sbUrl = new StringBuilder(reactomeProps.getEventUrl());
-						uri = new URI(sbUrl.toString());
-						requestGet = new HttpGet(uri);
-						context = HttpClientContext.create();
-						response = client.execute(requestGet, context);
-
-						statusCode = response.getStatusLine().getStatusCode();
-						if (statusCode == HttpStatus.SC_OK) {
-							Event[] eventsJson = mapper.readValue(response.getEntity().getContent(), Event[].class);
-							List<Event> events = new ArrayList<Event>();
-							for (Event e : eventsJson) {
-								if (levels.contains(e.getName())) {
-									events.add(e);
-								}
-							}
-							return buildViewTree(events, uniProtId);
-						}
+//						String uniProtId = result.getEntries().get(0).getReferenceIdentifier();
+//						sbUrl = new StringBuilder(reactomeProps.getEventUrl());
+//						uri = new URI(sbUrl.toString());
+//						requestGet = new HttpGet(uri);
+//						context = HttpClientContext.create();
+//						response = client.execute(requestGet, context);
+//
+//						statusCode = response.getStatusLine().getStatusCode();
+//						if (statusCode == HttpStatus.SC_OK) {
+//							Event[] eventsJson = mapper.readValue(response.getEntity().getContent(), Event[].class);
+//							List<Event> events = new ArrayList<Event>();
+//							for (Event e : eventsJson) {
+//								if (levels.contains(e.getName())) {
+//									events.add(e);
+//								}
+//							}
+//							return buildViewTree(events, uniProtId);
+//						}
+						TreeViewSummary summary = new TreeViewSummary();
+						String contentDetailUri = reactomeProps.getContentDetailUrl() + stId;
+						summary.setMainPageUrl(contentDetailUri);
+						summary.setItems(this.scrapeViewTree(contentDetailUri));
+						return summary;
 					}
 			}
 		}
@@ -114,7 +129,70 @@ public class ReactomeRequestUtils {
 		}
 		return null;
 	}
+	
+	private List<TreeViewItem> scrapeViewTree(String url) throws MalformedURLException, IOException, URISyntaxException {
+		List<TreeViewItem> items = new ArrayList<TreeViewItem>();
+		URI uri = new URI(url);
+		requestGet = new HttpGet(uri);
+		HttpClientContext context = HttpClientContext.create();
+		HttpResponse response = client.execute(requestGet, context);
 
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			StringBuffer tmp = new StringBuffer();
+			String line = null;
+			BufferedReader in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+		    while ((line = in.readLine()) != null) {
+		    	tmp.append(line);
+		    }
+		    Document doc = Jsoup.parse(tmp.toString());
+		    Elements rootElts = doc.getElementsByClass("tplSpe_Homo_sapiens");
+		    for (Element elt : rootElts) {
+		    	TreeViewItem item = new TreeViewItem();
+		    	item.setStId("id" + COUNTER.addAndGet(1));
+		    	String title = elt.child(0).firstElementSibling().text();
+		    	item.setName(title);
+//			System.out.println(title);
+		    	item.setRootLevel(true);
+		    	items.add(item);
+		    	Elements children = elt.child(1).child(0).children(); // div > ul
+		    	Element first = children.first();
+		    	while(first.nodeName().equals("ul")) {
+		    		first = first.child(0);
+		    	}
+		    	drillIntoTree(item, first.getElementsByTag("ul").first());
+		    }
+		}
+		return items;
+	}
+	
+	private void drillIntoTree(TreeViewItem parentItem, Element ulParent) {
+		for (Element li : ulParent.children()) {
+			TreeViewItem item = new TreeViewItem();
+			item.setStId("id" + COUNTER.addAndGet(1));
+			this.extractTitleLink(item, li);
+			parentItem.getChildren().add(item);
+			drillIntoTree(item, li.getElementsByTag("ul").first());
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * @param item current item
+	 * @param elt <li> element
+	 */
+	private void extractTitleLink(TreeViewItem item, Element elt) {
+		Element spanOrA = elt.child(1);
+		if (spanOrA.nodeName().equals("a")) {
+			String url = spanOrA.attr("href");
+			item.setUrl(reactomeProps.getBrowserUrl() + url);
+		}
+		String title = spanOrA.text();
+		item.setName(title);
+//		System.out.println(" -> " + title);
+	}
+	
 	private TreeViewSummary buildViewTree(List<Event> events, String uniProtId) {
 		List<TreeViewItem> items = new ArrayList<TreeViewItem>();
 		List<Event> meiosisEvents = new ArrayList<Event>();

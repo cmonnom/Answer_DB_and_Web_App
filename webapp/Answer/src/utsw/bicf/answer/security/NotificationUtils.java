@@ -67,22 +67,19 @@ public class NotificationUtils {
 		}
 		fullMessage.append("images/answer-logo-small.png'")
 				.append(" width='150px' />")
-//				.append("<p>Dr. ").append(toName).append(",</p><br/>")
-//				.append("<b>")
-//				.append(initiatorName)
-//				.append("</b>")
-//				.append(" assigned you a new case. ")
-//				.append("<b>")
-//				.append("Case Id: ").append(caseId).append("<br/>")
-//				.append("</b>")
 				.append(message)
 				.append("Follow this link to access it: ")
 				.append("<a href='")
 				.append(link)
 				.append("'>")
 				.append(link)
-				.append("</a><br/><br/>")
-				.append(emailProps.getSignature())
+				.append("</a><br/><br/>");
+		if (emailProps.getRemoteDesktopName() != null && !emailProps.getRemoteDesktopName().equals("")) {
+			fullMessage.append("You might need to open ")
+			.append(emailProps.getRemoteDesktopName())
+			.append(" if the link doesn't work.<br/><br/>");
+		}
+		fullMessage.append(emailProps.getSignature())
 				.append("</body></html>");
 		return fullMessage.toString();
 	}

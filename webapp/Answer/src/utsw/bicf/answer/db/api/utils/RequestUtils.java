@@ -2,6 +2,7 @@ package utsw.bicf.answer.db.api.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -22,6 +23,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -36,6 +38,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.ByteArrayBuffer;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -283,27 +286,36 @@ public class RequestUtils {
 
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/filter");
+//		sbUrl.append("case/").append(caseId).append("/summary");
 		URI uri = new URI(sbUrl.toString());
 
-		// requestGet = new HttpGet(uri);
-		// addAuthenticationHeader(requestGet);
+		 requestGet = new HttpGet(uri);
+		 addAuthenticationHeader(requestGet);
 
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
 		requestPost.setEntity(new StringEntity(filterParam, ContentType.APPLICATION_JSON));
-
+//		requestGet = new HttpGet(uri);
+//		addAuthenticationHeader(requestGet);
+		long beforeRequest = System.currentTimeMillis();
 		HttpResponse response = client.execute(requestPost);
-
+//		HttpResponse response = client.execute(requestGet);
+		long afterRequest = System.currentTimeMillis();
+		System.out.println("After Request in RequestUtils " + (afterRequest - beforeRequest) + "ms");
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
+			//TODO this is very slow. See if you can speed it up
 			OrderCase orderCase = mapper.readValue(response.getEntity().getContent(), OrderCase.class);
 			this.closePostRequest();
+//			this.closeGetRequest();
+			long beforeRequestReturns = System.currentTimeMillis();
+			System.out.println("Before Request Returns in RequestUtils " + (beforeRequestReturns - beforeRequest) + "ms");
 			return orderCase;
 		}
 		this.closePostRequest();
 		return null;
 	}
-
+	
 	/**
 	 * Get all information about a variant, including annotations
 	 * @param variantType 
@@ -388,9 +400,30 @@ public class RequestUtils {
 		this.closeGetRequest();
 		return null;
 	}
+	
+	public Virus getVirusDetails(String variantId) throws URISyntaxException, ClientProtocolException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("virus/"); 
+		sbUrl.append(variantId);
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			Virus virus = mapper.readValue(response.getEntity().getContent(), Virus.class);
+			this.closeGetRequest();
+			return virus;
+		}
+		this.closeGetRequest();
+		return null;
+	}
 
 	public void saveVariantSelection(AjaxResponse ajaxResponse, String caseId, List<String> selectedSNPVariantIds, 
-			List<String> selectedCNVIds, List<String> selectedTranslocationIds, User currentUser)
+			List<String> selectedCNVIds, List<String> selectedTranslocationIds, List<String> selectedVirusIds, User currentUser)
 			throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("case/").append(caseId).append("/selectvariants");
@@ -402,6 +435,7 @@ public class RequestUtils {
 		variantIds.setSelectedSNPVariantIds(selectedSNPVariantIds);
 		variantIds.setSelectedCNVIds(selectedCNVIds);
 		variantIds.setSelectedTranslocationIds(selectedTranslocationIds);
+		variantIds.setSelectedVirusIds(selectedVirusIds);
 		variantIds.setUserId(currentUser.getUserId() + "");
 		requestPost.setEntity(new StringEntity(variantIds.createObjectJSON(), ContentType.APPLICATION_JSON));
 
@@ -2083,6 +2117,25 @@ public class RequestUtils {
 		}
 		
 		this.closePostRequest();
+	}
+
+	public AjaxResponse getMutationSignatureTableForCase(String caseId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/mutsigtable"); 
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+
+		addAuthenticationHeader(requestGet);
+
+		HttpResponse response = client.execute(requestGet);
+
+		AjaxResponse mongoDBResponse = null;
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+		}
+		this.closeGetRequest();
+		return mongoDBResponse;
 	}
 
 }

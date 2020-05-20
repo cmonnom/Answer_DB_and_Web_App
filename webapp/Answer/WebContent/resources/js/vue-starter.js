@@ -112,7 +112,7 @@ var router = new VueRouter({
 			}
 		},
 		{
-			path: webAppRoot + '/lookupTool',
+			path: webAppRoot + '/discovar',
 			name: 'LookupTool',
 			component: () => new Promise(
 				resolve => resolve(LookupTool)),

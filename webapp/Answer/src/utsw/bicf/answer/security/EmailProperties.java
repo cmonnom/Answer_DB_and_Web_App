@@ -6,6 +6,7 @@ public class EmailProperties {
 	String signature;
 	String rootUrl;
 	Boolean doSend;
+	String remoteDesktopName;
 	public String getFrom() {
 		return from;
 	}
@@ -29,6 +30,12 @@ public class EmailProperties {
 	}
 	public void setDoSend(Boolean doSend) {
 		this.doSend = doSend;
+	}
+	public String getRemoteDesktopName() {
+		return remoteDesktopName;
+	}
+	public void setRemoteDesktopName(String remoteDesktopName) {
+		this.remoteDesktopName = remoteDesktopName;
 	}
 	
 	

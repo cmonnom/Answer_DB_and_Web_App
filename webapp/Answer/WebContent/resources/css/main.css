@@ -716,3 +716,17 @@ Slow down the fullscreen dialog
     top: 5px;
     left: 5px;
 }
+
+.v-expansion-panel__header {
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    position: relative;
+    padding: 0px 16px;
+    min-height: 48px;
+    font-weight: bold;
+}
+
+.v-treeview-node__root {
+    min-height: 0px !important;
+}

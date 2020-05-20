@@ -14,6 +14,7 @@ public class SelectedVariantIds {
 	List<String> selectedSNPVariantIds;
 	List<String> selectedCNVIds;
 	List<String> selectedTranslocationIds;
+	List<String> selectedVirusIds;
 	String userId;
 	
 	public SelectedVariantIds() {
@@ -55,6 +56,14 @@ public class SelectedVariantIds {
 
 	public void setUserId(String userId) {
 		this.userId = userId;
+	}
+
+	public List<String> getSelectedVirusIds() {
+		return selectedVirusIds;
+	}
+
+	public void setSelectedVirusIds(List<String> selectedVirusIds) {
+		this.selectedVirusIds = selectedVirusIds;
 	}
 
 

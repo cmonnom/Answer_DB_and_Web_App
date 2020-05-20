@@ -7,6 +7,7 @@ import utsw.bicf.answer.controller.serialization.TreeViewItem;
 public class TreeViewSummary {
 	
 	List<TreeViewItem> items;
+	String mainPageUrl;
 
 	public TreeViewSummary() {
 		super();
@@ -23,6 +24,14 @@ public class TreeViewSummary {
 
 	public void setItems(List<TreeViewItem> items) {
 		this.items = items;
+	}
+
+	public String getMainPageUrl() {
+		return mainPageUrl;
+	}
+
+	public void setMainPageUrl(String mainPageUrl) {
+		this.mainPageUrl = mainPageUrl;
 	}
 
 }

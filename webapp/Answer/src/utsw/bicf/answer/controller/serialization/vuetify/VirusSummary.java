@@ -80,6 +80,15 @@ public class VirusSummary extends Summary<VirusRow> {
 		virusDescription.setIsSafe(true);
 		headers.add(virusDescription);
 		
+		Header iconFlags = new Header("Flags", "iconFlags");
+		iconFlags.setWidth("150px");
+		iconFlags.setWidthValue(150);
+		iconFlags.setIsFlag(true);
+		iconFlags.setSortable(false);
+		iconFlags.setAlign("left");
+		iconFlags.setIsSafe(true);
+		headers.add(iconFlags);
+		
 		Header virusAcc = new Header("Accession ID", "virusAcc");
 		virusAcc.setIsSafe(true);
 		headers.add(virusAcc);

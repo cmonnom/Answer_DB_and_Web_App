@@ -65,14 +65,14 @@ public class OrderCase {
 	String user;
 	List<String> assignedTo;
 	String receivedDate;
-	List<Variant> variants;
+	List<Variant> variants = new ArrayList<Variant>();
 	String institution;
 	String normalBam;
 	String tumorBam;
 	String rnaBam;
 	String tumorVcf;
-	List<CNV> cnvs;
-	List<Translocation> translocations;
+	List<CNV> cnvs = new ArrayList<CNV>();
+	List<Translocation> translocations = new ArrayList<Translocation>();
 	List<Virus> viruses = new ArrayList<Virus>();
 	String oncotreeDiagnosis;
 	Integer totalCases;
@@ -92,8 +92,10 @@ public class OrderCase {
 	List<String> groupIds;
 	String storageType;
 	String caseOwner;
+	@JsonProperty("tmbClass")
 	String tumorMutationBurdenClass;
 	Float msi;
+	@JsonProperty("msiClass")
 	String msiClass;
 	String mutationalSignatureFileName;
 	

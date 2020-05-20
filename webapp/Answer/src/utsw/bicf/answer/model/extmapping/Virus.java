@@ -35,6 +35,8 @@ public class Virus {
 	Map<Integer, Boolean> annotatorSelections = new HashMap<Integer, Boolean>();
 	Map<Integer, String> annotatorDates = new HashMap<Integer, String>();
 	
+	AbstractReference referenceVirus;
+	
 	public Virus() {
 		
 	}
@@ -149,6 +151,14 @@ public class Virus {
 
 	public void setNumCasesSeen(Integer numCasesSeen) {
 		this.numCasesSeen = numCasesSeen;
+	}
+
+	public AbstractReference getReferenceVirus() {
+		return referenceVirus;
+	}
+
+	public void setReferenceVirus(AbstractReference referenceVirus) {
+		this.referenceVirus = referenceVirus;
 	}
 
 

@@ -3,7 +3,7 @@ package utsw.bicf.answer.controller.serialization.plotly;
 import java.util.Collections;
 import java.util.List;
 
-public class BoxPlotData {
+public class BoxPlotData extends PlotlyChartData{
 
 	Double min;
 	Double max;

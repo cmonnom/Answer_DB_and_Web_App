@@ -87,6 +87,7 @@ public class JaxCKBRequestUtils {
 				if (item.getId().equals(entrezIdInt)) {
 					summary.setSummary(item.getGeneDesc());
 					summary.setMoreInfoUrl(jaxCKBProps.getGeneUrl() + entrezId);
+					summary.setMoreInfoUrl2(jaxCKBProps.getGenePaidUrl() + entrezId);
 				}
 			}
 		}
@@ -125,6 +126,7 @@ public class JaxCKBRequestUtils {
 			for (JaxCKBResponse item : jaxJson) {
 				summary.setSummary(item.getVariantDescription());
 				summary.setMoreInfoUrl(jaxCKBProps.getVariantUrl() + item.getId());
+				summary.setMoreInfoUrl2(jaxCKBProps.getVariantPaidUrl() + item.getId());
 			}
 		}
 		else {

@@ -148,6 +148,11 @@ const OpenCase2 = {
      <v-img v-if="mutationalSignatureImage" alt="Mutational Signature Image" :src="mutationalSignatureImage" :width="1024">
      </v-img>
      <img :src="webAppRoot + '/resources/images/mutational_signature_axis.png'" alt="X Axis" width="1024px" class="mut-sig-image-axis"/>
+
+     <div>
+     Mutational Signature Data
+     {{ mutSigTableData }}
+     </div>
      </v-card-text>
      </v-card>
      </v-menu>  
@@ -224,6 +229,7 @@ const OpenCase2 = {
                     </v-list-tile-content>
                 </v-list-tile>
 
+                <!--
                 <v-list-tile avatar v-if="mutationalSignatureUrl" @click="openLink(mutationalSignatureUrl)" :disabled="!mutationalSignatureUrl">
                 <v-list-tile-avatar>
                 <v-icon>mdi-chart-histogram</v-icon>
@@ -232,9 +238,8 @@ const OpenCase2 = {
                     <v-list-tile-title>Open Mutational Signature (MuSiCa)</v-list-tile-title>
                 </v-list-tile-content>
                 </v-list-tile>
-                
+                -->
 
-                <!-- At the end of May, uncomment this and comment the block above to switch MuSiCa to our own plot.
                 <v-list-tile avatar @click="openMutSigImage" :disabled="!mutationalSignatureImage">
                 <v-list-tile-avatar>
                 <v-icon>mdi-chart-histogram</v-icon>
@@ -246,7 +251,6 @@ const OpenCase2 = {
                     </v-list-tile-title>
                 </v-list-tile-content>
                 </v-list-tile>
-                -->
 
                 <v-list-tile avatar @click="openFPKMChart">
                 <v-list-tile-avatar>
@@ -287,7 +291,7 @@ const OpenCase2 = {
 
                                     <v-list-tile avatar @click="downloadIGVFile('session', flt3ITDLocus)">
                                     <v-list-tile-avatar>
-                                        <v-icon>mdi-file-xml</v-icon>
+                                        <v-icon>mdi-file-code</v-icon>
                                     </v-list-tile-avatar>
                                     <v-list-tile-content  class="mb-2">
                                         <v-list-tile-title>Download IGV Session for FLT3 locus</v-list-tile-title>
@@ -381,15 +385,15 @@ const OpenCase2 = {
         </v-btn>
         <span>Open QC in NuCLIA</span>
     </v-tooltip>
-    
+    <!--
     <v-tooltip bottom>
     <v-btn icon flat slot="activator" :href="mutationalSignatureUrl" target="_blank" rel="noreferrer" :disabled="!mutationalSignatureUrl">
     <v-icon>mdi-chart-histogram</v-icon>
     </v-btn>
     <span>Open Mutational Signature (MuSiCa)</span>
     </v-tooltip>
+    -->
     
-   <!-- At the end of May, uncomment this and comment the block above to switch MuSiCa to our own plot.
 <v-tooltip bottom>
     <v-btn icon flat slot="activator" @click="openMutSigImage" :disabled="!mutationalSignatureImage">
     <v-icon>mdi-chart-histogram</v-icon>
@@ -397,7 +401,7 @@ const OpenCase2 = {
     <span v-if="mutationalSignatureImage">Open Mutational Signature</span>
     <span v-else>No Mutational Signature Available</span>
 </v-tooltip>
--->
+
 <v-tooltip bottom>
     <v-btn icon flat slot="activator" @click="openFPKMChart">
     <img alt="boxplot icon" :src="webAppRoot + '/resources/images/boxplot_icon_white.png'" width="36px" />
@@ -425,7 +429,7 @@ const OpenCase2 = {
 <br/>
 <v-tooltip bottom >
     <v-btn dark icon flat slot="activator" @click="downloadIGVFile('session', flt3ITDLocus)">
-        <v-icon>mdi-file-xml</v-icon>
+        <v-icon>mdi-file-code</v-icon>
     </v-btn>
     <span>Download IGV Session for FLT3 locus</span>
 </v-tooltip>
@@ -789,6 +793,7 @@ const OpenCase2 = {
                 mutationalSignatureUrl: "",
                 mutationalSignatureImage: "",
                 mutSigVisible: false,
+                mutSigTableData: null,
                 reportReady: false,
                 caseName: "",
                 caseId: "",
@@ -1136,7 +1141,7 @@ const OpenCase2 = {
                 this.unfilteredFTLsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
             }
             else if (idType == "VIR") {
-                this.unfilteredVIRDict[item.oid] = { oid: item.oid, selected: item.isSelected }
+                this.unfilteredVIRsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
             }
             if (!item.isSelected) {
                 delete item.selectionPerAnnotator[this.userId];
@@ -1287,8 +1292,7 @@ const OpenCase2 = {
                         this.addSNPIndelHeaderAction(response.data.snpIndelVariantSummary.headers);
                         this.addCNVHeaderAction(response.data.cnvSummary.headers);
                         this.addFusionHeaderAction(response.data.translocationSummary.headers);
-                        //Nothing in details for now.
-                        // this.addVirusHeaderAction(response.data.virusSummary.headers);
+                        this.addVirusHeaderAction(response.data.virusSummary.headers);
                         this.removeCurrentUserSelectionColumnFromHeaders(response.data.snpIndelVariantSummary.headerOrder, response.data.cnvSummary.headerOrder, response.data.translocationSummary.headerOrder
                             , response.data.virusSummary.headerOrder)
 
@@ -1475,7 +1479,6 @@ const OpenCase2 = {
             this.updateRoute();
         },
         openVirus(item) {
-            return; //nothing to do for now.
             if (this.isVariantOpening) {
                 return;
             }
@@ -2540,6 +2543,7 @@ const OpenCase2 = {
         },
     },
     mounted() {
+        bus.$emit("need-layout-resize", this);
         this.mountComponent();
         this.loadFromParams();
         this.updateBreadcrumbs();

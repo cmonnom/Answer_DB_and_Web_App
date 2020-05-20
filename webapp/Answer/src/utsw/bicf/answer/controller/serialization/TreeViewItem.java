@@ -9,6 +9,8 @@ public class TreeViewItem {
 	String stId;
 	String url;
 	List<TreeViewItem> children = new ArrayList<TreeViewItem>();
+	Boolean rootLevel = false;
+	
 	
 	public TreeViewItem() {
 		super();
@@ -42,6 +44,12 @@ public class TreeViewItem {
 	}
 	public void setChildren(List<TreeViewItem> children) {
 		this.children = children;
+	}
+	public Boolean getRootLevel() {
+		return rootLevel;
+	}
+	public void setRootLevel(Boolean rootLevel) {
+		this.rootLevel = rootLevel;
 	}
 	
 

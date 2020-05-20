@@ -9,12 +9,15 @@ import javax.transaction.Transactional;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
+import org.hibernate.transform.ResultTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.w3c.dom.Document;
 
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.GeneToReport;
+import utsw.bicf.answer.model.GenieSample;
+import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.HeaderConfig;
 import utsw.bicf.answer.model.ReportGroup;
@@ -24,6 +27,8 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.UserRank;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.Version;
+import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
+import utsw.bicf.answer.model.hybrid.GenericLollipopPlotData;
 
 @Repository
 public class ModelDAO {
@@ -80,6 +85,13 @@ public class ModelDAO {
 	}
 	
 	@Transactional
+	public void saveBatch(List<Object> objects) {
+		for (Object o : objects) {
+			sessionFactory.getCurrentSession().saveOrUpdate(o);
+		}
+	}
+	
+	@Transactional
 	public <T> T getObject(Class<T> clazz, int id) {
 		return sessionFactory.getCurrentSession().get(clazz, id);
 	}
@@ -87,6 +99,23 @@ public class ModelDAO {
 	@Transactional
 	public void deleteObject(Object object) {
 		sessionFactory.getCurrentSession().delete(object);
+	}
+	
+	@Transactional
+	public void deleteGenieTables() {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "delete from genie_mutation";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "delete from genie_sample";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "delete from genie_summary";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "ALTER TABLE genie_mutation AUTO_INCREMENT = 1";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "ALTER TABLE genie_sample AUTO_INCREMENT = 1";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "ALTER TABLE genie_summary AUTO_INCREMENT = 1";
+		session.createNativeQuery(sql).executeUpdate();
 	}
 
 //	@SuppressWarnings("unchecked")
@@ -120,6 +149,14 @@ public class ModelDAO {
 	public Token getParseMDAToken(String token) {
 		Session session = sessionFactory.getCurrentSession();
 		String hql = "from Token where type = 'parse-mda' and token = :token";
+		Token theToken = session.createQuery(hql, Token.class).setParameter("token", token).uniqueResult();
+		return theToken;
+	}
+	
+	@Transactional
+	public Token getUpdateGenieDataToken(String token) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from Token where type = 'update-genie' and token = :token";
 		Token theToken = session.createQuery(hql, Token.class).setParameter("token", token).uniqueResult();
 		return theToken;
 	}
@@ -405,9 +442,148 @@ public class ModelDAO {
 		return (String) session.createNativeQuery(sql)
 				.uniqueResult();
 	}
+	
+	@Transactional
+	public Map<String, Integer> getAllGenieSampleIdByTumorBarcode() {
+		Map<String, Integer> result = new HashMap<String, Integer>();
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from GenieSample";
+		List<GenieSample> samples = session.createQuery(hql, GenieSample.class).list();
+		for (GenieSample s : samples) {
+			result.put(s.getSampleId(), s.getGenieSampleId());
+		}
+		return result;
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<GenericBarPlotData> getGenieVariantCountForGene(String hugoSymbol) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		sb.append("select * from ( ")
+		.append("select count(gs.cancer_type) as x, gs.cancer_type as y from genie_mutation gm, genie_sample gs ")
+		.append("where gm.genie_sample_id = gs.genie_sample_id ")
+		.append("and gm.hugo_symbol = :hugoSymbol ")
+		.append("group by gs.cancer_type) as sub ")
+		.append("order by x desc limit 10; ");
+		Query<GenericBarPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameter("hugoSymbol", hugoSymbol);
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
 
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
 
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+	}
 	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<GenericBarPlotData> getGeniePatientCountPerCancer() {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		sb.append("select sum(count_cancer_type) x, cancer_type y from ")
+		.append(" (select count(gs.cancer_type) as count_cancer_type, gs.cancer_type from genie_sample gs")
+		.append(" group by patient_id, cancer_type) as sub")
+		.append(" group by cancer_type")
+		.append(" order by x desc limit 10;");
+		Query<GenericBarPlotData> query = session.createNativeQuery(sb.toString());
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+	}
 	
+	@Transactional
+	public List<GenieSummary> getGenieSummary(String category) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from GenieSummary where category = :category";
+		return session.createQuery(hql, GenieSummary.class).setParameter("category", category).list();
+	}
 	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<GenericBarPlotData> getGeniePatientCountForGene(String hugoSymbol, List<String> cancers) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		sb.append("select count(cancer_type) as x, cancer_type as y ")
+		.append(" from ( ")
+		.append(" select gs.cancer_type from genie_mutation gm, genie_sample gs ")
+				.append(" where gm.genie_sample_id = gs.genie_sample_id  ")
+				.append(" and gm.hugo_symbol = :hugoSymbol ")
+				.append(" and gs.cancer_type in :cancers ")
+				.append(" group by gs.patient_id, gs.cancer_type) as sub ")
+				.append(" group by cancer_type ");
+		Query<GenericBarPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameter("hugoSymbol", hugoSymbol)
+				.setParameter("cancers", cancers);
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+	}
+	
+	@SuppressWarnings({"deprecation", "unchecked" })
+	@Transactional
+	public List<GenericLollipopPlotData> getGeniePatientCountForGene(String hugoSymbol) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		sb.append("select")
+		.append(" count(amino_acid_notation) as y, ")
+		.append(" amino_acid_notation as label1,  ")
+		.append(" group_concat(variant_change separator '/') as label2,  ")
+		.append(" amino_acid_position as x ")
+		.append(" from genie_mutation ")
+		.append(" where hugo_symbol = :hugoSymbol and amino_acid_position is not null")
+		.append(" group by amino_acid_notation, amino_acid_position ")
+		.append(" order by amino_acid_position ");
+		Query<GenericLollipopPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameter("hugoSymbol", hugoSymbol);
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericLollipopPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+	}
+
 }

@@ -67,6 +67,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListItems;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListSaved;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantRelatedSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.VirusDetailsSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
@@ -85,8 +86,6 @@ import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.CommitAnnotationResponse;
-import utsw.bicf.answer.model.extmapping.FPKMData;
-import utsw.bicf.answer.model.extmapping.FPKMPerCaseData;
 import utsw.bicf.answer.model.extmapping.MongoDBId;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.TMBData;
@@ -106,6 +105,7 @@ import utsw.bicf.answer.model.hybrid.ReportGroupForDisplay;
 import utsw.bicf.answer.model.hybrid.SNPIndelVariantRow;
 import utsw.bicf.answer.model.hybrid.TranslocationRow;
 import utsw.bicf.answer.model.hybrid.VCFAnnotationRow;
+import utsw.bicf.answer.model.hybrid.VirusRow;
 import utsw.bicf.answer.reporting.parse.ExportSelectedVariants;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
@@ -195,6 +195,10 @@ public class OpenCaseController {
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".searchGenesInPanels",
 				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVirusDetails",
+				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getMutationSignatureTableForCase",
+				IndividualPermission.CAN_VIEW);
 		
 	}
 
@@ -266,11 +270,13 @@ public class OpenCaseController {
 	@ResponseBody
 	public String getCaseDetails(Model model, HttpSession session, @RequestParam String caseId,
 			@RequestBody String filters) throws Exception {
-
+		long now = System.currentTimeMillis();
 		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
 		// send user to Ben's API
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase detailedCase = utils.getCaseDetails(caseId, filters);
+		long afterRequest = System.currentTimeMillis();
+		System.out.println("After request " + (afterRequest - now) + "ms");
 		if (detailedCase == null) { // the case does not exist
 			AjaxResponse response = new AjaxResponse();
 			response.setIsAllowed(false);
@@ -292,12 +298,16 @@ public class OpenCaseController {
 		String mutationalSignatureFileName = caseId + ".mutational_signature.png";
 		String mutationalSignatureLinkName = createRandomizedLink(fileProps.getImageFilesDir(), fileProps.getImageLinksDir(), mutationalSignatureFileName, ".png");
 		detailedCase.setMutationalSignatureFileName(mutationalSignatureLinkName);
+		long beforeSummary = System.currentTimeMillis();
+		System.out.println("Before Summary " + (beforeSummary - now) + "ms");
 		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, qcAPI, detailedCase, "oid", user,
 				reportGroupsForDisplay);
 //		SNPIndelVariantRow row = summary.getSnpIndelVariantSummary().getItems().get(0);
 //		List<SNPIndelVariantRow> rows = new ArrayList<SNPIndelVariantRow>();
 //		rows.add(row);
 //		summary.getSnpIndelVariantSummary().setItems(rows);
+		long afterSummary = System.currentTimeMillis();
+		System.out.println("After Summary Total" + (afterSummary - now) + "ms");
 		return summary.createVuetifyObjectJSON();
 
 	}
@@ -842,7 +852,8 @@ public class OpenCaseController {
 		List<String> selectedSNPVariantIds = dataPOJO.getSelectedSNPVariantIds();
 		List<String> selectedCNVIds = dataPOJO.getSelectedCNVIds();
 		List<String> selectedTranslocationIds = dataPOJO.getSelectedTranslocationIds();
-		utils.saveVariantSelection(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds, user);
+		List<String> selectedVirusIds = dataPOJO.getSelectedVirusIds();
+		utils.saveVariantSelection(response, caseId, selectedSNPVariantIds, selectedCNVIds, selectedTranslocationIds, selectedVirusIds, user);
 		return response.createObjectJSON();
 
 	}
@@ -887,8 +898,13 @@ public class OpenCaseController {
 				userAnnotation.setCaseId(caseId);
 			}
 			if (userAnnotation.getIsGeneSpecific()) {
-				geneId = geneId != null && geneId.equals("") ? null : geneId;
-				userAnnotation.setGeneId(geneId);
+				if (userAnnotation.getType().equals("virus")) {
+					userAnnotation.setIsGeneSpecific(false);
+				}
+				else {
+					geneId = geneId != null && geneId.equals("") ? null : geneId;
+					userAnnotation.setGeneId(geneId);
+				}
 			}
 			if (userAnnotation.getIsVariantSpecific()) {
 				userAnnotation.setVariantId(variantId);
@@ -1397,7 +1413,7 @@ public class OpenCaseController {
 				if (tmbClass != null && OrderCase.TMB_CLASS_VALUES.contains(tmbClass)) {
 					caseSummary.setTumorMutationBurdenClass(tmbClass);
 				}
-				if (msiClass != null && OrderCase.MSI_CLASS_VALUES.contains(tmbClass)) {
+				if (msiClass != null && OrderCase.MSI_CLASS_VALUES.contains(msiClass)) {
 					caseSummary.setMsiClass(msiClass);
 				}
 				OrderCase savedCaseSummary = utils.saveCaseSummary(caseId, caseSummary);
@@ -1928,7 +1944,7 @@ public class OpenCaseController {
 			@RequestParam(defaultValue="false", required=false) Boolean useLog2) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
-		WhiskerData data = new WhiskerData(); 
+//		WhiskerData data = new WhiskerData(); 
 //		
 //		//create fake data here for testing
 //		List<FPKMPerCaseData> fpkms = new ArrayList<FPKMPerCaseData>();
@@ -1977,4 +1993,70 @@ public class OpenCaseController {
 	}
 	
 	
+	@RequestMapping(value = "/getVirusDetails", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String getVirusDetails(Model model, HttpSession session, @RequestParam String variantId, @RequestParam String caseId)
+			throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
+		Virus variantDetails = utils.getVirusDetails(variantId);
+		if (variantDetails != null) {
+			for (Annotation a : variantDetails.getReferenceVirus().getUtswAnnotations()) {
+				Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
+			}
+			variantDetails.getReferenceVirus().getUtswAnnotations().sort(new Comparator<Annotation>() {
+				@Override
+				public int compare(Annotation o1, Annotation o2) {
+					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+				}
+				
+			});
+			Map<Integer, AnnotatorSelection> selectionPerAnnotator = new HashMap<Integer, AnnotatorSelection>();
+			if (variantDetails.getAnnotatorSelections() != null) {
+				variantDetails.setSelected(false);
+				for (Integer userId : variantDetails.getAnnotatorSelections().keySet()) {
+					boolean isSelected = variantDetails.getAnnotatorSelections().get(userId) != null && variantDetails.getAnnotatorSelections().get(userId);
+					if (isSelected) {
+						String date = variantDetails.getAnnotatorDates().get(userId);
+						if (userId.equals(user.getUserId())) {
+							variantDetails.setSelected(true); //this is the selection of the current user
+						}
+					}
+				}
+			}
+			
+			VirusRow item = new VirusRow(variantDetails, selectionPerAnnotator, caseSummary.getTotalCases());
+			SearchItemString patientDetailsOncoTreeDiagnosis = new SearchItemString("", caseSummary.getOncotreeDiagnosis());
+			VirusDetailsSummary summary = new VirusDetailsSummary(variantDetails, item, user.getUserId(), patientDetailsOncoTreeDiagnosis);
+			return summary.createVuetifyObjectJSON();
+		}
+		return null;
+
+	}
+	
+	
+	@RequestMapping(value = "/getMutationSignatureTableForCase", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String getMutationSignatureTableForCase(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
+
+		RequestUtils utils = new RequestUtils(modelDAO);
+		AjaxResponse ajaxResponse = new AjaxResponse();
+		ajaxResponse.setIsAllowed(true);
+		ajaxResponse.setSuccess(true);
+		AjaxResponse mongoResponse = utils.getMutationSignatureTableForCase(caseId);
+		if (mongoResponse.getPayload() != null) {
+			ajaxResponse.setPayload(mongoResponse.getPayload());
+		}
+		else {
+			ajaxResponse.setIsAllowed(true);
+			ajaxResponse.setSuccess(false);
+		}
+		return ajaxResponse.createObjectJSON();
+	}
 }

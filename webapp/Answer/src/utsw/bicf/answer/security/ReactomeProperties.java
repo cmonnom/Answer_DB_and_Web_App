@@ -5,6 +5,7 @@ public class ReactomeProperties {
 	String searchUrl;
 	String browserUrl;
 	String eventUrl;
+	String contentDetailUrl;
 	
 	public ReactomeProperties() {
 		super();
@@ -32,6 +33,14 @@ public class ReactomeProperties {
 
 	public void setEventUrl(String eventUrl) {
 		this.eventUrl = eventUrl;
+	}
+
+	public String getContentDetailUrl() {
+		return contentDetailUrl;
+	}
+
+	public void setContentDetailUrl(String contentDetailUrl) {
+		this.contentDetailUrl = contentDetailUrl;
 	}
 
 

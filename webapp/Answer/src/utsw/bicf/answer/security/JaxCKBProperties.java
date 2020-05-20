@@ -4,8 +4,10 @@ public class JaxCKBProperties {
 
 	String geneServlet;
 	String geneUrl;
+	String genePaidUrl;
 	String variantServlet;
 	String variantUrl;
+	String variantPaidUrl;
 	
 	public JaxCKBProperties() {
 		super();
@@ -41,6 +43,22 @@ public class JaxCKBProperties {
 
 	public void setVariantUrl(String variantUrl) {
 		this.variantUrl = variantUrl;
+	}
+
+	public String getGenePaidUrl() {
+		return genePaidUrl;
+	}
+
+	public void setGenePaidUrl(String genePaidUrl) {
+		this.genePaidUrl = genePaidUrl;
+	}
+
+	public String getVariantPaidUrl() {
+		return variantPaidUrl;
+	}
+
+	public void setVariantPaidUrl(String variantPaidUrl) {
+		this.variantPaidUrl = variantPaidUrl;
 	}
 
 

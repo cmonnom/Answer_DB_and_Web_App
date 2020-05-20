@@ -69,7 +69,7 @@ Vue.component('variant-details-dialog', {
         unfilteredVIRsDict: {default: () => {}, type: Object},
         oncotree: {default: () => [], type: Array},
     },
-    template: `<div>
+    template: /*html*/`<div>
 
     <!-- add CNV dialog -->
     <v-dialog v-model="addCNVDialogVisible" max-width="500px" scrollable>
@@ -150,7 +150,7 @@ Vue.component('variant-details-dialog', {
         </edit-annotations>
 
         <edit-annotations type="virus" @saving-annotations="commitAnnotations" @annotation-dialog-changed="updateEditAnnotationBreadcrumbs"
-        :color="colors.editAnnotation" ref="virusAnnotationDialog" :title="currentVariant.virusName"
+        :color="colors.editAnnotation" ref="virusAnnotationDialog" :title="currentVariant.VirusName"
         :caseIcon="caseTypeIcon" :caseType="caseType" :outsideACase="false"
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories="annotationCategories"
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
@@ -294,7 +294,7 @@ Vue.component('variant-details-dialog', {
     
                                                 <v-list-tile  avatar @click="downloadIGVFile('session')">
                                                 <v-list-tile-avatar>
-                                                    <v-icon>mdi-file-xml</v-icon>
+                                                    <v-icon>mdi-file-code</v-icon>
                                                 </v-list-tile-avatar>
                                                 <v-list-tile-content  class="mb-2">
                                                     <v-list-tile-title>Download IGV Session</v-list-tile-title>
@@ -378,8 +378,8 @@ Vue.component('variant-details-dialog', {
               <span v-if="isSNP()">SNP</span>
               <span v-else-if="isCNV()">CNV</span>
               <span v-else-if="isTranslocation()">FTL</span>
-              <span v-else-if="isVirus()">VIR</span>
-              Variant:
+              <span v-else-if="isVirus()">Virus</span>
+              <span v-if="!isVirus()">Variant:</span>
                   <v-tooltip bottom v-if="variantNameIsTooLong() && isSNP()">
                   <span slot="activator" v-text="createVariantName()"></span>
                   <span>{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
@@ -387,7 +387,7 @@ Vue.component('variant-details-dialog', {
                   <span v-if="!variantNameIsTooLong() && isSNP()">{{ currentVariant.geneName }} {{ currentVariant.notation }}</span>
                   <span v-else-if="isCNV()" v-text="formatChrom(currentVariant.chrom)"></span>
                   <span v-else-if="isTranslocation()">{{ currentVariant.fusionName }}</span>
-                  <span v-else-if="isVirus()">{{ currentVariant.virusName }}</span>
+                  <span v-else-if="isVirus()">{{ currentVariant.VirusName }}</span>
                   <span> -- {{ caseName }} -- </span> 
                 <v-tooltip bottom>
                   <v-icon slot="activator" size="20" class="pb-1"> {{ caseTypeIcon }} </v-icon>
@@ -450,7 +450,7 @@ Vue.component('variant-details-dialog', {
                     <br/>
                     <v-tooltip bottom v-if="isSNP()">
                         <v-btn dark icon flat slot="activator" @click="downloadIGVFile('session')">
-                            <v-icon>mdi-file-xml</v-icon>
+                            <v-icon>mdi-file-code</v-icon>
                         </v-btn>
                         <span>Download IGV Session</span>
                     </v-tooltip>
@@ -1573,7 +1573,13 @@ Vue.component('variant-details-dialog', {
                         var infoTable = {
                             name: "infoTable",
                             items: [
-                            
+                                {
+                                    label: "Virus Name", value: this.currentVariant.VirusName
+                                },
+                                {
+                                    label: "Virus Description", value: this.currentVariant.VirusDescription
+                                },
+                               
                            
                             ]
                         };
@@ -1582,6 +1588,18 @@ Vue.component('variant-details-dialog', {
                         var infoTable2 = {
                             name: "infoTable2",
                             items: [
+                                {
+                                    label: "Sample ID", value: this.currentVariant.SampleId
+                                },
+                                {
+                                    label: "Accession ID", value: this.currentVariant.VirusAcc
+                                },
+                                {
+                                    label: "Read Count", value: this.currentVariant.VirusReadCount
+                                },
+                                {
+                                    label: "Nb. Cases Seen", value: this.currentVariant.numCasesSeen
+                                },
                            ]
                         };
                         this.variantDataTables.push(infoTable2);
@@ -2046,7 +2064,7 @@ Vue.component('variant-details-dialog', {
                     resolve({success: true});
                 }
                 else {
-                    this.handleDialogs(response.data, this.saveVasaveAnnotationSelectionriant.bind(null, response.data.skipSnackBar));
+                    this.handleDialogs(response.data, this.saveAnnotationSelection.bind(null, response.data.skipSnackBar));
                 }
                 this.savingAnnotationSelection = false;
                 this.$emit("annotation-selection-saved");
@@ -2530,11 +2548,9 @@ Vue.component('variant-details-dialog', {
                 newAnnotation.isRightSpecific = newAnnotation.scopes[4];
             }
             else if (newAnnotation.type == "virus") {
-                newAnnotation.isGeneSpecific = true;
-                newAnnotation.isVariantSpecific = newAnnotation.scopes[1];
+                newAnnotation.isGeneSpecific = false;
+                newAnnotation.isVariantSpecific = false;
                 newAnnotation.isTumorSpecific = newAnnotation.scopes[2];
-                newAnnotation.isLeftSpecific = newAnnotation.scopes[3];
-                newAnnotation.isRightSpecific = newAnnotation.scopes[4];
             }
             this.userAnnotations.push(newAnnotation);
             this.commitAnnotations(this.userAnnotations);

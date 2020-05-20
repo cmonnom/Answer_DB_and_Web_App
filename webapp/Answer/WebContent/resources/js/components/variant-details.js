@@ -12,7 +12,7 @@ Vue.component('variant-details', {
         cnvChromList: { default: () => [], type: Array },
         loadingVariant: { default: false, type: Boolean },
     },
-    template: ` <v-card>
+    template: /*html*/` <v-card>
 
     <v-dialog ref="chartHelpDialog" v-model="chartHelpVisible" hide-overlay max-width="600px" persistent content-class="top-right-dialog">
     <v-card class="subheading">
@@ -76,7 +76,7 @@ Vue.component('variant-details', {
       </v-menu>
       <v-toolbar-title class="ml-0">
       <span v-text="getVariantTypeTitle()"></span>
-          Variant Details
+          Details
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
@@ -511,7 +511,7 @@ Vue.component('variant-details', {
                     return ['xs4', 'md5'];
                 }
             }
-            if (this.isTranslocation()) {
+            if (this.isTranslocation() || this.isVirus()) {
                 return ['xs4'];
             }
             return [this.widthClass];
@@ -1069,16 +1069,16 @@ Vue.component('variant-details', {
         },
         getVariantTypeTitle() {
             if (this.isSNP()) {
-                return "SNP";
+                return "SNP Variant";
             }
             else if (this.isCNV()) {
-                return "CNV";
+                return "CNV Variant";
             }
             else if (this.isTranslocation()) {
-                return "FTL";
+                return "FTL Variant";
             }
             else if (this.isVirus()) {
-                return "VIR";
+                return "Virus";
             }
         },
         isSNP() {
