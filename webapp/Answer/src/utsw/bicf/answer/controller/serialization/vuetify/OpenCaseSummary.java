@@ -20,6 +20,7 @@ import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CaseHistory;
+import utsw.bicf.answer.model.extmapping.MutationalSignatureData;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.Variant;
@@ -53,7 +54,8 @@ public class OpenCaseSummary {
 	Map<String, String> checkBoxFTLLabelsByValue;
 	String caseOwnerId;
 	String caseOwnerName;
-	String mutationalSignatureFileName;
+	String mutationalSignatureLinkName;
+	List<MutationalSignatureData> mutationalSignatureData;
 
 	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
 		List<HeaderOrder> snpOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "SNP/Indel Variants");
@@ -97,7 +99,8 @@ public class OpenCaseSummary {
 					|| CaseHistory.lastStepMatches(aCase, CaseHistory.STEP_FINALIZED)
 					|| CaseHistory.lastStepMatches(aCase, CaseHistory.STEP_UPLOAD_TO_EPIC);
 		}
-		this.mutationalSignatureFileName = aCase.getMutationalSignatureFileName();
+		this.mutationalSignatureLinkName = aCase.getMutationalSignatureLinkName();
+		this.mutationalSignatureData = aCase.getMutationalSignatureData();
 	}
 
 	
@@ -402,13 +405,23 @@ public class OpenCaseSummary {
 	}
 
 
-	public String getMutationalSignatureFileName() {
-		return mutationalSignatureFileName;
+	public String getMutationalSignatureLinkName() {
+		return mutationalSignatureLinkName;
 	}
 
 
-	public void setMutationalSignatureFileName(String mutationalSignatureFileName) {
-		this.mutationalSignatureFileName = mutationalSignatureFileName;
+	public void setMutationalSignatureLinkName(String mutationalSignatureLinkName) {
+		this.mutationalSignatureLinkName = mutationalSignatureLinkName;
+	}
+
+
+	public List<MutationalSignatureData> getMutationalSignatureData() {
+		return mutationalSignatureData;
+	}
+
+
+	public void setMutationalSignatureData(List<MutationalSignatureData> mutationalSignatureData) {
+		this.mutationalSignatureData = mutationalSignatureData;
 	}
 
 

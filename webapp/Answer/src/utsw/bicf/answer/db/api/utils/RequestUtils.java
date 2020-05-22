@@ -2,7 +2,6 @@ package utsw.bicf.answer.db.api.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -16,6 +15,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
@@ -23,7 +25,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -38,7 +39,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.ByteArrayBuffer;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -71,12 +71,12 @@ import utsw.bicf.answer.model.extmapping.ExistingReports;
 import utsw.bicf.answer.model.extmapping.FPKMPerCaseData;
 import utsw.bicf.answer.model.extmapping.ITD;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
+import utsw.bicf.answer.model.extmapping.MutationalSignatureData;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.SearchSNPAnnotation;
 import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
 import utsw.bicf.answer.model.extmapping.TMBData;
-import utsw.bicf.answer.model.extmapping.TMBPerCaseData;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.extmapping.Trial;
@@ -268,7 +268,7 @@ public class RequestUtils {
 
 
 	public OrderCase getCaseDetails(String caseId, String data)
-			throws ClientProtocolException, IOException, URISyntaxException {
+			throws InterruptedException, JsonParseException, JsonMappingException, IOException {
 		if (data == null) {
 			data = "{\"filters\": []}";
 		}
@@ -284,36 +284,63 @@ public class RequestUtils {
 		String filterParam = filterList.createJSON();
 		System.out.println(filterParam);
 
-		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("case/").append(caseId).append("/filter");
-//		sbUrl.append("case/").append(caseId).append("/summary");
-		URI uri = new URI(sbUrl.toString());
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+		final OrderCase orderCase = new OrderCase();
+		Runnable caseWorker = new Runnable() {
+			@Override
+			public void run() {
+				try {
+					StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+					sbUrl.append("case/").append(caseId).append("/filter");
+					URI uri = new URI(sbUrl.toString());
+					requestPost = new HttpPost(uri);
+					addAuthenticationHeader(requestPost);
+					requestPost.setEntity(new StringEntity(filterParam, ContentType.APPLICATION_JSON));
+					long beforeRequest = System.currentTimeMillis();
+					HttpResponse response = null;
+					response = client.execute(requestPost);
 
-		 requestGet = new HttpGet(uri);
-		 addAuthenticationHeader(requestGet);
-
-		requestPost = new HttpPost(uri);
-		addAuthenticationHeader(requestPost);
-		requestPost.setEntity(new StringEntity(filterParam, ContentType.APPLICATION_JSON));
-//		requestGet = new HttpGet(uri);
-//		addAuthenticationHeader(requestGet);
-		long beforeRequest = System.currentTimeMillis();
-		HttpResponse response = client.execute(requestPost);
-//		HttpResponse response = client.execute(requestGet);
-		long afterRequest = System.currentTimeMillis();
-		System.out.println("After Request in RequestUtils " + (afterRequest - beforeRequest) + "ms");
-		int statusCode = response.getStatusLine().getStatusCode();
-		if (statusCode == HttpStatus.SC_OK) {
-			//TODO this is very slow. See if you can speed it up
-			OrderCase orderCase = mapper.readValue(response.getEntity().getContent(), OrderCase.class);
-			this.closePostRequest();
-//			this.closeGetRequest();
-			long beforeRequestReturns = System.currentTimeMillis();
-			System.out.println("Before Request Returns in RequestUtils " + (beforeRequestReturns - beforeRequest) + "ms");
-			return orderCase;
-		}
-		this.closePostRequest();
-		return null;
+					long afterRequest = System.currentTimeMillis();
+					System.out.println("After Request in RequestUtils " + (afterRequest - beforeRequest) + "ms");
+					int statusCode = response.getStatusLine().getStatusCode();
+					if (statusCode == HttpStatus.SC_OK) {
+						//TODO this is very slow. See if you can speed it up
+						OrderCase orderCaseTemp = mapper.readValue(response.getEntity().getContent(), OrderCase.class);
+						orderCase.copyAll(orderCaseTemp);
+						long beforeRequestReturns = System.currentTimeMillis();
+						System.out.println("Before Request Returns in RequestUtils " + (beforeRequestReturns - beforeRequest) + "ms");
+					}
+					closePostRequest();
+				} catch (IOException | URISyntaxException e1) {
+					e1.printStackTrace();
+				}
+			}
+		};
+		executor.execute(caseWorker);
+		 
+		Runnable mutSigWorker = new Runnable() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public void run() {
+				try {
+					AjaxResponse ajaxResponse = getMutationSignatureTableForCase(caseId);
+					if (ajaxResponse.getSuccess() && ajaxResponse.getPayload() != null) {
+						List<MutationalSignatureData> mutsigs = (List<MutationalSignatureData>) ajaxResponse.getPayload();
+						if (mutsigs != null) {
+							orderCase.setMutationalSignatureData(mutsigs);
+						}
+					}
+				} catch (IOException | URISyntaxException e1) {
+					e1.printStackTrace();
+				}
+			}
+		};
+		 executor.execute(mutSigWorker);
+		 
+		 executor.shutdown();
+		 executor.awaitTermination(1, TimeUnit.MINUTES);
+		 
+		 return orderCase;
 	}
 	
 	/**
@@ -1051,14 +1078,14 @@ public class RequestUtils {
 		return null;
 	}
 
-	public Report buildReportManually2(String caseId, User user, OtherProperties otherProps, NCBIProperties ncbiProps) throws ClientProtocolException, UnsupportedOperationException, IOException, URISyntaxException, JAXBException, SAXException, ParserConfigurationException {
+	public Report buildReportManually2(String caseId, User user, OtherProperties otherProps, NCBIProperties ncbiProps) throws ClientProtocolException, UnsupportedOperationException, IOException, URISyntaxException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
 		ReportBuilder rb = new ReportBuilder(this, modelDAO, caseId, user, otherProps, ncbiProps);
 		return rb.build();
 	}
 	
 	//temp method to test displaying the report
 	//while Ben implements the API
-	public Report buildReportManually(String caseId, User user, OtherProperties otherProps, NCBIProperties ncbiProps) throws ClientProtocolException, IOException, URISyntaxException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+	public Report buildReportManually(String caseId, User user, OtherProperties otherProps, NCBIProperties ncbiProps) throws ClientProtocolException, IOException, URISyntaxException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
 		Report report = new Report();
 		OrderCase caseDetails = getCaseDetails(caseId, null);
 		report.setCaseId(caseDetails.getCaseId());
@@ -2121,7 +2148,7 @@ public class RequestUtils {
 
 	public AjaxResponse getMutationSignatureTableForCase(String caseId) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("case/").append(caseId).append("/mutsigtable"); 
+		sbUrl.append("case/").append(caseId).append("/mutsigs"); 
 		URI uri = new URI(sbUrl.toString());
 		requestGet = new HttpGet(uri);
 

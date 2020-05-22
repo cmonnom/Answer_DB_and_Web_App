@@ -224,7 +224,6 @@ Vue.component('lookup-panel', {
                                          <span>Collapse All</span>
                                      </v-tooltip>
                                  </v-toolbar>
-                                 </v-toolbar>
                                  <v-card-text class="pa-3">
                                  <span class="body-2"><b>GDC Data Portal</b></span>
                                  <v-tooltip bottom v-if="ensemblId">
@@ -297,6 +296,9 @@ Vue.component('lookup-panel', {
                                       </template>
                                         </v-treeview>
                                     </v-card-text>
+                                    <v-card-text class="pa-2" v-show="reactomeError && !reactomeLoading">
+                                        {{ reactomeError }}
+                                    </v-card-text>
                                 </v-card>
                             </v-card>    
                             </v-flex>
@@ -307,23 +309,47 @@ Vue.component('lookup-panel', {
                         
                         <!-- Cancer Results -->
                         <v-flex :class="getGeneFlexClasses()" v-show="currentlyActive == 'Cancer'">
-                            <v-tooltip bottom v-if="oncotree.externalReferences && oncotree.externalReferences.NCI && currentOncotreeCode">
-                            <v-btn slot="activator" 
-                            :href="'https://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI_Thesaurus&code=' + oncotree.externalReferences.NCI[0]"
-                            target="_blank">
-                                NCI Thesaurus
-                                <v-icon right class="primary--text">mdi-open-in-new</v-icon>
-                            </v-btn>
-                            <span>Open {{ currentOncotreeCode.label }} ({{ currentOncotreeCode.text }}) in the NCI Thesaurus</span>
-                            </v-tooltip>
-                            <span v-if="oncotree.externalReferences && !oncotree.externalReferences.NCI && currentOncotreeCode">
-                                No NCI Thesaurus entry for {{ currentOncotreeCode.text}}: {{ currentOncotreeCode.label}}<br/>
-                                You can try a manual search directly in the NCI Thesaurus here: 
-                                <v-btn slot="activator" icon
-                                href="https://ncit.nci.nih.gov/ncitbrowser/pages/home.jsf"
-                                target="_blank"> <v-icon class="primary--text">mdi-open-in-new</v-icon>
-                                </v-btn>
-                            </span>
+                             <v-card>
+                                 <v-toolbar dense class="elevation-0" dark color="primary">
+                                     <div class="title ml-0">NCI</div>
+                                     <v-spacer></v-spacer>
+                                 </v-tooltip>
+                                 </v-toolbar>
+                                 <v-card-text class="pa-3">
+                                 <span class="body-2"><b>NCI Thesaurus</b></span>
+                                 <v-tooltip bottom v-if="oncotree.externalReferences && oncotree.externalReferences.NCI && currentOncotreeCode">
+                                 <v-btn icon slot="activator" :href="'https://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI_Thesaurus&code=' + oncotree.externalReferences.NCI[0]" target="_blank">
+                                 <v-icon class="primary--text">mdi-open-in-new</v-icon></v-btn>
+                                 <span>Open {{ currentOncotreeCode.label }} ({{ currentOncotreeCode.text }}) in the NCI Thesaurus</span>
+                                 </v-tooltip>
+                                 <span v-if="oncotree.externalReferences && !oncotree.externalReferences.NCI && currentOncotreeCode">
+                                 No NCI Thesaurus entry for {{ currentOncotreeCode.text}}: {{ currentOncotreeCode.label}}<br/>
+                                 You can try a manual search directly in the NCI Thesaurus here: 
+                                 <v-btn slot="activator" icon
+                                 href="https://ncit.nci.nih.gov/ncitbrowser/pages/home.jsf"
+                                 target="_blank"> <v-icon class="primary--text">mdi-open-in-new</v-icon>
+                                 </v-btn>
+                             </span>
+                                 </v-card-text>
+                             </v-card>    
+                        </v-flex>
+                        <v-flex :class="getGeneFlexClasses()" v-show="currentlyActive == 'Cancer'">
+                             <v-card>
+                                 <v-toolbar dense class="elevation-0" dark color="primary">
+                                     <div class="title ml-0">Genie</div>
+                                     <v-spacer></v-spacer>
+                                 </v-tooltip>
+                                 </v-toolbar>
+                                 <v-card-text class="pa-3">
+                                 <div :class="[cancerPlotLoading ? 'alpha-54' : '']">
+                                 <div v-if="cancerPlotError && !cancerPlotLoading">No Genie Data could be found for oncotree {{ currentOncotreeCode.text }}</div>
+                                 <div v-if="!cancerPlotError">
+                                    <div id="mutatedGenesCancerPlot"></div>
+                                </div>
+                                </div>
+
+                                 </v-card-text>
+                             </v-card>    
                         </v-flex>
 
                         <!-- Variant Results -->
@@ -434,7 +460,19 @@ Vue.component('lookup-panel', {
             },
             genePlotLoading: false,
             genePlotError: false,
-            showGeneGeniePanel: true
+            showGeneGeniePanel: true,
+            reactomeError: null,
+            cancerPlotLoading: false,
+            cancerPlotError: false,
+            cividisColors: {
+                "blue75": "#38486b", //blue75
+                "SNP": "#38486b", //blue75
+                "INS": "#a39a76", //brown50
+                "DEL": "#e4cf5b", //yellow25
+            },
+            lastGene: null,
+            lastOncotreeCode: null,
+            lastVariant: null,
         }
 
     },
@@ -500,21 +538,40 @@ Vue.component('lookup-panel', {
         },
         submitForm() {
             this.updateRoute();
-            if (this.isFormValid()) {
-                switch(this.currentlyActive) {
-                    case "Gene":
-                        this.toggleAllGenePanels(false);
-                        this.geneAjaxSummary(this.genePanelTitles);
-                        this.getReactomeLocations("Cell Cycle");
-                        this.fetchGenePlot();
-                        break;
-                    case "Cancer":
-                        this.getOncotree();
-                        break;
-                    case "Variant":
-                        this.getVariantSummary();
-                        break;    
-                }
+            // if (this.isFormValid()) {
+            //     switch(this.currentlyActive) {
+            //         case "Gene":
+            //             this.toggleAllGenePanels(false);
+            //             this.geneAjaxSummary(this.genePanelTitles);
+            //             this.getReactomeLocations("Cell Cycle");
+            //             this.fetchGenePlot();
+            //             break;
+            //         case "Cancer":
+            //             this.getOncotree();
+            //             this.fetchCancerPlot();
+            //             break;
+            //         case "Variant":
+            //             this.getVariantSummary();
+            //             break;    
+            //     }
+            // }
+            if (this.isFormValid("Gene") && this.lastGene != this.currentGene) {
+                this.toggleAllGenePanels(false);
+                this.geneAjaxSummary(this.genePanelTitles);
+                this.getReactomeLocations("Cell Cycle");
+                this.fetchGenePlot();
+                this.lastGene = this.currentGene;
+            }
+            if (this.isFormValid("Cancer") && this.lastOncotreeCode != this.currentOncotreeCode.text) {
+                this.getOncotree();
+                this.fetchCancerPlot();
+                this.lastOncotreeCode = this.currentOncotreeCode.text;
+            }
+            if (this.isFormValid("Variant") && this.lastGene != this.currentGene  && this.lastVariant != this.lastVariant && this.lastOncotreeCode != this.currentOncotreeCode.text) {
+                this.getVariantSummary();
+                this.lastGene = this.currentGene;
+                this.lastVariant = this.lastVariant;
+                this.lastOncotreeCode = this.currentOncotreeCode.text;
             }
         },
         geneAjaxSummary(databases) {
@@ -591,11 +648,14 @@ Vue.component('lookup-panel', {
             }
             return getDialogMaxHeightNumber(90);
         },
-        isFormValid() {
+        isFormValid(button) {
+            if (!button) {
+                button = this.currentlyActive;
+            }
             var geneValid = this.currentGene && this.currentGene.length > 0;
             var oncotreeValid = this.currentOncotreeCode != null && this.currentOncotreeCode.text != null;
             var variantValid = this.currentVariant && this.currentVariant.length > 0;
-            switch(this.currentlyActive) {
+            switch(button) {
                 case "Gene":
                     return geneValid;
                 case "Cancer":
@@ -648,6 +708,7 @@ Vue.component('lookup-panel', {
         getReactomeLocations(levels) {
             this.reactomeLoading = true;
             this.reactomeContentDetailUrl = null;
+            this.reactomeError = null;
             this.reactomeItems = [];
             axios.get(webAppRoot + "/getReactomeLocations", {
                 params: {
@@ -667,6 +728,7 @@ Vue.component('lookup-panel', {
                 }
                 else if (response.data.isAllowed && !response.data.success) {
                     console.log(response.data.message);
+                    this.reactomeError = this.currentGene + " could not be found in Reactome."
                 }
                 else {
                     this.handleDialogs(response.data, this.getReactomeLocations.bind(this, levels));
@@ -805,59 +867,63 @@ Vue.component('lookup-panel', {
             this.$emit("reload-values");
         },
         fetchGenePlot() {
-            this.genePlotLoading = true;
-            this.genePlotError = false;
-            var promise1 = this.updateBarPlot("alterationByCancerPlot", "/getAlterationByCancer");
-            var promise2 = this.updateBarPlot("cancerByPercentPlot", "/getCancerbyPercent");
-            var promise2 = this.updateLolliplotPlot("genieLollipopPlot", "/getGenieGeneLollipop");
-            Promise.all([promise1, promise2]).then(values => {
-                this.genePlotLoading = false;
-                if (values.filter(v => v.success).length != values.length) {
-                    console.log("Some plots did not finish properly");
-                    this.genePlotError = true;
-                }
-                else {
-                    this.genePlotError = false;
-                }
-            })
-        },
-        updateBarPlot(plotId, url) {
-            if (!this.currentGene) {
-                return;
+            if (this.currentGene) {
+                this.genePlotLoading = true;
+                this.genePlotError = false;
+                var promise1 = this.updateBarPlot("/getAlterationByCancer", {
+                    hugoSymbol: this.currentGene,
+                    plotId: "alterationByCancerPlot",
+                });
+                var promise2 = this.updateBarPlot("/getCancerbyPercent", {
+                    hugoSymbol: this.currentGene,
+                    plotId: "cancerByPercentPlot",
+                });
+                var promise2 = this.updateLolliplotPlot("genieLollipopPlot", "/getGenieGeneLollipop");
+                Promise.all([promise1, promise2]).then(values => {
+                    this.genePlotLoading = false;
+                    if (values.filter(v => v.success).length != values.length) {
+                        console.log("Some plots did not finish properly");
+                        this.genePlotError = true;
+                    }
+                    else {
+                        this.genePlotError = false;
+                    }
+                })
             }
+        },
+        fetchCancerPlot() {
+            if (this.currentOncotreeCode) {
+                this.cancerPlotLoading = true;
+                this.cancerPlotError = false;
+                var promise1 = this.updateBarPlot("/getMutatedGeneByCancer", {
+                    oncotreeCode: this.currentOncotreeCode.text,
+                    plotId: "mutatedGenesCancerPlot",
+                }, true);
+                Promise.all([promise1]).then(values => {
+                    this.cancerPlotLoading = false;
+                    if (values.filter(v => v.success).length != values.length) {
+                        console.log("Some plots did not finish properly");
+                        this.cancerPlotError = true;
+                    }
+                    else {
+                        this.cancerPlotError = false;
+                    }
+                })
+            }
+        },
+        updateBarPlot(url, params, stacked) {
             return new Promise((resolve, reject) => {
             axios.get(webAppRoot + url, {
-                params: {
-                    hugoSymbol: this.currentGene,
-                    plotId: plotId,
-                }
+                params: params
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        var chartData = response.data;
-                        var trace = chartData.trace;
-                        trace.type = "bar";
-                        trace.orientation = "h";
-                        trace.text = trace.labels;
-                        // trace.width=trace.y.map( i=> 0.5);
-                        trace.hovertemplate = "%{text}<extra></extra>"
-                        var data = [trace];
-                        var layout = {
-                            title: this.createPlotTitle(chartData.plotId),
-                            hovermode: 'closest',
-                            font: {
-                                family: 'Roboto,sans-serif',
-                            },
-                            xaxis: {automargin: true, title: this.createXAxisTitle(chartData.plotId)},
-                            yaxis: {automargin: true, title: {text: this.createYAxisTitle(chartData.plotId), standoff: 10}},
-                            margin: {
-                                t: this.getPlotTopMargin()
-                            },
-                            height: 350
+                        if (stacked) {
+                            this.buildHorizontalStackedBarPlot(response);
                         }
-                        this.$nextTick(() => {
-                            Plotly.newPlot(chartData.plotId, data, layout, this.plotlyConfig);
-                        });
+                        else {
+                            this.buildHorizontalBarPlot(response);
+                        }
                         resolve({
                             success: true
                         });
@@ -868,7 +934,7 @@ Vue.component('lookup-panel', {
                         });
                     }
                     else {
-                        this.handleDialogs(response.data, this.updateBarPlot.bind(null, plotId, url));
+                        this.handleDialogs(response.data, this.updateBarPlot.bind(null, url, params));
                     }
                 })
                 .catch(error => {
@@ -877,6 +943,68 @@ Vue.component('lookup-panel', {
                         success: false
                     });
                 });
+            });
+        },
+        buildHorizontalStackedBarPlot(response) {
+            var chartData = response.data;
+            var traces = chartData.traces;
+            for (var i = 0; i < traces.length; i++) {
+                traces[i].type = "bar";
+                traces[i].orientation = "h";
+                traces[i].text = traces[i].labels;
+                // trace.text = trace.labels;
+                traces[i].hovertemplate = "Gene: %{y}<br>Category: %{text}<br>Variant Count: %{x}<extra></extra>";
+                traces[i].marker = {
+                    color: this.cividisColors[traces[i].name],
+                }
+            }
+            var data = traces;
+            var layout = {
+                title: this.createPlotTitle(chartData.plotId),
+                barmode: 'stack',
+                hovermode: 'closest',
+                font: {
+                    family: 'Roboto,sans-serif',
+                },
+                xaxis: {automargin: true, title: this.createXAxisTitle(chartData.plotId)},
+                yaxis: {automargin: true, title: {text: this.createYAxisTitle(chartData.plotId), standoff: 10}},
+                margin: {
+                    t: this.getPlotTopMargin()
+                },
+                height: 350,
+                legend: {
+                    traceorder: 'normal'
+                }
+            }
+            this.$nextTick(() => {
+                Plotly.newPlot(chartData.plotId, data, layout, this.plotlyConfig);
+            });
+        },
+        buildHorizontalBarPlot(response) {
+            var chartData = response.data;
+            var trace = chartData.trace;
+            trace.type = "bar";
+            trace.orientation = "h";
+            trace.text = trace.labels;
+            trace.marker = { color: this.cividisColors.blue75};
+            trace.hovertemplate = "%{text}<extra></extra>"
+            var data = [trace];
+            var layout = {
+                title: this.createPlotTitle(chartData.plotId),
+                hovermode: 'closest',
+                font: {
+                    family: 'Roboto,sans-serif',
+                },
+                xaxis: {automargin: true, title: this.createXAxisTitle(chartData.plotId)},
+                yaxis: {automargin: true, title: {text: this.createYAxisTitle(chartData.plotId), standoff: 10}},
+                margin: {
+                    t: this.getPlotTopMargin()
+                },
+                height: 350,
+                colorscale: "Viridis"
+            }
+            this.$nextTick(() => {
+                Plotly.newPlot(chartData.plotId, data, layout, this.plotlyConfig);
             });
         },
         updateLolliplotPlot(plotId, url) {
@@ -896,27 +1024,28 @@ Vue.component('lookup-panel', {
                         var trace = chartData.trace;
                         trace.type = "scattergl";
                         trace.mode = 'markers';
-                        trace.marker = { size: 9};
+                        trace.marker = { size: 9, color: this.cividisColors.blue75};
                         trace.text = trace.labels;
                         trace.yaxis = "y";
+                        trace.opacity = 0.8;
                         trace.hovertemplate = "%{text}<extra></extra>"
-                        var data = [trace];
-                        var shapes = trace.x.map((x,index) => ({
-                            type: 'line',
-                            xref: 'x',
-                            yref: 'y',
-                            x0: x,
-                            y0: 0,
-                            x1: x,
-                            y1: trace.y[index],
+                        var data = [];
+                        var shapes = [];
+                        var lineTraces = trace.x.map((x,index) => ({
+                            type: 'scattergl',
+                            mode: "lines",
+                            x: [x, x],
+                            y: [0, trace.y[index]],
                             line: {
                                 color:'grey',
                                 width: 1
                             },
-                            layer: 'below'
+                            hoverinfo:'skip'
                         }
                             )
                         );
+                        data.push(...lineTraces);
+                        data.push(trace);
                         var annotations = [];
                         var y1Even = chartData.maxY * -0.1;
                         var y0Even = y1Even * 0.1;
@@ -1029,6 +1158,7 @@ Vue.component('lookup-panel', {
                 case "alterationByCancerPlot": return this.currentGene + " Alterations by Cancer";
                 case "cancerByPercentPlot": return "Cancers with most " + this.currentGene + " Alterations by Percent";
                 case "genieLollipopPlot": return "Lollipop Plot of Genie " + this.currentGene + " Variants";
+                case "mutatedGenesCancerPlot": return "Most Commonly Mutated Genes in " + this.currentOncotreeCode.text;
 
             }
         },
@@ -1037,6 +1167,7 @@ Vue.component('lookup-panel', {
                 case "alterationByCancerPlot": return "Number of Variants";
                 case "cancerByPercentPlot": return "Percent of cases";
                 case "genieLollipopPlot": return "Amino Acid Position";
+                case "mutatedGenesCancerPlot": return "Number of Variants";
 
             }
         },
@@ -1045,6 +1176,7 @@ Vue.component('lookup-panel', {
                 case "alterationByCancerPlot": return "Cancer Type";
                 case "cancerByPercentPlot": return "Cancer Type";
                 case "genieLollipopPlot": return "Variant Count";
+                case "mutatedGenesCancerPlot": return "Gene";
 
             }
         }

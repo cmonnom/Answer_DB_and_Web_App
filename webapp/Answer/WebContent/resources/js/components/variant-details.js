@@ -407,7 +407,7 @@ Vue.component('variant-details', {
             showingGeneLabels: false,
             maxGenesForLabels: 150,
             fieldsWithGeneRules: ["leftGene", "rightGene"],
-            searchForGene: null
+            searchForGene: null,
         }
 
 

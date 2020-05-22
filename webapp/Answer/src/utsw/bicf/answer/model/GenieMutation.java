@@ -47,6 +47,8 @@ public class GenieMutation {
 	@Column(name="amino_acid_notation")
 	String aminoAcidNotation;
 	
+	@Column(name="variant_type")
+	String variantType;
 
 	public Integer getGenieMutationId() {
 		return genieMutationId;
@@ -126,6 +128,14 @@ public class GenieMutation {
 
 	public void setVariantChange(String variantChange) {
 		this.variantChange = variantChange;
+	}
+
+	public String getVariantType() {
+		return variantType;
+	}
+
+	public void setVariantType(String variantType) {
+		this.variantType = variantType;
 	}
 
 }

@@ -200,6 +200,7 @@ public class APIController {
 							m.setHugoSymbol(items[0]);
 							m.setEntrezId(Integer.parseInt(items[1]));
 							m.setVariantClassification(items[8]);
+							m.setVariantType(items[9]);
 							m.setTumorSampleBarcode(items[15]);
 //							Integer fkey = modelDAO.getGenieSampleIdByTumorBarcode(m.getTumorSampleBarcode());
 							m.setGenieSampleId(sampleIdFKey.get(m.getTumorSampleBarcode()));

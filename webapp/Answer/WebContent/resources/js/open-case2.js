@@ -149,9 +149,18 @@ const OpenCase2 = {
      </v-img>
      <img :src="webAppRoot + '/resources/images/mutational_signature_axis.png'" alt="X Axis" width="1024px" class="mut-sig-image-axis"/>
 
-     <div>
-     Mutational Signature Data
-     {{ mutSigTableData }}
+     <div class="pa-2 centered">
+     <table>
+        <tr class="font-weight-bold">
+            <td>Signature</td><td>Proposed Etiology</td><td>Value</td>
+        </tr>
+        <tr v-for="(item, index) in mutSigTableData" :key="index">
+            <td>{{ item.signature }}</td><td>{{ item.proposedEtiology }}</td><td>{{ item.value }}</td>
+        </tr>
+     </table>
+     <div >
+        
+     </div>
      </div>
      </v-card-text>
      </v-card>
@@ -793,7 +802,7 @@ const OpenCase2 = {
                 mutationalSignatureUrl: "",
                 mutationalSignatureImage: "",
                 mutSigVisible: false,
-                mutSigTableData: null,
+                mutSigTableData: [],
                 reportReady: false,
                 caseName: "",
                 caseId: "",
@@ -1234,6 +1243,7 @@ const OpenCase2 = {
                         this.reportReady = response.data.reportReady;
                         this.caseOwnerId = response.data.caseOwnerId;
                         this.caseOwnerName = response.data.caseOwnerName;
+                        this.mutSigTableData = response.data.mutationalSignatureData;
                         if (this.caseType == "Clinical") {
                             this.caseTypeIcon = "fa-user-md";
                             this.caseTypeIconSize = 20;
@@ -1247,7 +1257,7 @@ const OpenCase2 = {
                         this.caseId = response.data.caseId;
                         this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true&primary=true";
                         this.mutationalSignatureUrl = response.data.tumorVcf ? webAppRoot + "/mutationalSignatureViewer?caseId=" + this.caseId : null;
-                        this.mutationalSignatureImage = response.data.mutationalSignatureFileName ? webAppRoot + "/images/" + response.data.mutationalSignatureFileName : null;
+                        this.mutationalSignatureImage = response.data.mutationalSignatureLinkName ? webAppRoot + "/images/" + response.data.mutationalSignatureLinkName : null;
                         this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
                         this.addOtherAnnotatorsValues(response.data.snpIndelVariantSummary);
                         this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
@@ -2540,6 +2550,28 @@ const OpenCase2 = {
         },
         openLink(link) {
             window.open(link, "_blank", 'noopener');
+        },
+        getMutationSignatureData() {
+            axios.get(
+                webAppRoot + "/getMutationSignatureTableForCase",
+                {
+                    params: {
+                        caseId: this.$route.params.id
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed) {
+                        this.patientDetailsUnSaved = false;
+                        this.patientTables = response.data.patientTables;
+                        this.extractPatientDetailsInfo();
+
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.getPatientDetails);
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                });
         },
     },
     mounted() {

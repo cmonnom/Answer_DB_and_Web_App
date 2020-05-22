@@ -197,8 +197,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVirusDetails",
 				IndividualPermission.CAN_VIEW);
-		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getMutationSignatureTableForCase",
-				IndividualPermission.CAN_VIEW);
+//		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getMutationSignatureTableForCase",
+//				IndividualPermission.CAN_VIEW);
 		
 	}
 
@@ -295,9 +295,11 @@ public class OpenCaseController {
 				.map(r -> new ReportGroupForDisplay(r))
 				.sorted()
 				.collect(Collectors.toList());
-		String mutationalSignatureFileName = caseId + ".mutational_signature.png";
-		String mutationalSignatureLinkName = createRandomizedLink(fileProps.getImageFilesDir(), fileProps.getImageLinksDir(), mutationalSignatureFileName, ".png");
-		detailedCase.setMutationalSignatureFileName(mutationalSignatureLinkName);
+		String mutationalSignatureFileName = detailedCase.getMutationalSignatureImage();
+		if (mutationalSignatureFileName != null) {
+			String mutationalSignatureLinkName = createRandomizedLink(fileProps.getImageFilesDir(), fileProps.getImageLinksDir(), mutationalSignatureFileName, ".png");
+			detailedCase.setMutationalSignatureLinkName(mutationalSignatureLinkName);
+		}
 		long beforeSummary = System.currentTimeMillis();
 		System.out.println("Before Summary " + (beforeSummary - now) + "ms");
 		OpenCaseSummary summary = new OpenCaseSummary(modelDAO, qcAPI, detailedCase, "oid", user,
@@ -2041,22 +2043,22 @@ public class OpenCaseController {
 	}
 	
 	
-	@RequestMapping(value = "/getMutationSignatureTableForCase", produces= "application/json; charset=utf-8")
-	@ResponseBody
-	public String getMutationSignatureTableForCase(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
-
-		RequestUtils utils = new RequestUtils(modelDAO);
-		AjaxResponse ajaxResponse = new AjaxResponse();
-		ajaxResponse.setIsAllowed(true);
-		ajaxResponse.setSuccess(true);
-		AjaxResponse mongoResponse = utils.getMutationSignatureTableForCase(caseId);
-		if (mongoResponse.getPayload() != null) {
-			ajaxResponse.setPayload(mongoResponse.getPayload());
-		}
-		else {
-			ajaxResponse.setIsAllowed(true);
-			ajaxResponse.setSuccess(false);
-		}
-		return ajaxResponse.createObjectJSON();
-	}
+//	@RequestMapping(value = "/getMutationSignatureTableForCase", produces= "application/json; charset=utf-8")
+//	@ResponseBody
+//	public String getMutationSignatureTableForCase(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
+//
+//		RequestUtils utils = new RequestUtils(modelDAO);
+//		AjaxResponse ajaxResponse = new AjaxResponse();
+//		ajaxResponse.setIsAllowed(true);
+//		ajaxResponse.setSuccess(true);
+//		AjaxResponse mongoResponse = utils.getMutationSignatureTableForCase(caseId);
+//		if (mongoResponse.getPayload() != null) {
+//			ajaxResponse.setPayload(mongoResponse.getPayload());
+//		}
+//		else {
+//			ajaxResponse.setIsAllowed(true);
+//			ajaxResponse.setSuccess(false);
+//		}
+//		return ajaxResponse.createObjectJSON();
+//	}
 }

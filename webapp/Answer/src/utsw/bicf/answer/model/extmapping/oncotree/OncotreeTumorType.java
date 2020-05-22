@@ -1,5 +1,7 @@
 package utsw.bicf.answer.model.extmapping.oncotree;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -23,6 +25,9 @@ public class OncotreeTumorType {
 	
 	@JsonProperty("parent")
 	String parent;
+	
+	@JsonProperty("children")
+	Map<String, OncotreeTumorType> children;
 
 	public String getCode() {
 		return code;
@@ -71,4 +76,14 @@ public class OncotreeTumorType {
 	public void setParent(String parent) {
 		this.parent = parent;
 	}
+
+	public Map<String, OncotreeTumorType> getChildren() {
+		return children;
+	}
+
+	public void setChildren(Map<String, OncotreeTumorType> children) {
+		this.children = children;
+	}
+
+
 }

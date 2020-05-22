@@ -85,7 +85,7 @@ public class ReportBuilder {
 	private void init() {
 	}
 	
-	public Report build() throws ClientProtocolException, IOException, URISyntaxException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+	public Report build() throws ClientProtocolException, IOException, URISyntaxException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
 		caseDetails = utils.getCaseDetails(caseId, null);
 		report.setCaseId(caseDetails.getCaseId());
 		report.setCaseName(caseDetails.getCaseName());

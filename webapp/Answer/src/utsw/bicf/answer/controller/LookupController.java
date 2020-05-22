@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +37,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.plotly.BarPlotData;
 import utsw.bicf.answer.controller.serialization.plotly.LollipopPlotData;
+import utsw.bicf.answer.controller.serialization.plotly.StackedBarPlotData;
 import utsw.bicf.answer.controller.serialization.plotly.Trace;
 import utsw.bicf.answer.controller.serialization.vuetify.TreeViewSummary;
 import utsw.bicf.answer.dao.LoginDAO;
@@ -63,6 +67,7 @@ import utsw.bicf.answer.model.extmapping.oncotree.OncotreeTumorType;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotDataSummary;
 import utsw.bicf.answer.model.hybrid.GenericLollipopPlotData;
+import utsw.bicf.answer.model.hybrid.GenericStackedBarPlotData;
 import utsw.bicf.answer.model.hybrid.StringSortableByInteger;
 import utsw.bicf.answer.security.CivicProperties;
 import utsw.bicf.answer.security.EnsemblProperties;
@@ -90,6 +95,7 @@ public class LookupController {
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getAlterationByCancer", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getCancerbyPercent", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getGenieGeneLollipop", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getMutatedGeneByCancer", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 
@@ -290,6 +296,74 @@ public class LookupController {
 		}
 	}
 	
+	@RequestMapping("/getMutatedGeneByCancer")
+	@ResponseBody
+	public String getMutatedGeneByCancer(Model model, HttpSession session, @RequestParam String oncotreeCode,
+			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			OncotreeRequestUtils utils = new OncotreeRequestUtils(oncotreeProps, otherProps);
+			Set<String> oncotrees = utils.getOncotreeTumorTypeChildren(oncotreeCode);
+			if (oncotrees != null) {
+				try {
+					response.setIsAllowed(true);
+					response.setSuccess(false);
+					List<GenericStackedBarPlotData> data = modelDAO.getMutatedGenesPerCancer(oncotrees);
+					Map<String, List<Object>> xPerVariantType = new HashMap<String, List<Object>>();
+					List<String> variantTypes = Arrays.asList("SNP", "INS", "DEL");
+					if (data != null && !data.isEmpty()) {
+						StackedBarPlotData chart = new StackedBarPlotData();
+						chart.setPlotId(plotId);
+						List<Object> y = new ArrayList<Object>();
+						for (GenericStackedBarPlotData d : data) {
+							y.add(d.getY());
+//							variantTypes.addAll(d.getCatX());
+						}
+						Collections.reverse(y); //need to reverse for Plotly to show the highest on top
+						//init map
+						for (String variantType : variantTypes) {
+							xPerVariantType.put(variantType, new ArrayList<Object>());
+						}
+						//second pass. Find each variant type x
+						for (GenericStackedBarPlotData d : data) {
+							for (String variantType : variantTypes) {
+								xPerVariantType.get(variantType).add(d.getxByCat().get(variantType));
+							}
+						}
+						//third pass. Build traces
+						for (String variantType : variantTypes) {
+							List<Object> xList = xPerVariantType.get(variantType);
+							if (xList.stream().filter(x -> x != null).count() == 0) {
+								continue;
+							}
+							Trace trace = new Trace();
+							trace.setY(y);
+							trace.setName(variantType);
+							Collections.reverse(xList);
+							trace.setX(xList);
+							List<String> labels = xList.stream().map(x -> variantType).collect(Collectors.toList());
+							Collections.reverse(labels);
+							trace.setLabels(labels);
+							chart.getTraces().add(trace);
+						}
+						
+						return chart.createObjectJSON();
+					}
+					return response.createObjectJSON();
+				} catch (JsonProcessingException e) {
+					e.printStackTrace();
+					return null;
+				}
+			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	@RequestMapping("/getReactomeLocations")
 	@ResponseBody
 	public String getReactomeLocations(Model model, HttpSession session, @RequestParam String levels,
@@ -450,8 +524,10 @@ public class LookupController {
 				for (int i = dataAll.size() -1; i >=0; i--) {
 					GenieSummary dAll = dataAll.get(i);
 					GenericBarPlotData dGene = geneCountPerCancer.get(dAll.getLabel());
-					float pct = dGene.getX().floatValue() / dAll.getTally().floatValue() * 100;
-					toSortData.add(new GenericBarPlotDataSummary(dAll, dGene, pct));
+					if (dGene != null) {
+						float pct = dGene.getX().floatValue() / dAll.getTally().floatValue() * 100;
+						toSortData.add(new GenericBarPlotDataSummary(dAll, dGene, pct));
+					}
 				}
 				toSortData = toSortData.stream().sorted(new Comparator<GenericBarPlotDataSummary>() {
 					@Override

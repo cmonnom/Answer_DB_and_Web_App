@@ -3,6 +3,7 @@ package utsw.bicf.answer.dao;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.transaction.Transactional;
 
@@ -29,6 +30,7 @@ import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.Version;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
 import utsw.bicf.answer.model.hybrid.GenericLollipopPlotData;
+import utsw.bicf.answer.model.hybrid.GenericStackedBarPlotData;
 
 @Repository
 public class ModelDAO {
@@ -576,6 +578,37 @@ public class ModelDAO {
 			@Override
 			public Object transformTuple(Object[] values, String[] labels) {
 				return new GenericLollipopPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<GenericStackedBarPlotData> getMutatedGenesPerCancer(Set<String> oncotreeCodes) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		sb.append("select sum(x) total, group_concat(x) bar_x, group_concat(x1) cat_x, y from ( ")
+		.append(" select count(gm.hugo_symbol) as x, gm.variant_type x1, gm.hugo_symbol as y from genie_mutation gm, genie_sample gs ") 
+		.append(" where gm.genie_sample_id = gs.genie_sample_id ")
+		.append(" and gs.oncotree_code in :oncotreeCodes ")
+		.append(" group by gm.hugo_symbol, gm.variant_type) as sub ")
+		.append(" group by y")
+		.append(" order by total desc limit 10; ");
+		Query<GenericStackedBarPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameterList("oncotreeCodes", oncotreeCodes);
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericStackedBarPlotData(values, labels);
 			}
 
 			@SuppressWarnings("rawtypes")

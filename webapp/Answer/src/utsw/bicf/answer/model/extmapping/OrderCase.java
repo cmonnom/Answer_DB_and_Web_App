@@ -97,7 +97,9 @@ public class OrderCase {
 	Float msi;
 	@JsonProperty("msiClass")
 	String msiClass;
-	String mutationalSignatureFileName;
+	String mutationalSignatureImage;
+	String mutationalSignatureLinkName;
+	List<MutationalSignatureData> mutationalSignatureData;
 	
 	public OrderCase() {
 		
@@ -623,14 +625,94 @@ public class OrderCase {
 	}
 
 
-	public String getMutationalSignatureFileName() {
-		return mutationalSignatureFileName;
+	public String getMutationalSignatureImage() {
+		return mutationalSignatureImage;
 	}
 
 
-	public void setMutationalSignatureFileName(String mutationalSignatureFileName) {
-		this.mutationalSignatureFileName = mutationalSignatureFileName;
+	public void setMutationalSignatureImage(String mutationalSignatureImage) {
+		this.mutationalSignatureImage = mutationalSignatureImage;
 	}
+
+
+	public String getMutationalSignatureLinkName() {
+		return mutationalSignatureLinkName;
+	}
+
+
+	public void setMutationalSignatureLinkName(String mutationalSignatureLinkName) {
+		this.mutationalSignatureLinkName = mutationalSignatureLinkName;
+	}
+
+
+	public void copyAll(OrderCase orderCase) {
+		this.active = orderCase.active;
+		this.authorizingPhysician = orderCase.authorizingPhysician;
+		this.caseId = orderCase.caseId;
+		this.caseName = orderCase.caseName;
+		this.dateOfBirth = orderCase.dateOfBirth;
+		this.epicOrderDate = orderCase.epicOrderDate;
+		this.epicOrderNumber = orderCase.epicOrderNumber;
+		this.gender = orderCase.gender;
+		this.icd10 = orderCase.icd10;
+		this.medicalRecordNumber = orderCase.medicalRecordNumber;
+		this.normalId = orderCase.normalId;
+		this.normalTissueType = orderCase.normalTissueType;
+		this.orderingPhysician = orderCase.orderingPhysician;
+		this.patientName = orderCase.patientName;
+		this.tumorBlock = orderCase.tumorBlock;
+		this.tumorCollectionDate = orderCase.tumorCollectionDate;
+		this.tumorId = orderCase.tumorId;
+		this.tumorTissueType = orderCase.tumorTissueType;
+		this.user = orderCase.user;
+		this.assignedTo = orderCase.assignedTo;
+		this.receivedDate = orderCase.receivedDate;
+		this.variants = orderCase.variants;
+		this.institution = orderCase.institution;
+		this.normalBam = orderCase.normalBam;
+		this.tumorBam = orderCase.tumorBam;
+		this.rnaBam = orderCase.rnaBam;
+		this.tumorVcf = orderCase.tumorVcf;
+		this.cnvs = orderCase.cnvs;
+		this.translocations = orderCase.translocations;
+		this.viruses = orderCase.viruses;
+		this.oncotreeDiagnosis = orderCase.oncotreeDiagnosis;
+		this.totalCases = orderCase.totalCases;
+		this.caseHistory = orderCase.caseHistory;
+		this.type = orderCase.type;
+		this.clinicalStage = orderCase.clinicalStage;
+		this.treatmentStatus = orderCase.treatmentStatus;
+		this.labTestName = orderCase.labTestName;
+		this.rawAvgDepth = orderCase.rawAvgDepth;
+		this.rawPctOver100X = orderCase.rawPctOver100X;
+		this.dedupAvgDepth = orderCase.dedupAvgDepth;
+		this.dedupPctOver100X = orderCase.dedupPctOver100X;
+		this.tumorMutationBurden = orderCase.tumorMutationBurden;
+		this.labNotes = orderCase.labNotes;
+		this.tumorPercent = orderCase.tumorPercent;
+		this.groupIds = orderCase.groupIds;
+		this.storageType = orderCase.storageType;
+		this.caseOwner = orderCase.caseOwner;
+		this.tumorMutationBurdenClass = orderCase.tumorMutationBurdenClass;
+		this.msi = orderCase.msi;
+		this.msiClass = orderCase.msiClass;
+		this.mutationalSignatureImage = orderCase.mutationalSignatureImage;
+		this.mutationalSignatureLinkName = orderCase.mutationalSignatureLinkName;
+	}
+
+
+	public List<MutationalSignatureData> getMutationalSignatureData() {
+		return mutationalSignatureData;
+	}
+
+
+	public void setMutationalSignatureData(List<MutationalSignatureData> mutationalSignatureData) {
+		this.mutationalSignatureData = mutationalSignatureData;
+	}
+
+
+
+
 
 
 }

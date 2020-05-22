@@ -3,6 +3,12 @@ package utsw.bicf.answer.db.api.utils;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -22,14 +28,11 @@ import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.xml.sax.SAXException;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import utsw.bicf.answer.aop.AOPAspect;
-import utsw.bicf.answer.model.extmapping.lookup.LookupSummary;
-import utsw.bicf.answer.model.extmapping.oncokb.OncoKBResponse;
 import utsw.bicf.answer.model.extmapping.oncotree.OncotreeTumorType;
-import utsw.bicf.answer.security.OncoKBProperties;
 import utsw.bicf.answer.security.OncotreeProperties;
 import utsw.bicf.answer.security.OtherProperties;
 
@@ -91,5 +94,68 @@ public class OncotreeRequestUtils {
 		}
 		return summary;
 	}
+	
+	/**
+	 * Find all children under a node
+	 * @param oncotreeCode
+	 * @return
+	 * @throws URISyntaxException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JAXBException
+	 * @throws UnsupportedOperationException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 */
+	public Set<String> getOncotreeTumorTypeChildren(String oncotreeCode)
+			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
+			UnsupportedOperationException, SAXException, ParserConfigurationException {
+		OncotreeTumorType summary = null;
+		StringBuilder sbUrl = new StringBuilder(oncotreeProps.getTumorTypeUrl().replace("search/code/", "tree"));
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+		HttpClientContext context = HttpClientContext.create();
+		HttpResponse response = client.execute(requestGet, context);
 
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ObjectMapper mapper = new ObjectMapper();
+			Map<String, OncotreeTumorType> oncotreeJson = mapper.readValue(response.getEntity().getContent(), new TypeReference<HashMap<String, OncotreeTumorType>>(){});
+			OncotreeTumorType oncotree = oncotreeJson.get("TISSUE");
+			OncotreeTumorType highestParentOncotree = this.goThroughChildren(oncotree.getChildren().values(), oncotreeCode);
+			Set<String> childrenCodes = new HashSet<String>();
+			childrenCodes.add(oncotreeCode);
+			this.findAllChildren(childrenCodes, highestParentOncotree.getChildren().values());
+			return childrenCodes;
+		}
+		else {
+			logger.info("Something went wrong OncotreeRequestUtils:90 HTTP_STATUS: " + statusCode);
+		}
+		return null;
+	}
+
+	private OncotreeTumorType goThroughChildren(Collection<OncotreeTumorType> children, String oncotreeCode) {
+		OncotreeTumorType found = null;
+		for (OncotreeTumorType child : children) {
+			if (child.getCode().equals(oncotreeCode)) {
+				found = child;
+				break;
+			}
+			else {
+				OncotreeTumorType possibleFound = goThroughChildren(child.getChildren().values(), oncotreeCode);
+				if (possibleFound != null) {
+					found = possibleFound;
+				}
+			}
+		}
+		return found;
+	}
+	
+	private void findAllChildren(Set<String> allChildren, Collection<OncotreeTumorType> children) {
+		for (OncotreeTumorType child : children) {
+			allChildren.add(child.getCode());
+			findAllChildren(allChildren, child.getChildren().values());
+		}
+	}
+	
 }
