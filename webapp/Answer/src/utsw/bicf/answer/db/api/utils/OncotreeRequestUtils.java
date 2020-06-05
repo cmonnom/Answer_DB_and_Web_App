@@ -6,32 +6,22 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.log4j.Logger;
-import org.owasp.html.HtmlPolicyBuilder;
-import org.owasp.html.PolicyFactory;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.aop.AOPAspect;
 import utsw.bicf.answer.model.extmapping.oncotree.OncotreeTumorType;
 import utsw.bicf.answer.security.OncotreeProperties;
 import utsw.bicf.answer.security.OtherProperties;
@@ -42,32 +32,14 @@ import utsw.bicf.answer.security.OtherProperties;
  * @author Guillaume
  *
  */
-public class OncotreeRequestUtils {
+public class OncotreeRequestUtils extends AbstractRequestUtils {
 
 	OncotreeProperties oncotreeProps;
-	OtherProperties otherProps;
-	PolicyFactory policy = new HtmlPolicyBuilder().toFactory();
-	private static final Logger logger = Logger.getLogger(AOPAspect.class);
 
 	public OncotreeRequestUtils(OncotreeProperties oncotreeProps, OtherProperties otherProps) {
 		this.oncotreeProps = oncotreeProps;
 		this.otherProps = otherProps;
 		this.setupClient();
-	}
-
-	private HttpGet requestGet = null;
-	private HttpPost requestPost = null;
-	private HttpPut requestPut = null;
-	private HttpHost proxy = null;
-	private HttpClient client = null;
-
-	private void setupClient() {
-		if (otherProps.getProxyHostname() != null) {
-			proxy = new HttpHost(otherProps.getProxyHostname(), otherProps.getProxyPort());
-			client = HttpClientBuilder.create().setProxy(proxy).build();
-		} else {
-			client = HttpClientBuilder.create().build();
-		}
 	}
 
 	public OncotreeTumorType getOncotreeTumorType(String oncotreeCode)
@@ -92,6 +64,7 @@ public class OncotreeRequestUtils {
 		else {
 			logger.info("Something went wrong OncotreeRequestUtils:90 HTTP_STATUS: " + statusCode);
 		}
+		this.closeGetRequest();
 		return summary;
 	}
 	
@@ -126,11 +99,13 @@ public class OncotreeRequestUtils {
 			Set<String> childrenCodes = new HashSet<String>();
 			childrenCodes.add(oncotreeCode);
 			this.findAllChildren(childrenCodes, highestParentOncotree.getChildren().values());
+			this.closeGetRequest();
 			return childrenCodes;
 		}
 		else {
 			logger.info("Something went wrong OncotreeRequestUtils:90 HTTP_STATUS: " + statusCode);
 		}
+		this.closeGetRequest();
 		return null;
 	}
 

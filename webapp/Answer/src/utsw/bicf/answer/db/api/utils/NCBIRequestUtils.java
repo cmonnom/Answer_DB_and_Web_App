@@ -55,12 +55,9 @@ import utsw.bicf.answer.aop.AOPAspect;
  * @author Guillaume
  *
  */
-public class NCBIRequestUtils {
+public class NCBIRequestUtils extends AbstractRequestUtils{
 
 	NCBIProperties ncbiProps;
-	OtherProperties otherProps;
-	PolicyFactory policy = new HtmlPolicyBuilder().toFactory();
-	private static final Logger logger = Logger.getLogger(AOPAspect.class);
 
 	public NCBIRequestUtils(NCBIProperties ncbiProps, OtherProperties otherProps) {
 		this.ncbiProps = ncbiProps;
@@ -69,21 +66,7 @@ public class NCBIRequestUtils {
 	}
 
 	public final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-	private HttpGet requestGet = null;
-	private HttpPost requestPost = null;
-	private HttpPut requestPut = null;
-	private HttpHost proxy = null;
-	private HttpClient client = null;
 	private XmlMapper mapper = new XmlMapper();
-
-	private void setupClient() {
-		if (otherProps.getProxyHostname() != null) {
-			proxy = new HttpHost(otherProps.getProxyHostname(), otherProps.getProxyPort());
-			client = HttpClientBuilder.create().setProxy(proxy).build();
-		} else {
-			client = HttpClientBuilder.create().build();
-		}
-	}
 
 	public List<PubMed> getPubmedDetails(Set<String> pmIds, ModelDAO modelDAO)
 			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
@@ -231,6 +214,7 @@ public class NCBIRequestUtils {
 			logger.info("Something went wrong NCBIRequest:229 HTTP_STATUS: " + statusCode);
 		}
 		logger.info("Pubmeds count: " + pubmeds.size());
+		this.closeGetRequest();
 		return pubmeds;
 	}
 	
@@ -301,7 +285,7 @@ public class NCBIRequestUtils {
 		else {
 			logger.info("Something went wrong NCBIRequest:229 HTTP_STATUS: " + statusCode);
 		}
-		
+		this.closeGetRequest();
 		return summary;
 	}
 
@@ -333,6 +317,7 @@ public class NCBIRequestUtils {
 		else {
 			logger.info("Something went wrong NCBIRequest:152 HTTP_STATUS: " + statusCode);
 		}
+		this.closeGetRequest();
 		return summary;
 	}
 

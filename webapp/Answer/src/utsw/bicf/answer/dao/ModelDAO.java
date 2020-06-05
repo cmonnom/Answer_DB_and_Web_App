@@ -1,12 +1,16 @@
 package utsw.bicf.answer.dao;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -15,12 +19,15 @@ import org.hibernate.transform.ResultTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import utsw.bicf.answer.controller.serialization.plotly.Trace;
+import utsw.bicf.answer.db.api.utils.LookupUtils;
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.GenieSample;
 import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.HeaderConfig;
+import utsw.bicf.answer.model.MSKHotspot;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.ResetToken;
 import utsw.bicf.answer.model.Token;
@@ -28,9 +35,11 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.UserRank;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.Version;
+import utsw.bicf.answer.model.extmapping.AminoAcid;
+import utsw.bicf.answer.model.hybrid.CondonDistribution;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
 import utsw.bicf.answer.model.hybrid.GenericLollipopPlotData;
-import utsw.bicf.answer.model.hybrid.GenericStackedBarPlotData;
+import utsw.bicf.answer.model.hybrid.GenericStackedBarPlotData2;
 
 @Repository
 public class ModelDAO {
@@ -108,6 +117,8 @@ public class ModelDAO {
 		Session session = sessionFactory.getCurrentSession();
 		String sql = "delete from genie_mutation";
 		session.createNativeQuery(sql).executeUpdate();
+		sql = "delete from genie_cna";
+		session.createNativeQuery(sql).executeUpdate();
 		sql = "delete from genie_sample";
 		session.createNativeQuery(sql).executeUpdate();
 		sql = "delete from genie_summary";
@@ -117,6 +128,8 @@ public class ModelDAO {
 		sql = "ALTER TABLE genie_sample AUTO_INCREMENT = 1";
 		session.createNativeQuery(sql).executeUpdate();
 		sql = "ALTER TABLE genie_summary AUTO_INCREMENT = 1";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "ALTER TABLE genie_cna AUTO_INCREMENT = 1";
 		session.createNativeQuery(sql).executeUpdate();
 	}
 
@@ -588,27 +601,55 @@ public class ModelDAO {
 		}).list();
 	}
 	
+//	@SuppressWarnings({ "unchecked", "deprecation" })
+//	@Transactional
+//	public List<GenericStackedBarPlotData> getMutatedGenesPerCancer(Set<String> oncotreeCodes) {
+//		Session session = sessionFactory.getCurrentSession();
+//		StringBuilder sb = new StringBuilder();
+//		sb.append("select sum(x) total, group_concat(x) bar_x, group_concat(x1) cat_x, y from ( ")
+//		.append(" select count(gm.hugo_symbol) as x, gm.variant_type x1, gm.hugo_symbol as y from genie_mutation gm, genie_sample gs ") 
+//		.append(" where gm.genie_sample_id = gs.genie_sample_id ")
+//		.append(" and gs.oncotree_code in :oncotreeCodes ")
+//		.append(" group by gm.hugo_symbol, gm.variant_type) as sub ")
+//		.append(" group by y")
+//		.append(" order by total desc limit 10; ");
+//		Query<GenericStackedBarPlotData> query = session.createNativeQuery(sb.toString())
+//				.setParameterList("oncotreeCodes", oncotreeCodes);
+//		
+//		return query.setResultTransformer(new ResultTransformer() {
+//			private static final long serialVersionUID = 1L;
+//
+//			@Override
+//			public Object transformTuple(Object[] values, String[] labels) {
+//				return new GenericStackedBarPlotData(values, labels);
+//			}
+//
+//			@SuppressWarnings("rawtypes")
+//			@Override
+//			public List transformList(List arg0) {
+//				return arg0;
+//			}
+//		}).list();
+//	}
+	
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	@Transactional
-	public List<GenericStackedBarPlotData> getMutatedGenesPerCancer(Set<String> oncotreeCodes) {
+	public GenericStackedBarPlotData2 getMutatedGenesPerCancer(Set<String> oncotreeCodes) {
 		Session session = sessionFactory.getCurrentSession();
 		StringBuilder sb = new StringBuilder();
-		sb.append("select sum(x) total, group_concat(x) bar_x, group_concat(x1) cat_x, y from ( ")
-		.append(" select count(gm.hugo_symbol) as x, gm.variant_type x1, gm.hugo_symbol as y from genie_mutation gm, genie_sample gs ") 
+		sb.append(" select count(gm.hugo_symbol) as x, gm.hugo_symbol as y from genie_mutation gm, genie_sample gs ") 
 		.append(" where gm.genie_sample_id = gs.genie_sample_id ")
 		.append(" and gs.oncotree_code in :oncotreeCodes ")
-		.append(" group by gm.hugo_symbol, gm.variant_type) as sub ")
-		.append(" group by y")
-		.append(" order by total desc limit 10; ");
-		Query<GenericStackedBarPlotData> query = session.createNativeQuery(sb.toString())
+		.append(" group by gm.hugo_symbol ");
+		Query<GenericBarPlotData> query = session.createNativeQuery(sb.toString())
 				.setParameterList("oncotreeCodes", oncotreeCodes);
 		
-		return query.setResultTransformer(new ResultTransformer() {
+		List<GenericBarPlotData> mutationData = query.setResultTransformer(new ResultTransformer() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public Object transformTuple(Object[] values, String[] labels) {
-				return new GenericStackedBarPlotData(values, labels);
+				return new GenericBarPlotData(values, labels);
 			}
 
 			@SuppressWarnings("rawtypes")
@@ -617,6 +658,233 @@ public class ModelDAO {
 				return arg0;
 			}
 		}).list();
+		Map<String, Number> mutationsByGene = new HashMap<String, Number>();
+		for (GenericBarPlotData m : mutationData) {
+			mutationsByGene.put(m.getY(), m.getX());
+		}
+		
+		sb = new StringBuilder();
+		sb.append(" select count(gm.hugo_symbol) as x, gm.hugo_symbol as y from genie_cna gm, genie_sample gs ") 
+		.append(" where gm.genie_sample_id = gs.genie_sample_id ")
+		.append(" and gs.oncotree_code in :oncotreeCodes ")
+		.append(" and gm.cna_value > 0 ")
+		.append(" group by gm.hugo_symbol ");
+		query = session.createNativeQuery(sb.toString())
+				.setParameterList("oncotreeCodes", oncotreeCodes);
+		
+		List<GenericBarPlotData> cnaAmpData = query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+		Map<String, Number> cnasAmpByGene = new HashMap<String, Number>();
+		for (GenericBarPlotData c : cnaAmpData) {
+			cnasAmpByGene.put(c.getY(), c.getX());
+		}
+		
+		sb = new StringBuilder();
+		sb.append(" select count(gm.hugo_symbol) as x, gm.hugo_symbol as y from genie_cna gm, genie_sample gs ") 
+		.append(" where gm.genie_sample_id = gs.genie_sample_id ")
+		.append(" and gs.oncotree_code in :oncotreeCodes ")
+		.append(" and gm.cna_value < 0 ")
+		.append(" group by gm.hugo_symbol ");
+		query = session.createNativeQuery(sb.toString())
+				.setParameterList("oncotreeCodes", oncotreeCodes);
+		
+		List<GenericBarPlotData> cnaDelData = query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+		Map<String, Number> cnasDelByGene = new HashMap<String, Number>();
+		for (GenericBarPlotData c : cnaDelData) {
+			cnasDelByGene.put(c.getY(), c.getX());
+		}
+		
+		GenericStackedBarPlotData2 stackedData = new GenericStackedBarPlotData2(mutationsByGene, cnasAmpByGene, cnasDelByGene);
+		return stackedData;
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<Trace> getCodonDiseaseDistribution(String geneTerm, String aminoAcidNotation) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		sb.append("select * from ( select count(gm.variant_change) x, gm.variant_change y from genie_mutation gm, genie_sample gs ")
+				.append(" where gm.hugo_symbol = :geneTerm and gm.amino_acid_notation = :aminoAcidNotation ")
+				.append(" and gm.genie_sample_id = gs.genie_sample_id ")
+				.append(" group by gm.variant_change ")
+				.append(" order by x desc ) sub")
+				.append(" where x > 2;");
+		Query<GenericBarPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameter("geneTerm", geneTerm)
+				.setParameter("aminoAcidNotation", aminoAcidNotation);
+		
+		List<GenericBarPlotData> yData = query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+		Collections.reverse(yData);
+		
+		//top 9 cancers
+		sb = new StringBuilder();
+		sb.append("select count(gs.cancer_type) x, gs.cancer_type y from genie_mutation gm, genie_sample gs  ")
+		.append(" where gm.hugo_symbol = :geneTerm and gm.amino_acid_notation = :aminoAcidNotation ")
+		.append(" and gm.genie_sample_id = gs.genie_sample_id ")
+		.append(" group by gs.cancer_type ")
+		.append(" order by x desc limit 9; ");
+		
+        query = session.createNativeQuery(sb.toString())
+		.setParameter("geneTerm", geneTerm)
+		.setParameter("aminoAcidNotation", aminoAcidNotation);
+
+        List<String> yDataCancer = query.setResultTransformer(new ResultTransformer() {
+		private static final long serialVersionUID = 1L;
+	
+		@Override
+		public Object transformTuple(Object[] values, String[] labels) {
+			return new GenericBarPlotData(values, labels);
+		}
+	
+		@SuppressWarnings("rawtypes")
+		@Override
+		public List transformList(List arg0) {
+			return arg0;
+		}
+	}).list().stream().map(c -> c.getY()).collect(Collectors.toList());
+		
+		sb = new StringBuilder();
+		sb.append(" select count(gm.variant_change) x, gm.variant_change aa, gs.cancer_type cancerType from genie_mutation gm, genie_sample gs ") 
+		.append(" where gm.hugo_symbol = :geneTerm and gm.amino_acid_notation = :aminoAcidNotation ")
+		.append(" and gm.genie_sample_id = gs.genie_sample_id ")
+		.append(" group by gm.variant_change, gs.cancer_type ")
+		.append(" order by x desc; ");
+		Query<CondonDistribution> query2 = session.createNativeQuery(sb.toString())
+				.setParameter("geneTerm", geneTerm)
+				.setParameter("aminoAcidNotation", aminoAcidNotation);
+		
+		List<CondonDistribution> codonData = query2.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new CondonDistribution(values, labels);
+			}
+			
+		}).list();
+		Map<String, Map<String, CondonDistribution>> codonDataByCancerType = new HashMap<String, Map<String, CondonDistribution>>();
+		for (CondonDistribution cd : codonData) {
+			if (!yDataCancer.contains(cd.getCancerType())) {
+				cd.setCancerType("Other");
+			}
+			Map<String, CondonDistribution> byAA = codonDataByCancerType.get(cd.getCancerType());
+			if (byAA == null) {
+				byAA = new HashMap<String, CondonDistribution>();
+			}
+			byAA.put(cd.getAa(), cd);
+			codonDataByCancerType.put(cd.getCancerType(), byAA);
+		}
+		yDataCancer.add("Other");
+		List<Trace> traces = new ArrayList<Trace>();
+		Map<String, Integer> countsPerAA= new HashMap<String, Integer>();
+//		Set<String> traceNames = codonData.stream().map(c -> c.getCancerType()).collect(Collectors.toSet());
+		for (String name : yDataCancer) {
+			for (GenericBarPlotData aa : yData) {
+				Map<String, CondonDistribution> byAA = codonDataByCancerType.get(name);
+				if (byAA != null) {
+					CondonDistribution cd = byAA.get(aa.getY());
+					if (cd != null) {
+						Integer count = countsPerAA.get(aa.getY());
+						if (count == null) {
+							count = 0;
+						}
+						count += cd.getCount().intValue();
+						countsPerAA.put(aa.getY(), count);
+					}
+				}
+			}
+		}
+		for (String name : yDataCancer) {
+			Trace trace = new Trace();
+			for (GenericBarPlotData aa : yData) {
+				Map<String, CondonDistribution> byAA = codonDataByCancerType.get(name);
+				if (byAA != null) {
+					CondonDistribution cd = byAA.get(aa.getY());
+					if (cd != null) {
+						trace.addX(cd.getCount());
+					}
+					else {
+						trace.addX(null);
+					}
+				}
+				else {
+					
+				}
+				trace.addY(aa.getY() + " ");
+				
+				AminoAcid aaPOJO = LookupUtils.PROTEIN_1_TO_3_MAP.get(aa.getY());
+				if (aaPOJO == null) { //try with '='
+					aaPOJO = LookupUtils.PROTEIN_1_TO_3_MAP.get(aminoAcidNotation.substring(0, 1));
+				}
+				String aaName = "";
+				if (aaPOJO != null) {
+					aaName = StringUtils.capitalize(aaPOJO.getFullName());
+				}
+				trace.addLabel(aaName + ": " + countsPerAA.get(aa.getY()));
+				
+				
+			}
+			if (trace.getY() != null && !trace.getY().isEmpty()) {
+				trace.setHovertemplate("%{text}<extra></extra>");
+				trace.setName(name);
+				traces.add(trace);
+			}
+		}
+		return traces;
 	}
 
+	@Transactional
+	public List<MSKHotspot> getMSKHotspots(String hugoSymbol, String residue) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from MSKHotspot where hugoSymbol = :hugoSymbol and residue = :residue";
+		List<MSKHotspot> hotspots = session.createQuery(hql, MSKHotspot.class)
+				.setParameter("hugoSymbol", hugoSymbol)
+				.setParameter("residue", residue)
+				.list();
+		return hotspots;
+	}
 }

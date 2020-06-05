@@ -241,9 +241,13 @@ const Home = {
             }
         },
         getWorklists() {
+            if (this.$refs.casesAllTable)
             this.$refs.casesAllTable.startLoading();
+            if (this.$refs.casesForUserTable)
             this.$refs.casesForUserTable.startLoading();
+            if (this.$refs.casesForUserCompletedTable)
             this.$refs.casesForUserCompletedTable.startLoading();
+            if (this.$refs.casesFinalizedTable)
             this.$refs.casesFinalizedTable.startLoading();
             axios.get("./getWorklists", {
                 params: {
@@ -251,9 +255,13 @@ const Home = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
+                        if (this.$refs.casesAllTable)
                         this.$refs.casesAllTable.manualDataFiltered(response.data.casesAll);
+                        if (this.$refs.casesForUserTable)
                         this.$refs.casesForUserTable.manualDataFiltered(response.data.casesForUser);
+                        if (this.$refs.casesForUserCompletedTable)
                         this.$refs.casesForUserCompletedTable.manualDataFiltered(response.data.casesForUserCompleted);
+                        if (this.$refs.casesFinalizedTable)
                         this.$refs.casesFinalizedTable.manualDataFiltered(response.data.casesFinalized);
                         this.openDefaultTab();
                     }

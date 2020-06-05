@@ -5,6 +5,7 @@ public class OncoKBProperties {
 	String searchUrl;
 	String summaryUrl;
 	String oncoKBGeneUrl;
+	String variantSearchUrl;
 	
 	public OncoKBProperties() {
 		super();
@@ -32,6 +33,14 @@ public class OncoKBProperties {
 
 	public void setOncoKBGeneUrl(String oncoKBGeneUrl) {
 		this.oncoKBGeneUrl = oncoKBGeneUrl;
+	}
+
+	public String getVariantSearchUrl() {
+		return variantSearchUrl;
+	}
+
+	public void setVariantSearchUrl(String variantSearchUrl) {
+		this.variantSearchUrl = variantSearchUrl;
 	}
 
 

@@ -38,32 +38,14 @@ import utsw.bicf.answer.security.OtherProperties;
  * @author Guillaume
  *
  */
-public class CivicRequestUtils {
+public class CivicRequestUtils  extends AbstractRequestUtils{
 
 	CivicProperties civicProps;
-	OtherProperties otherProps;
-	PolicyFactory policy = new HtmlPolicyBuilder().toFactory();
-	private static final Logger logger = Logger.getLogger(AOPAspect.class);
 
 	public CivicRequestUtils(CivicProperties civicProps, OtherProperties otherProps) {
 		this.civicProps = civicProps;
 		this.otherProps = otherProps;
 		this.setupClient();
-	}
-
-	private HttpGet requestGet = null;
-	private HttpPost requestPost = null;
-	private HttpPut requestPut = null;
-	private HttpHost proxy = null;
-	private HttpClient client = null;
-
-	private void setupClient() {
-		if (otherProps.getProxyHostname() != null) {
-			proxy = new HttpHost(otherProps.getProxyHostname(), otherProps.getProxyPort());
-			client = HttpClientBuilder.create().setProxy(proxy).build();
-		} else {
-			client = HttpClientBuilder.create().build();
-		}
 	}
 
 	private CivicResponse getGene(String geneTerm) throws URISyntaxException, ClientProtocolException, IOException {
@@ -78,11 +60,13 @@ public class CivicRequestUtils {
 		if (statusCode == HttpStatus.SC_OK) {
 			ObjectMapper mapper = new ObjectMapper();
 			CivicResponse civicJson = mapper.readValue(response.getEntity().getContent(), CivicResponse.class);
+			this.closeGetRequest();
 			return civicJson;
 		}
 		else {
 			logger.info("Something went wrong UniProtRequest:114 HTTP_STATUS: " + statusCode);
 		}
+		this.closeGetRequest();
 		return null;
 	}
 	
@@ -127,6 +111,7 @@ public class CivicRequestUtils {
 						else {
 							logger.info("Something went wrong UniProtRequest:114 HTTP_STATUS: " + statusCode);
 						}
+						this.closeGetRequest();
 						return summary;
 					}
 				}

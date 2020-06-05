@@ -730,3 +730,11 @@ Slow down the fullscreen dialog
 .v-treeview-node__root {
     min-height: 0px !important;
 }
+
+.no-border-table td {
+    border: none;
+}
+
+.no-border-table tr {
+    background-color: unset;
+}

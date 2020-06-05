@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,18 +42,22 @@ import utsw.bicf.answer.controller.serialization.vuetify.TreeViewSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.CivicRequestUtils;
+import utsw.bicf.answer.db.api.utils.ClinicalTrialsRequestUtils;
 import utsw.bicf.answer.db.api.utils.EnsemblRequestUtils;
+import utsw.bicf.answer.db.api.utils.FasmicRequestUtils;
 import utsw.bicf.answer.db.api.utils.InterProRequestUtils;
 import utsw.bicf.answer.db.api.utils.JaxCKBRequestUtils;
+import utsw.bicf.answer.db.api.utils.LookupUtils;
 import utsw.bicf.answer.db.api.utils.NCBIRequestUtils;
 import utsw.bicf.answer.db.api.utils.OncoKBRequestUtils;
 import utsw.bicf.answer.db.api.utils.OncotreeRequestUtils;
 import utsw.bicf.answer.db.api.utils.ReactomeRequestUtils;
-import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.db.api.utils.UniProtRequestUtils;
 import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.IndividualPermission;
+import utsw.bicf.answer.model.MSKHotspot;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.clinicaltrials.ClinicalTrial;
 import utsw.bicf.answer.model.extmapping.ensembl.EnsemblResponse;
 import utsw.bicf.answer.model.extmapping.interpro.EntryProteinLocation;
 import utsw.bicf.answer.model.extmapping.interpro.Fragment;
@@ -62,18 +65,29 @@ import utsw.bicf.answer.model.extmapping.interpro.InterProResponse;
 import utsw.bicf.answer.model.extmapping.interpro.Protein;
 import utsw.bicf.answer.model.extmapping.interpro.Result;
 import utsw.bicf.answer.model.extmapping.lookup.LookupGeneSummaries;
+import utsw.bicf.answer.model.extmapping.lookup.LookupOncoKBVariantSummary;
 import utsw.bicf.answer.model.extmapping.lookup.LookupSummary;
+import utsw.bicf.answer.model.extmapping.lookup.LookupVariantDashboardSummary;
+import utsw.bicf.answer.model.extmapping.lookup.StdOfCareIndication;
+import utsw.bicf.answer.model.extmapping.oncokb.EvidenceResponse;
+import utsw.bicf.answer.model.extmapping.oncokb.OncoKBArticle;
+import utsw.bicf.answer.model.extmapping.oncokb.OncoKBDrug;
+import utsw.bicf.answer.model.extmapping.oncokb.OncoKBTreatment;
 import utsw.bicf.answer.model.extmapping.oncotree.OncotreeTumorType;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotDataSummary;
 import utsw.bicf.answer.model.hybrid.GenericLollipopPlotData;
-import utsw.bicf.answer.model.hybrid.GenericStackedBarPlotData;
+import utsw.bicf.answer.model.hybrid.GenericStackedBarPlotData2;
 import utsw.bicf.answer.model.hybrid.StringSortableByInteger;
+import utsw.bicf.answer.reporting.finalreport.FinalReportTemplateConstants;
 import utsw.bicf.answer.security.CivicProperties;
+import utsw.bicf.answer.security.ClinicalTrialsProperties;
 import utsw.bicf.answer.security.EnsemblProperties;
+import utsw.bicf.answer.security.FasmicProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.InterProProperties;
 import utsw.bicf.answer.security.JaxCKBProperties;
+import utsw.bicf.answer.security.MSKProperties;
 import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.OncoKBProperties;
 import utsw.bicf.answer.security.OncotreeProperties;
@@ -96,6 +110,10 @@ public class LookupController {
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getCancerbyPercent", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getGenieGeneLollipop", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getMutatedGeneByCancer", IndividualPermission.CAN_VIEW);
+//		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getVariantOncoKB", IndividualPermission.CAN_VIEW);
+//		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getFasmicData", IndividualPermission.CAN_VIEW);
+//		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getUniProtVariantData", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getCodonDiseaseDistributionData", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 
@@ -126,6 +144,12 @@ public class LookupController {
 	ReactomeProperties reactomeProps;
 	@Autowired
 	InterProProperties interProProps;
+	@Autowired
+	FasmicProperties fasmicProps;
+	@Autowired
+	MSKProperties mskProps;
+	@Autowired
+	ClinicalTrialsProperties clinicalTrialProps;
 	
 	@RequestMapping("/discovar")
 	public String discovar(Model model, HttpSession session,
@@ -309,48 +333,48 @@ public class LookupController {
 			if (oncotrees != null) {
 				try {
 					response.setIsAllowed(true);
-					response.setSuccess(false);
-					List<GenericStackedBarPlotData> data = modelDAO.getMutatedGenesPerCancer(oncotrees);
-					Map<String, List<Object>> xPerVariantType = new HashMap<String, List<Object>>();
-					List<String> variantTypes = Arrays.asList("SNP", "INS", "DEL");
-					if (data != null && !data.isEmpty()) {
+					GenericStackedBarPlotData2 data = modelDAO.getMutatedGenesPerCancer(oncotrees);
+					List<String> variantTypes = Arrays.asList("Amplification", "Deletion", "SNP/Indel");
+					if (data != null && !data.getGeneCounts().isEmpty()) {
 						StackedBarPlotData chart = new StackedBarPlotData();
 						chart.setPlotId(plotId);
-						List<Object> y = new ArrayList<Object>();
-						for (GenericStackedBarPlotData d : data) {
-							y.add(d.getY());
-//							variantTypes.addAll(d.getCatX());
-						}
+						chart.setPlotTitle("Most Commonly Mutated Genes in " + oncotreeCode);
+						List<Object> y = data.getGeneCounts().stream().limit(10).map(g -> g.getGene() + " ").collect(Collectors.toList());
 						Collections.reverse(y); //need to reverse for Plotly to show the highest on top
-						//init map
-						for (String variantType : variantTypes) {
-							xPerVariantType.put(variantType, new ArrayList<Object>());
-						}
 						//second pass. Find each variant type x
-						for (GenericStackedBarPlotData d : data) {
-							for (String variantType : variantTypes) {
-								xPerVariantType.get(variantType).add(d.getxByCat().get(variantType));
-							}
+						List<Object> sortedXMutations = new ArrayList<Object>(); 
+						List<Object> sortedXCNAAmps = new ArrayList<Object>(); 
+						List<Object> sortedXCNADels = new ArrayList<Object>(); 
+						for (Object gene : y) {
+							String geneTrimmed = gene.toString().trim();
+							sortedXMutations.add(data.getSnpIndels().get(geneTrimmed));
+							sortedXCNAAmps.add(data.getAmplifications().get(geneTrimmed));
+							sortedXCNADels.add(data.getDeletions().get(geneTrimmed));
 						}
 						//third pass. Build traces
-						for (String variantType : variantTypes) {
-							List<Object> xList = xPerVariantType.get(variantType);
-							if (xList.stream().filter(x -> x != null).count() == 0) {
-								continue;
+						for (int i = 0; i < variantTypes.size(); i++) {
+							String variantType = variantTypes.get(i);
+							List<Object> xList = null;
+							switch(i) {
+							case 0: xList = sortedXCNAAmps; break;
+							case 1: xList = sortedXCNADels; break;
+							case 2: xList = sortedXMutations; break;
 							}
-							Trace trace = new Trace();
-							trace.setY(y);
-							trace.setName(variantType);
-							Collections.reverse(xList);
-							trace.setX(xList);
-							List<String> labels = xList.stream().map(x -> variantType).collect(Collectors.toList());
-							Collections.reverse(labels);
-							trace.setLabels(labels);
-							chart.getTraces().add(trace);
+							if (xList.stream().filter(x -> x != null).count() != 0) {
+								Trace trace = new Trace();
+								trace.setY(y);
+								trace.setName(variantType);
+								trace.setX(xList);
+								trace.setHovertemplate("Gene: %{y}<br>Category: %{text}<br>Variant Count: %{x}<extra></extra>");
+								List<String> labels = xList.stream().map(x -> variantType).collect(Collectors.toList());
+								trace.setLabels(labels);
+								chart.getTraces().add(trace);
+							}
 						}
 						
 						return chart.createObjectJSON();
 					}
+					
 					return response.createObjectJSON();
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
@@ -390,33 +414,20 @@ public class LookupController {
 	@ResponseBody
 	public String getVariantSummary(Model model, HttpSession session, @RequestParam String geneTerm,
 			@RequestParam String oncotreeCode, @RequestParam String hgvs, @RequestParam(defaultValue="") String originalVariant, 
-			@RequestParam(defaultValue="")  String oncokbVariantName,	@RequestParam String databases) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+			@RequestParam String databases) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
 		try {
 			AjaxResponse response = new AjaxResponse();
 			response.setIsAllowed(true);
 			response.setSuccess(false);
 
-			boolean needAnswerQuery = oncokbVariantName == null || oncokbVariantName.equals("")
-					|| originalVariant == null || originalVariant.equals("")
-					|| !hgvs.equals(originalVariant);
-			String variantName = null;
-			if (needAnswerQuery) {
-				//TODO build API to retrive oncokb variant from Answer
-//				variantName = "M918T"; //TODO remove this
-				RequestUtils utils = new RequestUtils(modelDAO);
-				utils.getOncoKbName(response, geneTerm, hgvs);
-				if (response.getSuccess() && response.getPayload() != null) {
-					variantName = (String) response.getPayload();
-				}
-			}
-			else {
-				variantName = oncokbVariantName;
-			}
+			LookupVariantDashboardSummary dashboardSummary = new LookupVariantDashboardSummary();
+			
+			String variantName = parseVariantNotation(hgvs, originalVariant);
 			final String finalVariantName = variantName;
 			
 			LookupGeneSummaries summaryResponse = new LookupGeneSummaries();
 			summaryResponse.setDatabases(Arrays.asList(databases.split(",")));
-			ExecutorService executor = Executors.newFixedThreadPool(summaryResponse.getDatabases().size());
+			ExecutorService executor = Executors.newFixedThreadPool(summaryResponse.getDatabases().size() + 5);
 
 
 			Runnable civicWorker = new Runnable() {
@@ -462,11 +473,108 @@ public class LookupController {
 				}
 			};
 			executor.execute(jaxWorker);
+			
+			Runnable oncoKBWorker = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						LookupOncoKBVariantSummary summary = getOncoKBData(geneTerm, oncotreeCode, response, variantName);
+						dashboardSummary.setOncoKBSummary(summary);
+					} catch (URISyntaxException | IOException | JAXBException | SAXException
+							| ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			};
+			executor.execute(oncoKBWorker);
+			
+			Runnable fasmicWorker = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						FasmicRequestUtils fasmicUtils = new FasmicRequestUtils(fasmicProps, otherProps);
+						LookupSummary summary = fasmicUtils.getVariantSummary(geneTerm, variantName);
+						dashboardSummary.setFasmicSummary(summary);
+					} catch (URISyntaxException | IOException | JAXBException | SAXException
+							| ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			};
+			executor.execute(fasmicWorker);
+			
 
+			Runnable uniprotWorker = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						String[] variantNameArray = parseVariantNotationToArray(hgvs, originalVariant);
+						UniProtRequestUtils uniProtUtils = new UniProtRequestUtils(uniprotProps, otherProps);
+						
+						String variantId = uniProtUtils.getVariantId(geneTerm, variantNameArray[0], variantNameArray[1], variantNameArray[2]);
+						if (variantId != null) {
+							LookupSummary summary = new LookupSummary();
+							summary.setMoreInfoUrl("https://web.expasy.org/variant_pages/" + variantId  + ".html");
+							dashboardSummary.setUniprotSummary(summary);
+							
+						}
+					} catch (URISyntaxException | IOException | JAXBException | SAXException
+							| ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			};
+			executor.execute(uniprotWorker);
+			
+			Runnable hotspotWorker = new Runnable() {
+				@Override
+				public void run() {
+					String[] variantNameArray = parseVariantNotationToArray(hgvs, originalVariant);
+					List<MSKHotspot> hotspots = modelDAO.getMSKHotspots(geneTerm, variantNameArray[0] + variantNameArray[1]);
+					if (hotspots != null && !hotspots.isEmpty()) {
+						LookupSummary hotspotSummary = new LookupSummary();
+						hotspotSummary.setMoreInfoUrl(mskProps.getHotspotUrl());
+						hotspotSummary.setMoreInfoUrl2(mskProps.getThreeDUrl());
+						dashboardSummary.setHotspotSummary(hotspotSummary);
+						dashboardSummary.setHotspot(hotspots.get(0));
+					}
+				}
+			};
+			executor.execute(hotspotWorker);
+			
+			Runnable clinicalTrialWorker = new Runnable() {
+				@Override
+				public void run() {
+					OncotreeRequestUtils oncotreeUtils = new OncotreeRequestUtils(oncotreeProps, otherProps);
+					OncotreeTumorType tumorType;
+					try {
+						tumorType = oncotreeUtils.getOncotreeTumorType(oncotreeCode);
+						if (tumorType != null) {
+							ClinicalTrialsRequestUtils clinicalTrialUtils = new ClinicalTrialsRequestUtils(clinicalTrialProps, otherProps);
+							List<ClinicalTrial> clinicalTrials = clinicalTrialUtils.getClinicalTrials(geneTerm, variantName, tumorType);
+							if (clinicalTrials != null && !clinicalTrials.isEmpty()) {
+								dashboardSummary.setClinicalTrials(clinicalTrials);
+								dashboardSummary.setClinicalTrialStudyUrl(clinicalTrialProps.getStudyUrl());
+							}
+						}
+					} catch (UnsupportedOperationException | URISyntaxException | IOException | JAXBException
+							| SAXException | ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			};
+			executor.execute(clinicalTrialWorker);
+			
 			executor.shutdown();
 			executor.awaitTermination(10, TimeUnit.SECONDS);
 
-			response.setPayload(summaryResponse);
+			dashboardSummary.setVariantSummaries(summaryResponse);
+			
+			response.setPayload(dashboardSummary);
 			response.setSuccess(true);
 			return response.createObjectJSON();
 		} catch (JsonProcessingException e) {
@@ -474,6 +582,193 @@ public class LookupController {
 			return null;
 		}
 	}
+	
+	private String parseVariantNotation(String hgvs, String originalVariant) {
+		//hgvs has priority
+		String variantName = null;
+		if (hgvs != null && hgvs.startsWith("p.")) {
+			variantName = LookupUtils.aminoAcid3To1(hgvs);
+		}
+		else if (hgvs != null) {
+			variantName = hgvs;
+		}
+		else if (originalVariant != null && originalVariant.startsWith("p.")) {
+			variantName = LookupUtils.aminoAcid3To1(originalVariant);
+		}
+		else if (originalVariant != null) {
+			variantName = originalVariant;
+		}
+		return variantName;
+	}
+	
+	private String[] parseVariantNotationToArray(String hgvs, String originalVariant) {
+		//hgvs has priority
+		String[] variantName = null;
+		if (hgvs != null) {
+			variantName = LookupUtils.aminoAcid3To1Array(hgvs);
+		}
+		else if (originalVariant != null) {
+			variantName = LookupUtils.aminoAcid3To1Array(originalVariant);
+		}
+		return variantName;
+	}
+	
+//	@RequestMapping("/getVariantOncoKB")
+//	@ResponseBody
+//	public String getVariantOncoKB(Model model, HttpSession session, @RequestParam String geneTerm,
+//			@RequestParam String oncotreeCode, @RequestParam String hgvs, 
+//			@RequestParam(defaultValue="") String originalVariant) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+//		try {
+//			AjaxResponse response = new AjaxResponse();
+//			response.setIsAllowed(true);
+//			response.setSuccess(false);
+//
+//			String variantName = parseVariantNotation(hgvs, originalVariant);
+//			
+//			LookupOncoKBVariantSummary summary = getOncoKBData(geneTerm, oncotreeCode, response, variantName);
+//			
+//			response.setPayload(summary);
+//			response.setSuccess(true);
+//			return response.createObjectJSON();
+//		} catch (JsonProcessingException e) {
+//			e.printStackTrace();
+//			return null;
+//		}
+//	}
+
+
+	public LookupOncoKBVariantSummary getOncoKBData(String geneTerm, String oncotreeCode, AjaxResponse response,
+			String variantName) throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
+			SAXException, ParserConfigurationException, JsonProcessingException {
+		OncoKBRequestUtils oncoKBUtils = new OncoKBRequestUtils(oncoKBProps, otherProps);
+		
+		EvidenceResponse[] oncoKBResponse = oncoKBUtils.getVariantSummary(geneTerm, variantName, oncotreeCode);
+		if (oncoKBResponse == null || oncoKBResponse.length <= 2) {
+			return null; //Maybe we found the gene but not the variant info
+		}
+		LookupOncoKBVariantSummary summary = new LookupOncoKBVariantSummary();
+		summary.setOncokbVariantUrl(oncoKBProps.getOncoKBGeneUrl() + geneTerm + "/" + variantName + "/" + oncotreeCode);
+		for (EvidenceResponse evidence : oncoKBResponse) {
+			if (evidence.getEvidenceType().equals("TUMOR_TYPE_SUMMARY")) {
+				summary.setClinicalImplications(evidence.getDescription());
+			}
+			else if (evidence.getEvidenceType().equals("STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY")) {
+				StdOfCareIndication indication = parseIndication(evidence);
+				summary.getIndications().add(indication);
+			}
+			else if (evidence.getEvidenceType().equals("INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY")) {
+				StdOfCareIndication indication = parseIndication(evidence);
+				summary.getInvestigationalIndications().add(indication);
+			}
+			else if (evidence.getEvidenceType().equals("STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE")) {
+				List<String> drugNames = new ArrayList<String>();
+				if (evidence.getTreatments() != null) {
+					for (OncoKBTreatment treatment : evidence.getTreatments()) {
+						if (treatment.getDrugs() != null) {
+							for (OncoKBDrug drug : treatment.getDrugs()) {
+								drugNames.add(drug.getDrugName());
+							}
+						}
+					}
+				}
+				summary.setDrugResistance(drugNames.stream().collect(Collectors.joining(", ")));
+			}
+			else if (evidence.getEvidenceType().equals("MUTATION_EFFECT")) {
+				summary.setMutationEffect(evidence.getKnownEffect());
+				if (evidence.getArticles() != null) {
+					List<String> pubmedIds = new ArrayList<String>();
+					for (OncoKBArticle article : evidence.getArticles()) {
+						pubmedIds.add(article.getPmid());
+					}
+					summary.setMutationEffectPubMedUrl(FinalReportTemplateConstants.PUBMED_URL + pubmedIds.stream().collect(Collectors.joining("+")));
+				}
+			}
+			else if (evidence.getEvidenceType().equals("ONCOGENIC")) {
+				summary.setOncogenic(evidence.getKnownEffect());
+			}
+		}
+		return summary;
+	}
+	
+	private StdOfCareIndication parseIndication(EvidenceResponse evidence) {
+		StdOfCareIndication indication = new StdOfCareIndication();
+		if (evidence.getTreatments() != null) {
+			for (OncoKBTreatment treatment : evidence.getTreatments()) {
+				indication.setIndications(treatment.getApprovedIndications());
+				if (treatment.getDrugs() != null) {
+					List<String> drugNames = new ArrayList<String>();
+					for (OncoKBDrug drug : treatment.getDrugs()) {
+						drugNames.add(drug.getDrugName());
+					}
+					indication.setDrugs(drugNames.stream().collect(Collectors.joining(", ")));
+				}
+			}
+		}
+		if (evidence.getArticles() != null) {
+			List<String> pubmedIds = new ArrayList<String>();
+			for (OncoKBArticle article : evidence.getArticles()) {
+				pubmedIds.add(article.getPmid());
+			}
+			indication.setPubmedUrl(FinalReportTemplateConstants.PUBMED_URL + pubmedIds.stream().collect(Collectors.joining("+")));
+		}
+		return indication;
+	}
+	
+//	@RequestMapping("/getFasmicData")
+//	@ResponseBody
+//	public String getFasmicData(Model model, HttpSession session, @RequestParam String geneTerm,
+//			@RequestParam String oncotreeCode, @RequestParam String hgvs, 
+//			@RequestParam(defaultValue="") String originalVariant) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+//		try {
+//			AjaxResponse response = new AjaxResponse();
+//			response.setIsAllowed(true);
+//			response.setSuccess(false);
+//
+//			String variantName = parseVariantNotation(hgvs, originalVariant);
+//			
+//			FasmicRequestUtils fasmicUtils = new FasmicRequestUtils(fasmicProps, otherProps);
+//			
+//			LookupSummary summary = fasmicUtils.getVariantSummary(geneTerm, variantName);
+//			if (summary != null) {
+//				response.setPayload(summary);
+//				response.setSuccess(true);
+//			}
+//			return response.createObjectJSON();
+//		} catch (JsonProcessingException e) {
+//			e.printStackTrace();
+//			return null;
+//		}
+//	}
+	
+	
+//	@RequestMapping("/getUniProtVariantData")
+//	@ResponseBody
+//	public String getUniProtVariantData(Model model, HttpSession session, @RequestParam String geneTerm,
+//			@RequestParam String oncotreeCode, @RequestParam String hgvs, 
+//			@RequestParam(defaultValue="") String originalVariant) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+//		try {
+//			AjaxResponse response = new AjaxResponse();
+//			response.setIsAllowed(true);
+//			response.setSuccess(false);
+//
+//			String[] variantName = parseVariantNotationToArray(hgvs, originalVariant);
+//			if (variantName != null) {
+//				UniProtRequestUtils uniProtUtils = new UniProtRequestUtils(uniprotProps, otherProps);
+//				
+//				String variantId = uniProtUtils.getVariantId(geneTerm, variantName[0], variantName[1], variantName[2]);
+//				if (variantId != null) {
+//					LookupSummary summary = new LookupSummary();
+//					summary.setMoreInfoUrl("https://web.expasy.org/variant_pages/" + variantId  + ".html");
+//					response.setPayload(summary);
+//					response.setSuccess(true);
+//				}
+//			}
+//			return response.createObjectJSON();
+//		} catch (JsonProcessingException e) {
+//			e.printStackTrace();
+//			return null;
+//		}
+//	}
 	
 	@RequestMapping("/getAlterationByCancer")
 	@ResponseBody
@@ -487,6 +782,7 @@ public class LookupController {
 			if (data != null && !data.isEmpty()) {
 				BarPlotData chart = new BarPlotData();
 				chart.setPlotId(plotId);
+				chart.setPlotTitle(hugoSymbol + " Alterations by Cancer");
 				Trace trace = new Trace();
 				for (int i = data.size() -1; i >=0; i--) {
 					GenericBarPlotData d = data.get(i);
@@ -518,6 +814,7 @@ public class LookupController {
 			if (dataAll != null && dataGene != null && !dataGene.isEmpty()) {
 				BarPlotData chart = new BarPlotData();
 				chart.setPlotId(plotId);
+				chart.setPlotTitle("Cancers with most " + hugoSymbol + " Alterations by Percent");
 				Trace trace = new Trace();
 				//need to sort by pct. Need a list too because there could be duplicate pct (key)
 				List<GenericBarPlotDataSummary> toSortData = new ArrayList<GenericBarPlotDataSummary>();
@@ -568,7 +865,7 @@ public class LookupController {
 		if (ensembl != null && ensembl.getUniProtId() != null) {
 			ExecutorService executor = Executors.newFixedThreadPool(2);
 			LollipopPlotData chart = new LollipopPlotData();
-
+			chart.setPlotTitle("Lollipop Plot of Genie " + hugoSymbol + " Variants");
 			Runnable pfamWorker = new Runnable() {
 				@Override
 				public void run() {
@@ -673,4 +970,33 @@ public class LookupController {
 		return response.createObjectJSON();
 	}
 
+	@RequestMapping("/getCodonDiseaseDistributionData")
+	@ResponseBody
+	public String getCodonDiseaseDistributionData(Model model, HttpSession session, @RequestParam String geneTerm,
+			@RequestParam String oncotreeCode, @RequestParam String hgvs, 
+			@RequestParam(defaultValue="") String originalVariant,
+			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			String[] variantName = parseVariantNotationToArray(hgvs, originalVariant);
+			if (variantName != null) {
+				List<Trace> traces = modelDAO.getCodonDiseaseDistribution(geneTerm, variantName[0] + variantName[1]);
+				if (traces != null && !traces.isEmpty()) {
+					StackedBarPlotData chart = new StackedBarPlotData();
+					chart.setPlotId(plotId);
+					chart.setPlotTitle("A Closer Look at " + geneTerm + " " + variantName[0] + variantName[1]);
+					chart.setTraces(traces);
+					chart.setHideLegendMarkers(true);
+					return chart.createObjectJSON();
+				}
+			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 }

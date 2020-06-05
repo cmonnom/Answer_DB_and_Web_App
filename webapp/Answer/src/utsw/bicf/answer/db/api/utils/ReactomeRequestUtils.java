@@ -50,33 +50,15 @@ import utsw.bicf.answer.security.ReactomeProperties;
  * @author Guillaume
  *
  */
-public class ReactomeRequestUtils {
+public class ReactomeRequestUtils extends AbstractRequestUtils {
 
 	ReactomeProperties reactomeProps;
-	OtherProperties otherProps;
-	PolicyFactory policy = new HtmlPolicyBuilder().toFactory();
-	private static final Logger logger = Logger.getLogger(AOPAspect.class);
 	private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
 	public ReactomeRequestUtils(ReactomeProperties reactomeProps, OtherProperties otherProps) {
 		this.reactomeProps = reactomeProps;
 		this.otherProps = otherProps;
 		this.setupClient();
-	}
-
-	private HttpGet requestGet = null;
-	private HttpPost requestPost = null;
-	private HttpPut requestPut = null;
-	private HttpHost proxy = null;
-	private HttpClient client = null;
-
-	private void setupClient() {
-		if (otherProps.getProxyHostname() != null) {
-			proxy = new HttpHost(otherProps.getProxyHostname(), otherProps.getProxyPort());
-			client = HttpClientBuilder.create().setProxy(proxy).build();
-		} else {
-			client = HttpClientBuilder.create().build();
-		}
 	}
 
 	public TreeViewSummary getLocations(String geneTerm, List<String> levels)
@@ -120,6 +102,7 @@ public class ReactomeRequestUtils {
 						String contentDetailUri = reactomeProps.getContentDetailUrl() + stId;
 						summary.setMainPageUrl(contentDetailUri);
 						summary.setItems(this.scrapeViewTree(contentDetailUri));
+						this.closeGetRequest();
 						return summary;
 					}
 			}
@@ -127,6 +110,7 @@ public class ReactomeRequestUtils {
 		else {
 			logger.info("Something went wrong UniProtRequest:114 HTTP_STATUS: " + statusCode);
 		}
+		this.closeGetRequest();
 		return null;
 	}
 	
@@ -163,6 +147,7 @@ public class ReactomeRequestUtils {
 		    	drillIntoTree(item, first.getElementsByTag("ul").first());
 		    }
 		}
+		this.closeGetRequest();
 		return items;
 	}
 	

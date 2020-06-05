@@ -2,9 +2,11 @@ package utsw.bicf.answer.controller.api;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.GenieCNA;
 import utsw.bicf.answer.model.GenieMutation;
 import utsw.bicf.answer.model.GenieSample;
 import utsw.bicf.answer.model.GenieSummary;
@@ -126,6 +129,7 @@ public class APIController {
 	public String updateGenieData(Model model, @RequestParam String token, 
 			@RequestParam String sampleDataPath, 
 			@RequestParam String mutationDataPath, 
+			@RequestParam String cnaDataPath,
 			HttpSession httpSession) throws IOException, InterruptedException {
 		httpSession.setAttribute("user", "API User from updateGenieData");
 		long now = System.currentTimeMillis();
@@ -141,9 +145,11 @@ public class APIController {
 		
 		File sampleDataFile = new File(sampleDataPath);
 		File mutationDataFile = new File(mutationDataPath);
+		File cnaDataFile = new File(cnaDataPath);
 		
 		if (sampleDataFile.exists() && sampleDataFile.canRead()
-				&& mutationDataFile.exists() && mutationDataFile.canRead()) {
+				&& mutationDataFile.exists() && mutationDataFile.canRead()
+				&& cnaDataFile.exists() && cnaDataFile.canRead()) {
 			ExecutorService executor = Executors.newFixedThreadPool(1);
 			modelDAO.deleteGenieTables();
 			Runnable worker = new Runnable() {
@@ -152,94 +158,12 @@ public class APIController {
 					try {
 						
 						List<Object> toSave = new ArrayList<Object>();
-						BufferedReader reader1 = new BufferedReader(new FileReader(sampleDataFile));
-						String line = null;
-						while ((line = reader1.readLine()) != null) {
-							if (line.startsWith("PATIENT_ID")) {
-								break;
-							}
-							continue; //skip until the first sample row
-						}
-						int counter = 0; //try without a counter first
-						while ((line = reader1.readLine()) != null) {
-							String[] items = line.split("\t");
-							GenieSample s = new GenieSample();
-							s.setPatientId(items[0]);
-							s.setSampleId(items[1]);
-							s.setOncotreeCode(items[3]);
-							s.setCancerType(items[6]);
-//							modelDAO.saveObject(s);
-							toSave.add(s);
-							counter++;
-							if (counter % 1000 == 0) {
-								System.out.println("Samples: " + counter);
-								modelDAO.saveBatch(toSave);
-								toSave = new ArrayList<Object>();
-							}
-						}
-						if (!toSave.isEmpty() ) {
-							modelDAO.saveBatch(toSave);
-							toSave = new ArrayList<Object>();
-						}
-						reader1.close();
-						
-						BufferedReader reader2 = new BufferedReader(new FileReader(mutationDataFile));
-						line = null;
-						while ((line = reader2.readLine()) != null) {
-							if (line.startsWith("Hugo_Symbol")) {
-								break;
-							}
-							continue; //skip until the first sample row
-						}
-						counter = 0;
+						int counter = 0;
+						importSamples(sampleDataFile, toSave, counter);
 						Map<String, Integer> sampleIdFKey = modelDAO.getAllGenieSampleIdByTumorBarcode();
-						Pattern variantPattern = Pattern.compile("([a-z]\\.)([A-Z]+)([0-9]+)([*_=A-Za-z]+[0-9a-z]*)");
-						while ((line = reader2.readLine()) != null ) {
-							String[] items = line.split("\t");
-							GenieMutation m = new GenieMutation();
-							m.setHugoSymbol(items[0]);
-							m.setEntrezId(Integer.parseInt(items[1]));
-							m.setVariantClassification(items[8]);
-							m.setVariantType(items[9]);
-							m.setTumorSampleBarcode(items[15]);
-//							Integer fkey = modelDAO.getGenieSampleIdByTumorBarcode(m.getTumorSampleBarcode());
-							m.setGenieSampleId(sampleIdFKey.get(m.getTumorSampleBarcode()));
-							String notation = items[32];
-							m.setVariantNotation(notation);
-							if (notation != null && !notation.equals("")) {
-								Matcher matcher = variantPattern.matcher(notation);
-								while(matcher.find()) {
-									int groupCount = matcher.groupCount();
-									if (groupCount >= 3) {
-//										String protein = matcher.group(1);
-										String positionString =  matcher.group(3);
-										if (positionString != null && !positionString.equals("")) {
-											Integer position = Integer.parseInt(positionString);
-											m.setAminoAcidPosition(position);
-										}
-										String aaNotation = matcher.group(2) + positionString;
-										m.setAminoAcidNotation(aaNotation);
-									}
-									if (groupCount >= 4) {
-										String variantChange = matcher.group(4);
-										m.setVariantChange(variantChange);
-									}
-								}
-							}
-							
-							toSave.add(m);
-							counter++;
-							if (counter % 1000 == 0) {
-								modelDAO.saveBatch(toSave);
-								toSave = new ArrayList<Object>();
-								System.out.println("Mutations: " + counter);
-							}
-						}
-						if (!toSave.isEmpty() ) {
-							modelDAO.saveBatch(toSave);
-							toSave = new ArrayList<Object>();
-						}
-						reader2.close();
+						importMutations(mutationDataFile, toSave, sampleIdFKey);
+						
+						importCNA(cnaDataFile, toSave, sampleIdFKey);
 						
 						long afterRequest = System.currentTimeMillis();
 						System.out.println("After request " + (afterRequest - now) + "ms");
@@ -275,6 +199,148 @@ public class APIController {
 		
 	
 		return response.createObjectJSON();
+	}
+
+	public void importSamples(File sampleDataFile, List<Object> toSave, int counter)
+			throws FileNotFoundException, IOException {
+		String line;
+		BufferedReader reader1 = new BufferedReader(new FileReader(sampleDataFile));
+		while ((line = reader1.readLine()) != null) {
+			if (line.startsWith("PATIENT_ID")) {
+				break;
+			}
+			continue; //skip until the first sample row
+		}
+		
+		while ((line = reader1.readLine()) != null) {
+			String[] items = line.split("\t");
+			GenieSample s = new GenieSample();
+			s.setPatientId(items[0]);
+			s.setSampleId(items[1]);
+			s.setOncotreeCode(items[3]);
+			s.setCancerType(items[6]);
+//							modelDAO.saveObject(s);
+			toSave.add(s);
+			counter++;
+			if (counter % 1000 == 0) {
+				System.out.println("Samples: " + counter);
+				modelDAO.saveBatch(toSave);
+				toSave = new ArrayList<Object>();
+			}
+		}
+		if (!toSave.isEmpty() ) {
+			modelDAO.saveBatch(toSave);
+			toSave = new ArrayList<Object>();
+		}
+		reader1.close();
+	}
+
+	public void importMutations(File mutationDataFile, List<Object> toSave, Map<String, Integer> sampleIdFKey)
+			throws FileNotFoundException, IOException {
+		int counter;
+		String line;
+		BufferedReader reader2 = new BufferedReader(new FileReader(mutationDataFile));
+		line = null;
+		while ((line = reader2.readLine()) != null) {
+			if (line.startsWith("Hugo_Symbol")) {
+				break;
+			}
+			continue; //skip until the first sample row
+		}
+		counter = 0;
+		Pattern variantPattern = Pattern.compile("([a-z]\\.)([A-Z]+)([0-9]+)([*_=A-Za-z]+[0-9a-z]*)");
+		while ((line = reader2.readLine()) != null ) {
+			String[] items = line.split("\t");
+			GenieMutation m = new GenieMutation();
+			m.setHugoSymbol(items[0]);
+			m.setEntrezId(Integer.parseInt(items[1]));
+			m.setVariantClassification(items[8]);
+			m.setVariantType(items[9]);
+			m.setTumorSampleBarcode(items[15]);
+//							Integer fkey = modelDAO.getGenieSampleIdByTumorBarcode(m.getTumorSampleBarcode());
+			m.setGenieSampleId(sampleIdFKey.get(m.getTumorSampleBarcode()));
+			String notation = items[32];
+			m.setVariantNotation(notation);
+			if (notation != null && !notation.equals("")) {
+				Matcher matcher = variantPattern.matcher(notation);
+				while(matcher.find()) {
+					int groupCount = matcher.groupCount();
+					if (groupCount >= 3) {
+//										String protein = matcher.group(1);
+						String positionString =  matcher.group(3);
+						if (positionString != null && !positionString.equals("")) {
+							Integer position = Integer.parseInt(positionString);
+							m.setAminoAcidPosition(position);
+						}
+						String aaNotation = matcher.group(2) + positionString;
+						m.setAminoAcidNotation(aaNotation);
+					}
+					if (groupCount >= 4) {
+						String variantChange = matcher.group(4);
+						m.setVariantChange(variantChange);
+					}
+				}
+			}
+			
+			toSave.add(m);
+			counter++;
+			if (counter % 1000 == 0) {
+				modelDAO.saveBatch(toSave);
+				toSave = new ArrayList<Object>();
+				System.out.println("Mutations: " + counter);
+			}
+		}
+		if (!toSave.isEmpty() ) {
+			modelDAO.saveBatch(toSave);
+			toSave = new ArrayList<Object>();
+		}
+		reader2.close();
+	}
+
+	public void importCNA(File cnaDataFile, List<Object> toSave, Map<String, Integer> sampleIdFKey)
+			throws FileNotFoundException, IOException {
+		int counter;
+		String line;
+		BufferedReader reader3 = new BufferedReader(new FileReader(cnaDataFile));
+		line = null;
+		List<String> headers = null;
+		while ((line = reader3.readLine()) != null) {
+			if (line.startsWith("Hugo_Symbol")) {
+				headers = Arrays.asList(line.split("\t"));
+				break;
+			}
+			continue; //skip until the first sample row
+		}
+		counter = 0;
+		while ((line = reader3.readLine()) != null ) {
+			String[] items = line.split("\t");
+			String hugoSymbol = items[0];
+			for (int i = 1; i < items.length; i++) {
+				String item = items[i];
+				if (!item.equals("NA")) {
+					float value = Float.parseFloat(item);
+					if (value <= -2 || value >= 2) {
+						GenieCNA cna = new GenieCNA();
+						cna.setCnaValue(value);
+						cna.setHugoSymbol(hugoSymbol);
+						cna.setTumorSampleBarcode(headers.get(i));
+						cna.setGenieSampleId(sampleIdFKey.get(cna.getTumorSampleBarcode()));
+						toSave.add(cna);
+						counter++;
+						if (counter % 1000 == 0) {
+							modelDAO.saveBatch(toSave);
+							toSave = new ArrayList<Object>();
+							System.out.println("CNA: " + counter);
+						}
+					}
+				}
+			}
+		}
+		if (!toSave.isEmpty() ) {
+			modelDAO.saveBatch(toSave);
+			toSave = new ArrayList<Object>();
+		}
+		reader3.close();
 	}
 	
 }

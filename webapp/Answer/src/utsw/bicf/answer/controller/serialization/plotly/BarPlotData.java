@@ -4,6 +4,7 @@ public class BarPlotData extends PlotlyChartData {
 	
 	Trace trace;
 	String plotId;
+	
 
 	public Trace getTrace() {
 		return trace;
@@ -24,6 +25,5 @@ public class BarPlotData extends PlotlyChartData {
 	public void setPlotId(String plotId) {
 		this.plotId = plotId;
 	}
-	
 
 }

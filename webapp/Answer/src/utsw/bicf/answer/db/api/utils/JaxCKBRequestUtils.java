@@ -8,24 +8,15 @@ import java.net.URLEncoder;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.log4j.Logger;
-import org.owasp.html.HtmlPolicyBuilder;
-import org.owasp.html.PolicyFactory;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import utsw.bicf.answer.aop.AOPAspect;
 import utsw.bicf.answer.model.extmapping.JaxCKBResponse;
 import utsw.bicf.answer.model.extmapping.lookup.LookupSummary;
 import utsw.bicf.answer.security.JaxCKBProperties;
@@ -37,32 +28,14 @@ import utsw.bicf.answer.security.OtherProperties;
  * @author Guillaume
  *
  */
-public class JaxCKBRequestUtils {
+public class JaxCKBRequestUtils extends AbstractRequestUtils{
 
 	JaxCKBProperties jaxCKBProps;
-	OtherProperties otherProps;
-	PolicyFactory policy = new HtmlPolicyBuilder().toFactory();
-	private static final Logger logger = Logger.getLogger(AOPAspect.class);
 
 	public JaxCKBRequestUtils(JaxCKBProperties jaxCKBProps, OtherProperties otherProps) {
 		this.jaxCKBProps = jaxCKBProps;
 		this.otherProps = otherProps;
 		this.setupClient();
-	}
-
-	private HttpGet requestGet = null;
-	private HttpPost requestPost = null;
-	private HttpPut requestPut = null;
-	private HttpHost proxy = null;
-	private HttpClient client = null;
-
-	private void setupClient() {
-		if (otherProps.getProxyHostname() != null) {
-			proxy = new HttpHost(otherProps.getProxyHostname(), otherProps.getProxyPort());
-			client = HttpClientBuilder.create().setProxy(proxy).build();
-		} else {
-			client = HttpClientBuilder.create().build();
-		}
 	}
 
 	public LookupSummary getGeneSummary(String geneName, String entrezId)
@@ -94,6 +67,7 @@ public class JaxCKBRequestUtils {
 		else {
 			logger.info("Something went wrong JaxCKBRequestUtils:90 HTTP_STATUS: " + statusCode);
 		}
+		this.closeGetRequest();
 		return summary;
 	}
 	
@@ -132,6 +106,7 @@ public class JaxCKBRequestUtils {
 		else {
 			logger.info("Something went wrong JaxCKBRequestUtils:130 HTTP_STATUS: " + statusCode);
 		}
+		this.closeGetRequest();
 		return summary;
 	}
 

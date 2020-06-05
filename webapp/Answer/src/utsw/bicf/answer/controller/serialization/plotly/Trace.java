@@ -11,6 +11,7 @@ public class Trace {
 	List<Object> end = new ArrayList<Object>();
 	List<String> labels = new ArrayList<String>();
 	String name;
+	String hovertemplate;
 	
 	public Trace(List<Object> x, List<Object> y, List<String> labels) {
 		super();
@@ -100,6 +101,15 @@ public class Trace {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public String getHovertemplate() {
+		return hovertemplate;
+	}
+
+	public void setHovertemplate(String hovertemplate) {
+		this.hovertemplate = hovertemplate;
+	}
+
 	
 	
 

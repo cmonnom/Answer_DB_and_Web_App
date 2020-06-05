@@ -7,6 +7,8 @@ public class PlotlyChartData {
 	
 	Boolean isAllowed = true;
 	boolean success = true;
+	String plotTitle;
+	Boolean hideLegendMarkers = false;
 	
 	public PlotlyChartData() {
 	}
@@ -30,6 +32,22 @@ public class PlotlyChartData {
 
 	public void setSuccess(boolean success) {
 		this.success = success;
+	}
+
+	public String getPlotTitle() {
+		return plotTitle;
+	}
+
+	public void setPlotTitle(String plotTitle) {
+		this.plotTitle = plotTitle;
+	}
+
+	public Boolean getHideLegendMarkers() {
+		return hideLegendMarkers;
+	}
+
+	public void setHideLegendMarkers(Boolean hideLegendMarkers) {
+		this.hideLegendMarkers = hideLegendMarkers;
 	}
 
 
