@@ -23,6 +23,7 @@ import utsw.bicf.answer.controller.serialization.plotly.Trace;
 import utsw.bicf.answer.db.api.utils.LookupUtils;
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.GeneToReport;
+import utsw.bicf.answer.model.GenieFusionCount;
 import utsw.bicf.answer.model.GenieSample;
 import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.Group;
@@ -40,6 +41,7 @@ import utsw.bicf.answer.model.hybrid.CondonDistribution;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
 import utsw.bicf.answer.model.hybrid.GenericLollipopPlotData;
 import utsw.bicf.answer.model.hybrid.GenericStackedBarPlotData2;
+import utsw.bicf.answer.model.hybrid.RatioBarPlotData;
 
 @Repository
 public class ModelDAO {
@@ -119,7 +121,14 @@ public class ModelDAO {
 		session.createNativeQuery(sql).executeUpdate();
 		sql = "delete from genie_cna";
 		session.createNativeQuery(sql).executeUpdate();
+//		String
+		sql = "delete from genie_fusion";
+		session.createNativeQuery(sql).executeUpdate();
 		sql = "delete from genie_sample";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "delete from genie_cna_count";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "delete from genie_fusion_count";
 		session.createNativeQuery(sql).executeUpdate();
 		sql = "delete from genie_summary";
 		session.createNativeQuery(sql).executeUpdate();
@@ -130,6 +139,12 @@ public class ModelDAO {
 		sql = "ALTER TABLE genie_summary AUTO_INCREMENT = 1";
 		session.createNativeQuery(sql).executeUpdate();
 		sql = "ALTER TABLE genie_cna AUTO_INCREMENT = 1";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "ALTER TABLE genie_cna_count AUTO_INCREMENT = 1";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "ALTER TABLE genie_fusion AUTO_INCREMENT = 1";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "ALTER TABLE genie_fusion_count AUTO_INCREMENT = 1";
 		session.createNativeQuery(sql).executeUpdate();
 	}
 
@@ -466,6 +481,18 @@ public class ModelDAO {
 		List<GenieSample> samples = session.createQuery(hql, GenieSample.class).list();
 		for (GenieSample s : samples) {
 			result.put(s.getSampleId(), s.getGenieSampleId());
+		}
+		return result;
+	}
+	
+	@Transactional
+	public Map<String, GenieSample> getAllGenieSamplesByTumorBarcode() {
+		Map<String, GenieSample> result = new HashMap<String, GenieSample>();
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from GenieSample";
+		List<GenieSample> samples = session.createQuery(hql, GenieSample.class).list();
+		for (GenieSample s : samples) {
+			result.put(s.getSampleId(), s);
 		}
 		return result;
 	}
@@ -886,5 +913,201 @@ public class ModelDAO {
 				.setParameter("residue", residue)
 				.list();
 		return hotspots;
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<GenericBarPlotData> getGeniePatientCountForCNV(String hugoSymbol, String ampDel) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		sb.append("select count(oncotree_code) as x,oncotree_code as y")
+		.append(" from ( ")
+		.append(" select gs.oncotree_code from genie_cna gc, genie_sample gs ")
+		.append(" where gc.genie_sample_id = gs.genie_sample_id ")
+		.append(" and gc.hugo_symbol = :hugoSymbol ");
+		if (ampDel.equals("AMPLIFICATION")) {
+			sb.append(" and cna_value > 1 ");
+		}
+		else {
+			sb.append(" and cna_value < -1 ");
+		}
+		sb.append(" group by gs.patient_id, gs.oncotree_code) as sub ")
+		.append(" group by oncotree_code ")
+		.append(" order by x desc ")
+		.append(" limit 10 ");
+		Query<GenericBarPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameter("hugoSymbol", hugoSymbol);
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<RatioBarPlotData> getGeniePatientPctForCNV(String hugoSymbol, String ampDel) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("select x, y, gcc.case_count as total, x / gcc.case_count as ratio from  ")
+		.append(" (select count(oncotree_code) as x,oncotree_code as y ")
+		.append(" from (  ")
+		.append(" select gs.oncotree_code from genie_cna gc, genie_sample gs  ")
+		.append(" where gc.genie_sample_id = gs.genie_sample_id   ")
+		.append("  and gc.hugo_symbol = :hugoSymbol ");
+		if (ampDel.equals("AMPLIFICATION")) {
+			sb.append(" and cna_value > 1 ");
+		}
+		else {
+			sb.append(" and cna_value < -1 ");
+		}
+		sb.append(" group by gs.patient_id, gs.oncotree_code) as sub  ")
+		.append(" group by oncotree_code) as sub2, genie_cna_count gcc ")
+		.append(" where sub2.y = gcc.oncotree_code ")
+		.append(" and gcc.hugo_symbol = :hugoSymbol ")
+		.append(" and x >= 5 ")
+		.append(" order by ratio desc ")
+		.append(" limit 10; ");
+		
+		Query<RatioBarPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameter("hugoSymbol", hugoSymbol);
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new RatioBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<GenericBarPlotData> getGeniePatientCountForFusion(String geneFive, String geneThree) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		String fiveThree = geneFive + "-" + geneThree;
+		String threeFive = geneThree + "-" + geneFive;
+		
+		sb.append("select count(oncotree_code) as x,oncotree_code as y ")
+		.append(" from (  ")
+		.append(" select gs.oncotree_code from genie_fusion gf, genie_sample gs  ")
+		.append(" where gf.genie_sample_id = gs.genie_sample_id  ")
+		.append(" and ( gf.fusion_name like :fiveThree or gf.fusion_name like :threeFive )")
+		.append(" group by gs.patient_id, gs.oncotree_code) as sub  ")
+		.append(" group by oncotree_code  ")
+		.append(" order by x desc  ")
+		.append(" limit 10;  ");
+		
+		Query<GenericBarPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameter("fiveThree", "%" + fiveThree + " %")
+				.setParameter("threeFive", "%" + threeFive + " %");
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<RatioBarPlotData> getGeniePatientPctForFusion(String geneFive, String geneThree) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		String fiveThree = geneFive + "-" + geneThree;
+		String threeFive = geneThree + "-" + geneFive;
+		sb.append("select x, y, gcc.case_count as total, x / gcc.case_count as ratio from  ")
+		.append(" ( ")
+		.append(" select count(oncotree_code) as x,oncotree_code as y ")
+		.append(" from (  ")
+		.append(" select gs.oncotree_code from genie_fusion gf, genie_sample gs  ")
+		.append(" where gf.genie_sample_id = gs.genie_sample_id  ")
+		.append(" and ( gf.fusion_name like :fiveThree or gf.fusion_name like :threeFive )")
+		.append(" group by gs.patient_id, gs.oncotree_code) as sub  ")
+		.append(" group by oncotree_code ) as sub2, genie_fusion_count gcc ")
+		.append(" where sub2.y = gcc.oncotree_code ")
+		.append(" and x >= 5 ")
+		.append(" order by ratio desc ")
+		.append(" limit 10; ");
+		
+		Query<RatioBarPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameter("fiveThree", "%" + fiveThree + " %")
+				.setParameter("threeFive", "%" + threeFive + " %");
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new RatioBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<Object> populateGenieFusionCountTable() {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		sb.append("select count(gs.oncotree_code) x, gs.oncotree_code y from genie_fusion gf, genie_sample gs ")
+		.append(" where gf.genie_sample_id = gs.genie_sample_id ")
+		.append(" group by gs.oncotree_code;");
+		
+		Query<GenericBarPlotData> query = session.createNativeQuery(sb.toString());
+		
+		List<Object> result = query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list().stream().map(g -> new GenieFusionCount(
+				g.getY(), 
+				g.getX()
+				.intValue()))
+				.collect(Collectors.toList());
+		return result;
 	}
 }

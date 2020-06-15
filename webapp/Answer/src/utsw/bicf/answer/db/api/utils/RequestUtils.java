@@ -625,8 +625,8 @@ public class RequestUtils {
 			sbUrl.append("variant/");
 			break;
 		case "cnv":
-			oid = ((Variant) variant).getMongoDBId().getOid();
-			sbUrl.append("variant/");
+			oid = ((CNV) variant).getMongoDBId().getOid();
+			sbUrl.append("cnv/");
 			break;
 		case "translocation":
 			oid = ((Translocation) variant).getMongoDBId().getOid();

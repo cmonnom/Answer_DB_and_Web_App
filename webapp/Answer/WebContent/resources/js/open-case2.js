@@ -345,7 +345,7 @@ const OpenCase2 = {
                     <v-icon>mdi-dna</v-icon>
                 </v-list-tile-avatar>
                 <v-list-tile-content>
-                    <v-list-tile-title>Toggle Lookup Tool (Beta)</v-list-tile-title>
+                    <v-list-tile-title>Open Lookup Tool (Beta)</v-list-tile-title>
                 </v-list-tile-content>
                 </v-list-tile>
 
@@ -572,10 +572,10 @@ const OpenCase2 = {
                                                                         <span>Open OncoTree in New Tab</span>
                                                                     </v-tooltip>
                                                                     <v-tooltip bottom>
-                                                                    <v-btn flat color="primary" icon @click="openOncoKBGeniePortalCancer()" slot="activator" class="ma-0">
+                                                                    <v-btn flat color="primary" icon @click="toggleLookupTool" slot="activator" class="ma-0">
                                                                         <v-icon>mdi-dna</v-icon>
                                                                     </v-btn>
-                                                                    <span>Open Lookup Portal in New Tab</span>
+                                                                    <span>Open Lookup Tool</span>
                                                                     </v-tooltip>
                                                                 </v-flex>
                                                                 <v-flex xs v-if="item.field == 'tmb'" class="align-flex-right pt-0">
@@ -774,7 +774,7 @@ const OpenCase2 = {
     </v-tabs>
 </v-slide-y-transition>
 </v-flex>
-<v-flex v-show="isLookupVisible()" class="xs4">
+<v-flex v-show="isLookupVisible()" class="xs4 max-lookup-width">
     <!-- lookup tools-->
 <lookup-panel ref="lookupTool" :standalone="false"
 :oncotree-items="oncotree"

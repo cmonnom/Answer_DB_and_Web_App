@@ -125,6 +125,9 @@ var router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
 		document.title = 'Answer ' + to.meta.title + (to.params.id ? to.params.id : '');
+		if (to.path.indexOf("discovar") > -1) {
+			document.title = document.title + buildLookupParamsTitle(to.query);
+		}
 		next();
 });
 
@@ -137,3 +140,12 @@ new Vue({
 	}
 })
 
+function buildLookupParamsTitle(query) {
+	switch(query.button) {
+		case "Gene": return " Gene " + query.gene;
+		case "Cancer": return " Cancer " + query.oncotree;
+		case "Variant": return " Variant " + query.gene + " " + query.variant + " " + query.oncotree;
+		case "CNV": ampDel = query.ampDel ? "Amplification" : "Deletion"; return " CNV " + query.gene + " " + query.oncotree + " " + ampDel;
+		case "Fusion": return " Fusion " + query.five + "-" + query.three + " " + query.oncotree;
+	}
+}

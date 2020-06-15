@@ -88,10 +88,16 @@ public class LookupUtils {
 	public static String aminoAcid3To1(String threeLetterProteinChange) {
 		Matcher matcher = AA_PATTERN.matcher(threeLetterProteinChange.trim());
 		while (matcher.find()) {
-			AminoAcid orig = PROTEIN_3_TO_1_MAP.get(matcher.group(1).toUpperCase());
+			String threeLetterOrigin = matcher.group(1).toUpperCase();
+			String untouchedChange = matcher.group(3);
+			String threeLetterChange = untouchedChange.toUpperCase();
+			AminoAcid orig = PROTEIN_3_TO_1_MAP.get(threeLetterOrigin);
 			String pos = matcher.group(2);
-			AminoAcid change = PROTEIN_3_TO_1_MAP.get(matcher.group(3).toUpperCase());
-			return orig.getOneLetter() + pos + change.getOneLetter();
+			AminoAcid change = PROTEIN_3_TO_1_MAP.get(threeLetterChange);
+			String oneLetterOrigin = orig != null ? orig.getOneLetter() : threeLetterOrigin;
+			String oneLetterChange = change != null ? change.getOneLetter() : untouchedChange;
+			
+			return oneLetterOrigin + pos + oneLetterChange;
 		}
 		return threeLetterProteinChange.replace("p.", "");
 	}
@@ -99,10 +105,15 @@ public class LookupUtils {
 	public static String[] aminoAcid3To1Array(String threeLetterProteinChange) {
 		Matcher matcher = AA_PATTERN.matcher(threeLetterProteinChange.trim());
 		while (matcher.find()) {
-			AminoAcid orig = PROTEIN_3_TO_1_MAP.get(matcher.group(1).toUpperCase());
+			String threeLetterOrigin = matcher.group(1).toUpperCase();
+			String untouchedChange = matcher.group(3);
+			String threeLetterChange = untouchedChange.toUpperCase();
+			AminoAcid orig = PROTEIN_3_TO_1_MAP.get(threeLetterOrigin);
 			String pos = matcher.group(2);
-			AminoAcid change = PROTEIN_3_TO_1_MAP.get(matcher.group(3).toUpperCase());
-			return new String[] {orig.getOneLetter(), pos, change.getOneLetter()};
+			AminoAcid change = PROTEIN_3_TO_1_MAP.get(threeLetterChange);
+			String oneLetterOrigin = orig != null ? orig.getOneLetter() : threeLetterOrigin;
+			String oneLetterChange = change != null ? change.getOneLetter() : untouchedChange;
+			return new String[] {oneLetterOrigin, pos, oneLetterChange};
 		}
 		String cleaned = threeLetterProteinChange.replace("p.", "");
 		String orig = cleaned.substring(0,1);

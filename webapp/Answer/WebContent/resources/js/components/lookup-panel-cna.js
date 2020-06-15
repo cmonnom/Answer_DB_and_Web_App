@@ -1,17 +1,15 @@
-Vue.component('lookup-panel-variant', {
+Vue.component('lookup-panel-cna', {
     props: {
         standalone: {default: true, type:Boolean},
-        originalVariant: {default: "", type:String},
-        currentOncotreeCode: {default:  () =>{}, type:Object},
+        currentOncotreeCode: {default: () =>{}, type:Object},
         currentGene: {default: "", type:String},
-        currentVariant: {default: "", type:String},
+        currentAmpDel: {default: "", type:String},
         lastOncotreeCode: {default: "", type:String},
         lastGene: {default: "", type:String},
-        lastVariant: {default: "", type:String},
+        lastAmpDel: {default: "", type:String},
         uniqId: {default: "uniqcna", type:String}
     },
     template: /*html*/`<v-layout row wrap>
-    <!-- Variant Results -->
 
     <!--  Variant & Tumor Type Description -->
     <v-flex :class="getGeneFlexClasses()" >
@@ -22,7 +20,7 @@ Vue.component('lookup-panel-variant', {
         </v-toolbar>
         <v-card-text class="pa-3">
             <div v-if="oncoKBVariantError || (oncoKBVariantSummary && !oncoKBVariantSummary.clinicalImplications)">
-            {{ lastGene }} {{ lastVariant }} has no clinical implication data in OncoKB.
+            {{ lastGene }} <span v-text="getAmpDelLabel()"></span> has no clinical implication data in OncoKB.
             </div>
             <div v-if="oncoKBVariantSummary && oncoKBVariantSummary.clinicalImplications">
                 <div class="font-weight-bold body-1 pb-2">Clinical Implications:</div>
@@ -60,11 +58,11 @@ Vue.component('lookup-panel-variant', {
                 <div>{{ item }}
                 <v-tooltip bottom v-show="variantSummaries[item].url && !loading">
                 <v-btn slot="activator" icon :href="variantSummaries[item].url" target="_blank" @click.stop class="primary--text"><v-icon>mdi-open-in-new</v-icon></v-btn>
-                <span>Open {{ lastVariant }} in {{ item }} (new tab).</span>
+                <span>Open {{ lastGene }} <span v-text="getAmpDelLabel()"></span> in {{ item }} (new tab).</span>
                 </v-tooltip>
                 <v-tooltip bottom v-show="variantSummaries[item].url2 && !loading">
                 <v-btn slot="activator" icon :href="variantSummaries[item].url2" target="_blank" @click.stop class="primary--text"><v-icon>mdi-lock</v-icon></v-btn>
-                <span>Open {{ lastVariant }} in {{ item }} (need paid subscription).</span>
+                <span>Open {{ lastGene }} <span v-text="getAmpDelLabel()"></span> in {{ item }} (need paid subscription).</span>
                 </v-tooltip>
                 </div>
 
@@ -108,7 +106,7 @@ Vue.component('lookup-panel-variant', {
         <v-slide-y-transition>
         <v-card-text class="pl-2 pr-2 pt-1" v-show="showStandardOfCare">
             <div v-if="oncoKBVariantError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-                {{ lastGene }} {{ lastVariant }} has no result in OncoKB.
+                {{ lastGene }} <span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
             </div>
             <div v-if="oncoKBVariantSummary">
                 <span class="font-weight-bold body-1 pl-2">OncoKB</span>
@@ -117,21 +115,21 @@ Vue.component('lookup-panel-variant', {
                 target="_blank" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                 <span>Open Variant in OncoKB</span>
                 </v-tooltip>
-                <div class="pa-2" v-for="indication in oncoKBVariantSummary.indications" :key="indication.drugs">
+                <div class="pt-2 pl-2 pr-2 pb-0" v-for="indication in oncoKBVariantSummary.indications" :key="indication.drugs">
                 <v-divider class="pb-3"></v-divider>
                     <div><span class="font-weight-bold">Indicated Drugs: </span><span>{{ indication.drugs }}</span></div>
                     <div><span class="font-weight-bold">Indication: </span><span v-for="(text, index) in indication.indications" v-text="text"></span></div>
                     <div>
                     <span class="font-weight-bold">Pubmed:</span>
                     <v-tooltip bottom>
-                    <v-btn slot="activator" icon :href="indication.pubmedUrl" target="_blank" @click.stop class="primary--text"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                    <v-btn slot="activator" icon :href="indication.pubmedUrl" target="_blank" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                     <span>Open Pubmed Article(s)</span>
                     </v-tooltip>
                     </div>
-                </div>
+                </div> 
                 <div class="pa-2" v-show="oncoKBVariantSummary.indications.length == 0">
-                    No indications were found but the variant exists in their database.
-                </div>    
+                No indications were found but the variant exists in their database.
+                </div>          
                     
             </div>
         </v-card-text>
@@ -148,13 +146,14 @@ Vue.component('lookup-panel-variant', {
              </v-toolbar>
              <v-card-text class="pl-2 pr-2 pt-1">
                  <div v-if="oncoKBVariantError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-                     {{ lastGene }} {{ lastVariant }} has no result in OncoKB.
+                     {{ lastGene }} <span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
                  </div>
                  <div v-if="oncoKBVariantSummary">
                      <span class="font-weight-bold body-1 pl-2">OncoKB</span>
                      <v-tooltip bottom>
-                     <v-btn slot="activator" icon :href="oncoKBVariantSummary.oncokbVariantUrl" 
-                     target="_blank" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                     <v-btn slot="activator" icon 
+                     :href="oncoKBVariantSummary.oncokbVariantUrl" target="_blank"
+                      @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                      <span>Open Variant in OncoKB</span>
                      </v-tooltip>
                      <div class="pa-2" v-for="indication in oncoKBVariantSummary.investigationalIndications" :key="indication.drugs">
@@ -168,10 +167,10 @@ Vue.component('lookup-panel-variant', {
                          <span>Open Pubmed Article(s)</span>
                          </v-tooltip>
                          </div>
-                     </div>
+                     </div>   
                      <div class="pa-2" v-show="oncoKBVariantSummary.indications.length == 0">
-                        No indications were found but the variant exists in their database.
-                     </div>        
+                     No indications were found but the variant exists in their database.
+                    </div>        
                          
                  </div>
              </v-card-text>
@@ -190,7 +189,7 @@ Vue.component('lookup-panel-variant', {
             </v-toolbar>
             <v-card-text class="pa-3">
                 <div v-if="oncoKBVariantError" class="">
-                    {{ lastGene }} {{ lastVariant }} has no result in OncoKB.
+                    {{ lastGene }} <span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
                 </div>
                 <div v-if="oncoKBVariantSummary">
                     <span class="font-weight-bold body-1">OncoKB</span>
@@ -229,7 +228,7 @@ Vue.component('lookup-panel-variant', {
         <v-slide-y-transition>
         <v-card-text class="pl-2 pr-2 pt-1" v-show="showClinicalTrials">
             <div v-if="clinicalTrialsError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-                {{ lastGene }} {{ lastVariant }} {{ lastOncotreeCode }} has no result in clinicaltrials.gov.
+                {{ lastGene }} <span v-text="getAmpDelLabel()"></span> {{ lastOncotreeCode }} has no result in clinicaltrials.gov.
             </div>
             <div v-if="clinicalTrials">
                 <div class="pt-2 pl-2 pr-2 pb-0" v-for="(trial, index) in clinicalTrials" :key="index">
@@ -263,7 +262,7 @@ Vue.component('lookup-panel-variant', {
     </v-toolbar>
     <v-card-text class="pl-3 pr-3 pt-1">
         <div v-if="oncoKBVariantError" class="pt-2 mt-1 pb-2 mb-1">
-            {{ lastGene }} {{ lastVariant }} has no result in OncoKB.
+            {{ lastGene }} <span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
         </div>
         <div v-if="oncoKBVariantSummary && !fasmicLoading && !uniProtVariantLoading">
             <table class="no-border-table">
@@ -282,6 +281,7 @@ Vue.component('lookup-panel-variant', {
                     </v-tooltip>
                     </td>
                 </tr>
+                <!--
                 <tr>
                     <td :class="[fasmicUrl ? 'pl-2 pr-2' : 'pa-2', 'font-weight-bold', 'pt-0' ]">Fasmic</td><td :class="[fasmicUrl ? 'pl-2 pr-2' : 'pa-2', 'pt-0']">
                     <span v-if="fasmicSummary">{{ fasmicSummary }}</span>
@@ -302,6 +302,7 @@ Vue.component('lookup-panel-variant', {
                     <span v-else>No entry in UniprotKB</span>
                     </td>
                 </tr>
+                -->
                 </tbody>
             </table>
     </div>
@@ -310,6 +311,7 @@ Vue.component('lookup-panel-variant', {
 </v-flex>
 
 <!--   Hot Spots  -->
+<!-- 
 <v-flex class="xs6">
 <v-card>
     <v-toolbar dense class="elevation-0" dark color="primary">
@@ -318,7 +320,7 @@ Vue.component('lookup-panel-variant', {
     </v-toolbar>
     <v-card-text class="pl-3 pr-3 pt-1">
         <div v-if="hotspotVariantError"  class="pt-2 mt-1 pb-2 mb-1">
-            {{ lastGene }} {{ lastVariant }} has no result in MSK Hotspot.
+            {{ lastGene }} {{ lastAmpDel }} has no result in MSK Hotspot.
         </div>
         <div v-if="hotspotSummary && !hotspotLoading">
                 <table class="no-border-table">
@@ -353,35 +355,37 @@ Vue.component('lookup-panel-variant', {
     </v-card-text>
 </v-card>    
 </v-flex>
-<!-- Codon Disease Distribution -->
+-->
+
+<!-- Common Cancers  -->
 <v-flex class="xs12">
 <lookup-panel-plot-utils ref="plotUtils"
 :standalone="standalone" @handle-dialogs="handleDialogs"></lookup-panel-plot-utils>
         <v-card>
             <v-toolbar dense class="elevation-0" dark color="primary">
-                <div class="title ml-0">Codon Disease Distribution</div>
+                <div class="title ml-0" v-text="getPlotTitle()"></div>
                 <v-spacer></v-spacer>
                 <v-tooltip bottom>
-                    <v-btn icon @click="showCodonPanel = true" slot="activator">
+                    <v-btn icon @click="showCNVPanel = true" slot="activator">
                         <v-icon>mdi-arrow-expand-vertical</v-icon>
                     </v-btn>
                     <span>Expand All</span>
                 </v-tooltip>
 
                 <v-tooltip bottom>
-                    <v-btn icon @click="showCodonPanel = false" slot="activator">
+                    <v-btn icon @click="showCNVPanel = false" slot="activator">
                         <v-icon>mdi-arrow-collapse-vertical</v-icon>
                     </v-btn>
                     <span>Collapse All</span>
                 </v-tooltip>
             </v-toolbar>
             <v-card-text class="pa-3">
-                <div :class="[codonPlotLoading ? 'alpha-54' : '']">
-                    <div v-if="codonPlotError && !codonPlotLoading">No Genie Data could be found for variant
-                        {{ lastGene }} {{ lastVariant }}</div>
-                    <div v-if="!codonPlotError" v-show="showCodonPanel">
-                        <div class="pb-2">This graph shows the disease distribution of this codon. Sometimes diseases will be enriched for a given mutant amino acid, and this can be useful for cancers that lack a definitive diagnosis.</div>
-                        <div :id="'codonPlot' + uniqId"></div>
+                <div :class="[cnvPlotLoading ? 'alpha-54' : '']">
+                    <div v-if="cnvPlotError && !cnvPlotLoading">No Genie Data could be found for variant
+                        {{ lastGene }} <span v-text="getAmpDelLabel()"></span> (or too few incidences found to be useful)</div>
+                    <div v-if="!cnvPlotError" v-show="showCNVPanel">
+                        <div :id="'cnvAbsPlot' + uniqId"></div>
+                        <div :id="'cnvPctPlot' + uniqId"></div>
                     </div>
                 </div>
 
@@ -415,9 +419,9 @@ Vue.component('lookup-panel-variant', {
             hotspotSummary: null,
             hotspotVariantError: false,
             hotspot: null,
-            showCodonPanel: true,
-            codonPlotLoading: false,
-            codonPlotError: false,
+            showCNVPanel: true,
+            cnvPlotLoading: false,
+            cnvPlotError: false,
             clinicalTrials: [],
             clinicalTrialsError: false,
             clinicalTrialsLoading: false,
@@ -470,12 +474,11 @@ Vue.component('lookup-panel-variant', {
                 this.variantSummaries[this.variantPanelTitles[i]].url = null;
                 this.variantSummaries[this.variantPanelTitles[i]].url2 = null;
             }
-            axios.get(webAppRoot + "/getVariantSummary", {
+            axios.get(webAppRoot + "/getCNVSummary", {
                 params: {
                     geneTerm: this.currentGene,
                     oncotreeCode: this.currentOncotreeCode.text,
-                    hgvs: this.currentVariant,
-                    originalVariant: this.originalVariant,
+                    ampDel: this.currentAmpDel,
                     databases: this.variantPanelTitles.join(",")
                 }
             })
@@ -566,31 +569,56 @@ Vue.component('lookup-panel-variant', {
         },
         reload() {
             this.getVariantSummary();
-            this.fetchCodonPlot();
+            // this.fetchCodonPlot();
+            this.fetchCNVPlots();
         },
         isLoading() {
             return this.uniProtVariantLoading || this.fasmicLoading 
             || this.hotspotLoading || this.loading
-            || this.codonPlotLoading;
+            || this.cnvPlotLoading;
         },
-        fetchCodonPlot() {
-            this.codonPlotLoading = true;
-            this.codonPlotError = false;
-            var promise1 = this.$refs.plotUtils.updateBarPlot("/getCodonDiseaseDistributionData", {
-                geneTerm: this.currentGene,
-                oncotreeCode: this.currentOncotreeCode.text,
-                hgvs: this.currentVariant,
-                originalVariant: this.originalVariant,
-                plotId: "codonPlot" + this.uniqId,
-            }, true);
-            Promise.all([promise1]).then(values => {
-                this.codonPlotLoading = false;
+        // fetchCodonPlot() {
+        //     this.cnvPlotLoading = true;
+        //     this.cnvPlotError = false;
+        //     var promise1 = this.$refs.plotUtils.updateBarPlot("/getCodonDiseaseDistributionData", {
+        //         geneTerm: this.currentGene,
+        //         oncotreeCode: this.currentOncotreeCode.text,
+        //         hgvs: this.currentVariant,
+        //         originalVariant: this.originalVariant,
+        //         plotId: "codonPlot",
+        //     }, true);
+        //     Promise.all([promise1]).then(values => {
+        //         this.cnvPlotLoading = false;
+        //         if (values.filter(v => v.success).length != values.length) {
+        //             console.log("Some plots did not finish properly");
+        //             this.cnvPlotError = true;
+        //         }
+        //         else {
+        //             this.cnvPlotError = false;
+        //         }
+        //     })
+        // },
+        fetchCNVPlots() {
+            this.cnvPlotLoading = true;
+            this.cnvPlotError = false;
+            var promise1 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidenceAbsCNV", {
+                hugoSymbol: this.currentGene,
+                ampDel: this.currentAmpDel,
+                plotId: "cnvAbsPlot" + this.uniqId,
+            });
+            var promise2 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidencePctCNV", {
+                hugoSymbol: this.currentGene,
+                ampDel: this.currentAmpDel,
+                plotId: "cnvPctPlot" + this.uniqId,
+            });
+            Promise.all([promise1, promise2]).then(values => {
+                this.cnvPlotLoading = false;
                 if (values.filter(v => v.success).length != values.length) {
                     console.log("Some plots did not finish properly");
-                    this.codonPlotError = true;
+                    this.cnvPlotError = true;
                 }
                 else {
-                    this.codonPlotError = false;
+                    this.cnvPlotError = false;
                 }
             })
         },
@@ -599,7 +627,14 @@ Vue.component('lookup-panel-variant', {
                 return items.join(" | ");
             }
             return "None";
-        }  
+        },
+        getPlotTitle() {
+            var ampDelLabel = this.getAmpDelLabel();
+            return "Common Cancers with " + this.lastGene + " " + ampDelLabel + " in Profile";
+        },
+        getAmpDelLabel() {
+            return this.lastAmpDel == "amp" ? "Amplification" : "Deletion";
+        }
     },
     mounted() {
     },

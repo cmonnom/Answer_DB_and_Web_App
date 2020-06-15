@@ -1,14 +1,14 @@
 Vue.component('lookup-panel', {
     props: {
-        title: {default: "Lookup Tool (Beta)", type: String},
+        title: {default: "Lookup Tool", type: String},
         standalone: {default: true, type:Boolean},
         oncotreeItems: {default: () => [], type:Array},
-        originalVariant: {default: "", type:String}
+        originalVariant: {default: "", type:String},
     },
-    template: /*html*/`<div>
+    template: /*html*/`<div ref="lookupPanel">
 
     <v-card v-if="panelVisible || standalone" :class="standalone ? [] : ['lookup-panel', 'mr-2','ml-2']"
-        :height="calcMaxHeight()" :flat="standalone" :color="standalone ? 'rgba(0,0,0,0)' : ''">
+        :height="calcMaxHeight()" :width="calcMaxWidth()" :flat="standalone" :color="standalone ? 'rgba(0,0,0,0)' : ''">
         <v-toolbar dense class="elevation-0" dark color="primary" v-show="!standalone">
             <v-tooltip class="ml-0" bottom>
                 <v-menu offset-y offset-x slot="activator" class="ml-0">
@@ -41,6 +41,15 @@ Vue.component('lookup-panel', {
                             </v-list-tile-avatar>
                             <v-list-tile-content>
                                 <v-list-tile-title>Close Lookup Tool</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+
+                        <v-list-tile avatar @click="relayout()">
+                            <v-list-tile-avatar>
+                                <v-icon>search</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>RElayout</v-list-tile-title>
                             </v-list-tile-content>
                         </v-list-tile>
 
@@ -79,7 +88,7 @@ Vue.component('lookup-panel', {
             :color="standalone ? 'rgba(0,0,0,0)' : ''">
             <v-container grid-list-md fluid pa-1>
                 <v-layout row wrap justify-center>
-                    <v-flex xs12 class="centered error--text">NOT PRODUCTION READY</v-flex>
+                    <v-flex xs12 class="centered error--text">NOT QUITE PRODUCTION READY</v-flex>
                     <v-tooltip bottom v-for="button in buttons" :key="button.label">
                         <v-btn slot="activator" @click="handleButton(button)"
                             :class="button.label == currentlyActive ? 'amber accent-2': ''">
@@ -99,24 +108,48 @@ Vue.component('lookup-panel', {
                     <v-flex xs12>
                         <v-layout row wrap>
 
-                            <!-- Gene/Variant Input -->
-                            <v-flex v-if="currentlyActive == 'Gene' || currentlyActive == 'Variant'"
+                            <!-- Gene/Variant/CNV Input -->
+                            <v-flex v-if="currentlyActive == 'Gene' || currentlyActive == 'Variant' || currentlyActive == 'CNV'"
                                 :class="['pl-2','pr-2', ...getFlexClasses()]">
                                 <v-text-field hide-details v-model="currentGene" :value="currentGene"
                                     label="Gene Symbol" placeholder="Eg. BRCA1" :error-messages="geneSymbolErrorMessage"
-                                    @input="geneSymbolErrorMessage = null" @keyup.enter="submitForm">
+                                    @input="geneSymbolErrorMessage = null" @keyup.enter="submitForm"
+                                    clearable>
                                 </v-text-field>
                             </v-flex>
 
                             <!-- Variant Input -->
                             <v-flex v-if="currentlyActive == 'Variant'" :class="['pl-2','pr-2', ...getFlexClasses()]">
                                 <v-text-field hide-details v-model="currentVariant" :value="currentVariant"
-                                    label="HGVS Variant:" placeholder="Eg. p.His1791Gln" @keyup.enter="submitForm">
+                                    label="HGVS Variant:" placeholder="Eg. p.His1791Gln" @keyup.enter="submitForm"
+                                    clearable>
                                 </v-text-field>
                             </v-flex>
 
-                            <!-- Cancer Input -->
-                            <v-flex v-if="currentlyActive == 'Cancer' || currentlyActive == 'Variant'"
+                            <!-- Fusion Input -->
+                            <v-flex v-if="currentlyActive == 'Fusion'"
+                                :class="['pl-2','pr-2', ...getFlexClasses()]">
+                                <v-text-field hide-details v-model="currentFive" :value="currentFive"
+                                    label="5' Gene Symbol" placeholder="Eg. EML4" :error-messages="geneFiveErrorMessage"
+                                    @input="geneFiveErrorMessage = null" @keyup.enter="submitForm"
+                                    clearable>
+                                </v-text-field>
+                            </v-flex>
+
+                             <!-- Fusion Input -->
+                             <v-flex v-if="currentlyActive == 'Fusion'"
+                             :class="['pl-2','pr-2', ...getFlexClasses()]">
+                             <v-text-field hide-details v-model="currentThree" :value="currentThree"
+                                 label="3' Gene Symbol" placeholder="Eg. ALK" :error-messages="geneThreeErrorMessage"
+                                 @input="geneThreeErrorMessage = null" @keyup.enter="submitForm"
+                                 clearable>
+                             </v-text-field>
+                         </v-flex>
+
+
+                            <!-- Cancer Input/CNV -->
+                            <v-flex 
+                            v-if="currentlyActive == 'Cancer' || currentlyActive == 'Variant' || currentlyActive == 'CNV' || currentlyActive == 'Fusion'"
                                 :class="['pl-2','pr-2', ...getCancerFlexClasses()]">
                                 <v-autocomplete hide-details value="currentOncotreeCode" v-model="currentOncotreeCode"
                                     :items="oncotreeItems" return-object label="Oncotree Code" placeholder="Eg. AML"
@@ -130,6 +163,14 @@ Vue.component('lookup-panel', {
                                 </v-autocomplete>
                             </v-flex>
 
+                            <!-- CNV Input -->
+                            <v-flex v-if="currentlyActive == 'CNV'" :class="['pl-2','pr-2', ...getFlexClasses()]">
+                            <v-radio-group v-model="currentAmpDel" row  @change="submitForm" hide-details>
+                            <v-radio label="Amplification" value="amp" color="primary"></v-radio>
+                            <v-radio label="Deletion" value="del" color="primary"></v-radio>
+                            </v-radio-group>
+                            </v-flex>
+
                         </v-layout>
 
                         <v-btn v-show="currentlyActive" @click="submitForm"
@@ -139,10 +180,10 @@ Vue.component('lookup-panel', {
 
 
                     <!-- Gene Results -->
-                    <v-flex xs12>
-                        <lookup-panel-gene v-show="currentlyActive == 'Gene'" ref="genePanel" :standalone="standalone"
+                    <v-flex xs12 v-show="currentlyActive == 'Gene'">
+                        <lookup-panel-gene  ref="genePanel" :standalone="standalone"
                             :current-gene="currentGene" @handleDialogs="handleDialogs"
-                            :last-gene="lastGene">
+                            :last-gene="lastGene" :uniq-id="uniqId">
                         </lookup-panel-gene>
                     </v-flex>
 
@@ -163,13 +204,12 @@ Vue.component('lookup-panel', {
                                         target="_blank">
                                         <v-icon class="primary--text">mdi-open-in-new</v-icon>
                                     </v-btn>
-                                    <span>Open {{ currentOncotreeCode.label }} ({{ currentOncotreeCode.text }}) in the
+                                    <span>Open {{ lastOncotreeCode }} in the
                                         NCI Thesaurus</span>
                                 </v-tooltip>
                                 <span
                                     v-if="oncotree.externalReferences && !oncotree.externalReferences.NCI && currentOncotreeCode">
-                                    No NCI Thesaurus entry for {{ currentOncotreeCode.text}}:
-                                    {{ currentOncotreeCode.label}}<br />
+                                    No NCI Thesaurus entry for {{ lastOncotreeCode }}<br />
                                     You can try a manual search directly in the NCI Thesaurus here:
                                     <v-btn slot="activator" icon
                                         href="https://ncit.nci.nih.gov/ncitbrowser/pages/home.jsf" target="_blank">
@@ -189,9 +229,9 @@ Vue.component('lookup-panel', {
                             <v-card-text class="pa-3">
                                 <div :class="[cancerPlotLoading ? 'alpha-54' : '']">
                                     <div v-if="cancerPlotError && !cancerPlotLoading">No Genie Data could be found for
-                                        oncotree {{ currentOncotreeCode.text }}</div>
-                                    <div v-if="!cancerPlotError">
-                                        <div id="mutatedGenesCancerPlot"></div>
+                                        oncotree {{ lastOncotreeCode }}</div>
+                                    <div v-show="!cancerPlotError">
+                                        <div :id="'mutatedGenesCancerPlot' + uniqId"></div>
                                     </div>
                                 </div>
 
@@ -200,15 +240,40 @@ Vue.component('lookup-panel', {
                     </v-flex>
 
                     <!-- Variant Results -->
-                    <v-flex xs12>
-                        <lookup-panel-variant v-show="currentlyActive == 'Variant'" ref="variantPanel"
+                    <v-flex xs12 v-show="currentlyActive == 'Variant'" >
+                        <lookup-panel-variant ref="variantPanel"
                             :standalone="standalone" :original-variant="originalVariant"
                             :current-oncotree-code="currentOncotreeCode" :current-variant="currentVariant"
                             :current-gene="currentGene" @handleDialogs="handleDialogs"
                             :last-oncotree-code="lastOncotreeCode" :last-variant="lastVariant"
-                            :last-gene="lastGene">
+                            :last-gene="lastGene"
+                            :uniq-id="uniqId">
                         </lookup-panel-variant>
                     </v-flex>
+
+                       <!-- CNV Results -->
+                       <v-flex xs12 v-show="currentlyActive == 'CNV'">
+                       <lookup-panel-cna  ref="cnvPanel"
+                           :standalone="standalone"
+                           :current-oncotree-code="currentOncotreeCode" :current-amp-del="currentAmpDel"
+                           :current-gene="currentGene" @handleDialogs="handleDialogs"
+                           :last-oncotree-code="lastOncotreeCode"
+                           :last-gene="lastGene" :last-amp-del="lastAmpDel"
+                           :uniq-id="uniqId">
+                       </lookup-panel-cna>
+                   </v-flex>
+
+                    <!-- Fusion Results -->
+                    <v-flex xs12  v-show="currentlyActive == 'Fusion'">
+                    <lookup-panel-fusion ref="fusionPanel"
+                        :standalone="standalone"
+                        :current-oncotree-code="currentOncotreeCode" :current-five="currentFive"
+                        :current-three="currentThree" @handleDialogs="handleDialogs"
+                        :last-oncotree-code="lastOncotreeCode"
+                        :last-five="lastFive" :last-three="lastThree"
+                        :uniq-id="uniqId">
+                    </lookup-panel-fusion>
+                </v-flex>
 
                 </v-layout>
             </v-container>
@@ -233,6 +298,7 @@ Vue.component('lookup-panel', {
             oncotree: {},
             currentVariant: "",
             geneSymbolErrorMessage: null,
+           
             variantSymbolErrorMessage: null,
             reactomeItems: [],
             reactomeItemsOpen: [],
@@ -245,6 +311,17 @@ Vue.component('lookup-panel', {
             lastGene: null,
             lastOncotreeCode: null,
             lastVariant: null,
+
+            currentAmpDel: "",
+            lastAmpDel: null,
+
+            currentFive: "",
+            currentThree: "",
+            lastFive: null,
+            lastThree: null,
+            geneFiveErrorMessage:null,
+            geneThreeErrorMessage: null,
+            uniqId: "uniq"
         }
 
     },
@@ -258,6 +335,9 @@ Vue.component('lookup-panel', {
         openInNewWindow() {
             var params = "gene=" + (this.currentGene ? this.currentGene : "") + "&variant=" +  (this.currentVariant ? this.currentVariant : "")
             + "&oncotree=" +  (this.currentOncotreeCode ? this.currentOncotreeCode.text : "")
+            + "&ampDel=" +  (this.currentAmpDel ? this.currentAmpDel : "")
+            + "&five=" +  (this.currentFive ? this.currentFive : "")
+            + "&three=" +  (this.currentThree ? this.currentThree : "")
             + "&button=" +  (this.currentlyActive ? this.currentlyActive : "")
             window.open(webAppRoot + "/discovar?" + params, "_blank");
             this.panelVisible = false;
@@ -275,6 +355,7 @@ Vue.component('lookup-panel', {
                 this.lastGene = null;
                 this.lastOncotreeCode = null;
                 this.lastVariant = null;
+                this.lastAmpDel = null;
             }
             else if (response.success === false) {
                 this.splashProgress = 100; //should dismiss the splash dialog
@@ -284,6 +365,12 @@ Vue.component('lookup-panel', {
         handleButton(button) {
             this.currentlyActive = button.label;
             this.updateRoute();
+            this.$nextTick(() => {
+                window.dispatchEvent(new Event('resize'));
+            });
+            // if (this.currentlyActive == "Cancer" && !this.isLoadingOverall()) {
+            //     this.fetchCancerPlot();
+            // }
         },
         updateRoute() {
             if (!this.standalone) {
@@ -293,6 +380,9 @@ Vue.component('lookup-panel', {
                 gene: this.currentGene,
                 variant: this.currentVariant,
                 oncotree: this.currentOncotreeCode ? this.currentOncotreeCode.text : null,
+                ampDel: this.currentAmpDel,
+                five: this.currentFive,
+                three: this.currentThree,
                 button: this.currentlyActive
             }
             this.$router.push({ query: query });
@@ -304,6 +394,9 @@ Vue.component('lookup-panel', {
            this.currentGene = this.$route.query.gene;
            this.currentVariant = this.$route.query.variant;
            var oncotreeItems = this.oncotreeItems.filter(o => o.text == this.$route.query.oncotree);
+           this.currentAmpDel = this.$route.query.ampDel;
+           this.currentFive = this.$route.query.five;
+           this.currentThree = this.$route.query.three;
            var oncotree = null;
            if (oncotreeItems && oncotreeItems[0]) {
                oncotree = oncotreeItems[0];
@@ -312,15 +405,16 @@ Vue.component('lookup-panel', {
            this.currentlyActive = this.$route.query.button;
         },
         submitForm() {
+            setStart();
             this.updateRoute();
-            var timeout = 100; //prioritize current button
+            var timeout = 500; //prioritize current button
             if (this.isFormValid("Gene") && this.needsReloading("Gene")) {
             setTimeout(() => {
                     this.$nextTick(() => {
                         this.$refs.genePanel.reload();
                         this.lastGene = this.currentGene;
                     });
-                }, this.currentlyActive == "Gene" ? 0 : 100);
+                }, this.currentlyActive == "Gene" ? 0 : timeout);
             }
 
             if (this.isFormValid("Cancer") && this.needsReloading("Cancer")) {
@@ -328,7 +422,7 @@ Vue.component('lookup-panel', {
                     this.getOncotree();
                     this.fetchCancerPlot();
                     this.lastOncotreeCode = this.currentOncotreeCode.text;
-                }, this.currentlyActive == "Cancer" ? 0 : 100);
+                }, this.currentlyActive == "Cancer" ? 0 : timeout);
             }
 
             if (this.isFormValid("Variant") && this.needsReloading("Variant")) {
@@ -339,9 +433,31 @@ Vue.component('lookup-panel', {
                         this.lastVariant = this.currentVariant;
                         this.lastOncotreeCode = this.currentOncotreeCode.text;
                     });
-                }, this.currentlyActive == "Variant" ? 0 : 100);
+                }, this.currentlyActive == "Variant" ? 0 : timeout);
             }
 
+            
+            if (this.isFormValid("CNV") && this.needsReloading("CNV")) {
+                setTimeout(() => {
+                        this.$nextTick(() => {
+                            this.$refs.cnvPanel.reload();
+                            this.lastGene = this.currentGene;
+                            this.lastAmpDel = this.currentAmpDel;
+                            this.lastOncotreeCode = this.currentOncotreeCode.text;
+                        });
+                    }, this.currentlyActive == "CNV" ? 0 : timeout);
+            }
+
+            if (this.isFormValid("Fusion") && this.needsReloading("Fusion")) {
+                setTimeout(() => {
+                        this.$nextTick(() => {
+                            this.$refs.fusionPanel.reload();
+                            this.lastFive = this.currentFive;
+                            this.lastThree = this.currentThree;
+                            this.lastOncotreeCode = this.currentOncotreeCode.text;
+                        });
+                    }, this.currentlyActive == "Fusion" ? 0 : timeout);
+            }
 
           
            
@@ -359,10 +475,12 @@ Vue.component('lookup-panel', {
                 || this.lastOncotreeCode != (this.currentOncotreeCode ? this.currentOncotreeCode.text : null);
             }
             if (button == "CNV") {
-                return false; //TODO
+                return this.lastGene != this.currentGene  || this.lastAmpDel != this.currentAmpDel 
+                || this.lastOncotreeCode != (this.currentOncotreeCode ? this.currentOncotreeCode.text : null);
             }
             if (button == "Fusion") {
-                return false; //TODO
+                return this.lastFive != this.currentFive  || this.lastThree != this.currentThree 
+                || this.lastOncotreeCode != (this.currentOncotreeCode ? this.currentOncotreeCode.text : null);
             }
         },
         calcMaxHeight() {
@@ -376,8 +494,11 @@ Vue.component('lookup-panel', {
                 button = this.currentlyActive;
             }
             var geneValid = this.currentGene && this.currentGene.length > 0;
+            var fiveValid = this.currentFive && this.currentFive.length > 0;
+            var threeValid = this.currentThree && this.currentThree.length > 0;
             var oncotreeValid = this.currentOncotreeCode != null && this.currentOncotreeCode.text != null;
             var variantValid = this.currentVariant && this.currentVariant.length > 0;
+            var cnvValid = this.currentAmpDel == "amp" || this.currentAmpDel == "del";
             switch(button) {
                 case "Gene":
                     return geneValid;
@@ -385,23 +506,12 @@ Vue.component('lookup-panel', {
                     return oncotreeValid;
                 case "Variant":
                     return geneValid && variantValid && oncotreeValid;
+                case "CNV":
+                    return geneValid && cnvValid && oncotreeValid;
+                case "Fusion":
+                    return fiveValid && threeValid && oncotreeValid;
             }
             return false;
-        },
-        formatPubMedLinks(text) {
-            var regex = /([0-9]{6,})/gm;
-            var results = text.split(regex);
-            var summary = [];
-            for (var i = 0; i < results.length; i++) {
-                var item = results[i];
-                if (isNaN(item)) {
-                    summary.push({text: item, type: "text"});
-                }
-                else {
-                    summary.push({text: item, type: "link"});
-                }
-            }
-            return summary;
         },
         getOncotree() {
             this.loading = true;
@@ -431,20 +541,29 @@ Vue.component('lookup-panel', {
         isLoadingOverall() {
             switch(this.currentlyActive) {
                 case "Gene":
-                    return this.$refs.genePanel.isLoading();
+                    return this.$refs.genePanel && this.$refs.genePanel.isLoading();
                 case "Cancer":
                     return this.loading;
                 case "Variant":
                     return this.$refs.variantPanel && this.$refs.variantPanel.isLoading();
+                case "CNV":
+                    return this.$refs.cnvPanel && this.$refs.cnvPanel.isLoading();
+                case "Fusion":
+                    return this.$refs.fusionPanel && this.$refs.fusionPanel.isLoading();    
             }
             return this.loading;
         },
         getFlexClasses() {
             switch(this.currentlyActive) {
                 case "Gene":
-                    return ["xs12"]
+                    if (this.standalone) {
+                        return ["xs12","md6","lg4","xl3"];
+                    }
+                    else {
+                        return ["xs12"];
+                    }
                 case "Cancer":
-                    return ["xs12"]
+                    return ["xs12"];
                 case "Variant":
                     if (this.standalone) {
                         return ["xs12","md6","lg4","xl3"];
@@ -452,11 +571,26 @@ Vue.component('lookup-panel', {
                     else {
                         return ["xs12","md6","lg6","xl6"];
                     }
+                case "CNV":
+                    if (this.standalone) {
+                        return ["xs12","md6","lg4","xl3"];
+                    }
+                    else {
+                        return ["xs12","md6","lg6","xl6"];
+                    }
+                case "Fusion":
+                    if (this.standalone) {
+                        return ["xs12","md6","lg4","xl3"];
+                    }
+                    else {
+                        return ["xs12","md6","lg6","xl6"];
+                    }
+                    
             }
         },
         getGeneFlexClasses() {
             if (this.standalone) {
-                return "md12 lg6";
+                return "xs12 md12 lg6";
             }
             else {
                 return "xs12";
@@ -464,7 +598,7 @@ Vue.component('lookup-panel', {
         },
         getGeneFlexClassesHalf() {
             if (this.standalone) {
-                return "md6 lg3";
+                return "xs12 md6 lg3";
             }
             else {
                 return "xs12";
@@ -494,7 +628,7 @@ Vue.component('lookup-panel', {
                 this.cancerPlotError = false;
                 var promise1 = this.$refs.plotUtils.updateBarPlot("/getMutatedGeneByCancer", {
                     oncotreeCode: this.currentOncotreeCode.text,
-                    plotId: "mutatedGenesCancerPlot",
+                    plotId: "mutatedGenesCancerPlot" + this.uniqId,
                 }, true);
                 Promise.all([promise1]).then(values => {
                     this.cancerPlotLoading = false;
@@ -508,8 +642,23 @@ Vue.component('lookup-panel', {
                 })
             }
         },
+        relayout() {
+            console.log("relayouting");
+        },
+        calcMaxWidth() {
+            if (this.standalone) {
+                return null;
+            }
+            // var content = document.getElementsByClassName("v-content");
+			// 	if (content) {
+                    return this.$el.parentElement.parentElement.clientWidth / 3 - 10;
+                    // return (content[0].clientWidth - parseInt(content[0].style.paddingLeft.replace("px", ""))) / 3 - 10;
+				// }
+            // return null; 
+        }
     },
     mounted() {
+        this.uniqId = "_uniq" + Math.round(Math.random() * 10000);
     },
     created: function () {
     },

@@ -40,38 +40,39 @@ public class ClinicalTrialsRequestUtils  extends AbstractRequestUtils{
 
 	public List<ClinicalTrial> getClinicalTrials(String geneTerm, String variant, OncotreeTumorType tumorType) throws URISyntaxException, ClientProtocolException, IOException {
 		List<ClinicalTrial> clinicalTrials = new ArrayList<ClinicalTrial>();
-			parseResponse(clinicalTrials, geneTerm, variant, tumorType,  true);
+			parseResponse(clinicalTrials, geneTerm, variant, tumorType);
 			return clinicalTrials;
 	}
 
 	public void parseResponse(List<ClinicalTrial> clinicalTrials,
-			String geneTerm, String variant, OncotreeTumorType tumorType, boolean doMainType)
+			String geneTerm, String variant, OncotreeTumorType tumorType)
 			throws IOException, JsonParseException, JsonMappingException, URISyntaxException {
-		URI uri = new URI(this.buildURL(geneTerm, variant, doMainType ? tumorType.getName() : tumorType.getMainType()));
+		String url = this.buildURL(geneTerm, variant, tumorType.getName());
+		ObjectMapper mapper = new ObjectMapper();
+		this.addClinicalTrials(url, mapper, clinicalTrials);
+		if (clinicalTrials.size() <= 3) {
+			url = this.buildURL(geneTerm, variant, tumorType.getMainType());
+			this.addClinicalTrials(url, mapper, clinicalTrials);
+		}
+	}
+	
+	private void addClinicalTrials(String url, ObjectMapper mapper, List<ClinicalTrial> clinicalTrials) throws ClientProtocolException, IOException, URISyntaxException {
+		URI uri = new URI(url);
 		requestGet = new HttpGet(uri);
 		HttpClientContext context = HttpClientContext.create();
 		HttpResponse response = client.execute(requestGet, context);
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
-			ObjectMapper mapper = new ObjectMapper();
 			ClinicalTrialResponse trialJson = mapper.readValue(response.getEntity().getContent(), ClinicalTrialResponse.class);
 			this.closeGetRequest();
 			if (trialJson != null && trialJson.getStudyFieldsResponse() != null 
 					&& trialJson.getStudyFieldsResponse().getClinicalTrials() != null) {
-				//need to fetch trials for mainType
 				clinicalTrials.addAll(trialJson.getStudyFieldsResponse().getClinicalTrials());
-			}
-			if (doMainType) {
-				if (trialJson == null || trialJson.getStudyFieldsResponse() == null || trialJson.getStudyFieldsResponse().getClinicalTrials() == null
-						|| trialJson.getStudyFieldsResponse().getClinicalTrials().size() <= 3) {
-					this.parseResponse(clinicalTrials, geneTerm, variant, tumorType, true);
-				}
 			}
 		}
 		else {
 			logger.info("Something went wrong ClinicalTrialsRequestUtils:70 HTTP_STATUS: " + statusCode);
 		}
-		this.closeGetRequest();
 	}
 	
 	private String buildURL(String geneTerm, String variant, String condition) {

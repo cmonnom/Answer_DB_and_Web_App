@@ -738,3 +738,7 @@ Slow down the fullscreen dialog
 .no-border-table tr {
     background-color: unset;
 }
+
+.max-lookup-width {
+    max-width: 683px;
+}

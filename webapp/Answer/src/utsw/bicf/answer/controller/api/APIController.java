@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -27,6 +28,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.GenieCNA;
+import utsw.bicf.answer.model.GenieCNACount;
+import utsw.bicf.answer.model.GenieFusion;
+import utsw.bicf.answer.model.GenieFusionCount;
 import utsw.bicf.answer.model.GenieMutation;
 import utsw.bicf.answer.model.GenieSample;
 import utsw.bicf.answer.model.GenieSummary;
@@ -130,6 +134,7 @@ public class APIController {
 			@RequestParam String sampleDataPath, 
 			@RequestParam String mutationDataPath, 
 			@RequestParam String cnaDataPath,
+			@RequestParam String fusionDataPath,
 			HttpSession httpSession) throws IOException, InterruptedException {
 		httpSession.setAttribute("user", "API User from updateGenieData");
 		long now = System.currentTimeMillis();
@@ -146,10 +151,12 @@ public class APIController {
 		File sampleDataFile = new File(sampleDataPath);
 		File mutationDataFile = new File(mutationDataPath);
 		File cnaDataFile = new File(cnaDataPath);
+		File fusionDataFile = new File(fusionDataPath);
 		
 		if (sampleDataFile.exists() && sampleDataFile.canRead()
 				&& mutationDataFile.exists() && mutationDataFile.canRead()
-				&& cnaDataFile.exists() && cnaDataFile.canRead()) {
+				&& cnaDataFile.exists() && cnaDataFile.canRead()
+				&& fusionDataFile.exists() && fusionDataFile.canRead()) {
 			ExecutorService executor = Executors.newFixedThreadPool(1);
 			modelDAO.deleteGenieTables();
 			Runnable worker = new Runnable() {
@@ -164,6 +171,7 @@ public class APIController {
 						importMutations(mutationDataFile, toSave, sampleIdFKey);
 						
 						importCNA(cnaDataFile, toSave, sampleIdFKey);
+						importFusion(fusionDataFile, toSave, sampleIdFKey);
 						
 						long afterRequest = System.currentTimeMillis();
 						System.out.println("After request " + (afterRequest - now) + "ms");
@@ -312,6 +320,8 @@ public class APIController {
 			continue; //skip until the first sample row
 		}
 		counter = 0;
+		Map<String, GenieSample> genieSampleFKey = modelDAO.getAllGenieSamplesByTumorBarcode();
+		Map<String, Map<String, GenieCNACount>> countCasesPerCancerPerGene = new HashMap<String, Map<String, GenieCNACount>>();
 		while ((line = reader3.readLine()) != null ) {
 			String[] items = line.split("\t");
 			String hugoSymbol = items[0];
@@ -333,6 +343,20 @@ public class APIController {
 							System.out.println("CNA: " + counter);
 						}
 					}
+					GenieSample gs = genieSampleFKey.get(headers.get(i));
+					if (gs != null) {
+						Map<String, GenieCNACount> geneCount = countCasesPerCancerPerGene.get(gs.getOncotreeCode());
+						if (geneCount == null) {
+							geneCount = new HashMap<String, GenieCNACount>();
+							countCasesPerCancerPerGene.put(gs.getOncotreeCode(), geneCount);
+						}
+						GenieCNACount cnaCount = geneCount.get(hugoSymbol);
+						if (cnaCount == null) {
+							cnaCount = new GenieCNACount(gs.getOncotreeCode(), hugoSymbol, 0);
+							geneCount.put(hugoSymbol, cnaCount);
+						}
+						cnaCount.incrementCount();
+					}
 				}
 			}
 		}
@@ -341,6 +365,55 @@ public class APIController {
 			toSave = new ArrayList<Object>();
 		}
 		reader3.close();
+		counter = 0;
+		for (Map<String, GenieCNACount> cnCountPerOncotreeCode : countCasesPerCancerPerGene.values()) {
+			List<Object> cnaToSave = cnCountPerOncotreeCode.values().stream().collect(Collectors.toList());
+			modelDAO.saveBatch(cnaToSave);
+			counter += cnaToSave.size();
+			System.out.println("CNA counts: " + counter);
+		}
+	}
+	
+	public void importFusion(File fusionDataFile, List<Object> toSave, Map<String, Integer> sampleIdFKey)
+			throws FileNotFoundException, IOException {
+		int counter;
+		String line;
+		BufferedReader reader2 = new BufferedReader(new FileReader(fusionDataFile));
+		line = null;
+		while ((line = reader2.readLine()) != null) {
+			if (line.startsWith("Hugo_Symbol")) {
+				break;
+			}
+			continue; //skip until the first sample row
+		}
+		counter = 0;
+		while ((line = reader2.readLine()) != null ) {
+			String[] items = line.split("\t");
+			if (items[0] == null || items[0].length() == 0) {
+				continue;
+			}
+			GenieFusion m = new GenieFusion();
+			m.setHugoSymbol(items[0]);
+			m.setFusionName(items[4]);
+			m.setTumorSampleBarcode(items[3]);
+//							Integer fkey = modelDAO.getGenieSampleIdByTumorBarcode(m.getTumorSampleBarcode());
+			m.setGenieSampleId(sampleIdFKey.get(m.getTumorSampleBarcode()));
+			
+			toSave.add(m);
+			counter++;
+			if (counter % 1000 == 0) {
+				modelDAO.saveBatch(toSave);
+				toSave = new ArrayList<Object>();
+				System.out.println("Fusions: " + counter);
+			}
+		}
+		if (!toSave.isEmpty() ) {
+			modelDAO.saveBatch(toSave);
+			toSave = new ArrayList<Object>();
+		}
+		reader2.close();
+		List<Object> counts = modelDAO.populateGenieFusionCountTable();
+		modelDAO.saveBatch(counts);
 	}
 	
 }

@@ -9,6 +9,7 @@ public class StdOfCareIndication {
 	List<String> indications = new ArrayList<String>();
 	String summary;
 	String pubmedUrl; 
+	String level;
 	
 	public StdOfCareIndication() {
 		super();
@@ -45,6 +46,14 @@ public class StdOfCareIndication {
 
 	public void setIndications(List<String> indications) {
 		this.indications = indications;
+	}
+
+	public String getLevel() {
+		return level;
+	}
+
+	public void setLevel(String level) {
+		this.level = level;
 	}
 	
 }

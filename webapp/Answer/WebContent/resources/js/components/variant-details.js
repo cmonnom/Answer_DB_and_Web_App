@@ -99,7 +99,7 @@ Vue.component('variant-details', {
                                   <v-layout class="full-width">
                                       <v-flex xs12 :class="[item.type == 'link' ? 'pb-0' : '', 'text-xs-left', 'grow']">
                                           <span v-if="isRegularVariantDetailsLabel(item.type)" :class="[loadingVariant ? loadingVariantTextColor : '','selectable']">{{ item.label }}:</span>
-                                          <span v-if="!item.type || item.type == 'link'" v-html="item.value" :class="['selectable text-xs-right grow blue-grey--text', loadingVariant ? 'text--lighten-4': 'text--lighten-1']"></span>
+                                          <span v-if="!item.type || item.type == 'link' || item.fieldName == 'gene'" v-html="item.value" :class="['selectable text-xs-right grow blue-grey--text', loadingVariant ? 'text--lighten-4': 'text--lighten-1']"></span>
                                           <v-tooltip bottom>
                                           <v-btn slot="activator" v-if="item.type == 'chip'" flat icon color="primary" @click="toggleAllGenes" :loading="toggleAllLoading">
                                           <v-icon>done_all</v-icon>
@@ -126,6 +126,14 @@ Vue.component('variant-details', {
                                             <v-flex xs v-if="item.url"> 
                                             <v-tooltip bottom>
                                                 <v-btn slot="activator" color="primary" icon flat @click="openUrl(item)" class="mt-0 mb-0">
+                                                    <v-icon>{{ item.linkIcon }}</v-icon>
+                                                </v-btn>
+                                                <span>{{ item.tooltip }}</span>
+                                            </v-tooltip>  
+                                            </v-flex>
+                                            <v-flex xs v-if="item.handler"> 
+                                            <v-tooltip bottom>
+                                                <v-btn slot="activator" color="primary" icon flat @click="handleButtonClick(item)" class="mt-0 mb-0">
                                                     <v-icon>{{ item.linkIcon }}</v-icon>
                                                 </v-btn>
                                                 <span>{{ item.tooltip }}</span>
@@ -160,6 +168,12 @@ Vue.component('variant-details', {
                                               </v-btn>
                                               <span>{{ item.tooltip }}</span>
                                           </v-tooltip>  
+                                          <v-tooltip bottom v-if="item.type == 'button'">
+                                          <v-btn slot="activator" color="primary" icon flat @click="handleButtonClick(item)" class="mt-0 mb-0">
+                                            <v-icon>{{ item.linkIcon }}</v-icon>
+                                          </v-btn>
+                                          <span>{{ item.tooltip }}</span>
+                                        </v-tooltip>  
                                           <span v-if="item.type == 'array'" class="selectable text-xs-right grow blue-grey--text text--lighten-1">
                                             <span v-for="v in item.value" :key="v">{{ v }}<br/></span>
                                           </span>  
@@ -494,7 +508,8 @@ Vue.component('variant-details', {
         //like Gene, Notation Nb.Cases Seen etc.
         //so that it behaves like a regular "label: string" combo
         isRegularVariantDetailsLabel(type) {
-            return !type || type == 'chip' || type == 'callSet' || type == 'flag' || type == 'link' || type == 'array' || type == 'menu-link';
+            return !type || type == 'chip' || type == 'callSet' || type == 'flag' || type == 'link' || type == 'array' || type == 'menu-link'
+            || type == 'button';
         },
         getTableFlexClass(name) {
             if (this.variantType == "cnv") {
@@ -518,6 +533,9 @@ Vue.component('variant-details', {
         },
         openUrl(item) {
             window.open(item.url, "_blank");
+        },
+        handleButtonClick(item) {
+           this.$emit(item.handler, this);
         },
         // handleVariantDetailsChanged() {
         //     this.$emit("variant-details-changed");

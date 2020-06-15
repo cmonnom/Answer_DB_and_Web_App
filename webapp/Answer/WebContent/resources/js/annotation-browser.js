@@ -1,6 +1,6 @@
 const AnnotationBrowser = {
   template:
-    `<div>
+    /*html*/`<div>
 
     <!-- goodies panel dialog -->
     <v-dialog v-model="showGoodiesPanel" content-class="no-transition" full-width hide-overlay fullscreen>

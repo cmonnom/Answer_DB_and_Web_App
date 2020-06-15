@@ -98,7 +98,10 @@ Vue.component('variant-details-dialog', {
                 @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
                 @save-variant="saveVariant" :color="colors.variantDetails"
                 :variant-type="currentVariantType" cnv-plot-id="cnvPlotEditUnused"
-                :loading-variant="loadingVariant">
+                :loading-variant="loadingVariant"
+                @toggle-lookup-tool="toggleLookupTool"
+                @toggle-lookup-tool-variant="toggleLookupToolVariant"
+                @toggle-lookup-tool-gene="toggleLookupToolGene">
             </variant-details>
             </v-flex>
         </v-slide-y-transition>
@@ -119,7 +122,9 @@ Vue.component('variant-details-dialog', {
                     @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
                     ref="cnvVariantDetailsPanel" cnv-plot-id="cnvPlotEdit" :cnv-chrom-list="cnvChromList"
                     :variant-type="currentVariantType"
-                    :loading-variant="loadingVariant">
+                    :loading-variant="loadingVariant"
+                    @toggle-lookup-tool="toggleLookupTool"
+                    >
 
                 </variant-details>
             </v-flex>
@@ -142,8 +147,8 @@ Vue.component('variant-details-dialog', {
                         @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant" :color="colors.editAnnotation"
                         cnv-plot-id="cnvPlotEditUnusedFTL"
                         :variant-type="currentVariantType"
-                        :loading-variant="loadingVariant">
-
+                        :loading-variant="loadingVariant"
+                        @toggle-lookup-tool="toggleLookupTool">
                     </variant-details>
             </v-flex>
             </v-slide-y-transition>
@@ -321,7 +326,7 @@ Vue.component('variant-details-dialog', {
                                 <v-icon>mdi-dna</v-icon>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
-                                <v-list-tile-title>Toggle Lookup Tool (Beta)</v-list-tile-title>
+                                <v-list-tile-title>Open Lookup Tool (Beta)</v-list-tile-title>
                             </v-list-tile-content>
                             </v-list-tile>
     
@@ -516,6 +521,9 @@ Vue.component('variant-details-dialog', {
                                         :variant-type="currentVariantType" cnv-plot-id="cnvPlotDetails" :cnv-chrom-list="cnvChromList"
                                         :loading-variant="loadingVariant"
                                         @open-lookup-link="openLookupLink"
+                                        @toggle-lookup-tool="toggleLookupTool"
+                                        @toggle-lookup-tool-variant="toggleLookupToolVariant"
+                                        @toggle-lookup-tool-gene="toggleLookupToolGene"
                                         >
                                     </variant-details>
     
@@ -1036,20 +1044,21 @@ Vue.component('variant-details-dialog', {
                                 },
                                 {
                                     label: "Gene",
-                                    type: "link",
+                                    type: "button",
+                                    fieldName: "gene",
                                     linkIcon: "mdi-dna",
-                                    url: this.createOncoKBGeniePortalGene(),
+                                    handler: "toggle-lookup-tool-gene",
                                     value: this.currentVariant.geneName,
-                                    tooltip: "Open Lookup Portal (Gene) in new tab"
+                                    tooltip: "Open Lookup Tool (Gene)"
                                 },
                                 {
                                     label: "Notation",
                                     type: "notation",
                                     fieldName: "notation",
                                     linkIcon: "mdi-dna",
-                                    url: this.createOncoKBGeniePortalVariant(),
+                                    handler: "toggle-lookup-tool-variant",
                                     value: this.currentVariant.notation,
-                                    tooltip: "Open Lookup Portal (Variant) in new tab"
+                                    tooltip: "Open Lookup Tool (Variant)"
                                 },
                                 {
                                     label: "Reference Allele(s)",
@@ -1333,7 +1342,6 @@ Vue.component('variant-details-dialog', {
                                     value: "",
                                     tooltip: "Open Lookup Portal (CNV) in new tab"
                                 },
-                               
                             ]
                         };
                         this.variantDataTables.push(infoTable);
@@ -1510,13 +1518,21 @@ Vue.component('variant-details-dialog', {
                             {
                                 label: "DNA Reads", value: this.currentVariant.dnaReads ? this.currentVariant.dnaReads + "" : ""
                             },
+                            // {
+                            //     label: "Open Lookup Portal (Fusion)",
+                            //     type: "link",
+                            //     linkIcon: "mdi-dna",
+                            //     url: this.createOncoKBGeniePortalFusion(),
+                            //     value: "",
+                            //     tooltip: "Open Lookup Portal (Fusion) in new tab"
+                            // },
                             {
-                                label: "Open Lookup Portal (Fusion)",
-                                type: "link",
+                                label: "Open Lookup Tool (Fusion)",
+                                type: "button",
                                 linkIcon: "mdi-dna",
-                                url: this.createOncoKBGeniePortalFusion(),
+                                handler: "toggle-lookup-tool",
                                 value: "",
-                                tooltip: "Open Lookup Portal (Fusion) in new tab"
+                                tooltip: "Open Lookup Tool Panel (Fusion)"
                             }]
                         };
                         this.variantDataTables.push(infoTable3);
@@ -1858,8 +1874,9 @@ Vue.component('variant-details-dialog', {
             + ampDel + "&Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
         },
         openLookupLink(geneName) {
-            var link = this.createOncoKBGeniePortalCNV(geneName);
-            window.open(link, "_blank");
+            this.toggleLookupTool(geneName);
+            // var link = this.createOncoKBGeniePortalCNV(geneName);
+            // window.open(link, "_blank");
         },
         startUserAnnotations() {
             if (!this.canProceed('canAnnotate') || this.readonly) {
@@ -2697,17 +2714,44 @@ Vue.component('variant-details-dialog', {
         refreshVariantTables() {
             this.$emit("refresh-variant-tables");
         },
-        toggleLookupTool() {
-           this.reloadLookupValues();
-            this.$refs.lookupTool.panelVisible = !this.$refs.lookupTool.panelVisible;
+        toggleLookupTool(cnvGeneName) {
+           this.reloadLookupValues(cnvGeneName);
+           this.$refs.lookupTool.panelVisible = true;
         },
+        toggleLookupToolVariant() {
+            this.reloadLookupValues(null, "Variant");
+            this.$refs.lookupTool.panelVisible = true;
+         },
+         toggleLookupToolGene() {
+            this.reloadLookupValues(null, "Gene");
+            this.$refs.lookupTool.panelVisible = true;
+         },
         isLookupVisible() {
             return this.$refs.lookupTool && this.$refs.lookupTool.panelVisible;
         },
-        reloadLookupValues() {
+        reloadLookupValues(cnvGeneName, activeButton) {
             this.$refs.lookupTool.currentGene = this.currentVariant.geneName;
             this.$refs.lookupTool.currentVariant = this.currentVariant.notation;
-            this.$refs.lookupTool.currentlyActive = "Variant";
+            if (this.isCNV()) {
+                this.$refs.lookupTool.currentGene = cnvGeneName;
+                var ampDel = "";
+                if (this.currentVariant.aberrationType == "amplification") {
+                    ampDel = "amp";
+                }
+                else if (this.currentVariant.aberrationType == "homozygous loss") {
+                    ampDel = "del";
+                }
+                this.$refs.lookupTool.currentAmpDel = ampDel;
+                this.$refs.lookupTool.currentlyActive = "CNV";
+            }
+            else if (this.isSNP()) {
+                this.$refs.lookupTool.currentlyActive = activeButton ? activeButton : "Variant";
+            }
+            else if (this.isTranslocation()) {
+                this.$refs.lookupTool.currentFive = this.currentVariant.leftGene;
+                this.$refs.lookupTool.currentThree = this.currentVariant.rightGene;
+                this.$refs.lookupTool.currentlyActive = "Fusion";
+            }
             this.$refs.lookupTool.oncokbVariantName = this.currentVariant.oncokbVariantName;
             
             var oncotreeItems = this.oncotree.filter(o => o.text == this.patientDetailsOncoTreeDiagnosis.text);
@@ -2716,9 +2760,7 @@ Vue.component('variant-details-dialog', {
                 oncotree = oncotreeItems[0];
             }
             this.$refs.lookupTool.currentOncotreeCode = oncotree;
-            if (this.$refs.lookupTool.isFormValid()) {
-                 this.$refs.lookupTool.submitForm();
-             }
+            this.$refs.lookupTool.submitForm();
         }
         
     },

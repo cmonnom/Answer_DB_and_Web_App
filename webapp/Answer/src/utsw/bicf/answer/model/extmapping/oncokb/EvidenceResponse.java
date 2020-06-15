@@ -15,6 +15,7 @@ public class EvidenceResponse {
 	List<OncoKBTreatment> treatments;
 	List<OncoKBArticle> articles;
 	String knownEffect;
+	String levelOfEvidence;
 	
 	public EvidenceResponse() {
 		super();
@@ -82,6 +83,14 @@ public class EvidenceResponse {
 
 	public void setKnownEffect(String knownEffect) {
 		this.knownEffect = knownEffect;
+	}
+
+	public String getLevelOfEvidence() {
+		return levelOfEvidence;
+	}
+
+	public void setLevelOfEvidence(String levelOfEvidence) {
+		this.levelOfEvidence = levelOfEvidence;
 	}
 
 

@@ -3,6 +3,7 @@ Vue.component('lookup-panel-gene', {
         standalone: { default: true, type: Boolean },
         currentGene: { default: "", type: String },
         lastGene: { default: "", type: String },
+        uniqId: {default: "uniqcna", type:String}
     },
     template: /*html*/`<v-layout row wrap>
 
@@ -100,10 +101,10 @@ Vue.component('lookup-panel-gene', {
                         <div :class="[genePlotLoading ? 'alpha-54' : '']">
                             <div v-if="genePlotError && !genePlotLoading">No Genie Data could be found for gene
                                 {{ lastGene }}</div>
-                            <div v-if="!genePlotError" v-show="showGeneGeniePanel">
-                                <div id="genieLollipopPlot"></div>
-                                <div id="alterationByCancerPlot"></div>
-                                <div id="cancerByPercentPlot"></div>
+                            <div v-if="!genePlotError" v-show="showGeneGeniePanel" width="100%">
+                                <div :id="'genieLollipopPlot' + uniqId"></div>
+                                <div :id="'alterationByCancerPlot' + uniqId"></div>
+                                <div :id="'cancerByPercentPlot' + uniqId"></div>
                             </div>
                         </div>
 
@@ -199,7 +200,6 @@ Vue.component('lookup-panel-gene', {
             genePanel: [],
             variantPanel: [],
             ensemblId: null,
-            currentOncotreeCode: {},
             oncotree: {},
             currentVariant: "",
             geneSymbolErrorMessage: null,
@@ -215,9 +215,6 @@ Vue.component('lookup-panel-gene', {
             reactomeError: null,
             cancerPlotLoading: false,
             cancerPlotError: false,
-            lastGene: null,
-            lastOncotreeCode: null,
-            lastVariant: null,
         }
 
     },
@@ -255,7 +252,7 @@ Vue.component('lookup-panel-gene', {
                         for (var i = 0; i < responseDatabases.length; i++) {
                             var database = responseDatabases[i];
                             var payload = response.data.payload.summaries[database];
-                            var summary = payload && payload.summary ? this.formatPubMedLinks(payload.summary) : null;
+                            var summary = payload && payload.summary ? formatPubMedLinks(payload.summary) : null;
                             panelsToOpen.push(summary ? true : false);
                             this.geneSummaries[database].summary = summary;
                             this.geneSummaries[database].url = payload && payload.moreInfoUrl ? payload.moreInfoUrl : "";
@@ -269,7 +266,7 @@ Vue.component('lookup-panel-gene', {
                     }
                     else if (response.data.isAllowed && !response.data.success) {
                         for (var i = 0; i < responseDatabases.length; i++) {
-                            var summary = this.formatPubMedLinks("Nothing found in " + database);
+                            var summary = formatPubMedLinks("Nothing found in " + database);
                             this.geneSummaries[database].summary = summary;
                             this.geneSummaries[database].url = null;
                             this.geneSummaries[database].url2 = null;
@@ -295,21 +292,6 @@ Vue.component('lookup-panel-gene', {
             else {
                 this.genePanel = this.genePanelTitles.map(i => doOpen);
             }
-        },
-        formatPubMedLinks(text) {
-            var regex = /([0-9]{6,})/gm;
-            var results = text.split(regex);
-            var summary = [];
-            for (var i = 0; i < results.length; i++) {
-                var item = results[i];
-                if (isNaN(item)) {
-                    summary.push({ text: item, type: "text" });
-                }
-                else {
-                    summary.push({ text: item, type: "link" });
-                }
-            }
-            return summary;
         },
         getReactomeLocations(levels) {
             this.reactomeLoading = true;
@@ -365,7 +347,7 @@ Vue.component('lookup-panel-gene', {
             }
         },
         isLoading() {
-            return this.geneSummaryLoading || this.reactomeLoading;
+            return this.geneSummaryLoading || this.reactomeLoading ||  this.genePlotLoading;
         },
         getGeneFlexClasses() {
             if (this.standalone) {
@@ -381,13 +363,13 @@ Vue.component('lookup-panel-gene', {
                 this.genePlotError = false;
                 var promise1 = this.$refs.plotUtils.updateBarPlot("/getAlterationByCancer", {
                     hugoSymbol: this.currentGene,
-                    plotId: "alterationByCancerPlot",
+                    plotId: "alterationByCancerPlot" + this.uniqId,
                 });
                 var promise2 = this.$refs.plotUtils.updateBarPlot("/getCancerbyPercent", {
                     hugoSymbol: this.currentGene,
-                    plotId: "cancerByPercentPlot",
+                    plotId: "cancerByPercentPlot" + this.uniqId,
                 });
-                var promise3 = this.$refs.plotUtils.updateLolliplotPlot("genieLollipopPlot", "/getGenieGeneLollipop", this.currentGene);
+                var promise3 = this.$refs.plotUtils.updateLolliplotPlot("genieLollipopPlot" + this.uniqId, "/getGenieGeneLollipop", this.currentGene);
                 Promise.all([promise1, promise2, promise3]).then(values => {
                     this.genePlotLoading = false;
                     if (values.filter(v => v.success).length != values.length) {

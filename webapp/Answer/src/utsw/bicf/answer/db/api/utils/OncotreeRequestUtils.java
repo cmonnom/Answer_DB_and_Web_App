@@ -3,9 +3,11 @@ package utsw.bicf.answer.db.api.utils;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -66,6 +68,30 @@ public class OncotreeRequestUtils extends AbstractRequestUtils {
 		}
 		this.closeGetRequest();
 		return summary;
+	}
+	
+	public List<OncotreeTumorType> getAllOncotreeTumorTypes()
+			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
+			UnsupportedOperationException, SAXException, ParserConfigurationException {
+		StringBuilder sbUrl = new StringBuilder(oncotreeProps.getTumorTypeUrl().replace("/search/code/", ""));
+		URI uri = new URI(sbUrl.toString());
+		requestGet = new HttpGet(uri);
+		HttpClientContext context = HttpClientContext.create();
+		HttpResponse response = client.execute(requestGet, context);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			ObjectMapper mapper = new ObjectMapper();
+			OncotreeTumorType[] oncotreeJson = mapper.readValue(response.getEntity().getContent(), OncotreeTumorType[].class);
+			if (oncotreeJson.length > 0) {
+				return Arrays.asList(oncotreeJson);
+			}
+		}
+		else {
+			logger.info("Something went wrong OncotreeRequestUtils:90 HTTP_STATUS: " + statusCode);
+		}
+		this.closeGetRequest();
+		return null;
 	}
 	
 	/**

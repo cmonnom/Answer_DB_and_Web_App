@@ -169,7 +169,7 @@ Vue.component('lookup-panel-plot-utils', {
                     family: 'Roboto,sans-serif',
                 },
                 xaxis: {automargin: true, title: this.createXAxisTitle(chartData.plotId)},
-                yaxis: {automargin: true, title: {text: this.createYAxisTitle(chartData.plotId), standoff: 10}},
+                yaxis: {automargin: true, ticks: 'outside', title: {text: this.createYAxisTitle(chartData.plotId), standoff: 10}},
                 margin: {
                     t: this.getPlotTopMargin()
                 },
@@ -192,6 +192,10 @@ Vue.component('lookup-panel-plot-utils', {
                     if (response.data.isAllowed && response.data.success) {
                         var chartData = response.data.payload;
                         var trace = chartData.trace;
+                        if (!trace) {
+                            resolve({success: false});
+                            return;
+                        }
                         trace.type = "scattergl";
                         trace.mode = 'markers';
                         trace.marker = { size: 9, color: this.cividisColors.blue75};
@@ -290,7 +294,7 @@ Vue.component('lookup-panel-plot-utils', {
                         this.$nextTick(() => {
                             Plotly.newPlot(chartData.plotId, data, layout, this.plotlyConfig);
                             //need to hide tick labels below 0. Use d3
-                            var axisTickLabels = Plotly.d3.selectAll("#genieLollipopPlot .yaxislayer-above").selectAll('text')[0];
+                            var axisTickLabels = Plotly.d3.selectAll("#" + chartData.plotId + " .yaxislayer-above").selectAll('text')[0];
                             for (var i = 0; i < axisTickLabels.length; i++) {
                                 if (isNaN(axisTickLabels[i].innerHTML.substring(0, 1))) {
                                     axisTickLabels[i].innerHTML = " ";
@@ -322,22 +326,37 @@ Vue.component('lookup-panel-plot-utils', {
             return this.standalone ? 30 : null;
         },
         createXAxisTitle(plotId) {
-            switch(plotId) {
+            var genericPlotId = plotId.split("_")[0];
+            switch(genericPlotId) {
                 case "alterationByCancerPlot": return "Number of Variants";
                 case "cancerByPercentPlot": return "Percent of cases";
                 case "genieLollipopPlot": return "Amino Acid Position";
                 case "mutatedGenesCancerPlot": return "Number of Variants";
                 case "codonPlot": return "Number of Cases";
+                case "cnvAbsPlot": return "Number of Cases";
+                case "cnvPctPlot": return "Percent of Cases";
+                case "fusionAbsPlot": return "Number of Cases";
+                case "fusionPctPlot": return "Percent of Cases";
+                case "fusionBreakpointFivePlot": return "Percent of Annotated Breakpoint";
+                case "fusionBreakpointThreePlot": return "Percent of Annotated Breakpoint";
 
             }
         },
         createYAxisTitle(plotId) {
-            switch(plotId) {
+            var genericPlotId = plotId.split("_")[0];
+            switch(genericPlotId) {
                 case "alterationByCancerPlot": return "Cancer Type";
                 case "cancerByPercentPlot": return "Cancer Type";
                 case "genieLollipopPlot": return "Variant Count";
                 case "mutatedGenesCancerPlot": return "Gene";
                 case "codonPlot": return "Mutant AA";
+                case "cnvAbsPlot": return "Cancer Type";
+                case "cnvPctPlot": return "Cancer Type";
+                case "fusionAbsPlot": return "Cancer Type";
+                case "fusionPctPlot": return "Cancer Type";
+                case "fusionBreakpointFivePlot": return "Breakpoint";
+                case "fusionBreakpointThreePlot": return "fusionBreakpointFivePlot";
+
 
             }
         },

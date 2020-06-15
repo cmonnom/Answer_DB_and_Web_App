@@ -78,6 +78,7 @@ import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotDataSummary;
 import utsw.bicf.answer.model.hybrid.GenericLollipopPlotData;
 import utsw.bicf.answer.model.hybrid.GenericStackedBarPlotData2;
+import utsw.bicf.answer.model.hybrid.RatioBarPlotData;
 import utsw.bicf.answer.model.hybrid.StringSortableByInteger;
 import utsw.bicf.answer.reporting.finalreport.FinalReportTemplateConstants;
 import utsw.bicf.answer.security.CivicProperties;
@@ -114,6 +115,12 @@ public class LookupController {
 //		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getFasmicData", IndividualPermission.CAN_VIEW);
 //		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getUniProtVariantData", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getCodonDiseaseDistributionData", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getCNVSummary", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getHighestIndidenceAbsCNV", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getHighestIndidencePctCNV", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getFusionSummary", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getHighestIndidenceAbsFusion", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getHighestIndidencePctFusion", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 
@@ -155,10 +162,15 @@ public class LookupController {
 	public String discovar(Model model, HttpSession session,
 			@RequestParam(defaultValue="", required=false) String gene,
 			@RequestParam(defaultValue="", required=false) String variant,
+			@RequestParam(defaultValue="", required=false) String ampDel,
+			@RequestParam(defaultValue="", required=false) String three,
+			@RequestParam(defaultValue="", required=false) String five,
 			@RequestParam(defaultValue="", required=false) String oncotree,
 			@RequestParam(defaultValue="", required=false) String button) throws IOException {
 		String url = "discovar?gene=" + gene
 				+ "%26variant=" + variant + "%26oncotree=" + oncotree
+				+ "%26ampDel=" + ampDel + "%26five=" + five
+				+ "%26three=" + three
 				 + "%26button=" + button;
 		model.addAttribute("urlRedirect", url);
 		ControllerUtil.setGlobalVariables(model, fileProps, otherProps);
@@ -583,6 +595,274 @@ public class LookupController {
 		}
 	}
 	
+	@RequestMapping("/getCNVSummary")
+	@ResponseBody
+	public String getCNVSummary(Model model, HttpSession session, @RequestParam String geneTerm,
+			@RequestParam String oncotreeCode, @RequestParam String ampDel,
+			@RequestParam String databases) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+
+			LookupVariantDashboardSummary dashboardSummary = new LookupVariantDashboardSummary();
+			
+			String variantName = ampDel.equals("amp") ? "AMPLIFICATION" : "DELETION";
+			final String finalVariantName = variantName;
+			
+			LookupGeneSummaries summaryResponse = new LookupGeneSummaries();
+			summaryResponse.setDatabases(Arrays.asList(databases.split(",")));
+			ExecutorService executor = Executors.newFixedThreadPool(summaryResponse.getDatabases().size() + 5);
+
+			Runnable civicWorker = new Runnable() {
+				@Override
+				public void run() {
+					CivicRequestUtils civicUtils = new CivicRequestUtils(civicProps, otherProps);
+					try {
+						LookupSummary civicSummary = null;
+						if (finalVariantName == null || finalVariantName.equals("")) {
+							civicSummary = new LookupSummary();
+						}
+						else {
+							civicSummary = civicUtils.getVariantSummary(geneTerm, finalVariantName);
+						}
+						summaryResponse.getSummaries().put("Civic DB", civicSummary);
+					} catch (UnsupportedOperationException | URISyntaxException | IOException | JAXBException
+							| SAXException | ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+				}
+			};
+			executor.execute(civicWorker);
+
+			Runnable jaxWorker = new Runnable() {
+				@Override
+				public void run() {
+					JaxCKBRequestUtils jaxUtils = new JaxCKBRequestUtils(jaxProps, otherProps);
+					try {
+						LookupSummary jaxSummary = null;
+						if (finalVariantName == null || finalVariantName.equals("")) {
+							jaxSummary = new LookupSummary();
+						}
+						else {
+							String query = null;
+							query = geneTerm + " " + (ampDel.equals("amp") ? "amp" : "loss");
+							jaxSummary = jaxUtils.getVariantSummary(query);
+						}
+						summaryResponse.getSummaries().put("Jackson Labs", jaxSummary);
+					} catch (UnsupportedOperationException | URISyntaxException | IOException | JAXBException
+							| SAXException | ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+				}
+			};
+			executor.execute(jaxWorker);
+			
+			Runnable oncoKBWorker = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						LookupOncoKBVariantSummary summary = getOncoKBData(geneTerm, oncotreeCode, response, variantName);
+						dashboardSummary.setOncoKBSummary(summary);
+					} catch (URISyntaxException | IOException | JAXBException | SAXException
+							| ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			};
+			executor.execute(oncoKBWorker);
+			
+//			Runnable fasmicWorker = new Runnable() {
+//				@Override
+//				public void run() {
+//					try {
+//						FasmicRequestUtils fasmicUtils = new FasmicRequestUtils(fasmicProps, otherProps);
+//						LookupSummary summary = fasmicUtils.getVariantSummary(geneTerm, variantName);
+//						dashboardSummary.setFasmicSummary(summary);
+//					} catch (URISyntaxException | IOException | JAXBException | SAXException
+//							| ParserConfigurationException e) {
+//						e.printStackTrace();
+//					}
+//					
+//				}
+//			};
+//			executor.execute(fasmicWorker);
+//			
+//
+//			Runnable uniprotWorker = new Runnable() {
+//				@Override
+//				public void run() {
+//					try {
+//						String[] variantNameArray = parseVariantNotationToArray(hgvs, originalVariant);
+//						UniProtRequestUtils uniProtUtils = new UniProtRequestUtils(uniprotProps, otherProps);
+//						
+//						String variantId = uniProtUtils.getVariantId(geneTerm, variantNameArray[0], variantNameArray[1], variantNameArray[2]);
+//						if (variantId != null) {
+//							LookupSummary summary = new LookupSummary();
+//							summary.setMoreInfoUrl("https://web.expasy.org/variant_pages/" + variantId  + ".html");
+//							dashboardSummary.setUniprotSummary(summary);
+//							
+//						}
+//					} catch (URISyntaxException | IOException | JAXBException | SAXException
+//							| ParserConfigurationException e) {
+//						e.printStackTrace();
+//					}
+//					
+//				}
+//			};
+//			executor.execute(uniprotWorker);
+//			
+//			Runnable hotspotWorker = new Runnable() {
+//				@Override
+//				public void run() {
+//					String[] variantNameArray = parseVariantNotationToArray(hgvs, originalVariant);
+//					List<MSKHotspot> hotspots = modelDAO.getMSKHotspots(geneTerm, variantNameArray[0] + variantNameArray[1]);
+//					if (hotspots != null && !hotspots.isEmpty()) {
+//						LookupSummary hotspotSummary = new LookupSummary();
+//						hotspotSummary.setMoreInfoUrl(mskProps.getHotspotUrl());
+//						hotspotSummary.setMoreInfoUrl2(mskProps.getThreeDUrl());
+//						dashboardSummary.setHotspotSummary(hotspotSummary);
+//						dashboardSummary.setHotspot(hotspots.get(0));
+//					}
+//				}
+//			};
+//			executor.execute(hotspotWorker);
+			
+			Runnable clinicalTrialWorker = new Runnable() {
+				@Override
+				public void run() {
+					OncotreeRequestUtils oncotreeUtils = new OncotreeRequestUtils(oncotreeProps, otherProps);
+					OncotreeTumorType tumorType;
+					try {
+						tumorType = oncotreeUtils.getOncotreeTumorType(oncotreeCode);
+						if (tumorType != null) {
+							ClinicalTrialsRequestUtils clinicalTrialUtils = new ClinicalTrialsRequestUtils(clinicalTrialProps, otherProps);
+							List<ClinicalTrial> clinicalTrials = clinicalTrialUtils.getClinicalTrials(geneTerm, variantName, tumorType);
+							if (clinicalTrials != null && !clinicalTrials.isEmpty()) {
+								dashboardSummary.setClinicalTrials(clinicalTrials);
+								dashboardSummary.setClinicalTrialStudyUrl(clinicalTrialProps.getStudyUrl());
+							}
+						}
+					} catch (UnsupportedOperationException | URISyntaxException | IOException | JAXBException
+							| SAXException | ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			};
+			executor.execute(clinicalTrialWorker);
+			
+			executor.shutdown();
+			executor.awaitTermination(10, TimeUnit.SECONDS);
+
+			dashboardSummary.setVariantSummaries(summaryResponse);
+			
+			response.setPayload(dashboardSummary);
+			response.setSuccess(true);
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@RequestMapping("/getFusionSummary")
+	@ResponseBody
+	public String getFusionSummary(Model model, HttpSession session, @RequestParam String geneFive,
+			@RequestParam String oncotreeCode, @RequestParam String geneThree,
+			@RequestParam String databases) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+
+			LookupVariantDashboardSummary dashboardSummary = new LookupVariantDashboardSummary();
+			
+			final String finalFive = geneFive.trim();
+			final String finalThree = geneThree.trim();
+			
+			LookupGeneSummaries summaryResponse = new LookupGeneSummaries();
+			summaryResponse.setDatabases(Arrays.asList(databases.split(",")));
+			ExecutorService executor = Executors.newFixedThreadPool(summaryResponse.getDatabases().size() + 5);
+
+			Runnable civicWorker = new Runnable() {
+				@Override
+				public void run() {
+					CivicRequestUtils civicUtils = new CivicRequestUtils(civicProps, otherProps);
+					try {
+						LookupSummary civicSummary = null;
+						if (finalFive == null || finalFive.equals("") 
+								|| finalThree == null || finalThree.equals("")) {
+							civicSummary = new LookupSummary();
+						}
+						else {
+							civicSummary = civicUtils.getFusionSummary(finalFive, finalThree);
+						}
+						summaryResponse.getSummaries().put("Civic DB", civicSummary);
+					} catch (UnsupportedOperationException | URISyntaxException | IOException | JAXBException
+							| SAXException | ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+				}
+			};
+			executor.execute(civicWorker);
+
+			Runnable jaxWorker = new Runnable() {
+				@Override
+				public void run() {
+					JaxCKBRequestUtils jaxUtils = new JaxCKBRequestUtils(jaxProps, otherProps);
+					try {
+						LookupSummary jaxSummary = null;
+						if (finalFive == null || finalFive.equals("") 
+								|| finalThree == null || finalThree.equals("")) {
+							jaxSummary = new LookupSummary();
+						}
+						else {
+							String query = null;
+							query = geneFive + " " + geneThree;
+							jaxSummary = jaxUtils.getVariantSummary(query);
+						}
+						summaryResponse.getSummaries().put("Jackson Labs", jaxSummary);
+					} catch (UnsupportedOperationException | URISyntaxException | IOException | JAXBException
+							| SAXException | ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+				}
+			};
+			executor.execute(jaxWorker);
+			
+			Runnable oncoKBWorker = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						String variant = geneFive + "-" + geneThree + "%20Fusion";
+						LookupOncoKBVariantSummary summary = getOncoKBData(geneThree, oncotreeCode, response, variant);
+						dashboardSummary.setOncoKBSummary(summary);
+					} catch (URISyntaxException | IOException | JAXBException | SAXException
+							| ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			};
+			executor.execute(oncoKBWorker);
+			
+			executor.shutdown();
+			executor.awaitTermination(10, TimeUnit.SECONDS);
+
+			dashboardSummary.setVariantSummaries(summaryResponse);
+			
+			response.setPayload(dashboardSummary);
+			response.setSuccess(true);
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
 	private String parseVariantNotation(String hgvs, String originalVariant) {
 		//hgvs has priority
 		String variantName = null;
@@ -692,6 +972,7 @@ public class LookupController {
 	
 	private StdOfCareIndication parseIndication(EvidenceResponse evidence) {
 		StdOfCareIndication indication = new StdOfCareIndication();
+		indication.setLevel(evidence.getLevelOfEvidence());
 		if (evidence.getTreatments() != null) {
 			for (OncoKBTreatment treatment : evidence.getTreatments()) {
 				indication.setIndications(treatment.getApprovedIndications());
@@ -709,7 +990,7 @@ public class LookupController {
 			for (OncoKBArticle article : evidence.getArticles()) {
 				pubmedIds.add(article.getPmid());
 			}
-			indication.setPubmedUrl(FinalReportTemplateConstants.PUBMED_URL + pubmedIds.stream().collect(Collectors.joining("+")));
+			indication.setPubmedUrl(FinalReportTemplateConstants.PUBMED_URL + pubmedIds.stream().filter(p -> p != null).collect(Collectors.joining("+")));
 		}
 		return indication;
 	}
@@ -778,6 +1059,7 @@ public class LookupController {
 			AjaxResponse response = new AjaxResponse();
 			response.setIsAllowed(true);
 			response.setSuccess(false);
+			hugoSymbol = hugoSymbol.trim();
 			List<GenericBarPlotData> data = modelDAO.getGenieVariantCountForGene(hugoSymbol);
 			if (data != null && !data.isEmpty()) {
 				BarPlotData chart = new BarPlotData();
@@ -808,6 +1090,7 @@ public class LookupController {
 			AjaxResponse response = new AjaxResponse();
 			response.setIsAllowed(true);
 			response.setSuccess(false);
+			hugoSymbol = hugoSymbol.trim();
 			List<GenieSummary> dataAll = modelDAO.getGenieSummary(GenieSummary.CATEGORY_CANCER_COUNT);
 			List<GenericBarPlotData> dataGene = modelDAO.getGeniePatientCountForGene(hugoSymbol, dataAll.stream().map(d -> d.getLabel()).collect(Collectors.toList()));
 			Map<String, GenericBarPlotData> geneCountPerCancer = dataGene.stream().collect(Collectors.toMap(GenericBarPlotData::getY, Function.identity()));
@@ -858,14 +1141,14 @@ public class LookupController {
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
 		response.setSuccess(false);
-
+		final String hugoSymbolTrimmed = hugoSymbol.trim();
 		EnsemblRequestUtils utils = new EnsemblRequestUtils(ensemblProps, otherProps);
-		EnsemblResponse ensembl = utils.fetchEnsembl(hugoSymbol);
+		EnsemblResponse ensembl = utils.fetchEnsembl(hugoSymbolTrimmed);
 		ensembl.init();
 		if (ensembl != null && ensembl.getUniProtId() != null) {
 			ExecutorService executor = Executors.newFixedThreadPool(2);
 			LollipopPlotData chart = new LollipopPlotData();
-			chart.setPlotTitle("Lollipop Plot of Genie " + hugoSymbol + " Variants");
+			chart.setPlotTitle("Lollipop Plot of Genie " + hugoSymbolTrimmed + " Variants");
 			Runnable pfamWorker = new Runnable() {
 				@Override
 				public void run() {
@@ -917,7 +1200,7 @@ public class LookupController {
 			Runnable dbWorker = new Runnable() {
 				@Override
 				public void run() {
-					List<GenericLollipopPlotData> dataAll = modelDAO.getGeniePatientCountForGene(hugoSymbol);
+					List<GenericLollipopPlotData> dataAll = modelDAO.getGeniePatientCountForGene(hugoSymbolTrimmed);
 					if (dataAll != null && !dataAll.isEmpty()) {
 
 						chart.setPlotId(plotId);
@@ -999,4 +1282,175 @@ public class LookupController {
 		}
 	}
 	
+	@RequestMapping("/getHighestIndidenceAbsCNV")
+	@ResponseBody
+	public String getHighestIndidenceAbsCNV(Model model, HttpSession session,
+			@RequestParam String hugoSymbol, @RequestParam String ampDel,
+			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			final String hugoSymbolTrimmed = hugoSymbol.trim();
+			String cnvType = ampDel.equals("amp") ? "AMPLIFICATION" : "DELETION";
+			List<GenericBarPlotData> data = modelDAO.getGeniePatientCountForCNV(hugoSymbolTrimmed, cnvType);
+			if (data != null && !data.isEmpty()) {
+				OncotreeRequestUtils utils = new OncotreeRequestUtils(oncotreeProps, otherProps);
+				List<OncotreeTumorType> oncotrees = utils.getAllOncotreeTumorTypes();
+				Map<String, OncotreeTumorType> oncotreeByCode = null;
+				if (oncotrees != null) {
+					oncotreeByCode = oncotrees.stream().collect(Collectors.toMap(OncotreeTumorType::getCode, Function.identity()));
+				}
+				BarPlotData chart = new BarPlotData();
+				chart.setPlotId(plotId);
+				chart.setPlotTitle("Highest Incidence by Absolute Count");
+				Trace trace = new Trace();
+				for (int i = data.size() -1; i >=0; i--) {
+					GenericBarPlotData d = data.get(i);
+					trace.addX(d.getX());
+					trace.addY(d.getY());
+					if (oncotreeByCode != null) {
+						OncotreeTumorType oncotreeType =  oncotreeByCode.get(d.getY());
+						String oncotreeName = oncotreeType != null ? oncotreeType.getName() : "Unknown";
+						trace.addLabel("<b>Cancer:</b> " + oncotreeName + "<br><b>Observations:</b> " + d.getX());
+					}
+				}
+				chart.setTrace(trace);
+				return chart.createObjectJSON();
+			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@RequestMapping("/getHighestIndidencePctCNV")
+	@ResponseBody
+	public String getHighestIndidencePctCNV(Model model, HttpSession session,
+			@RequestParam String hugoSymbol, @RequestParam String ampDel,
+			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			final String hugoSymbolTrimmed = hugoSymbol.trim();
+			String cnvType = ampDel.equals("amp") ? "AMPLIFICATION" : "DELETION";
+			List<RatioBarPlotData> data = modelDAO.getGeniePatientPctForCNV(hugoSymbolTrimmed, cnvType);
+			if (data != null && !data.isEmpty()) {
+				OncotreeRequestUtils utils = new OncotreeRequestUtils(oncotreeProps, otherProps);
+				List<OncotreeTumorType> oncotrees = utils.getAllOncotreeTumorTypes();
+				Map<String, OncotreeTumorType> oncotreeByCode = null;
+				if (oncotrees != null) {
+					oncotreeByCode = oncotrees.stream().collect(Collectors.toMap(OncotreeTumorType::getCode, Function.identity()));
+				}
+				BarPlotData chart = new BarPlotData();
+				chart.setPlotId(plotId);
+				chart.setPlotTitle("Highest Incidence by Percent");
+				Trace trace = new Trace();
+				for (int i = data.size() -1; i >=0; i--) {
+					RatioBarPlotData d = data.get(i);
+					trace.addX(d.getRatio().floatValue() * 100);
+					trace.addY(d.getY());
+					String pct = String.format("%.2f", d.getRatio().floatValue() * 100);
+					if (oncotreeByCode != null) {
+						trace.addLabel("<b>Cancer:</b> " + oncotreeByCode.get(d.getY()).getName() + "<br><b>Observations:</b> " + d.getX()
+						+ "<br><b>Total Cases:</b> " + d.getTotal()
+						+ "<br><b>Percent:</b> " + pct);
+					}
+				}
+				chart.setTrace(trace);
+				return chart.createObjectJSON();
+			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@RequestMapping("/getHighestIndidenceAbsFusion")
+	@ResponseBody
+	public String getHighestIndidenceAbsFusion(Model model, HttpSession session,
+			@RequestParam String geneFive, @RequestParam String geneThree,
+			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			final String geneFiveTrimmed = geneFive.trim();
+			final String geneThreeTrimmed = geneThree.trim();
+			List<GenericBarPlotData> data = modelDAO.getGeniePatientCountForFusion(geneFiveTrimmed, geneThreeTrimmed);
+			if (data != null && !data.isEmpty()) {
+				OncotreeRequestUtils utils = new OncotreeRequestUtils(oncotreeProps, otherProps);
+				List<OncotreeTumorType> oncotrees = utils.getAllOncotreeTumorTypes();
+				Map<String, OncotreeTumorType> oncotreeByCode = null;
+				if (oncotrees != null) {
+					oncotreeByCode = oncotrees.stream().collect(Collectors.toMap(OncotreeTumorType::getCode, Function.identity()));
+				}
+				BarPlotData chart = new BarPlotData();
+				chart.setPlotId(plotId);
+				chart.setPlotTitle("Highest Incidence by Absolute Count");
+				Trace trace = new Trace();
+				for (int i = data.size() -1; i >=0; i--) {
+					GenericBarPlotData d = data.get(i);
+					trace.addX(d.getX());
+					trace.addY(d.getY());
+					if (oncotreeByCode != null) {
+						trace.addLabel("<b>Cancer:</b> " + oncotreeByCode.get(d.getY()).getName() + "<br><b>Observations:</b> " + d.getX());
+					}
+				}
+				chart.setTrace(trace);
+				return chart.createObjectJSON();
+			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@RequestMapping("/getHighestIndidencePctFusion")
+	@ResponseBody
+	public String getHighestIndidencePctFusion(Model model, HttpSession session,
+			@RequestParam String geneFive, @RequestParam String geneThree,
+			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			final String geneFiveTrimmed = geneFive.trim();
+			final String geneThreeTrimmed = geneThree.trim();
+			List<RatioBarPlotData> data = modelDAO.getGeniePatientPctForFusion(geneFiveTrimmed, geneThreeTrimmed);
+			if (data != null && !data.isEmpty()) {
+				OncotreeRequestUtils utils = new OncotreeRequestUtils(oncotreeProps, otherProps);
+				List<OncotreeTumorType> oncotrees = utils.getAllOncotreeTumorTypes();
+				Map<String, OncotreeTumorType> oncotreeByCode = null;
+				if (oncotrees != null) {
+					oncotreeByCode = oncotrees.stream().collect(Collectors.toMap(OncotreeTumorType::getCode, Function.identity()));
+				}
+				BarPlotData chart = new BarPlotData();
+				chart.setPlotId(plotId);
+				chart.setPlotTitle("Highest Incidence by Percent");
+				Trace trace = new Trace();
+				for (int i = data.size() -1; i >=0; i--) {
+					RatioBarPlotData d = data.get(i);
+					trace.addX(d.getRatio().floatValue() * 100);
+					trace.addY(d.getY());
+					String pct = String.format("%.2f", d.getRatio().floatValue() * 100);
+					if (oncotreeByCode != null) {
+						trace.addLabel("<b>Cancer:</b> " + oncotreeByCode.get(d.getY()).getName() + "<br><b>Observations:</b> " + d.getX()
+						+ "<br><b>Total Cases:</b> " + d.getTotal()
+						+ "<br><b>Percent:</b> " + pct);
+					}
+				}
+				chart.setTrace(trace);
+				return chart.createObjectJSON();
+			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }

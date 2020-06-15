@@ -91,7 +91,7 @@ public class CivicRequestUtils  extends AbstractRequestUtils{
 			List<CivicVariant> variants = civicJson.getVariants();
 			if (variants != null) {
 				for (CivicVariant v : variants) {
-					if (v.getName().equals(oncokbVariantName)) {
+					if (v.getName().equals(oncokbVariantName) || v.getName().startsWith(oncokbVariantName + " ")) {
 						StringBuilder sbUrl = new StringBuilder(civicProps.getVariantServlet());
 						sbUrl.append(v.getId());
 						URI uri = new URI(sbUrl.toString());
@@ -110,6 +110,47 @@ public class CivicRequestUtils  extends AbstractRequestUtils{
 						}
 						else {
 							logger.info("Something went wrong UniProtRequest:114 HTTP_STATUS: " + statusCode);
+						}
+						this.closeGetRequest();
+						return summary;
+					}
+				}
+			}
+		}
+		return summary;
+		
+		
+	}
+	
+	public LookupSummary getFusionSummary(String geneFive, String geneThree)
+			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
+			UnsupportedOperationException, SAXException, ParserConfigurationException {
+		LookupSummary summary = new LookupSummary();
+		CivicResponse civicJson = this.getGene(geneThree);
+		if (civicJson != null) {
+			List<CivicVariant> variants = civicJson.getVariants();
+			if (variants != null) {
+				String variantName = geneFive + "-" + geneThree;
+				for (CivicVariant v : variants) {
+					if (v.getName().equals(variantName)) {
+						StringBuilder sbUrl = new StringBuilder(civicProps.getVariantServlet());
+						sbUrl.append(v.getId());
+						URI uri = new URI(sbUrl.toString());
+						requestGet = new HttpGet(uri);
+						HttpClientContext context = HttpClientContext.create();
+						HttpResponse response = client.execute(requestGet, context);
+
+						int statusCode = response.getStatusLine().getStatusCode();
+						if (statusCode == HttpStatus.SC_OK) {
+							ObjectMapper mapper = new ObjectMapper();
+							civicJson = mapper.readValue(response.getEntity().getContent(), CivicResponse.class);
+							summary.setSummary(civicJson.getDescription());
+							summary.setMoreInfoUrl(civicProps.getCivicGeneUrl() + v.getId() 
+							+ "/summary/variants/" + civicJson.getId()
+							+ "/summary#variant");
+						}
+						else {
+							logger.info("Something went wrong CivicRequest:153 HTTP_STATUS: " + statusCode);
 						}
 						this.closeGetRequest();
 						return summary;

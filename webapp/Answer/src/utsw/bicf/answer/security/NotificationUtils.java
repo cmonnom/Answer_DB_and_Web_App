@@ -75,9 +75,9 @@ public class NotificationUtils {
 				.append(link)
 				.append("</a><br/><br/>");
 		if (emailProps.getRemoteDesktopName() != null && !emailProps.getRemoteDesktopName().equals("")) {
-			fullMessage.append("You might need to open ")
+			fullMessage.append("You may need to open ")
 			.append(emailProps.getRemoteDesktopName())
-			.append(" if the link doesn't work.<br/><br/>");
+			.append(" if the link does not work.<br/><br/>");
 		}
 		fullMessage.append(emailProps.getSignature())
 				.append("</body></html>");
