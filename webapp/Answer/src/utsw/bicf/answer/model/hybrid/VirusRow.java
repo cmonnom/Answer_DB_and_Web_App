@@ -23,6 +23,8 @@ public class VirusRow {
 	Boolean isSelected;
 	
 	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
+	String highestTier;
+	
 	
 	
 	public VirusRow(Virus virus, Map<Integer, AnnotatorSelection> selectionPerAnnotator, Integer totalCases) {
@@ -36,14 +38,19 @@ public class VirusRow {
 		this.virusDescription = virus.getVirusDescription();
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
-		if (utswAnnotated != null && utswAnnotated) {
-			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
+//		if (utswAnnotated != null && utswAnnotated) {
+//			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
+//		}
+		if (utswAnnotated == null || !utswAnnotated) {
+			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
 		}
 		iconFlags = new FlagValue(icons);
 		
 		this.selectionPerAnnotator = selectionPerAnnotator;
 		
 		this.numCasesSeenFormatted = this.numCasesSeen + "/" + totalCases;
+		
+		this.highestTier = virus.getHighestTier();
 		
 	}
 

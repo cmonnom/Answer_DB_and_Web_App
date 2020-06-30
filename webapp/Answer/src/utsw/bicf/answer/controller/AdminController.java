@@ -179,6 +179,7 @@ public class AdminController {
 		individualPermission.setCanSelect(ipParams.getCanSelect());
 		individualPermission.setCanView(ipParams.getCanView());
 		individualPermission.setCanReview(ipParams.getCanReview());
+		individualPermission.setCanHide(ipParams.getCanHide());
 		individualPermission.setReceiveAllNotifications(ipParams.getReceiveAllNotifications());
 		
 		modelDAO.saveObject(individualPermission);

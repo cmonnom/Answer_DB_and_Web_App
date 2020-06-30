@@ -61,6 +61,7 @@ public class PermissionUtils {
 				case IndividualPermission.CAN_SELECT: canProceed &= permission.getCanSelect(); break; 
 				case IndividualPermission.CAN_ASSIGN: canProceed &= permission.getCanAssign(); break; 
 				case IndividualPermission.CAN_REVIEW: canProceed &= permission.getCanReview(); break; 
+				case IndividualPermission.CAN_HIDE: canProceed &= permission.getCanHide(); break; 
 				default: canProceed = false; break;
 				}
 				

@@ -71,28 +71,28 @@ public class AnnotationBrowserController {
 		return ControllerUtil.initializeModel(model, servletContext, user, loginDAO);
 	}
 	
-	@RequestMapping(value = "/searchForAnnotations")
-	@ResponseBody
-	public String searchForAnnotations(Model model, HttpSession session, 
-			@RequestParam(defaultValue = "", required = false) String gene,
-			@RequestParam(defaultValue = "", required = false) String variant, 
-			@RequestParam(defaultValue = "", required = false) String chrom,
-			@RequestParam(defaultValue = "", required = false) String leftGene, 
-			@RequestParam(defaultValue = "", required = false) String rightGene, 
-			@RequestParam(defaultValue = "", required = false) String variantType) throws Exception {
-
-		RequestUtils utils = new RequestUtils(modelDAO);
-		AnnotationSearchResult result = utils.getGetAnnotationsByGeneAndVariant(gene, variant);
-		if (result != null) {
-			return result.createObjectJSON();
-		}
-		AjaxResponse response = new AjaxResponse();
-		response.setIsAllowed(true);
-		response.setSuccess(false);
-		response.setMessage("No annotations found");
-
-		return response.createObjectJSON();
-	}
+//	@RequestMapping(value = "/searchForAnnotations")
+//	@ResponseBody
+//	public String searchForAnnotations(Model model, HttpSession session, 
+//			@RequestParam(defaultValue = "", required = false) String gene,
+//			@RequestParam(defaultValue = "", required = false) String variant, 
+//			@RequestParam(defaultValue = "", required = false) String chrom,
+//			@RequestParam(defaultValue = "", required = false) String leftGene, 
+//			@RequestParam(defaultValue = "", required = false) String rightGene, 
+//			@RequestParam(defaultValue = "", required = false) String variantType) throws Exception {
+//
+//		RequestUtils utils = new RequestUtils(modelDAO);
+//		AnnotationSearchResult result = utils.getGetAnnotationsByGeneAndVariant(gene, variant);
+//		if (result != null) {
+//			return result.createObjectJSON();
+//		}
+//		AjaxResponse response = new AjaxResponse();
+//		response.setIsAllowed(true);
+//		response.setSuccess(false);
+//		response.setMessage("No annotations found");
+//
+//		return response.createObjectJSON();
+//	}
 	
 	@RequestMapping(value = "/getAllClinicalTrials")
 	@ResponseBody

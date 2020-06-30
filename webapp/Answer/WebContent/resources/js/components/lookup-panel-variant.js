@@ -8,7 +8,10 @@ Vue.component('lookup-panel-variant', {
         lastOncotreeCode: {default: "", type:String},
         lastGene: {default: "", type:String},
         lastVariant: {default: "", type:String},
-        uniqId: {default: "uniqcna", type:String}
+        uniqId: {default: "uniqcna", type:String},
+        originalChr: {default: "", type:String},
+        originalPos: {default: -1, type:Number},
+        originalPosOldBuild: {default: -1, type:Number},
     },
     template: /*html*/`<v-layout row wrap>
     <!-- Variant Results -->
@@ -476,7 +479,10 @@ Vue.component('lookup-panel-variant', {
                     oncotreeCode: this.currentOncotreeCode.text,
                     hgvs: this.currentVariant,
                     originalVariant: this.originalVariant,
-                    databases: this.variantPanelTitles.join(",")
+                    databases: this.variantPanelTitles.join(","),
+                    chr: this.originalChr,
+                    posGRC38: this.originalPos,
+                    posHG19: this.originalPosOldBuild
                 }
             })
             .then(response => {
@@ -582,6 +588,10 @@ Vue.component('lookup-panel-variant', {
                 hgvs: this.currentVariant,
                 originalVariant: this.originalVariant,
                 plotId: "codonPlot" + this.uniqId,
+                posGRC38: this.originalPos,
+                posHG19: this.originalPosOldBuild,
+                chr: this.originalChr
+
             }, true);
             Promise.all([promise1]).then(values => {
                 this.codonPlotLoading = false;

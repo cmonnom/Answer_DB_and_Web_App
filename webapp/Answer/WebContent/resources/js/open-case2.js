@@ -919,6 +919,7 @@ const OpenCase2 = {
                 case "canSelect": return permissions.canSelect;
                 case "canView": return permissions.canView;
                 case "canReview": return permissions.canReview;
+                case "canHide": return permissions.canHide;
                 default: return false;
             }
         },

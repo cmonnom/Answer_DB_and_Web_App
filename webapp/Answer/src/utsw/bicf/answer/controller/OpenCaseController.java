@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -197,6 +198,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getVirusDetails",
 				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".hideAnnotations",
+				IndividualPermission.CAN_HIDE);
 //		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getMutationSignatureTableForCase",
 //				IndividualPermission.CAN_VIEW);
 		
@@ -666,7 +669,7 @@ public class OpenCaseController {
 				}
 				// Sort annotation by last modified
 				variantDetails.getReferenceVariant().setUtswAnnotations(variantDetails.getReferenceVariant()
-						.getUtswAnnotations().stream().sorted(annotationComparator).collect(Collectors.toList()));
+						.getUtswAnnotations().stream().filter(a -> !a.getForceHide()).sorted(annotationComparator).collect(Collectors.toList()));
 			}
 			if (variantDetails.getRelatedVariants() != null && !variantDetails.getRelatedVariants().isEmpty()) {
 				List<HeaderOrder> headerOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Related Variants");
@@ -710,17 +713,27 @@ public class OpenCaseController {
 			return ControllerUtil.returnFailedGroupCheck();
 		}
 		CNV variantDetails = utils.getCNVDetails(variantId);
+		// sort annotations with the most recent first
+		Comparator<Annotation> annotationComparator = new Comparator<Annotation>() {
+			@Override
+			public int compare(Annotation o1, Annotation o2) {
+				return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+			}
+		};
 		if (variantDetails != null) {
 			for (Annotation a : variantDetails.getReferenceCnv().getUtswAnnotations()) {
 				Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
 			}
-			variantDetails.getReferenceCnv().getUtswAnnotations().sort(new Comparator<Annotation>() {
-				@Override
-				public int compare(Annotation o1, Annotation o2) {
-					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
-				}
-				
-			});
+			// Sort annotation by last modified
+			variantDetails.getReferenceCnv().setUtswAnnotations(variantDetails.getReferenceCnv()
+					.getUtswAnnotations().stream().filter(a -> !a.getForceHide()).sorted(annotationComparator).collect(Collectors.toList()));
+//			variantDetails.getReferenceCnv().getUtswAnnotations().sort(new Comparator<Annotation>() {
+//				@Override
+//				public int compare(Annotation o1, Annotation o2) {
+//					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+//				}
+//				
+//			});
 			Map<Integer, AnnotatorSelection> selectionPerAnnotator = new HashMap<Integer, AnnotatorSelection>();
 			if (variantDetails.getAnnotatorSelections() != null) {
 				variantDetails.setSelected(false);
@@ -788,17 +801,25 @@ public class OpenCaseController {
 			return ControllerUtil.returnFailedGroupCheck();
 		}
 		Translocation variantDetails = utils.getTranslocationDetails(variantId);
+		Comparator<Annotation> annotationComparator = new Comparator<Annotation>() {
+			@Override
+			public int compare(Annotation o1, Annotation o2) {
+				return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+			}
+		};
 		if (variantDetails != null) {
 			for (Annotation a : variantDetails.getReferenceTranslocation().getUtswAnnotations()) {
 				Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
 			}
-			variantDetails.getReferenceTranslocation().getUtswAnnotations().sort(new Comparator<Annotation>() {
-				@Override
-				public int compare(Annotation o1, Annotation o2) {
-					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
-				}
-				
-			});
+			variantDetails.getReferenceTranslocation().setUtswAnnotations(variantDetails.getReferenceTranslocation()
+					.getUtswAnnotations().stream().filter(a -> !a.getForceHide()).sorted(annotationComparator).collect(Collectors.toList()));
+//			variantDetails.getReferenceTranslocation().getUtswAnnotations().sort(new Comparator<Annotation>() {
+//				@Override
+//				public int compare(Annotation o1, Annotation o2) {
+//					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+//				}
+//				
+//			});
 			Map<Integer, AnnotatorSelection> selectionPerAnnotator = new HashMap<Integer, AnnotatorSelection>();
 			if (variantDetails.getAnnotatorSelections() != null) {
 				variantDetails.setSelected(false);
@@ -1020,6 +1041,70 @@ public class OpenCaseController {
 		}
 		return response.createObjectJSON();
 
+	}
+	
+	@RequestMapping(value = "/hideAnnotations", produces= "application/json; charset=utf-8", method= RequestMethod.GET)
+	@ResponseBody
+	public String hideAnnotations(Model model, HttpSession session, 
+			@RequestParam String annotationId,
+			@RequestParam String variantType, @RequestParam String variantId,
+			@RequestParam String caseId) throws Exception {
+		User user = ControllerUtil.getSessionUser(session);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		AjaxResponse response = new AjaxResponse();
+		if (!caseId.equals("")) { //for annotations within a case
+			if (!ControllerUtil.isUserAssignedToCase(caseSummary, user)) {
+				// user is not assigned to this case
+				response.setIsAllowed(false);
+				response.setSuccess(false);
+				response.setMessage(user.getFullName() + " is not assigned to this case");
+				return response.createObjectJSON();
+			}
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+				return ControllerUtil.returnFailedGroupCheck();
+			}
+		}
+		
+		if (user.getIndividualPermission().getAdmin() 
+				|| user.getIndividualPermission().getCanHide()) {
+			response.setIsAllowed(true);
+			Annotation annotationToHide = null;
+			List<Annotation> annotations = new ArrayList<Annotation>();
+			if (variantType.equals("snp")) {
+				Variant variant = utils.getVariantDetails(variantId);
+				annotations = variant.getReferenceVariant().getUtswAnnotations();
+			}
+			else if (variantType.equals("cnv")) {
+				CNV variant = utils.getCNVDetails(variantId);
+				annotations = variant.getReferenceCnv().getUtswAnnotations();
+			}
+			else if (variantType.equals("translocation")) {
+				Translocation variant = utils.getTranslocationDetails(variantId);
+				annotations = variant.getReferenceTranslocation().getUtswAnnotations();
+			}
+			else if (variantType.equals("virus")) {
+				Virus variant = utils.getVirusDetails(variantId);
+				annotations = variant.getReferenceVirus().getUtswAnnotations();
+			}
+			for (Annotation annotation : annotations) {
+				if (annotation.getMongoDBId().getOid().equals(annotationId)) {
+					annotationToHide = annotation;
+					break;
+				}
+			}
+
+			if (annotationToHide == null) {
+				response.setSuccess(false);
+				response.setMessage("No matching annotation");
+			}
+			else {
+				annotationToHide.setForceHide(true);
+				List<Annotation> annotationsToSave = Arrays.asList(annotationToHide);
+				response = utils.commitAnnotation(response, annotationsToSave);
+			}
+		}
+		return response.createObjectJSON();
 	}
 
 	@RequestMapping(value = "/saveCurrentFilters", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
@@ -2008,17 +2093,26 @@ public class OpenCaseController {
 			return ControllerUtil.returnFailedGroupCheck();
 		}
 		Virus variantDetails = utils.getVirusDetails(variantId);
+		Comparator<Annotation> annotationComparator = new Comparator<Annotation>() {
+			@Override
+			public int compare(Annotation o1, Annotation o2) {
+				return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+			}
+		};
 		if (variantDetails != null) {
 			for (Annotation a : variantDetails.getReferenceVirus().getUtswAnnotations()) {
 				Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
 			}
-			variantDetails.getReferenceVirus().getUtswAnnotations().sort(new Comparator<Annotation>() {
-				@Override
-				public int compare(Annotation o1, Annotation o2) {
-					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
-				}
-				
-			});
+			// Sort annotation by last modified
+			variantDetails.getReferenceVirus().setUtswAnnotations(variantDetails.getReferenceVirus()
+					.getUtswAnnotations().stream().filter(a -> !a.getForceHide()).sorted(annotationComparator).collect(Collectors.toList()));
+//			variantDetails.getReferenceVirus().getUtswAnnotations().sort(new Comparator<Annotation>() {
+//				@Override
+//				public int compare(Annotation o1, Annotation o2) {
+//					return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+//				}
+//				
+//			});
 			Map<Integer, AnnotatorSelection> selectionPerAnnotator = new HashMap<Integer, AnnotatorSelection>();
 			if (variantDetails.getAnnotatorSelections() != null) {
 				variantDetails.setSelected(false);

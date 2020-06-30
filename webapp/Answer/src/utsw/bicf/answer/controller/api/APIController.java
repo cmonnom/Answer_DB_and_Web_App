@@ -1,10 +1,13 @@
 package utsw.bicf.answer.controller.api;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,17 +28,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.CosmicFusion;
+import utsw.bicf.answer.model.CosmicSampleFusion;
 import utsw.bicf.answer.model.GenieCNA;
 import utsw.bicf.answer.model.GenieCNACount;
 import utsw.bicf.answer.model.GenieFusion;
-import utsw.bicf.answer.model.GenieFusionCount;
 import utsw.bicf.answer.model.GenieMutation;
 import utsw.bicf.answer.model.GenieSample;
 import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
+import utsw.bicf.answer.model.extmapping.CosmicRawData;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.EmailProperties;
@@ -249,25 +255,40 @@ public class APIController {
 		String line;
 		BufferedReader reader2 = new BufferedReader(new FileReader(mutationDataFile));
 		line = null;
+		Map<String, Integer> headerByPos = new HashMap<String, Integer>();
 		while ((line = reader2.readLine()) != null) {
-			if (line.startsWith("Hugo_Symbol")) {
+			if (line.contains("Hugo_Symbol")) {
+				String[] items = line.split("\t");
+				for (int i = 0; i < items.length; i++) {
+					headerByPos.put(items[i], i);
+				}
 				break;
 			}
 			continue; //skip until the first sample row
 		}
 		counter = 0;
-		Pattern variantPattern = Pattern.compile("([a-z]\\.)([A-Z]+)([0-9]+)([*_=A-Za-z]+[0-9a-z]*)");
+//		Pattern variantPattern = Pattern.compile("([a-z]\\.)([A-Z]+)([0-9]+)([*_=A-Za-z]+[0-9a-z]*)");
+		Pattern variantPattern = Pattern.compile("([a-z]\\.)([A-Z]+)([0-9]+)([*_=A-Z])([0-9a-z]*)");
 		while ((line = reader2.readLine()) != null ) {
 			String[] items = line.split("\t");
 			GenieMutation m = new GenieMutation();
-			m.setHugoSymbol(items[0]);
-			m.setEntrezId(Integer.parseInt(items[1]));
-			m.setVariantClassification(items[8]);
-			m.setVariantType(items[9]);
-			m.setTumorSampleBarcode(items[15]);
+			m.setHugoSymbol(items[headerByPos.get("Hugo_Symbol")]);
+			m.setEntrezId(Integer.parseInt(items[headerByPos.get("Entrez_Gene_Id")]));
+			m.setVariantClassification(items[headerByPos.get("Variant_Classification")]);
+			m.setVariantType(items[headerByPos.get("Variant_Type")]);
+			m.setTumorSampleBarcode(items[headerByPos.get("Tumor_Sample_Barcode")]);
 //							Integer fkey = modelDAO.getGenieSampleIdByTumorBarcode(m.getTumorSampleBarcode());
 			m.setGenieSampleId(sampleIdFKey.get(m.getTumorSampleBarcode()));
-			String notation = items[32];
+			m.setChr(items[headerByPos.get("Chromosome")]);
+			String startString = items[headerByPos.get("Start_Position")];
+			if (startString != null) {
+				m.setStartPos(Integer.parseInt(startString));
+			}
+			String endString = items[headerByPos.get("End_Position")];
+			if (endString != null) {
+				m.setEndPos(Integer.parseInt(endString));
+			}
+			String notation = items[headerByPos.get("HGVSp_Short")];
 			m.setVariantNotation(notation);
 			if (notation != null && !notation.equals("")) {
 				Matcher matcher = variantPattern.matcher(notation);
@@ -416,4 +437,277 @@ public class APIController {
 		modelDAO.saveBatch(counts);
 	}
 	
+	/**
+	 * To update Cosmic, you need the CosmicFusionExport.tsv file
+	 * which is available on their website.
+	 * You need to run the script file produced here on the cluster to find the exon numbers for each breakpoint
+	 * Then run updateCosmicExon with the output of the script file to update the database
+	 * @param model
+	 * @param token
+	 * @param cosmicDataPath
+	 * @param cosmicScriptOutputPath
+	 * @param httpSession
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	@RequestMapping("/updateCosmicData")
+	@ResponseBody
+	public String updateCosmicData(Model model, @RequestParam String token, 
+			@RequestParam String cosmicDataPath, 
+			@RequestParam String cosmicScriptOutputPath, 
+			HttpSession httpSession) throws IOException, InterruptedException {
+		httpSession.setAttribute("user", "API User from updateCosmicData");
+		long now = System.currentTimeMillis();
+		// check that token is valid
+		Token theToken = modelDAO.getUpdateGenieDataToken(token);
+		AjaxResponse response = new AjaxResponse();
+		if (theToken == null) {
+			response.setSuccess(false);
+			response.setIsAllowed(false);
+			response.setMessage("You are not allowed to run this servlet.");
+			return response.createObjectJSON();
+		}
+		
+		File cosmicDataFile = new File(cosmicDataPath);
+		File cosmicOutputFile = new File(cosmicScriptOutputPath);
+		
+		if (cosmicDataFile.exists() && cosmicDataFile.canRead()
+				&& (!cosmicOutputFile.exists() || cosmicOutputFile.canWrite())) {
+			ExecutorService executor = Executors.newFixedThreadPool(1);
+			modelDAO.deleteCosmicTables();
+			Runnable worker = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						String transvarPath = "/project/shared/bicf_workflow_ref/seqprg/bin/transvar ganno --refversion hg38 --gencode -i ";
+						List<String> lines = parseCosmic(cosmicDataFile);
+						BufferedWriter bw = new BufferedWriter(new FileWriter(cosmicOutputFile));
+						bw.write("#!/bin/bash\n");
+						bw.write("# Script auto generated by Answer on ");
+						bw.write(LocalDateTime.now().format(TypeUtils.localDateTimeFormatter));
+						bw.write("\n#Make sure .transvar.cfg in in you home directory with the following data:\n");
+						bw.write("\n#[DEFAULT]");
+						bw.write("\n#		refversion = hg38");
+						bw.write("\n#				");
+						bw.write("\n#		[hg38]");
+						bw.write("\n#		refseq = /project/shared/bicf_workflow_ref/seqprg/lib/python2.7/site-packages/transvar/transvar.download/hg38.refseq.gff.gz.transvardb");
+						bw.write("\n#		ensembl = /project/shared/bicf_workflow_ref/seqprg/lib/python2.7/site-packages/transvar/transvar.download/hg38.ensembl.gtf.gz.transvardb");
+						bw.write("\n#		gencode = /project/shared/bicf_workflow_ref/seqprg/lib/python2.7/site-packages/transvar/transvar.download/hg38.gencode.gtf.gz.transvardb");
+						bw.write("\n#		ucsc = /project/shared/bicf_workflow_ref/seqprg/lib/python2.7/site-packages/transvar/transvar.download/hg38.ucsc.txt.gz.transvardb");
+						bw.write("\n#		reference = /project/shared/bicf_workflow_ref/seqprg/lib/python2.7/site-packages/transvar/transvar.download/hg38.fa\n\n\n");
+
+						bw.write("export PYTHONPATH=/project/shared/bicf_workflow_ref/seqprg/lib/python2.7/site-packages/:$PYTHONPATH\n");
+						for (String line : lines) {
+							bw.write(transvarPath);
+							bw.write(line);
+						}
+						bw.close();
+						long afterRequest = System.currentTimeMillis();
+						System.out.println("After request " + (afterRequest - now) + "ms");
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				
+			};
+			
+			executor.execute(worker);
+		}
+		else {
+			response.setSuccess(false);
+			response.setIsAllowed(false);
+			response.setMessage("The files don't exist or can't be read by Answer.");
+			return response.createObjectJSON();
+		}
+		
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		
+	
+		return response.createObjectJSON();
+	}
+	
+	@RequestMapping("/updateCosmicExonData")
+	@ResponseBody
+	public String updateCosmicExonData(Model model, @RequestParam String token, 
+			@RequestParam String cosmicExonDataPath, 
+			HttpSession httpSession) throws IOException, InterruptedException {
+		httpSession.setAttribute("user", "API User from updateCosmicExonData");
+		long now = System.currentTimeMillis();
+		// check that token is valid
+		Token theToken = modelDAO.getUpdateGenieDataToken(token);
+		AjaxResponse response = new AjaxResponse();
+		if (theToken == null) {
+			response.setSuccess(false);
+			response.setIsAllowed(false);
+			response.setMessage("You are not allowed to run this servlet.");
+			return response.createObjectJSON();
+		}
+		
+		File cosmicDataFile = new File(cosmicExonDataPath);
+		
+		if (cosmicDataFile.exists() && cosmicDataFile.canRead()) {
+			ExecutorService executor = Executors.newFixedThreadPool(1);
+			Runnable worker = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						String transvarPath = "/project/shared/bicf_workflow_ref/seqprg/bin/transvar ganno --refversion hg38 --gencode -i ";
+						parseCosmicExon(cosmicDataFile);
+						long afterRequest = System.currentTimeMillis();
+						System.out.println("After request " + (afterRequest - now) + "ms");
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				
+			};
+			
+			executor.execute(worker);
+		}
+		else {
+			response.setSuccess(false);
+			response.setIsAllowed(false);
+			response.setMessage("The files don't exist or can't be read by Answer.");
+			return response.createObjectJSON();
+		}
+		
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		
+	
+		return response.createObjectJSON();
+	}
+	
+	public void parseCosmicExon(File cosmicDataFile) throws IOException {
+		String line;
+		BufferedReader reader2 = new BufferedReader(new FileReader(cosmicDataFile));
+		line = null;
+		
+		Map<String, CosmicFusion> allFusions = modelDAO.getAllCosmicFusionsAsMap();
+		
+		while ((line = reader2.readLine()) != null ) {
+			String[] items = line.split("\t");
+			if (items[0] == null || items[0].length() == 0) {
+				continue;
+			}
+			String exonLine = items[0];
+			String fusionId = items[1];
+			String threeOfFive = items[2];
+			String exonFound = null;
+			//avoid empty or "." exonLine
+			if (exonLine != null && exonLine.length() > 2) {
+				if (exonLine.contains("cds_in_exon_")) {
+					exonFound = exonLine.split("cds_in_exon_")[1].split("[];]")[0];
+				}
+				else if (exonLine.contains("noncoding_exon_")) {
+					exonFound = exonLine.split("noncoding_exon_")[1].split("[];]")[0];
+				}
+			}
+			if (exonFound != null) {
+				CosmicFusion cf = allFusions.get(fusionId);
+				if (threeOfFive.equals("three") && cf.getThreeExon() == null) {
+					cf.setThreeExon(exonFound);
+				}
+				else if (threeOfFive.equals("five") && cf.getFiveExon() == null) {
+					cf.setFiveExon(exonFound);
+				}
+				modelDAO.saveObject(cf);
+			}
+		}
+		
+		reader2.close();
+	}
+	
+	public List<String> parseCosmic(File cosmicDataFile) throws IOException {
+		String line;
+		BufferedReader reader2 = new BufferedReader(new FileReader(cosmicDataFile));
+		line = null;
+		while ((line = reader2.readLine()) != null) {
+			if (line.startsWith("Sample ID")) {
+				break;
+			}
+			continue; //skip until the first sample row
+		}
+		Map<String, CosmicFusion> fusionById = new HashMap<String, CosmicFusion>();
+		List<String> lines = new ArrayList<String>();
+		
+		int counter = 0;
+		while ((line = reader2.readLine()) != null ) {
+			String[] items = line.split("\t");
+			if (items[0] == null || items[0].length() == 0) {
+				continue;
+			}
+			String fusionId = items[10];
+			String sampleId = items[0];
+			String fusionType = items[24];
+			if (!fusionType.equals("Observed mRNA")) {
+				continue;
+			}
+			if (!fusionById.containsKey(fusionId)) {
+				CosmicRawData m = new CosmicRawData();
+				m.setFusionId(fusionId);
+				m.setTranslocationName(items[11]);
+				m.setFiveChr(items[12]);
+				m.setFiveStart(items[13]);
+				m.setFiveEnd(items[15]);
+				m.setThreeChr(items[18]);
+				m.setThreeStart(items[19]);
+				m.setThreeEnd(items[21]);
+				
+				if (m.isValid()) {
+					m.extractENSTsGenes();
+					if (m.getThreeGene() == null || m.getThreeENST() == null) {
+						continue;
+					}
+					//first pass does a script grep match
+					//second pass does a loose grep match
+					//the second pass can be use if no results on first pass
+					lines.add(m.createBashLineFive(true));
+					lines.add(m.createBashLineThree(true));
+					lines.add(m.createBashLineFive(false));
+					lines.add(m.createBashLineThree(false));
+					
+					//save object to database
+					CosmicFusion cf= new CosmicFusion();
+					cf.setFiveChr(m.getFiveChr());
+					cf.setFiveEnd(Integer.parseInt(m.getFiveEnd()));
+					cf.setFiveENST(m.getFiveENST());
+					cf.setFiveGene(m.getFiveGene());
+					cf.setFiveStart(Integer.parseInt(m.getFiveStart()));
+					cf.setThreeChr(m.getThreeChr());
+					cf.setThreeEnd(Integer.parseInt(m.getThreeEnd()));
+					cf.setThreeENST(m.getThreeENST());
+					cf.setThreeGene(m.getThreeGene());
+					cf.setThreeStart(Integer.parseInt(m.getThreeStart()));
+					cf.setTranslocationName(m.getTranslocationName());
+					cf.setFusionId(fusionId);
+					modelDAO.saveObject(cf);
+					fusionById.put(fusionId, cf);
+					CosmicSampleFusion csf = new CosmicSampleFusion();
+					csf.setCosmicSampleId(sampleId);
+					csf.setCosmicFusionId(cf.getCosmicFusionId());
+					modelDAO.saveObject(csf);
+					counter++;
+					if (counter % 10 == 0) {
+						System.out.println("Added " + counter + " cosmic fusion");
+					}
+				}
+				
+			}
+			else {
+				CosmicFusion cf= fusionById.get(fusionId);
+				CosmicSampleFusion csf = new CosmicSampleFusion();
+				csf.setCosmicSampleId(sampleId);
+				csf.setCosmicFusionId(cf.getCosmicFusionId());
+				modelDAO.saveObject(csf);
+			}
+		}
+		
+		reader2.close();
+		return lines;
+	}
 }

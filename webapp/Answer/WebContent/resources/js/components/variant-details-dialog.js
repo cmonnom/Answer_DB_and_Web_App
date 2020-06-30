@@ -715,8 +715,10 @@ Vue.component('variant-details-dialog', {
                                                         <utsw-annotation-card :annotation="annotation" :variant-type="currentVariantType"
                                                         :no-edit="!canProceed('canAnnotate') || readonly"
                                                         :can-copy="canCopyAnnotation && canProceed('canAnnotate') && !readonly && !loadingVariant"
+                                                        :can-hide="canProceed('canHide') && !readonly && !loadingVariant"
                                                         @annotation-selection-changed="handleAnnotationSelectionChanged()"
                                                         @copy-annotation="copyAnnotation"
+                                                        @hide-annotation="hideAnnotation"
                                                         :class="getHighlightClass(index)"></utsw-annotation-card>
                                                     </v-flex>
                                                 </v-layout>
@@ -732,6 +734,9 @@ Vue.component('variant-details-dialog', {
                         <!-- lookup tools-->
                     <lookup-panel ref="lookupTool" :standalone="false"
                     :original-variant="currentVariant.notation"
+                    :original-chr="currentVariant.chrom"
+                    :original-pos="currentVariant.pos"
+                    :original-pos-old-build="getHG19Pos()"
                     :oncotree-items="oncotree"
                     @reload-values="reloadLookupValues"
                     ></lookup-panel>
@@ -841,6 +846,7 @@ Vue.component('variant-details-dialog', {
                 case "canSelect": return permissions.canSelect;
                 case "canView": return permissions.canView;
                 case "canReview": return permissions.canReview;
+                case "canHide": return permissions.canHide;
                 default: return false;
             }
         },
@@ -2218,6 +2224,7 @@ Vue.component('variant-details-dialog', {
         },
         closeVariantDetails() {
             this.$emit("close-variant-details");
+            this.$refs.lookupTool.panelVisible = false;
         },
         createUCSCLink() {
             return "https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position="
@@ -2327,6 +2334,7 @@ Vue.component('variant-details-dialog', {
                 annotation.drugs = annotations[i].drugs;
                 annotation.warningLevel = annotations[i].warningLevel;
                 annotation.drugResistant = annotations[i].drugResistant;
+                // annotation.visible = annotations[i].isVisible;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2384,6 +2392,7 @@ Vue.component('variant-details-dialog', {
                 annotation.trial = annotations[i].trial;
                 annotation.warningLevel = annotations[i].warningLevel;
                 annotation.drugResistant = annotations[i].drugResistant;
+                // annotation.visible = annotations[i].isVisible;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2442,6 +2451,7 @@ Vue.component('variant-details-dialog', {
                 annotation.trial = annotations[i].trial;
                 annotation.warningLevel = annotations[i].warningLevel;
                 annotation.drugResistant = annotations[i].drugResistant;
+                // annotation.visible = annotations[i].isVisible;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2498,6 +2508,7 @@ Vue.component('variant-details-dialog', {
                 annotation.drugs = annotations[i].drugs;
                 annotation.warningLevel = annotations[i].warningLevel;
                 annotation.drugResistant = annotations[i].drugResistant;
+                // annotation.visible = annotations[i].isVisible;
                 formatted.push(annotation);
             }
             return formatted;
@@ -2571,6 +2582,42 @@ Vue.component('variant-details-dialog', {
             }
             this.userAnnotations.push(newAnnotation);
             this.commitAnnotations(this.userAnnotations);
+        },
+        hideAnnotation(annotation) {
+            if (!annotation._id || !annotation._id["$oid"]) {
+                return; //new annotation can't modify it yet
+            }
+            axios.get(
+                webAppRoot + "/hideAnnotations",
+                {
+                    params: {
+                        variantId: this.currentVariant._id.$oid,
+                        caseId: this.$route.params.id,
+                        annotationId: annotation._id["$oid"],
+                        variantType: this.currentVariantType
+                    }
+                }).then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        console.log("success");
+                        if (this.isSNP()) {
+                            this.getVariantDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+                        }
+                        else if (this.isCNV()) {
+                            this.getCNVDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+                        }
+                        else if (this.isTranslocation()) {
+                            this.getTranslocationDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+                        }
+                        else if (this.isVirus()) {
+                            this.getVirusDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+                        }
+                    } else {
+                        this.handleDialogs(response.data, this.hideAnnotation.bind(null,
+                            annotation));
+                    }
+                }).catch(error => {
+                    this.handleAxiosError(error);
+                });
         },
         setDefaultTranscript(item) {
             axios({
@@ -2761,6 +2808,12 @@ Vue.component('variant-details-dialog', {
             }
             this.$refs.lookupTool.currentOncotreeCode = oncotree;
             this.$refs.lookupTool.submitForm();
+        },
+        getHG19Pos() {
+            if (this.currentVariant.oldBuilds && this.currentVariant.oldBuilds.hg19) {
+                return this.currentVariant.oldBuilds.hg19.pos;
+            }
+            return -1;
         }
         
     },

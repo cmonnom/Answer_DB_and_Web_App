@@ -22,6 +22,7 @@ public class UserTableRow {
 	PassableValue selectValue;
 	PassableValue assignValue;
 	PassableValue reviewValue;
+	PassableValue hideValue;
 	PassableValue notificationValue;
 	PassableValue adminValue;
 	String groupsConcat;
@@ -45,6 +46,7 @@ public class UserTableRow {
 		selectValue = new PassableValue("selectValue", "", p.getCanSelect());
 		assignValue = new PassableValue("assignValue", "", p.getCanAssign());
 		reviewValue = new PassableValue("reviewValue", "", p.getCanReview());
+		hideValue = new PassableValue("hideValue", "", p.getCanHide());
 		notificationValue = new PassableValue("notificationValue", "", p.getReceiveAllNotifications());
 		adminValue = new PassableValue("adminValue", "", p.getAdmin());
 		
@@ -115,6 +117,10 @@ public class UserTableRow {
 
 	public List<String> getGroupIds() {
 		return groupIds;
+	}
+
+	public PassableValue getHideValue() {
+		return hideValue;
 	}
 
 

@@ -38,20 +38,31 @@ public class ClinicalTrialsRequestUtils  extends AbstractRequestUtils{
 		this.setupClient();
 	}
 
-	public List<ClinicalTrial> getClinicalTrials(String geneTerm, String variant, OncotreeTumorType tumorType) throws URISyntaxException, ClientProtocolException, IOException {
+	public List<ClinicalTrial> getClinicalTrials(String geneTerm, String variant, OncotreeTumorType tumorType, boolean fusion) throws URISyntaxException, ClientProtocolException, IOException {
 		List<ClinicalTrial> clinicalTrials = new ArrayList<ClinicalTrial>();
-			parseResponse(clinicalTrials, geneTerm, variant, tumorType);
+			parseResponse(clinicalTrials, geneTerm, variant, tumorType, fusion);
 			return clinicalTrials;
 	}
 
 	public void parseResponse(List<ClinicalTrial> clinicalTrials,
-			String geneTerm, String variant, OncotreeTumorType tumorType)
+			String geneTerm, String variant, OncotreeTumorType tumorType, boolean fusion)
 			throws IOException, JsonParseException, JsonMappingException, URISyntaxException {
-		String url = this.buildURL(geneTerm, variant, tumorType.getName());
+		String url = null;
+		if (fusion) {
+			url = this.buildURLFusion(geneTerm, variant, tumorType.getName());
+		}
+		else {
+			url = this.buildURL(geneTerm, variant, tumorType.getName());
+		}
 		ObjectMapper mapper = new ObjectMapper();
 		this.addClinicalTrials(url, mapper, clinicalTrials);
 		if (clinicalTrials.size() <= 3) {
-			url = this.buildURL(geneTerm, variant, tumorType.getMainType());
+			if (fusion) {
+				url = this.buildURLFusion(geneTerm, variant, tumorType.getMainType());
+			}
+			else {
+				url = this.buildURL(geneTerm, variant, tumorType.getMainType());
+			}
 			this.addClinicalTrials(url, mapper, clinicalTrials);
 		}
 	}
@@ -80,6 +91,22 @@ public class ClinicalTrialsRequestUtils  extends AbstractRequestUtils{
 		sbUrl.append("AREA[Condition]").append(condition)
 		.append(" AND AREA[EligibilityCriteria]").append(geneTerm)
 		.append(" AND AREA[EligibilityCriteria]").append(variant)
+		.append("&fields=NCTId,BriefTitle,Condition,InterventionName&min_rnk=1&max_rnk=&fmt=json");
+		return sbUrl.toString().replaceAll(" ", "+");
+	}
+	
+	private String buildURLFusion(String geneFive, String geneThree, String condition) {
+		StringBuilder sbUrl = new StringBuilder(clinicalTrialsProps.getApiUrl());
+		sbUrl.append("AREA[Condition]").append(condition)
+		.append(" AND AREA[EligibilityCriteria]").append(geneFive).append("-").append(geneThree)
+		.append(" OR AREA[Condition]").append(condition)
+		.append(" AND AREA[EligibilityCriteria]").append(geneFive).append(" fusion")
+		.append(" OR AREA[Condition]").append(condition)
+		.append(" AND AREA[EligibilityCriteria]").append(geneThree).append(" fusion")
+		.append(" OR AREA[Condition]").append(condition)
+		.append(" AND AREA[EligibilityCriteria]").append(geneFive).append(" rearrangement")
+		.append(" OR AREA[Condition]").append(condition)
+		.append(" AND AREA[EligibilityCriteria]").append(geneThree).append(" rearrangement")
 		.append("&fields=NCTId,BriefTitle,Condition,InterventionName&min_rnk=1&max_rnk=&fmt=json");
 		return sbUrl.toString().replaceAll(" ", "+");
 	}

@@ -11,6 +11,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
         		canSelect:  "${permissions.canSelect}" === 'true',
                         canAssign:  "${permissions.canAssign}" === 'true',
                         canReview: "${permissions.canReview}" === 'true',
+                        canHide: "${permissions.canHide}" === 'true',
         		admin: "${permissions.admin}" === 'true'
         };
         const isAdmin = permissions.admin === true;

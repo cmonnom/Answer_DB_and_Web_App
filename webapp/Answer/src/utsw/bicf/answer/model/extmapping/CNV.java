@@ -45,6 +45,7 @@ public class CNV {
 	AnnotationRow mdaAnnotation;
 	
 	String tier;
+	String highestTier;
 	
 	Map<Integer, Boolean> annotatorSelections = new HashMap<Integer, Boolean>();
 	Map<Integer, String> annotatorDates = new HashMap<Integer, String>();
@@ -295,6 +296,16 @@ public class CNV {
 
 	public void setAnnotatorDates(Map<Integer, String> annotatorDates) {
 		this.annotatorDates = annotatorDates;
+	}
+
+
+	public String getHighestTier() {
+		return highestTier;
+	}
+
+
+	public void setHighestTier(String highestTier) {
+		this.highestTier = highestTier;
 	}
 
 

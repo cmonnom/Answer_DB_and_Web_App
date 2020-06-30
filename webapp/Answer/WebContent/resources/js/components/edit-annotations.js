@@ -125,7 +125,7 @@ Vue.component('edit-annotations', {
                     {{ item.text }}
                     </v-breadcrumbs-item>
                  </v-breadcrumbs>
-                <v-card v-if="userEditingAnnotations.length == 0" class="mb-3">
+                <v-card v-if="userEditingAnnotations.length == 0" class="flex xs12 md12 lg12 xl11 mb-2">
                     <v-card-text>
                         Click on
                         <v-btn color="primary" @click="addCustomAnnotation()" :disabled="single">Add Annotation

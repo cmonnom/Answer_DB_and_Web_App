@@ -1,6 +1,6 @@
 const Admin = {
   template:
-    `<div>
+    /*html*/`<div>
 
   <v-snackbar :timeout="4000" :bottom="true" :value="snackBarVisible">
     {{ snackBarMessage }}
@@ -49,6 +49,7 @@ const Admin = {
                   <v-switch :label="'Can Select Variants: ' + (editSelect ? 'Yes' : 'No')" v-model="editSelect"></v-switch>
                   <v-switch :label="'Can Assign Cases: ' + (editAssign ? 'Yes' : 'No')" v-model="editAssign"></v-switch>
                   <v-switch :label="'Can Review Cases: ' + (editReview ? 'Yes' : 'No')" v-model="editReview"></v-switch>
+                  <v-switch :label="'Can Hide Annotations: ' + (editHide ? 'Yes' : 'No')" v-model="editHide"></v-switch>
                   <v-switch :label="'Receive All Notifications: ' + (editNotification ? 'Yes' : 'No')" v-model="editNotification"></v-switch>
                   <v-switch :label="'Is Admin: ' + (editAdmin ? 'Yes' : 'No')" v-model="editAdmin"></v-switch>
                 </v-card-text>
@@ -185,6 +186,7 @@ const Admin = {
       editSelect: false,
       editAssign: false,
       editReview: false,
+      editHide: false,
       editNotification: false,
       editAdmin: false,
       editAdd: "Add",
@@ -229,6 +231,7 @@ const Admin = {
       this.editSelect = user.selectValue.pass;
       this.editAssign = user.assignValue.pass;
       this.editReview = user.reviewValue.pass;
+      this.editHide = user.hideValue.pass;
       this.editNotification = user.notificationValue.pass;
       this.editAdmin = user.adminValue.pass;
       this.currentEditGroupsInUser = user.groupIds;
@@ -251,6 +254,7 @@ const Admin = {
       this.editSelect = false;
       this.editAssign = false;
       this.editReview = false;
+      this.editHide = false;
       this.editNotification = false;
       this.editAdmin = false;
       var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
@@ -282,6 +286,7 @@ const Admin = {
             canAnnotate: this.editAnnotate,
             canAssign: this.editAssign,
             canReview: this.editReview,
+            canHide: this.editHide,
             receiveAllNotifications: this.editNotification,
             admin: this.editAdmin,
           }
@@ -353,6 +358,7 @@ const Admin = {
       this.editAnnotate = false;
       this.editAssign = false;
       this.editReview = false;
+      this.editHide = false;
       this.editNotification = false;
       this.editAdmin = false;
       this.editUserDialogVisible = true;

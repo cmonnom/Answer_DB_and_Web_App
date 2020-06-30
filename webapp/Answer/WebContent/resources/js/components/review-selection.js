@@ -345,6 +345,7 @@ Vue.component('review-selection', {
                 case "canSelect": return permissions.canSelect && !this.readonly;
                 case "canView": return permissions.canView;
                 case "canReview": return permissions.canReview && !this.readonly;
+                case "canHide": return permissions.canHide && !this.readonly;
                 default: return false;
             }
         },

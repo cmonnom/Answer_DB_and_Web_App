@@ -37,6 +37,8 @@ public class Virus {
 	
 	AbstractReference referenceVirus;
 	
+	String highestTier;
+	
 	public Virus() {
 		
 	}
@@ -159,6 +161,14 @@ public class Virus {
 
 	public void setReferenceVirus(AbstractReference referenceVirus) {
 		this.referenceVirus = referenceVirus;
+	}
+
+	public String getHighestTier() {
+		return highestTier;
+	}
+
+	public void setHighestTier(String highestTier) {
+		this.highestTier = highestTier;
 	}
 
 

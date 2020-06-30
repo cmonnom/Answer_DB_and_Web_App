@@ -91,7 +91,8 @@ public class CivicRequestUtils  extends AbstractRequestUtils{
 			List<CivicVariant> variants = civicJson.getVariants();
 			if (variants != null) {
 				for (CivicVariant v : variants) {
-					if (v.getName().equals(oncokbVariantName) || v.getName().startsWith(oncokbVariantName + " ")) {
+					if (v.getName().equals(oncokbVariantName) 
+							|| v.getName().equals(oncokbVariantName.substring(oncokbVariantName.length() - 1, (oncokbVariantName.length())))) {
 						StringBuilder sbUrl = new StringBuilder(civicProps.getVariantServlet());
 						sbUrl.append(v.getId());
 						URI uri = new URI(sbUrl.toString());

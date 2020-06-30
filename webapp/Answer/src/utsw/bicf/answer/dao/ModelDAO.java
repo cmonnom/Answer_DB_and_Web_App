@@ -22,8 +22,10 @@ import org.springframework.stereotype.Repository;
 import utsw.bicf.answer.controller.serialization.plotly.Trace;
 import utsw.bicf.answer.db.api.utils.LookupUtils;
 import utsw.bicf.answer.model.AnswerDBCredentials;
+import utsw.bicf.answer.model.CosmicFusion;
 import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.GenieFusionCount;
+import utsw.bicf.answer.model.GenieMutation;
 import utsw.bicf.answer.model.GenieSample;
 import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.Group;
@@ -145,6 +147,19 @@ public class ModelDAO {
 		sql = "ALTER TABLE genie_fusion AUTO_INCREMENT = 1";
 		session.createNativeQuery(sql).executeUpdate();
 		sql = "ALTER TABLE genie_fusion_count AUTO_INCREMENT = 1";
+		session.createNativeQuery(sql).executeUpdate();
+	}
+	
+	@Transactional
+	public void deleteCosmicTables() {
+		Session session = sessionFactory.getCurrentSession();
+		String sql = "delete from cosmic_sample_fusion";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "delete from cosmic_fusion";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "ALTER TABLE cosmic_sample_fusion AUTO_INCREMENT = 1";
+		session.createNativeQuery(sql).executeUpdate();
+		sql = "ALTER TABLE cosmic_fusion AUTO_INCREMENT = 1";
 		session.createNativeQuery(sql).executeUpdate();
 	}
 
@@ -903,7 +918,20 @@ public class ModelDAO {
 		}
 		return traces;
 	}
-
+	
+	@Transactional
+	public List<GenieMutation> getGenieMutationFromPostion(String chr, String hugoSymbol, Integer position) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		sb.append("select * from genie_mutation where chr = :chr ")
+		.append(" and hugo_symbol = :hugoSymbol and start_pos = :position");
+		return session.createNativeQuery(sb.toString(), GenieMutation.class)
+		.setParameter("hugoSymbol", hugoSymbol)
+		.setParameter("chr", chr)
+		.setParameter("position", position)
+		.list();
+	}
+	
 	@Transactional
 	public List<MSKHotspot> getMSKHotspots(String hugoSymbol, String residue) {
 		Session session = sessionFactory.getCurrentSession();
@@ -1109,5 +1137,53 @@ public class ModelDAO {
 				.intValue()))
 				.collect(Collectors.toList());
 		return result;
+	}
+	
+	@Transactional
+	public Map<String, CosmicFusion> getAllCosmicFusionsAsMap() {
+		Session session = sessionFactory.getCurrentSession();
+		Map<String, CosmicFusion> fusionsByFusionId = new HashMap<String, CosmicFusion>();
+		String hql = "from CosmicFusion";
+		List<CosmicFusion> fusions = session.createQuery(hql, CosmicFusion.class).list();
+		for (CosmicFusion c : fusions) {
+			fusionsByFusionId.put(c.getFusionId(), c);
+		}
+		return fusionsByFusionId;
+	}
+	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	@Transactional
+	public List<GenericBarPlotData> getCosmicExonBreakpointForGene(String fiveGene, String threeGene, boolean isFiveGene) {
+		Session session = sessionFactory.getCurrentSession();
+		StringBuilder sb = new StringBuilder();
+		String fiveOrThree = "three";
+		if (isFiveGene) {
+			fiveOrThree = "five";
+		}
+		sb.append(" select * from ( ")
+				.append(" select cf.").append(fiveOrThree).append("_exon y, count(cf.five_exon) x ")
+				.append(" from cosmic_sample_fusion csf, cosmic_fusion cf ")
+				.append(" where csf.cosmic_fusion_id = cf.cosmic_fusion_id ")
+				.append(" and five_gene = :fiveGene and three_gene = :threeGene ")
+				.append(" group by cf.").append(fiveOrThree).append("_exon) as sub ")
+				.append(" order by x desc; ");
+		Query<GenericBarPlotData> query = session.createNativeQuery(sb.toString())
+				.setParameter("fiveGene", fiveGene)
+				.setParameter("threeGene", threeGene);
+		
+		return query.setResultTransformer(new ResultTransformer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Object transformTuple(Object[] values, String[] labels) {
+				return new GenericBarPlotData(values, labels);
+			}
+
+			@SuppressWarnings("rawtypes")
+			@Override
+			public List transformList(List arg0) {
+				return arg0;
+			}
+		}).list();
 	}
 }

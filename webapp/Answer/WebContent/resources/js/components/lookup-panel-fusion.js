@@ -181,7 +181,6 @@ Vue.component('lookup-panel-fusion', {
       
 
         <!--  Standard of Care Resistance  -->
-         <!--
         <v-flex :class="getGeneFlexClasses()" >
         <v-card>
             <v-toolbar dense class="elevation-0" dark color="primary">
@@ -190,7 +189,7 @@ Vue.component('lookup-panel-fusion', {
             </v-toolbar>
             <v-card-text class="pa-3">
                 <div v-if="oncoKBVariantError" class="">
-                    {{ lastGene }} {{ lastAmpDel }} has no result in OncoKB.
+                {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} has no result in OncoKB.
                 </div>
                 <div v-if="oncoKBVariantSummary">
                     <span class="font-weight-bold body-1">OncoKB</span>
@@ -204,10 +203,8 @@ Vue.component('lookup-panel-fusion', {
             </v-card-text>
         </v-card>    
         </v-flex>
-         -->
 
               <!--  Clinical Trials  -->
-               <!--
     <v-flex :class="getGeneFlexClasses()" >
     <v-card>
         <v-toolbar dense class="elevation-0" dark color="primary">
@@ -230,7 +227,7 @@ Vue.component('lookup-panel-fusion', {
         <v-slide-y-transition>
         <v-card-text class="pl-2 pr-2 pt-1" v-show="showClinicalTrials">
             <div v-if="clinicalTrialsError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-                {{ lastGene }} {{ lastAmpDel }} {{ lastOncotreeCode }} has no result in clinicaltrials.gov.
+            {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} has no result in clinicaltrials.gov.
             </div>
             <div v-if="clinicalTrials">
                 <div class="pt-2 pl-2 pr-2 pb-0" v-for="(trial, index) in clinicalTrials" :key="index">
@@ -252,7 +249,7 @@ Vue.component('lookup-panel-fusion', {
         </v-slide-y-transition>
     </v-card>    
     </v-flex>
-  -->
+
     <v-flex :class="getGeneFlexClasses()">
     <v-layout row wrap>
 <!--   Functional Annotations  -->
@@ -612,15 +609,16 @@ Vue.component('lookup-panel-fusion', {
         reload() {
             this.getVariantSummary();
             this.fetchFusionPlots();
+            this.fetchCosmicFusionPlots();
         },
         isLoading() {
             return this.uniProtVariantLoading || this.fasmicLoading 
             || this.hotspotLoading || this.loading
-            || this.fusionPlotLoading;
+            || this.fusionGeniePlotLoading;
         },
         fetchFusionPlots() {
-            this.fusionPlotLoading = true;
-            this.fusionPlotError = false;
+            this.fusionGeniePlotLoading = true;
+            this.fusionGeniePlotError = false;
             var promise1 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidenceAbsFusion", {
                 geneFive: this.currentFive,
                 geneThree: this.currentThree,
@@ -632,13 +630,39 @@ Vue.component('lookup-panel-fusion', {
                 plotId: "fusionPctPlot" + this.uniqId,
             });
             Promise.all([promise1, promise2]).then(values => {
-                this.fusionPlotLoading = false;
+                this.fusionGeniePlotLoading = false;
                 if (values.filter(v => v.success).length != values.length) {
                     console.log("Some plots did not finish properly");
-                    this.fusionPlotError = true;
+                    this.fusionGeniePlotError = true;
                 }
                 else {
-                    this.fusionPlotError = false;
+                    this.fusionGeniePlotError = false;
+                }
+            })
+        },
+        fetchCosmicFusionPlots() {
+            this.fusionCosmicPlotLoading = true;
+            this.fusionCosmicPlotError = false;
+            var promise1 = this.$refs.plotUtils.updateBarPlot("/getBreakPointPlot", {
+                geneFive: this.currentFive,
+                geneThree: this.currentThree,
+                plotId: "fusionBreakpointFivePlot" + this.uniqId,
+                plotFive: true
+            });
+            var promise2 = this.$refs.plotUtils.updateBarPlot("/getBreakPointPlot", {
+                geneFive: this.currentFive,
+                geneThree: this.currentThree,
+                plotId: "fusionBreakpointThreePlot" + this.uniqId,
+                plotFive: false
+            });
+            Promise.all([promise1, promise2]).then(values => {
+                this.fusionCosmicPlotLoading = false;
+                if (values.filter(v => v.success).length != values.length) {
+                    console.log("Some plots did not finish properly");
+                    this.fusionCosmicPlotError = true;
+                }
+                else {
+                    this.fusionCosmicPlotError = false;
                 }
             })
         },

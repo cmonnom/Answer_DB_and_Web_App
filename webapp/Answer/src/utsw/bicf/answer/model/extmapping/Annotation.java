@@ -67,6 +67,10 @@ public class Annotation {
 	int warningLevel = 0;
 	boolean drugResistant;
 	
+	//this flag is removing the annotation from the annotations displayed
+	//on the front end
+	Boolean forceHide = false;
+	
 	public Annotation() {
 		
 	}
@@ -312,7 +316,10 @@ public class Annotation {
 		
 		boolean needWarningLevel = (a.getIsVariantSpecific() != null && a.getIsVariantSpecific())
 				|| (a.getCategory() != null && (a.getCategory().equals("Therapy") || a.getCategory().equals("Clinical Trial")));
-		if (needWarningLevel && modifiedUTCDatetime.plusMonths(6).isBefore(OffsetDateTime.now())) {
+		if (needWarningLevel && modifiedUTCDatetime.plusMonths(12).isBefore(OffsetDateTime.now())) {
+			a.warningLevel = 3;
+		}
+		else if (needWarningLevel && modifiedUTCDatetime.plusMonths(6).isBefore(OffsetDateTime.now())) {
 			a.warningLevel = 2;
 		}
 		else {
@@ -444,9 +451,12 @@ public class Annotation {
 		this.likelyArtifact = likelyArtifact;
 	}
 
+	public Boolean getForceHide() {
+		return forceHide;
+	}
 
+	public void setForceHide(Boolean forceHide) {
+		this.forceHide = forceHide;
+	}
 
-
-
-	
 }

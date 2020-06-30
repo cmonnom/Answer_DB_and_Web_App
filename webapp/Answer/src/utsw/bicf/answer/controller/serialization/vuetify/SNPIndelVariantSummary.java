@@ -93,6 +93,10 @@ public class SNPIndelVariantSummary extends Summary<SNPIndelVariantRow> {
 		iconFlags.setAlign("left");
 		iconFlags.setIsSafe(true);
 		headers.add(iconFlags);
+		Header highestTier = new Header(new String[] {"Highest", "Tier"}, "highestTier");
+		highestTier.setAlign("right");
+		highestTier.setIsSafe(true);
+		headers.add(highestTier);
 		Header exonNb = new Header("Exon #", "rank");
 		exonNb.setIsSafe(true);
 		headers.add(exonNb);

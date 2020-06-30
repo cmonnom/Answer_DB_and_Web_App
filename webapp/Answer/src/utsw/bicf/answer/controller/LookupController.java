@@ -53,6 +53,7 @@ import utsw.bicf.answer.db.api.utils.OncoKBRequestUtils;
 import utsw.bicf.answer.db.api.utils.OncotreeRequestUtils;
 import utsw.bicf.answer.db.api.utils.ReactomeRequestUtils;
 import utsw.bicf.answer.db.api.utils.UniProtRequestUtils;
+import utsw.bicf.answer.model.GenieMutation;
 import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.MSKHotspot;
@@ -121,6 +122,7 @@ public class LookupController {
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getFusionSummary", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getHighestIndidenceAbsFusion", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getHighestIndidencePctFusion", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getBreakPointPlot", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 
@@ -426,7 +428,8 @@ public class LookupController {
 	@ResponseBody
 	public String getVariantSummary(Model model, HttpSession session, @RequestParam String geneTerm,
 			@RequestParam String oncotreeCode, @RequestParam String hgvs, @RequestParam(defaultValue="") String originalVariant, 
-			@RequestParam String databases) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+			@RequestParam String databases, @RequestParam String chr,
+			@RequestParam Integer posGRC38, @RequestParam Integer posHG19) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
 		try {
 			AjaxResponse response = new AjaxResponse();
 			response.setIsAllowed(true);
@@ -434,7 +437,25 @@ public class LookupController {
 
 			LookupVariantDashboardSummary dashboardSummary = new LookupVariantDashboardSummary();
 			
-			String variantName = parseVariantNotation(hgvs, originalVariant);
+			
+//			String variantName = parseVariantNotation(hgvs, originalVariant);
+//			final String finalVariantName = variantName;
+			
+			String[] variantNameArray = parseVariantNotationToArray(hgvs, originalVariant);
+			String variantName = "";
+			
+			if (posHG19 != -1 && (variantNameArray[0] == null || !variantNameArray[0].equals(variantNameArray[0].toUpperCase()) || variantNameArray[2] == null || variantNameArray[2].length() > 1 || !variantNameArray[2].equals(variantNameArray[2].toUpperCase())) ) {
+				variantNameArray = parseVariantNotationToArray(chr.replace("chr",  ""), geneTerm, posHG19);
+				if (variantNameArray != null) {
+					variantName = variantNameArray[0] + variantNameArray[1] + variantNameArray[2];
+				}
+				else {
+					variantName = parseVariantNotation(hgvs, originalVariant);
+				}
+			}
+			else {
+				variantName = parseVariantNotation(hgvs, originalVariant);
+			}
 			final String finalVariantName = variantName;
 			
 			LookupGeneSummaries summaryResponse = new LookupGeneSummaries();
@@ -490,7 +511,7 @@ public class LookupController {
 				@Override
 				public void run() {
 					try {
-						LookupOncoKBVariantSummary summary = getOncoKBData(geneTerm, oncotreeCode, response, variantName);
+						LookupOncoKBVariantSummary summary = getOncoKBData(geneTerm, oncotreeCode, response, finalVariantName);
 						dashboardSummary.setOncoKBSummary(summary);
 					} catch (URISyntaxException | IOException | JAXBException | SAXException
 							| ParserConfigurationException e) {
@@ -506,7 +527,7 @@ public class LookupController {
 				public void run() {
 					try {
 						FasmicRequestUtils fasmicUtils = new FasmicRequestUtils(fasmicProps, otherProps);
-						LookupSummary summary = fasmicUtils.getVariantSummary(geneTerm, variantName);
+						LookupSummary summary = fasmicUtils.getVariantSummary(geneTerm, finalVariantName);
 						dashboardSummary.setFasmicSummary(summary);
 					} catch (URISyntaxException | IOException | JAXBException | SAXException
 							| ParserConfigurationException e) {
@@ -566,7 +587,7 @@ public class LookupController {
 						tumorType = oncotreeUtils.getOncotreeTumorType(oncotreeCode);
 						if (tumorType != null) {
 							ClinicalTrialsRequestUtils clinicalTrialUtils = new ClinicalTrialsRequestUtils(clinicalTrialProps, otherProps);
-							List<ClinicalTrial> clinicalTrials = clinicalTrialUtils.getClinicalTrials(geneTerm, variantName, tumorType);
+							List<ClinicalTrial> clinicalTrials = clinicalTrialUtils.getClinicalTrials(geneTerm, finalVariantName, tumorType, false);
 							if (clinicalTrials != null && !clinicalTrials.isEmpty()) {
 								dashboardSummary.setClinicalTrials(clinicalTrials);
 								dashboardSummary.setClinicalTrialStudyUrl(clinicalTrialProps.getStudyUrl());
@@ -712,7 +733,7 @@ public class LookupController {
 //				}
 //			};
 //			executor.execute(uniprotWorker);
-//			
+			
 //			Runnable hotspotWorker = new Runnable() {
 //				@Override
 //				public void run() {
@@ -738,7 +759,7 @@ public class LookupController {
 						tumorType = oncotreeUtils.getOncotreeTumorType(oncotreeCode);
 						if (tumorType != null) {
 							ClinicalTrialsRequestUtils clinicalTrialUtils = new ClinicalTrialsRequestUtils(clinicalTrialProps, otherProps);
-							List<ClinicalTrial> clinicalTrials = clinicalTrialUtils.getClinicalTrials(geneTerm, variantName, tumorType);
+							List<ClinicalTrial> clinicalTrials = clinicalTrialUtils.getClinicalTrials(geneTerm, variantName, tumorType, false);
 							if (clinicalTrials != null && !clinicalTrials.isEmpty()) {
 								dashboardSummary.setClinicalTrials(clinicalTrials);
 								dashboardSummary.setClinicalTrialStudyUrl(clinicalTrialProps.getStudyUrl());
@@ -848,6 +869,30 @@ public class LookupController {
 			};
 			executor.execute(oncoKBWorker);
 			
+			Runnable clinicalTrialWorker = new Runnable() {
+				@Override
+				public void run() {
+					OncotreeRequestUtils oncotreeUtils = new OncotreeRequestUtils(oncotreeProps, otherProps);
+					OncotreeTumorType tumorType;
+					try {
+						tumorType = oncotreeUtils.getOncotreeTumorType(oncotreeCode);
+						if (tumorType != null) {
+							ClinicalTrialsRequestUtils clinicalTrialUtils = new ClinicalTrialsRequestUtils(clinicalTrialProps, otherProps);
+							List<ClinicalTrial> clinicalTrials = clinicalTrialUtils.getClinicalTrials(geneFive, geneThree, tumorType, true);
+							if (clinicalTrials != null && !clinicalTrials.isEmpty()) {
+								dashboardSummary.setClinicalTrials(clinicalTrials);
+								dashboardSummary.setClinicalTrialStudyUrl(clinicalTrialProps.getStudyUrl());
+							}
+						}
+					} catch (UnsupportedOperationException | URISyntaxException | IOException | JAXBException
+							| SAXException | ParserConfigurationException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			};
+			executor.execute(clinicalTrialWorker);
+			
 			executor.shutdown();
 			executor.awaitTermination(10, TimeUnit.SECONDS);
 
@@ -891,6 +936,16 @@ public class LookupController {
 			variantName = LookupUtils.aminoAcid3To1Array(originalVariant);
 		}
 		return variantName;
+	}
+	
+	private String[] parseVariantNotationToArray(String chr, String hugoSymbol, Integer position) {
+		List<GenieMutation> aaNotations = modelDAO.getGenieMutationFromPostion(chr, hugoSymbol, position);
+		if (aaNotations != null && !aaNotations.isEmpty()) {
+			String origin = aaNotations.get(0).getAminoAcidNotation().substring(0, 1);
+			String pos = aaNotations.get(0).getAminoAcidNotation().substring(1);
+			return new String[] {origin, pos, aaNotations.get(0).getVariantChange()};
+		}
+		return null;
 	}
 	
 //	@RequestMapping("/getVariantOncoKB")
@@ -1258,12 +1313,21 @@ public class LookupController {
 	public String getCodonDiseaseDistributionData(Model model, HttpSession session, @RequestParam String geneTerm,
 			@RequestParam String oncotreeCode, @RequestParam String hgvs, 
 			@RequestParam(defaultValue="") String originalVariant,
+			@RequestParam String chr,
+			@RequestParam Integer posGRC38, @RequestParam Integer posHG19,
 			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
 		try {
 			AjaxResponse response = new AjaxResponse();
 			response.setIsAllowed(true);
 			response.setSuccess(false);
-			String[] variantName = parseVariantNotationToArray(hgvs, originalVariant);
+			String[] variantName = null;
+			if (posHG19 != -1) {
+				variantName = parseVariantNotationToArray(chr.replace("chr",  ""), geneTerm, posHG19);
+				
+			}
+			else {
+				variantName = parseVariantNotationToArray(hgvs, originalVariant);
+			}
 			if (variantName != null) {
 				List<Trace> traces = modelDAO.getCodonDiseaseDistribution(geneTerm, variantName[0] + variantName[1]);
 				if (traces != null && !traces.isEmpty()) {
@@ -1443,6 +1507,44 @@ public class LookupController {
 						+ "<br><b>Total Cases:</b> " + d.getTotal()
 						+ "<br><b>Percent:</b> " + pct);
 					}
+				}
+				chart.setTrace(trace);
+				return chart.createObjectJSON();
+			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@RequestMapping("/getBreakPointPlot")
+	@ResponseBody
+	public String getBreakPointPlot(Model model, HttpSession session,
+			@RequestParam String geneFive, @RequestParam String geneThree,
+			@RequestParam String plotId, @RequestParam boolean plotFive) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(false);
+			final String fiveTrimmed = geneFive.trim();
+			final String threeTrimmed = geneThree.trim();
+			List<GenericBarPlotData> data = modelDAO.getCosmicExonBreakpointForGene(fiveTrimmed, threeTrimmed, plotFive);
+			int total = 0;
+			for (GenericBarPlotData d : data) {
+				total += d.getX().intValue();
+			}
+			if (data != null && !data.isEmpty()) {
+				BarPlotData chart = new BarPlotData();
+				chart.setPlotId(plotId);
+				chart.setPlotTitle((plotFive ? fiveTrimmed : threeTrimmed) + " Breakpoints");
+				Trace trace = new Trace();
+				for (int i = data.size() -1; i >=0; i--) {
+					GenericBarPlotData d = data.get(i);
+					trace.addX(d.getX());
+					trace.addY("Exon " + d.getY());
+					String pct = String.format("%.2f", d.getX().floatValue() / total * 100);
+					trace.addLabel("<b>Observations:</b> " + d.getX() + "<br><b>Percent:</b> " + pct);
 				}
 				chart.setTrace(trace);
 				return chart.createObjectJSON();

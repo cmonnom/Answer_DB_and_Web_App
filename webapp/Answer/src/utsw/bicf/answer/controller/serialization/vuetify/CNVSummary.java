@@ -92,6 +92,10 @@ public class CNVSummary extends Summary<CNVRow> {
 		iconFlags.setAlign("left");
 		iconFlags.setIsSafe(true);
 		headers.add(iconFlags);
+		Header highestTier = new Header(new String[] {"Highest", "Tier"}, "highestTier");
+		highestTier.setAlign("right");
+		highestTier.setIsSafe(true);
+		headers.add(highestTier);
 		Header start = new Header("Start", "start");
 		start.setWidth("100px");
 		start.setIsSafe(true);

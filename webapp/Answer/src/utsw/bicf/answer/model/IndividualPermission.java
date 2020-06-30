@@ -22,6 +22,7 @@ public class IndividualPermission {
 	public static final String CAN_SELECT = "canSelect";
 	public static final String CAN_ASSIGN = "canAssign";
 	public static final String CAN_REVIEW = "canReview";
+	public static final String CAN_HIDE = "canHide";
 	public static final String ALL_NOTIFICATIONS = "allNotifications";
 	
 	public IndividualPermission() {
@@ -51,6 +52,9 @@ public class IndividualPermission {
 	
 	@Column(name="can_review")
 	Boolean canReview;
+	
+	@Column(name="can_hide")
+	Boolean canHide;
 	
 	@Column(name="receive_all_notifications")
 	Boolean receiveAllNotifications;
@@ -127,5 +131,14 @@ public class IndividualPermission {
 	public static String getAllNotifications() {
 		return ALL_NOTIFICATIONS;
 	}
+
+	public Boolean getCanHide() {
+		return canHide;
+	}
+
+	public void setCanHide(Boolean canHide) {
+		this.canHide = canHide;
+	}
+
 	
 }

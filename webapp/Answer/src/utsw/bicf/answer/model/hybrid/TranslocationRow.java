@@ -45,6 +45,8 @@ public class TranslocationRow {
 	String ftlSomaticStatus;
 	Integer normalDnaReads;
 	
+	String highestTier;
+	
 	public TranslocationRow(Translocation translocation, Map<Integer, AnnotatorSelection> selectionPerAnnotator) {
 		this.oid = translocation.getMongoDBId().getOid();
 		this.fusionName = translocation.getFusionName();
@@ -91,13 +93,17 @@ public class TranslocationRow {
 				icons.add(new VuetifyIcon("check_circle", "green", "Passed QC"));
 			}
 		}
-		if (utswAnnotated != null && utswAnnotated) {
-			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
+//		if (utswAnnotated != null && utswAnnotated) {
+//			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
+//		}
+		if (utswAnnotated == null || !utswAnnotated) {
+			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
 		}
+		
 		iconFlags = new FlagValue(icons);
 		
 		this.selectionPerAnnotator = selectionPerAnnotator;
-		
+		this.highestTier = translocation.getHighestTier();
 	}
 
 

@@ -118,6 +118,7 @@ public class Variant {
 	Boolean hasRelatedVariants;
 	
 	String tier;
+	String highestTier;
 	
 	Boolean isOncokbVariant;
 	String impact;
@@ -938,6 +939,16 @@ public class Variant {
 
 	public Map<Integer, Boolean> getAnnotatorSelections() {
 		return annotatorSelections;
+	}
+
+
+	public String getHighestTier() {
+		return highestTier;
+	}
+
+
+	public void setHighestTier(String highestTier) {
+		this.highestTier = highestTier;
 	}
 
 

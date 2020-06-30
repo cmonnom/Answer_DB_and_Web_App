@@ -66,6 +66,7 @@ public class SNPIndelVariantRow {
 	Boolean gnomadLcr;
 	String gnomadHg19Variant;
 	String deltaTumorNormal;
+	String highestTier;
 	
 	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
 	
@@ -204,15 +205,17 @@ public class SNPIndelVariantRow {
 //		else {
 //			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No MDA Annotations"));
 //		}
-		if (utswAnnotated != null && utswAnnotated) {
-			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
-		}
-//		else {
-//			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
+//		if (utswAnnotated != null && utswAnnotated) {
+//			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 //		}
+		if (utswAnnotated == null || !utswAnnotated) {
+			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
+		}
 		iconFlags = new FlagValue(icons);
 		
 		this.selectionPerAnnotator = selectionPerAnnotator;
+		
+		this.highestTier = variant.getHighestTier();
 		
 	}
 
@@ -574,6 +577,10 @@ public class SNPIndelVariantRow {
 
 	public String getDeltaTumorNormal() {
 		return deltaTumorNormal;
+	}
+
+	public String getHighestTier() {
+		return highestTier;
 	}
 
 

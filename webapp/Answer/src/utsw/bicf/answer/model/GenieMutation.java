@@ -49,6 +49,15 @@ public class GenieMutation {
 	
 	@Column(name="variant_type")
 	String variantType;
+	
+	@Column(name="chr")
+	String chr;
+	
+	@Column(name="start_pos")
+	Integer startPos;
+	
+	@Column(name="end_pos")
+	Integer endPos;
 
 	public Integer getGenieMutationId() {
 		return genieMutationId;
@@ -136,6 +145,30 @@ public class GenieMutation {
 
 	public void setVariantType(String variantType) {
 		this.variantType = variantType;
+	}
+
+	public String getChr() {
+		return chr;
+	}
+
+	public void setChr(String chr) {
+		this.chr = chr;
+	}
+
+	public Integer getStartPos() {
+		return startPos;
+	}
+
+	public void setStartPos(Integer startPos) {
+		this.startPos = startPos;
+	}
+
+	public Integer getEndPos() {
+		return endPos;
+	}
+
+	public void setEndPos(Integer endPos) {
+		this.endPos = endPos;
 	}
 
 }

@@ -30,6 +30,8 @@ public class CNVRow {
 	
 	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
 	
+	String highestTier;
+	
 	public CNVRow(CNV cnv, Map<Integer, AnnotatorSelection> selectionPerAnnotator) {
 		this.oid = cnv.getMongoDBId().getOid();
 		this.genes = formatHTMLGenes(cnv.getGenes().stream().sorted().collect(Collectors.toList()));
@@ -49,15 +51,16 @@ public class CNVRow {
 		if (mdaAnnotated) {
 			icons.add(new VuetifyIcon("mdi-message-bulleted", "green", "MDA Annotations"));
 		}
-		if (utswAnnotated != null && utswAnnotated) {
-			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
-		}
-//		else {
-//			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
+//		if (utswAnnotated != null && utswAnnotated) {
+//			icons.add(new VuetifyIcon("mdi-message-bulleted", "indigo darken-4", "UTSW Annotations"));
 //		}
+		if (utswAnnotated == null || !utswAnnotated) {
+			icons.add(new VuetifyIcon("mdi-message-bulleted-off", "grey", "No UTSW Annotations"));
+		}
 		iconFlags = new FlagValue(icons);
 		
 		this.selectionPerAnnotator = selectionPerAnnotator;
+		this.highestTier = cnv.getHighestTier();
 	}
 
 	public static String formatHTMLGenes(List<String> genes) {

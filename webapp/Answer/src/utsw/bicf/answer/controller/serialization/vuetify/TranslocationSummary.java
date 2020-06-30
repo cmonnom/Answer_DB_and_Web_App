@@ -83,6 +83,11 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 		iconFlags.setIsSafe(true);
 		headers.add(iconFlags);
 		
+		Header highestTier = new Header(new String[] {"Highest", "Tier"}, "highestTier");
+		highestTier.setAlign("right");
+		highestTier.setIsSafe(true);
+		headers.add(highestTier);
+		
 		Header filters = new Header("QC Tags", "filters");
 //		leftGene.setWidth("100px");
 		filters.setIsSafe(true);

@@ -55,6 +55,8 @@ public class Translocation {
 	String ftlSomaticStatus;
 	Integer normalDnaReads;
 	
+	String highestTier;
+	
 	public Translocation() {
 		
 	}
@@ -309,6 +311,14 @@ public class Translocation {
 
 	public void setNormalDnaReads(Integer normalDnaReads) {
 		this.normalDnaReads = normalDnaReads;
+	}
+
+	public String getHighestTier() {
+		return highestTier;
+	}
+
+	public void setHighestTier(String highestTier) {
+		this.highestTier = highestTier;
 	}
 
 

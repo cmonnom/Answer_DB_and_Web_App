@@ -89,6 +89,11 @@ public class VirusSummary extends Summary<VirusRow> {
 		iconFlags.setIsSafe(true);
 		headers.add(iconFlags);
 		
+		Header highestTier = new Header(new String[] {"Highest", "Tier"}, "highestTier");
+		highestTier.setAlign("right");
+		highestTier.setIsSafe(true);
+		headers.add(highestTier);
+		
 		Header virusAcc = new Header("Accession ID", "virusAcc");
 		virusAcc.setIsSafe(true);
 		headers.add(virusAcc);

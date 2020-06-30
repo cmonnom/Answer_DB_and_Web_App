@@ -8,21 +8,47 @@ Vue.component('utsw-annotation-card', {
         caseAgnostic: { default: false, type: Boolean },
         currentUserId: { default: null, type: Number},
         canCopy: { default: false, type: Boolean },
+        canHide: { default: false, type: Boolean }
     },
-    template: `<div>
+    template: /*html*/`<div>
     <v-card>
-    <v-card-text :class="['subheading', !annotation.canEdit && caseAgnostic ? 'blue-grey lighten-3' : '']">
+    <v-card-text :class="['subheading', !annotation.canEdit && caseAgnostic ? 'blue-grey lighten-3' : '', aboutToHide ? 'alpha-54' : '']">
         <v-container grid-list-md fluid class="white" pl-2 pr-2 pt-2 pb-2>
             <v-layout row wrap>
-                <v-flex xs10 class="pt-2">
+                <v-flex :class="[canHide? 'xs9' : 'xs10', 'pt-2']">
                     From {{ annotation.fullName }}
-                    <span v-text="parseDate(annotation)" :class="annotation.warningLevel == 2 ? 'error--text font-weight-bold' : ''"></span>
+                    <span slot="activator" v-if="!annotation.warningLevel || annotation.warningLevel == 0"
+                    v-text="parseDate(annotation)"></span>
+                    <v-tooltip bottom v-if="annotation.warningLevel == 2">
+                    <span slot="activator" v-text="parseDate(annotation)" class="orange--text text--darken-1 font-weight-bold"></span>
+                    <span>This Therapy card is fairly old.<br/>
+                    You may want to update its information before using it in a report.</span>
+                    </v-tooltip>
+                    <v-tooltip bottom v-if="annotation.warningLevel == 3">
+                    <span slot="activator">
+                    <span v-text="parseDate(annotation)" 
+                    class="error--text font-weight-bold"></span>
+                    <v-icon color="error">mdi-alert-decagram</v-icon>
+                    </span>
+                    <span>This Therapy card is very old.<br/>
+                    You probalby should not use it in a report and create a new one<br/>
+                    with updated information.</span>
+                    </v-tooltip>
+                </v-flex>
+                <v-flex xs1 class="pt-0" v-if="canHide">
+                <v-tooltip bottom>
+                <v-btn color="primary" slot="activator" @click="aboutToHide = true" flat icon
+                :disabled="noEdit || aboutToHide" class="mr-0">
+                <v-icon>mdi-delete</v-icon>
+                </v-btn>
+                    <span>Delete this annotation permanently, for all users</span>
+                    </v-tooltip>
                 </v-flex>
                 <v-flex xs1 class="pt-0">
                 <!-- TODO disable copying for CNV annotations for now. Need to handle Chomosomal vs focal -->
                 <v-tooltip bottom>
                 <v-btn color="primary" slot="activator" @click="copyAnnotation" flat icon
-                :disabled="noEdit || !canCopy">
+                :disabled="noEdit || !canCopy" class="ml-0">
                 <v-icon>mdi-content-copy</v-icon>
                 </v-btn>
                     <span>Create a copy of this annotation</span>
@@ -119,11 +145,21 @@ Vue.component('utsw-annotation-card', {
             </v-layout>
         </v-container>
     </v-card-text>
+    <v-card-actions v-if="aboutToHide">
+        <span class="pr-2">This card will be deleted permanently, are you sure?</span>
+        <v-btn @click="hideAnnotation" class="success">
+            Yes, Delete
+        </v-btn>
+        <v-btn @click="aboutToHide = false" class="error">
+            No, Cancel
+        </v-btn>
+    </v-card-actions>
 </v-card>
 
 </div>`,
     data() {
         return {
+            aboutToHide: false
         }
     },
     methods: {
@@ -161,6 +197,12 @@ Vue.component('utsw-annotation-card', {
         copyAnnotation() {
             if (this.canCopy) {
                 this.$emit("copy-annotation", this.annotation, this.variantType);
+            }
+        },
+        hideAnnotation() {
+            if (this.canHide) {
+                this.aboutToHide = false;
+                this.$emit("hide-annotation", this.annotation, this.variantType);
             }
         }
     },

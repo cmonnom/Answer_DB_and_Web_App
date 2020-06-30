@@ -763,30 +763,30 @@ public class RequestUtils {
 		return apiResponse;
 	}
 
-	public AnnotationSearchResult getGetAnnotationsByGeneAndVariant(String gene, String variant) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
-		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("searchannotations/");
-		URI uri = new URI(sbUrl.toString());
-
-		requestPost = new HttpPost(uri);
-		addAuthenticationHeader(requestPost);
-		SearchSNPAnnotation search = new SearchSNPAnnotation();
-		search.setGeneSymbolOrSynonym(gene);
-		search.setVariant(variant);
-		
-		requestPost.setEntity(new StringEntity(search.createObjectJSON(), ContentType.APPLICATION_JSON));
-
-		HttpResponse response = client.execute(requestPost);
-
-		int statusCode = response.getStatusLine().getStatusCode();
-		if (statusCode == HttpStatus.SC_OK) {
-			AnnotationSearchResult result = mapper.readValue(response.getEntity().getContent(), AnnotationSearchResult.class);
-			this.closePostRequest();
-			return result;
-		}
-		this.closePostRequest();
-		return null;
-	}
+//	public AnnotationSearchResult getGetAnnotationsByGeneAndVariant(String gene, String variant) throws URISyntaxException, JsonParseException, JsonMappingException, UnsupportedOperationException, IOException {
+//		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+//		sbUrl.append("searchannotations/");
+//		URI uri = new URI(sbUrl.toString());
+//
+//		requestPost = new HttpPost(uri);
+//		addAuthenticationHeader(requestPost);
+//		SearchSNPAnnotation search = new SearchSNPAnnotation();
+//		search.setGeneSymbolOrSynonym(gene);
+//		search.setVariant(variant);
+//		
+//		requestPost.setEntity(new StringEntity(search.createObjectJSON(), ContentType.APPLICATION_JSON));
+//
+//		HttpResponse response = client.execute(requestPost);
+//
+//		int statusCode = response.getStatusLine().getStatusCode();
+//		if (statusCode == HttpStatus.SC_OK) {
+//			AnnotationSearchResult result = mapper.readValue(response.getEntity().getContent(), AnnotationSearchResult.class);
+//			this.closePostRequest();
+//			return result;
+//		}
+//		this.closePostRequest();
+//		return null;
+//	}
 
 	public void caseReadyForReview(AjaxResponse ajaxResponse, String caseId) throws URISyntaxException, ClientProtocolException, IOException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());

@@ -337,8 +337,8 @@ Vue.component('lookup-panel-plot-utils', {
                 case "cnvPctPlot": return "Percent of Cases";
                 case "fusionAbsPlot": return "Number of Cases";
                 case "fusionPctPlot": return "Percent of Cases";
-                case "fusionBreakpointFivePlot": return "Percent of Annotated Breakpoint";
-                case "fusionBreakpointThreePlot": return "Percent of Annotated Breakpoint";
+                case "fusionBreakpointFivePlot": return "Number of Annotated Breakpoint";
+                case "fusionBreakpointThreePlot": return "Number of Annotated Breakpoint";
 
             }
         },
@@ -355,9 +355,7 @@ Vue.component('lookup-panel-plot-utils', {
                 case "fusionAbsPlot": return "Cancer Type";
                 case "fusionPctPlot": return "Cancer Type";
                 case "fusionBreakpointFivePlot": return "Breakpoint";
-                case "fusionBreakpointThreePlot": return "fusionBreakpointFivePlot";
-
-
+                case "fusionBreakpointThreePlot": return "Breakpoint";
             }
         },
         handleDialogs(response, callback) {

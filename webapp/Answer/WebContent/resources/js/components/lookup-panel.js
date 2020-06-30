@@ -4,6 +4,9 @@ Vue.component('lookup-panel', {
         standalone: {default: true, type:Boolean},
         oncotreeItems: {default: () => [], type:Array},
         originalVariant: {default: "", type:String},
+        originalChr: {default: "", type:String},
+        originalPos: {default: -1, type:Number},
+        originalPosOldBuild: {default: -1, type:Number},
     },
     template: /*html*/`<div ref="lookupPanel">
 
@@ -243,6 +246,8 @@ Vue.component('lookup-panel', {
                     <v-flex xs12 v-show="currentlyActive == 'Variant'" >
                         <lookup-panel-variant ref="variantPanel"
                             :standalone="standalone" :original-variant="originalVariant"
+                            :original-chr="originalChr" :original-pos="originalPos"
+                            :original-pos-old-build="originalPosOldBuild"
                             :current-oncotree-code="currentOncotreeCode" :current-variant="currentVariant"
                             :current-gene="currentGene" @handleDialogs="handleDialogs"
                             :last-oncotree-code="lastOncotreeCode" :last-variant="lastVariant"
