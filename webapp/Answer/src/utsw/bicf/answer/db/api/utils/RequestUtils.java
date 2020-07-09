@@ -485,7 +485,7 @@ public class RequestUtils {
 		URI uri = new URI(sbUrl.toString());
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
-		System.out.println(mapper.writeValueAsString(annotations));
+//		System.out.println(mapper.writeValueAsString(annotations));
 		requestPost.setEntity(new StringEntity(mapper.writeValueAsString(annotations), ContentType.APPLICATION_JSON));
 		HttpResponse response = client.execute(requestPost);
 
@@ -598,7 +598,7 @@ public class RequestUtils {
 		URI uri = new URI(sbUrl.toString());
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
-		System.out.println(mapper.writeValueAsString(annotationToSave));
+//		System.out.println(mapper.writeValueAsString(annotationToSave));
 		requestPost.setEntity(new StringEntity(mapper.writeValueAsString(annotationToSave), ContentType.APPLICATION_JSON));
 		HttpResponse response = client.execute(requestPost);
 
@@ -2163,6 +2163,35 @@ public class RequestUtils {
 		}
 		this.closeGetRequest();
 		return mongoDBResponse;
+	}
+
+	public void saveFusion(AjaxResponse ajaxResponse, Translocation fusionToSave, String caseId) throws ClientProtocolException, IOException, URISyntaxException {
+		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
+		sbUrl.append("case/").append(caseId).append("/translocation");
+		URI uri = new URI(sbUrl.toString());
+
+		System.out.println(fusionToSave.createObjectJSON());
+		HttpResponse response = null;
+		requestPost = new HttpPost(uri);
+		addAuthenticationHeader(requestPost);
+		requestPost.setEntity(new StringEntity(fusionToSave.createObjectJSON(), ContentType.APPLICATION_JSON));
+		response = client.execute(requestPost);
+
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == HttpStatus.SC_OK) {
+			AjaxResponse dbResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
+			if (dbResponse.getSuccess()) {
+				ajaxResponse.setSuccess(true);
+			}
+			else {
+				ajaxResponse.setSuccess(false);
+				ajaxResponse.setMessage(dbResponse.getMessage());
+			}
+		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Something went wrong");
+		}
+		this.closePostRequest();
 	}
 
 }

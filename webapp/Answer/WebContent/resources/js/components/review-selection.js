@@ -23,6 +23,72 @@ Vue.component('review-selection', {
         openReportUrl: {default: "", type: String}
     },
     template: /*html*/`<v-card class="soft-grey-background">
+
+    <!-- copy to clipboard dialog -->
+    <v-dialog v-model="autoVUSResultVisible" max-width="50%" scrollable>
+    <v-card>
+    <v-card-title class="title primary white--text">
+    Summary of Auto-selecting VUS Annotations
+    </v-card-title>
+        <v-card-text class="pl-3 pr-3 pt-3 subheading">
+        <v-layout row wrap>
+            <v-flex xs12 md6 lg4>
+                <v-card flat>
+                <v-tooltip top>
+                    <div slot="activator"><span>Success </span><v-icon class="blue--text">mdi-thumb-up</v-icon>:</div>
+                    <span>A tier 3 gene function annotation has been selected.</span>
+                    </v-tooltip>
+                    <v-card-text>
+                        <v-list dense>
+                            <v-list-tile v-for="notation in successVUSNotations" :key="notation">
+                            {{ notation }}
+                            </v-list-tile>
+                        </v-list>
+                    </v-card-text>
+                </v-card>
+            </v-flex>
+            <v-flex xs12 md6 lg4>
+                <v-card flat>
+                    <v-tooltip top>
+                    <div class="pt-1" slot="activator"><span >Error </span><v-icon class="amber--text align-text-top">mdi-thumb-down</v-icon>:</div>
+                    <span>Either there is no <b>tier 3 gene function</b> card OR<br/>
+                     a card has a higher tier.<br/>
+                    You need at least one tier 3 gene function card for the variant annotation to be auto-selected.</span>
+                    </v-tooltip>
+                    <v-card-text>
+                        <v-list dense>
+                            <v-list-tile v-for="notation in errorVUSNotations" :key="notation">
+                            {{ notation }}</v-list-tile>
+                        </v-list>
+                    </v-card-text>
+                </v-card>
+            </v-flex>
+            <v-flex xs12 md6 lg4>
+                <v-card flat>
+                <v-tooltip top>
+                <div slot="activator"><span>Unchanged </span><v-icon>mdi-equal-box</v-icon>:</div>
+                <span>At least one annotation has already be selected by the case owner manually.<br/>
+                (non VUS will also be listed here)</span>
+                </v-tooltip>
+                    <v-card-text>
+                        <v-list dense>
+                            <v-list-tile v-for="notation in unchangedVUSNotations" :key="notation">
+                            {{ notation }}</v-list-tile>
+                        </v-list>
+                    </v-card-text>
+                </v-card>
+            </v-flex>
+        </v-layout>
+        
+        </v-card-text>
+        <v-card-actions>
+            <v-btn color="error" @click="autoVUSResultVisible = false">
+                Close
+            </v-btn>
+        </v-card-actions>
+    </v-card>
+    </v-dialog>
+
     <v-toolbar dense dark color="primary">
         <v-menu offset-y offset-x class="ml-0">
             <v-btn slot="activator" flat icon dark>
@@ -191,6 +257,25 @@ Vue.component('review-selection', {
             <data-table disable-sticky-header ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'SNP/Indel Variants from Case Owner ' + caseOwnerName"
             initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
             @refresh-requested="handleRefresh()">
+            <v-fade-transition slot="action1">
+                <v-tooltip bottom >
+                    <v-btn slot="activator" flat icon @click="autoSelectVUSs" color="white"
+                    :loading="autoVUSLoading" :disabled="caseOwnerId != userId">
+                        <v-icon>mdi-auto-fix</v-icon>
+                    </v-btn>
+                    <span v-if="caseOwnerId == userId">Auto Select VUS annotations</span>
+                    <span v-else>Only the case owner can use this feature</span>
+                </v-tooltip>
+            </v-fade-transition>
+            <v-list-tile avatar @click="autoSelectVUSs" slot="action1MenuItem"
+            :disabled="autoVUSLoading || caseOwnerId != userId">
+                <v-list-tile-avatar>
+                    <v-icon>mdi-auto-fix</v-icon>
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                    <v-list-tile-title>Auto Select VUS annotations</v-list-tile-title>
+                </v-list-tile-content>
+            </v-list-tile>
             </data-table>  
 
             <v-tooltip top v-for="(otherAnnotator, index) in otherAnnotatorSNPs" :key="otherAnnotator.userId" class="pr-2" v-if="userId == caseOwnerId">
@@ -332,7 +417,12 @@ Vue.component('review-selection', {
             variantIdsFTLForCaseOwner: {},
             otherAnnotatorVIRs: [],
             variantIdVIRPerAnnotator: {},
-            variantIdsVIRForCaseOwner: {}
+            variantIdsVIRForCaseOwner: {},
+            autoVUSResultVisible: false,
+            successVUSNotations: [],
+            errorVUSNotations: [],
+            unchangedVUSNotations: [],
+            autoVUSLoading: false
         }
     },
     methods: {
@@ -691,6 +781,50 @@ Vue.component('review-selection', {
         noNewVariantFromAnnotator(type, otherAnnotator) {
             let diffIds = this.calcSelectionDiff(type, otherAnnotator.userId);
             return diffIds.length == 0;
+        },
+        autoSelectVUSs() {
+            if (this.autoVUSLoading || caseOwnerId != userId) {
+                return;
+            }
+            this.autoVUSLoading = true;
+            this.successVUSNotations = [];
+            this.errorVUSNotations = [];
+            this.unchangedVUSNotations = [];
+            this.$emit("auto-select-vus");
+        },
+        openAutoSelectVUSSummary(summary) {
+            this.successVUSNotations = summary.successNotation;
+            this.errorVUSNotations = summary.failedNotation;
+            this.unchangedVUSNotations = summary.untouchedNotation;
+            
+            this.updateSNPTablewithVUSResult(summary);
+            this.autoVUSLoading = false;
+            
+            this.autoVUSResultVisible = true;
+        },
+        updateSNPTablewithVUSResult(summary) {
+            var items = this.$refs.snpVariantsSelectedReviewer.items;
+            var successFlag = {temporary: true, chip: false, color: "blue", iconName: "mdi-thumb-up", size: null, tooltip: "Tier 3 gene annotation selected"}; 
+            var errorFlag = {temporary: true, chip: false, color: "amber", iconName: "mdi-thumb-down", size: null, tooltip: "Could not auto-select"}; 
+            var untouchedFlag = {temporary: true, chip: false, color: null, iconName: "mdi-equal-box", size: null, tooltip: "No change"}; 
+            for (var i=0; i < items.length; i++) {
+                var item = items[i];
+                for (var j =0; j < item.iconFlags.iconFlags.length; j++) {
+                    if (item.iconFlags.iconFlags[j].temporary) {
+                        // remove the previous flag if any
+                        item.iconFlags.iconFlags.splice(j, 1);
+                    }
+                }
+                if (summary.successOids.indexOf(item.oid) > -1) {
+                    item.iconFlags.iconFlags.push(successFlag);
+                }
+                else if (summary.failedOids.indexOf(item.oid) > -1) {
+                    item.iconFlags.iconFlags.push(errorFlag);
+                }
+                else if (summary.untouchedOids.indexOf(item.oid) > -1) {
+                    item.iconFlags.iconFlags.push(untouchedFlag);
+                }
+            }
         }
     },
     computed: {

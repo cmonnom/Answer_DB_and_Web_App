@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.model.extmapping.clinicaltrials.ClinicalTrial;
 import utsw.bicf.answer.model.extmapping.clinicaltrials.ClinicalTrialResponse;
 import utsw.bicf.answer.model.extmapping.oncotree.OncotreeTumorType;
@@ -90,7 +92,7 @@ public class ClinicalTrialsRequestUtils  extends AbstractRequestUtils{
 		StringBuilder sbUrl = new StringBuilder(clinicalTrialsProps.getApiUrl());
 		sbUrl.append("AREA[Condition]").append(condition)
 		.append(" AND AREA[EligibilityCriteria]").append(geneTerm)
-		.append(" AND AREA[EligibilityCriteria]").append(variant)
+		.append(" AND AREA[EligibilityCriteria]").append(StringEscapeUtils.escapeHtml4(variant))
 		.append("&fields=NCTId,BriefTitle,Condition,InterventionName&min_rnk=1&max_rnk=&fmt=json");
 		return sbUrl.toString().replaceAll(" ", "+");
 	}

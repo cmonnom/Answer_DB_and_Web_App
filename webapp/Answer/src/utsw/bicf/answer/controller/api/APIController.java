@@ -529,6 +529,36 @@ public class APIController {
 		return response.createObjectJSON();
 	}
 	
+	/**
+	 * Some exons breakpoints are missing when using transvar.
+	 * Until we can figure it out, you need to manually check the breakpoints
+	 * in Cosmic and run an update of the database like so:
+	 * 
+	 * update cosmic_fusion set three_exon = '9' where three_start = 140730665 and three_end = 140787584 and three_gene = 'BRAF' and three_exon is null;
+	 * update cosmic_fusion set three_exon = '11' where three_start = 140730665 and three_end = 140781693 and three_gene = 'BRAF' and three_exon is null;
+	 * update cosmic_fusion set three_exon = '8' where three_start = 140730665 and three_end = 140794467 and three_gene = 'BRAF' and three_exon is null;
+	 * update cosmic_fusion set three_exon = '10' where three_start = 140730665 and three_end = 140783157 and three_gene = 'BRAF' and three_exon is null;
+	 * update cosmic_fusion set five_exon = '8' where five_start = 140794308 and five_end = 140924928 and five_gene = 'BRAF' and five_exon is null;
+	 * update cosmic_fusion set three_exon = '7' where three_start = 140730665 and three_end = 140800481 and three_gene = 'BRAF' and three_exon is null;
+	 * update cosmic_fusion set three_exon = '9' where three_start = 188866200 and three_end = 188890671 and three_gene = 'LPP' and three_exon is null;
+	 * update cosmic_fusion set three_exon = '7' where three_start = 188708267 and three_end = 188890671 and three_gene = 'LPP' and three_exon is null;
+	 * update cosmic_fusion set five_exon = '8' where five_start = 188212933 and five_end = 188760282 and five_gene = 'LPP' and five_exon is null;
+	 * update cosmic_fusion set five_exon = '7' where five_start = 188212933 and five_end = 188708393 and five_gene = 'LPP' and five_exon is null;
+	 * update cosmic_fusion set five_exon = '17' where five_start = 1793293 and five_end = 1807038 and five_gene = 'FGFR3' and five_exon is null;
+	 * update cosmic_fusion set five_exon = '17' where five_start = 1793293 and five_end = 1806997 and five_gene = 'FGFR3' and five_exon is null;
+	 * update cosmic_fusion set five_exon = '13' where five_start = 23180210 and five_end = 23289710 and five_gene = 'BCR' and five_exon is null;
+	 * update cosmic_fusion set five_exon = '2' where five_start = 122498827 and five_end = 122501073 and five_gene = 'ZCCHC8' and five_exon is null;
+	 * update cosmic_fusion set three_exon = '3' where three_start = 6666477 and three_end = 6689072 and three_gene = 'ZNF384' and three_exon is null;
+	 * update cosmic_fusion set five_exon = '22' where five_start = 23180210 and five_end = 23311918 and five_gene = 'BCR' and five_exon is null;
+	 * 
+	 * @param model
+	 * @param token
+	 * @param cosmicExonDataPath
+	 * @param httpSession
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	@RequestMapping("/updateCosmicExonData")
 	@ResponseBody
 	public String updateCosmicExonData(Model model, @RequestParam String token, 

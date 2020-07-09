@@ -832,7 +832,7 @@ Vue.component('variant-details-dialog', {
             patientDetailsOncoTreeDiagnosis: {},
             currentlySelected: false,
             currentListOfCNVVisibleGenes: [],
-            addCNVDialogVisible: false
+            addCNVDialogVisible: false,
         }
 
     },

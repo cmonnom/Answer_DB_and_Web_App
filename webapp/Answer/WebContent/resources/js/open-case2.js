@@ -46,6 +46,12 @@ const OpenCase2 = {
     </v-card>
     </v-dialog>
 
+        <!-- add Fusion dialog -->
+        <v-dialog v-model="addFusionDialogVisible" max-width="500px" scrollable>
+        <add-fusion  @hide-add-fusion-panel="closeAddFusionDialog"
+        :no-edit="!canProceed('canAnnotate') || readonly"
+      @refresh-fusion-table="getAjaxData"></add-fusion>
+      </v-dialog>
 
     <v-dialog v-model="confirmationDialogVisible" max-width="500px">
         <v-card>
@@ -200,7 +206,8 @@ const OpenCase2 = {
         :unfilteredFTLsDict="unfilteredFTLsDict"
         :unfilteredVIRsDict="unfilteredVIRsDict"
         :readonly="readonly"
-        @accept-selection-from="addOtherAnnotatorSelection"></review-selection>
+        @accept-selection-from="addOtherAnnotatorSelection"
+        @auto-select-vus="autoSelectVUSs"></review-selection>
     </v-dialog>
 
 
@@ -735,12 +742,28 @@ const OpenCase2 = {
                         <span>Advanced Filtering</span>
                     </v-tooltip>
                 </v-fade-transition>
+                <v-fade-transition slot="action2">
+                <v-tooltip bottom >
+                    <v-btn slot="activator" flat icon @click="openAddFusionDialog()" :color="addFusionDialogVisible ? 'amber accent-2' : 'white'">
+                        <v-icon>mdi-plus-circle-outline</v-icon>
+                    </v-btn>
+                    <span>Add New Fusion</span>
+                </v-tooltip>
+            </v-fade-transition>
                 <v-list-tile avatar @click="toggleFilters('ftl')" slot="action1MenuItem">
                     <v-list-tile-avatar>
                         <v-icon>filter_list</v-icon>
                     </v-list-tile-avatar>
                     <v-list-tile-content>
                         <v-list-tile-title>Advanced Filtering</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile avatar @click="openAddFusionDialog()" slot="action2MenuItem">
+                    <v-list-tile-avatar>
+                        <v-icon>mdi-plus-circle-outline</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Add New Fusion</v-list-tile-title>
                     </v-list-tile-content>
                 </v-list-tile>
                 </data-table>
@@ -887,7 +910,8 @@ const OpenCase2 = {
                 tmbClass: null,
                 msiItems: ["MSI", "MSS"],
                 msiClass: null,
-                hasTMB: false
+                hasTMB: false,
+                addFusionDialogVisible: false,
             }
         },
         openIDTCreationDialog() {
@@ -1218,6 +1242,7 @@ const OpenCase2 = {
             }
             this.loadingVariantDetails = true;
             this.$refs.advancedFilter.loading = true;
+            this.mutSigTableData = [];
             return new Promise((resolve, reject) => {
 
                 axios({
@@ -2573,6 +2598,35 @@ const OpenCase2 = {
                 }).catch(error => {
                     this.handleAxiosError(error);
                 });
+        },
+        autoSelectVUSs() {
+            this.$refs.reviewDialog.autoVUSLoading = true;
+            axios.get(
+                webAppRoot + "/selectVUSAnnotations",
+                {
+                    params: {
+                        caseId: this.$route.params.id
+                    }
+                })
+                .then(response => {
+                    if (response.data.isAllowed && response.data.success) {
+                        console.log(response.data.payload);
+                        this.$refs.reviewDialog.openAutoSelectVUSSummary(response.data.payload);
+                    }
+                    else {
+                        this.$refs.reviewDialog.autoVUSLoading = false;
+                        this.handleDialogs(response.data, this.selectVUSAnnotations);
+                    }
+                }).catch(error => {
+                    this.$refs.reviewDialog.autoVUSLoading = false;
+                    this.handleAxiosError(error);
+                });
+        },
+        openAddFusionDialog() {
+            this.addFusionDialogVisible = true;
+        },
+        closeAddFusionDialog() {
+            this.addFusionDialogVisible = false;
         },
     },
     mounted() {

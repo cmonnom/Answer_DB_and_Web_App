@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
@@ -117,7 +118,7 @@ public class OncoKBRequestUtils extends AbstractRequestUtils{
 			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
 			UnsupportedOperationException, SAXException, ParserConfigurationException {
 		StringBuilder sbUrl = new StringBuilder(oncoKBProps.getVariantSearchUrl());
-		sbUrl.append(geneTerm).append("&variant=").append(variant)
+		sbUrl.append(geneTerm).append("&variant=").append(StringEscapeUtils.escapeHtml4(variant))
 		.append("&tumorType=").append(oncotreeCode)
 		.append("&source=oncotree");
 		URI uri = new URI(sbUrl.toString());

@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 
@@ -320,7 +322,10 @@ public class Translocation {
 	public void setHighestTier(String highestTier) {
 		this.highestTier = highestTier;
 	}
-
+	public String createObjectJSON() throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writeValueAsString(this);
+	}
 
 
 }

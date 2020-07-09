@@ -62,6 +62,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.GenesInPanelItems;
 import utsw.bicf.answer.controller.serialization.vuetify.OpenCaseSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.Summary;
 import utsw.bicf.answer.controller.serialization.vuetify.TranslocationDetailsSummary;
+import utsw.bicf.answer.controller.serialization.vuetify.VUSAutoSelectResult;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantDetailsSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterItems;
 import utsw.bicf.answer.controller.serialization.vuetify.VariantFilterListItems;
@@ -71,6 +72,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.VariantVcfAnnotationSum
 import utsw.bicf.answer.controller.serialization.vuetify.VirusDetailsSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.db.api.utils.ReportBuilder;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.FilterStringValue;
 import utsw.bicf.answer.model.HeaderConfig;
@@ -174,6 +176,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveCNV",
 				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveFusion",
+				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".fetchNCTData",
 				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".setDefaultTranscript",
@@ -202,6 +206,8 @@ public class OpenCaseController {
 				IndividualPermission.CAN_HIDE);
 //		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".getMutationSignatureTableForCase",
 //				IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".selectVUSAnnotations",
+				IndividualPermission.CAN_REVIEW);
 		
 	}
 
@@ -1727,6 +1733,38 @@ public class OpenCaseController {
 		return response.createObjectJSON();
 	}
 	
+	@RequestMapping(value = "/saveFusion", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
+	@ResponseBody
+	public String saveFusion(Model model, HttpSession session, @RequestParam String caseId,
+			@RequestBody String data) throws Exception {
+
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
+		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, caseId, user);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
+		AjaxResponse response = new AjaxResponse();
+		if (!isAssigned) {
+			response.setIsAllowed(false);
+			response.setSuccess(false);
+		}
+		else {
+			ObjectMapper mapper = new ObjectMapper();
+			Translocation ftl = mapper.readValue(data, Translocation.class);
+			if (ftl != null) {
+				ftl.setCaseId(caseSummary.getCaseId());
+				ftl.setFusionName(ftl.getLeftGene() + "--" + ftl.getRightGene());
+				utils.saveFusion(response, ftl, caseId);
+			}
+			else {
+				response.setMessage("Nothing to save");
+			}
+		}
+		return response.createObjectJSON();
+	}
+	
 	@RequestMapping(value = "/fetchNCTData", produces= "application/json; charset=utf-8") 
 	@ResponseBody
 	public String fetchNCTData(Model model, HttpSession session, @RequestParam String nctId)
@@ -2155,4 +2193,105 @@ public class OpenCaseController {
 //		}
 //		return ajaxResponse.createObjectJSON();
 //	}
+	
+	@RequestMapping(value = "/selectVUSAnnotations", produces= "application/json; charset=utf-8")
+	@ResponseBody
+	public String selectVUSAnnotations(Model model, HttpSession session, @RequestParam String caseId) throws Exception {
+
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseDetails = utils.getCaseDetails(caseId, null);
+		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseDetails)) {
+			return ControllerUtil.returnFailedGroupCheck();
+		}
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		User owner = modelDAO.getUserByUserId(Integer.parseInt(caseDetails.getCaseOwner()));
+		if (!ControllerUtil.isOwnerOrAdmin(user, owner)) {
+			response.setMessage("You are not the case owner");
+			return response.createObjectJSON();
+		}
+		List<Variant> selectedSNPs = new ArrayList<Variant>();
+		List<Variant> selectedSNPsToSave = new ArrayList<Variant>();
+		List<Variant> untouchedSNPs = new ArrayList<Variant>();
+		List<Variant> errorSNPs = new ArrayList<Variant>();
+		for (Variant v : caseDetails.getVariants()) {
+			boolean isSelected = v.getAnnotatorSelections().get(owner.getUserId()) != null && v.getAnnotatorSelections().get(owner.getUserId());
+			if (isSelected) {
+				selectedSNPs.add(v);
+			}
+		}
+		Comparator<Annotation> annotationComparator = new Comparator<Annotation>() {
+			@Override
+			public int compare(Annotation o1, Annotation o2) {
+				return o2.getModifiedLocalDateTime().compareTo(o1.getModifiedLocalDateTime());
+			}
+		};
+		for (Variant v : selectedSNPs) {
+			Variant variantDetails = utils.getVariantDetails(v.getMongoDBId().getOid());
+			if (variantDetails.getReferenceVariant() != null
+					&& variantDetails.getReferenceVariant().getUtswAnnotations() != null) {
+				for (Annotation a : variantDetails.getReferenceVariant().getUtswAnnotations()) {
+					Annotation.init(a, variantDetails.getAnnotationIdsForReporting(), modelDAO); // format dates and add missing info
+				}
+				// Sort annotation by last modified
+				variantDetails.getReferenceVariant().setUtswAnnotations(variantDetails.getReferenceVariant()
+						.getUtswAnnotations().stream().filter(a -> !a.getForceHide()).sorted(annotationComparator).collect(Collectors.toList()));
+			}
+			boolean geneFunctionFound = false;
+			boolean alreadySelected = false;
+			boolean moreThanTier3 = false;
+			for (Annotation a : variantDetails.getReferenceVariant().getUtswAnnotations()) {
+				if (a.getIsSelected() != null && a.getIsSelected()) {
+					alreadySelected = true; //make sure the variant has not been selected already by the user
+					break;
+				}
+				if ((a.getIsSelected() == null || !a.getIsSelected())  && !geneFunctionFound && a.getCategory().equals("Gene Function")
+						&& a.getTier() != null && ReportBuilder.UNKNOWN_TIERS.contains(a.getTier())) {
+					a.setIsSelected(true);
+					List<MongoDBId> annotationIds = variantDetails.getAnnotationIdsForReporting();
+					if (annotationIds == null) {
+						annotationIds = new ArrayList<MongoDBId>();
+					}
+					annotationIds.add(a.getMongoDBId());
+					variantDetails.setAnnotationIdsForReporting(annotationIds);
+					geneFunctionFound = true;
+				}
+				if (a.getTier() != null && !a.getTier().equals("3")) {
+					moreThanTier3 = true;
+					break;
+				}
+			}
+			if (alreadySelected) {
+				untouchedSNPs.add(variantDetails);
+			}
+			else if (moreThanTier3 || !geneFunctionFound) {
+				//TODO add the variant to an error list
+				System.out.println("Variant " + v.getGeneName() + " " + v.getNotation() + " is missing a gene function card(s) or is above tier 3.");
+				errorSNPs.add(variantDetails);
+			}
+			else {
+				System.out.println("Variant " + v.getGeneName() + " " + v.getNotation() + " success");
+				selectedSNPsToSave.add(variantDetails);
+			}
+		}
+		for (Variant v : selectedSNPsToSave) {
+			utils.saveSelectedAnnotations(response, v, "snp", v.getMongoDBId().getOid());
+		}
+		VUSAutoSelectResult result = new VUSAutoSelectResult();
+		response.setPayload(result);
+		
+		result.setFailedNotation(errorSNPs.stream().map(v -> v.getGeneName() + " " + v.getNotation()).collect(Collectors.toList()));
+		result.setSuccessNotation(selectedSNPsToSave.stream().map(v -> v.getGeneName() + " " + v.getNotation()).collect(Collectors.toList()));
+		result.setUntouchedNotation(untouchedSNPs.stream().map(v -> v.getGeneName() + " " + v.getNotation()).collect(Collectors.toList()));
+		result.setFailedOids(errorSNPs.stream().map(v -> v.getMongoDBId().getOid()).collect(Collectors.toList()));
+		result.setSuccessOids(selectedSNPsToSave.stream().map(v -> v.getMongoDBId().getOid()).collect(Collectors.toList()));
+		result.setUntouchedOids(untouchedSNPs.stream().map(v -> v.getMongoDBId().getOid()).collect(Collectors.toList()));
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		return response.createObjectJSON();
+
+	}
 }
