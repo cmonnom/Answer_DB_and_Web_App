@@ -270,12 +270,13 @@ Vue.component('fpkm-plot', {
                             hovertemplate: "%{text}: %{y}"
                         }
                         var data = [allDataTrace, currentCaseTrace, outliersTrace];
+                        ymax = Math.max(1, chartData.max);
                         var layout = {
                             title: this.createPlotTitle(chartData.label, chartData.nbOfCases),
                             yaxis: {
                                 title: this.getCurrentGeneName() + ": FPKM" + (this.useLog2 ? " (log2)": ""),
                                 zeroline: false,
-                                range: [0, chartData.max],
+                                range: [0, ymax],
                             },
                             xaxis: {
                                 showticklabels: false,

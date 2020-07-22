@@ -743,6 +743,10 @@ Slow down the fullscreen dialog
     background-color: unset;
 }
 
+.no-border-table-with-background td {
+    border: none;
+}
+
 .max-lookup-width {
     max-width: 683px;
 }

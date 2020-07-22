@@ -147,5 +147,6 @@ function buildLookupParamsTitle(query) {
 		case "Variant": return " Variant " + query.gene + " " + query.variant + " " + query.oncotree;
 		case "CNV": ampDel = query.ampDel ? "Amplification" : "Deletion"; return " CNV " + query.gene + " " + query.oncotree + " " + ampDel;
 		case "Fusion": return " Fusion " + query.five + "-" + query.three + " " + query.oncotree;
+		default: return "";
 	}
 }

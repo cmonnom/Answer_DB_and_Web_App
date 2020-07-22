@@ -10,6 +10,34 @@ Vue.component('lookup-panel', {
     },
     template: /*html*/`<div ref="lookupPanel">
 
+    <v-dialog v-model="versionDialogVisible" max-width="50%" scrollable>
+        <v-card class="pa-2">
+            <v-card-text>
+            <div><b>The information displayed in the Lookup Tool comes from the following databases:</b></div>
+            <table class="no-border-table-with-background pa-2">
+            <tr><td>Database</td><td>Version</td><td>Website</td></tr>
+            <tr v-for="item in versionItems" :key="item.name">
+                <td class="pr-2">{{ item.name }}:</td>
+                <td class="pr-2">{{ item.version }}</td>
+                <td>
+                <v-tooltip bottom>
+                    <v-btn slot="activator" icon :href="item.url" target="_blank"
+                        @click.stop class="ma-0 primary--text">
+                        <v-icon>mdi-open-in-new</v-icon>
+                    </v-btn>
+                    <span>Open in new tab.</span>
+                </v-tooltip>
+                </td>
+            </tr>
+            </table>
+            Most data comes from APIs (live data). A version number indicates that
+            Answer stores the data locally for faster access.<br/>
+            The availability of each API may vary. If you think some data or chart is missing, 
+            it could be because the API is offline. Please retry later or contact Answer admins.
+            </v-card-text>
+        </v-card>
+    </v-dialog>
+
     <v-card v-if="panelVisible || standalone" :class="standalone ? [] : ['lookup-panel', 'mr-2','ml-2']"
         :height="calcMaxHeight()" :width="calcMaxWidth()" :flat="standalone" :color="standalone ? 'rgba(0,0,0,0)' : ''">
         <v-toolbar dense class="elevation-0" dark color="primary" v-show="!standalone">
@@ -91,7 +119,9 @@ Vue.component('lookup-panel', {
             :color="standalone ? 'rgba(0,0,0,0)' : ''">
             <v-container grid-list-md fluid pa-1>
                 <v-layout row wrap justify-center>
+                 <!-- 
                     <v-flex xs12 class="centered error--text">NOT QUITE PRODUCTION READY</v-flex>
+                     -->
                     <v-tooltip bottom v-for="button in buttons" :key="button.label">
                         <v-btn slot="activator" @click="handleButton(button)"
                             :class="button.label == currentlyActive ? 'amber accent-2': ''">
@@ -101,8 +131,14 @@ Vue.component('lookup-panel', {
                         <span>{{ button.tooltip }} </span>
                     </v-tooltip>
                     <v-flex xs12 class="centered">
-                        <v-icon class="error--text">mdi-alert-circle</v-icon>
-                        The data provided here is purely for research.<br />You are responsible for the content of
+                    <v-tooltip bottom>
+                    <v-btn slot="activator" flat icon class="ma-0" @click="versionDialogVisible = true">
+                     <v-icon class="primary--text">mdi-information-outline</v-icon>
+                    </v-btn>
+                    <span>Learn more about the data</span>
+                    </v-tooltip>
+                        The data
+                        provided here is purely for research.<br />You are responsible for the content of
                         annotations you create.
                     </v-flex>
 
@@ -207,12 +243,12 @@ Vue.component('lookup-panel', {
                                         target="_blank">
                                         <v-icon class="primary--text">mdi-open-in-new</v-icon>
                                     </v-btn>
-                                    <span>Open {{ lastOncotreeCode }} in the
+                                    <span>Open {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }} in the
                                         NCI Thesaurus</span>
                                 </v-tooltip>
                                 <span
                                     v-if="oncotree.externalReferences && !oncotree.externalReferences.NCI && currentOncotreeCode">
-                                    No NCI Thesaurus entry for {{ lastOncotreeCode }}<br />
+                                    No NCI Thesaurus entry for {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }}<br />
                                     You can try a manual search directly in the NCI Thesaurus here:
                                     <v-btn slot="activator" icon
                                         href="https://ncit.nci.nih.gov/ncitbrowser/pages/home.jsf" target="_blank">
@@ -232,7 +268,7 @@ Vue.component('lookup-panel', {
                             <v-card-text class="pa-3">
                                 <div :class="[cancerPlotLoading ? 'alpha-54' : '']">
                                     <div v-if="cancerPlotError && !cancerPlotLoading">No Genie Data could be found for
-                                        oncotree {{ lastOncotreeCode }}</div>
+                                        oncotree {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }}</div>
                                     <div v-show="!cancerPlotError">
                                         <div :id="'mutatedGenesCancerPlot' + uniqId"></div>
                                     </div>
@@ -250,7 +286,8 @@ Vue.component('lookup-panel', {
                             :original-pos-old-build="originalPosOldBuild"
                             :current-oncotree-code="currentOncotreeCode" :current-variant="currentVariant"
                             :current-gene="currentGene" @handleDialogs="handleDialogs"
-                            :last-oncotree-code="lastOncotreeCode" :last-variant="lastVariant"
+                            :last-oncotree-code="lastOncotreeCode"
+                            :last-oncotree-code-label="lastOncotreeCodeLabel" :last-variant="lastVariant"
                             :last-gene="lastGene"
                             :uniq-id="uniqId">
                         </lookup-panel-variant>
@@ -263,6 +300,7 @@ Vue.component('lookup-panel', {
                            :current-oncotree-code="currentOncotreeCode" :current-amp-del="currentAmpDel"
                            :current-gene="currentGene" @handleDialogs="handleDialogs"
                            :last-oncotree-code="lastOncotreeCode"
+                           :last-oncotree-code-label="lastOncotreeCodeLabel"
                            :last-gene="lastGene" :last-amp-del="lastAmpDel"
                            :uniq-id="uniqId">
                        </lookup-panel-cna>
@@ -275,6 +313,7 @@ Vue.component('lookup-panel', {
                         :current-oncotree-code="currentOncotreeCode" :current-five="currentFive"
                         :current-three="currentThree" @handleDialogs="handleDialogs"
                         :last-oncotree-code="lastOncotreeCode"
+                        :last-oncotree-code-label="lastOncotreeCodeLabel"
                         :last-five="lastFive" :last-three="lastThree"
                         :uniq-id="uniqId">
                     </lookup-panel-fusion>
@@ -315,6 +354,7 @@ Vue.component('lookup-panel', {
           
             lastGene: null,
             lastOncotreeCode: null,
+            lastOncotreeCodeLabel: null,
             lastVariant: null,
 
             currentAmpDel: "",
@@ -326,16 +366,39 @@ Vue.component('lookup-panel', {
             lastThree: null,
             geneFiveErrorMessage:null,
             geneThreeErrorMessage: null,
-            uniqId: "uniq"
+            uniqId: "uniq",
+            versionDialogVisible: false,
+            versionItems: [
+                { name: "Cosmic", version: "latest", url: "https://cancer.sanger.ac.uk/cosmic/download"},
+                { name: "Genie", version: "latest", url: "https://www.synapse.org/#!Synapse:syn7222066/wiki/410924"},
+                { name: "RefSeq", version: "live data", url: "https://www.ncbi.nlm.nih.gov/refseq/"},
+                { name: "OncoKB", version: "live data", url: "https://www.oncokb.org/"},
+                { name: "UniProt", version: "live data", url: "https://www.ebi.ac.uk/interpro/protein/UniProt/"},
+                { name: "Jaxson Labs", version: "live data", url: "https://ckb.jax.org/"},
+                { name: "CIViC DB", version: "live data", url: "https://civicdb.org/home"},
+                { name: "NCI Thesaurus", version: "live data", url: "https://ncithesaurus.nci.nih.gov/ncitbrowser/"},
+                { name: "Reactome", version: "live data", url: "https://reactome.org/"},
+                { name: "MSK Hotspots", version: "latest", url: "https://www.cancerhotspots.org/#/home"},
+            ]
         }
 
     },
     methods: {
         togglePanel() {
             this.panelVisible = !this.panelVisible;
+            this.resetValues();
             if (!this.panelVisible) {
                 bus.$emit("need-layout-resize", this);
             }
+        },
+        resetValues() {
+            this.lastGene = null;
+            this.lastOncotreeCode = null;
+            this.lastOncotreeCodeLabel = null;
+            this.lastVariant = null;
+            this.lastAmpDel = null;
+            this.lastFive = null;
+            this.lastThree = null;
         },
         openInNewWindow() {
             var params = "gene=" + (this.currentGene ? this.currentGene : "") + "&variant=" +  (this.currentVariant ? this.currentVariant : "")
@@ -359,6 +422,7 @@ Vue.component('lookup-panel', {
                 bus.$emit("login-needed", [this, callback]);
                 this.lastGene = null;
                 this.lastOncotreeCode = null;
+                this.lastOncotreeCodeLabel = null;
                 this.lastVariant = null;
                 this.lastAmpDel = null;
             }
@@ -427,6 +491,7 @@ Vue.component('lookup-panel', {
                     this.getOncotree();
                     this.fetchCancerPlot();
                     this.lastOncotreeCode = this.currentOncotreeCode.text;
+                    this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
                 }, this.currentlyActive == "Cancer" ? 0 : timeout);
             }
 
@@ -437,6 +502,7 @@ Vue.component('lookup-panel', {
                         this.lastGene = this.currentGene;
                         this.lastVariant = this.currentVariant;
                         this.lastOncotreeCode = this.currentOncotreeCode.text;
+                        this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
                     });
                 }, this.currentlyActive == "Variant" ? 0 : timeout);
             }
@@ -449,6 +515,7 @@ Vue.component('lookup-panel', {
                             this.lastGene = this.currentGene;
                             this.lastAmpDel = this.currentAmpDel;
                             this.lastOncotreeCode = this.currentOncotreeCode.text;
+                            this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
                         });
                     }, this.currentlyActive == "CNV" ? 0 : timeout);
             }
@@ -460,6 +527,7 @@ Vue.component('lookup-panel', {
                             this.lastFive = this.currentFive;
                             this.lastThree = this.currentThree;
                             this.lastOncotreeCode = this.currentOncotreeCode.text;
+                            this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
                         });
                     }, this.currentlyActive == "Fusion" ? 0 : timeout);
             }
@@ -660,10 +728,41 @@ Vue.component('lookup-panel', {
                     // return (content[0].clientWidth - parseInt(content[0].style.paddingLeft.replace("px", ""))) / 3 - 10;
 				// }
             // return null; 
+        },
+        updateVersion() {
+            axios.get(webAppRoot + "/updateLookupVersion", {
+                params: {
+                }
+            })
+            .then(response => {
+                if (response.data.isAllowed && response.data.success) {
+                    var cosmicVersion = response.data.payload.cosmic;
+                    var genieVersion = response.data.payload.genie;
+                    var mskVersion = response.data.payload.msk;
+                    for (var i = 0; i < this.versionItems.length; i++) {
+                        if (this.versionItems[i].name == "Cosmic" && cosmicVersion) {
+                            this.versionItems[i].version = cosmicVersion.version;
+                        }
+                        else if (this.versionItems[i].name == "Genie" && genieVersion) {
+                            this.versionItems[i].version = genieVersion.version;
+                        }
+                        else if (this.versionItems[i].name == "MSK Hotspots" && mskVersion) {
+                            this.versionItems[i].version = mskVersion.version;
+                        }
+                    }
+                }
+                else {
+                    this.handleDialogs(response.data, this.updateVersion);
+                }
+            })
+            .catch(error => {
+                alert(error);
+            });
         }
     },
     mounted() {
         this.uniqId = "_uniq" + Math.round(Math.random() * 10000);
+        this.updateVersion();
     },
     created: function () {
     },

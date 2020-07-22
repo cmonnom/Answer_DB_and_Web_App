@@ -2779,6 +2779,9 @@ Vue.component('variant-details-dialog', {
         reloadLookupValues(cnvGeneName, activeButton) {
             this.$refs.lookupTool.currentGene = this.currentVariant.geneName;
             this.$refs.lookupTool.currentVariant = this.currentVariant.notation;
+            if (this.$refs.lookupTool.currentlyActive && !activeButton) {
+                activeButton = this.$refs.lookupTool.currentlyActive;
+            }
             if (this.isCNV()) {
                 this.$refs.lookupTool.currentGene = cnvGeneName;
                 var ampDel = "";

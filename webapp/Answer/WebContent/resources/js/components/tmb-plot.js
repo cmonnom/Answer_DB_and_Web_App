@@ -1,6 +1,7 @@
 Vue.component('tmb-plot', {
     props: {
         canPlot: { default: false, type: Boolean },
+        oncotree: {default: () => [], type:Array },
         oncotreeCode: {default: null, type: String}
     },
     template: `
@@ -21,7 +22,7 @@ Vue.component('tmb-plot', {
                 </v-flex>
                 <v-flex xs12>
                     <v-layout row wrap justify-end>
-                        <v-flex class="pl-2">
+                        <v-flex class="pl-2 pt-2 mt-1">
                             <v-switch color="primary" @change="updateTMBPlot" :disabled="!canPlot" class="no-margin-top-controls" hide-details v-model="useLog2" label=" Use Log2"></v-switch>
                         </v-flex>
                     </v-layout>
@@ -70,7 +71,6 @@ Vue.component('tmb-plot', {
             search: null,
             showOtherPlots: false,
             loading: false,
-            currentTissueGroup: null,
             useLog2: true,
             openedOnce: false,
             noDataMessage: "No TMB Data could be found",
@@ -101,7 +101,7 @@ Vue.component('tmb-plot', {
             console.log(error);
             bus.$emit("some-error", [this, error]);
         },
-        createPlotTitle(nbOfCases) {
+        createPlotTitle(code, nbOfCases) {
             let caseString = nbOfCases ? nbOfCases : 0;
             if (nbOfCases > 1) {
                 caseString += " cases";
@@ -109,7 +109,10 @@ Vue.component('tmb-plot', {
             else {
                 caseString += " case";
             }
-            return "TMB from " + this.currentTissueGroup +" tissues";
+            return "TMB from " + this.getTissueFromOncotreeCode(code) +" tissues";
+        },
+        getTissueFromOncotreeCode(code) {
+            return this.oncotree.filter( i => {return i.text === code;})[0].tissue;
         },
         updateTMBPlot() {
             this.loading = true;
@@ -125,7 +128,6 @@ Vue.component('tmb-plot', {
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
                         var chartData = response.data;
-                        this.currentTissueGroup = chartData.label;
                         var allDataTrace = {
                             y: chartData.boxData,
                             type: 'box',
@@ -160,12 +162,13 @@ Vue.component('tmb-plot', {
                             hovertemplate: "%{text}: %{y}"
                         }
                         var data = [allDataTrace, currentCaseTrace, outliersTrace];
+                        ymax = Math.max(1, chartData.max);
                         var layout = {
-                            title: this.createPlotTitle(chartData.nbOfCases),
+                            title: this.createPlotTitle(chartData.label, chartData.nbOfCases),
                             yaxis: {
                                 title: "TMB (Mutations/MB)" + (this.useLog2 ? " (log2)": ""),
                                 zeroline: false,
-                                range: [0, chartData.max],
+                                range: [0, ymax],
                             },
                             xaxis: {
                                 showticklabels: false,

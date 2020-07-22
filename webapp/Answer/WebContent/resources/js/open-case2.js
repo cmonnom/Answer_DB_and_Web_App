@@ -137,6 +137,7 @@ const OpenCase2 = {
       <tmb-plot ref="tmbPlot"
       :can-plot="patientDetailsOncoTreeDiagnosis.text != null && hasTMB"
       :oncotreeCode="patientDetailsOncoTreeDiagnosis.text"
+      :oncotree="oncotree"
       @hide-tmb-plot="closeTMBChart"
       ></tmb-plot>
       </v-menu>  
@@ -273,7 +274,7 @@ const OpenCase2 = {
                 <img alt="boxplot icon" class="alpha-54" :src="webAppRoot + '/resources/images/boxplot_icon_black.png'" width="16px" />
                 </v-list-tile-avatar>
                 <v-list-tile-content>
-                    <v-list-tile-title>Open FPKM Plot</v-list-tile-title>
+                    <v-list-tile-title>Compare FPKM with other samples</v-list-tile-title>
                 </v-list-tile-content>
                 </v-list-tile>
 
@@ -418,12 +419,15 @@ const OpenCase2 = {
     <span v-else>No Mutational Signature Available</span>
 </v-tooltip>
 
+<v-badge right bottom overlap class="mini-badge" color="none">
+<span slot="badge">F</span>
 <v-tooltip bottom>
     <v-btn icon flat slot="activator" @click="openFPKMChart">
     <img alt="boxplot icon" :src="webAppRoot + '/resources/images/boxplot_icon_white.png'" width="36px" />
     </v-btn>
-    <span>Open FPKM Plot</span>
+    <span>Compare FPKM with other samples</span>
 </v-tooltip>
+</v-badge>
 
 <v-menu origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y >
 <v-btn icon flat slot="activator">IGV
@@ -586,12 +590,16 @@ const OpenCase2 = {
                                                                     </v-tooltip>
                                                                 </v-flex>
                                                                 <v-flex xs v-if="item.field == 'tmb'" class="align-flex-right pt-0">
+                                                                <v-badge right bottom overlap class="mini-badge" color="none">
+                                                                <span slot="badge" class="primary--text pl-2 pt-1">T</span>
                                                                 <v-tooltip bottom>
                                                                 <v-btn flat color="primary" icon @click="openTMBChart" slot="activator" class="ma-0">
-                                                                    <v-icon>mdi-chart-scatter-plot</v-icon>
+                                                                    <!-- <v-icon>mdi-chart-scatter-plot</v-icon> -->
+                                                                    <img alt="boxplot icon" :src="webAppRoot + '/resources/images/boxplot_icon_primary.png'" width="36px" />
                                                                 </v-btn>
                                                                 <span>Compare TMB with other samples</span>
                                                                 </v-tooltip>
+                                                                </v-badge>
                                                             </v-flex>
                                                             </v-layout>    
                                                         </v-flex>

@@ -2,13 +2,11 @@ package utsw.bicf.answer.reporting.finalreport;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.pdfbox.pdmodel.font.CIDFontMapping;
-import org.apache.pdfbox.pdmodel.font.PDSimpleFont;
-import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 import be.quodlibet.boxable.line.LineStyle;
 
@@ -74,7 +72,7 @@ public class FinalReportTemplateConstants {
 	
 	//_NAV titles are meant to be slightly different than the regular title
 	//This will allow a unique "link" search term when adding links
-	public static final String TITLE = "1385-Gene Pan-Cancer Mutation Test";
+	public static final String DEFAULT_TITLE = "1385-Gene Pan-Cancer Mutation Test";
 	public static final String PATIENT_DETAILS_TITLE = "PATIENT RECORD";
 	public static final String CASE_SUMMARY_TITLE = "CASE SUMMARY";
 	
@@ -110,29 +108,66 @@ public class FinalReportTemplateConstants {
 		ADDRESS.add("CLIA ID 45D0861764");
 		ADDRESS.add("Director: Ravi Sarode, MD");
 	}
-	public static final String ABOUT_THE_TEST_LINK = "http://www.utsouthwestern.edu/sites/genomics-molecular-pathology/";
-
-	public static final String[] ABOUT_THE_TEST = new String[] { "Test Characteristics and Performance:",
-			"DNA and RNA are isolated from peripheral blood, bone marrow aspirate or formalin-fixed, paraffin-embedded tissues. Sequencing libraries "
-					+ "are generated using Kapa Biosystems and Illumina chemistry. A custom panel of DNA probes is used to produce an enriched library containing "
-					+ "all exons from over 1,425 cancer-related genes, which are sequenced on Illumina NextSeq 550 or MiSeq instruments. DNA and RNA sequence "
-					+ "analyses are done using custom germline, somatic and mRNA bioinformatics pipelines run on the UTSW Bio-High Performance Computer "
-					+ "cluster and optimized for detection of single nucleotide variants, indels and known gene fusions.",
-			"Reports are generated in Answer, which was developed at UTSW. Annotations are written either by a PhD variant curation scientist, UTSW "
-					+ "residents and fellows, or MD medical directors. Interpretations can be revaluated upon request.",
-			"Median target exon coverage for the assay is 900X with 94% of exons at >100X. The minor allele frequency "
-					+ "limit of detection is 5% for single nucleotide variants and 10% for indels and known gene fusions. The assay is "
-					+ "not informative for mutations outside the 1,425 cancer-related genes or for those regions for which the assay "
-					+ "achieves limited coverage. Full details of the genes tested, exon coverage and the bioinformatics pipeline are "
-					+ "available at ",
-			ABOUT_THE_TEST_LINK + ".",		
-			"Disclaimer:<br/>"
-			+ "This is a laboratory developed test, and its performance characteristics have been determined by the Next "
-					+ "Generation Sequencing Clinical Lab, Department of Pathology, UTSW. It has not been cleared or approved by "
-					+ "the U.S. Food and Drug Administration. The U.S. Food and Drug Administration does not require this test to go "
-					+ "through premarket review. This test is used for clinical purposes. It should not be regarded as investigational or "
-					+ "for research. This laboratory is certified under the Clinical Laboratory Improvement Amendments (1988) as "
-					+ "qualified to perform high complexity testing. " };
 	
-
+	// Original test
+//	private static final String ABOUT_THE_TEST_LINK = "http://www.utsouthwestern.edu/sites/genomics-molecular-pathology/";
+//
+//	private static final String[] ABOUT_THE_TEST_DEFAULT = new String[] { "Test Characteristics and Performance:",
+//			"DNA and RNA are isolated from peripheral blood, bone marrow aspirate or formalin-fixed, paraffin-embedded tissues. Sequencing libraries "
+//					+ "are generated using Kapa Biosystems and Illumina chemistry. A custom panel of DNA probes is used to produce an enriched library containing "
+//					+ "all exons from over 1,425 cancer-related genes, which are sequenced on Illumina NextSeq 550 or MiSeq instruments. DNA and RNA sequence "
+//					+ "analyses are done using custom germline, somatic and mRNA bioinformatics pipelines run on the UTSW Bio-High Performance Computer "
+//					+ "cluster and optimized for detection of single nucleotide variants, indels and known gene fusions.",
+//			"Reports are generated in Answer, which was developed at UTSW. Annotations are written either by a PhD variant curation scientist, UTSW "
+//					+ "residents and fellows, or MD medical directors. Interpretations can be revaluated upon request.",
+//			"Median target exon coverage for the assay is 900X with 94% of exons at >100X. The minor allele frequency "
+//					+ "limit of detection is 5% for single nucleotide variants and 10% for indels and known gene fusions. The assay is "
+//					+ "not informative for mutations outside the 1,425 cancer-related genes or for those regions for which the assay "
+//					+ "achieves limited coverage. Full details of the genes tested, exon coverage and the bioinformatics pipeline are "
+//					+ "available at ",
+//			ABOUT_THE_TEST_LINK + ".",		
+//			"Disclaimer:<br/>"
+//			+ "This is a laboratory developed test, and its performance characteristics have been determined by the Next "
+//					+ "Generation Sequencing Clinical Lab, Department of Pathology, UTSW. It has not been cleared or approved by "
+//					+ "the U.S. Food and Drug Administration. The U.S. Food and Drug Administration does not require this test to go "
+//					+ "through premarket review. This test is used for clinical purposes. It should not be regarded as investigational or "
+//					+ "for research. This laboratory is certified under the Clinical Laboratory Improvement Amendments (1988) as "
+//					+ "qualified to perform high complexity testing. " };
+	//////////////
+	
+	// Comprehensive Pan-Cancer Next Generation Sequencing
+//	private static final String ABOUT_THE_TEST_LINK_CPCNGS = "http://www.utsouthwestern.edu/sites/genomics-molecular-pathology/";
+//
+//	private static final String[] ABOUT_THE_TEST_DEFAULT_CPCNGS = new String[] { "Test Characteristics and Performance:",
+//			"DNA and RNA are isolated from peripheral blood, bone marrow aspirate or formalin-fixed, paraffin-embedded tissues. Sequencing libraries "
+//					+ "are generated using Kapa Biosystems and Illumina chemistry. A custom panel of DNA probes is used to produce an enriched library containing "
+//					+ "all exons from over 1,425 cancer-related genes, which are sequenced on Illumina NextSeq 550 or MiSeq instruments. DNA and RNA sequence "
+//					+ "analyses are done using custom germline, somatic and mRNA bioinformatics pipelines run on the UTSW Bio-High Performance Computer "
+//					+ "cluster and optimized for detection of single nucleotide variants, indels and known gene fusions.",
+//			"Reports are generated in Answer, which was developed at UTSW. Annotations are written either by a PhD variant curation scientist, UTSW "
+//					+ "residents and fellows, or MD medical directors. Interpretations can be revaluated upon request.",
+//			"Median target exon coverage for the assay is 900X with 94% of exons at >100X. The minor allele frequency "
+//					+ "limit of detection is 5% for single nucleotide variants and 10% for indels and known gene fusions. The assay is "
+//					+ "not informative for mutations outside the 1,425 cancer-related genes or for those regions for which the assay "
+//					+ "achieves limited coverage. Full details of the genes tested, exon coverage and the bioinformatics pipeline are "
+//					+ "available at ",
+//			ABOUT_THE_TEST_LINK + ".",		
+//			"Disclaimer:<br/>"
+//			+ "This is a laboratory developed test, and its performance characteristics have been determined by the Next "
+//					+ "Generation Sequencing Clinical Lab, Department of Pathology, UTSW. It has not been cleared or approved by "
+//					+ "the U.S. Food and Drug Administration. The U.S. Food and Drug Administration does not require this test to go "
+//					+ "through premarket review. This test is used for clinical purposes. It should not be regarded as investigational or "
+//					+ "for research. This laboratory is certified under the Clinical Laboratory Improvement Amendments (1988) as "
+//					+ "qualified to perform high complexity testing. " };
+//	
+//	public static final Map<String, String[]> ABOUT_THE_TEST_PER_TEST_NAME = new HashMap<String, String[]>();
+//	static {
+//		ABOUT_THE_TEST_PER_TEST_NAME.put("default", ABOUT_THE_TEST_DEFAULT);
+//		ABOUT_THE_TEST_PER_TEST_NAME.put("Comprehensive Pan-Cancer Next Generation Sequencing", ABOUT_THE_TEST_DEFAULT_CPCNGS);
+//	}
+//	public static final Map<String, String> ABOUT_THE_TEST_LINK_PER_TEST_NAME = new HashMap<String, String>();
+//	static {
+//		ABOUT_THE_TEST_LINK_PER_TEST_NAME.put("default", ABOUT_THE_TEST_LINK);
+//		ABOUT_THE_TEST_LINK_PER_TEST_NAME.put("Comprehensive Pan-Cancer Next Generation Sequencing", ABOUT_THE_TEST_LINK_CPCNGS);
+//	}
 }

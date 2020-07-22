@@ -35,6 +35,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.ReportSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.ClinicalTest;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.Annotation;
@@ -47,6 +48,7 @@ import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.hybrid.ClinicalSignificance;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
+import utsw.bicf.answer.reporting.finalreport.FinalReportTemplateConstants;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.reporting.parse.EncodingGlyphException;
 import utsw.bicf.answer.security.FileProperties;
@@ -432,7 +434,11 @@ public class OpenReportController {
 			}
 			if (linkName == null) { //otherwise, generate the report.
 				try {
-					FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportToPreview, fileProps, caseSummary, otherProps, signedBy);
+					ClinicalTest clinicalTest = modelDAO.getClinicalTest(caseSummary.getLabTestName());
+					if (clinicalTest == null) {
+						clinicalTest = modelDAO.getClinicalTest(FinalReportTemplateConstants.DEFAULT_TITLE);
+					}
+					FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportToPreview, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
 					pdfReport.saveTemp();
 					linkName = pdfReport.createPDFLink(fileProps);
 					
@@ -514,7 +520,11 @@ public class OpenReportController {
 
 					//save a copy of the pdf
 					User signedBy = modelDAO.getUserByUserId(reportDetails.getModifiedBy());
-					FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy);
+					ClinicalTest clinicalTest = modelDAO.getClinicalTest(caseSummary.getLabTestName());
+					if (clinicalTest == null) {
+						clinicalTest = modelDAO.getClinicalTest(FinalReportTemplateConstants.DEFAULT_TITLE);
+					}
+					FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
 					pdfReport.saveFinalized();
 				}
 			}

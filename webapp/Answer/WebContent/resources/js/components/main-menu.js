@@ -115,11 +115,14 @@ Vue.component('main-menu', {
 		</v-list-tile-content>
 		</v-list-tile>
 		</v-slide-x-transition>
-<!--
-				<v-btn icon v-if="showGoodies()" flat @click="activateGoodies" :class="goodiesActive ? 'error' : ''">
-					<v-icon>mdi-egg-easter</v-icon>
-				</v-btn>
-				-->
+		<!--
+		<v-tooltip bottom>
+			<v-btn slot="activator" icon v-if="showGoodies()" flat @click="activateGoodies" :class="goodiesActive ? 'error' : ''">
+				<v-icon>mdi-baguette</v-icon>
+			</v-btn>
+			<span>Bastille Day!</span>
+		</v-tooltip>
+			-->
 	</v-list>
 </v-navigation-drawer>`,
 	data() {
@@ -373,16 +376,19 @@ Vue.component('main-menu', {
 		},
 		showGoodies() {
 			var now = moment();
-			if (now.isBefore("2020-04-09") || now.isAfter("2020-04-14")) {
+			if (now.isBefore("2020-07-14") || now.isAfter("2020-07-15")) {
 				return false;
 			}
 			// return false;
-            if (userFullName == "Guillaume Jimenez"
-            || userFullName == "Brandi Cantarel"
-            || userFullName == "Benjamin Wakeland"
-            || userFullName == "Jeffrey Gagan"
-            || userFullName == "Erika Villa") {
-                return this.$route.name == "Home";
+            // if (userFullName == "Guillaume Jimenez"
+            // || userFullName == "Brandi Cantarel"
+            // || userFullName == "Benjamin Wakeland"
+            // || userFullName == "Jeffrey Gagan"
+            // || userFullName == "Erika Villa") {
+            //     return this.$route.name == "Home";
+			// }
+			if ( this.$route.name == "Home") {
+				return true;
 			}
 			this.goodiesActive = false;
             return false;

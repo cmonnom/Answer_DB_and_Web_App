@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -80,6 +81,7 @@ public class OrderCase {
 	String type; //Clinical or Research or ClinicalResearch
 	String clinicalStage;
 	String treatmentStatus;
+	@JsonProperty("testName")
 	String labTestName;
 	Integer rawAvgDepth;
 	Double rawPctOver100X;

@@ -2,6 +2,7 @@ package utsw.bicf.answer.db.api.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -42,6 +43,9 @@ import org.apache.http.message.BasicNameValuePair;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,7 +61,6 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.VariantFilter;
 import utsw.bicf.answer.model.VariantFilterList;
 import utsw.bicf.answer.model.extmapping.Annotation;
-import utsw.bicf.answer.model.extmapping.AnnotationSearchResult;
 import utsw.bicf.answer.model.extmapping.BAlleleFrequencyData;
 import utsw.bicf.answer.model.extmapping.CNRData;
 import utsw.bicf.answer.model.extmapping.CNSData;
@@ -74,9 +77,9 @@ import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.MutationalSignatureData;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
-import utsw.bicf.answer.model.extmapping.SearchSNPAnnotation;
 import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
 import utsw.bicf.answer.model.extmapping.TMBData;
+import utsw.bicf.answer.model.extmapping.TMBPerCaseData;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.extmapping.Trial;
@@ -305,10 +308,14 @@ public class RequestUtils {
 					int statusCode = response.getStatusLine().getStatusCode();
 					if (statusCode == HttpStatus.SC_OK) {
 						//TODO this is very slow. See if you can speed it up
+//						List<Variant> variants = parserTest(is);
+//						long beforeRequestReturns = System.currentTimeMillis();
+//						System.out.println("After parserTest in RequestUtils " + (beforeRequestReturns - beforeRequest) + "ms");
 						OrderCase orderCaseTemp = mapper.readValue(response.getEntity().getContent(), OrderCase.class);
 						orderCase.copyAll(orderCaseTemp);
 						long beforeRequestReturns = System.currentTimeMillis();
 						System.out.println("Before Request Returns in RequestUtils " + (beforeRequestReturns - beforeRequest) + "ms");
+						
 					}
 					closePostRequest();
 				} catch (IOException | URISyntaxException e1) {
@@ -341,6 +348,24 @@ public class RequestUtils {
 		 executor.awaitTermination(1, TimeUnit.MINUTES);
 		 
 		 return orderCase;
+	}
+	
+	private List<Variant> parserTest(InputStream is) throws JsonParseException, IOException {
+		JsonParser jsonParser = mapper.getFactory().createParser(is);
+		JsonToken token = jsonParser.nextToken();
+		List<Variant> variantList = new ArrayList<Variant>();
+		while((token = jsonParser.nextToken()) != JsonToken.END_OBJECT) {
+//			System.out.println(token);
+			TreeNode treenode = mapper.readTree(jsonParser).get("variants");
+			jsonParser = treenode.traverse();
+			jsonParser.nextToken(); //START_ARRAY
+			while((token = jsonParser.nextToken()) != JsonToken.END_ARRAY) {
+				Variant v = mapper.readValue(jsonParser, Variant.class);
+				variantList.add(v);
+			}
+			break;
+		}
+		return variantList;
 	}
 	
 	/**
@@ -2028,10 +2053,9 @@ public class RequestUtils {
 		}
 	}
 	
-	public TMBData getTMBChartData(AjaxResponse ajaxResponse, String caseId, String oncotreeCode) throws ClientProtocolException, IOException, URISyntaxException {
+	public List<WhiskerPerCaseData> getTMBChartData(AjaxResponse ajaxResponse, String caseId) throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
-		sbUrl.append("case/").append(caseId).append("/tmb/");
-		sbUrl.append(oncotreeCode);
+		sbUrl.append("case/").append(caseId).append("/tmb");
 		URI uri = new URI(sbUrl.toString());
 
 		HttpResponse response = null;
@@ -2045,9 +2069,10 @@ public class RequestUtils {
 			ajaxResponse.setSuccess(mongoDBResponse.getSuccess());
 			ajaxResponse.setMessage(mongoDBResponse.getMessage());
 			if (ajaxResponse.getSuccess()) {
-				TMBData result = mapper.convertValue(mongoDBResponse.getPayload(), TMBData.class);
+				TMBPerCaseData[] result = mapper.convertValue(mongoDBResponse.getPayload(), TMBPerCaseData[].class);
+				List<WhiskerPerCaseData> tmbs = Arrays.asList(result);
 				this.closeGetRequest();
-				return result;
+				return tmbs;
 			}
 			else {
 				this.closeGetRequest();

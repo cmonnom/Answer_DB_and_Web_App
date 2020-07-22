@@ -56,6 +56,7 @@ import utsw.bicf.answer.db.api.utils.UniProtRequestUtils;
 import utsw.bicf.answer.model.GenieMutation;
 import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.IndividualPermission;
+import utsw.bicf.answer.model.LookupVersion;
 import utsw.bicf.answer.model.MSKHotspot;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.clinicaltrials.ClinicalTrial;
@@ -123,6 +124,7 @@ public class LookupController {
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getHighestIndidenceAbsFusion", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getHighestIndidencePctFusion", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".getBreakPointPlot", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(LookupController.class.getCanonicalName() + ".updateLookupVersion", IndividualPermission.CAN_VIEW);
 	}
 
 	@Autowired 
@@ -985,6 +987,8 @@ public class LookupController {
 		summary.setOncokbVariantUrl(oncoKBProps.getOncoKBGeneUrl() + geneTerm + "/" + variantName + "/" + oncotreeCode);
 		for (EvidenceResponse evidence : oncoKBResponse) {
 			if (evidence.getEvidenceType().equals("TUMOR_TYPE_SUMMARY")) {
+				//OncoKB API sometimes returns place holders like [[gene]] [[mutation]] [[[mutant]]]
+				//make sure to replace the placeholders
 				summary.setClinicalImplications(evidence.getDescription());
 			}
 			else if (evidence.getEvidenceType().equals("STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY")) {
@@ -1549,6 +1553,22 @@ public class LookupController {
 				chart.setTrace(trace);
 				return chart.createObjectJSON();
 			}
+			return response.createObjectJSON();
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@RequestMapping("/updateLookupVersion")
+	@ResponseBody
+	public String updateLookupVersion(Model model, HttpSession session) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+		try {
+			AjaxResponse response = new AjaxResponse();
+			response.setIsAllowed(true);
+			response.setSuccess(true);
+			Map<String, LookupVersion> versions = modelDAO.getAllLookupVersionsAsMap();
+			response.setPayload(versions);
 			return response.createObjectJSON();
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Repository;
 import utsw.bicf.answer.controller.serialization.plotly.Trace;
 import utsw.bicf.answer.db.api.utils.LookupUtils;
 import utsw.bicf.answer.model.AnswerDBCredentials;
+import utsw.bicf.answer.model.ClinicalTest;
 import utsw.bicf.answer.model.CosmicFusion;
 import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.GenieFusionCount;
@@ -30,6 +31,7 @@ import utsw.bicf.answer.model.GenieSample;
 import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.HeaderConfig;
+import utsw.bicf.answer.model.LookupVersion;
 import utsw.bicf.answer.model.MSKHotspot;
 import utsw.bicf.answer.model.ReportGroup;
 import utsw.bicf.answer.model.ResetToken;
@@ -221,6 +223,16 @@ public class ModelDAO {
 		AnswerDBCredentials db = session.createQuery(hql, AnswerDBCredentials.class).uniqueResult();
 		return db;
 	}
+	
+	@Transactional
+	public LookupVersion getLookupVersion(String databaseName) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from LookupVersion where databaseName = :databaseName";
+		LookupVersion db = session.createQuery(hql, LookupVersion.class)
+				.setParameter("databaseName", databaseName)
+				.uniqueResult();
+		return db;
+	}
 
 	public SessionFactory getSessionFactory() {
 		return sessionFactory;
@@ -240,6 +252,13 @@ public class ModelDAO {
 	}
 	
 	@Transactional
+	public List<LookupVersion> getAllLookupVersions() {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from LookupVersion";
+		return session.createQuery(hql, LookupVersion.class).list();
+	}
+	
+	@Transactional
 	public Map<Integer, User> getAllUsersAsMap() {
 		Map<Integer, User> usersById = new HashMap<Integer, User>();
 		List<User> users = this.getAllUsers();
@@ -247,6 +266,16 @@ public class ModelDAO {
 			usersById.put(u.getUserId(), u);
 		}
 		return usersById;
+	}
+	
+	@Transactional
+	public Map<String, LookupVersion> getAllLookupVersionsAsMap() {
+		Map<String, LookupVersion> versionByDatabaseName = new HashMap<String, LookupVersion>();
+		List<LookupVersion> versions = this.getAllLookupVersions();
+		for (LookupVersion v : versions) {
+			versionByDatabaseName.put(v.getDatabaseName(), v);
+		}
+		return versionByDatabaseName;
 	}
 	
 	@Transactional
@@ -1185,5 +1214,14 @@ public class ModelDAO {
 				return arg0;
 			}
 		}).list();
+	}
+
+	@Transactional
+	public ClinicalTest getClinicalTest(String labTestName) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from ClinicalTest where test_name = :labTestName";
+		return session.createQuery(hql, ClinicalTest.class)
+		.setParameter("labTestName", labTestName)
+		.uniqueResult();
 	}
 }

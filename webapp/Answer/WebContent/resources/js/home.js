@@ -195,6 +195,8 @@ const Home = {
     </v-tabs>
     <!--
     <easter v-if="showEaster" :baseUrl="getBaseUrl()"></easter>
+    
+    <goodies2 v-if="showEaster" ref="fireworks"></goodies2>
     -->
     </v-container>
 </div>`,
@@ -553,7 +555,7 @@ const Home = {
         bus.$off('open-report-read-only');
         bus.$off('sent-to-epic');
         bus.$off('downloadPDFReport');
-        bus.$off('showEaster');
+        // bus.$off('showEaster');
        
     },
     created: function () {
@@ -634,6 +636,9 @@ const Home = {
         });
         // bus.$on('showEaster', (item) => {
         //     this.showEaster = !this.showEaster;
+        //     setTimeout(() => {
+        //         this.$refs.fireworks.createFireworks();
+        //     }, 1000);
         // });
         this.showLastLoginAttempt();
     },

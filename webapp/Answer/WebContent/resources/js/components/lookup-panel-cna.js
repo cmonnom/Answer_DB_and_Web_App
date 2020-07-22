@@ -5,6 +5,7 @@ Vue.component('lookup-panel-cna', {
         currentGene: {default: "", type:String},
         currentAmpDel: {default: "", type:String},
         lastOncotreeCode: {default: "", type:String},
+        lastOncotreeCodeLabel: {default: "", type:String},
         lastGene: {default: "", type:String},
         lastAmpDel: {default: "", type:String},
         uniqId: {default: "uniqcna", type:String}
@@ -20,7 +21,7 @@ Vue.component('lookup-panel-cna', {
         </v-toolbar>
         <v-card-text class="pa-3">
             <div v-if="oncoKBVariantError || (oncoKBVariantSummary && !oncoKBVariantSummary.clinicalImplications)">
-            {{ lastGene }} <span v-text="getAmpDelLabel()"></span> has no clinical implication data in OncoKB.
+            {{ lastGene }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }} <span v-text="getAmpDelLabel()"></span> has no clinical implication data in OncoKB.
             </div>
             <div v-if="oncoKBVariantSummary && oncoKBVariantSummary.clinicalImplications">
                 <div class="font-weight-bold body-1 pb-2">Clinical Implications:</div>
@@ -106,7 +107,7 @@ Vue.component('lookup-panel-cna', {
         <v-slide-y-transition>
         <v-card-text class="pl-2 pr-2 pt-1" v-show="showStandardOfCare">
             <div v-if="oncoKBVariantError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-                {{ lastGene }} <span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
+                {{ lastGene }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }} <span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
             </div>
             <div v-if="oncoKBVariantSummary">
                 <span class="font-weight-bold body-1 pl-2">OncoKB</span>
@@ -146,7 +147,7 @@ Vue.component('lookup-panel-cna', {
              </v-toolbar>
              <v-card-text class="pl-2 pr-2 pt-1">
                  <div v-if="oncoKBVariantError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-                     {{ lastGene }} <span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
+                     {{ lastGene }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }}<span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
                  </div>
                  <div v-if="oncoKBVariantSummary">
                      <span class="font-weight-bold body-1 pl-2">OncoKB</span>
@@ -228,7 +229,7 @@ Vue.component('lookup-panel-cna', {
         <v-slide-y-transition>
         <v-card-text class="pl-2 pr-2 pt-1" v-show="showClinicalTrials">
             <div v-if="clinicalTrialsError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-                {{ lastGene }} <span v-text="getAmpDelLabel()"></span> {{ lastOncotreeCode }} has no result in clinicaltrials.gov.
+                {{ lastGene }} <span v-text="getAmpDelLabel()"></span> {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }} has no result in clinicaltrials.gov.
             </div>
             <div v-if="clinicalTrials">
                 <div class="pt-2 pl-2 pr-2 pb-0" v-for="(trial, index) in clinicalTrials" :key="index">
@@ -494,6 +495,9 @@ Vue.component('lookup-panel-cna', {
                     if (!this.oncoKBVariantSummary) {
                         this.oncoKBVariantError = true;
                     }
+                    else {
+                        this.oncoKBVariantSummary.clinicalImplications = this.formatClinicalImplications();
+                    }
 
                     //Fasmic
                     var fasmicSummary = response.data.payload.fasmicSummary;
@@ -634,6 +638,19 @@ Vue.component('lookup-panel-cna', {
         },
         getAmpDelLabel() {
             return this.lastAmpDel == "amp" ? "Amplification" : "Deletion";
+        },
+        formatClinicalImplications() {
+            if (this.oncoKBVariantSummary && this.oncoKBVariantSummary.clinicalImplications) {
+                var description = this.oncoKBVariantSummary.clinicalImplications;
+                description = description.replace(/\[\[gene\]\]/g, this.lastGene);
+                description = description.replace(/\[\[mutation\]\]/g, this.lastVariant);
+                description = description.replace(/\[\[variant\]\]/g, this.lastVariant);
+                description = description.replace(/\[\[\[mutant\]\]\]/g, this.lastOncotreeCode);
+                description = description.replace(/\[\[mutant\]\]/g, this.lastOncotreeCode);
+                description = description.replace(/\[\[tumor type\]\]/g, this.lastOncotreeCode);
+                return description;
+            }
+            return "";
         }
     },
     mounted() {

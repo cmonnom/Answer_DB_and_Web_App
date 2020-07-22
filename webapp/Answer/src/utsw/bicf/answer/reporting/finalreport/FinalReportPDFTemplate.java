@@ -33,8 +33,6 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageXYZDestination;
 
-import com.mchange.lang.ArrayUtils;
-
 import be.quodlibet.boxable.BaseTable;
 import be.quodlibet.boxable.Cell;
 import be.quodlibet.boxable.HorizontalAlignment;
@@ -46,6 +44,7 @@ import be.quodlibet.boxable.utils.PDStreamUtils;
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.CellItem;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
+import utsw.bicf.answer.model.ClinicalTest;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
@@ -74,13 +73,15 @@ public class FinalReportPDFTemplate {
 	List<Link> links = new ArrayList<Link>();
 	Map<Integer, List<FooterColor>> colorPerPage = new HashMap<Integer, List<FooterColor>>();
 	User signedBy;
+	ClinicalTest clinicalTest;
 
-	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps, User signedBy) throws EncodingGlyphException {
+	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps, User signedBy, ClinicalTest clinicalTest) throws EncodingGlyphException {
 		this.otherProps = otherProps;
 		this.report = report;
 		this.fileProps = fileProps;
 		this.caseSummary = caseSummary;
 		this.signedBy = signedBy;
+		this.clinicalTest = clinicalTest;
 		try {
 			this.tempFile = new File(fileProps.getPdfFilesDir(), System.currentTimeMillis() + "_temp.pdf");
 			if (tempFile.exists()) {
@@ -182,7 +183,7 @@ public class FinalReportPDFTemplate {
 		PDPage firstPage = mainDocument.getPage(0);
 		PDPageContentStream contentStream = new PDPageContentStream(mainDocument, firstPage,
 				PDPageContentStream.AppendMode.APPEND, true);
-		String testName = FinalReportTemplateConstants.TITLE;
+		String testName = FinalReportTemplateConstants.DEFAULT_TITLE;
 		if (report.getLabTestName() != null) {
 			testName = report.getLabTestName();
 		}
@@ -1321,7 +1322,7 @@ public class FinalReportPDFTemplate {
 			BaseTable table = new BaseTable(tableYPos, tableYPos, 0, tableWidth,
 					FinalReportTemplateConstants.MARGINLEFT, mainDocument, currentPage, true, true);
 			Row<PDPage> row = table.createRow(6);
-			String testName = FinalReportTemplateConstants.TITLE;
+			String testName = FinalReportTemplateConstants.DEFAULT_TITLE;
 			if (report.getLabTestName() != null) {
 				testName = report.getLabTestName();
 			}
@@ -1346,9 +1347,12 @@ public class FinalReportPDFTemplate {
 			}
 			
 //			this.createFooterCellColor(row, " ", HorizontalAlignment.LEFT, 2f, fillColor, borderColor);
-			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 34f);
-			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 32f);
-			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 30f);
+//			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 34f);
+//			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 32f);
+//			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 30f);
+			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 42f);
+			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 29f);
+			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 27f);
 			float width = 2f;
 			if (colors.size() > 1) {
 				width = 4f / colors.size();
@@ -1398,7 +1402,10 @@ public class FinalReportPDFTemplate {
 		cellHeader.setFillColor(FinalReportTemplateConstants.ABOUT_THE_TEST_COLOR);
 
 		// Content
-		for (String info : FinalReportTemplateConstants.ABOUT_THE_TEST) {
+		//Fetch the correct disclamer based on the test name:
+		List<String> aboutTheTest = clinicalTest.getDisclaimerTexts().stream().map(c -> c.getText()).collect(Collectors.toList());
+		String aboutTheTestLink = clinicalTest.getTestLink();
+		for (String info : aboutTheTest) {
 			Row<PDPage> row = table.createRow(12);
 			Cell<PDPage> cell = row.createCell(100, info);
 			applyCellFormatting(cell, FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE, Color.WHITE);
@@ -1417,7 +1424,7 @@ public class FinalReportPDFTemplate {
 		} catch (IllegalArgumentException e) {
 			throw new EncodingGlyphException(e.getMessage() + " in Information About the Test." );
 		}
-		this.links.add(new Link(FinalReportTemplateConstants.ABOUT_THE_TEST_LINK, FinalReportTemplateConstants.ABOUT_THE_TEST_LINK));
+		this.links.add(new Link(aboutTheTestLink, aboutTheTestLink));
 	}
 
 	public void saveTemp() throws IOException {

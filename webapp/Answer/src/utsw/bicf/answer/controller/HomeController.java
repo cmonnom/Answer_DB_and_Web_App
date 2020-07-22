@@ -57,6 +57,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.UserSearchItems;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.ClinicalTest;
 import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.User;
@@ -69,6 +70,7 @@ import utsw.bicf.answer.model.hybrid.OrderCaseAll;
 import utsw.bicf.answer.model.hybrid.OrderCaseFinalized;
 import utsw.bicf.answer.model.hybrid.OrderCaseForUser;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
+import utsw.bicf.answer.reporting.finalreport.FinalReportTemplateConstants;
 import utsw.bicf.answer.reporting.parse.EncodingGlyphException;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
@@ -472,8 +474,12 @@ public class HomeController {
 				return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 			}
 			User signedBy = modelDAO.getUserByUserId(report.getModifiedBy());
+			ClinicalTest clinicalTest = modelDAO.getClinicalTest(caseSummary.getLabTestName());
+			if (clinicalTest == null) {
+				clinicalTest = modelDAO.getClinicalTest(FinalReportTemplateConstants.DEFAULT_TITLE);
+			}
 			try {
-			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(report, fileProps, caseSummary, otherProps, signedBy);
+			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(report, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
 			pdfReport.saveTemp();
 
 			String linkName = pdfReport.createPDFLink(fileProps);

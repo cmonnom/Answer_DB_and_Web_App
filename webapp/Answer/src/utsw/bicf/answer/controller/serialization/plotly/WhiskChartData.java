@@ -18,14 +18,14 @@ public class WhiskChartData extends PlotlyChartData {
 	List<String> outliersLabels;
 	Double min = 1000000d, max = -1000000d;
 	
-	List<Double> fpkms = new ArrayList<Double>();
+	List<Double> values = new ArrayList<Double>();
 	
 	long nbOfCases;
 	
 	
 	public WhiskChartData(WhiskerData whiskData, String caseId, Boolean useLog2) {
 		
-		this.fpkms = whiskData.getPerCaseList().stream().map(i -> i.getWhiskValue()).collect(Collectors.toList());
+		this.values = whiskData.getPerCaseList().stream().map(i -> i.getWhiskValue()).collect(Collectors.toList());
 		this.label = whiskData.getLabel();
 		
 		
@@ -129,12 +129,12 @@ public class WhiskChartData extends PlotlyChartData {
 	}
 	
 
-	public List<Double> getFpkms() {
-		return fpkms;
+	public List<Double> getValues() {
+		return values;
 	}
 
-	public void setFpkms(List<Double> fpkms) {
-		this.fpkms = fpkms;
+	public void setValues(List<Double> values) {
+		this.values = values;
 	}
 
 	public long getNbOfCases() {

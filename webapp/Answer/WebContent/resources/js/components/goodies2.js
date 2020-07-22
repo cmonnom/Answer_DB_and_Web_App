@@ -53,7 +53,8 @@ Vue.component('goodies2', {
       snowOriginColor: "#AAA",
       fireworks: [],
       blackHoles: [],
-      canClick: false
+      canClick: false,
+      externalCounter: 0
     }
 
   },
@@ -442,6 +443,13 @@ Vue.component('goodies2', {
       this.demo.update = () => {
         for (var i = 0; i < this.fireworks.length; i++) {
           this.fireworks[i].move();
+        }
+        if (this.demo.dragging) {
+          this.externalCounter++;
+          if (this.externalCounter > 10) {
+            this.externalCounter = 0;
+            this.createAFirework(true);
+          }
         }
       };
 

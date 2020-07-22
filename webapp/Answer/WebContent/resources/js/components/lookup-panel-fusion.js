@@ -5,6 +5,7 @@ Vue.component('lookup-panel-fusion', {
         currentFive: {default: "", type:String},
         currentThree: {default: "", type:String},
         lastOncotreeCode: {default: "", type:String},
+        lastOncotreeCodeLabel: {default: "", type:String},
         lastFive: {default: "", type:String},
         lastThree: {default: "", type:String},
         uniqId: {default: "uniqfusion", type:String}
@@ -20,7 +21,7 @@ Vue.component('lookup-panel-fusion', {
         </v-toolbar>
         <v-card-text class="pa-3">
             <div v-if="oncoKBVariantError || (oncoKBVariantSummary && !oncoKBVariantSummary.clinicalImplications)">
-            {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} has no clinical implication data in OncoKB.
+            {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }} has no clinical implication data in OncoKB.
             </div>
             <div v-if="oncoKBVariantSummary && oncoKBVariantSummary.clinicalImplications">
                 <div class="font-weight-bold body-1 pb-2">Clinical Implications:</div>
@@ -58,11 +59,11 @@ Vue.component('lookup-panel-fusion', {
                 <div>{{ item }}
                 <v-tooltip bottom v-show="variantSummaries[item].url && !loading">
                 <v-btn slot="activator" icon :href="variantSummaries[item].url" target="_blank" @click.stop class="primary--text"><v-icon>mdi-open-in-new</v-icon></v-btn>
-                <span>Open {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} in {{ item }} (new tab).</span>
+                <span>Open {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel}} in {{ item }} (new tab).</span>
                 </v-tooltip>
                 <v-tooltip bottom v-show="variantSummaries[item].url2 && !loading">
                 <v-btn slot="activator" icon :href="variantSummaries[item].url2" target="_blank" @click.stop class="primary--text"><v-icon>mdi-lock</v-icon></v-btn>
-                <span>Open {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} in {{ item }} (need paid subscription).</span>
+                <span>Open {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel}} in {{ item }} (need paid subscription).</span>
                 </v-tooltip>
                 </div>
 
@@ -106,7 +107,7 @@ Vue.component('lookup-panel-fusion', {
         <v-slide-y-transition>
         <v-card-text class="pl-2 pr-2 pt-1" v-show="showStandardOfCare">
             <div v-if="oncoKBVariantError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-            {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} has no result in OncoKB.
+            {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel}} has no result in OncoKB.
             </div>
             <div v-if="oncoKBVariantSummary">
                 <span class="font-weight-bold body-1 pl-2">OncoKB</span>
@@ -147,7 +148,7 @@ Vue.component('lookup-panel-fusion', {
              </v-toolbar>
              <v-card-text class="pl-2 pr-2 pt-1">
                  <div v-if="oncoKBVariantError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-                 {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} has no result in OncoKB.
+                 {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel}} has no result in OncoKB.
                  </div>
                  <div v-if="oncoKBVariantSummary">
                      <span class="font-weight-bold body-1 pl-2">OncoKB</span>
@@ -189,7 +190,7 @@ Vue.component('lookup-panel-fusion', {
             </v-toolbar>
             <v-card-text class="pa-3">
                 <div v-if="oncoKBVariantError" class="">
-                {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} has no result in OncoKB.
+                {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel}} has no result in OncoKB.
                 </div>
                 <div v-if="oncoKBVariantSummary">
                     <span class="font-weight-bold body-1">OncoKB</span>
@@ -227,7 +228,7 @@ Vue.component('lookup-panel-fusion', {
         <v-slide-y-transition>
         <v-card-text class="pl-2 pr-2 pt-1" v-show="showClinicalTrials">
             <div v-if="clinicalTrialsError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-            {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} has no result in clinicaltrials.gov.
+            {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel}} has no result in clinicaltrials.gov.
             </div>
             <div v-if="clinicalTrials">
                 <div class="pt-2 pl-2 pr-2 pb-0" v-for="(trial, index) in clinicalTrials" :key="index">
@@ -261,7 +262,7 @@ Vue.component('lookup-panel-fusion', {
     </v-toolbar>
     <v-card-text class="pl-3 pr-3 pt-1">
         <div v-if="oncoKBVariantError" class="pt-2 mt-1 pb-2 mb-1">
-        {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }} has no result in OncoKB.
+        {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel}} has no result in OncoKB.
         </div>
         <div v-if="oncoKBVariantSummary && !fasmicLoading && !uniProtVariantLoading">
             <table class="no-border-table">
@@ -381,7 +382,7 @@ Vue.component('lookup-panel-fusion', {
             <v-card-text class="pa-3">
                 <div :class="[fusionGeniePlotLoading ? 'alpha-54' : '']">
                     <div v-if="fusionGeniePlotError && !fusionGeniePlotLoading">No Genie Data could be found for fusion
-                    {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}</div>
+                    {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel}}</div>
                     <div v-if="!fusionGeniePlotError" v-show="showFusionGeniePanel">
                         <div :id="'fusionAbsPlot' + uniqId"></div>
                         <div :id="'fusionPctPlot' + uniqId"></div>
@@ -415,7 +416,7 @@ Vue.component('lookup-panel-fusion', {
         <v-card-text class="pa-3">
             <div :class="[fusionCosmicPlotLoading ? 'alpha-54' : '']">
                 <div v-if="fusionCosmicPlotError && !fusionCosmicPlotLoading">No Cosmic Data could be found for fusion
-                {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}</div>
+                {{ lastFive }} {{ lastThree }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel}}</div>
                 <div v-if="!fusionCosmicPlotError" v-show="showFusionCosmicPanel">
                     <div :id="'fusionBreakpointFivePlot' + uniqId"></div>
                     <div :id="'fusionBreakpointThreePlot' + uniqId"></div>
@@ -532,6 +533,9 @@ Vue.component('lookup-panel-fusion', {
                     this.oncoKBVariantSummary = response.data.payload.oncoKBSummary;
                     if (!this.oncoKBVariantSummary) {
                         this.oncoKBVariantError = true;
+                    }
+                    else {
+                        this.oncoKBVariantSummary.clinicalImplications = this.formatClinicalImplications();
                     }
 
                     //Fasmic
@@ -674,7 +678,20 @@ Vue.component('lookup-panel-fusion', {
         },
         getPlotTitle() {
             return this.lastFive + " " + this.lastThree + " " + this.lastOncotreeCode;
-        }  
+        },
+        formatClinicalImplications() {
+            if (this.oncoKBVariantSummary && this.oncoKBVariantSummary.clinicalImplications) {
+                var description = this.oncoKBVariantSummary.clinicalImplications;
+                description = description.replace(/\[\[gene\]\]/g, this.lastGene);
+                description = description.replace(/\[\[mutation\]\]/g, this.lastVariant);
+                description = description.replace(/\[\[variant\]\]/g, this.lastVariant);
+                description = description.replace(/\[\[\[mutant\]\]\]/g, this.lastOncotreeCode);
+                description = description.replace(/\[\[mutant\]\]/g, this.lastOncotreeCode);
+                description = description.replace(/\[\[tumor type\]\]/g, this.lastOncotreeCode);
+                return description;
+            }
+            return "";
+        }    
     },
     mounted() {
     },

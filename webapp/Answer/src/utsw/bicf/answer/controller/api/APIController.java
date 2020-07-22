@@ -39,6 +39,7 @@ import utsw.bicf.answer.model.GenieFusion;
 import utsw.bicf.answer.model.GenieMutation;
 import utsw.bicf.answer.model.GenieSample;
 import utsw.bicf.answer.model.GenieSummary;
+import utsw.bicf.answer.model.LookupVersion;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CosmicRawData;
@@ -141,6 +142,7 @@ public class APIController {
 			@RequestParam String mutationDataPath, 
 			@RequestParam String cnaDataPath,
 			@RequestParam String fusionDataPath,
+			@RequestParam String versionNumber,
 			HttpSession httpSession) throws IOException, InterruptedException {
 		httpSession.setAttribute("user", "API User from updateGenieData");
 		long now = System.currentTimeMillis();
@@ -189,6 +191,16 @@ public class APIController {
 								.stream().map(i -> new GenieSummary(i.getX().intValue(), i.getY(), GenieSummary.CATEGORY_CANCER_COUNT))
 								.collect(Collectors.toList());
 						modelDAO.saveBatch(summaryToSave);
+						
+						LookupVersion genieVersion = modelDAO.getLookupVersion("genie");
+						if (genieVersion == null) {
+							genieVersion = new LookupVersion();
+							genieVersion.setDatabaseName("genie");
+						}
+						genieVersion.setVersion(versionNumber);
+						modelDAO.saveObject(genieVersion);
+						
+						
 						afterRequest = System.currentTimeMillis();
 						System.out.println("After request " + (afterRequest - now) + "ms");
 						
@@ -563,6 +575,7 @@ public class APIController {
 	@ResponseBody
 	public String updateCosmicExonData(Model model, @RequestParam String token, 
 			@RequestParam String cosmicExonDataPath, 
+			@RequestParam String versionNumber, 
 			HttpSession httpSession) throws IOException, InterruptedException {
 		httpSession.setAttribute("user", "API User from updateCosmicExonData");
 		long now = System.currentTimeMillis();
@@ -586,6 +599,15 @@ public class APIController {
 					try {
 						String transvarPath = "/project/shared/bicf_workflow_ref/seqprg/bin/transvar ganno --refversion hg38 --gencode -i ";
 						parseCosmicExon(cosmicDataFile);
+						
+						LookupVersion cosmicVersion = modelDAO.getLookupVersion("cosmic");
+						if (cosmicVersion == null) {
+							cosmicVersion = new LookupVersion();
+							cosmicVersion.setDatabaseName("cosmic");
+						}
+						cosmicVersion.setVersion(versionNumber);
+						modelDAO.saveObject(cosmicVersion);
+						
 						long afterRequest = System.currentTimeMillis();
 						System.out.println("After request " + (afterRequest - now) + "ms");
 						

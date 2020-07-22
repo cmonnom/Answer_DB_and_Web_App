@@ -2069,7 +2069,7 @@ public class OpenCaseController {
 			@RequestParam(defaultValue="false", required=false) Boolean useLog2) throws Exception {
 
 		RequestUtils utils = new RequestUtils(modelDAO);
-//		WhiskerData data = new WhiskerData(); 
+		WhiskerData data = new WhiskerData(); 
 //		
 //		//create fake data here for testing
 //		List<FPKMPerCaseData> fpkms = new ArrayList<FPKMPerCaseData>();
@@ -2101,11 +2101,14 @@ public class OpenCaseController {
 		AjaxResponse ajaxResponse = new AjaxResponse();
 		ajaxResponse.setIsAllowed(true);
 		ajaxResponse.setSuccess(true);
-		TMBData tmbResult = utils.getTMBChartData(ajaxResponse, caseId, oncotreeCode);
-		if (tmbResult != null && tmbResult.getTmbs() != null && !tmbResult.getTmbs().isEmpty()) {
-			return new WhiskChartData(tmbResult, caseId, useLog2).createObjectJSON();
+		List<WhiskerPerCaseData> tmbs = utils.getTMBChartData(ajaxResponse, caseId);
+		if (tmbs != null && !tmbs.isEmpty()) {
+			data.setPerCaseList(tmbs);
+			data.setLabel(tmbs.get(0).getLabel());
+//			data.setOncotreeCode("AML"); //for testing only
+			return new WhiskChartData(data, caseId, useLog2).createObjectJSON();
 		}
-		else if (tmbResult != null && tmbResult.getTmbs() != null && tmbResult.getTmbs().isEmpty()) {
+		else if (tmbs != null && tmbs.isEmpty()) {
 			ajaxResponse.setIsAllowed(true);
 			ajaxResponse.setSuccess(false);
 		}
