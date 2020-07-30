@@ -4,7 +4,7 @@ Vue.component('tmb-plot', {
         oncotree: {default: () => [], type:Array },
         oncotreeCode: {default: null, type: String}
     },
-    template: `
+    template: /*html*/`
    
         <v-card width="500px" class="pt-3 pl-3 pr-3 pb-3">
             <v-card-actions>

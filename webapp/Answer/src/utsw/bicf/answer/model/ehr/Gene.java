@@ -13,6 +13,7 @@ import java.util.List;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlMixed;
@@ -48,15 +49,23 @@ import javax.xml.bind.annotation.XmlType;
 })
 @XmlRootElement(name = "Gene")
 public class Gene {
-
-    @XmlElementRefs({
-        @XmlElementRef(name = "Alterations", type = Alterations.class, required = false),
-        @XmlElementRef(name = "Name", type = JAXBElement.class, required = false),
-        @XmlElementRef(name = "Include", type = JAXBElement.class, required = false),
-        @XmlElementRef(name = "ReferenceLinks", type = ReferenceLinks.class, required = false)
-    })
+//
+//    @XmlElementRefs({
+//        @XmlElementRef(name = "Alterations", type = Alterations.class, required = false),
+//        @XmlElementRef(name = "Name", type = JAXBElement.class, required = false),
+//        @XmlElementRef(name = "Include", type = JAXBElement.class, required = false),
+//        @XmlElementRef(name = "ReferenceLinks", type = ReferenceLinks.class, required = false)
+//    })
     @XmlMixed
     protected List<Object> content;
+    @XmlElement(name = "Alterations")
+    protected Alterations alterations;
+    @XmlElement(name = "Name")
+    protected String name;
+    @XmlElement(name = "Include")
+    protected boolean include;
+    @XmlElement(name = "ReferenceLinks")
+    protected ReferenceLinks referenceLinks;
 
     /**
      * Gets the value of the content property.
@@ -90,5 +99,41 @@ public class Gene {
         }
         return this.content;
     }
+
+	public Alterations getAlterations() {
+		return alterations;
+	}
+
+	public void setAlterations(Alterations alterations) {
+		this.alterations = alterations;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public boolean isInclude() {
+		return include;
+	}
+
+	public void setInclude(boolean include) {
+		this.include = include;
+	}
+
+	public ReferenceLinks getReferenceLinks() {
+		return referenceLinks;
+	}
+
+	public void setReferenceLinks(ReferenceLinks referenceLinks) {
+		this.referenceLinks = referenceLinks;
+	}
+
+	public void setContent(List<Object> content) {
+		this.content = content;
+	}
 
 }

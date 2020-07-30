@@ -118,6 +118,18 @@ const OpenCase2 = {
         :position-x="fpkmPositionx"  :position-y="fpkmPositiony"
         absolute
       >
+      <v-toolbar dense dark class="primary">
+      <v-toolbar-title>
+      Comparing FPKM with Other Cases
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-tooltip bottom>
+      <v-btn flat icon @click="closeFPKMChart" slot="activator">
+          <v-icon>close</v-icon>
+      </v-btn>
+      <span>Close FPKM Plot</span>
+      </v-tooltip>
+      </v-toolbar>
       <fpkm-plot ref="fpkmPlot"
       :can-plot="patientDetailsOncoTreeDiagnosis.text != null"
       :oncotreeCode="patientDetailsOncoTreeDiagnosis.text"
@@ -134,6 +146,18 @@ const OpenCase2 = {
         :position-x="tmbPositionx"  :position-y="tmbPositiony"
         absolute
       >
+      <v-toolbar dense dark class="primary">
+      <v-toolbar-title>
+      Comparing TMB with Other Cases
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-tooltip bottom>
+      <v-btn flat icon @click="closeTMBChart" slot="activator">
+          <v-icon>close</v-icon>
+      </v-btn>
+      <span>Close TMB Plot</span>
+      </v-tooltip>
+      </v-toolbar>
       <tmb-plot ref="tmbPlot"
       :can-plot="patientDetailsOncoTreeDiagnosis.text != null && hasTMB"
       :oncotreeCode="patientDetailsOncoTreeDiagnosis.text"
@@ -269,14 +293,36 @@ const OpenCase2 = {
                 </v-list-tile-content>
                 </v-list-tile>
 
-                <v-list-tile avatar @click="openFPKMChart">
-                <v-list-tile-avatar>
-                <img alt="boxplot icon" class="alpha-54" :src="webAppRoot + '/resources/images/boxplot_icon_black.png'" width="16px" />
-                </v-list-tile-avatar>
+                <v-list-tile class="list-menu">
                 <v-list-tile-content>
-                    <v-list-tile-title>Compare FPKM with other samples</v-list-tile-title>
-                </v-list-tile-content>
-                </v-list-tile>
+                    <v-list-tile-title>
+                        <v-menu offset-y offset-x close-delay="500" open-on-hover>
+                                <span slot="activator">
+                                <v-icon class="pl-2 pr-4">keyboard_arrow_right</v-icon>Compare with Other Cases
+                                </span>
+                                <v-list>
+                        <v-list-tile avatar @click="openFPKMChart">
+                                <v-list-tile-avatar>
+                                <img alt="boxplot icon" class="alpha-54" :src="webAppRoot + '/resources/images/boxplot_icon_black.png'" width="36px" />
+                            </v-list-tile-avatar>
+                                <v-list-tile-content >
+                                    <v-list-tile-title>FPKM</v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
+                            <v-list-tile avatar @click="openTMBChart">
+                            <v-list-tile-avatar>
+                            <img alt="boxplot icon" class="alpha-54" :src="webAppRoot + '/resources/images/boxplot_icon_black.png'" width="36px" />
+                        </v-list-tile-avatar>
+                            <v-list-tile-content >
+                                <v-list-tile-title>TMB</v-list-tile-title>
+                            </v-list-tile-content>
+                        </v-list-tile>    
+
+                        </v-list>
+                    </v-menu> 
+                </v-list-tile-title>
+            </v-list-tile-content>
+        </v-list-tile>   
 
                 <v-list-tile class="list-menu">
                         <v-list-tile-content>
@@ -292,7 +338,7 @@ const OpenCase2 = {
                                         <v-list-tile-avatar>
                                             <v-icon>mdi-web</v-icon>
                                         </v-list-tile-avatar>
-                                        <v-list-tile-content class="mb-2">
+                                        <v-list-tile-content >
                                             <v-list-tile-title>Open FLT3 locus (web)</v-list-tile-title>
                                         </v-list-tile-content>
                                     </v-list-tile>
@@ -301,7 +347,7 @@ const OpenCase2 = {
                                     <v-list-tile-avatar>
                                         <v-icon>mdi-desktop-mac-dashboard</v-icon>
                                     </v-list-tile-avatar>
-                                    <v-list-tile-content  class="mb-2">
+                                    <v-list-tile-content >
                                         <v-list-tile-title>Open FLT3 locus (desktop)</v-list-tile-title>
                                     </v-list-tile-content>
                                     </v-list-tile>
@@ -310,7 +356,7 @@ const OpenCase2 = {
                                     <v-list-tile-avatar>
                                         <v-icon>mdi-file-code</v-icon>
                                     </v-list-tile-avatar>
-                                    <v-list-tile-content  class="mb-2">
+                                    <v-list-tile-content  >
                                         <v-list-tile-title>Download IGV Session for FLT3 locus</v-list-tile-title>
                                     </v-list-tile-content>
                                     </v-list-tile>
@@ -419,6 +465,7 @@ const OpenCase2 = {
     <span v-else>No Mutational Signature Available</span>
 </v-tooltip>
 
+    <!--
 <v-badge right bottom overlap class="mini-badge" color="none">
 <span slot="badge">F</span>
 <v-tooltip bottom>
@@ -428,6 +475,22 @@ const OpenCase2 = {
     <span>Compare FPKM with other samples</span>
 </v-tooltip>
 </v-badge>
+-->
+
+<v-menu dark class="primary" origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y z-index="9">
+<v-tooltip left  slot="activator">
+<v-btn icon flat slot="activator">
+<img alt="boxplot icon" :src="webAppRoot + '/resources/images/boxplot_icon_white.png'" width="36px" />
+</v-btn>
+<span>Compare with Other Cases</span>
+</v-tooltip>
+<v-card color="primary">
+<v-list dense class="primary">
+    <v-list-tile @click="openFPKMChart">FPKM</v-list-tile>
+    <v-list-tile @click="openTMBChart">TMB</v-list-tile>
+</v-list>
+</v-card>
+</v-menu>
 
 <v-menu origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y >
 <v-btn icon flat slot="activator">IGV
@@ -529,9 +592,9 @@ const OpenCase2 = {
                                     <v-card-text>
                                         <v-list class="dense-tiles">
                                             <v-list-tile v-for="item in table.items" :key="item.label" class="pl-0 pr-0 pb-2 no-tile-padding">
-                                                <v-list-tile-content :class="[item.field == 'tmb' || item.field == 'oncotree' ? 'pt-1': '', 'pl-0','pr-0']">
+                                                <v-list-tile-content :class="[item.field == 'oncotree' ? 'pt-1': '', 'pl-0','pr-0']">
                                                     <v-layout class="full-width " justify-space-between align-start>
-                                                        <v-flex :class="[item && item.type == 'text-field' ? 'pt-2' : '', 'text-xs-left', item && item.field == 'icd10' ? 'xs2' : 'xs5', 'grow']">
+                                                        <v-flex :class="getPatientDetailLabelClass(item)">
                                                             <span :class="[item && item.active ? 'primary--text': '', 'selectable']">{{ item.label }}:</span>
                                                         </v-flex>
                                                         
@@ -589,18 +652,6 @@ const OpenCase2 = {
                                                                     <span>Open Lookup Tool</span>
                                                                     </v-tooltip>
                                                                 </v-flex>
-                                                                <v-flex xs v-if="item.field == 'tmb'" class="align-flex-right pt-0">
-                                                                <v-badge right bottom overlap class="mini-badge" color="none">
-                                                                <span slot="badge" class="primary--text pl-2 pt-1">T</span>
-                                                                <v-tooltip bottom>
-                                                                <v-btn flat color="primary" icon @click="openTMBChart" slot="activator" class="ma-0">
-                                                                    <!-- <v-icon>mdi-chart-scatter-plot</v-icon> -->
-                                                                    <img alt="boxplot icon" :src="webAppRoot + '/resources/images/boxplot_icon_primary.png'" width="36px" />
-                                                                </v-btn>
-                                                                <span>Compare TMB with other samples</span>
-                                                                </v-tooltip>
-                                                                </v-badge>
-                                                            </v-flex>
                                                             </v-layout>    
                                                         </v-flex>
                                                        
@@ -977,27 +1028,51 @@ const OpenCase2 = {
                     this.handleAxiosError(error);
                 });
         },
-        openFPKMChart(event) {
-            this.fpkmPositionx = event.clientX;
-            this.fpkmPositiony = event.clientY > 48 ? event.clientY : 54;
+        openFPKMChart() {
+            if (this.tmbVisible) {
+                this.fpkmPositionx = this.$refs.tmbPlot.$el.getBoundingClientRect().x - this.$refs.tmbPlot.$el.clientWidth - 10;
+            }
+            else {
+                this.fpkmPositionx = this.$el.clientWidth;
+            }
+            this.fpkmPositiony = 54;
             this.fpkmVisible = true;
             this.$nextTick(() => {
-                this.$refs.fpkmPlot.loadDefaultFPKMPlot();
+                setTimeout(() => {
+                    this.$refs.fpkmPlot.loadDefaultFPKMPlot();
+                }, 1000);
             });
         },
         closeFPKMChart() {
             this.fpkmVisible = false;
+            this.$nextTick(() => {
+                if (this.tmbVisible  && this.tmbPositionx < this.fpkmPositionx) {
+                    this.tmbPositionx = this.$el.clientWidth;
+                }
+             });
         },
-        openTMBChart(event) {
-            this.tmbPositionx = this.$el.clientWidth;
+        openTMBChart() {
+            if (this.fpkmVisible) {
+                this.tmbPositionx = this.$refs.fpkmPlot.$el.getBoundingClientRect().x - this.$refs.fpkmPlot.$el.clientWidth - 10;
+            }
+            else {
+                this.tmbPositionx = this.$el.clientWidth;
+            }
             this.tmbPositiony = 54;
             this.tmbVisible = true;
             this.$nextTick(() => {
-                this.$refs.tmbPlot.loadDefaultTMBPlot();
+                setTimeout(() => {
+                    this.$refs.tmbPlot.loadDefaultTMBPlot();
+                }, 1000);
             });
         },
         closeTMBChart() {
             this.tmbVisible = false;
+            this.$nextTick(() => {
+                if (this.fpkmVisible && this.fpkmPositionx < this.tmbPositionx) {
+                    this.fpkmPositionx = this.$el.clientWidth;
+                }
+            });
         },
         openMutSigImage(event) {
             if (!this.mutationalSignatureImage) {
@@ -2636,6 +2711,22 @@ const OpenCase2 = {
         closeAddFusionDialog() {
             this.addFusionDialogVisible = false;
         },
+        getPatientDetailLabelClass(item) {
+            var classes = ['text-xs-left', 'grow'];
+            if (item && item.type == 'text-field') {
+                classes.push('pt-2');
+            }
+            if (item && item.field == 'icd10') {
+                classes.push('xs2');
+            }
+            else if (item && item.field == 'msi') {
+                classes.push('xs');
+            }
+            else {
+                classes.push('xs5');
+            }
+            return classes;
+        }
     },
     mounted() {
         bus.$emit("need-layout-resize", this);

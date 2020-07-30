@@ -1352,7 +1352,7 @@ public class FinalReportPDFTemplate {
 //			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 30f);
 			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 42f);
 			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 29f);
-			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 27f);
+			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 25f);
 			float width = 2f;
 			if (colors.size() > 1) {
 				width = 4f / colors.size();

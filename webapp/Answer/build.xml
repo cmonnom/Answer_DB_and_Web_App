@@ -157,5 +157,6 @@
 
 	<target name="main-test" depends="war-docs-clean, scp-test" />
 	<target name="main-prod" depends="war-docs-clean, scp-prod" />
+	<target name="main-test-prod" depends="war-docs-clean, scp-test, scp-prod" />
 
 </project>

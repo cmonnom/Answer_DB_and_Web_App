@@ -8,6 +8,10 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
 import utsw.bicf.answer.model.ehr.Alteration;
 import utsw.bicf.answer.model.ehr.AlterationProperties;
 import utsw.bicf.answer.model.ehr.Alterations;
@@ -43,7 +47,7 @@ public class EpicXML {
 		this.caseSummary = caseSummary;
 	}
 	
-	public String buildXML() {
+	public String buildXML() throws JsonProcessingException {
 		ResultsReport resultsReport = new ResultsReport();
 		CustomerInformation customerInformation = buildCustomerInformation();
 		resultsReport.setCustomerInformation(customerInformation);
@@ -53,8 +57,8 @@ public class EpicXML {
 		rpayload.setPdfReport(buildPDFHash());
 		resultsReport.setResultsPayload(rpayload);
 		
-		
-		return null;
+		ObjectMapper mapper = new XmlMapper();
+		return mapper.writeValueAsString(resultsReport);
 	}
 	
 	private CustomerInformation buildCustomerInformation() {
@@ -85,6 +89,7 @@ public class EpicXML {
 		
 		//Sample
 		Sample sample = new Sample();
+		fr.setSample(sample);
 		sample.setFMId(caseSummary.getCaseId());
 		sample.setSampleId(caseSummary.getTumorBam());
 		sample.setTRFNumber(caseSummary.getCaseId());
@@ -106,6 +111,7 @@ public class EpicXML {
 		
 		//PMI
 		PMI pmi = new PMI();
+		fr.setPMI(pmi);
 		pmi.setReportId(caseSummary.getCaseId());
 		pmi.setMRN(caseSummary.getMedicalRecordNumber());
 		pmi.setFullName(caseSummary.getPatientName());
@@ -117,22 +123,26 @@ public class EpicXML {
 		
 		//Genes
 		Genes genes = new Genes();
+		fr.setGenes(genes);
 		QName name = new QName("Name");
 		QName include = new QName("Include");
 		QName interpretation = new QName("Interpretation");
 		for (IndicatedTherapy therapy : report.getIndicatedTherapies()) {
 			Gene gene = new Gene();
 			genes.getGene().add(gene);
-			JAXBElement<String> eltName = new JAXBElement<String>(name, String.class, therapy.getBiomarkers());
-			gene.getContent().add(eltName);
-			JAXBElement<Boolean> eltInclude = new JAXBElement<Boolean>(include, Boolean.class, true);
-			gene.getContent().add(eltInclude);
+			gene.setName(therapy.getBiomarkers());
+			gene.setInclude(true);
+//			JAXBElement<String> eltName = new JAXBElement<String>(name, String.class, therapy.getBiomarkers());
+//			gene.getContent().add(eltName);
+//			JAXBElement<Boolean> eltInclude = new JAXBElement<Boolean>(include, Boolean.class, true);
+//			gene.getContent().add(eltInclude);
 			
 			//Alterations
 			Alterations alts = new Alterations();
+			gene.setAlterations(alts);
 			Alteration alt = new Alteration();
 			alts.getAlteration().add(alt);
-			gene.getContent().add(alts);
+//			gene.getContent().add(alts);
 			
 			JAXBElement<String> eltNameAlt = new JAXBElement<String>(name, String.class, therapy.getVariant());
 			alt.getContent().add(eltNameAlt);

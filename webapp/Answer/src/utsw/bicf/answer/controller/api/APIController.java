@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,8 +30,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
+import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.db.api.utils.ReportBuilder;
+import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.CosmicFusion;
 import utsw.bicf.answer.model.CosmicSampleFusion;
 import utsw.bicf.answer.model.GenieCNA;
@@ -43,11 +47,16 @@ import utsw.bicf.answer.model.LookupVersion;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CosmicRawData;
+import utsw.bicf.answer.model.extmapping.OrderCase;
+import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
+import utsw.bicf.answer.reporting.ehr.EpicXML;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
+import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.NotificationUtils;
+import utsw.bicf.answer.security.OtherProperties;
 
 @Controller
 @RequestMapping("/")
@@ -59,6 +68,10 @@ public class APIController {
 	private FileProperties fileProps;
 	@Autowired
 	EmailProperties emailProps;
+	@Autowired
+	OtherProperties otherProps;
+	@Autowired
+	NCBIProperties ncbiProps;
 	
 
 	@RequestMapping("/parseMDAEmail")
@@ -761,5 +774,47 @@ public class APIController {
 		
 		reader2.close();
 		return lines;
+	}
+	
+	@RequestMapping("/testEpicReportHL7")
+	@ResponseBody
+	public String testEpicReportHL7(Model model, @RequestParam String token, 
+			@RequestParam String caseId, 
+			HttpSession httpSession) throws IOException, InterruptedException, URISyntaxException {
+		httpSession.setAttribute("user", "API User from testEpicReportHL7");
+		long now = System.currentTimeMillis();
+		// check that token is valid
+		Token theToken = modelDAO.getUpdateGenieDataToken(token);
+		AjaxResponse response = new AjaxResponse();
+		response.setSuccess(false);
+		response.setIsAllowed(false);
+		if (theToken == null) {
+			response.setMessage("You are not allowed to run this servlet.");
+			return response.createObjectJSON();
+		}
+		User user = ControllerUtil.getSessionUser(httpSession);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		
+		if (caseSummary == null) {
+			response.setMessage("Case " + caseId + " does not exist.");
+			return response.createObjectJSON();
+		}
+		
+		List<Report> reports = utils.getExistingReports(caseId);
+		if (reports == null || reports.isEmpty()) {
+			response.setMessage("No report for " + caseId + ".");
+			return response.createObjectJSON();
+		}
+		Report testReport = reports.get(reports.size() - 1);
+		Report reportDetails = utils.getReportDetails(testReport.getMongoDBId().getOid());
+		EpicXML epicXML = new EpicXML(reportDetails, caseSummary);
+		String xml = epicXML.buildXML();
+		
+		response.setIsAllowed(true);
+		response.setSuccess(true);
+		response.setPayload(xml);
+	
+		return response.createObjectJSON();
 	}
 }

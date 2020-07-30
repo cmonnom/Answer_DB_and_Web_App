@@ -1168,7 +1168,7 @@ Vue.component('variant-details-dialog', {
                                     type: this.currentVariant.gnomadHg19Variant ? "link" : null,
                                     linkIcon: "open_in_new",
                                     url: this.createGnomadLink(),
-                                    tooltip: "Open in gnomAD"
+                                    tooltip: "Open in gnomAD (data may differ from version on gnomAD website)"
                                 }
                             );
                         }
