@@ -16,6 +16,9 @@ public class OtherProperties {
 	public static final String AUTH_LDAP = "ldap";
 	public static final String AUTH_AZURE_OAUTH = "azure_oauth";
 	public static final String AUTH_LOCAL = "local";
+	 // CAREFUL WITH THIS PARAM. All users would use the same pwd stored in the Token table (dev-login).
+	//DO NOT USE THIS PARAM on test or prod. Only on local instances like AnswerVM
+	public static final String AUTH_DEV = "dev";
 	
 
 	public int getProxyPort() {

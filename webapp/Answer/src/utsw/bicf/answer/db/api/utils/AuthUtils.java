@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.UserCredentials;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.security.OtherProperties;
 
 /**
@@ -117,6 +118,30 @@ public class AuthUtils {
 			AjaxResponse mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
 			ajaxResponse.setSuccess(mongoDBResponse.getSuccess());
 		} else {
+			ajaxResponse.setSuccess(false);
+			ajaxResponse.setMessage("Wrong username or password");
+		}
+	}
+	
+	/**
+	 * CAREFUL WHEN USING THIS METHOD.
+	 * The goal is to bypass LDAP during development
+	 *  All users would use the same pwd stored in the Token table (dev-login).
+	 *  DO NOT USE THIS PARAM on test or prod. Only on local instances like AnswerVM
+	 *  
+	 *  Using this method, you can also become any registered user
+	 *  
+	 * @param ajaxResponse
+	 * @param userCreds
+	 */
+	public void checkDevCredentials(AjaxResponse ajaxResponse, UserCredentials userCreds) {
+		Token token = modelDAO.getDevLoginToken();
+		if (token != null && token.getToken().equals(userCreds.getPassword())) {
+			ajaxResponse.setIsAllowed(true);
+			ajaxResponse.setSuccess(true);
+		}
+		else {
+			ajaxResponse.setIsAllowed(false);
 			ajaxResponse.setSuccess(false);
 			ajaxResponse.setMessage("Wrong username or password");
 		}

@@ -125,6 +125,14 @@ public class LoginController {
 			else if (OtherProperties.AUTH_LDAP.equals(otherProps.getAuthenticateWith())) {
 				proceed = ldapUtils.isUserValid(user.getUsername(), credentials.getPassword());
 			}
+			else if (OtherProperties.AUTH_DEV.equals(otherProps.getAuthenticateWith())) {
+				AjaxResponse response = new AjaxResponse();
+				AuthUtils utils = new AuthUtils(modelDAO, otherProps);
+				credentials.setUsername(user.getUserId() + ""); //switch to userId for the auth
+				credentials.setPassword(credentials.getPassword());
+				utils.checkDevCredentials(response, credentials);
+				proceed = response.getSuccess();
+			}
 			else { //local auth check
 				AjaxResponse response = new AjaxResponse();
 				AuthUtils utils = new AuthUtils(modelDAO, otherProps);

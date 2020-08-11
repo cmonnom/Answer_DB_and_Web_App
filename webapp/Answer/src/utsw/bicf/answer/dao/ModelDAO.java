@@ -215,6 +215,14 @@ public class ModelDAO {
 		Token theToken = session.createQuery(hql, Token.class).uniqueResult();
 		return theToken;
 	}
+	
+	@Transactional
+	public Token getDevLoginToken() {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from Token where type = 'dev-login'";
+		Token theToken = session.createQuery(hql, Token.class).uniqueResult();
+		return theToken;
+	}
 
 	@Transactional
 	public AnswerDBCredentials getAnswerDBCredentials() {
