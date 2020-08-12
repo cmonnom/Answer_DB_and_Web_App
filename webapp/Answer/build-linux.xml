@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+
+<project name="Answer Webapp" basedir="." default="main-test">
+
+
+	<!-- Project Structure -->
+	<property name="jdk.version" value="1.8" />
+	<property name="src.dir" location="src" />
+	<property name="web.dir" value="war" />
+	<property name="webcontent.dir" value="WebContent" />
+	<property name="web.classes.dir" location="${web.dir}/WEB-INF/classes" />
+	<property name="target.dir" location="/tmp/war" />
+	<property name="tomcat.lib.dir" location="/opt/tomcat/latest/lib" />
+	<property name="answer.ssh.properties" location="/opt/answer/conf/answer-ssh.properties" />
+	<property name="web.xml.path" location="${web.dir}/WEB-INF/web.xml" />
+	<property name="docs.output.dir" location="/tmp/war/html" />
+	<property name="docs.source.dir" location="${webcontent.dir}/WEB-INF/view/docs/build/html" />
+	<property name="manifest.path" location="${web.dir}/META-INF/MANIFEST.MF" />
+	
+
+
+	<!-- Create folders -->
+	<target name="init">
+		<mkdir dir="${src.dir}" />
+		<mkdir dir="${target.dir}" />
+		<mkdir dir="${web.classes.dir}" />
+		<mkdir dir="${docs.output.dir}" />
+	</target>
+
+	<!-- Delete folders 
+	<target name="clean" description="clean up">
+		<delete dir="${web.dir}" />
+		<delete dir="${docs.output.dir}" />
+	</target> -->
+	
+	<!-- Delete folders -->
+		<target name="final-clean" description="clean up">
+			<move failonerror="false"  file="${web.dir}/index.jsp" tofile="${web.dir}/index.jsp.old"/>
+			<delete dir="${web.dir}" />
+			<delete dir="${docs.output.dir}" />
+		</target>
+
+	
+	<path id="EAR Libraries.libraryclasspath" />
+	<path id="Apache Tomcat v8.5 [Apache Tomcat v8.5].libraryclasspath">
+		<fileset dir="${tomcat.lib.dir}"></fileset>
+	</path>
+	<path id="Answer.classpath">
+		<pathelement location="build/classes" />
+		
+		<path refid="EAR Libraries.libraryclasspath" />
+		<fileset dir="${webcontent.dir}/WEB-INF/lib/"></fileset>
+		
+		<path refid="Apache Tomcat v8.5 [Apache Tomcat v8.5].libraryclasspath" />
+	</path>
+
+	<target name="compile" depends="init" description="compile source code">
+		<mkdir dir="${web.classes.dir}" />
+		<javac destdir="${web.classes.dir}" source="${jdk.version}" target="${jdk.version}" debug="true" 
+			includeantruntime="false">
+			<src path="${src.dir}" />
+			<classpath refid="Answer.classpath" />
+		</javac>
+	</target>
+
+	<target name="copy-resources" description="copy Java resources like xml and properties files">
+		<copy todir="${web.dir}/resources/">
+			<fileset dir="${webcontent.dir}/resources">
+			</fileset>
+		</copy>
+		<copy todir="war">
+			<fileset dir="${webcontent.dir}">
+				<exclude name="**/docs/**"/>
+			</fileset>
+		</copy>
+		<copy todir="${web.classes.dir}">
+					<fileset dir="src">
+						<include name="*.properties"/>
+					</fileset>
+		</copy>
+		<move file="${web.xml.path}.devprod" tofile="${web.xml.path}"/>
+	</target>
+	
+	<target name="copy-docs" description="copy documentation files">
+			<copy todir="${docs.output.dir}">
+				<fileset dir="${docs.source.dir}">
+				</fileset>
+			</copy>
+		</target>
+
+	<!-- Minify js files (testing for now) but does not support ES6 -->
+	<target name="js-minify">
+	    <apply executable="java" parallel="false">
+	        <fileset dir="${webcontent.dir}/resources/js" includes="admin.js" excludes="vue-sticky.js, *-min.js, *.min.js"/>
+	        <arg line="-jar"/>
+	        <arg path="${web.dir}/WEB-INF/lib/yuicompressor-2.4.2.jar"/>
+	        <srcfile/>
+	        <arg line="-o"/>
+	        <mapper type="glob" from="*.js" to="${web.dir}/resources/js/*-min.js"/>
+	        <targetfile/>
+	    </apply>
+	</target>
+	
+	<!-- Create the final WAR file for deployment -->
+		<target name="package" depends="final-clean, compile, version, copy-resources" description="create a war file">
+			<zip destfile="${target.dir}/Answer.war" basedir="${web.dir}">
+			</zip>
+		</target>
+	
+	<target name="zip-docs" depends="final-clean, copy-docs" description="zip documentation">
+				<zip destfile="${target.dir}/html.zip" basedir="${target.dir}/html">
+				</zip>
+			</target>
+
+       <target name="war-docs-clean" depends="package, zip-docs, final-clean" description="Create war and clean temp files">
+       	</target>
+	
+	<tstamp>
+	    <format property="VERSION_DATE" pattern="yyyy-MM-dd" locale="en,US"/>
+	</tstamp>
+	
+    <target name="version" description="Create version number in manifest">
+    	<mkdir dir="${web.dir}/META-INF" />
+    	<manifest file="${manifest.path}">
+    		 <attribute name="Implementation-Version" value="${VERSION_DATE}"/>
+    		</manifest>
+    	</target>
+	
+	<target name="war-clean-scp-test" depends="war-docs-clean, scp-test" description="Create war and clean temp files and copy to server">
+	</target>
+
+	<loadproperties srcFile="${answer.ssh.properties}" />
+	
+	<target name="scp-test" description="SCP to answer server">
+		<scp file="${target.dir}/Answer.war" trust="yes"
+			todir="${answer.test.username}:${answer.test.password}@${answer.test.host}:${answer.war.test.destination.path}"/>
+			<scp file="${target.dir}/html.zip" trust="yes"
+			todir="${answer.test.username}:${answer.test.password}@${answer.test.host}:${answer.war.test.destination.path}"/>
+	</target>
+	
+	<target name="scp-prod" description="SCP to answer server">
+			<scp file="${target.dir}/Answer.war" trust="yes"
+				todir="${answer.prod.username}:${answer.prod.password}@${answer.prod.host}:${answer.war.prod.destination.path}"/>
+				<scp file="${target.dir}/html.zip" trust="yes"
+				todir="${answer.prod.username}:${answer.prod.password}@${answer.prod.host}:${answer.war.prod.destination.path}"/>
+		</target>
+	
+	<target name="scp-test-docs" description="SCP docs to answer test server">
+		<scp file="${target.dir}/html.zip" trust="yes"
+			todir="${answer.test.username}:${answer.test.password}@${answer.test.host}:${answer.war.test.destination.path}"/>
+	</target>
+	
+	<target name="scp-prod-docs" description="SCP docs to answer prod server">
+			<scp file="${target.dir}/html.zip" trust="yes"
+				todir="${answer.prod.username}:${answer.prod.password}@${answer.prod.host}:${answer.war.prod.destination.path}"/>
+		</target>
+
+	<target name="main-test" depends="war-docs-clean, scp-test" />
+	<target name="main-prod" depends="war-docs-clean, scp-prod" />
+	<target name="main-test-prod" depends="war-docs-clean, scp-test, scp-prod" />
+
+</project>
