@@ -189,7 +189,17 @@ public class FinalReportPDFTemplate {
 		}
 		PDStreamUtils.write(contentStream, testName, FinalReportTemplateConstants.MAIN_FONT_TYPE, 16,
 				FinalReportTemplateConstants.MARGINLEFT, latestYPosition, Color.BLACK);
-		latestYPosition = latestYPosition - 30; // position of the patient table title
+		latestYPosition = latestYPosition - 20; // position of the subtitle
+		
+		if (report.getTumorPanel() != null && !report.getTumorPanel().equals("")) {
+			String tumorPanel = (report.getTumorPanel() + " Panel Report").toUpperCase(); 
+			PDStreamUtils.write(contentStream, tumorPanel, FinalReportTemplateConstants.MAIN_FONT_TYPE, 16,
+					FinalReportTemplateConstants.MARGINLEFT, latestYPosition, Color.BLACK);
+			latestYPosition = latestYPosition - 30; // position of the patient table title
+		}
+		else {
+			latestYPosition = latestYPosition - 10;
+		}
 		contentStream.close();
 	}
 
@@ -375,10 +385,20 @@ public class FinalReportPDFTemplate {
 
 	public void formatPatientCells(float defaultFont, BaseTable rightTable, CellItem item) throws IOException {
 		if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
-			item.setValue(item.getValue() + "%");
+			if (item.getValue() != null) {
+				item.setValue(item.getValue() + "%");
+			}
+			else {
+				item.setValue("");
+			}
 		}
 		else if (item.getField() != null && item.getField().equals("tumorPercent")) {
-			item.setValue(item.getValue() + "%");
+			if (item.getValue() != null) {
+				item.setValue(item.getValue() + "%");
+			}
+			else {
+				item.setValue("");
+			}
 		}
 		else if (item.getField() != null && item.getField().equals("msi")) {
 			String value = item.getValue() == null || item.getValue().equals("Not calculated") ? "" : item.getValue() + "%";

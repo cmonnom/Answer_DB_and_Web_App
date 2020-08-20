@@ -78,7 +78,6 @@ import utsw.bicf.answer.model.extmapping.MutationalSignatureData;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
-import utsw.bicf.answer.model.extmapping.TMBData;
 import utsw.bicf.answer.model.extmapping.TMBPerCaseData;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
@@ -285,7 +284,7 @@ public class RequestUtils {
 			}
 		}
 		String filterParam = filterList.createJSON();
-		System.out.println(filterParam);
+//		System.out.println(filterParam);
 
 		ExecutorService executor = Executors.newFixedThreadPool(2);
 		final OrderCase orderCase = new OrderCase();
@@ -974,12 +973,13 @@ public class RequestUtils {
 				if (chrom == null || cnrChrom.equals(chrom)) {
 					String chr = items.get(0);
 					Long pos = Long.parseLong(items.get(1));
-					Long ao = Long.parseLong(items.get(2));
+//					Long ao = Long.parseLong(items.get(2));
 					Long ro = Long.parseLong(items.get(3));
 					Double depth = Double.parseDouble(items.get(4));
 					Double log2 = Double.parseDouble(items.get(5));
 					if (!skipChrom(cnrChrom, keepX)) { //skip chromosomes in the toSkip list
-						bAllFDataList.add(new BAlleleFrequencyData(chr, pos, ao, ro, depth, log2));
+//						bAllFDataList.add(new BAlleleFrequencyData(chr, pos, ao, ro, depth, log2));
+						bAllFDataList.add(new BAlleleFrequencyData(chr, pos, ro, depth, log2));
 					}
 				}
 				
@@ -1602,7 +1602,7 @@ public class RequestUtils {
 		sbUrl.append("case/").append(reportToSave.getCaseId()).append("/savereport");
 		URI uri = new URI(sbUrl.toString());
 
-		System.out.println(reportToSave.createObjectJSON());
+//		System.out.println(reportToSave.createObjectJSON());
 		HttpResponse response = null;
 		if (isNewReport) {
 			requestPost = new HttpPost(uri);
@@ -1637,7 +1637,7 @@ public class RequestUtils {
 		sbUrl.append("case/").append(caseId).append("/cnv");
 		URI uri = new URI(sbUrl.toString());
 
-		System.out.println(cnvToSave.createObjectJSON());
+//		System.out.println(cnvToSave.createObjectJSON());
 		HttpResponse response = null;
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);
@@ -1890,7 +1890,7 @@ public class RequestUtils {
 
 		HttpResponse response = null;
 		requestPut = new HttpPut(uri);
-		System.out.println(row);
+//		System.out.println(row);
 
 		addAuthenticationHeader(requestPut);
 		requestPut.setEntity(new StringEntity(row, ContentType.APPLICATION_JSON));
@@ -2195,7 +2195,7 @@ public class RequestUtils {
 		sbUrl.append("case/").append(caseId).append("/translocation");
 		URI uri = new URI(sbUrl.toString());
 
-		System.out.println(fusionToSave.createObjectJSON());
+//		System.out.println(fusionToSave.createObjectJSON());
 		HttpResponse response = null;
 		requestPost = new HttpPost(uri);
 		addAuthenticationHeader(requestPost);

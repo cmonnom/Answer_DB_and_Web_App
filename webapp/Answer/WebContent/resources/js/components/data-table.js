@@ -33,7 +33,7 @@ Vue.component('data-table', {
         "external-filtering-active": {default: false, type: Boolean}, //parent can control that the table is filtered externally (eg. advanced-filter)
         "id-type": {default: "", type: String}, //can be used to know which table an event came from. Should be unique to some extend
     },
-    template: `<div>
+    template: /*html*/`<div>
     <!-- Comment above and uncomment below to use the buttons on hover feature -->
      <!-- <div @mouseover="toggleShowButtons(true)" @mouseleave="toggleShowButtons(false)"> -->
   <!-- Top tool bar with menu options -->

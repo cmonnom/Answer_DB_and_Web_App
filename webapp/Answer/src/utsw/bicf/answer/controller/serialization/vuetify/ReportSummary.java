@@ -90,6 +90,7 @@ public class ReportSummary {
 	
 	List<PubMed> pubmeds = new ArrayList<PubMed>();	
 	
+	String tumorPanel;
 	
 	public ReportSummary() {
 		
@@ -198,6 +199,7 @@ public class ReportSummary {
 			this.finalizedSince = TypeUtils.dateSince(finalizedUTCDatetime);
 		}
 		this.pubmeds = reportDetails.getPubmeds();
+		this.tumorPanel = reportDetails.getTumorPanel();
 	}
 	
 	public String createObjectJSON() throws JsonProcessingException {
@@ -628,6 +630,14 @@ public class ReportSummary {
 
 	public void setMissingTierFTLs(List<Translocation> missingTierFTLs) {
 		this.missingTierFTLs = missingTierFTLs;
+	}
+
+	public String getTumorPanel() {
+		return tumorPanel;
+	}
+
+	public void setTumorPanel(String tumorPanel) {
+		this.tumorPanel = tumorPanel;
 	}
 
 

@@ -147,7 +147,7 @@ Vue.component('lookup-panel-cna', {
              </v-toolbar>
              <v-card-text class="pl-2 pr-2 pt-1">
                  <div v-if="oncoKBVariantError" class="pl-2 pt-2 mt-1 pb-2 mb-1 pr-2">
-                     {{ lastGene }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }}<span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
+                     {{ lastGene }} {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }} <span v-text="getAmpDelLabel()"></span> has no result in OncoKB.
                  </div>
                  <div v-if="oncoKBVariantSummary">
                      <span class="font-weight-bold body-1 pl-2">OncoKB</span>

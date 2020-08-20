@@ -64,6 +64,8 @@ public class Report {
 	
 	List<PubMed> pubmeds = new ArrayList<PubMed>();	
 	
+	String tumorPanel;
+	
 	public Report() {
 	}
 
@@ -76,6 +78,7 @@ public class Report {
 		this.reportName = reportSummary.getReportName();
 		this.createdBy = reportSummary.getCreatedBy();
 		this.modifiedBy = reportSummary.getModifiedBy();
+		this.tumorPanel = reportSummary.getTumorPanel();
 		
 		this.setSummary(reportSummary.getSummary());
 		//update Indicated Therapies
@@ -551,6 +554,14 @@ public class Report {
 
 	public void setVirusIds(Set<String> virusIds) {
 		this.virusIds = virusIds;
+	}
+
+	public String getTumorPanel() {
+		return tumorPanel;
+	}
+
+	public void setTumorPanel(String tumorPanel) {
+		this.tumorPanel = tumorPanel;
 	}
 
 }

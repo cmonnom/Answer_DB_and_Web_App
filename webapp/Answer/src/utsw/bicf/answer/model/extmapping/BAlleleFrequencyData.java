@@ -9,7 +9,10 @@ import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 public class BAlleleFrequencyData {
 	
 	String chrom;
-	Long ao;
+	//ao is not used and sometimes is entered in Mongo as a string (see ao: "25,3")
+	//so for now, let's not parse it. The issue will need to be addressed
+	//the day we need that data.
+//	Long ao;
 	Long ro;
 	Long pos;
 	@JsonProperty("maf")
@@ -20,22 +23,31 @@ public class BAlleleFrequencyData {
 	public BAlleleFrequencyData() {
 		super();
 	}
-	public BAlleleFrequencyData(String chr, Long pos, Long ao, Long ro, Double depth, Double log2) {
+//	public BAlleleFrequencyData(String chr, Long pos, Long ao, Long ro, Double depth, Double log2) {
+//		super();
+//		this.chrom = TypeUtils.formatChromosome(chr);
+//		this.pos = pos;
+//		this.ao = ao;
+//		this.ro = ro;
+//		this.log2 = log2;
+//		this.depth = depth;
+//	}
+	
+	public BAlleleFrequencyData(String chr, Long pos, Long ro, Double depth, Double log2) {
 		super();
 		this.chrom = TypeUtils.formatChromosome(chr);
 		this.pos = pos;
-		this.ao = ao;
 		this.ro = ro;
 		this.log2 = log2;
 		this.depth = depth;
 	}
 	
-	public Long getAo() {
-		return ao;
-	}
-	public void setAo(Long ao) {
-		this.ao = ao;
-	}
+//	public Long getAo() {
+//		return ao;
+//	}
+//	public void setAo(Long ao) {
+//		this.ao = ao;
+//	}
 	public Long getRo() {
 		return ro;
 	}

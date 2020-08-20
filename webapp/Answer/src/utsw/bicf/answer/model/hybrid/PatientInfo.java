@@ -167,6 +167,7 @@ public class PatientInfo {
 //		items.add(clinicalStage);//TODO
 //		CellItem treatmentStatus = new CellItem("Treatment Status", orderCase.getTreatmentStatus());
 //		items.add(treatmentStatus);//TODO
+		items.add(new CellItem("Gene Panel", orderCase.getTumorPanel() != null ? orderCase.getTumorPanel() : ""));
 		patientTables.add(table);
 		
 		table = new ListTable();

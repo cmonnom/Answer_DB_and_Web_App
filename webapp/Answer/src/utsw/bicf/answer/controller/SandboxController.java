@@ -149,11 +149,12 @@ public class SandboxController {
 			if (!splitLine.isEmpty() && !splitLine.get(0).equals("CHROM")) {
 				String chr = splitLine.get(0);
 				Long pos = Long.parseLong(splitLine.get(1));
-				Long ao = Long.parseLong(splitLine.get(2));
+//				Long ao = Long.parseLong(splitLine.get(2));
 				Long ro = Long.parseLong(splitLine.get(3));
 				Double depth = Double.parseDouble(splitLine.get(4));
 				Double log2 = Double.parseDouble(splitLine.get(5));
-				ballelefreqs.add(new BAlleleFrequencyData(chr, pos, ao, ro, depth, log2));
+//				ballelefreqs.add(new BAlleleFrequencyData(chr, pos, ao, ro, depth, log2));
+				ballelefreqs.add(new BAlleleFrequencyData(chr, pos, ro, depth, log2));
 			}
 		}
 		rawData.setCaseId(caseId);

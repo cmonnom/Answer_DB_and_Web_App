@@ -133,6 +133,7 @@ public class ReportBuilder {
 		report.setCnvs(this.getCNVs(annotationsPerCNV));
 		this.setClinicalSignificances(annotationsPerSNP, annotationsPerCNV);
 		report.buildSummaryTable2();
+		report.setTumorPanel(caseDetails.getTumorPanel());
 		return report;
 	}
 

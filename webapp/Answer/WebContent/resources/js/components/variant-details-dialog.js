@@ -90,7 +90,9 @@ Vue.component('variant-details-dialog', {
         :userAnnotations="userAnnotations"
         @toggle-panel="handlePanelVisibility()" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
         @breadcrumb-navigation="breadcrumbNavigation"
-        :current-variant="currentVariant">
+        :current-variant="currentVariant"
+        :oncotree="oncotree"
+        @reload-values="reloadLookupValues">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
             <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType" 
@@ -99,6 +101,7 @@ Vue.component('variant-details-dialog', {
                 @save-variant="saveVariant" :color="colors.variantDetails"
                 :variant-type="currentVariantType" cnv-plot-id="cnvPlotEditUnused"
                 :loading-variant="loadingVariant"
+                @open-lookup-link="openLookupLink"
                 @toggle-lookup-tool="toggleLookupTool"
                 @toggle-lookup-tool-variant="toggleLookupToolVariant"
                 @toggle-lookup-tool-gene="toggleLookupToolGene">
@@ -113,6 +116,8 @@ Vue.component('variant-details-dialog', {
         :breadcrumbs="breadcrumbs" @breadcrumb-navigation="breadcrumbNavigation" :annotation-categories-c-n-v="annotationCategoriesCNV" :annotation-breadth="annotationBreadth"
         :annotation-phases="annotationPhases"
         :userAnnotations="userAnnotations"
+        @reload-values="reloadLookupValues"
+        :oncotree="oncotree"
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
         :current-variant="currentVariant" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible">
         <v-slide-y-transition slot="variantDetails">
@@ -123,6 +128,7 @@ Vue.component('variant-details-dialog', {
                     ref="cnvVariantDetailsPanel" cnv-plot-id="cnvPlotEdit" :cnv-chrom-list="cnvChromList"
                     :variant-type="currentVariantType"
                     :loading-variant="loadingVariant"
+                    @open-lookup-link="openLookupLink"
                     @toggle-lookup-tool="toggleLookupTool"
                     >
 
@@ -139,7 +145,9 @@ Vue.component('variant-details-dialog', {
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
         :annotation-phases="annotationPhases"
         :userAnnotations="userAnnotations"
-        :current-variant="currentVariant" @toggle-panel="handlePanelVisibility()">
+        :current-variant="currentVariant" @toggle-panel="handlePanelVisibility()"
+        :oncotree="oncotree"
+        @reload-values="reloadLookupValues">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
                     <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :width-class="getWidthClassForVariantDetails()" :type="currentVariantType"
@@ -148,6 +156,7 @@ Vue.component('variant-details-dialog', {
                         cnv-plot-id="cnvPlotEditUnusedFTL"
                         :variant-type="currentVariantType"
                         :loading-variant="loadingVariant"
+                        @open-lookup-link="openLookupLink"
                         @toggle-lookup-tool="toggleLookupTool">
                     </variant-details>
             </v-flex>
@@ -2761,29 +2770,48 @@ Vue.component('variant-details-dialog', {
         refreshVariantTables() {
             this.$emit("refresh-variant-tables");
         },
+        getLookupRef() {
+            var ref = this.$refs.lookupTool;
+            if (this.urlQuery.edit && this.isSNP()) {
+                ref = this.$refs.annotationDialog.$refs.lookupTool;
+            }
+            else if (this.urlQuery.edit && this.isCNV()) {
+                ref = this.$refs.cnvAnnotationDialog.$refs.lookupTool;
+            }
+            else if (this.urlQuery.edit && this.isTranslocation()) {
+                ref = this.$refs.translocationAnnotationDialog.$refs.lookupTool;
+            }
+            return ref;
+        },
         toggleLookupTool(cnvGeneName) {
-           this.reloadLookupValues(cnvGeneName);
-           this.$refs.lookupTool.panelVisible = true;
+            var ref = this.getLookupRef();
+            this.reloadLookupValues(ref, cnvGeneName);
+            ref.panelVisible = true;
         },
         toggleLookupToolVariant() {
-            this.reloadLookupValues(null, "Variant");
-            this.$refs.lookupTool.panelVisible = true;
-         },
-         toggleLookupToolGene() {
-            this.reloadLookupValues(null, "Gene");
-            this.$refs.lookupTool.panelVisible = true;
-         },
+            var ref = this.getLookupRef();
+            this.reloadLookupValues(ref, null, "Variant");
+            ref.panelVisible = true;
+        },
+        toggleLookupToolGene() {
+            var ref = this.getLookupRef();
+            this.reloadLookupValues(ref, null, "Gene");
+            ref.panelVisible = true;
+        },
         isLookupVisible() {
             return this.$refs.lookupTool && this.$refs.lookupTool.panelVisible;
         },
-        reloadLookupValues(cnvGeneName, activeButton) {
-            this.$refs.lookupTool.currentGene = this.currentVariant.geneName;
-            this.$refs.lookupTool.currentVariant = this.currentVariant.notation;
-            if (this.$refs.lookupTool.currentlyActive && !activeButton) {
-                activeButton = this.$refs.lookupTool.currentlyActive;
+        reloadLookupValues(ref, cnvGeneName, activeButton) {
+            if (!ref) {
+                ref = this.getLookupRef();
+            }
+            ref.currentGene = this.currentVariant.geneName;
+            ref.currentVariant = this.currentVariant.notation;
+            if (ref.currentlyActive && !activeButton) {
+                activeButton = ref.currentlyActive;
             }
             if (this.isCNV()) {
-                this.$refs.lookupTool.currentGene = cnvGeneName;
+                ref.currentGene = cnvGeneName;
                 var ampDel = "";
                 if (this.currentVariant.aberrationType == "amplification") {
                     ampDel = "amp";
@@ -2791,26 +2819,26 @@ Vue.component('variant-details-dialog', {
                 else if (this.currentVariant.aberrationType == "homozygous loss") {
                     ampDel = "del";
                 }
-                this.$refs.lookupTool.currentAmpDel = ampDel;
-                this.$refs.lookupTool.currentlyActive = "CNV";
+                ref.currentAmpDel = ampDel;
+                ref.currentlyActive = "CNV";
             }
             else if (this.isSNP()) {
-                this.$refs.lookupTool.currentlyActive = activeButton ? activeButton : "Variant";
+                ref.currentlyActive = activeButton ? activeButton : "Variant";
             }
             else if (this.isTranslocation()) {
-                this.$refs.lookupTool.currentFive = this.currentVariant.leftGene;
-                this.$refs.lookupTool.currentThree = this.currentVariant.rightGene;
-                this.$refs.lookupTool.currentlyActive = "Fusion";
+                ref.currentFive = this.currentVariant.leftGene;
+                ref.currentThree = this.currentVariant.rightGene;
+                ref.currentlyActive = "Fusion";
             }
-            this.$refs.lookupTool.oncokbVariantName = this.currentVariant.oncokbVariantName;
+            ref.oncokbVariantName = this.currentVariant.oncokbVariantName;
             
             var oncotreeItems = this.oncotree.filter(o => o.text == this.patientDetailsOncoTreeDiagnosis.text);
             var oncotree = null;
             if (oncotreeItems && oncotreeItems[0]) {
                 oncotree = oncotreeItems[0];
             }
-            this.$refs.lookupTool.currentOncotreeCode = oncotree;
-            this.$refs.lookupTool.submitForm();
+            ref.currentOncotreeCode = oncotree;
+            ref.submitForm();
         },
         getHG19Pos() {
             if (this.currentVariant.oldBuilds && this.currentVariant.oldBuilds.hg19) {

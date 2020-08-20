@@ -102,6 +102,7 @@ public class OrderCase {
 	String mutationalSignatureImage;
 	String mutationalSignatureLinkName;
 	List<MutationalSignatureData> mutationalSignatureData;
+	String tumorPanel;
 	
 	public OrderCase() {
 		
@@ -700,6 +701,7 @@ public class OrderCase {
 		this.msiClass = orderCase.msiClass;
 		this.mutationalSignatureImage = orderCase.mutationalSignatureImage;
 		this.mutationalSignatureLinkName = orderCase.mutationalSignatureLinkName;
+		this.tumorPanel = orderCase.tumorPanel;
 	}
 
 
@@ -710,6 +712,16 @@ public class OrderCase {
 
 	public void setMutationalSignatureData(List<MutationalSignatureData> mutationalSignatureData) {
 		this.mutationalSignatureData = mutationalSignatureData;
+	}
+
+
+	public String getTumorPanel() {
+		return tumorPanel;
+	}
+
+
+	public void setTumorPanel(String tumorPanel) {
+		this.tumorPanel = tumorPanel;
 	}
 
 

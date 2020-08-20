@@ -21,6 +21,7 @@ Vue.component('edit-annotations', {
         caseIcon: {default: "", type: String},
         caseType: {default: "", type: String},
         userAnnotations: { default: () => [], type: Array },
+        oncotree: {default: () => [], type: Array},
         single: {default: false, type: Boolean}, //only one annotation at a time (for editing outside of a case)
         outsideACase: {default: true, type: Boolean} //to display the variant details or not
     },
@@ -119,7 +120,9 @@ Vue.component('edit-annotations', {
                 </v-tooltip>
             </v-toolbar>
             <v-card-text :style="getDialogMaxHeight(130)" :class="['pl-3', 'pr-3', backColor, 'smooth-scroll']" ref="scrollableEditContent">
-                <v-breadcrumbs class="pt-2">
+            <v-layout row wrap>
+            <v-flex :class="isLookupVisible() ? 'xs8' : 'xs12'">
+            <v-breadcrumbs class="pt-2">
                 <v-icon slot="divider">forward</v-icon>
                     <v-breadcrumbs-item v-for="(item, index) in breadcrumbs" :key="item.text" :disabled="disableBreadCrumbItem(item, index)"  @click.native="breadcrumbNavigation(index)">
                     {{ item.text }}
@@ -514,6 +517,19 @@ Vue.component('edit-annotations', {
                         </v-card-text>
                     </v-slide-y-transition>
                 </v-card>
+                </v-flex>
+                <v-flex v-show="isLookupVisible()" class="xs4">
+                    <!-- lookup tools-->
+                <lookup-panel ref="lookupTool" :standalone="false"
+                :original-variant="currentVariant.notation"
+                :original-chr="currentVariant.chrom"
+                :original-pos="currentVariant.pos"
+                :original-pos-old-build="getHG19Pos()"
+                :oncotree-items="oncotree"
+                @reload-values="reloadLookupValues"
+                ></lookup-panel>
+                </v-flex>
+            </v-layout>
             </v-card-text>
             <v-card-actions :class="['card-actions-bottom', backColor]">
                 <v-tooltip top class="pr-2">
@@ -1031,34 +1047,46 @@ Vue.component('edit-annotations', {
               .catch(error => {
                 alert(error);
               });
-          },
-          getVariantsForGene(geneId, annotation) { //TODO
-            if (!geneId) {
-                return;
+        },
+        getVariantsForGene(geneId, annotation) { //TODO
+        if (!geneId) {
+            return;
+        }
+        axios.get(webAppRoot + "/getVariantsForGene", {
+            params: {
+            geneId: geneId,
+            annotationId: annotation._id.$oid
             }
-            axios.get(webAppRoot + "/getVariantsForGene", {
-              params: {
-                geneId: geneId,
-                annotationId: annotation._id.$oid
-              }
-            })
-              .then(response => {
-                if (response.data.isAllowed && response.data.success) {
-                    for (var i = 0; i < this.userAnnotations.length; i++) {
-                        if (this.userAnnotations[i]._id.$oid == response.data.payload.annotationId) {
-                            this.userAnnotations[i].variantItems = response.data.payload;
-                            break;
-                        }
+        })
+            .then(response => {
+            if (response.data.isAllowed && response.data.success) {
+                for (var i = 0; i < this.userAnnotations.length; i++) {
+                    if (this.userAnnotations[i]._id.$oid == response.data.payload.annotationId) {
+                        this.userAnnotations[i].variantItems = response.data.payload;
+                        break;
                     }
                 }
-                else {
-                  this.handleDialogs(response.data, this.getVariantsForGene.bind(null, geneId, annotation));
-                }
-              })
-              .catch(error => {
-                alert(error);
-              });
-          },
+            }
+            else {
+                this.handleDialogs(response.data, this.getVariantsForGene.bind(null, geneId, annotation));
+            }
+            })
+            .catch(error => {
+            alert(error);
+            });
+        },
+        isLookupVisible() {
+            return this.$refs.lookupTool && this.$refs.lookupTool.panelVisible;
+        },
+        getHG19Pos() {
+            if (this.currentVariant.oldBuilds && this.currentVariant.oldBuilds.hg19) {
+                return this.currentVariant.oldBuilds.hg19.pos;
+            }
+            return -1;
+        },
+        reloadLookupValues(ref, cnvGeneName, activeButton) {
+            this.$emit("reload-values", [this, ref, cnvGeneName, activeButton]);
+        }
     },
     created: function () {
     },
