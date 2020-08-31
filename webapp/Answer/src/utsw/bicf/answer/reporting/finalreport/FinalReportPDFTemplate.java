@@ -54,6 +54,7 @@ import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
+import utsw.bicf.answer.model.hybrid.SampleLowCoverageFromQC;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.reporting.parse.EncodingGlyphException;
 import utsw.bicf.answer.security.FileProperties;
@@ -116,6 +117,7 @@ public class FinalReportPDFTemplate {
 		this.createCNVTable();
 		this.createTranslocationTable();
 		this.createPubmedTable();
+//		this.createLowCoverageTable();
 		this.addInformationAboutTheTest();
 		this.addFooters();
 		if (report.getFinalized() == null || !report.getFinalized()) {
@@ -123,6 +125,72 @@ public class FinalReportPDFTemplate {
 		}
 		
 		this.addLinks();
+	}
+
+	private void createLowCoverageTable() throws IOException, EncodingGlyphException {
+		List<SampleLowCoverageFromQC> lowCovs = report.getLowCoverages();
+		Map<String, List<Integer>> exonsPerGenes = new HashMap<String, List<Integer>>();
+		
+		for (SampleLowCoverageFromQC lowCov : lowCovs) {
+			List<Integer> exons = exonsPerGenes.get(lowCov.getGene());
+			if (exons == null) {
+				exons = new ArrayList<Integer>();
+			}
+			exons.add(lowCov.getExonNb());
+			exonsPerGenes.put(lowCov.getGene(), exons);
+		}
+		this.updatePotentialNewPagePosition(exonsPerGenes.size());
+		
+		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.PUBMED_COLOR, FinalReportTemplateConstants.BORDER_PUBMED_COLOR);
+		if (!colors.contains(fColor)) {
+			colors.add(fColor);
+		}
+		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
+		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
+		BaseTable table = createNewTable(currentPage);
+		//Title
+		Row<PDPage> row = table.createRow(12); 
+//				table.addHeaderRow(row);
+		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.LOW_COV_TITLE);
+		this.applyTitleHeaderFormatting(cellHeader);
+		cellHeader.setTextColor(Color.WHITE);
+		cellHeader.setFillColor(FinalReportTemplateConstants.PUBMED_COLOR);
+		
+		if (exonsPerGenes.isEmpty()) {
+			row = table.createRow(12);
+			Cell<PDPage> cell = row.createCell(100, "No exon with low coverage");
+			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
+		}
+		else {
+			//Headers
+			row = table.createRow(12); 
+			table.addHeaderRow(row);
+			cellHeader = row.createCell(25, "GENE");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			cellHeader = row.createCell(75, "EXONS");
+			this.applyHeaderFormatting(cellHeader, defaultFont);
+			boolean greyBackground = false;
+			for (String gene : exonsPerGenes.keySet()) {
+				List<Integer> exons = exonsPerGenes.get(gene);
+				Color color = Color.WHITE;
+				if (greyBackground) {
+					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+				}
+				row = table.createRow(12);
+				Cell<PDPage> cell = row.createCell(25, gene);
+				this.applyCellFormatting(cell, defaultFont, color);
+				cell = row.createCell(75, exons.stream().filter(e -> e != null).map(e -> e.toString()).collect(Collectors.joining(", ")));
+				this.applyCellFormatting(cell, defaultFont, color);
+				greyBackground = !greyBackground;
+			}
+		}
+		try {
+			latestYPosition = table.draw() - 20;
+		} catch (IllegalArgumentException e) {
+			throw new EncodingGlyphException(e.getMessage() + " in Low Cov Table." );
+		}
 	}
 
 	private void addAddress() throws IOException, EncodingGlyphException {

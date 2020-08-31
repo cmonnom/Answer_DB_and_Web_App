@@ -89,6 +89,7 @@ public class FinalReportTemplateConstants {
 	public static final String CLINICAL_SIGNIFICANCE = "CLINICAL SIGNIFICANCE";
 	public static final String CLINICAL_SIGNIFICANCE_NAV = "VARIANT TIERS";
 	public static final String PUBMED_REFERENCE_TITLE = "PUBMED REFERENCES";
+	public static final String LOW_COV_TITLE = "LOW COVERAGE EXONS";
 	
 	
 	static {

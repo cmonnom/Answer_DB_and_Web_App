@@ -138,6 +138,7 @@ public class ReportBuilder {
 		report.setTumorPanel(caseDetails.getTumorPanel());
 		
 		AnswerLowExonCoverage lowCov = utils.getLowCoverageExons(caseDetails.getCaseId());
+//		AnswerLowExonCoverage lowCov = utils.getLowCoverageExons("ORD4310");
 		if (lowCov != null && lowCov.getSuccess() && lowCov.getLowCoverages() != null
 				&& !lowCov.getLowCoverages().isEmpty()) {
 			report.setLowCoverages(lowCov.getLowCoverages());
