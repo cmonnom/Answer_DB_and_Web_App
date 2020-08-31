@@ -24,6 +24,8 @@ public class GeneVariantAndAnnotation {
 	String copyNumber;
 	String aberrationType;
 	String type;
+	String ref;
+	String alt;
 	
 	public GeneVariantAndAnnotation() {
 	}
@@ -40,6 +42,8 @@ public class GeneVariantAndAnnotation {
 		this.taf = v.getTumorAltFrequencyFormatted() + "%";
 		this.tDepth = v.getTumorTotalDepth() + "";
 		this.type = "snp";
+		this.ref = v.getReference();
+		this.alt = v.getAlt();
 	}
 	
 	public GeneVariantAndAnnotation(CNV v, String genes, Map<String, String> annotationsByCategory) {
@@ -156,6 +160,22 @@ public class GeneVariantAndAnnotation {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getRef() {
+		return ref;
+	}
+
+	public void setRef(String ref) {
+		this.ref = ref;
+	}
+
+	public String getAlt() {
+		return alt;
+	}
+
+	public void setAlt(String alt) {
+		this.alt = alt;
 	}
 
 	

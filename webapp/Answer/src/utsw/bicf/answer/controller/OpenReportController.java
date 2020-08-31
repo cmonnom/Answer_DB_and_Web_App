@@ -55,6 +55,7 @@ import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.OtherProperties;
 import utsw.bicf.answer.security.PermissionUtils;
+import utsw.bicf.answer.security.QcAPIAuthentication;
 
 @Controller
 @RequestMapping("/")
@@ -104,6 +105,8 @@ public class OpenReportController {
 	NCBIProperties ncbiProps;
 	@Autowired
 	LoginDAO loginDAO;
+	@Autowired
+	QcAPIAuthentication qcAPI;
 
 	@RequestMapping("/openReport/{caseId}")
 	public String openReport(Model model, HttpSession session, @PathVariable String caseId,
@@ -192,7 +195,7 @@ public class OpenReportController {
 			@RequestParam(defaultValue="", required=false) String reportId,
 			@RequestParam(defaultValue="", required=false) String test) throws Exception {
 
-		RequestUtils utils = new RequestUtils(modelDAO);
+		RequestUtils utils = new RequestUtils(modelDAO, qcAPI);
 		User user = ControllerUtil.getSessionUser(session);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
 		if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
@@ -593,7 +596,7 @@ public class OpenReportController {
 
 		AjaxResponse response = new AjaxResponse();
 		// send user to Ben's API
-		RequestUtils utils = new RequestUtils(modelDAO);
+		RequestUtils utils = new RequestUtils(modelDAO, qcAPI);
 		User currentUser = ControllerUtil.getSessionUser(session);
 
 		boolean isAssigned = ControllerUtil.isUserAssignedToCase(utils, reportId, currentUser);

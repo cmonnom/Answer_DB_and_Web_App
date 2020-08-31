@@ -3,7 +3,7 @@ const OpenReport = {
         "readonly": { default: true, type: Boolean }
 
     },
-    template: `<div>
+    template: /*html*/`<div>
     <v-dialog v-model="confirmationDialogVisible" max-width="500px">
         <v-toolbar dense dark :color="colors.openReport">
             <v-toolbar-title>
@@ -182,7 +182,16 @@ const OpenReport = {
                                         <v-list-tile-content>
                                             <v-list-tile-title>PubMed References</v-list-tile-title>
                                         </v-list-tile-content>
-                                    </v-list-tile>
+                                        </v-list-tile>
+
+                                        <v-list-tile :class="!lowCoverageVisible ? 'grey--text' : ''" avatar @click="lowCoverageVisible = !lowCoverageVisible">
+                                        <v-list-tile-avatar>
+                                            <v-icon>assignment</v-icon>
+                                        </v-list-tile-avatar>
+                                        <v-list-tile-content>
+                                            <v-list-tile-title>Low Coverage Exons</v-list-tile-title>
+                                        </v-list-tile-content>
+                                        </v-list-tile>
                                     </v-list>
                                 </v-menu>
                             </v-list-tile-title>
@@ -463,6 +472,18 @@ const OpenReport = {
     </v-flex>
 </v-slide-y-transition>
 
+<v-slide-y-transition>
+        <v-flex xs12 xl9 v-show="lowCoverageVisible" pt-3>
+            <div>
+                <data-table ref="lowCoverages" :fixed="false" :fetch-on-created="false" table-title="Exons with Median Depth < 100X"
+                    initial-sort="chr" no-data-text="No Data" :show-pagination="true" title-icon="assignment" 
+                    :disable-sticky-header="true"
+                >
+                </data-table>
+            </div>
+        </v-flex>
+    </v-slide-y-transition>
+
 </div>`,
     data() {
         return {
@@ -501,6 +522,7 @@ const OpenReport = {
             copyNumberAlterationsVisible: false,
             geneFusionVisible: false,
             reportNotesVisible: false,
+            lowCoverageVisible: false,
             fullReport: {},
             currentEdit: {},
             currentEditField: "",
@@ -729,6 +751,13 @@ const OpenReport = {
                             }
                         }
 
+                        if (this.fullReport.lowCovSummary) {
+                            this.$refs.lowCoverages.manualDataFiltered(this.fullReport.lowCovSummary);
+                            // if (this.canProceed("canReview") && !this.readonly) {
+                            //     this.addCNVHeaderAction(this.fullReport.cnvSummary.headers);
+                            // }
+                        }
+
                         this.loadingReportDetails = false;
                         this.patientDetailsVisible = true;
                         this.reportNotesVisible = true;
@@ -740,6 +769,7 @@ const OpenReport = {
                         this.copyNumberAlterationsVisible = true;
                         this.geneFusionVisible = true;
                         this.pmidPanelVisible = true;
+                        this.lowCoverageVisible = false; //until ready
                         this.commitingAnnotations = false;
                     }
                     else {

@@ -35,7 +35,9 @@
 	
 	<!-- Delete folders -->
 		<target name="final-clean" description="clean up">
+			<sleep seconds="2"/>
 			<move failonerror="false"  file="${web.dir}/index.jsp" tofile="${web.dir}/index.jsp.old"/>
+			<sleep seconds="2"/>
 			<delete dir="${web.dir}" />
 			<delete dir="${docs.output.dir}" />
 		</target>

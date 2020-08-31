@@ -85,8 +85,10 @@ import utsw.bicf.answer.model.extmapping.Trial;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.extmapping.Virus;
 import utsw.bicf.answer.model.extmapping.WhiskerPerCaseData;
+import utsw.bicf.answer.model.hybrid.AnswerLowExonCoverage;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
+import utsw.bicf.answer.model.hybrid.SampleLowCoverageFromQC;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.AzureOAuth;
@@ -115,7 +117,14 @@ public class RequestUtils {
 	public RequestUtils(QcAPIAuthentication qcAPI) {
 		this.qcAPI = qcAPI;
 	}
-
+	
+	public RequestUtils(ModelDAO modelDAO, QcAPIAuthentication qcAPI) {
+		super();
+		this.modelDAO = modelDAO;
+		this.dbProps = modelDAO.getAnswerDBCredentials();
+		this.qcAPI = qcAPI;
+	}
+	
 	private HttpGet requestGet = null;
 	private HttpPost requestPost = null;
 	private HttpPut requestPut = null;
@@ -1110,474 +1119,474 @@ public class RequestUtils {
 	
 	//temp method to test displaying the report
 	//while Ben implements the API
-	public Report buildReportManually(String caseId, User user, OtherProperties otherProps, NCBIProperties ncbiProps) throws ClientProtocolException, IOException, URISyntaxException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
-		Report report = new Report();
-		OrderCase caseDetails = getCaseDetails(caseId, null);
-		report.setCaseId(caseDetails.getCaseId());
-		report.setCaseName(caseDetails.getCaseName());
-		report.setLabTestName(caseDetails.getLabTestName());
-		PatientInfo patientInfo = new PatientInfo(caseDetails);
-		report.setPatientInfo(patientInfo);
-		report.setReportName(caseDetails.getCaseName());
-		
-//		report.setSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
-		
-		List<String> strongTiers = Arrays.asList("1A", "1B");
-		List<String> possibleTiers = Arrays.asList("2C", "2D");
-		List<String> unknownTiers = Arrays.asList("3");
-		List<String> tier1Classifications = Arrays.asList(Variant.CATEGORY_LIKELY_PATHOGENIC, Variant.CATEGORY_PATHOGENIC);
-		
-		
-		MDAReportTemplate mdaEmail = this.getMDATrials(caseId);
-		List<BiomarkerTrialsRow> trials = null;
-		if (mdaEmail != null) {
-			trials = mdaEmail.getSelectedBiomarkers();
-			if (trials != null) {
-				if (mdaEmail.getSelectedAdditionalBiomarkers() != null)
-					trials.addAll(mdaEmail.getSelectedAdditionalBiomarkers());
-				if (mdaEmail.getRelevantBiomarkers() != null)
-					trials.addAll(mdaEmail.getRelevantBiomarkers());
-				if (mdaEmail.getRelevantAdditionalBiomarkers() != null)
-					trials.addAll(mdaEmail.getRelevantAdditionalBiomarkers());
-
-			}
-			else {
-				trials = new ArrayList<BiomarkerTrialsRow>();
-			}
-
-
-		}
-		
-		Set<String> pmIds = new HashSet<String>();
-		List<CNVReport> cnvReports = new ArrayList<CNVReport>();
-		for (CNV cnv : caseDetails.getCnvs()) {
-			if (cnv.getUtswAnnotated() != null && cnv.getUtswAnnotated()
-					&& cnv.getSelected() != null && cnv.getSelected()
-					) {
-				cnv = getCNVDetails(cnv.getMongoDBId().getOid());
-				if (cnv.getReferenceCnv() != null && cnv.getReferenceCnv().getUtswAnnotations() != null
-						&& !cnv.getReferenceCnv().getUtswAnnotations().isEmpty()) {
-					StringBuilder sb = new StringBuilder();
-					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
-					boolean atLeastOneChromosomal = false; //to increment the navigation table for chromosomal CNVs
-					for (Annotation a : cnv.getReferenceCnv().getUtswAnnotations()) {
-						Annotation.init(a, cnv.getAnnotationIdsForReporting(), modelDAO);
-						if (a.getIsSelected() != null && a.getIsSelected()
-								&& a.getBreadth() != null 
-								&& (a.getBreadth().equals("Chromosomal")
-										|| ((a.getBreadth().equals("Focal") && a.getTier() != null && unknownTiers.contains(a.getTier()))
-												|| a.getTier() == null))
-								&& !"Therapy".equals(a.getCategory())
-								&& !"Clinical Trial".equals(a.getCategory())) {
-							sb.append(a.getText()).append(" ");
-							atLeastOneSelected = true;
-							atLeastOneChromosomal = true;
-							if (a.getPmids() != null) {
-								pmIds.addAll(this.trimPmIds(a.getPmids()));
-							}
-						}
-						//get the trials
-						if (a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
-							trials.add(new BiomarkerTrialsRow(a.getTrial()));
-						}
-					}
-					if (atLeastOneSelected) {
-						cnvReports.add(new CNVReport(sb.toString(), cnv));
-						report.getCnvIds().add(cnv.getMongoDBId().getOid());
-						if (atLeastOneChromosomal) {
-							String aberrationType = "";
-							if ("gain".equals(cnv.getAberrationType())
-									|| "amplification".equals(cnv.getAberrationType())) {
-								aberrationType = "Gain ";
-							}
-							else if (cnv.getAberrationType() != null && cnv.getAberrationType().contains("loss")) {
-								aberrationType = "Loss ";
-							}
-							String cytobandTruncated = cnv.getCytoband().substring(0, 1);
-							report.incrementCnvCount(aberrationType + cnv.getChrom() + cytobandTruncated);
-						}
-					}
-				}
-			}
-		}
-		report.setCnvs(cnvReports);
-		
-		List<TranslocationReport> translocationReports = new ArrayList<TranslocationReport>();
-		for (Translocation ftl : caseDetails.getTranslocations()) {
-			if (ftl.getUtswAnnotated() != null && ftl.getUtswAnnotated()
-					&& ftl.getSelected() != null && ftl.getSelected()) {
-				ftl = getTranslocationDetails(ftl.getMongoDBId().getOid());
-				if (ftl.getReferenceTranslocation() != null && ftl.getReferenceTranslocation().getUtswAnnotations() != null
-						&& !ftl.getReferenceTranslocation().getUtswAnnotations().isEmpty()) {
-					StringBuilder sb = new StringBuilder();
-					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
-					for (Annotation a : ftl.getReferenceTranslocation().getUtswAnnotations()) {
-						Annotation.init(a, ftl.getAnnotationIdsForReporting(), modelDAO);
-						if (a.getIsSelected() != null && a.getIsSelected()
-								&& !"Therapy".equals(a.getCategory())
-								&& !"Clinical Trial".equals(a.getCategory())) { 
-								sb.append(a.getText()).append(" ");
-								atLeastOneSelected = true;
-								if (a.getPmids() != null) {
-									pmIds.addAll(this.trimPmIds(a.getPmids()));
-								}
-						}
-						//get the trials
-						if (a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
-							trials.add(new BiomarkerTrialsRow(a.getTrial()));
-						}
-					}
-					if (atLeastOneSelected) {
-						translocationReports.add(new TranslocationReport(sb.toString(), ftl));
-						report.getFtlIds().add(ftl.getMongoDBId().getOid());
-						report.incrementFusionCount(ftl.getFusionName());
-					}
-				}
-			}
-		}
-		report.setTranslocations(translocationReports);
-		
-		
-		List<IndicatedTherapy> indicatedTherapies = new ArrayList<IndicatedTherapy>();
-		for (Variant v : caseDetails.getVariants()) {
-			if (v.getSelected() != null && v.getSelected()) {
-				v = getVariantDetails(v.getMongoDBId().getOid());
-				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
-				if (v.getReferenceVariant() != null && 
-						v.getReferenceVariant().getUtswAnnotations() != null) {
-					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
-						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (this.annotationGoesInTherapyTable(a)
-								&& !"Clinical Trial".equals(a.getCategory())) {
-							annotations.add(new IndicatedTherapy(a, v));
-							report.getSnpIds().add(v.getMongoDBId().getOid());
-							report.incrementIndicatedTherapyCount(v.getGeneName());
-							if (a.getPmids() != null) {
-								pmIds.addAll(this.trimPmIds(a.getPmids()));
-							}
-						}
-						//get the trials
-						if (a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
-							trials.add(new BiomarkerTrialsRow(a.getTrial()));
-						}
-					}
-				}
-				indicatedTherapies.addAll(annotations);
-			}
-		}
-		for (CNV v : caseDetails.getCnvs()) {
-			if (v.getSelected() != null && v.getSelected()) {
-				v = getCNVDetails(v.getMongoDBId().getOid());
-				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
-				if (v.getReferenceCnv() != null && 
-						v.getReferenceCnv().getUtswAnnotations() != null) {
-					for (Annotation a : v.getReferenceCnv().getUtswAnnotations()) {
-						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (this.annotationGoesInTherapyTable(a)) {
-							annotations.add(new IndicatedTherapy(a, v));
-							report.getCnvIds().add(v.getMongoDBId().getOid());
-							String key = v.getGenes().stream().collect(Collectors.joining(" "));
-							if (v.getAberrationType().equals("ITD")) {
-								key += "-ITD";
-							}
-							report.incrementIndicatedTherapyCount(key);
-							if (a.getPmids() != null) {
-								pmIds.addAll(this.trimPmIds(a.getPmids()));
-							}
-						}
-					}
-				}
-				indicatedTherapies.addAll(annotations);
-			}
-		}
-		for (Translocation v : caseDetails.getTranslocations()) {
-			if (v.getSelected() != null && v.getSelected()) {
-				v = getTranslocationDetails(v.getMongoDBId().getOid());
-				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
-				if (v.getReferenceTranslocation() != null && 
-						v.getReferenceTranslocation().getUtswAnnotations() != null) {
-					for (Annotation a : v.getReferenceTranslocation().getUtswAnnotations()) {
-						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (this.annotationGoesInTherapyTable(a)) {
-							annotations.add(new IndicatedTherapy(a, v));
-							report.getFtlIds().add(v.getMongoDBId().getOid());
-							report.incrementIndicatedTherapyCount(v.getFusionName());
-							if (a.getPmids() != null) {
-								pmIds.addAll(this.trimPmIds(a.getPmids()));
-							}
-						}
-					}
-				}
-				indicatedTherapies.addAll(annotations);
-			}
-		}
-//		trials.stream().forEach(t -> t.setIsSelected(true)); //don't select them all by default (changed since I added a select all button)
-		report.setClinicalTrials(trials); //after adding all the UTSW trials
-		
-		report.setIndicatedTherapies(indicatedTherapies);
-		
-		report.setModifiedBy(user.getUserId());
-		report.setCreatedBy(user.getUserId());
-		report.setDateCreated(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
-		report.setDateModified(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
-		
-		report.setLive(true);
-		
-		List<Variant> variants = caseDetails.getVariants().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
-		List<CNV> cnvVariants = caseDetails.getCnvs().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
-		Map<String, GeneVariantAndAnnotation> annotationsStrongByVariant = new HashMap<String, GeneVariantAndAnnotation>();
-		Map<String, GeneVariantAndAnnotation> annotationsPossibleByVariant = new HashMap<String, GeneVariantAndAnnotation>();
-		Map<String, GeneVariantAndAnnotation> annotationsUnknownByVariant = new HashMap<String, GeneVariantAndAnnotation>();
-		
-		
-		for (Variant v : variants) {
-			if (v.getUtswAnnotated() && v.getSelected()) {
-				v = getVariantDetails(v.getMongoDBId().getOid());
-				List<Annotation> selectedAnnotationsForVariant = new ArrayList<Annotation>();
-				List<String> tiers = new ArrayList<String>(); //to determine the highest tier for this variant
-				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
-					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
-						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getCategory() != null ) {
-							selectedAnnotationsForVariant.add(a);
-							tiers.add(a.getTier());
-							if (a.getClassification() != null && tier1Classifications.contains(a.getClassification())) {
-								if (a.getClassification().equals(Variant.CATEGORY_PATHOGENIC)) {
-									tiers.add("1A");
-								}
-								else if (a.getClassification().equals(Variant.CATEGORY_LIKELY_PATHOGENIC)) {
-									tiers.add("1B");
-								}
-							}
-							if (a.getPmids() != null) {
-								pmIds.addAll(this.trimPmIds(a.getPmids()));
-							}
-						}
-					}
-				}
-				Map<String, List<String>> strongAnnotations = new HashMap<String, List<String>>();
-				Map<String, List<String>> possibleAnnotations = new HashMap<String, List<String>>();
-				Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
-				String highestTierForVariant = null;
-				tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
-				if (!tiers.isEmpty()) {
-					highestTierForVariant = tiers.get(0);
-					if (strongTiers.contains(highestTierForVariant)) {
-						for (Annotation a : selectedAnnotationsForVariant) {
-							String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
-							List<String> annotations = strongAnnotations.get(category);
-							if (annotations == null) {
-								annotations = new ArrayList<String>();
-							}
-							annotations.add(a.getText());
-							strongAnnotations.put(category, annotations);
-						}
-					}
-					else if (possibleTiers.contains(highestTierForVariant)) {
-						for (Annotation a : selectedAnnotationsForVariant) {
-							String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
-							List<String> annotations = possibleAnnotations.get(category);
-							if (annotations == null) {
-								annotations = new ArrayList<String>();
-							}
-							annotations.add(a.getText());
-							possibleAnnotations.put(category, annotations);
-						}
-					}
-					else if (unknownTiers.contains(highestTierForVariant)) {
-						for (Annotation a : selectedAnnotationsForVariant) {
-							String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
-							List<String> annotations = unknownAnnotations.get(category);
-							if (annotations == null) {
-								annotations = new ArrayList<String>();
-							}
-							annotations.add(a.getText());
-							unknownAnnotations.put(category, annotations);
-						}
-					}
-				}
-				else if (v.getType().equals("snp")){
-					//inform user that no tier was selected
-					report.getMissingTierVariants().add(v);
-				}
-				
-				String name = v.getGeneName() + " " + v.getNotation();
-				if (!strongAnnotations.isEmpty()) {
-					report.getSnpIds().add(v.getMongoDBId().getOid());
-					Map<String, String> strongAnnotationsConcat = new HashMap<String, String>();
-					for (String cat : strongAnnotations.keySet()) {
-						strongAnnotationsConcat.put(cat, strongAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
-					}
-					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, strongAnnotationsConcat));
-					report.incrementStrongClinicalSignificanceCount(v.getGeneName());
-				}
-				if (!possibleAnnotations.isEmpty()) {
-					report.getSnpIds().add(v.getMongoDBId().getOid());
-					Map<String, String> possibleAnnotationsConcat = new HashMap<String, String>();
-					for (String cat : possibleAnnotations.keySet()) {
-						possibleAnnotationsConcat.put(cat, possibleAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
-					}
-					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, possibleAnnotationsConcat));
-					report.incrementPossibleClinicalSignificanceCount(v.getGeneName());
-				}
-				if (!unknownAnnotations.isEmpty()) {
-					report.getSnpIds().add(v.getMongoDBId().getOid());
-					Map<String, String> unknownAnnotationsConcat = new HashMap<String, String>();
-					for (String cat : unknownAnnotations.keySet()) {
-						unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
-					}
-					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, unknownAnnotationsConcat));
-//					report.incrementUnknownClinicalSignificanceCount(v.getGeneName()); //no tier 3 in navigation table anymore
-				}
-					
-			}
-		}
-		
-		for (CNV v : cnvVariants) {
-			if (v.getSelected()) {
-				boolean hasTiers = false;
-				v = getCNVDetails(v.getMongoDBId().getOid());
-				Map<String, List<Annotation>> selectedAnnotationsForVariant = new HashMap<String, List<Annotation>>();
-				Map<String, List<String>> tiersByGenes = new HashMap<String, List<String>>(); //to determine the highest tier for this variant
-				if (v.getReferenceCnv() != null && v.getReferenceCnv().getUtswAnnotations() != null) {
-					for (Annotation a : v.getReferenceCnv().getUtswAnnotations()) {
-						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
-						if (a != null && a.getIsSelected() != null && a.getIsSelected()
-								&& a.getBreadth() != null) {
-							if (a.getBreadth().equals("Chromosomal") && a.getTier() != null && !a.getTier().equals("")) {
-								 //chromosomal annotations don't go into the same table
-								// but need to be counted anyway
-								hasTiers = true;
-							}
-							else if (a.getBreadth().equals("Focal") && !a.getCategory().equals("Therapy")) {
-								String key = a.getCnvGenes().stream().collect(Collectors.joining(" "));
-								if (v.getAberrationType().equals("ITD")) {
-									key += "-ITD";
-								}
-								List<Annotation> annotations = selectedAnnotationsForVariant.get(key);
-								if (annotations == null) {
-									annotations = new ArrayList<Annotation>();
-								}
-								annotations.add(a);
-								selectedAnnotationsForVariant.put(key, annotations);
-								List<String> tiers = tiersByGenes.get(key);
-								if (tiers == null) {
-									tiers = new ArrayList<String>();
-								}
-								tiers.add(a.getTier());
-								if (a.getClassification() != null && tier1Classifications.contains(a.getClassification())) {
-									if (a.getClassification().equals(Variant.CATEGORY_PATHOGENIC)) {
-										tiers.add("1A");
-									}
-									else if (a.getClassification().equals(Variant.CATEGORY_LIKELY_PATHOGENIC)) {
-										tiers.add("1B");
-									}
-								}
-								tiersByGenes.put(key, tiers);
-								if (a.getPmids() != null) {
-									pmIds.addAll(this.trimPmIds(a.getPmids()));
-								}
-							}
-						}
-					}
-				}
-				for (String genes : selectedAnnotationsForVariant.keySet()) {
-					List<Annotation> annotations = selectedAnnotationsForVariant.get(genes);
-					List<String> tiers = tiersByGenes.get(genes);
-					Map<String, List<String>> strongAnnotations = new HashMap<String, List<String>>();
-					Map<String, List<String>> possibleAnnotations = new HashMap<String, List<String>>();
-//					Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
-					String highestTierForVariant = null;
-					tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
-					if (!tiers.isEmpty() || hasTiers) {
-						hasTiers = true;
-						highestTierForVariant = tiers.get(0);
-						if (strongTiers.contains(highestTierForVariant)) {
-							for (Annotation a : annotations) {
-								String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
-								List<String> annotationsFormatted = strongAnnotations.get(category);
-								if (annotationsFormatted == null) {
-									annotationsFormatted = new ArrayList<String>();
-								}
-								annotationsFormatted.add(a.getText());
-								strongAnnotations.put(category, annotationsFormatted);
-							}
-						}
-						else if (possibleTiers.contains(highestTierForVariant)) {
-							for (Annotation a : annotations) {
-								String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
-								List<String> annotationsFormatted = possibleAnnotations.get(category);
-								if (annotationsFormatted == null) {
-									annotationsFormatted = new ArrayList<String>();
-								}
-								annotationsFormatted.add(a.getText());
-								possibleAnnotations.put(category, annotationsFormatted);
-							}
-						}
-//						else if (unknownTiers.contains(highestTierForVariant)) {
+//	public Report buildReportManually(String caseId, User user, OtherProperties otherProps, NCBIProperties ncbiProps) throws ClientProtocolException, IOException, URISyntaxException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException, InterruptedException {
+//		Report report = new Report();
+//		OrderCase caseDetails = getCaseDetails(caseId, null);
+//		report.setCaseId(caseDetails.getCaseId());
+//		report.setCaseName(caseDetails.getCaseName());
+//		report.setLabTestName(caseDetails.getLabTestName());
+//		PatientInfo patientInfo = new PatientInfo(caseDetails);
+//		report.setPatientInfo(patientInfo);
+//		report.setReportName(caseDetails.getCaseName());
+//		
+////		report.setSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+//		
+//		List<String> strongTiers = Arrays.asList("1A", "1B");
+//		List<String> possibleTiers = Arrays.asList("2C", "2D");
+//		List<String> unknownTiers = Arrays.asList("3");
+//		List<String> tier1Classifications = Arrays.asList(Variant.CATEGORY_LIKELY_PATHOGENIC, Variant.CATEGORY_PATHOGENIC);
+//		
+//		
+//		MDAReportTemplate mdaEmail = this.getMDATrials(caseId);
+//		List<BiomarkerTrialsRow> trials = null;
+//		if (mdaEmail != null) {
+//			trials = mdaEmail.getSelectedBiomarkers();
+//			if (trials != null) {
+//				if (mdaEmail.getSelectedAdditionalBiomarkers() != null)
+//					trials.addAll(mdaEmail.getSelectedAdditionalBiomarkers());
+//				if (mdaEmail.getRelevantBiomarkers() != null)
+//					trials.addAll(mdaEmail.getRelevantBiomarkers());
+//				if (mdaEmail.getRelevantAdditionalBiomarkers() != null)
+//					trials.addAll(mdaEmail.getRelevantAdditionalBiomarkers());
+//
+//			}
+//			else {
+//				trials = new ArrayList<BiomarkerTrialsRow>();
+//			}
+//
+//
+//		}
+//		
+//		Set<String> pmIds = new HashSet<String>();
+//		List<CNVReport> cnvReports = new ArrayList<CNVReport>();
+//		for (CNV cnv : caseDetails.getCnvs()) {
+//			if (cnv.getUtswAnnotated() != null && cnv.getUtswAnnotated()
+//					&& cnv.getSelected() != null && cnv.getSelected()
+//					) {
+//				cnv = getCNVDetails(cnv.getMongoDBId().getOid());
+//				if (cnv.getReferenceCnv() != null && cnv.getReferenceCnv().getUtswAnnotations() != null
+//						&& !cnv.getReferenceCnv().getUtswAnnotations().isEmpty()) {
+//					StringBuilder sb = new StringBuilder();
+//					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
+//					boolean atLeastOneChromosomal = false; //to increment the navigation table for chromosomal CNVs
+//					for (Annotation a : cnv.getReferenceCnv().getUtswAnnotations()) {
+//						Annotation.init(a, cnv.getAnnotationIdsForReporting(), modelDAO);
+//						if (a.getIsSelected() != null && a.getIsSelected()
+//								&& a.getBreadth() != null 
+//								&& (a.getBreadth().equals("Chromosomal")
+//										|| ((a.getBreadth().equals("Focal") && a.getTier() != null && unknownTiers.contains(a.getTier()))
+//												|| a.getTier() == null))
+//								&& !"Therapy".equals(a.getCategory())
+//								&& !"Clinical Trial".equals(a.getCategory())) {
+//							sb.append(a.getText()).append(" ");
+//							atLeastOneSelected = true;
+//							atLeastOneChromosomal = true;
+//							if (a.getPmids() != null) {
+//								pmIds.addAll(this.trimPmIds(a.getPmids()));
+//							}
+//						}
+//						//get the trials
+//						if (a.getIsSelected() != null && a.getIsSelected()
+//								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
+//							trials.add(new BiomarkerTrialsRow(a.getTrial()));
+//						}
+//					}
+//					if (atLeastOneSelected) {
+//						cnvReports.add(new CNVReport(sb.toString(), cnv));
+//						report.getCnvIds().add(cnv.getMongoDBId().getOid());
+//						if (atLeastOneChromosomal) {
+//							String aberrationType = "";
+//							if ("gain".equals(cnv.getAberrationType())
+//									|| "amplification".equals(cnv.getAberrationType())) {
+//								aberrationType = "Gain ";
+//							}
+//							else if (cnv.getAberrationType() != null && cnv.getAberrationType().contains("loss")) {
+//								aberrationType = "Loss ";
+//							}
+//							String cytobandTruncated = cnv.getCytoband().substring(0, 1);
+//							report.incrementCnvCount(aberrationType + cnv.getChrom() + cytobandTruncated);
+//						}
+//					}
+//				}
+//			}
+//		}
+//		report.setCnvs(cnvReports);
+//		
+//		List<TranslocationReport> translocationReports = new ArrayList<TranslocationReport>();
+//		for (Translocation ftl : caseDetails.getTranslocations()) {
+//			if (ftl.getUtswAnnotated() != null && ftl.getUtswAnnotated()
+//					&& ftl.getSelected() != null && ftl.getSelected()) {
+//				ftl = getTranslocationDetails(ftl.getMongoDBId().getOid());
+//				if (ftl.getReferenceTranslocation() != null && ftl.getReferenceTranslocation().getUtswAnnotations() != null
+//						&& !ftl.getReferenceTranslocation().getUtswAnnotations().isEmpty()) {
+//					StringBuilder sb = new StringBuilder();
+//					boolean atLeastOneSelected = false; //only add row if at least one annotation is selected
+//					for (Annotation a : ftl.getReferenceTranslocation().getUtswAnnotations()) {
+//						Annotation.init(a, ftl.getAnnotationIdsForReporting(), modelDAO);
+//						if (a.getIsSelected() != null && a.getIsSelected()
+//								&& !"Therapy".equals(a.getCategory())
+//								&& !"Clinical Trial".equals(a.getCategory())) { 
+//								sb.append(a.getText()).append(" ");
+//								atLeastOneSelected = true;
+//								if (a.getPmids() != null) {
+//									pmIds.addAll(this.trimPmIds(a.getPmids()));
+//								}
+//						}
+//						//get the trials
+//						if (a.getIsSelected() != null && a.getIsSelected()
+//								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
+//							trials.add(new BiomarkerTrialsRow(a.getTrial()));
+//						}
+//					}
+//					if (atLeastOneSelected) {
+//						translocationReports.add(new TranslocationReport(sb.toString(), ftl));
+//						report.getFtlIds().add(ftl.getMongoDBId().getOid());
+//						report.incrementFusionCount(ftl.getFusionName());
+//					}
+//				}
+//			}
+//		}
+//		report.setTranslocations(translocationReports);
+//		
+//		
+//		List<IndicatedTherapy> indicatedTherapies = new ArrayList<IndicatedTherapy>();
+//		for (Variant v : caseDetails.getVariants()) {
+//			if (v.getSelected() != null && v.getSelected()) {
+//				v = getVariantDetails(v.getMongoDBId().getOid());
+//				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
+//				if (v.getReferenceVariant() != null && 
+//						v.getReferenceVariant().getUtswAnnotations() != null) {
+//					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
+//						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+//						if (this.annotationGoesInTherapyTable(a)
+//								&& !"Clinical Trial".equals(a.getCategory())) {
+//							annotations.add(new IndicatedTherapy(a, v));
+//							report.getSnpIds().add(v.getMongoDBId().getOid());
+//							report.incrementIndicatedTherapyCount(v.getGeneName());
+//							if (a.getPmids() != null) {
+//								pmIds.addAll(this.trimPmIds(a.getPmids()));
+//							}
+//						}
+//						//get the trials
+//						if (a.getIsSelected() != null && a.getIsSelected()
+//								&& a.getCategory() != null && a.getCategory().equals("Clinical Trial")) {
+//							trials.add(new BiomarkerTrialsRow(a.getTrial()));
+//						}
+//					}
+//				}
+//				indicatedTherapies.addAll(annotations);
+//			}
+//		}
+//		for (CNV v : caseDetails.getCnvs()) {
+//			if (v.getSelected() != null && v.getSelected()) {
+//				v = getCNVDetails(v.getMongoDBId().getOid());
+//				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
+//				if (v.getReferenceCnv() != null && 
+//						v.getReferenceCnv().getUtswAnnotations() != null) {
+//					for (Annotation a : v.getReferenceCnv().getUtswAnnotations()) {
+//						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+//						if (this.annotationGoesInTherapyTable(a)) {
+//							annotations.add(new IndicatedTherapy(a, v));
+//							report.getCnvIds().add(v.getMongoDBId().getOid());
+//							String key = v.getGenes().stream().collect(Collectors.joining(" "));
+//							if (v.getAberrationType().equals("ITD")) {
+//								key += "-ITD";
+//							}
+//							report.incrementIndicatedTherapyCount(key);
+//							if (a.getPmids() != null) {
+//								pmIds.addAll(this.trimPmIds(a.getPmids()));
+//							}
+//						}
+//					}
+//				}
+//				indicatedTherapies.addAll(annotations);
+//			}
+//		}
+//		for (Translocation v : caseDetails.getTranslocations()) {
+//			if (v.getSelected() != null && v.getSelected()) {
+//				v = getTranslocationDetails(v.getMongoDBId().getOid());
+//				List<IndicatedTherapy> annotations = new ArrayList<IndicatedTherapy>();
+//				if (v.getReferenceTranslocation() != null && 
+//						v.getReferenceTranslocation().getUtswAnnotations() != null) {
+//					for (Annotation a : v.getReferenceTranslocation().getUtswAnnotations()) {
+//						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+//						if (this.annotationGoesInTherapyTable(a)) {
+//							annotations.add(new IndicatedTherapy(a, v));
+//							report.getFtlIds().add(v.getMongoDBId().getOid());
+//							report.incrementIndicatedTherapyCount(v.getFusionName());
+//							if (a.getPmids() != null) {
+//								pmIds.addAll(this.trimPmIds(a.getPmids()));
+//							}
+//						}
+//					}
+//				}
+//				indicatedTherapies.addAll(annotations);
+//			}
+//		}
+////		trials.stream().forEach(t -> t.setIsSelected(true)); //don't select them all by default (changed since I added a select all button)
+//		report.setClinicalTrials(trials); //after adding all the UTSW trials
+//		
+//		report.setIndicatedTherapies(indicatedTherapies);
+//		
+//		report.setModifiedBy(user.getUserId());
+//		report.setCreatedBy(user.getUserId());
+//		report.setDateCreated(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+//		report.setDateModified(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+//		
+//		report.setLive(true);
+//		
+//		List<Variant> variants = caseDetails.getVariants().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
+//		List<CNV> cnvVariants = caseDetails.getCnvs().stream().filter(v -> v.getSelected()).collect(Collectors.toList());
+//		Map<String, GeneVariantAndAnnotation> annotationsStrongByVariant = new HashMap<String, GeneVariantAndAnnotation>();
+//		Map<String, GeneVariantAndAnnotation> annotationsPossibleByVariant = new HashMap<String, GeneVariantAndAnnotation>();
+//		Map<String, GeneVariantAndAnnotation> annotationsUnknownByVariant = new HashMap<String, GeneVariantAndAnnotation>();
+//		
+//		
+//		for (Variant v : variants) {
+//			if (v.getUtswAnnotated() && v.getSelected()) {
+//				v = getVariantDetails(v.getMongoDBId().getOid());
+//				List<Annotation> selectedAnnotationsForVariant = new ArrayList<Annotation>();
+//				List<String> tiers = new ArrayList<String>(); //to determine the highest tier for this variant
+//				if (v.getReferenceVariant() != null && v.getReferenceVariant().getUtswAnnotations() != null) {
+//					for (Annotation a : v.getReferenceVariant().getUtswAnnotations()) {
+//						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+//						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+//								&& a.getCategory() != null ) {
+//							selectedAnnotationsForVariant.add(a);
+//							tiers.add(a.getTier());
+//							if (a.getClassification() != null && tier1Classifications.contains(a.getClassification())) {
+//								if (a.getClassification().equals(Variant.CATEGORY_PATHOGENIC)) {
+//									tiers.add("1A");
+//								}
+//								else if (a.getClassification().equals(Variant.CATEGORY_LIKELY_PATHOGENIC)) {
+//									tiers.add("1B");
+//								}
+//							}
+//							if (a.getPmids() != null) {
+//								pmIds.addAll(this.trimPmIds(a.getPmids()));
+//							}
+//						}
+//					}
+//				}
+//				Map<String, List<String>> strongAnnotations = new HashMap<String, List<String>>();
+//				Map<String, List<String>> possibleAnnotations = new HashMap<String, List<String>>();
+//				Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
+//				String highestTierForVariant = null;
+//				tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
+//				if (!tiers.isEmpty()) {
+//					highestTierForVariant = tiers.get(0);
+//					if (strongTiers.contains(highestTierForVariant)) {
+//						for (Annotation a : selectedAnnotationsForVariant) {
+//							String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
+//							List<String> annotations = strongAnnotations.get(category);
+//							if (annotations == null) {
+//								annotations = new ArrayList<String>();
+//							}
+//							annotations.add(a.getText());
+//							strongAnnotations.put(category, annotations);
+//						}
+//					}
+//					else if (possibleTiers.contains(highestTierForVariant)) {
+//						for (Annotation a : selectedAnnotationsForVariant) {
+//							String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
+//							List<String> annotations = possibleAnnotations.get(category);
+//							if (annotations == null) {
+//								annotations = new ArrayList<String>();
+//							}
+//							annotations.add(a.getText());
+//							possibleAnnotations.put(category, annotations);
+//						}
+//					}
+//					else if (unknownTiers.contains(highestTierForVariant)) {
+//						for (Annotation a : selectedAnnotationsForVariant) {
+//							String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
+//							List<String> annotations = unknownAnnotations.get(category);
+//							if (annotations == null) {
+//								annotations = new ArrayList<String>();
+//							}
+//							annotations.add(a.getText());
+//							unknownAnnotations.put(category, annotations);
+//						}
+//					}
+//				}
+//				else if (v.getType().equals("snp")){
+//					//inform user that no tier was selected
+//					report.getMissingTierVariants().add(v);
+//				}
+//				
+//				String name = v.getGeneName() + " " + v.getNotation();
+//				if (!strongAnnotations.isEmpty()) {
+//					report.getSnpIds().add(v.getMongoDBId().getOid());
+//					Map<String, String> strongAnnotationsConcat = new HashMap<String, String>();
+//					for (String cat : strongAnnotations.keySet()) {
+//						strongAnnotationsConcat.put(cat, strongAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+//					}
+//					annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, strongAnnotationsConcat));
+//					report.incrementStrongClinicalSignificanceCount(v.getGeneName());
+//				}
+//				if (!possibleAnnotations.isEmpty()) {
+//					report.getSnpIds().add(v.getMongoDBId().getOid());
+//					Map<String, String> possibleAnnotationsConcat = new HashMap<String, String>();
+//					for (String cat : possibleAnnotations.keySet()) {
+//						possibleAnnotationsConcat.put(cat, possibleAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+//					}
+//					annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, possibleAnnotationsConcat));
+//					report.incrementPossibleClinicalSignificanceCount(v.getGeneName());
+//				}
+//				if (!unknownAnnotations.isEmpty()) {
+//					report.getSnpIds().add(v.getMongoDBId().getOid());
+//					Map<String, String> unknownAnnotationsConcat = new HashMap<String, String>();
+//					for (String cat : unknownAnnotations.keySet()) {
+//						unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+//					}
+//					annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, unknownAnnotationsConcat));
+////					report.incrementUnknownClinicalSignificanceCount(v.getGeneName()); //no tier 3 in navigation table anymore
+//				}
+//					
+//			}
+//		}
+//		
+//		for (CNV v : cnvVariants) {
+//			if (v.getSelected()) {
+//				boolean hasTiers = false;
+//				v = getCNVDetails(v.getMongoDBId().getOid());
+//				Map<String, List<Annotation>> selectedAnnotationsForVariant = new HashMap<String, List<Annotation>>();
+//				Map<String, List<String>> tiersByGenes = new HashMap<String, List<String>>(); //to determine the highest tier for this variant
+//				if (v.getReferenceCnv() != null && v.getReferenceCnv().getUtswAnnotations() != null) {
+//					for (Annotation a : v.getReferenceCnv().getUtswAnnotations()) {
+//						Annotation.init(a, v.getAnnotationIdsForReporting(), modelDAO);
+//						if (a != null && a.getIsSelected() != null && a.getIsSelected()
+//								&& a.getBreadth() != null) {
+//							if (a.getBreadth().equals("Chromosomal") && a.getTier() != null && !a.getTier().equals("")) {
+//								 //chromosomal annotations don't go into the same table
+//								// but need to be counted anyway
+//								hasTiers = true;
+//							}
+//							else if (a.getBreadth().equals("Focal") && !a.getCategory().equals("Therapy")) {
+//								String key = a.getCnvGenes().stream().collect(Collectors.joining(" "));
+//								if (v.getAberrationType().equals("ITD")) {
+//									key += "-ITD";
+//								}
+//								List<Annotation> annotations = selectedAnnotationsForVariant.get(key);
+//								if (annotations == null) {
+//									annotations = new ArrayList<Annotation>();
+//								}
+//								annotations.add(a);
+//								selectedAnnotationsForVariant.put(key, annotations);
+//								List<String> tiers = tiersByGenes.get(key);
+//								if (tiers == null) {
+//									tiers = new ArrayList<String>();
+//								}
+//								tiers.add(a.getTier());
+//								if (a.getClassification() != null && tier1Classifications.contains(a.getClassification())) {
+//									if (a.getClassification().equals(Variant.CATEGORY_PATHOGENIC)) {
+//										tiers.add("1A");
+//									}
+//									else if (a.getClassification().equals(Variant.CATEGORY_LIKELY_PATHOGENIC)) {
+//										tiers.add("1B");
+//									}
+//								}
+//								tiersByGenes.put(key, tiers);
+//								if (a.getPmids() != null) {
+//									pmIds.addAll(this.trimPmIds(a.getPmids()));
+//								}
+//							}
+//						}
+//					}
+//				}
+//				for (String genes : selectedAnnotationsForVariant.keySet()) {
+//					List<Annotation> annotations = selectedAnnotationsForVariant.get(genes);
+//					List<String> tiers = tiersByGenes.get(genes);
+//					Map<String, List<String>> strongAnnotations = new HashMap<String, List<String>>();
+//					Map<String, List<String>> possibleAnnotations = new HashMap<String, List<String>>();
+////					Map<String, List<String>> unknownAnnotations = new HashMap<String, List<String>>();
+//					String highestTierForVariant = null;
+//					tiers = tiers.stream().filter(t -> t != null).sorted().collect(Collectors.toList());
+//					if (!tiers.isEmpty() || hasTiers) {
+//						hasTiers = true;
+//						highestTierForVariant = tiers.get(0);
+//						if (strongTiers.contains(highestTierForVariant)) {
 //							for (Annotation a : annotations) {
-//								String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
-//								List<String> annotationsFormatted = unknownAnnotations.get(category);
+//								String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
+//								List<String> annotationsFormatted = strongAnnotations.get(category);
 //								if (annotationsFormatted == null) {
 //									annotationsFormatted = new ArrayList<String>();
 //								}
 //								annotationsFormatted.add(a.getText());
-//								unknownAnnotations.put(category, annotationsFormatted);
+//								strongAnnotations.put(category, annotationsFormatted);
 //							}
 //						}
-					}
-					String name = genes;
-					if (!strongAnnotations.isEmpty()) {
-						report.getCnvIds().add(v.getMongoDBId().getOid());
-						Map<String, String> strongAnnotationsConcat = new HashMap<String, String>();
-						for (String cat : strongAnnotations.keySet()) {
-							strongAnnotationsConcat.put(cat, strongAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
-						}
-						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, strongAnnotationsConcat));
-						report.incrementStrongClinicalSignificanceCount(name);
-					}
-					if (!possibleAnnotations.isEmpty()) {
-						report.getCnvIds().add(v.getMongoDBId().getOid());
-						Map<String, String> possibleAnnotationsConcat = new HashMap<String, String>();
-						for (String cat : possibleAnnotations.keySet()) {
-							possibleAnnotationsConcat.put(cat, possibleAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
-						}
-						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, possibleAnnotationsConcat));
-						report.incrementPossibleClinicalSignificanceCount(name);
-					}
-//					if (!unknownAnnotations.isEmpty()) {
-//						report.getCnvIds().add(v.getMongoDBId().getOid());
-//						Map<String, String> unknownAnnotationsConcat = new HashMap<String, String>();
-//						for (String cat : unknownAnnotations.keySet()) {
-//							unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+//						else if (possibleTiers.contains(highestTierForVariant)) {
+//							for (Annotation a : annotations) {
+//								String category = a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory();
+//								List<String> annotationsFormatted = possibleAnnotations.get(category);
+//								if (annotationsFormatted == null) {
+//									annotationsFormatted = new ArrayList<String>();
+//								}
+//								annotationsFormatted.add(a.getText());
+//								possibleAnnotations.put(category, annotationsFormatted);
+//							}
 //						}
-//						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, unknownAnnotationsConcat));
-////						report.incrementUnknownClinicalSignificanceCount(name); //no tier 3 in navigation table anymore
+////						else if (unknownTiers.contains(highestTierForVariant)) {
+////							for (Annotation a : annotations) {
+////								String category = a.getCategory() == null ? "Uncategorized" : a.getCategory();
+////								List<String> annotationsFormatted = unknownAnnotations.get(category);
+////								if (annotationsFormatted == null) {
+////									annotationsFormatted = new ArrayList<String>();
+////								}
+////								annotationsFormatted.add(a.getText());
+////								unknownAnnotations.put(category, annotationsFormatted);
+////							}
+////						}
 //					}
-				}
-				if (!hasTiers) {
-					v.setType("cnv"); //somehow, the type is not set on CNV
-					report.getMissingTierCNVs().add(v);
-				}
-			}
-		}
-		
-		report.setSnpVariantsStrongClinicalSignificance(annotationsStrongByVariant);
-		report.setSnpVariantsPossibleClinicalSignificance(annotationsPossibleByVariant);
-		report.setSnpVariantsUnknownClinicalSignificance(annotationsUnknownByVariant);
-		
-		//convert pmids to PubMed objects
-		NCBIRequestUtils utils = new NCBIRequestUtils(ncbiProps, otherProps);
-		List<PubMed> pubmeds = utils.getPubmedDetails(pmIds, modelDAO);
-		report.setPubmeds(pubmeds);
-		
-		return report;
-	}
-	
+//					String name = genes;
+//					if (!strongAnnotations.isEmpty()) {
+//						report.getCnvIds().add(v.getMongoDBId().getOid());
+//						Map<String, String> strongAnnotationsConcat = new HashMap<String, String>();
+//						for (String cat : strongAnnotations.keySet()) {
+//							strongAnnotationsConcat.put(cat, strongAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+//						}
+//						annotationsStrongByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, strongAnnotationsConcat));
+//						report.incrementStrongClinicalSignificanceCount(name);
+//					}
+//					if (!possibleAnnotations.isEmpty()) {
+//						report.getCnvIds().add(v.getMongoDBId().getOid());
+//						Map<String, String> possibleAnnotationsConcat = new HashMap<String, String>();
+//						for (String cat : possibleAnnotations.keySet()) {
+//							possibleAnnotationsConcat.put(cat, possibleAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+//						}
+//						annotationsPossibleByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, possibleAnnotationsConcat));
+//						report.incrementPossibleClinicalSignificanceCount(name);
+//					}
+////					if (!unknownAnnotations.isEmpty()) {
+////						report.getCnvIds().add(v.getMongoDBId().getOid());
+////						Map<String, String> unknownAnnotationsConcat = new HashMap<String, String>();
+////						for (String cat : unknownAnnotations.keySet()) {
+////							unknownAnnotationsConcat.put(cat, unknownAnnotations.get(cat).stream().collect(Collectors.joining(" ")));
+////						}
+////						annotationsUnknownByVariant.put(name.replaceAll("\\.", ""), new GeneVariantAndAnnotation(v, name, unknownAnnotationsConcat));
+//////						report.incrementUnknownClinicalSignificanceCount(name); //no tier 3 in navigation table anymore
+////					}
+//				}
+//				if (!hasTiers) {
+//					v.setType("cnv"); //somehow, the type is not set on CNV
+//					report.getMissingTierCNVs().add(v);
+//				}
+//			}
+//		}
+//		
+//		report.setSnpVariantsStrongClinicalSignificance(annotationsStrongByVariant);
+//		report.setSnpVariantsPossibleClinicalSignificance(annotationsPossibleByVariant);
+//		report.setSnpVariantsUnknownClinicalSignificance(annotationsUnknownByVariant);
+//		
+//		//convert pmids to PubMed objects
+//		NCBIRequestUtils utils = new NCBIRequestUtils(ncbiProps, otherProps);
+//		List<PubMed> pubmeds = utils.getPubmedDetails(pmIds, modelDAO);
+//		report.setPubmeds(pubmeds);
+//		
+//		return report;
+//	}
+//	
 	/**
 	 * Checks if an annotation should go into the Indicated Therapy table
 	 * It should be selected
@@ -1787,6 +1796,27 @@ public class RequestUtils {
 		this.closePostRequest();
 	}
 
+	public AnswerLowExonCoverage getLowCoverageExons(String caseId) throws URISyntaxException, ClientProtocolException, IOException {
+		AnswerLowExonCoverage qcResponse = null;
+		//fetch low cov from NuCLIA
+		if (qcAPI != null && qcAPI.getLowCov() != null && !qcAPI.getLowCov().equals("")) {
+			requestPost = new HttpPost(qcAPI.getLowCov());
+			 List<NameValuePair> params = new ArrayList<NameValuePair>();
+			 params.add(new BasicNameValuePair("caseId", caseId));
+			 params.add(new BasicNameValuePair("token", qcAPI.getToken()));
+			StringEntity entity = new UrlEncodedFormEntity(params);
+			requestPost.setEntity(entity);
+			HttpResponse response = client.execute(requestPost);
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode == HttpStatus.SC_OK) {
+				qcResponse = mapper.readValue(response.getEntity().getContent(), AnswerLowExonCoverage.class);
+			}
+		}
+		this.closePostRequest();
+		return qcResponse;
+	}
+	
+	
 	public Trial getNCTData(AjaxResponse ajaxResponse, String nctId) throws ClientProtocolException, IOException, URISyntaxException {
 		StringBuilder sbUrl = new StringBuilder(dbProps.getUrl());
 		sbUrl.append("trials/").append(nctId);

@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import ca.uhn.hl7v2.HL7Exception;
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
@@ -51,6 +52,7 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
 import utsw.bicf.answer.reporting.ehr.EpicXML;
+import utsw.bicf.answer.reporting.ehr.HL7v251Factory;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
@@ -780,7 +782,7 @@ public class APIController {
 	@ResponseBody
 	public String testEpicReportHL7(Model model, @RequestParam String token, 
 			@RequestParam String caseId, 
-			HttpSession httpSession) throws IOException, InterruptedException, URISyntaxException {
+			HttpSession httpSession) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from testEpicReportHL7");
 		long now = System.currentTimeMillis();
 		// check that token is valid
@@ -806,14 +808,22 @@ public class APIController {
 			response.setMessage("No report for " + caseId + ".");
 			return response.createObjectJSON();
 		}
+		//ATM getting the latest report
+		//TODO get the finalized report instead
 		Report testReport = reports.get(reports.size() - 1);
 		Report reportDetails = utils.getReportDetails(testReport.getMongoDBId().getOid());
-		EpicXML epicXML = new EpicXML(reportDetails, caseSummary);
-		String xml = epicXML.buildXML();
+//		EpicXML epicXML = new EpicXML(reportDetails, caseSummary);
+//		String xml = epicXML.buildXML();
+//		
+//		response.setIsAllowed(true);
+//		response.setSuccess(true);
+//		response.setPayload(xml);
 		
+		HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils);
+		String hl7 = hl7Factory.reportToHL7();
 		response.setIsAllowed(true);
 		response.setSuccess(true);
-		response.setPayload(xml);
+		response.setPayload(hl7);
 	
 		return response.createObjectJSON();
 	}

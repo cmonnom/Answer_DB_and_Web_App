@@ -102,6 +102,7 @@
 <!-- 		<property name="api" value="${qc.api.url}" /> -->
 		<property name="token" value="${qc.token}" />
 		<property name="epic" value="${qc.api.epic}" />
+		<property name="lowCov" value="${qc.api.low.coverage}" />
 	</bean>
 	
 <!-- 	<bean id="requestUtils" class="utsw.bicf.answer.clarity.api.utils.RequestUtils"> -->

@@ -35,8 +35,10 @@ import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.extmapping.Variant;
+import utsw.bicf.answer.model.hybrid.AnswerLowExonCoverage;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
+import utsw.bicf.answer.model.hybrid.SampleLowCoverageFromQC;
 import utsw.bicf.answer.reporting.finalreport.CNVClinicalSignificance;
 import utsw.bicf.answer.reporting.finalreport.CNVReportWithHighestTier;
 import utsw.bicf.answer.reporting.finalreport.VariantReport;
@@ -134,6 +136,13 @@ public class ReportBuilder {
 		this.setClinicalSignificances(annotationsPerSNP, annotationsPerCNV);
 		report.buildSummaryTable2();
 		report.setTumorPanel(caseDetails.getTumorPanel());
+		
+		AnswerLowExonCoverage lowCov = utils.getLowCoverageExons(caseDetails.getCaseId());
+		if (lowCov != null && lowCov.getSuccess() && lowCov.getLowCoverages() != null
+				&& !lowCov.getLowCoverages().isEmpty()) {
+			report.setLowCoverages(lowCov.getLowCoverages());
+		}
+		
 		return report;
 	}
 
@@ -589,4 +598,5 @@ public class ReportBuilder {
 	public OrderCase getCaseDetails() {
 		return caseDetails;
 	}
+
 }

@@ -18,6 +18,7 @@ import utsw.bicf.answer.db.api.utils.ReportBuilder;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.model.hybrid.ReportNavigationRow;
+import utsw.bicf.answer.model.hybrid.SampleLowCoverageFromQC;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -65,6 +66,8 @@ public class Report {
 	List<PubMed> pubmeds = new ArrayList<PubMed>();	
 	
 	String tumorPanel;
+	
+	List<SampleLowCoverageFromQC> lowCoverages = new ArrayList<SampleLowCoverageFromQC>();
 	
 	public Report() {
 	}
@@ -120,6 +123,8 @@ public class Report {
 		this.addendum = reportSummary.getAddendum();
 		this.dateFinalized = reportSummary.getDateFinalized();
 		this.pubmeds = reportSummary.getPubmeds();
+		
+		this.setLowCoverages(reportSummary.getLowCovSummary().getItems());
 		
 	}
 	public MongoDBId getMongoDBId() {
@@ -562,6 +567,14 @@ public class Report {
 
 	public void setTumorPanel(String tumorPanel) {
 		this.tumorPanel = tumorPanel;
+	}
+
+	public List<SampleLowCoverageFromQC> getLowCoverages() {
+		return lowCoverages;
+	}
+
+	public void setLowCoverages(List<SampleLowCoverageFromQC> lowCoverages) {
+		this.lowCoverages = lowCoverages;
 	}
 
 }

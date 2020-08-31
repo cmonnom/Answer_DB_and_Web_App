@@ -875,7 +875,11 @@ public class FinalReportPDFTemplate {
 				cellContent.append("<b>").append(geneVariant).append("</b><br/>")
 				.append("<b>Pos: </b>").append(item.getPosition()).append("<br/>");
 				if (item.getType().equals("snp")) {
-					cellContent.append("<b>ENST: </b>").append(item.getTranscript()).append("<br/>")
+					cellContent
+					.append("<b>Ref: </b>").append(item.getRef()).append("<br/>")
+					.append("<b>Alt: </b>").append(item.getAlt()).append("<br/>")
+					.append("<b>ENST: </b>")
+					.append(item.getTranscript()).append("<br/>")
 					.append("<b>VAF: </b>").append(item.getTaf()).append("<br/>")
 					.append("<b>Depth: </b>").append(item.gettDepth()).append("<br/>");
 				}

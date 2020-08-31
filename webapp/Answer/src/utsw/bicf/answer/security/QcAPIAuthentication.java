@@ -6,6 +6,7 @@ public class QcAPIAuthentication {
 //	String api;
 	String token;
 	String epic;
+	String lowCov;
 	
 	public String getUrl() {
 		return url;
@@ -30,6 +31,12 @@ public class QcAPIAuthentication {
 	}
 	public void setEpic(String epic) {
 		this.epic = epic;
+	}
+	public String getLowCov() {
+		return lowCov;
+	}
+	public void setLowCov(String lowCov) {
+		this.lowCov = lowCov;
 	}
 	
 

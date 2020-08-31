@@ -92,6 +92,8 @@ public class ReportSummary {
 	
 	String tumorPanel;
 	
+	LowCovReportSummary lowCovSummary;
+	
 	public ReportSummary() {
 		
 	}
@@ -177,6 +179,7 @@ public class ReportSummary {
 			this.snpVariantsUnknownClinicalSignificance = reportDetails.getSnpVariantsUnknownClinicalSignificance();
 			
 			this.clinicalTrialsSummary = reportDetails.getClinicalTrials() != null ? new ReportClinicalTrialsSummary(reportDetails.getClinicalTrials(), "nctid") : null;
+			this.lowCovSummary = reportDetails.getLowCoverages() != null ? new LowCovReportSummary(reportDetails.getLowCoverages(), "locus") : null;
 		}
 	
 		this.missingTierVariants = reportDetails.getMissingTierVariants();
@@ -640,6 +643,12 @@ public class ReportSummary {
 		this.tumorPanel = tumorPanel;
 	}
 
+	public LowCovReportSummary getLowCovSummary() {
+		return lowCovSummary;
+	}
 
-	
+	public void setLowCovSummary(LowCovReportSummary lowCovSummary) {
+		this.lowCovSummary = lowCovSummary;
+	}
+
 }

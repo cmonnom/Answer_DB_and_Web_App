@@ -2178,6 +2178,7 @@ const OpenCase2 = {
 
         },
         loadPrevVariant() {
+            this.handleSaveAll(true);
             var table; //could be the selected table or the regular one
             if (this.isSNP()) {
                 if (this.reviewDialogVisible) {
@@ -2298,6 +2299,7 @@ const OpenCase2 = {
             this.updatingSelectedVariantTable = false;
         },
         loadNextVariant() {
+            this.handleSaveAll(true);
             var table; //could be the selected table or the regular one
             if (this.isSNP()) {
                 if (this.reviewDialogVisible) {
@@ -2590,7 +2592,8 @@ const OpenCase2 = {
         createAutoSaveInterval() {
             this.autoSaveInterval = setInterval(() => {
                 var editing = this.$route.query.edit === true || this.$route.query.edit === "true";
-                if (!this.waitingForAjaxActive && !editing) {
+                var reviewing = this.$route.query.showReview === true || this.$route.query.showReview === "true";
+                if (!this.waitingForAjaxActive && !editing && !reviewing) {
                     this.handleSaveAll(true);
                 }
             }, 120000);
