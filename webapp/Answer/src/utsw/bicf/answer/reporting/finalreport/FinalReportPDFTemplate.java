@@ -118,6 +118,7 @@ public class FinalReportPDFTemplate {
 		this.createTranslocationTable();
 		this.createPubmedTable();
 //		this.createLowCoverageTable();
+//		this.createLowCoverageTableSplit();
 		this.addInformationAboutTheTest();
 		this.addFooters();
 		if (report.getFinalized() == null || !report.getFinalized()) {
@@ -127,7 +128,81 @@ public class FinalReportPDFTemplate {
 		this.addLinks();
 	}
 
-	private void createLowCoverageTable() throws IOException, EncodingGlyphException {
+//	private void createLowCoverageTable() throws IOException, EncodingGlyphException {
+//		List<SampleLowCoverageFromQC> lowCovs = report.getLowCoverages();
+//		Map<String, List<Integer>> exonsPerGenes = new HashMap<String, List<Integer>>();
+//		
+//		for (SampleLowCoverageFromQC lowCov : lowCovs) {
+//			List<Integer> exons = exonsPerGenes.get(lowCov.getGene());
+//			if (exons == null) {
+//				exons = new ArrayList<Integer>();
+//			}
+//			if (!exons.contains(lowCov.getExonNb())) {
+//				exons.add(lowCov.getExonNb());
+//				exonsPerGenes.put(lowCov.getGene(), exons);
+//			}
+//		}
+//		this.updatePotentialNewPagePosition(exonsPerGenes.size());
+//		
+//		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+//		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+//		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.PUBMED_COLOR, FinalReportTemplateConstants.BORDER_PUBMED_COLOR);
+//		if (!colors.contains(fColor)) {
+//			colors.add(fColor);
+//		}
+//		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
+//		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
+//		BaseTable table = createNewTable(currentPage);
+//		//Title
+//		Row<PDPage> row = table.createRow(12); 
+////				table.addHeaderRow(row);
+//		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.LOW_COV_TITLE);
+//		this.applyTitleHeaderFormatting(cellHeader);
+//		cellHeader.setTextColor(Color.WHITE);
+//		cellHeader.setFillColor(FinalReportTemplateConstants.PUBMED_COLOR);
+//		
+//		if (exonsPerGenes.isEmpty()) {
+//			row = table.createRow(12);
+//			Cell<PDPage> cell = row.createCell(100, "No exon with low coverage");
+//			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
+//		}
+//		else {
+//			//Headers
+//			row = table.createRow(12); 
+//			table.addHeaderRow(row);
+//			int width = 15;
+//			cellHeader = row.createCell(width, "GENE");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(width, "EXON #");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			boolean greyBackground = false;
+//			List<String> sortedGenes = new ArrayList<String>();
+//			sortedGenes.addAll(exonsPerGenes.keySet());
+//			Collections.sort(sortedGenes);
+//			for (String gene : sortedGenes) {
+//				List<Integer> exons = exonsPerGenes.get(gene);
+//				Color color = Color.WHITE;
+//				if (greyBackground) {
+//					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+//				}
+//				row = table.createRow(12);
+//				Cell<PDPage> cell = row.createCell(width, gene);
+//				this.applyCellFormatting(cell, defaultFont, color);
+//				String cellContent = exons.stream().filter(e -> e != null).map(e -> e.toString()).sorted().collect(Collectors.joining(", "));
+//				cell = row.createCell(width, cellContent);
+//				this.applyCellFormatting(cell, defaultFont, color);
+//				cell.setAlign(HorizontalAlignment.RIGHT);
+//				greyBackground = !greyBackground;
+//			}
+//		}
+//		try {
+//			latestYPosition = table.draw() - 20;
+//		} catch (IllegalArgumentException e) {
+//			throw new EncodingGlyphException(e.getMessage() + " in Low Cov Table." );
+//		}
+//	}
+	
+	private String createLowCoverageString() {
 		List<SampleLowCoverageFromQC> lowCovs = report.getLowCoverages();
 		Map<String, List<Integer>> exonsPerGenes = new HashMap<String, List<Integer>>();
 		
@@ -136,62 +211,146 @@ public class FinalReportPDFTemplate {
 			if (exons == null) {
 				exons = new ArrayList<Integer>();
 			}
-			exons.add(lowCov.getExonNb());
-			exonsPerGenes.put(lowCov.getGene(), exons);
+			if (!exons.contains(lowCov.getExonNb())) {
+				exons.add(lowCov.getExonNb());
+				exonsPerGenes.put(lowCov.getGene(), exons);
+			}
 		}
 		this.updatePotentialNewPagePosition(exonsPerGenes.size());
 		
-		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
-		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
-		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.PUBMED_COLOR, FinalReportTemplateConstants.BORDER_PUBMED_COLOR);
-		if (!colors.contains(fColor)) {
-			colors.add(fColor);
-		}
-		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
-		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
-		BaseTable table = createNewTable(currentPage);
-		//Title
-		Row<PDPage> row = table.createRow(12); 
-//				table.addHeaderRow(row);
-		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.LOW_COV_TITLE);
-		this.applyTitleHeaderFormatting(cellHeader);
-		cellHeader.setTextColor(Color.WHITE);
-		cellHeader.setFillColor(FinalReportTemplateConstants.PUBMED_COLOR);
-		
 		if (exonsPerGenes.isEmpty()) {
-			row = table.createRow(12);
-			Cell<PDPage> cell = row.createCell(100, "No exon with low coverage");
-			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
+			return "No exon with low coverage";
 		}
 		else {
-			//Headers
-			row = table.createRow(12); 
-			table.addHeaderRow(row);
-			cellHeader = row.createCell(25, "GENE");
-			this.applyHeaderFormatting(cellHeader, defaultFont);
-			cellHeader = row.createCell(75, "EXONS");
-			this.applyHeaderFormatting(cellHeader, defaultFont);
-			boolean greyBackground = false;
-			for (String gene : exonsPerGenes.keySet()) {
+			List<String> sortedGenes = new ArrayList<String>();
+			sortedGenes.addAll(exonsPerGenes.keySet());
+			Collections.sort(sortedGenes);
+			StringBuilder sb = new StringBuilder("The following genes:exons have less than 100X coverage on average: ");
+			for (String gene : sortedGenes) {
 				List<Integer> exons = exonsPerGenes.get(gene);
-				Color color = Color.WHITE;
-				if (greyBackground) {
-					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
-				}
-				row = table.createRow(12);
-				Cell<PDPage> cell = row.createCell(25, gene);
-				this.applyCellFormatting(cell, defaultFont, color);
-				cell = row.createCell(75, exons.stream().filter(e -> e != null).map(e -> e.toString()).collect(Collectors.joining(", ")));
-				this.applyCellFormatting(cell, defaultFont, color);
-				greyBackground = !greyBackground;
+				sb.append(gene).append(": ");
+				String cellContent = exons.stream().filter(e -> e != null).map(e -> e.toString()).sorted().collect(Collectors.joining(", "));
+				sb.append(cellContent).append("; ");
 			}
-		}
-		try {
-			latestYPosition = table.draw() - 20;
-		} catch (IllegalArgumentException e) {
-			throw new EncodingGlyphException(e.getMessage() + " in Low Cov Table." );
+			return sb.toString();
 		}
 	}
+	
+//	private void createLowCoverageTableSplit() throws IOException, EncodingGlyphException {
+//		List<SampleLowCoverageFromQC> lowCovs = report.getLowCoverages();
+//		Map<String, List<Integer>> exonsPerGenes = new HashMap<String, List<Integer>>();
+//		
+//		for (SampleLowCoverageFromQC lowCov : lowCovs) {
+//			List<Integer> exons = exonsPerGenes.get(lowCov.getGene());
+//			if (exons == null) {
+//				exons = new ArrayList<Integer>();
+//			}
+//			if (!exons.contains(lowCov.getExonNb())) {
+//				exons.add(lowCov.getExonNb());
+//				exonsPerGenes.put(lowCov.getGene(), exons);
+//			}
+//		}
+//		this.updatePotentialNewPagePosition(exonsPerGenes.size());
+//		
+//		PDPage currentPage = this.mainDocument.getPage(this.mainDocument.getNumberOfPages() - 1);
+//		List<FooterColor> colors = this.getExistingColorsForCurrentPage();
+//		FooterColor fColor = new FooterColor(FinalReportTemplateConstants.PUBMED_COLOR, FinalReportTemplateConstants.BORDER_PUBMED_COLOR);
+//		if (!colors.contains(fColor)) {
+//			colors.add(fColor);
+//		}
+//		colorPerPage.put(this.mainDocument.getNumberOfPages() - 1, colors);
+//		float defaultFont = FinalReportTemplateConstants.SMALLER_TEXT_FONT_SIZE;
+//		BaseTable table = createNewTable(currentPage);
+//		//Title
+//		Row<PDPage> row = table.createRow(12); 
+////				table.addHeaderRow(row);
+//		Cell<PDPage> cellHeader = row.createCell(100, FinalReportTemplateConstants.LOW_COV_TITLE);
+//		this.applyTitleHeaderFormatting(cellHeader);
+//		cellHeader.setTextColor(Color.WHITE);
+//		cellHeader.setFillColor(FinalReportTemplateConstants.PUBMED_COLOR);
+//		
+//		if (exonsPerGenes.isEmpty()) {
+//			row = table.createRow(12);
+//			Cell<PDPage> cell = row.createCell(100, "No exon with low coverage");
+//			this.applyCellFormatting(cell, defaultFont, Color.WHITE);
+//		}
+//		else {
+//			//Headers
+//			row = table.createRow(12); 
+//			table.addHeaderRow(row);
+//			int width = 15;
+//			cellHeader = row.createCell(width, "GENE");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(width, "EXON #");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(100 - 4 * width, " ");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(width, "GENE");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			cellHeader = row.createCell(width, "EXON #");
+//			this.applyHeaderFormatting(cellHeader, defaultFont);
+//			boolean greyBackground = false;
+//			List<String> sortedGenes = new ArrayList<String>();
+//			sortedGenes.addAll(exonsPerGenes.keySet());
+//			Collections.sort(sortedGenes);
+//			List<String> firstHalf = new ArrayList<String>();
+//			List<String> secondHalf = new ArrayList<String>();
+//			int size = sortedGenes.size();
+//			int rebalance = 0;
+//			if (size % 2 != 0) {
+//				rebalance = 1; //make sure firstHalf is greater or equal to secondHalf
+//			}
+//			for (int i = 0;i < sortedGenes.size() / 2 + rebalance; i++) {
+//				firstHalf.add(sortedGenes.get(i));
+//			}
+//			for (int i = sortedGenes.size() / 2 + rebalance; i < sortedGenes.size(); i++) {
+//				secondHalf.add(sortedGenes.get(i));
+//			}
+//			for (int i = 0;i < firstHalf.size(); i++) {
+//				String gene1 = firstHalf.get(i);
+//				String gene2 = "";
+//				if (secondHalf.size() > i) {
+//					gene2 = secondHalf.get(i);
+//				}
+//				List<Integer> exons1 = exonsPerGenes.get(gene1);
+//				List<Integer> exons2 = exonsPerGenes.get(gene2);
+//				Color color = Color.WHITE;
+//				if (greyBackground) {
+//					color = FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY;
+//				}
+//				row = table.createRow(12);
+//				Cell<PDPage> cell = row.createCell(width, gene1);
+//				this.applyCellFormatting(cell, defaultFont, color);
+//				String cellContent = exons1.stream().filter(e -> e != null).map(e -> e.toString()).sorted().collect(Collectors.joining(", "));
+//				cell = row.createCell(width, cellContent);
+//				this.applyCellFormatting(cell, defaultFont, color);
+//				cell.setAlign(HorizontalAlignment.RIGHT);
+//				
+//				cell = row.createCell(100 - 4 * width, " ");
+//				this.applyCellFormatting(cell, defaultFont, FinalReportTemplateConstants.BACKGROUND_LIGHT_GRAY);
+//				
+//				cell = row.createCell(width, gene2);
+//				this.applyCellFormatting(cell, defaultFont, color);
+//				if (exons2 != null) {
+//					cellContent = exons2.stream().filter(e -> e != null).map(e -> e.toString()).sorted().collect(Collectors.joining(", "));
+//				}
+//				else {
+//					cellContent = "";
+//				}
+//				cell = row.createCell(width, cellContent);
+//				this.applyCellFormatting(cell, defaultFont, color);
+//				cell.setAlign(HorizontalAlignment.RIGHT);
+//				
+//				greyBackground = !greyBackground;
+//			}
+//		}
+//		try {
+//			latestYPosition = table.draw() - 20;
+//		} catch (IllegalArgumentException e) {
+//			throw new EncodingGlyphException(e.getMessage() + " in Low Cov Table." );
+//		}
+//	}
+
 
 	private void addAddress() throws IOException, EncodingGlyphException {
 		FinalReportTemplateConstants.MAIN_FONT_TYPE = PDType0Font.load(mainDocument,
@@ -1496,6 +1655,8 @@ public class FinalReportPDFTemplate {
 		// Content
 		//Fetch the correct disclamer based on the test name:
 		List<String> aboutTheTest = clinicalTest.getDisclaimerTexts().stream().map(c -> c.getText()).collect(Collectors.toList());
+//		String lowCoverageContent = this.createLowCoverageString();
+//		aboutTheTest.add(lowCoverageContent);
 		String aboutTheTestLink = clinicalTest.getTestLink();
 		for (String info : aboutTheTest) {
 			Row<PDPage> row = table.createRow(12);
