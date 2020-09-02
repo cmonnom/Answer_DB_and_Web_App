@@ -2251,7 +2251,8 @@ public class OpenCaseController {
 					alreadySelected = true; //make sure the variant has not been selected already by the user
 					break;
 				}
-				if ((a.getIsSelected() == null || !a.getIsSelected())  && !geneFunctionFound && a.getCategory().equals("Gene Function")
+				if ((a.getIsSelected() == null || !a.getIsSelected())  && !geneFunctionFound 
+						&& a.getCategory() != null && a.getCategory().equals("Gene Function")
 						&& a.getTier() != null && ReportBuilder.UNKNOWN_TIERS.contains(a.getTier())) {
 					a.setIsSelected(true);
 					List<MongoDBId> annotationIds = variantDetails.getAnnotationIdsForReporting();

@@ -219,7 +219,7 @@ public class FinalReportPDFTemplate {
 		this.updatePotentialNewPagePosition(exonsPerGenes.size());
 		
 		if (exonsPerGenes.isEmpty()) {
-			return "No exon with low coverage";
+			return "All exons in clinically actionable genes were covered above 100X";
 		}
 		else {
 			List<String> sortedGenes = new ArrayList<String>();
@@ -1655,8 +1655,8 @@ public class FinalReportPDFTemplate {
 		// Content
 		//Fetch the correct disclamer based on the test name:
 		List<String> aboutTheTest = clinicalTest.getDisclaimerTexts().stream().map(c -> c.getText()).collect(Collectors.toList());
-//		String lowCoverageContent = this.createLowCoverageString();
-//		aboutTheTest.add(lowCoverageContent);
+		String lowCoverageContent = this.createLowCoverageString();
+		aboutTheTest.add(lowCoverageContent);
 		String aboutTheTestLink = clinicalTest.getTestLink();
 		for (String info : aboutTheTest) {
 			Row<PDPage> row = table.createRow(12);

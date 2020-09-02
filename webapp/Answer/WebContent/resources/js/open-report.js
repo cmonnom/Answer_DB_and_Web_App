@@ -769,7 +769,7 @@ const OpenReport = {
                         this.copyNumberAlterationsVisible = true;
                         this.geneFusionVisible = true;
                         this.pmidPanelVisible = true;
-                        this.lowCoverageVisible = false; //until ready
+                        this.lowCoverageVisible = true;
                         this.commitingAnnotations = false;
                     }
                     else {

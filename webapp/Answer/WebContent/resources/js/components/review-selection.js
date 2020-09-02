@@ -783,7 +783,7 @@ Vue.component('review-selection', {
             return diffIds.length == 0;
         },
         autoSelectVUSs() {
-            if (this.autoVUSLoading || caseOwnerId != userId) {
+            if (this.autoVUSLoading || this.caseOwnerId != this.userId) {
                 return;
             }
             this.autoVUSLoading = true;
