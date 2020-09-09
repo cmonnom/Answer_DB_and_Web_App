@@ -131,9 +131,21 @@ router.beforeEach((to, from, next) => {
 		next();
 });
 
+const store = new Vuex.Store( {
+	modules: {
+		snpStore: snpStoreModule,
+		cnvStore: cnvStoreModule,
+		ftlStore: ftlStoreModule,
+		virStore: virStoreModule,
+		annotationStore: annotationStoreModule,
+		variantStore: variantStoreModule
+	}
+})
+
 new Vue({
 	router,
 	el: '#app',
+	store: store,
 	mounted() {
 		this.$vuetify.theme.primary = '#4db6ac'; //set the theme here
 		this.$vuetify.theme.warning = "#FFD740";

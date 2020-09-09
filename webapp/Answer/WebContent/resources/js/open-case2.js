@@ -93,16 +93,12 @@ const OpenCase2 = {
         :breadcrumbs="breadcrumbs"
         :variantDetailsVisible=variantDetailsVisible
         :urlQuery="urlQuery"
-        @annotation-selection-changed="handleAnnotationSelectionChanged"
         @handle-save-all="handleSaveAll"
         @annotation-selection-saved="handleAnnotationSelectionSaved"
         @load-prev-variant="loadPrevVariant"
         @load-next-variant="loadNextVariant"
         @selection-changed="handleSelectionChangeFromVariantDetails"
-        :unfilteredSNPsDict="unfilteredSNPsDict"
-        :unfilteredCNVsDict="unfilteredCNVsDict"
-        :unfilteredFTLsDict="unfilteredFTLsDict"
-        :unfilteredVIRsDict="unfilteredVIRsDict"
+        
         @download-igv-file="downloadIGVFile"
         @refresh-variant-tables="getAjaxData"
         :oncotree="oncotree"
@@ -226,10 +222,6 @@ const OpenCase2 = {
         :case-owner-name="caseOwnerName"
         :user-id="userId + ''"
         @review-selection-refresh="updateSelectedVariantTable()"
-        :unfilteredSNPsDict="unfilteredSNPsDict"
-        :unfilteredCNVsDict="unfilteredCNVsDict"
-        :unfilteredFTLsDict="unfilteredFTLsDict"
-        :unfilteredVIRsDict="unfilteredVIRsDict"
         :readonly="readonly"
         @accept-selection-from="addOtherAnnotatorSelection"
         @auto-select-vus="autoSelectVUSs"></review-selection>
@@ -269,17 +261,6 @@ const OpenCase2 = {
                         <v-list-tile-title>Open QC in NuCLIA</v-list-tile-title>
                     </v-list-tile-content>
                 </v-list-tile>
-
-                <!--
-                <v-list-tile avatar v-if="mutationalSignatureUrl" @click="openLink(mutationalSignatureUrl)" :disabled="!mutationalSignatureUrl">
-                <v-list-tile-avatar>
-                <v-icon>mdi-chart-histogram</v-icon>
-                </v-list-tile-avatar>
-                <v-list-tile-content>
-                    <v-list-tile-title>Open Mutational Signature (MuSiCa)</v-list-tile-title>
-                </v-list-tile-content>
-                </v-list-tile>
-                -->
 
                 <v-list-tile avatar @click="openMutSigImage" :disabled="!mutationalSignatureImage">
                 <v-list-tile-avatar>
@@ -448,14 +429,6 @@ const OpenCase2 = {
         </v-btn>
         <span>Open QC in NuCLIA</span>
     </v-tooltip>
-    <!--
-    <v-tooltip bottom>
-    <v-btn icon flat slot="activator" :href="mutationalSignatureUrl" target="_blank" rel="noreferrer" :disabled="!mutationalSignatureUrl">
-    <v-icon>mdi-chart-histogram</v-icon>
-    </v-btn>
-    <span>Open Mutational Signature (MuSiCa)</span>
-    </v-tooltip>
-    -->
     
 <v-tooltip bottom>
     <v-btn icon flat slot="activator" @click="openMutSigImage" :disabled="!mutationalSignatureImage">
@@ -464,18 +437,6 @@ const OpenCase2 = {
     <span v-if="mutationalSignatureImage">Open Mutational Signature</span>
     <span v-else>No Mutational Signature Available</span>
 </v-tooltip>
-
-    <!--
-<v-badge right bottom overlap class="mini-badge" color="none">
-<span slot="badge">F</span>
-<v-tooltip bottom>
-    <v-btn icon flat slot="activator" @click="openFPKMChart">
-    <img alt="boxplot icon" :src="webAppRoot + '/resources/images/boxplot_icon_white.png'" width="36px" />
-    </v-btn>
-    <span>Compare FPKM with other samples</span>
-</v-tooltip>
-</v-badge>
--->
 
 <v-menu dark class="primary" origin="center center" transition="slide-y-transition" bottom open-on-hover offset-y z-index="9">
 <v-tooltip left  slot="activator">
@@ -923,10 +884,6 @@ const OpenCase2 = {
                 tmbPositionx: 0,
                 tmbPositiony: 0,
                 mutSigPositionx: 0,
-                unfilteredSNPsDict: {},
-                unfilteredCNVsDict: {},
-                unfilteredFTLsDict: {},
-                unfilteredVIRsDict: {},
                 isVariantOpening: false,
                 urlQuery: {
                     showReview: false,
@@ -938,7 +895,6 @@ const OpenCase2 = {
                 cnvChromList: [],
                 currentVariantType: "snp",
                 currentItem: {},
-                currentVariant: {},
                 breadcrumbItemVariantDetails: { text: "Variant Details", disabled: false, params: ["variantId", "variantType"] },
                 breadcrumbItemReview: { text: "Review", disabled: false, params: ["showReview"] },
                 breadcrumbItemEditAnnotation: { text: "Add / Edit Annotation", disabled: false, params: ["edit"] },
@@ -953,15 +909,10 @@ const OpenCase2 = {
                 autoSaveInterval: null,
                 savingVariantDetails: false,
                 savingPatientDetails: false,
-                annotationSelectionUnSaved: false,
                 saveVariantDisabled: false,
                 caseOwnerId: null,
                 caseOwnerName: null,
                 updatingSelectedVariantTable: false,
-                snpIndelUnfilteredItems: null,
-                cnvUnfilteredItems: null,
-                ftlUnfilteredItems: null,
-                virUnfilteredItems: null,
                 itdDialogVisible: false,
                 copyDialogVisible: false,
                 textToCopy: "",
@@ -1150,28 +1101,20 @@ const OpenCase2 = {
             else if (response.success === false) {
                 bus.$emit("some-error", [this, response.message]);
             }
-            // this.splashProgress = 100; //should dismiss the splash dialog
-            // this.waitingForAjaxMessage = "There were some errors while saving";
-            // this.waitingForAjaxActive = false; //stops spinning wheel if error
         },
         handleAxiosError(error) {
             console.log(error);
-            // this.splashProgress = 100;
             bus.$emit("some-error", [this, error]);
-            // this.waitingForAjaxMessage = "There were some errors while saving";
         },
         isSaveNeededBadgeVisible() {
             if (!this.saveAllNeeded) {
                 this.saveAllNeeded = this.annotationSelectionUnSaved
                     || this.variantUnSaved
                     || this.patientDetailsUnSaved
-                    || ((this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel) ? this.$refs.variantDetailsDialog.$refs.variantDetailsPanel.variantDetailsUnSaved : false)
+                    || this.variantDetailsUnsaved
                     || this.isCaseAnnotationChanged();
             }
             return this.saveAllNeeded && !this.readonly;
-        },
-        handleAnnotationSelectionChanged(annotationSelectionUnSaved) {
-            this.annotationSelectionUnSaved = annotationSelectionUnSaved;
         },
         handleAnnotationSelectionSaved() {
             this.waitingForAjaxCount--;
@@ -1190,7 +1133,7 @@ const OpenCase2 = {
             if (this.isCaseAnnotationChanged()) {
                 tooltip.push("- Case Notes");
             }
-            if (this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel.variantDetailsUnSaved) {
+            if (this.variantDetailsUnsaved) {
                 tooltip.push("- Variant Details");
             }
             if (tooltip.length > 1) {
@@ -1214,55 +1157,39 @@ const OpenCase2 = {
         },
         handleSelectionChangeFromVariantDetails(oid, idType, isSelected) {
             //idType is used to know which table the event came from.
-            let table = null;
+            var payload = {id: oid, selected: isSelected, userId: this.userId};
             if (idType == "SNP") {
-                this.unfilteredSNPsDict[oid] = { oid: oid, selected: isSelected }
-                //update the SNP tables with the new selection
-                table = this.$refs.geneVariantDetails;
+                this.$store.commit("snpStore/updateSelectedVariant", payload);
             }
-            else if (idType == "CNV") {
-                this.unfilteredCNVsDict[oid] = { oid: oid, selected: isSelected }
-                table = this.$refs.cnvDetails;
+            if (idType == "CNV") {
+                this.$store.commit("cnvStore/updateSelectedVariant", payload);
             }
             else if (idType == "FTL") {
-                this.unfilteredFTLsDict[oid] = { oid: oid, selected: isSelected }
-                table = this.$refs.translocationDetails;
+                this.$store.commit("ftlStore/updateSelectedVariant", payload);
             }
             else if (idType == "VIR") {
-                this.unfilteredVIRsDict[oid] = { oid: oid, selected: isSelected }
-                table = this.$refs.virusDetails;
-            }
-            for (let i = 0; i < table.items.length; i++) {
-                let item = table.items[i];
-                if (item.oid == this.urlQuery.variantId) {
-                    item.isSelected = isSelected;
-                    if (!item.isSelected) {
-                        delete item.selectionPerAnnotator[this.userId];
-                        delete item["dateSince" + this.userId];
-                    }
-                    break; //item found. exit
-                }
+                this.$store.commit("virStore/updateSelectedVariant", payload);;
             }
             this.variantUnSaved = true;
         },
         handleSelectionChanged(selectedSize, item, idType) {
             //idType is used to know which table the event came from.
-            if (idType == "SNP") {
-                this.unfilteredSNPsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
-
-            }
-            else if (idType == "CNV") {
-                this.unfilteredCNVsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
-            }
-            else if (idType == "FTL") {
-                this.unfilteredFTLsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
-            }
-            else if (idType == "VIR") {
-                this.unfilteredVIRsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
-            }
+            var payload = {id: item.oid, selected: item.isSelected, userId: this.userId};
             if (!item.isSelected) {
                 delete item.selectionPerAnnotator[this.userId];
                 delete item["dateSince" + this.userId];
+            }
+            if (idType == "SNP") {
+                this.$store.commit("snpStore/updateSelectedVariant", payload);
+            }
+            if (idType == "CNV") {
+                this.$store.commit("cnvStore/updateSelectedVariant", payload);
+            }
+            else if (idType == "FTL") {
+                this.$store.commit("ftlStore/updateSelectedVariant", payload);
+            }
+            else if (idType == "VIR") {
+                this.$store.commit("virStore/updateSelectedVariant", payload);;
             }
             this.variantUnSaved = true;
 
@@ -1351,6 +1278,10 @@ const OpenCase2 = {
                         this.caseType = response.data.type;
                         this.reportReady = response.data.reportReady;
                         this.caseOwnerId = response.data.caseOwnerId;
+                        this.$store.commit("snpStore/updateCaseOwnerId", this.caseOwnerId);
+                        this.$store.commit("cnvStore/updateCaseOwnerId", this.caseOwnerId);
+                        this.$store.commit("ftlStore/updateCaseOwnerId", this.caseOwnerId);
+                        this.$store.commit("virStore/updateCaseOwnerId", this.caseOwnerId);
                         this.caseOwnerName = response.data.caseOwnerName;
                         this.mutSigTableData = response.data.mutationalSignatureData;
                         if (this.caseType == "Clinical") {
@@ -1367,35 +1298,33 @@ const OpenCase2 = {
                         this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true&primary=true";
                         this.mutationalSignatureUrl = response.data.tumorVcf ? webAppRoot + "/mutationalSignatureViewer?caseId=" + this.caseId : null;
                         this.mutationalSignatureImage = response.data.mutationalSignatureLinkName ? webAppRoot + "/images/" + response.data.mutationalSignatureLinkName : null;
-                        this.addCustomWarningFlags(response.data.snpIndelVariantSummary);
-                        this.addOtherAnnotatorsValues(response.data.snpIndelVariantSummary);
-                        this.$refs.geneVariantDetails.manualDataFiltered(response.data.snpIndelVariantSummary); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+                        
+                        var snpIndelVariantSummary = response.data.snpIndelVariantSummary;
+                        var cnvSummary = response.data.cnvSummary;
+                        var translocationSummary = response.data.translocationSummary;
+                        var virusSummary = response.data.virusSummary;
+                        this.addCustomWarningFlags(snpIndelVariantSummary);
+                        this.addOtherAnnotatorsValues(snpIndelVariantSummary);
+                        this.addOtherAnnotatorsValues(cnvSummary);
+                        this.addCNVHeaderAction(cnvSummary.headers);
+                        this.addSNPIndelHeaderAction(snpIndelVariantSummary.headers);
+                        this.addOtherAnnotatorsValues(translocationSummary);
+                        this.addFusionHeaderAction(translocationSummary.headers);
+                        this.addOtherAnnotatorsValues(virusSummary);
+                        this.addVirusHeaderAction(virusSummary.headers);
+                      
+                        
+                        this.$store.commit("snpStore/updateAllVariantSummary", snpIndelVariantSummary);
+                        this.$refs.geneVariantDetails.manualDataFilteredFromStore(this.$store.getters["snpStore/getCurrentVariantSummary"], this.$store.getters["snpStore/getCurrentVariantSummaryItems"]);
 
-                        this.addOtherAnnotatorsValues(response.data.cnvSummary);
-                        this.$refs.cnvDetails.manualDataFiltered(response.data.cnvSummary);
-
-                        this.addOtherAnnotatorsValues(response.data.translocationSummary);
-                        this.$refs.translocationDetails.manualDataFiltered(response.data.translocationSummary);
-
-                        this.addOtherAnnotatorsValues(response.data.virusSummary);
-                        this.$refs.virusDetails.manualDataFiltered(response.data.virusSummary);
-
-                        //keep track of the original items in order to select all the variants regardless of filtering
-                        if (!this.snpIndelUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
-                            this.snpIndelUnfilteredItems = response.data.snpIndelVariantSummary.items;
-                        }
-                        //keep track of the original items in order to select all the variants regardless of filtering
-                        if (!this.cnvUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
-                            this.cnvUnfilteredItems = response.data.cnvSummary.items;
-                        }
-                        //keep track of the original items in order to select all the variants regardless of filtering
-                        if (!this.ftlUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
-                            this.ftlUnfilteredItems = response.data.translocationSummary.items;
-                        }
-                        //keep track of the original items in order to select all the variants regardless of filtering
-                        if (!this.virUnfilteredItems && !this.$refs.advancedFilter.isAnyFilterUsed()) {
-                            this.virUnfilteredItems = response.data.virusSummary.items;
-                        }
+                        this.$store.commit("cnvStore/updateAllVariantSummary", cnvSummary);
+                        this.$refs.cnvDetails.manualDataFilteredFromStore(this.$store.getters["cnvStore/getCurrentVariantSummary"], this.$store.getters["cnvStore/getCurrentVariantSummaryItems"]); 
+                        
+                        this.$store.commit("ftlStore/updateAllVariantSummary", translocationSummary);
+                        this.$refs.translocationDetails.manualDataFilteredFromStore(this.$store.getters["ftlStore/getCurrentVariantSummary"], this.$store.getters["ftlStore/getCurrentVariantSummaryItems"]); 
+                        
+                        this.$store.commit("virStore/updateAllVariantSummary", virusSummary);
+                        this.$refs.virusDetails.manualDataFilteredFromStore(this.$store.getters["virStore/getCurrentVariantSummary"], this.$store.getters["virStore/getCurrentVariantSummaryItems"]); 
 
 
                         this.$refs.advancedFilter.effects = response.data.effects;
@@ -1408,12 +1337,6 @@ const OpenCase2 = {
                         this.$refs.advancedFilter.populateCheckBoxes();
 
                         this.$refs.advancedFilter.filterNeedsReload = false;
-                        this.addSNPIndelHeaderAction(response.data.snpIndelVariantSummary.headers);
-                        this.addCNVHeaderAction(response.data.cnvSummary.headers);
-                        this.addFusionHeaderAction(response.data.translocationSummary.headers);
-                        this.addVirusHeaderAction(response.data.virusSummary.headers);
-                        this.removeCurrentUserSelectionColumnFromHeaders(response.data.snpIndelVariantSummary.headerOrder, response.data.cnvSummary.headerOrder, response.data.translocationSummary.headerOrder
-                            , response.data.virusSummary.headerOrder)
 
                         this.reportGroups = response.data.reportGroups;
                         if (this.$refs.reviewDialog) {
@@ -1421,45 +1344,9 @@ const OpenCase2 = {
                         }
                         this.$refs.advancedFilter.reportGroups = this.reportGroups;
 
+                        this.removeCurrentUserSelectionColumnFromHeaders(snpIndelVariantSummary.headerOrder, cnvSummary.headerOrder, translocationSummary.headerOrder
+                            , response.data.virusSummary.headerOrder);
 
-
-                        //create a dict of oids and their selected status here
-                        for (let i = 0; i < response.data.snpIndelVariantSummary.items.length; i++) {
-                            let item = response.data.snpIndelVariantSummary.items[i];
-                            if (item.oid in this.unfilteredSNPsDict) {
-                                item.isSelected = this.unfilteredSNPsDict[item.oid].selected;
-                            }
-                            else {
-                                this.unfilteredSNPsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
-                            }
-                        }
-                        for (let i = 0; i < response.data.cnvSummary.items.length; i++) {
-                            let item = response.data.cnvSummary.items[i];
-                            if (item.oid in this.unfilteredCNVsDict) {
-                                item.isSelected = this.unfilteredCNVsDict[item.oid].selected;
-                            }
-                            else {
-                                this.unfilteredCNVsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
-                            }
-                        }
-                        for (let i = 0; i < response.data.translocationSummary.items.length; i++) {
-                            let item = response.data.translocationSummary.items[i];
-                            if (item.oid in this.unfilteredFTLsDict) {
-                                item.isSelected = this.unfilteredFTLsDict[item.oid].selected;
-                            }
-                            else {
-                                this.unfilteredFTLsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
-                            }
-                        }
-                        for (let i = 0; i < response.data.virusSummary.items.length; i++) {
-                            let item = response.data.virusSummary.items[i];
-                            if (item.oid in this.unfilteredVIRsDict) {
-                                item.isSelected = this.unfilteredVIRsDict[item.oid].selected;
-                            }
-                            else {
-                                this.unfilteredVIRsDict[item.oid] = { oid: item.oid, selected: item.isSelected }
-                            }
-                        }
                         this.$refs.variantDetailsDialog.setSelected();
 
                         //TODo might need to handle currentRow
@@ -1652,8 +1539,6 @@ const OpenCase2 = {
         openReviewSelectionDialogFromNavigation() {
             this.reviewDialogVisible = true;
             this.urlQuery.showReview = true;
-            // this.updateRoute();
-            // this.updateSelectedVariantTable();
         },
         closeReviewDialog() {
             this.reviewDialogVisible = false;
@@ -1729,7 +1614,6 @@ const OpenCase2 = {
             this.getAjaxData().then(response => {
                 if (this.urlQuery.showReview === true) {
                     this.$nextTick(this.openReviewSelectionDialog());
-                    this.updateSelectedVariantTable();
                 }
                 this.closeSplashScreen();
             }).catch(error => {
@@ -1742,7 +1626,6 @@ const OpenCase2 = {
             bus.$emit("clear-item-selected", [this]);
             this.loadCaseAnnotations();
 
-            // this.$refs.geneVariantDetails.headerOptionsVisible = true;
             this.$refs.splashScreen.manageSplashScreen();
             this.getCNVChromList();
         },
@@ -1859,7 +1742,7 @@ const OpenCase2 = {
             this.urlQuery.edit = this.$route.query.edit === true || this.$route.query.edit === "true";
 
             if (!this.urlQuery.variantId) { //close variant details
-                this.closeVariantDetails(true);
+                this.closeVariantDetails();
                 this.toggleHTMLOverlay();
             }
             if (this.urlQuery.variantType) {
@@ -1884,6 +1767,7 @@ const OpenCase2 = {
                                 .then((response) => {
                                     if (response.success) {
                                         this.$refs.variantDetailsDialog.setSelected();
+                                        this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
                                         this.isVariantOpening = false;
                                         //open other dialogs if needed
                                         if (this.urlQuery.edit) {
@@ -1905,6 +1789,7 @@ const OpenCase2 = {
                                 .then((response) => {
                                     if (response.success) {
                                         this.$refs.variantDetailsDialog.setSelected();
+                                        this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
                                         this.isVariantOpening = false;
                                         //open other dialogs if needed
                                         if (this.urlQuery.edit) {
@@ -1922,6 +1807,7 @@ const OpenCase2 = {
                                 .then((response) => {
                                     if (response.success) {
                                         this.$refs.variantDetailsDialog.setSelected();
+                                        this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
                                         this.isVariantOpening = false;
                                         //open other dialogs if needed
                                         if (this.urlQuery.edit) {
@@ -1940,6 +1826,7 @@ const OpenCase2 = {
                                 .then((response) => {
                                     if (response.success) {
                                         this.$refs.variantDetailsDialog.setSelected();
+                                        this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
                                         this.isVariantOpening = false;
                                         //open other dialogs if needed
                                         if (this.urlQuery.edit) {
@@ -1951,15 +1838,7 @@ const OpenCase2 = {
                         }
                     }
                     if (!variantFound) {
-                        //commented out because not working properly
-                        // var response = {
-                        //     success: false,
-                        //     message: "The variant ID could not be found. The URL must be incorrect."
-                        // }
-                        // this.handleDialogs(response, null);
                         this.toggleHTMLOverlay();
-                        // var html = document.querySelector("html");
-                        // html.style.overflow = ""
                     }
                 }
                 else {
@@ -2010,7 +1889,6 @@ const OpenCase2 = {
             setTimeout(() => {
                 //make sure the dialogs are stacked up properly
                 if (this.urlQuery.showReview && this.urlQuery.variantId) {
-                    // var styleVariantDetails = this.$refs.variantDetailsDialog.$children[0].$el.parentElement.style;
                     let styleVariantDetails = document.getElementsByClassName("variantDetailsDialog")[0].parentElement.style;
                     var styleShowReview = this.$refs.reviewDialog.$parent.$parent.$children[0].$el.parentElement.style;
                     var zIndexVariantDetails = styleVariantDetails.zIndex == "" ? 200 : parseInt(styleVariantDetails.zIndex);
@@ -2178,7 +2056,6 @@ const OpenCase2 = {
 
         },
         loadPrevVariant() {
-            this.handleSaveAll(true);
             var table; //could be the selected table or the regular one
             if (this.isSNP()) {
                 if (this.reviewDialogVisible) {
@@ -2189,7 +2066,6 @@ const OpenCase2 = {
                 }
                 var prevVariant = table.getPreviousItem(this.urlQuery.variantId, true);
                 if (prevVariant) {
-                    // this.getVariantDetails(prevVariant);
                     this.openVariant(prevVariant);
                 }
             }
@@ -2244,40 +2120,12 @@ const OpenCase2 = {
             this.updatingSelectedVariantTable = true;
             this.$refs.reviewDialog.startLoading();
 
-            //use the unfiltered tables
-            var selectedSNPVariants = this.snpIndelUnfilteredItems.filter(item => this.unfilteredSNPsDict[item.oid].selected || Object.entries(item.selectionPerAnnotator).length > 0);
-            var selectedSNPVariantsReviewer = this.snpIndelUnfilteredItems.filter(item => this.unfilteredSNPsDict[item.oid].selected || item.selectionPerAnnotator[this.caseOwnerId] != null);
-            var selectedCNVs = this.cnvUnfilteredItems.filter(item => this.unfilteredCNVsDict[item.oid].selected || Object.entries(item.selectionPerAnnotator).length > 0);
-            var selectedCNVsReviewer = this.cnvUnfilteredItems.filter(item => this.unfilteredCNVsDict[item.oid].selected || item.selectionPerAnnotator[this.caseOwnerId] != null);
-            var selectedTranslocations = this.ftlUnfilteredItems.filter(item => this.unfilteredFTLsDict[item.oid].selected || Object.entries(item.selectionPerAnnotator).length > 0);
-            var selectedFTLsReviewer = this.ftlUnfilteredItems.filter(item => this.unfilteredFTLsDict[item.oid].selected || item.selectionPerAnnotator[this.caseOwnerId] != null);
-            var selectedViruses = this.virUnfilteredItems.filter(item => this.unfilteredVIRsDict[item.oid].selected || Object.entries(item.selectionPerAnnotator).length > 0);
-            var selectedVIRsReviewer = this.virUnfilteredItems.filter(item => this.unfilteredVIRsDict[item.oid].selected || item.selectionPerAnnotator[this.caseOwnerId] != null);
-            this.saveVariantDisabled = (selectedSNPVariants.length == 0 && selectedCNVs.length == 0 && selectedTranslocations.length == 0
-                && selectedViruses.length == 0) || !this.canProceed('canAnnotate') || this.readonly;
+            this.saveVariantDisabled = ( this.$store.getters["snpStore/getSelectedVariantItems"].length == 0 
+            && this.$store.getters["cnvStore/getSelectedVariantItems"].length == 0 
+            && this.$store.getters["ftlStore/getSelectedVariantItems"].length == 0
+                && this.$store.getters["virStore/getSelectedVariantItems"].length == 0) 
+                || !this.canProceed('canAnnotate') || this.readonly;
 
-            let allVariantTables = [
-                { items: selectedSNPVariants, dict: this.unfilteredSNPsDict },
-                { items: selectedSNPVariantsReviewer, dict: this.unfilteredSNPsDict },
-                { items: selectedCNVs, dict: this.unfilteredCNVsDict },
-                { items: selectedCNVsReviewer, dict: this.unfilteredCNVsDict },
-                { items: selectedTranslocations, dict: this.unfilteredFTLsDict },
-                { items: selectedFTLsReviewer, dict: this.unfilteredFTLsDict },
-                { items: selectedViruses, dict: this.unfilteredVIRsDict },
-                { items: selectedVIRsReviewer, dict: this.unfilteredVIRsDict }
-            ]
-
-            //populate the selected variants but not yet saved by creating fake selectionPerAnnotator objects
-            for (let i = 0; i < allVariantTables.length; i++) {
-                let items = allVariantTables[i].items;
-                let dict = allVariantTables[i].dict;
-                for (var j = 0; j < items.length; j++) {
-                    let item = items[j];
-                    if (!this.isSelectionPerAnnotatorReal(item.selectionPerAnnotator[this.userId]) && dict[item.oid].selected) {
-                        item["dateSince" + this.userId] = this.createTempSelectionPerAnnotator();
-                    }
-                }
-            }
 
             //add the current user column headerOrder but only to the all annotator table
             snpAllHeaderOrder = this.$refs.geneVariantDetails.headerOrder.slice();
@@ -2288,18 +2136,13 @@ const OpenCase2 = {
             this.addCurrentUserSelectionColumnToHeaders(snpAllHeaderOrder, cnvAllHeaderOrder, ftlAllHeaderOrder, virAllHeaderOrder);
 
             this.$refs.reviewDialog.updateSelectedVariantTable(
-                selectedSNPVariants, selectedSNPVariantsReviewer,
                 this.$refs.geneVariantDetails.headers, snpAllHeaderOrder, this.$refs.geneVariantDetails.headerOrder,
-                selectedCNVs, selectedCNVsReviewer,
                 this.$refs.cnvDetails.headers, cnvAllHeaderOrder, this.$refs.cnvDetails.headerOrder,
-                selectedTranslocations, selectedFTLsReviewer,
                 this.$refs.translocationDetails.headers, ftlAllHeaderOrder, this.$refs.translocationDetails.headerOrder,
-                selectedViruses, selectedVIRsReviewer,
                 this.$refs.virusDetails.headers, virAllHeaderOrder, this.$refs.virusDetails.headerOrder);
             this.updatingSelectedVariantTable = false;
         },
         loadNextVariant() {
-            this.handleSaveAll(true);
             var table; //could be the selected table or the regular one
             if (this.isSNP()) {
                 if (this.reviewDialogVisible) {
@@ -2311,7 +2154,6 @@ const OpenCase2 = {
                 var nextVariant = table.getNextItem(this.urlQuery.variantId, true);
                 if (nextVariant) {
                     this.openVariant(nextVariant);
-                    // this.getVariantDetails(nextVariant);
                 }
             }
             else if (this.isCNV()) {
@@ -2352,13 +2194,10 @@ const OpenCase2 = {
             }
         },
         closeVariantDetailsExternally(skipSave) {
-            this.closeVariantDetails(skipSave);
+            this.closeVariantDetails();
             this.updateRoute();
         },
-        closeVariantDetails(skipSave) {
-            if (!skipSave) {
-                this.handleSaveAll();
-            }
+        closeVariantDetails() {
             this.isVariantOpening = false;
             this.variantDetailsVisible = false;
             this.urlQuery.variantId = null;
@@ -2431,7 +2270,7 @@ const OpenCase2 = {
                 this.createAutoSaveInterval();
             }
             this.waitingForAjaxCount = 0;
-            if (this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel.variantDetailsUnSaved) {
+            if (this.variantDetailsUnsaved) {
                 this.waitingForAjaxCount++;
             }
             if (this.annotationSelectionUnSaved) {
@@ -2449,13 +2288,13 @@ const OpenCase2 = {
 
             if (this.waitingForAjaxCount > 0) {
                 this.waitingForAjaxActive = true;
-                if (this.$refs.variantDetailsDialog && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel && this.$refs.variantDetailsDialog.$refs.variantDetailsPanel.variantDetailsUnSaved) {
-                    this.$refs.variantDetailsDialog.saveVariant(true).then(() => {
+                if (this.variantDetailsUnsaved) {
+                    this.$refs.variantDetailsDialog.saveAllVariants(true).then(() => {
                         this.waitingForAjaxCount--;
                     });
                 }
                 if (this.annotationSelectionUnSaved) {
-                    this.$refs.variantDetailsDialog.saveAnnotationSelection(true).then(() => {
+                    this.$refs.variantDetailsDialog.saveAllAnnotationSelections(true).then(() => {
                         this.waitingForAjaxCount--;
                     });
                 }
@@ -2481,10 +2320,10 @@ const OpenCase2 = {
             }
             this.saveLoading = true;
 
-            let selectedSNPVariantIds = Object.values(this.unfilteredSNPsDict).filter(i => i.selected).map(i => i.oid);
-            let selectedCNVIds = Object.values(this.unfilteredCNVsDict).filter(i => i.selected).map(i => i.oid);
-            let selectedTranslocationIds = Object.values(this.unfilteredFTLsDict).filter(i => i.selected).map(i => i.oid);
-            let selectedVirusIds = Object.values(this.unfilteredVIRsDict).filter(i => i.selected).map(i => i.oid);
+            let selectedSNPVariantIds = this.$store.getters["snpStore/getSelectedVariantIds"];
+            let selectedCNVIds = this.$store.getters["cnvStore/getSelectedVariantIds"];
+            let selectedTranslocationIds = this.$store.getters["ftlStore/getSelectedVariantIds"];
+            let selectedVirusIds = this.$store.getters["virStore/getSelectedVariantIds"];
             axios({
                 method: 'post',
                 url: webAppRoot + "/saveVariantSelection",
@@ -2509,6 +2348,7 @@ const OpenCase2 = {
                     this.variantUnSaved = false;
                     this.saveLoading = false;
                     if (response.data.uiProceed) {
+                        this.closeVariantDetails();
                         this.closeReviewDialog(true);
                     }
                     this.updateSelectedVariantTable();
@@ -2590,13 +2430,13 @@ const OpenCase2 = {
             }
         },
         createAutoSaveInterval() {
-            this.autoSaveInterval = setInterval(() => {
-                var editing = this.$route.query.edit === true || this.$route.query.edit === "true";
-                var reviewing = this.$route.query.showReview === true || this.$route.query.showReview === "true";
-                if (!this.waitingForAjaxActive && !editing && !reviewing) {
-                    this.handleSaveAll(true);
-                }
-            }, 120000);
+            // this.autoSaveInterval = setInterval(() => {
+            //     var editing = this.$route.query.edit === true || this.$route.query.edit === "true";
+            //     var reviewing = this.$route.query.showReview === true || this.$route.query.showReview === "true";
+            //     if (!this.waitingForAjaxActive && !editing && !reviewing) {
+            //         this.handleSaveAll(true);
+            //     }
+            // }, 120000);
         },
         openReport() {
             if (!this.reportReady) {
@@ -2640,7 +2480,6 @@ const OpenCase2 = {
             if (type) {
                 for (let i = 0; i < variantIds.length; i++) {
                     this.handleSelectionChangeFromVariantDetails(variantIds[i], type.toUpperCase(), true);
-                    // this.unfilteredSNPsDict[variantIds[i]] =  {oid: variantIds[i], selected: true}
                 }
             }
             this.getAjaxData().then(response => {
@@ -2745,9 +2584,12 @@ const OpenCase2 = {
         webAppRoot() {
             return webAppRoot;
         },
-        // saveTooltip() {
-        //     return this.createSaveTooltip();
-        // }
+        annotationSelectionUnSaved() {
+            return this.$store.getters["annotationStore/getNeedSaving"];
+        },
+        variantDetailsUnsaved() {
+            return this.$store.getters["variantStore/getNeedSaving"]
+        }
     },
     destroyed: function () {
         clearInterval(this.autoSaveInterval);

@@ -2,6 +2,7 @@ Vue.config.devtools = true;
 // Vue.use(Vuetable);
 Vue.use(VueRouter)
 Vue.use(Vuetify)
+Vue.use(Vuex)
 
 /**
  * This variable can be use for behavior specific to index.jsp

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -64,6 +65,7 @@ public class Variant {
 	
 	@JsonProperty("_id")
 	MongoDBId mongoDBId;
+	String caseId;
 	String chrom;
 	String geneName;
 	List<String> effects;
@@ -951,7 +953,14 @@ public class Variant {
 		this.highestTier = highestTier;
 	}
 
+	public String getCaseId() {
+		return caseId;
+	}
 
+
+	public void setCaseId(String caseId) {
+		this.caseId = caseId;
+	}
 
 
 

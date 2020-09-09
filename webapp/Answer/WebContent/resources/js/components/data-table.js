@@ -4,8 +4,6 @@ Vue.component('data-table', {
     props: {
         "table-title": { default: "Table", type: String },
         "data-url": "",
-        "expanded-data-url": "",
-        "expanded-data-url2": "",
         "initial-sort": { default: "id", type: String },
         "sort-descending": { default: false, type: Boolean },
         "toolbar-visible": { default: true, type: Boolean },
@@ -367,8 +365,6 @@ Vue.component('data-table', {
           <span>Select/Unselect All</span>
         </v-tooltip>
         </th>
-        <th v-if="expandedDataUrl" :class="color">
-        </th>
         <th v-for="header in getSortedHeaders" :key="header.text" :class="[loading ? headerLoadingColor : color, 'white--text', 'subheading', header.sortable ? 'column sortable' : '', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
           @click="changeSort(header)" :width="header.width" :style="'min-width:' + header.width">
           <v-icon v-if="header.sortable" class="table-sorting-icon" color="white">mdi-menu-up</v-icon>
@@ -385,7 +381,6 @@ Vue.component('data-table', {
 
       <tr v-show="showDraggableHeader">
         <th v-if="enableSelection" :class="[color, 'white--text']" style="width:50px"></th>
-        <th v-if="expandedDataUrl" :class="color"></th>
         <th v-for="header in getSortedHeaders" :key="header.text" :class="[color, 'white--text', 'subheading']" :width="header.width"
           :style="'min-width:' + header.width">
           <!-- <v-btn flat icon small @click="decreaseHeaderWidth(header)">
@@ -405,11 +400,6 @@ Vue.component('data-table', {
         <td v-if="enableSelection" style="width:50px" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
           <v-checkbox :color="color" hide-details :input-value="props.selected" @change="selectionChanged(props.item)" v-model="props.item.isSelected"
             :ripple="false" :disabled="props.item.readonly"></v-checkbox>
-        </td>
-        <td v-if="expandedDataUrl" class="pl-0 pr-0" :class="[isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']" @click="expandRow(props.item[uniqueIdField], props)">
-          <v-btn flat icon small>
-            <v-icon :class="[props.expanded ? 'rotate180' : 'rotate90']">expand_less</v-icon>
-          </v-btn>
         </td>
         <td v-for="header in getSortedHeaders" :class="[alignHeader(header), isHighlighted(props.item[uniqueIdField]) ? 'row-highlight' : '']">
 
@@ -473,43 +463,6 @@ Vue.component('data-table', {
         </td>
       </tr>
     </template>
-    <!-- expanded row dynamically loaded when user clicks on row -->
-    <template v-if="expandedDataUrl" slot="expand" slot-scope="props">
-      <v-data-table id="expandedTableId" ref="expandedTableId" v-model="selected" v-bind:headers="expandedHeaders" v-bind:items="expandedItems"
-        hide-actions :item-key="uniqueIdField" no-data-text="No Data Found" :loading="loading ? isLoadingColor : false" :class="['pl-5', 'pb-1', 'elevation-1', toolbarVisible ? 'mt-1' : '']"
-        :custom-sort="customSort">
-        <template slot="headers" slot-scope="props">
-          <tr>
-            <th v-for="header in expandedHeaders" :key="header.text" :class="['cyan white--text', 'subheading', 'column sortable']" :width="header.width">
-              <v-tooltip bottom v-if="header.toolTip">
-                <span slot="activator" v-html="formattedHeader(header)">
-                </span>
-                <span>
-                  {{ header.toolTip.text }}
-                </span>
-              </v-tooltip>
-              <span v-if="!header.toolTip" v-html="formattedHeader(header)">
-              </span>
-            </th>
-          </tr>
-        </template>
-
-        <template slot="items" slot-scope="props">
-          <tr @click="expandRow(props.item[uniqueIdField], props)">
-            <td v-for="header in expandedHeaders" :class="alignHeader(header)">
-              <span v-if="header.isSafe" v-html="formattedItem(header, props.item[header.value])"></span>
-              <span v-if="!header.isSafe" v-text="formattedItem(header, props.item[header.value])"></span>
-
-              <v-icon color="green" v-if="showPassFlag(header, props.item)">check_circle</v-icon>
-              <v-icon color="red" v-if="showFailFlag(header, props.item)">cancel</v-icon>
-            </td>
-          </tr>
-        </template>
-
-      </v-data-table>
-
-    </template>
-
   </v-data-table>
   <!-- external pagination -->
   <div class="text-xs-center pt-1" v-show="showPagination">
@@ -539,10 +492,6 @@ Vue.component('data-table', {
             previousPageNb: null,
             tableId: this.createTableId,
             showDrawer: false,
-            expandedUniqueId: "",
-            expandedItems: [],
-            expandedHeaders: [],
-            expandedHeaderOrder: [],
             filters: [],
             highlight: null, //use this to change the style of a row should have the value of item.[uniqueIdField]
             doExport: false, //if true, the table will be exported as a CSV
@@ -596,17 +545,6 @@ Vue.component('data-table', {
             } else {
                 this.pagination.sortBy = column
                 this.pagination.descending = false
-            }
-        },
-        calcExpandedWidth() {
-            var width = 0;
-            for (var i = 0; i < this.expandedHeaders.length; i++) {
-                //add all the header widths plus some room for padding (?)
-                //not sure about that one
-                width += parseInt(this.expandedHeaders[i].width.replace("px", "")) + 24;
-            }
-            if (this.$refs.expandedTableId) {
-                this.$refs.expandedTableId.$el.style.width = width + "px";
             }
         },
         getButtonColor(flag) {
@@ -784,6 +722,19 @@ Vue.component('data-table', {
             this.uniqueIdField = data.uniqueIdField;
             this.stopLoading();
         },
+         //When using a Vuex store
+        manualDataFilteredFromStore(summaryGetter, dataGetter) {
+          if (this.headers.length != summaryGetter.headers.length) {
+              //just a refresh. Keep the headerOrder in place
+              //in case the user modified the column order
+              this.headerOrder = summaryGetter.headerOrder;
+          }
+          this.headers = summaryGetter.headers;
+          this.items = dataGetter;
+          this.pagination.totalItems = this.items.length;
+          this.uniqueIdField = summaryGetter.uniqueIdField;
+          this.stopLoading();
+      },
         manualDataError() {
             this.stopLoading();
         },
@@ -1109,40 +1060,6 @@ Vue.component('data-table', {
             var id = "table";
             var counter = Math.round(Math.random() * 10000);
             return id + counter;
-        },
-        expandRow(idItem, props) {
-            if (!this.expandedDataUrl) {
-                return;
-            }
-            props.expanded = !props.expanded;
-            this.expandedUniqueId = idItem;
-            this.startLoading();
-            axios.get(this.expandedDataUrl, {
-                params: {
-                    'uniqueId': this.expandedUniqueId + ""
-                }
-            })
-                .then(response => {
-                    if (response.data.isAllowed) {
-                        if (this.expandedHeaders.length != response.data.headers.length) {
-                            //just a refresh. Keep the headerOrder in place
-                            //in case the user modified the column order
-                            this.expandedHeaderOrder = response.data.headerOrder;
-
-                        }
-                        this.expandedHeaders = response.data.headers;
-                        this.expandedItems = response.data.items;
-                        this.calcExpandedWidth();
-                    }
-                    else {
-                        this.handleDialogs(response, this.getAjaxData);
-                    }
-                    this.stopLoading();
-                })
-                .catch(error => {
-                    this.stopLoading();
-                    alert(error);
-                });
         },
         handleSelectionChange(props) {
             //if previous rows had been selected, the props.selected is out of sync

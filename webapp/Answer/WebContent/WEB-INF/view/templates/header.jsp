@@ -56,9 +56,11 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 <c:choose>
 <c:when test="${isProduction == 'false'}">
          <script src="https://unpkg.com/vue@2.6.8/dist/vue.js" integrity="sha384-YzY3KQhnjdhKuuhBSraSy+kHLJuhBO3BGqmWfr6JXg98Ns4bAdTkHmtiNZT4mT1S" crossorigin="anonymous"></script>
+         <script src="https://unpkg.com/vuex@3.5.1/dist/vuex.js" integrity="sha384-+O5ZSPkN6TGXt9PxjU2EBQjmscj6Qt5ki7uytTSfvQ5rbd2ZNjHGFX+Zj+GmsCBZ" crossorigin="anonymous"></script>
 </c:when>
 <c:otherwise>
         <script src="https://unpkg.com/vue@2.6.8/dist/vue.min.js" integrity="sha384-tJs0vlPyuG7XcysSkZ0VtWsM/uztJkUtpLwb6HzV5NSgSwGqdW61IBOBJDhbUf+K" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/vuex@3.5.1/dist/vuex.min.js" integrity="sha384-LiIJNOpyvdXELIx0yBiazgrvDGSE2p8aHU27i55lTzWC42cNiFqDNWIlU8ocTyWI" crossorigin="anonymous"></script>
 </c:otherwise>
 </c:choose>
 
@@ -88,6 +90,10 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" /> -->
+
+<c:forEach var = "storeFile" items="${storesFiles}">
+		<script src="${pageContext.request.contextPath}/resources/js/stores/${storeFile}?timestamp=${timestamp}"></script>
+</c:forEach>
 
 <c:forEach var = "goodieFile" items="${goodiesFiles}">
 		<script async src="${pageContext.request.contextPath}/resources/js/goodies/${goodieFile}?timestamp=${timestamp}"></script>

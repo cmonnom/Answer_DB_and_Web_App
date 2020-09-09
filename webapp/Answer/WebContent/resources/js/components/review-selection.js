@@ -15,10 +15,6 @@ Vue.component('review-selection', {
         caseOwnerId: { default: "-1", type: String},
         caseOwnerName: {default: "", type: String},
         userId: { default: "-2", type: String},
-        unfilteredSNPsDict: {default: () => {}, type: Object},
-        unfilteredCNVsDict: {default: () => {}, type: Object},
-        unfilteredFTLsDict: {default: () => {}, type: Object},
-        unfilteredVIRsDict: {default: () => {}, type: Object},
         readonly: {default: false, type: Boolean},
         openReportUrl: {default: "", type: String}
     },
@@ -216,7 +212,7 @@ Vue.component('review-selection', {
                                 <div class="subheading">
                                     {{ reportGroup.description }}
                                     <v-tooltip bottom>
-                                        <v-btn slot="activator" flat icon @click="openLink(reportGroup.link)" color="primary">
+                                        <v-btn slot="activator" flat icon :href="reportGroup.link" target="_blank" rel="noreferrer" color="primary">
                                             <v-icon>open_in_new</v-icon>
                                         </v-btn>
                                         <span>Open Link in New Tab</span>
@@ -573,12 +569,12 @@ Vue.component('review-selection', {
         } ,
         //to show hide the warning in the review dialog
         areReportableGeneSelected() {
-            if (!this.$refs.snpVariantsSelected || !this.reportGroups) {
+            if (!this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"] || !this.reportGroups) {
                 return false;
             }
             var selectedGenes = [];
-            for (var i = 0; i < this.$refs.snpVariantsSelected.items.length; i++) {
-                var item = this.$refs.snpVariantsSelected.items[i];
+            for (var i = 0; i < this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"].length; i++) {
+                var item = this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"].items[i];
                 selectedGenes.push(item.geneName);
             }
             var geneNamesToReport = [];
@@ -601,8 +597,8 @@ Vue.component('review-selection', {
         //to color the reportGroup gene if already selected
         isReportableGeneSelected(gene) {
             //TODO use reviewer table
-            for (var i = 0; i < this.$refs.snpVariantsSelected.items.length; i++) {
-                var item = this.$refs.snpVariantsSelected.items[i].geneName;
+            for (var i = 0; i < this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"].length; i++) {
+                var item = this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"][i].geneName;
                 if (item == gene) {
                     return true;
                 }
@@ -615,33 +611,46 @@ Vue.component('review-selection', {
         getDialogMaxHeight(offset) {
             getDialogMaxHeight(offset);
         },
-        updateSelectedVariantTable(selectedSNPVariants, selectedSNPVariantsReviewer, snpHeaders, snpHeaderOrderAll, snpHeaderOrderReviewer,
-            selectedCNVs, selectedCNVsReviewer, cnvHeaders, cnvHeaderOrderAll, cnvHeaderOrderReviewer,
-            selectedTranslocations, selectedTranslocationsReviewer, ftlHeaders, ftlHeaderOrderAll, ftlHeaderOrderReviewer,
-            selectedViruses, selectedVirusesReviewer, virHeaders, virHeaderOrderAll, virHeaderOrderReviewer) {
-            this.$refs.snpVariantsSelected.manualDataFiltered(
-                { items: selectedSNPVariants, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderAll });
-            this.$refs.snpVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedSNPVariantsReviewer, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderReviewer });    
+        updateSelectedVariantTable(snpHeaders, snpHeaderOrderAll, snpHeaderOrderReviewer,
+            cnvHeaders, cnvHeaderOrderAll, cnvHeaderOrderReviewer,
+            ftlHeaders, ftlHeaderOrderAll, ftlHeaderOrderReviewer,
+            virHeaders, virHeaderOrderAll, virHeaderOrderReviewer) {
+            this.getSnpTable().manualDataFilteredFromStore(
+                { items: [], headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderAll },
+                this.$store.getters["snpStore/getSelectedVariantItems"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
 
-            this.$refs.cnvVariantsSelected.manualDataFiltered(
-                { items: selectedCNVs, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderAll });
-            this.$refs.cnvVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedCNVsReviewer, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderReviewer });
+           
+            this.$refs.snpVariantsSelectedReviewer.manualDataFilteredFromStore(
+                { items: [], headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderReviewer },
+                this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+
+
+            this.getCnvTable().manualDataFilteredFromStore(
+                { items: [], headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderAll },
+                this.$store.getters["cnvStore/getSelectedVariantItems"]);
+            this.$refs.cnvVariantsSelectedReviewer.manualDataFilteredFromStore(
+                { items: [], headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderReviewer },
+                this.$store.getters["cnvStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+
+            this.getFtlTable().manualDataFilteredFromStore(
+                { items: [], headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderAll },
+                this.$store.getters["ftlStore/getSelectedVariantItems"]);
+            this.$refs.translocationVariantsSelectedReviewer.manualDataFilteredFromStore(
+                { items: [], headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer },
+                this.$store.getters["ftlStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
     
-            this.$refs.translocationVariantsSelected.manualDataFiltered(
-                { items: selectedTranslocations, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderAll });
-            this.$refs.translocationVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedTranslocationsReviewer, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer });
 
-            this.$refs.virusVariantsSelected.manualDataFiltered(
-                { items: selectedViruses, headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderAll });
-            this.$refs.virusVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedVirusesReviewer, headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderReviewer });
-            this.populateOtherAnnotators('snp', selectedSNPVariants); 
-            this.populateOtherAnnotators('cnv', selectedCNVs); 
-            this.populateOtherAnnotators('ftl', selectedTranslocations);  
-            this.populateOtherAnnotators('vir', selectedViruses);   
+            this.getVirTable().manualDataFilteredFromStore(
+                { items: [], headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderAll },
+                this.$store.getters["virStore/getSelectedVariantItems"]);
+            this.$refs.virusVariantsSelectedReviewer.manualDataFilteredFromStore(
+                { items: [], headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderReviewer },
+                this.$store.getters["virStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+                
+        this.populateOtherAnnotators('snp', this.$store.getters["snpStore/getSelectedVariantItems"]); 
+            this.populateOtherAnnotators('cnv', this.$store.getters["cnvStore/getSelectedVariantItems"]); 
+            this.populateOtherAnnotators('ftl', this.$store.getters["ftlStore/getSelectedVariantItems"]);  
+            this.populateOtherAnnotators('vir', this.$store.getters["virStore/getSelectedVariantItems"]);   
             this.stopLoading();    
         },
         getSnpTable() {
@@ -660,30 +669,29 @@ Vue.component('review-selection', {
             this.$emit("open-report");
         },
         startLoading() {
-            this.$refs.snpVariantsSelected.startLoading();
+            this.getSnpTable().startLoading();
             this.$refs.snpVariantsSelectedReviewer.startLoading();
-            this.$refs.cnvVariantsSelected.startLoading();
+            this.getCnvTable().startLoading();
             this.$refs.cnvVariantsSelectedReviewer.startLoading();
-            this.$refs.translocationVariantsSelected.startLoading();
+            this.getFtlTable().startLoading();
             this.$refs.translocationVariantsSelectedReviewer.startLoading();
-            this.$refs.virusVariantsSelected.startLoading();
+            this.getVirTable().startLoading();
             this.$refs.virusVariantsSelectedReviewer.startLoading();
         },
         stopLoading() {
-            this.$refs.snpVariantsSelected.stopLoading();
+            this.getSnpTable().stopLoading();
             this.$refs.snpVariantsSelectedReviewer.stopLoading();
-            this.$refs.cnvVariantsSelected.stopLoading();
+            this.getCnvTable().stopLoading();
             this.$refs.cnvVariantsSelectedReviewer.stopLoading();
-            this.$refs.translocationVariantsSelected.stopLoading();
+            this.getFtlTable().stopLoading();
             this.$refs.translocationVariantsSelectedReviewer.stopLoading();
-            this.$refs.virusVariantsSelected.stopLoading();
+            this.getVirTable().stopLoading();
             this.$refs.virusVariantsSelectedReviewer.stopLoading();
         },
         handleRefresh() {
             this.$emit("review-selection-refresh");
         },
         acceptSelectionFrom(type, userId) {
-            // let diffIds = this.calcSelectionDiff(type, userId);
             let variantIds = [];
             if (type == "snp") {
                 variantIds = this.variantIdSNPPerAnnotator[userId + "_"];
@@ -708,22 +716,22 @@ Vue.component('review-selection', {
             if (type == "snp") {
                 variantIds = this.variantIdSNPPerAnnotator[userId + "_"];
                 caseOwnerVariantIds = this.variantIdsSNPForCaseOwner;
-                dict = this.unfilteredSNPsDict;
+                dict = this.$store.getters["snpStore/getAllVariantItemsMap"];
             }
             else if (type == "cnv") {
                 variantIds = this.variantIdCNVPerAnnotator[userId + "_"];
                 caseOwnerVariantIds = this.variantIdsCNVForCaseOwner;
-                dict = this.unfilteredCNVsDict;
+                dict = this.$store.getters["cnvStore/getAllVariantItemsMap"];
             }
             else if (type == "ftl") {
                 variantIds = this.variantIdFTLPerAnnotator[userId + "_"];
                 caseOwnerVariantIds = this.variantIdsFTLForCaseOwner;
-                dict = this.unfilteredFTLsDict;
+                dict = this.$store.getters["ftlStore/getAllVariantItemsMap"];
             }
             else if (type == "vir") {
                 variantIds = this.variantIdVIRPerAnnotator[userId + "_"];
                 caseOwnerVariantIds = this.variantIdsVIRForCaseOwner;
-                dict = this.unfilteredVIRsDict;
+                dict = this.$store.getters["virStore/getAllVariantItemsMap"];
             }
             for (let i =0; i < variantIds.length; i++) {
                 if (caseOwnerVariantIds.indexOf(variantIds[i]) == -1 && !dict[variantIds[i]].selected) {
@@ -803,7 +811,7 @@ Vue.component('review-selection', {
             this.autoVUSResultVisible = true;
         },
         updateSNPTablewithVUSResult(summary) {
-            var items = this.$refs.snpVariantsSelectedReviewer.items;
+            var items = this.getSelectedSNPItemsForReviewer;
             var successFlag = {temporary: true, chip: false, color: "blue", iconName: "mdi-thumb-up", size: null, tooltip: "Tier 3 gene annotation selected"}; 
             var errorFlag = {temporary: true, chip: false, color: "amber", iconName: "mdi-thumb-down", size: null, tooltip: "Could not auto-select"}; 
             var untouchedFlag = {temporary: true, chip: false, color: null, iconName: "mdi-equal-box", size: null, tooltip: "No change"}; 
@@ -828,7 +836,9 @@ Vue.component('review-selection', {
         }
     },
     computed: {
-
+        getSelectedSNPItemsForReviewer() {
+            return this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"];
+        },
     },
     created() {
 

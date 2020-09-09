@@ -154,7 +154,11 @@ public class OpenCaseController {
 				IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveVariant",
 				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveAllVariants",
+				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveSelectedAnnotationsForVariant",
+				IndividualPermission.CAN_ANNOTATE);
+		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".saveAllSelectedAnnotations",
 				IndividualPermission.CAN_ANNOTATE);
 		PermissionUtils.addPermission(OpenCaseController.class.getCanonicalName() + ".sendToMDA",
 				IndividualPermission.CAN_SELECT);
@@ -1341,6 +1345,132 @@ public class OpenCaseController {
 		}
 	}
 	
+	@RequestMapping(value = "/saveAllVariants", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
+	@ResponseBody
+	public String saveAllVariants(Model model, HttpSession session, @RequestBody String data,
+			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
+		
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		response.setSkipSnackBar(skipSnackBar);
+		response.setUiProceed(false);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode nodeData = mapper.readTree(data);
+		Map<String, List<Variant>> snpsByCaseId = new HashMap<String, List<Variant>>();
+		Map<String, List<CNV>> cnvsByCaseId = new HashMap<String, List<CNV>>();
+		Map<String, List<Translocation>> ftlsByCaseId = new HashMap<String, List<Translocation>>();
+		Map<String, List<Virus>> virsByCaseId = new HashMap<String, List<Virus>>();
+		
+		JsonNode variants = nodeData.get("variants");
+//		System.out.println(variants);
+		Map<String, OrderCase> casesAlreadyFetched = new HashMap<String, OrderCase>();
+		for (JsonNode variantNode : variants) {
+			String variantType = variantNode.get("variantType").textValue();
+			String caseId = variantNode.get("caseId").textValue();
+			OrderCase orderCase = null;
+			//reuse already fetched case if exists
+			if (casesAlreadyFetched.containsKey(caseId)) {
+				orderCase = casesAlreadyFetched.get(caseId);
+			}
+			else {
+				orderCase = utils.getCaseSummary(caseId);
+			}
+			if (orderCase == null) {
+				response.setMessage("No case found");
+				return response.createObjectJSON();
+			}
+			else {
+				casesAlreadyFetched.put(caseId, orderCase);
+			}
+			if (orderCase != null && !orderCase.getAssignedTo().contains(user.getUserId().toString())) {
+				response.setMessage("User " + user.getFullName() + " cannot edit this case.");
+				return response.createObjectJSON();
+			}
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, orderCase)) {
+				return ControllerUtil.returnFailedGroupCheck();
+			}
+			
+			if (variantType.equals("snp")) {
+				List<Variant> snps = snpsByCaseId.get(caseId);
+				if (snps == null) {
+					snps = new ArrayList<Variant>();
+				}
+				Variant variant = mapper.readValue(variantNode.toString(), Variant.class);
+				snps.add(variant);
+				snpsByCaseId.put(caseId, snps);
+			}
+			else if (variantType.equals("cnv")) {
+				List<CNV> cnvs = cnvsByCaseId.get(caseId);
+				if (cnvs == null) {
+					cnvs = new ArrayList<CNV>();
+				}
+				CNV cnv = mapper.readValue(variantNode.toString(), CNV.class);
+				cnvs.add(cnv);
+				cnvsByCaseId.put(caseId, cnvs);
+			}
+			else if (variantType.equals("translocation")) {
+				List<Translocation> ftls = ftlsByCaseId.get(caseId);
+				if (ftls == null) {
+					ftls = new ArrayList<Translocation>();
+				}
+				Translocation ftl = mapper.readValue(variantNode.toString(), Translocation.class);
+				ftls.add(ftl);
+				ftlsByCaseId.put(caseId, ftls);
+			}
+			else if (variantType.equals("virus")) {
+				List<Virus> virs = virsByCaseId.get(caseId);
+				if (virs == null) {
+					virs = new ArrayList<Virus>();
+				}
+				Virus vir = mapper.readValue(variantNode.toString(), Virus.class);
+				virs.add(vir);
+				virsByCaseId.put(caseId, virs);
+			}
+		}
+		if (snpsByCaseId.isEmpty() && cnvsByCaseId.isEmpty() && ftlsByCaseId.isEmpty() && virsByCaseId.isEmpty()) {
+			response.setMessage("Nothing to save");
+			return response.createObjectJSON();
+		}
+		
+		for (String caseId : snpsByCaseId.keySet()) {
+			for (Variant v : snpsByCaseId.get(caseId)) {
+				utils.saveVariant(response, v, "snp");
+				if (!response.getSuccess()) {
+					return response.createObjectJSON();
+				}
+			}
+		}
+		for (String caseId : cnvsByCaseId.keySet()) {
+			for (CNV v : cnvsByCaseId.get(caseId)) {
+				utils.saveVariant(response, v, "cnv");
+				if (!response.getSuccess()) {
+					return response.createObjectJSON();
+				}
+			}
+		}
+		for (String caseId : ftlsByCaseId.keySet()) {
+			for (Translocation v : ftlsByCaseId.get(caseId)) {
+				utils.saveVariant(response, v, "translocation");
+				if (!response.getSuccess()) {
+					return response.createObjectJSON();
+				}
+			}
+		}
+		for (String caseId : virsByCaseId.keySet()) {
+			for (Virus v : virsByCaseId.get(caseId)) {
+				utils.saveVariant(response, v, "virus");
+				if (!response.getSuccess()) {
+					return response.createObjectJSON();
+				}
+			}
+		}
+		
+		return response.createObjectJSON();
+	}
+	
 	@RequestMapping(value = "/saveSelectedAnnotationsForVariant", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
 	@ResponseBody
 	public String saveSelectedAnnotationsForVariant(Model model, HttpSession session, @RequestBody String data,
@@ -1425,7 +1555,131 @@ public class OpenCaseController {
 		return response.createObjectJSON();
 	}
 	
+	@RequestMapping(value = "/saveAllSelectedAnnotations", produces= "application/json; charset=utf-8", method= RequestMethod.POST)
+	@ResponseBody
+	public String saveAllSelectedAnnotations(Model model, HttpSession session, @RequestBody String data,
+			@RequestParam(defaultValue="false") Boolean skipSnackBar) throws Exception {
 
+		User user = ControllerUtil.getSessionUser(session); // to verify that the user is assigned to the case
+		AjaxResponse response = new AjaxResponse();
+		response.setIsAllowed(false);
+		response.setSuccess(false);
+		response.setSkipSnackBar(skipSnackBar);
+		response.setUiProceed(false);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode nodeData = mapper.readTree(data);
+		Map<String, List<Variant>> snpsByCaseId = new HashMap<String, List<Variant>>();
+		Map<String, List<CNV>> cnvsByCaseId = new HashMap<String, List<CNV>>();
+		Map<String, List<Translocation>> ftlsByCaseId = new HashMap<String, List<Translocation>>();
+		Map<String, List<Virus>> virsByCaseId = new HashMap<String, List<Virus>>();
+		
+		JsonNode variants = nodeData.get("variants");
+//		System.out.println(variants);
+		Map<String, OrderCase> casesAlreadyFetched = new HashMap<String, OrderCase>();
+		for (JsonNode variantNode : variants) {
+			String variantType = variantNode.get("variantType").textValue();
+			String caseId = variantNode.get("caseId").textValue();
+			OrderCase orderCase = null;
+			//reuse already fetched case if exists
+			if (casesAlreadyFetched.containsKey(caseId)) {
+				orderCase = casesAlreadyFetched.get(caseId);
+			}
+			else {
+				orderCase = utils.getCaseSummary(caseId);
+			}
+			if (orderCase == null) {
+				response.setMessage("No case found");
+				return response.createObjectJSON();
+			}
+			else {
+				casesAlreadyFetched.put(caseId, orderCase);
+			}
+			if (orderCase != null && !orderCase.getAssignedTo().contains(user.getUserId().toString())) {
+				response.setMessage("User " + user.getFullName() + " cannot edit this case.");
+				return response.createObjectJSON();
+			}
+			if (!ControllerUtil.areUserAndCaseInSameGroup(user, orderCase)) {
+				return ControllerUtil.returnFailedGroupCheck();
+			}
+			
+			if (variantType.equals("snp")) {
+				List<Variant> snps = snpsByCaseId.get(caseId);
+				if (snps == null) {
+					snps = new ArrayList<Variant>();
+				}
+				Variant variant = mapper.readValue(variantNode.toString(), Variant.class);
+				snps.add(variant);
+				snpsByCaseId.put(caseId, snps);
+			}
+			else if (variantType.equals("cnv")) {
+				List<CNV> cnvs = cnvsByCaseId.get(caseId);
+				if (cnvs == null) {
+					cnvs = new ArrayList<CNV>();
+				}
+				CNV cnv = mapper.readValue(variantNode.toString(), CNV.class);
+				cnvs.add(cnv);
+				cnvsByCaseId.put(caseId, cnvs);
+			}
+			else if (variantType.equals("translocation")) {
+				List<Translocation> ftls = ftlsByCaseId.get(caseId);
+				if (ftls == null) {
+					ftls = new ArrayList<Translocation>();
+				}
+				Translocation ftl = mapper.readValue(variantNode.toString(), Translocation.class);
+				ftls.add(ftl);
+				ftlsByCaseId.put(caseId, ftls);
+			}
+			else if (variantType.equals("virus")) {
+				List<Virus> virs = virsByCaseId.get(caseId);
+				if (virs == null) {
+					virs = new ArrayList<Virus>();
+				}
+				Virus vir = mapper.readValue(variantNode.toString(), Virus.class);
+				virs.add(vir);
+				virsByCaseId.put(caseId, virs);
+			}
+		}
+		if (snpsByCaseId.isEmpty() && cnvsByCaseId.isEmpty() && ftlsByCaseId.isEmpty() && virsByCaseId.isEmpty()) {
+			response.setMessage("Nothing to save");
+			return response.createObjectJSON();
+		}
+		
+		for (String caseId : snpsByCaseId.keySet()) {
+			for (Variant v : snpsByCaseId.get(caseId)) {
+				utils.saveSelectedAnnotations(response, v, "snp", v.getMongoDBId().getOid());
+				if (!response.getSuccess()) {
+					return response.createObjectJSON();
+				}
+			}
+		}
+		for (String caseId : cnvsByCaseId.keySet()) {
+			for (CNV v : cnvsByCaseId.get(caseId)) {
+				utils.saveSelectedAnnotations(response, v, "cnv", v.getMongoDBId().getOid());
+				if (!response.getSuccess()) {
+					return response.createObjectJSON();
+				}
+			}
+		}
+		for (String caseId : ftlsByCaseId.keySet()) {
+			for (Translocation v : ftlsByCaseId.get(caseId)) {
+				utils.saveSelectedAnnotations(response, v, "translocation", v.getMongoDBId().getOid());
+				if (!response.getSuccess()) {
+					return response.createObjectJSON();
+				}
+			}
+		}
+		for (String caseId : virsByCaseId.keySet()) {
+			for (Virus v : virsByCaseId.get(caseId)) {
+				utils.saveSelectedAnnotations(response, v, "virus", v.getMongoDBId().getOid());
+				if (!response.getSuccess()) {
+					return response.createObjectJSON();
+				}
+			}
+		}
+		
+		return response.createObjectJSON();
+	}
 	
 	@RequestMapping(value = "/getPatientDetails", produces= "application/json; charset=utf-8")
 	@ResponseBody

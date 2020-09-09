@@ -70,6 +70,7 @@ public class SNPIndelVariantRow {
 	
 	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
 	
+	Boolean includeInFilter;
 	
 	public SNPIndelVariantRow() {
 		super();
@@ -581,6 +582,10 @@ public class SNPIndelVariantRow {
 
 	public String getHighestTier() {
 		return highestTier;
+	}
+
+	public Boolean getIncludeInFilter() {
+		return includeInFilter;
 	}
 
 
