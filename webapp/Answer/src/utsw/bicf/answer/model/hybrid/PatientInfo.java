@@ -5,7 +5,6 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
@@ -17,6 +16,7 @@ public class PatientInfo {
 	
 	List<ListTable> patientTables = new ArrayList<ListTable>();
 	Boolean isAllowed = true;
+	String caseConcatName;
 	
 	public PatientInfo() {
 		
@@ -38,6 +38,7 @@ public class PatientInfo {
 		CellItem caseName = new CellItem("Name", orderCase.getPatientName());
 		caseName.setField("caseName");
 		items.add(caseName);
+		this.caseConcatName = orderCase.getEpicOrderNumber() + "-" + orderCase.getMedicalRecordNumber() + " (" + orderCase.getPatientName() + ")";
 		items.add(new CellItem("MRN", orderCase.getMedicalRecordNumber()));
 		String dab = orderCase.getDateOfBirth();
 		if (dab != null) {
@@ -255,6 +256,14 @@ public class PatientInfo {
 
 	public void setIsAllowed(Boolean isAllowed) {
 		this.isAllowed = isAllowed;
+	}
+
+	public String getCaseConcatName() {
+		return caseConcatName;
+	}
+
+	public void setCaseConcatName(String caseConcatName) {
+		this.caseConcatName = caseConcatName;
 	}
 
 

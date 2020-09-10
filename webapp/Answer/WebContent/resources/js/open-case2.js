@@ -3,7 +3,7 @@ const OpenCase2 = {
         "readonly": { default: true, type: Boolean },
         loadingColor: { default: "blue-grey lighten-4", type: String },
         flt3ITDLocus: { default: "chr13:28,033,867-28,034,235", type: String },
-        confirmationMessage: { default: "Unsaved selected variants will be discarded.<br/>Are you sure?", type: String },
+        confirmationMessage: { default: "Some changes have not been saved.<br/>Are you sure?", type: String },
         confirmationProceedButton: { default: "Proceed", type: String },
         confirmationCancelButton: { default: "Cancel", type: String },
     },
@@ -52,7 +52,7 @@ const OpenCase2 = {
         :no-edit="!canProceed('canAnnotate') || readonly"
       @refresh-fusion-table="getAjaxData"></add-fusion>
       </v-dialog>
-
+ 
     <v-dialog v-model="confirmationDialogVisible" max-width="500px">
         <v-card>
             <v-card-text v-html="confirmationMessage" class="pl-2 pr-2 subheading">
@@ -67,6 +67,7 @@ const OpenCase2 = {
         </v-card>
     </v-dialog>
 
+
     <!-- create ITD dialog -->
     <v-dialog v-model="itdDialogVisible" max-width="300px" v-if="canProceed('canSelect') && !readonly" persistent>
     <create-itd
@@ -79,7 +80,7 @@ const OpenCase2 = {
         <variant-details-dialog :colors="colors" ref="variantDetailsDialog" 
         :isSaveNeededOverall="saveAllNeeded"
         :saveTooltip="createSaveTooltip()"
-        :caseName="caseName"
+        :caseName="caseConcatName"
         :caseTypeIcon="caseTypeIcon"
         :caseType="caseType"
         :isSaveLoading="waitingForAjaxActive"
@@ -213,7 +214,7 @@ const OpenCase2 = {
         :open-report-url="getOpenReportHref()"
         :report-ready="reportReady"
         :breadcrumbs="breadcrumbs"
-        :case-name="caseName" :case-type="caseType" :case-type-icon="caseTypeIcon"
+        :case-name="caseConcatName" :case-type="caseType" :case-type-icon="caseTypeIcon"
         @save-selection="saveSelection" @close-review-dialog="closeReviewDialog"
         :is-save-badge-visible="isSaveNeededBadgeVisible()" :save-variant-disabled="saveVariantDisabled"
         @save-all="handleSaveAll" :waiting-for-ajax-active="waitingForAjaxActive" @show-snackbar="showSnackBarMessageWithParams"
@@ -397,7 +398,7 @@ const OpenCase2 = {
         <span>Case Menu</span>
     </v-tooltip>
     <v-toolbar-title class="white--text ml-0">
-    Working on case: {{ caseName }} 
+    Working on case: {{ caseConcatName }} 
     <v-tooltip bottom>
           <v-icon slot="activator" :size="caseTypeIconSize" class="icon-align-cancel"> {{ caseTypeIcon }} </v-icon>
         <span>{{caseType}} case</span>  
@@ -405,7 +406,7 @@ const OpenCase2 = {
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-fade-transition>
-        <v-progress-linear class="ml-4 mr-4" v-if="(!caseName || loadingVariantDetails) && !splashDialog"
+        <v-progress-linear class="ml-4 mr-4" v-if="(!caseConcatName || loadingVariantDetails) && !splashDialog"
         :indeterminate="true" color="white" style="max-width:200px"></v-progress-linear>
         </v-fade-transition>    
     <v-tooltip bottom>
@@ -676,7 +677,7 @@ const OpenCase2 = {
             <v-tab-item value="tab-snp">
                 <data-table ref="geneVariantDetails" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants" initial-sort="chromPos"
                     no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true"
-                    @refresh-requested="handleRefresh()" :show-left-menu="true"
+                     :show-left-menu="true"
                     id-type="SNP"
                     @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase" :external-filtering-active="isFilteringActiveForType('snp', 'geneVariantDetails')"
                     >
@@ -702,7 +703,7 @@ const OpenCase2 = {
             <!-- CNV table -->
             <v-tab-item value="tab-cnv">
                 <data-table ref="cnvDetails" :fixed="false" :fetch-on-created="false" table-title="CNVs" initial-sort="chrom" no-data-text="No Data"
-                    :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
+                    :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" 
                     :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase"
                     id-type="CNV"
                     :highlights="highlights" :external-filtering-active="isFilteringActiveForType('cnv', 'cnvDetails')">
@@ -751,7 +752,7 @@ const OpenCase2 = {
             <!--  Fusion / Translocation table -->
             <v-tab-item value="tab-translocation">
                 <data-table ref="translocationDetails" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations" initial-sort="fusionName"
-                    no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
+                    no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" 
                     id-type="FTL"
                     :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase" :external-filtering-active="isFilteringActiveForType('ftl', 'translocationDetails')">
                     <v-fade-transition slot="action1">
@@ -792,7 +793,7 @@ const OpenCase2 = {
             <!--  Virus table -->
             <v-tab-item value="tab-virus">
                 <data-table ref="virusDetails" :fixed="false" :fetch-on-created="false" table-title="Virus" initial-sort="virusName"
-                    no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" @refresh-requested="handleRefresh()"
+                    no-data-text="No Data" :enable-selection="canProceed('canSelect') && !readonly" :show-row-count="true" 
                     id-type="VIR"
                     :show-left-menu="true" @datatable-selection-changed="handleSelectionChanged" :color="colors.openCase" :external-filtering-active="isFilteringActiveForType('virus', 'virusDetails')">
                     <v-fade-transition slot="action1">
@@ -847,7 +848,7 @@ const OpenCase2 = {
                 mutSigVisible: false,
                 mutSigTableData: [],
                 reportReady: false,
-                caseName: "",
+                caseConcatName: "",
                 caseId: "",
                 caseType: "",
                 caseTypeIcon: "",
@@ -933,9 +934,10 @@ const OpenCase2 = {
         },
         proceedWithConfirmation() {
             this.confirmationDialogVisible = false;
-            this.getAjaxData().catch(error => {
-                this.handleDialogs(error.data, this.proceedWithConfirmation);
-            });;
+            this.caseChangeCallBack();
+            // this.getAjaxData().catch(error => {
+            //     this.handleDialogs(error.data, this.proceedWithConfirmation);
+            // });;
         },
         cancelConfirmation() {
             this.confirmationDialogVisible = false;
@@ -969,6 +971,7 @@ const OpenCase2 = {
                     if (response.data.isAllowed) {
                         this.patientDetailsUnSaved = false;
                         this.patientTables = response.data.patientTables;
+                        this.caseConcatName = response.data.caseConcatName;
                         this.extractPatientDetailsInfo();
 
                     }
@@ -1273,7 +1276,7 @@ const OpenCase2 = {
                         else {
                             bus.$emit("update-status-off");
                         }
-                        this.patientTables = response.data.patientInfo.patientTables;
+                        // this.patientTables = response.data.patientInfo.patientTables;
                         this.caseAssignedTo = response.data.assignedToIds;
                         this.caseType = response.data.type;
                         this.reportReady = response.data.reportReady;
@@ -1293,7 +1296,7 @@ const OpenCase2 = {
                             this.caseTypeIconSize = 18;
                         }
                         this.labNotes = response.data.labNotes;
-                        this.extractPatientDetailsInfo(response.data.caseName);
+                        // this.extractPatientDetailsInfo(response.data.caseName);
                         this.caseId = response.data.caseId;
                         this.qcUrl = response.data.qcUrl + this.caseId + "?isLimsId=true&primary=true";
                         this.mutationalSignatureUrl = response.data.tumorVcf ? webAppRoot + "/mutationalSignatureViewer?caseId=" + this.caseId : null;
@@ -1494,14 +1497,11 @@ const OpenCase2 = {
             item.loading = true;
             this.updateRoute();
         },
-        extractPatientDetailsInfo(caseName) {
+        extractPatientDetailsInfo() {
             for (var i = 0; i < this.patientTables.length; i++) {
                 for (var j = 0; j < this.patientTables[i].items.length; j++) {
                     var item = this.patientTables[i].items[j];
-                    if (caseName && item.field == "caseName") {
-                        this.caseName = caseName + " (" + item.value + ")";
-                    }
-                    else if (item.field == "oncotree") {
+                    if (item.field == "oncotree") {
                         this.patientDetailsOncoTreeDiagnosis = { text: item.value, label: "" };
                     }
                     else if (item.field == "tumorTissueType") {
@@ -1611,6 +1611,7 @@ const OpenCase2 = {
             this.snackBarVisible = this.readonly;
 
             this.collectOncoTreeDiagnosis();
+            this.getPatientDetails();
             this.getAjaxData().then(response => {
                 if (this.urlQuery.showReview === true) {
                     this.$nextTick(this.openReviewSelectionDialog());
@@ -1706,10 +1707,13 @@ const OpenCase2 = {
                 }
             }
         },
+        caseChangeCallBack() {
+            Object.assign(this.$data, this.initData(true));
+            this.mountComponent();
+        },
         handleRouteChanged(newRoute, oldRoute) {
             if (newRoute.path != oldRoute.path) { //prevent reloading data if only changing the query router.push({query: {test:"hello3"}})
-                Object.assign(this.$data, this.initData(true));
-                this.mountComponent();
+                    this.caseChangeCallBack();
             }
             else { //look at the query
                 // console.log(newRoute.query, oldRoute.query);
@@ -2502,28 +2506,6 @@ const OpenCase2 = {
         openLink(link) {
             window.open(link, "_blank", 'noopener');
         },
-        getMutationSignatureData() {
-            axios.get(
-                webAppRoot + "/getMutationSignatureTableForCase",
-                {
-                    params: {
-                        caseId: this.$route.params.id
-                    }
-                })
-                .then(response => {
-                    if (response.data.isAllowed) {
-                        this.patientDetailsUnSaved = false;
-                        this.patientTables = response.data.patientTables;
-                        this.extractPatientDetailsInfo();
-
-                    }
-                    else {
-                        this.handleDialogs(response.data, this.getPatientDetails);
-                    }
-                }).catch(error => {
-                    this.handleAxiosError(error);
-                });
-        },
         autoSelectVUSs() {
             this.$refs.reviewDialog.autoVUSLoading = true;
             axios.get(
@@ -2598,6 +2580,11 @@ const OpenCase2 = {
         '$route': "handleRouteChanged",
         variantTabActive: "handleTabChanged",
         waitingForAjaxCount: "handleWaitingForAjaxCount",
-    }
+    },
+    beforeRouteLeave (to, from, next) {
+        // called when the route that renders this component is about to
+        // be navigated away from.
+        // has access to `this` component instance.
+      }
 
 };
