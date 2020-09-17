@@ -58,9 +58,9 @@ public class OpenCaseSummary {
 	List<MutationalSignatureData> mutationalSignatureData;
 
 	public OpenCaseSummary(ModelDAO modelDAO, QcAPIAuthentication qcAPI, OrderCase aCase, String uniqueIdField, User user, List<ReportGroupForDisplay> reportGroups) throws JsonParseException, JsonMappingException, UnsupportedOperationException, URISyntaxException, IOException {
-		List<HeaderOrder> snpOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "SNP/Indel Variants");
-		List<HeaderOrder> cnvOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "CNVs");
-		List<HeaderOrder> ftlOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Fusions / Translocations");
+		List<HeaderOrder> snpOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "SNP/Indel");
+		List<HeaderOrder> cnvOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "CNV");
+		List<HeaderOrder> ftlOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Fusion / Translocation");
 		List<HeaderOrder> virOrders = Summary.getHeaderOrdersForUserAndTable(modelDAO, user, "Virus");
 		this.snpIndelVariantSummary = new SNPIndelVariantSummary(modelDAO, aCase, uniqueIdField, reportGroups, snpOrders, user);
 		this.cnvSummary = new CNVSummary(modelDAO, aCase, uniqueIdField, cnvOrders, user);

@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
@@ -36,6 +37,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -128,6 +131,17 @@ public class NCBIRequestUtils extends AbstractRequestUtils{
 
 					DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 					DocumentBuilder builder = factory.newDocumentBuilder();
+					builder.setEntityResolver(new EntityResolver() {
+						@Override
+						public InputSource resolveEntity(String publicId, String systemId)
+								throws SAXException, IOException {
+							if (systemId.contains("https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20041029/esummary-v1.dtd")) {
+								return new InputSource(new StringReader(""));
+							} else {
+								return null;
+							}
+						}
+					});
 
 					doc = builder.parse(response2.getEntity().getContent());
 
