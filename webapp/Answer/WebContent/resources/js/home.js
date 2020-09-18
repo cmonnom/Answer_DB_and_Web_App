@@ -4,7 +4,7 @@ const Home = {
 
         <v-snackbar :timeout="snackBarTimeout" :bottom="true" :value="snackBarVisible">
         {{ snackBarMessage }}
-        <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
+        <v-btn aria-label="Close Snackbar" flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
       </v-snackbar>
 
   <v-dialog v-model="assignDialogVisible" max-width="50%" scrollable>
@@ -41,12 +41,12 @@ const Home = {
       </v-card-text>
       <v-card-actions>
       <v-tooltip bottom class="pr-2">
-      <v-btn color="success" @click="assignToUser()" slot="activator" :disabled="assignToUserDisabled">Save
+      <v-btn aria-label="Assign to User" color="success" @click="assignToUser()" slot="activator" :disabled="assignToUserDisabled">Save
       <v-icon right dark>save</v-icon>
       </v-btn>
       <span>Answer will send an email notification<br/>to the selected users</span>
         </v-tooltip>
-        <v-btn class="mr-2" color="error" @click="cancelAssign()">Cancel
+        <v-btn aria-label="Cancel Assign to User" class="mr-2" color="error" @click="cancelAssign()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
         <v-checkbox v-model="receiveACopyOfEmail" label="Also send a notification to my email" hide-details class="no-margin-top-controls"></v-checkbox>
@@ -96,12 +96,12 @@ const Home = {
     </v-card-text>
     <v-card-actions>
     <v-tooltip bottom class="pr-2">
-      <v-btn color="success" @click="assignToGroup()" slot="activator">Save
+      <v-btn aria-label="Assign to Group" color="success" @click="assignToGroup()" slot="activator">Save
         <v-icon right dark>save</v-icon>
       </v-btn>
       <span></span>
       </v-tooltip>
-      <v-btn class="mr-2" color="error" @click="cancelAssignGroup()">Cancel
+      <v-btn aria-label="Cancel Assign to Group" class="mr-2" color="error" @click="cancelAssignGroup()">Cancel
         <v-icon right dark>cancel</v-icon>
       </v-btn>
       
@@ -112,7 +112,7 @@ const Home = {
   
   <v-toolbar dense dark color="primary" fixed app>
   <v-menu offset-y offset-x class="ml-0">
-  <v-btn slot="activator" flat icon dark>
+  <v-btn aria-label="Bookmark Current Tab" slot="activator" flat icon dark>
   <v-icon color="amber accent-2">mdi-home</v-icon>
           </v-btn>
           <v-list>
@@ -130,7 +130,7 @@ const Home = {
     </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-tooltip bottom>
-    <v-btn flat icon @click="saveTabPreference()" slot="activator" color="white">
+    <v-btn aria-label="Bookmark Current Tab" flat icon @click="saveTabPreference()" slot="activator" color="white">
         <v-icon>bookmark</v-icon>
     </v-btn>
     <span>Bookmark Current Tab</span>
@@ -547,6 +547,7 @@ const Home = {
 
     },
     destroyed: function () {
+        console.log("destroying home");
         bus.$off('assignToUser');
         bus.$off('assignToGroup');
         bus.$off('open');

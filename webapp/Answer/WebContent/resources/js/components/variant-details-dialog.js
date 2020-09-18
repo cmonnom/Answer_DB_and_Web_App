@@ -2919,6 +2919,7 @@ Vue.component('variant-details-dialog', {
         this.setSelected();
     },
     destroyed() {
+        console.log("destroying variant-details-dialog");
         bus.$off('create-new-cnv');
         bus.$off('setDefaultTranscript');
     },

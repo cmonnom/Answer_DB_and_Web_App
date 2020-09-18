@@ -1117,6 +1117,7 @@ const OpenCase2 = {
                     || this.variantDetailsUnsaved
                     || this.isCaseAnnotationChanged();
             }
+            this.$store.commit("updateOpenCaseSaveNeeded", this.saveAllNeeded);
             return this.saveAllNeeded && !this.readonly;
         },
         handleAnnotationSelectionSaved() {
@@ -2574,6 +2575,7 @@ const OpenCase2 = {
         }
     },
     destroyed: function () {
+        console.log("destroying open-case");
         clearInterval(this.autoSaveInterval);
     },
     watch: {
@@ -2581,10 +2583,4 @@ const OpenCase2 = {
         variantTabActive: "handleTabChanged",
         waitingForAjaxCount: "handleWaitingForAjaxCount",
     },
-    beforeRouteLeave (to, from, next) {
-        // called when the route that renders this component is about to
-        // be navigated away from.
-        // has access to `this` component instance.
-      }
-
 };

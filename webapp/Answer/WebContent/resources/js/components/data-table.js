@@ -41,7 +41,7 @@ Vue.component('data-table', {
     <!-- menu with same functions as left side icons -->
     <v-tooltip class="ml-0" bottom v-if="showLeftMenu">
       <v-menu offset-y offset-x slot="activator" class="ml-0">
-        <v-btn slot="activator" flat icon dark>
+        <v-btn aria-label="Table Menu" slot="activator" flat icon dark>
           <v-icon v-if="!titleIcon">more_vert</v-icon>
           <v-icon v-if="titleIcon" :color="iconColor ? iconColor : 'amber accent-2'">{{ titleIcon }}</v-icon>
         </v-btn>
@@ -136,7 +136,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-show="showButtons" v-if="addRowButton">
-        <v-btn flat icon @click="toggleAddRowBar" slot="activator"  :color="getButtonColor(showAddRowBar)">
+        <v-btn aria-label="Add New Row" flat icon @click="toggleAddRowBar" slot="activator"  :color="getButtonColor(showAddRowBar)">
           <v-icon>add</v-icon>
         </v-btn>
         <span>Add New Row</span>
@@ -145,7 +145,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-show="showButtons">
-        <v-btn flat icon @click="toggleSearchBar" slot="activator" :color="getButtonColor(showSearchBar)">
+        <v-btn aria-label="Quick Filter" flat icon @click="toggleSearchBar" slot="activator" :color="getButtonColor(showSearchBar)">
           <v-icon>search</v-icon>
         </v-btn>
         <span>Quick Filter</span>
@@ -154,7 +154,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-if="advanceFiltering" v-show="showButtons">
-        <v-btn flat icon @click="toggleFilters" slot="activator" :color="getButtonColor(showDrawer)">
+        <v-btn aria-label="Filter Menu" flat icon @click="toggleFilters" slot="activator" :color="getButtonColor(showDrawer)">
           <v-icon>filter_list</v-icon>
         </v-btn>
         <span>Filter Menu</span>
@@ -163,7 +163,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-if="exportEnabled" v-show="showButtons">
-        <v-btn flat icon @click="exportToCSV" slot="activator">
+        <v-btn aria-label="Export to CSV" flat icon @click="exportToCSV" slot="activator">
           <v-icon>file_download</v-icon>
         </v-btn>
         <span>Export to CSV
@@ -173,7 +173,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-show="showButtons">
-        <v-btn flat icon @click="showDraggableHeader=!showDraggableHeader" slot="activator" :color="getButtonColor(showDraggableHeader)">
+        <v-btn aria-label="Move Columns" flat icon @click="showDraggableHeader=!showDraggableHeader" slot="activator" :color="getButtonColor(showDraggableHeader)">
           <v-icon>swap_horiz</v-icon>
         </v-btn>
         <span>Move Columns</span>
@@ -182,7 +182,7 @@ Vue.component('data-table', {
 
     <v-fade-transition>
       <v-tooltip bottom v-show="showButtons">
-        <v-btn flat icon @click="handleRefresh()" slot="activator" :loading="loading">
+        <v-btn aria-label="Refresh" flat icon @click="handleRefresh()" slot="activator" :loading="loading">
           <v-icon>refresh</v-icon>
         </v-btn>
         <span>Refresh</span>
@@ -196,7 +196,7 @@ Vue.component('data-table', {
   <v-card-text>
       <v-layout>
         <v-flex xs12>
-          <v-btn icon @click="toggleAddRowBar" slot="activator">
+          <v-btn aria-label="Add a New Row" icon @click="toggleAddRowBar" slot="activator">
           <v-icon>keyboard_arrow_up</v-icon>
           </v-btn>
           <span class="subheading"> Add a new Row {{ addRowDescription }}</span>
@@ -210,7 +210,7 @@ Vue.component('data-table', {
         <v-textarea hide-details :label="header.oneLineText" :hint="header.hint" v-model="newRow[header.value]" :style="'width:' + header.width" :color="color"></v-textarea>
       </v-flex>
       <v-flex>
-      <v-btn :color="color" @click="addNewRow">Add Row</v-btn>
+      <v-btn aria-label="Add Row" :color="color" @click="addNewRow">Add Row</v-btn>
       </v-flex>
       </v-layout>
       </v-card-text>
@@ -224,7 +224,7 @@ Vue.component('data-table', {
       <v-card-text>
       <v-layout row wrap justify-space-between>
       <v-flex xs3>
-        <v-btn icon @click="toggleSearchBar" slot="activator">
+        <v-btn aria-label="Toggle Quick Filter" icon @click="toggleSearchBar" slot="activator">
         <v-icon>keyboard_arrow_up</v-icon>
         </v-btn>
         <span class="subheading">Quick Filter</span>
@@ -242,7 +242,7 @@ Vue.component('data-table', {
       <v-card v-show="showDraggableHeader" class="mt-1 mb-1 pt-1 pb-1">
         <v-layout>
         <v-flex xs12>
-        <v-btn icon @click="showDraggableHeader=!showDraggableHeader" slot="activator">
+        <v-btn aria-label="Toggle Move Columns" icon @click="showDraggableHeader=!showDraggableHeader" slot="activator">
             <v-icon>keyboard_arrow_up</v-icon>
           </v-btn>
         <span class="subheading">Move Columns</span>
@@ -251,17 +251,17 @@ Vue.component('data-table', {
         <v-layout>
           <v-flex>
             <v-tooltip bottom>
-              <v-btn slot="activator" icon flat :color="color" small @click="toggleHeaderHidden()">
+              <v-btn aria-label="Show/Hide all" slot="activator" icon flat :color="color" small @click="toggleHeaderHidden()">
                 <v-icon>visibility</v-icon>
               </v-btn>
               <span>Show/Hide all</span>
             </v-tooltip><br/>
             <v-tooltip bottom>
-            <v-btn slot="activator" icon flat :color="color" small
+            <v-btn aria-label="Save Header Configuration" slot="activator" icon flat :color="color" small
             :loading="savingHeaderConfig" :disabled="!saveHeaderConfigNeeded" @click="saveHeaderConfig()">
               <v-icon>save</v-icon>
             </v-btn>
-            <span>Save Headers Configuration (position, visibility)</span>
+            <span>Save Header Configuration (position, visibility)</span>
           </v-tooltip>
           </v-flex>
           <v-flex>
@@ -269,7 +269,7 @@ Vue.component('data-table', {
               <v-chip label v-for="header in headerOrder" :key="header" :color="color" text-color="white" :class="[{'is-dragging':isDragging(header)}, 'elevation-1', 'draggable']"
                 :id="header + tableTitle">
                 <span class="draggable">{{ getHeaderByValue(header) }}</span>
-                <v-btn :color="getHeaderButtonColor(header)" icon flat small @click="toggleHeaderHidden(header)">
+                <v-btn aria-label="Show/Hide Header" :color="getHeaderButtonColor(header)" icon flat small @click="toggleHeaderHidden(header)">
                   <v-icon>visibility</v-icon>
                 </v-btn>
               </v-chip>
@@ -288,14 +288,14 @@ Vue.component('data-table', {
           Filters
         </div>
         <v-spacer></v-spacer>
-        <v-btn :color="color" @click="clearFilters">
+        <v-btn aria-label="Clear Filters" :color="color" @click="clearFilters">
           Clear
         </v-btn>
-        <v-btn :color="color" @click="filterData">
+        <v-btn aria-label="Refresh" :color="color" @click="filterData">
           Refresh
         </v-btn>
         <v-tooltip bottom>
-          <v-btn icon @click="toggleFilters" slot="activator">
+          <v-btn aria-label="Close Filter Menu" icon @click="toggleFilters" slot="activator">
             <v-icon>close</v-icon>
           </v-btn>
           <span>Close Filter Menu</span>
@@ -433,7 +433,7 @@ Vue.component('data-table', {
 
           <!-- action button in after  cell content  -->
           <v-tooltip bottom v-if="header.itemAction && !props.item.readonly">
-            <v-btn :ripple="false" slot="activator" flat small icon @click="header['itemAction'](props.item)" class="mt-0 mb-0 ml-0 mr-0" :loading="props.item.loading">
+            <v-btn :aria-label="header.actionTooltip" :ripple="false" slot="activator" flat small icon @click="header['itemAction'](props.item)" class="mt-0 mb-0 ml-0 mr-0" :loading="props.item.loading">
               <v-icon v-if="!header.actionIcon">keyboard_arrow_right</v-icon>
               <v-icon v-if="header.actionIcon"> {{ header.actionIcon }}</v-icon>
             </v-btn>
@@ -448,7 +448,7 @@ Vue.component('data-table', {
             </v-btn>
           </router-link>
                     
-            <v-btn v-else class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item, $event)" slot="activator"
+            <v-btn :aria-label="button.tooltip" v-else class="table-btn" icon flat @click="handleButtonTriggered(button.action, props.item, $event)" slot="activator"
              :color="props.item.active === false ? 'blue-grey lighten-2' : button.color">
               <v-icon>{{ button.icon }}</v-icon>
             </v-btn>

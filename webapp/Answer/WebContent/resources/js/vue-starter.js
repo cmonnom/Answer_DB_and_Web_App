@@ -124,12 +124,31 @@ var router = new VueRouter({
 });
 
 router.beforeEach((to, from, next) => {
-		document.title = 'Answer ' + to.meta.title + (to.params.id ? to.params.id : '');
-		if (to.path.indexOf("discovar") > -1) {
-			document.title = document.title + buildLookupParamsTitle(to.query);
+	var samepage = (to.name == from.name) && (to.params.id == from.params.id);
+	if (store.getters.isOpenCaseSaveNeeded && !samepage) {
+		const answer = window.confirm('Some work has not been saved. Are you sure you want to leave?');
+		if (answer) {
+			store.commit("resetAll");
+			updateTitle(to, from);
+			next();
 		}
+		else {
+			next(false);
+		}    
+	}
+	else {
+		store.commit("resetAll");
+		updateTitle(to, from);
 		next();
+	}
 });
+
+function updateTitle(to, from) {
+	document.title = 'Answer ' + to.meta.title + (to.params.id ? to.params.id : '');
+	if (to.path.indexOf("discovar") > -1) {
+		document.title = document.title + buildLookupParamsTitle(to.query);
+	}
+}
 
 const store = new Vuex.Store( {
 	modules: {
@@ -139,6 +158,28 @@ const store = new Vuex.Store( {
 		virStore: virStoreModule,
 		annotationStore: annotationStoreModule,
 		variantStore: variantStoreModule
+	},
+	state: {
+		openCaseSaveNeeded: false
+	},
+	getters: {
+		isOpenCaseSaveNeeded: (state) => {
+			return state.openCaseSaveNeeded;
+		}
+	},
+	mutations: {
+		updateOpenCaseSaveNeeded: (state, isSaveNeeded) => {
+			state.openCaseSaveNeeded = isSaveNeeded;
+		},
+		resetAll: (state) => {
+			state.openCaseSaveNeeded = false;
+			store.commit("snpStore/resetAll");
+			store.commit("cnvStore/resetAll");
+			store.commit("ftlStore/resetAll");
+			store.commit("virStore/resetAll");
+			store.commit("annotationStore/clearAfterSaving");
+			store.commit("variantStore/clearAfterSaving");
+		}
 	}
 })
 

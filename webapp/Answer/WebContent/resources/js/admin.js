@@ -4,7 +4,7 @@ const Admin = {
 
   <v-snackbar :timeout="4000" :bottom="true" :value="snackBarVisible">
     {{ snackBarMessage }}
-    <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
+    <v-btn aria-label="Close Snackbar" flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
   </v-snackbar>
 
   <!-- edit user dialog -->
@@ -16,7 +16,7 @@ const Admin = {
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
-          <v-btn icon @click="cancelEdits()" slot="activator">
+          <v-btn aria-label="Cancel Edits" icon @click="cancelEdits()" slot="activator">
             <v-icon>close</v-icon>
           </v-btn>
           <span>Cancel</span>
@@ -89,7 +89,7 @@ const Admin = {
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
-          <v-btn icon @click="cancelGroupEdits()" slot="activator">
+          <v-btn aria-label="Cancel Group Edits" icon @click="cancelGroupEdits()" slot="activator">
             <v-icon>close</v-icon>
           </v-btn>
           <span>Cancel</span>
@@ -115,10 +115,10 @@ const Admin = {
         </v-container>
       </v-card-text>
       <v-card-actions>
-        <v-btn class="mr-2" color="success" @click="saveGroupEdits()" :disabled="editGroupDialogSaveDisabled">Save
+        <v-btn aria-label="Save Group Edits" class="mr-2" color="success" @click="saveGroupEdits()" :disabled="editGroupDialogSaveDisabled">Save
           <v-icon right dark>save</v-icon>
         </v-btn>
-        <v-btn class="mr-2" color="error" @click="cancelGroupEdits()">Cancel
+        <v-btn aria-label="Cancel Group Edits" class="mr-2" color="error" @click="cancelGroupEdits()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
       </v-card-actions>
@@ -136,7 +136,7 @@ const Admin = {
     data-url="./getAllUsers" >
     <v-fade-transition slot="action1">
       <v-tooltip bottom>
-        <v-btn flat icon @click="addUser" slot="activator">
+        <v-btn aria-label="Add User" flat icon @click="addUser" slot="activator">
           <v-icon dark>mdi-account-plus</v-icon>
         </v-btn>
         <span>Add New User</span>
@@ -156,7 +156,7 @@ const Admin = {
     data-url="./getAllGroups" >
     <v-fade-transition slot="action1">
       <v-tooltip bottom>
-        <v-btn flat icon @click="addGroup" slot="activator">
+        <v-btn aria-label="Add Group" flat icon @click="addGroup" slot="activator">
           <v-icon dark>mdi-account-multiple-plus</v-icon>
         </v-btn>
         <span>Add New Group</span>

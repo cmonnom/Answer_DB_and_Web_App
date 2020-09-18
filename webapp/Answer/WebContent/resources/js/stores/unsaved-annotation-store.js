@@ -47,7 +47,8 @@ const annotationStoreModule = {
         clearAfterSaving: state => {
             state.unsavedAnnotationMap = {};
             state.needSaving = false;
-        }
+            state.unsavedAnnotationValues = [];
+        },
     },
     getters: {
         getAnnotationSelectionToSave: state => {
@@ -58,7 +59,7 @@ const annotationStoreModule = {
         },
         getAnnotationIdsForReporting: (state, getters) => (variantId) => {
             return state.unsavedAnnotationMap[variantId].annotationIdsForReporting;
-        }
+        },
     }
 
 };

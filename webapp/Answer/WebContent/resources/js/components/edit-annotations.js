@@ -1091,6 +1091,7 @@ Vue.component('edit-annotations', {
     created: function () {
     },
     destroyed: function () {
+        console.log("destroying edit-annotations");
     },
     mounted() {
         this.getAllGenes();
