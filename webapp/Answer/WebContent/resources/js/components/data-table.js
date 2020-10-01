@@ -20,7 +20,7 @@ Vue.component('data-table', {
         "title-icon": { default: null, type: String },
         "show-left-menu": { default: true, type: Boolean },
         "color": { default: "primary", type: String },
-        "disable-sticky-header": {default: false, type: Boolean},
+        // "disable-sticky-header": {default: false, type: Boolean},
         highlights: { default: () => {}, type: Object },
         "fixed-header": {default: false, type: Boolean}, //not working yet
         "add-row-button": {default: false, type: Boolean},
@@ -31,7 +31,7 @@ Vue.component('data-table', {
         "external-filtering-active": {default: false, type: Boolean}, //parent can control that the table is filtered externally (eg. advanced-filter)
         "id-type": {default: "", type: String}, //can be used to know which table an event came from. Should be unique to some extend
     },
-    template: /*html*/`<div>
+    template: /*html*/`<div class="elevation-1">
     <!-- Comment above and uncomment below to use the buttons on hover feature -->
      <!-- <div @mouseover="toggleShowButtons(true)" @mouseleave="toggleShowButtons(false)"> -->
   <!-- Top tool bar with menu options -->
@@ -353,9 +353,9 @@ Vue.component('data-table', {
 
 
   <!-- Data Table -->
-  <v-divider></v-divider>
+    <!-- <v-divider></v-divider>-->
   <v-data-table :id="tableId" v-model="selected" v-bind:headers="headers" v-bind:items="items" v-bind:search="search" hide-actions
-    v-bind:pagination.sync="pagination" :item-key="uniqueIdField" :no-data-text="noDataText" :loading="loading ? isLoadingColor : false" :class="['elevation-1', toolbarVisible ? 'mt-0' : '', isHeaderFixed ? 'fixed-header' : '']"
+    v-bind:pagination.sync="pagination" :item-key="uniqueIdField" :no-data-text="noDataText" :loading="loading ? isLoadingColor : false" :class="['elevation-0', toolbarVisible ? 'mt-0' : '', isHeaderFixed ? 'fixed-header' : '']"
     :custom-sort="customSort" ref="dataTable">
     <template slot="headers" slot-scope="props">
       <tr>
@@ -434,9 +434,9 @@ Vue.component('data-table', {
           <!-- action button in after  cell content  -->
           <v-tooltip bottom v-if="header.itemAction && !props.item.readonly">
             <v-btn :aria-label="header.actionTooltip" :ripple="false" slot="activator" flat small icon @click="header['itemAction'](props.item)" class="mt-0 mb-0 ml-0 mr-0" :loading="props.item.loading">
-              <v-icon v-if="!header.actionIcon">keyboard_arrow_right</v-icon>
-              <v-icon v-if="header.actionIcon"> {{ header.actionIcon }}</v-icon>
-            </v-btn>
+            <v-icon v-if="!header.actionIcon">keyboard_arrow_right</v-icon>
+            <v-icon v-if="header.actionIcon"> {{ header.actionIcon }}</v-icon>
+          </v-btn>
             <span>{{ header.actionTooltip }}</span>
           </v-tooltip>
 
@@ -455,9 +455,15 @@ Vue.component('data-table', {
             <span v-html="button.tooltip"></span>
           </v-tooltip>
 
-          <v-tooltip bottom v-if="header.isLink">
-            <a :href="props.item[header.value]" slot="activator" target="_blank" rel="noreferrer">{{ props.item[header.value] }}</a>
-            <span>Open Link in New Tab</span>
+          <v-tooltip bottom v-if="header.isLink && header.urlForItem">
+          <span slot="activator" >
+          {{ props.item[header.value] }}
+          <v-btn :aria-label="header.actionTooltip" :ripple="false" flat small icon :href="header.urlForItem(props.item)" target="_blank" rel="noreferrer" class="mt-0 mb-0 ml-0 mr-0">
+          <v-icon v-if="!header.actionIcon">open_in_new</v-icon>
+          <v-icon v-if="header.actionIcon"> {{ header.actionIcon }}</v-icon>
+          </v-btn>
+          </span>
+            <span>{{ header.actionTooltip }}</span>
           </v-tooltip>
 
         </td>
@@ -465,10 +471,9 @@ Vue.component('data-table', {
     </template>
   </v-data-table>
   <!-- external pagination -->
-  <div class="text-xs-center pt-1" v-show="showPagination">
+  <div class="text-xs-center" v-show="showPagination && hasData()">
     <v-pagination v-model="pagination.page" :color="color" :length="pages" :total-visible="10"></v-pagination>
   </div>
-
 
 </div>`,
     data() {
@@ -505,7 +510,7 @@ Vue.component('data-table', {
             headerLoadingColor: "blue-grey lighten-4",
             filteringActive: false, //preserves the previous value
             currentSeachTimeout: null,
-            pendingSearch: null
+            pendingSearch: null,
         }
     },
     methods: {
@@ -820,18 +825,18 @@ Vue.component('data-table', {
                 bus.$emit("need-layout-resize", this);
             }
         },
-        handleScroll(event) {
-            if (this.disableStickyHeader) {
-                return;
-            }
-            if (!this.stickyHeader) {
-                this.stickyHeader = $('table').stickyTableHeaders({ fixedOffset: 48 }); //need to use the html element rather than the element id
-            }
-            this.$nextTick(function () {
-                $(window).trigger('resize.stickyTableHeaders');
-            });
+        // handleScroll(event) {
+        //     if (this.disableStickyHeader) {
+        //         return;
+        //     }
+        //     if (!this.stickyHeader) {
+        //         this.stickyHeader = $('table').stickyTableHeaders({ fixedOffset: 48 }); //need to use the html element rather than the element id
+        //     }
+        //     this.$nextTick(function () {
+        //         $(window).trigger('resize.stickyTableHeaders');
+        //     });
 
-        },
+        // },
         handleDialogs(response, callback) {
             if (response.data.isXss) {
                 bus.$emit("xss-error", [this, response.data.reason]);
@@ -1278,6 +1283,9 @@ Vue.component('data-table', {
                     this.savingHeaderConfig = false;
                 });
         },
+        hasData() {
+          return this.items.length > 0;
+        }
 
     },
     computed: {
@@ -1324,14 +1332,14 @@ Vue.component('data-table', {
 
     },
     destroyed: function () {
-        window.removeEventListener('scroll', this.handleScroll);
-        $('#' + this.tableId).stickyTableHeaders('destroy');
+        // window.removeEventListener('scroll', this.handleScroll);
+        // $('#' + this.tableId).stickyTableHeaders('destroy');
         //make sure the layout is refreshed for other views
         bus.$emit("need-layout-resize", this);
     },
     mounted: function () {
-        window.addEventListener('scroll', this.handleScroll);
-        this.$el.querySelector('#' + this.tableId).firstElementChild.addEventListener('scroll', this.handleScroll);
+        // window.addEventListener('scroll', this.handleScroll);
+        // this.$el.querySelector('#' + this.tableId).firstElementChild.addEventListener('scroll', this.handleScroll);
 
         if (this.fetchOnCreated) {
             this.getAjaxData();

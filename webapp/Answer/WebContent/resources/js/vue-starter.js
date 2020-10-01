@@ -1,4 +1,4 @@
-var router = new VueRouter({
+const router = new VueRouter({
 	mode: 'history',
 	routes: [
 		{
@@ -125,7 +125,10 @@ var router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
 	var samepage = (to.name == from.name) && (to.params.id == from.params.id);
-	if (store.getters.isOpenCaseSaveNeeded && !samepage) {
+	if (samepage) {
+		next();
+	}
+	else if (store.getters.isOpenCaseSaveNeeded && !samepage) {
 		const answer = window.confirm('Some work has not been saved. Are you sure you want to leave?');
 		if (answer) {
 			store.commit("resetAll");
@@ -198,7 +201,7 @@ function buildLookupParamsTitle(query) {
 		case "Gene": return " Gene " + query.gene;
 		case "Cancer": return " Cancer " + query.oncotree;
 		case "Variant": return " Variant " + query.gene + " " + query.variant + " " + query.oncotree;
-		case "CNV": ampDel = query.ampDel ? "Amplification" : "Deletion"; return " CNV " + query.gene + " " + query.oncotree + " " + ampDel;
+		case "CNV": var ampDel = query.ampDel ? "Amplification" : "Deletion"; return " CNV " + query.gene + " " + query.oncotree + " " + ampDel;
 		case "Fusion": return " Fusion " + query.five + "-" + query.three + " " + query.oncotree;
 		default: return "";
 	}

@@ -1004,8 +1004,7 @@ Vue.component('variant-details', {
                 bus.$emit("not-allowed", [this.reponse]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [this, response.reason]);
             }
             else if (response.isLogin) {
                 bus.$emit("login-needed", [this, callback])
@@ -1172,6 +1171,11 @@ Vue.component('variant-details', {
     },
     created: function () {
 
+    },
+    beforeDestroy() {
+        if (document.getElementById(this.cnvPlotId)) {
+            Plotly.purge(this.cnvPlotId);
+        }
     },
     destroyed: function () {
 

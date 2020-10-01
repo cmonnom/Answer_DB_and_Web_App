@@ -1578,7 +1578,11 @@ public class OpenCaseController {
 //		System.out.println(variants);
 		Map<String, OrderCase> casesAlreadyFetched = new HashMap<String, OrderCase>();
 		for (JsonNode variantNode : variants) {
-			String variantType = variantNode.get("variantType").textValue();
+			JsonNode variantTypeNode = variantNode.get("variantType");
+			if (variantTypeNode == null) {
+				variantTypeNode = variantNode.get("type");
+			}
+			String variantType = variantTypeNode.textValue();
 			String caseId = variantNode.get("caseId").textValue();
 			OrderCase orderCase = null;
 			//reuse already fetched case if exists

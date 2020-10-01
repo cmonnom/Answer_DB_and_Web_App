@@ -156,8 +156,7 @@ Vue.component('add-fusion', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [this, response.reason]);
             }
             else if (response.isLogin) {
                 bus.$emit("login-needed", [this, callback])

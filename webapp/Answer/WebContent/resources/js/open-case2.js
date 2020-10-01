@@ -102,7 +102,6 @@ const OpenCase2 = {
         
         @download-igv-file="downloadIGVFile"
         @refresh-variant-tables="getAjaxData"
-        :oncotree="oncotree"
         >
         </variant-details-dialog>
 
@@ -130,7 +129,6 @@ const OpenCase2 = {
       <fpkm-plot ref="fpkmPlot"
       :can-plot="patientDetailsOncoTreeDiagnosis.text != null"
       :oncotreeCode="patientDetailsOncoTreeDiagnosis.text"
-      :oncotree="oncotree"
       @hide-fpkm-plot="closeFPKMChart"
       ></fpkm-plot>
       </v-menu>
@@ -158,7 +156,6 @@ const OpenCase2 = {
       <tmb-plot ref="tmbPlot"
       :can-plot="patientDetailsOncoTreeDiagnosis.text != null && hasTMB"
       :oncotreeCode="patientDetailsOncoTreeDiagnosis.text"
-      :oncotree="oncotree"
       @hide-tmb-plot="closeTMBChart"
       ></tmb-plot>
       </v-menu>  
@@ -398,7 +395,10 @@ const OpenCase2 = {
         <span>Case Menu</span>
     </v-tooltip>
     <v-toolbar-title class="white--text ml-0">
-    Working on case: {{ caseConcatName }} 
+    <v-tooltip bottom>
+    <span slot="activator">Working on case: {{ caseConcatName }}</span>
+    <span>Working on case: {{ caseConcatName }} ({{caseType}})</span>
+    </v-tooltip>
     <v-tooltip bottom>
           <v-icon slot="activator" :size="caseTypeIconSize" class="icon-align-cancel"> {{ caseTypeIcon }} </v-icon>
         <span>{{caseType}} case</span>  
@@ -602,7 +602,7 @@ const OpenCase2 = {
                                                                 </v-flex>
                                                                 <v-flex xs4 v-if="item.type == 'text' && item.field == 'oncotree'" class="align-flex-right pt-0">
                                                                     <v-tooltip bottom>
-                                                                        <v-btn flat color="primary" icon @click="openOncoTree()" slot="activator" class="ma-0">
+                                                                        <v-btn flat color="primary" icon :href="getOncoTreeUrl()" target="_blank" rel="noreferrer" slot="activator" class="ma-0">
                                                                             <img alt="oncotree icon" :src="oncotreeIconUrl" width="24px"/>
                                                                         </v-btn>
                                                                         <span>Open OncoTree in New Tab</span>
@@ -1095,8 +1095,7 @@ const OpenCase2 = {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [this, response.reason]);
             }
             else if (response.isLogin) {
                 bus.$emit("login-needed", [this, callback])
@@ -1198,16 +1197,12 @@ const OpenCase2 = {
             this.variantUnSaved = true;
 
         },
-        openOncoTree() {
+        getOncoTreeUrl() {
             var leaf = "";
             if (this.patientDetailsOncoTreeDiagnosis.text) {
                 leaf = "?version=oncotree_2019_03_01&search_term=(" + this.patientDetailsOncoTreeDiagnosis.text + ")";
             }
-            var oncotreeWindow = window.open("http://oncotree.mskcc.org/#/home" + leaf, "_blank");
-        },
-        openOncoKBGeniePortalCancer() {
-            var url = oncoKBGeniePortalUrl + "Cancer/?Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
-            window.open(url, "_blank");
+            return "http://oncotree.mskcc.org/#/home" + leaf;
         },
         isAdvancedFilteringVisible() {
             return this.$refs.advancedFilter && this.$refs.advancedFilter.advancedFilteringVisible;
@@ -2435,13 +2430,13 @@ const OpenCase2 = {
             }
         },
         createAutoSaveInterval() {
-            // this.autoSaveInterval = setInterval(() => {
-            //     var editing = this.$route.query.edit === true || this.$route.query.edit === "true";
-            //     var reviewing = this.$route.query.showReview === true || this.$route.query.showReview === "true";
-            //     if (!this.waitingForAjaxActive && !editing && !reviewing) {
-            //         this.handleSaveAll(true);
-            //     }
-            // }, 120000);
+            this.autoSaveInterval = setInterval(() => {
+                var editing = this.$route.query.edit === true || this.$route.query.edit === "true";
+                var reviewing = this.$route.query.showReview === true || this.$route.query.showReview === "true";
+                if (!this.waitingForAjaxActive && !editing && !reviewing) {
+                    this.handleSaveAll(true);
+                }
+            }, 120000);
         },
         openReport() {
             if (!this.reportReady) {
@@ -2575,7 +2570,6 @@ const OpenCase2 = {
         }
     },
     destroyed: function () {
-        console.log("destroying open-case");
         clearInterval(this.autoSaveInterval);
     },
     watch: {

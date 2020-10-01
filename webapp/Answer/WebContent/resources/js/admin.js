@@ -133,7 +133,7 @@ const Admin = {
   </v-toolbar>
 
   <data-table ref="userTable" :fixed="false" :fetch-on-created="true" table-title="Users" :initial-sort="'fullName'" no-data-text="No Data"
-    data-url="./getAllUsers" >
+    data-url="./getAllUsers" class="pb-3">
     <v-fade-transition slot="action1">
       <v-tooltip bottom>
         <v-btn aria-label="Add User" flat icon @click="addUser" slot="activator">
@@ -423,6 +423,15 @@ const Admin = {
     },
     getAppVersion() {
       return "(version: " + version + ")";
+    },
+    editUserHandler(item) {
+      this.editUser(item.userId);
+    },
+    editGroupHanlder(item) {
+      this.editGroup(item.groupId);
+    },
+    blockUserHandler(item) {
+      this.blockUser(item.userId);
     }
   },
   mounted: function () {
@@ -430,22 +439,20 @@ const Admin = {
     this.getAllGroupsForUsers();
   },
   destroyed: function () {
-    bus.$off('editUser');
-    bus.$off('editGroup');
-    bus.$off('blockUser');
+    // bus.$off('editUser');
+    // bus.$off('editGroup');
+    // bus.$off('blockUser');
 
   },
+  beforeDestroy() {
+    bus.$off('editUser', this.editUserHandler);
+    bus.$off('editGroup', this.editGroupHanlder);
+    bus.$off('blockUser', this.blockUserHandler);
+  },
   created: function () {
-    bus.$on('editUser', (item) => {
-      this.editUser(item.userId);
-    });
-    bus.$on('editGroup', (item) => {
-      this.editGroup(item.groupId);
-    });
-    bus.$on('blockUser', (item) => {
-      this.blockUser(item.userId);
-    });
-
+    bus.$on('editUser', this.editUserHandler);
+    bus.$on('editGroup', this.editGroupHanlder);
+    bus.$on('blockUser', this.blockUserHandler);
   },
   computed: {
   },

@@ -91,7 +91,7 @@ Vue.component('review-selection', {
                 <v-icon>more_vert</v-icon>
             </v-btn>
             <v-list>
-
+<!--
                 <v-list-tile avatar @click="sendToMDA()" :disabled="saveVariantDisabled || sendToMDALoading">
                     <v-list-tile-avatar>
                         MDA
@@ -100,7 +100,7 @@ Vue.component('review-selection', {
                         <v-list-tile-title>Download Moclia File</v-list-tile-title>
                     </v-list-tile-content>
                 </v-list-tile>
-
+-->
                 <v-list-tile avatar @click="markAsReadyForReview()"  v-if="canProceed('canAnnotate')">
                     <v-list-tile-avatar>
                         <v-icon>how_to_reg</v-icon>
@@ -155,12 +155,14 @@ Vue.component('review-selection', {
           </v-tooltip>
         </v-toolbar-title>
         <v-spacer></v-spacer>
+        <!--
         <v-tooltip bottom>
             <v-btn icon :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">
                 MDA
             </v-btn>
             <span>Download Moclia File</span>
         </v-tooltip>
+        -->
         <v-tooltip bottom v-if="canProceed('canAnnotate')">
         <v-btn icon  @click="markAsReadyForReview()" slot="activator" :loading="markingForReview">
             <v-icon>how_to_reg</v-icon>
@@ -250,8 +252,8 @@ Vue.component('review-selection', {
             <!-- SNP / Indel table -->
         <v-tab-item value="tab-selected-snp" class="pt-1">
         
-            <data-table disable-sticky-header ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'SNP/Indel Variants from Case Owner ' + caseOwnerName"
-            initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table  ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'SNP/Indel Variants from Case Owner ' + caseOwnerName"
+            initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" color="primary"
             @refresh-requested="handleRefresh()">
             <v-fade-transition slot="action1">
                 <v-tooltip bottom >
@@ -284,8 +286,8 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s SNPs</span>
             </v-tooltip>
 
-            <data-table disable-sticky-header ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
-                initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table  ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
+                initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
 
@@ -293,8 +295,8 @@ Vue.component('review-selection', {
         </v-tab-item>
         <!-- CNV table -->
         <v-tab-item value="tab-selected-cnv"  class="pt-1">
-            <data-table disable-sticky-header ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'CNVs from Case Owner ' + caseOwnerName" initial-sort="chrom"
-            no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table  ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'CNVs from Case Owner ' + caseOwnerName" initial-sort="chrom"
+            no-data-text="No Data" :show-row-count="true" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
 
@@ -308,15 +310,15 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s CNVs</span>
             </v-tooltip>
 
-            <data-table disable-sticky-header ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
-                no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table  ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
+                no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
              </data-table>
         </v-tab-item>
         <!--  Fusion / Translocation table -->
         <v-tab-item value="tab-selected-translocation" class="pt-1">
-            <data-table disable-sticky-header ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Fusions / Translocations from Case Owner '  + caseOwnerName"
-            initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table  ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Fusions / Translocations from Case Owner '  + caseOwnerName"
+            initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
 
@@ -330,16 +332,16 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s Fusions/Translocations</span>
             </v-tooltip>
 
-            <data-table disable-sticky-header ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
-                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table  ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
+                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
         </v-tab-item>
 
         <!--  Virus table -->
         <v-tab-item value="tab-selected-virus" class="pt-1">
-            <data-table disable-sticky-header ref="virusVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Virus from Case Owner '  + caseOwnerName"
-            initial-sort="virusName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table  ref="virusVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Virus from Case Owner '  + caseOwnerName"
+            initial-sort="virusName" no-data-text="No Data" :show-row-count="true"  color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
 
@@ -353,8 +355,8 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s Viruses</span>
             </v-tooltip>
 
-            <data-table disable-sticky-header ref="virusVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Viruses from All Annotators"
-                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table  ref="virusVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Viruses from All Annotators"
+                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
         </v-tab-item>
@@ -363,11 +365,13 @@ Vue.component('review-selection', {
 
     </v-card-text>
     <v-card-actions class="card-actions-bottom">
+    <!--
         <v-tooltip top class="pr-2">
             <v-btn color="primary" :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">Moclia File
             </v-btn>
             <span>Download Moclia File</span>
         </v-tooltip>
+        -->
         <v-tooltip top v-if="canProceed('canAnnotate')" class="pr-2">
             <v-btn color="primary" @click="markAsReadyForReview()" slot="activator"  :loading="markingForReview">
                 Ready for Review
@@ -397,7 +401,7 @@ Vue.component('review-selection', {
    `,
     data() {
         return {
-            sendToMDALoading: false,
+            // sendToMDALoading: false,
             requiredReportGroups: [],
             markingForReview: false,
             markingForReport: false,
@@ -440,8 +444,7 @@ Vue.component('review-selection', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [this, response.reason]);
             }
             else if (response.isLogin) {
                 bus.$emit("login-needed", [this, callback])
@@ -459,39 +462,39 @@ Vue.component('review-selection', {
         breadcrumbNavigation(index) {
             this.$emit("breadcrumb-navigation", index);
         },
-        sendToMDA() {
-            // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
-            // Use a flag to disable the action in the meantime
-            if (this.saveVariantDisabled) {
-                return;
-            }
-            this.sendToMDALoading = true;
-            axios({
-                method: 'post',
-                url: webAppRoot + "/sendToMDA",
-                params: {
-                    caseId: this.$route.params.id
-                },
-                data: {
-                    filters: [],
-                    selectedSNPVariantIds: this.selectedIds.selectedSNPVariantIds,
-                    selectedCNVIds: this.selectedIds.selectedCNVIds,
-                    selectedTranslocationIds: this.selectedIds.selectedTranslocationIds,
-                    selectedVirusIds: this.selectedIds.selectedVirusIds
-                }
-            }).then(response => {
-                this.sendToMDALoading = false;
-                if (response.data.isAllowed && response.data.success) {
-                    this.createCSVFile(response.data.message);
-                }
-                else {
-                    this.handleDialogs(response.data, this.sendToMDA);
-                }
-            }).catch(error => {
-                this.sendToMDALoading = false;
-                this.handleAxiosError(error);
-            });
-        },
+        // sendToMDA() {
+        //     // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
+        //     // Use a flag to disable the action in the meantime
+        //     if (this.saveVariantDisabled) {
+        //         return;
+        //     }
+        //     this.sendToMDALoading = true;
+        //     axios({
+        //         method: 'post',
+        //         url: webAppRoot + "/sendToMDA",
+        //         params: {
+        //             caseId: this.$route.params.id
+        //         },
+        //         data: {
+        //             filters: [],
+        //             selectedSNPVariantIds: this.selectedIds.selectedSNPVariantIds,
+        //             selectedCNVIds: this.selectedIds.selectedCNVIds,
+        //             selectedTranslocationIds: this.selectedIds.selectedTranslocationIds,
+        //             selectedVirusIds: this.selectedIds.selectedVirusIds
+        //         }
+        //     }).then(response => {
+        //         this.sendToMDALoading = false;
+        //         if (response.data.isAllowed && response.data.success) {
+        //             this.createCSVFile(response.data.message);
+        //         }
+        //         else {
+        //             this.handleDialogs(response.data, this.sendToMDA);
+        //         }
+        //     }).catch(error => {
+        //         this.sendToMDALoading = false;
+        //         this.handleAxiosError(error);
+        //     });
+        // },
         createCSVFile(csvContent) {
         	 var blob = new Blob(
                      [csvContent],

@@ -219,7 +219,7 @@ public class FinalReportPDFTemplate {
 		this.updatePotentialNewPagePosition(exonsPerGenes.size());
 		
 		if (exonsPerGenes.isEmpty()) {
-			return "All exons in clinically actionable genes were covered above 100X";
+			return "All exons in clinically actionable genes were covered above 100X.";
 		}
 		else {
 			List<String> sortedGenes = new ArrayList<String>();

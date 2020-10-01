@@ -1,7 +1,6 @@
 Vue.component('fpkm-plot', {
     props: {
         canPlot: { default: false, type: Boolean },
-        oncotree: {default: () => [], type:Array },
         oncotreeCode: {default: null, type: String}
     },
     template: /*html*/`
@@ -190,8 +189,7 @@ Vue.component('fpkm-plot', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [this, response.reason]);
             }
             else if (response.isLogin) {
                 bus.$emit("login-needed", [this, callback])
@@ -205,7 +203,7 @@ Vue.component('fpkm-plot', {
             bus.$emit("some-error", [this, error]);
         },
         getTissueFromOncotreeCode(code) {
-            return this.oncotree.filter( i => {return i.text === code;})[0].tissue;
+            return oncotree.filter( i => {return i.text === code;})[0].tissue;
         },
         createPlotTitle(code, nbOfCases) {
             let caseString = nbOfCases ? nbOfCases : 0;
@@ -378,10 +376,12 @@ Vue.component('fpkm-plot', {
     created() {
         this.populateItems();
     },
-    destroyed() {
+    beforeDestroy() {
         if (document.getElementById('fpkmPlot')) {
             Plotly.purge('fpkmPlot');
         }
+    },
+    destroyed() {
     },
     watch: {
         search(value) {

@@ -41,43 +41,51 @@ Vue.component('error-handler', {
             this.busy = true; //prevents other events
             this.showLoginDialog = false;
             // console.log(this.callBacks);
-            for (var i = 0; i < this.callBacks.length; i++) {
-                var callBack = this.callBacks[i];
+            for (let i = 0; i < this.callBacks.length; i++) {
+                let callBack = this.callBacks[i];
                 if (callBack) {
                     callBack();
                 }
             }
             this.callBacks = [];
             busy = false; 
+        },
+        xssErrorHandler(args) {
+            if (args) {
+                this.handleError(args);
+            }
+        },
+        someErrorHandler(args) {
+            if (args) {
+                this.handleError(args);
+            }
+        },
+        loginNeededHandler(args) {
+            if (args) {
+                this.handleLoginNeeded(args);
+            }
+        },
+        notAllowedHandler() {
+            this.handleError([null,"You are not allowed to perform this action"]);
         }
     },
     computed: {
 
     },
     created: function () {
-        //just a test example. Do no display a popup when user enters invalid characters
-        bus.$on('xss-error', args => {
-            if (args) {
-                this.handleError(args);
-            }
-        });
-        bus.$on('some-error', args => {
-            if (args) {
-                this.handleError(args);
-            }
-        });
-        bus.$on('login-needed', args => {
-            if (args) {
-                this.handleLoginNeeded(args);
-            }
-        });
-        bus.$on('login-success', () => {
-            this.doCallBacks();
-        });
-        bus.$on('not-allowed', () => {
-            this.handleError([null,"You are not allowed to perform this action"]);
-        });
-    }
+        bus.$on('xss-error', this.xssErrorHandler);
+        bus.$on('some-error', this.someErrorHandler);
+        bus.$on('login-needed', this.loginNeededHandler);
+        bus.$on('login-success', this.doCallBacks);
+        bus.$on('not-allowed', this.notAllowedHandler);
+    },
+    beforeDestroy() {
+        bus.$off('xss-error', this.xssErrorHandler);
+        bus.$off('some-error', this.someErrorHandler);
+        bus.$off('login-needed', this.loginNeededHandler);
+        bus.$off('login-success', this.doCallBacks);
+        bus.$off('not-allowed', this.notAllowedHandler);
+    },
 
 
 

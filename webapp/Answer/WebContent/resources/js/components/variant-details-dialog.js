@@ -63,7 +63,7 @@ Vue.component('variant-details-dialog', {
             'homozygous loss',
             'ITD'
         ], type: Array},
-        oncotree: {default: () => [], type: Array},
+        // oncotree: {default: () => [], type: Array},
     },
     template: /*html*/`<div>
 
@@ -87,10 +87,10 @@ Vue.component('variant-details-dialog', {
         @toggle-panel="handlePanelVisibility()" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible"
         @breadcrumb-navigation="breadcrumbNavigation"
         :current-variant="currentVariant"
-        :oncotree="oncotree"
+        
         @reload-values="reloadLookupValues">
         <v-slide-y-transition slot="variantDetails">
-            <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
+            <v-flex xs12 md12 lg12 xl11 mb-3 v-show="editAnnotationVariantDetailsVisible">
             <variant-details :no-edit="true" :variant-data-tables="variantDataTables" :link-table="linkTable" :type="currentVariantType" 
                 :width-class="getWidthClassForVariantDetails()" :current-variant="currentVariant" @hide-panel="handlePanelVisibility(false)"
                 @show-panel="handlePanelVisibility(true)" @toggle-panel="handlePanelVisibility()" @revert-variant="revertVariant"
@@ -113,7 +113,7 @@ Vue.component('variant-details-dialog', {
         :annotation-phases="annotationPhases"
         :userAnnotations="userAnnotations"
         @reload-values="reloadLookupValues"
-        :oncotree="oncotree"
+        
         :annotation-tiers="variantTiers" :annotation-classifications="annotationClassifications"
         :current-variant="currentVariant" :annotation-variant-details-visible="editAnnotationVariantDetailsVisible">
         <v-slide-y-transition slot="variantDetails">
@@ -142,7 +142,7 @@ Vue.component('variant-details-dialog', {
         :annotation-phases="annotationPhases"
         :userAnnotations="userAnnotations"
         :current-variant="currentVariant" @toggle-panel="handlePanelVisibility()"
-        :oncotree="oncotree"
+       
         @reload-values="reloadLookupValues">
         <v-slide-y-transition slot="variantDetails">
             <v-flex xs12 md12 lg12 xl11 mb-2 v-show="editAnnotationVariantDetailsVisible">
@@ -243,19 +243,6 @@ Vue.component('variant-details-dialog', {
                                                         <v-list-tile-title>Other VCF Annotations</v-list-tile-title>
                                                     </v-list-tile-content>
                                                 </v-list-tile>
-    
-                                                <!--
-                                                <v-list-tile v-if="isSNP() || isCNV()" :class="!mdaAnnotationsVisible ? 'grey--text' : ''" avatar @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" :disabled="!mdaAnnotationsExists()">
-                                                    <v-list-tile-avatar>
-                                                        <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
-                                                        <v-icon v-else>mdi-message-bulleted-off</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title v-if="mdaAnnotationsExists()">MDA Annotations</v-list-tile-title>
-                                                        <v-list-tile-title v-else>No MDA Annotations</v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-                                                -->
     
                                                 <v-list-tile avatar :class="!utswAnnotationsVisible ? 'grey--text' : ''" avatar @click="utswAnnotationsVisible = !utswAnnotationsVisible" :disabled="!utswAnnotationsExists()">
                                                     <v-list-tile-avatar>
@@ -420,17 +407,6 @@ Vue.component('variant-details-dialog', {
                         </v-btn>
                         <span>Show/Hide Canonical VCF Annotations</span>
                     </v-tooltip>
-                    <!--
-                    <v-tooltip bottom v-if="isSNP || isCNV()">
-                        <v-btn :disabled="!mdaAnnotationsExists()" icon flat :color="(mdaAnnotationsVisible && mdaAnnotationsExists()) ? 'amber accent-2' : ''"
-                            @click="mdaAnnotationsVisible = !mdaAnnotationsVisible" slot="activator">
-                            <v-icon v-if="mdaAnnotationsExists()">mdi-message-bulleted</v-icon>
-                            <v-icon v-else>mdi-message-bulleted-off</v-icon>
-                        </v-btn>
-                        <span v-if="mdaAnnotationsExists()">Show/Hide MDA Annotations</span>
-                        <span v-else>No MDA Annotations</span>
-                    </v-tooltip>
-                    -->
                     <v-tooltip bottom>
                         <v-btn :disabled="!utswAnnotationsExists()" icon flat :color="(utswAnnotationsVisible && utswAnnotationsExists()) ? 'amber accent-2' : ''"
                             @click="utswAnnotationsVisible = !utswAnnotationsVisible" slot="activator">
@@ -572,40 +548,6 @@ Vue.component('variant-details-dialog', {
                                     </data-table>
                                 </v-flex>
                             </v-slide-y-transition>
-                            <!-- MDA Annotation card -->
-                            <!--
-                            <v-slide-y-transition>
-                                <v-flex xs12 v-show="mdaAnnotationsVisible && mdaAnnotationsExists()">
-                                    <v-card class="soft-grey-background">
-                                        <v-toolbar class="elevation-0" dense dark :color="colors.variantDetails">
-                                            <v-toolbar-title>
-                                                <v-icon color="amber accent-2">mdi-message-bulleted</v-icon>
-                                                MD Anderson Annotations
-                                            </v-toolbar-title>
-                                            <v-spacer></v-spacer>
-                                            <v-tooltip bottom>
-                                                <v-btn icon @click="mdaAnnotationsVisible = false" slot="activator">
-                                                    <v-icon>close</v-icon>
-                                                </v-btn>
-                                                <span>Close</span>
-                                            </v-tooltip>
-                                        </v-toolbar>
-                                        <v-card-text>
-                                            <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
-                                        <v-layout row wrap>
-                                        <v-flex xs12 sm12 md6 lg6 xl4 v-for="(annotation, index) in mdaAnnotationsFormatted" :key="index" v-show="annotation.visible">
-                                            <mda-annotation-card :annotation="annotation" :variant-type="currentVariantType"
-                                            :no-edit="!canProceed('canAnnotate') || readonly"
-                                            @copy-mda-annotation="copyMDAAnnotation"
-                                            ></mda-annotation-card>
-                                        </v-flex>
-                                        </v-layout>
-                                        </v-container>
-                                        </v-card-text>
-                                    </v-card>
-                                </v-flex>
-                            </v-slide-y-transition>
-                            -->
                             <v-slide-y-transition>
                                 <v-flex xs12 v-show="utswAnnotationsVisible && utswAnnotationsExists()">
                                     <v-card class="soft-grey-background">
@@ -745,7 +687,7 @@ Vue.component('variant-details-dialog', {
                     :original-chr="currentVariant.chrom"
                     :original-pos="currentVariant.pos"
                     :original-pos-old-build="getHG19Pos()"
-                    :oncotree-items="oncotree"
+                   
                     @reload-values="reloadLookupValues"
                     ></lookup-panel>
                     </v-flex>
@@ -925,8 +867,7 @@ Vue.component('variant-details-dialog', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [this, response.reason]);
             }
             else if (response.isLogin) {
                 bus.$emit("login-needed", [this, callback])
@@ -1771,7 +1712,7 @@ Vue.component('variant-details-dialog', {
                 annotation.geneSpecific = geneSpecific;
                 annotation.variantSpecific = variantSpecific;
                 annotation.tumorSpecific = tumorSpecific;
-                annotation.text = annotations.annotationCategories[i].text.replace(/\n/g, "<br/>").replace(/(PMID:)([0-9]*)/g, `<a href='https://www.ncbi.nlm.nih.gov/pubmed/?term=$2' target="_blank">PMID:$2</a>`);
+                annotation.text = annotations.annotationCategories[i].text.replace(/\n/g, "<br/>").replace(/(PMID:)([0-9]*)/g, `<a href='https://www.ncbi.nlm.nih.gov/pubmed/?term=$2' target="_blank" rel="noreferrer">PMID:$2</a>`);
                 annotation.scopes = [geneSpecific ,variantSpecific, tumorSpecific];
                 annotation.scopeLevels = [
                 "Gene " + (geneSpecific ? this.mdaAnnotations.gene : ''),
@@ -2310,10 +2251,10 @@ Vue.component('variant-details-dialog', {
             }
             return builds;
         },
-        openOncoKBGeniePortalCancer() {
-            var url = oncoKBGeniePortalUrl + "Cancer/?Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
-            window.open(url, "_blank");
-        },
+        // openOncoKBGeniePortalCancer() {
+        //     var url = oncoKBGeniePortalUrl + "Cancer/?Oncotree=" + this.patientDetailsOncoTreeDiagnosis.text;
+        //     window.open(url, "_blank");
+        // },
         createOncoKBGeniePortalGene() {
             return oncoKBGeniePortalUrl + "Gene/?gene_name=" + this.currentVariant.geneName;
         },
@@ -2889,12 +2830,12 @@ Vue.component('variant-details-dialog', {
             }
             ref.oncokbVariantName = this.currentVariant.oncokbVariantName;
             
-            var oncotreeItems = this.oncotree.filter(o => o.text == this.patientDetailsOncoTreeDiagnosis.text);
-            var oncotree = null;
+            let oncotreeItems = oncotree.filter(o => o.text == this.patientDetailsOncoTreeDiagnosis.text);
+            let oncotreeCode = null;
             if (oncotreeItems && oncotreeItems[0]) {
-                oncotree = oncotreeItems[0];
+                oncotreeCode = oncotreeItems[0];
             }
-            ref.currentOncotreeCode = oncotree;
+            ref.currentOncotreeCode = oncotreeCode;
             ref.submitForm();
         },
         getHG19Pos() {
@@ -2908,20 +2849,17 @@ Vue.component('variant-details-dialog', {
     computed: {
     },
     created() {
-        bus.$on('create-new-cnv', (genes) => {
-            this.openAddCNVDialog(genes);
-        });
-        bus.$on('setDefaultTranscript', (item) => {
-            this.setDefaultTranscript(item);
-        });
+        bus.$on('create-new-cnv', this.openAddCNVDialog);
+        bus.$on('setDefaultTranscript', this.setDefaultTranscript);
     },
     mounted() {
         this.setSelected();
     },
+    beforeDestroy() {
+        bus.$off('create-new-cnv', this.openAddCNVDialog);
+        bus.$off('setDefaultTranscript', this.setDefaultTranscript);
+    },
     destroyed() {
-        console.log("destroying variant-details-dialog");
-        bus.$off('create-new-cnv');
-        bus.$off('setDefaultTranscript');
     },
     watch: {
     }

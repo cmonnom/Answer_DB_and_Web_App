@@ -245,8 +245,7 @@ Vue.component('main-menu', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [this, response.reason]);
             }
             else if (response.isLogin) {
                 bus.$emit("login-needed", [this, callback])
@@ -392,26 +391,12 @@ Vue.component('main-menu', {
 			}
 			this.goodiesActive = false;
             return false;
-        }
-	},
-	mounted() {
-		// this.getUserLeaderBoardInfo();
-	},
-	created: function () {
-		this.populateCases();
-		this.populateCasesWithReport();
-//		bus.$on('shrink-menu', () => {
-//			this.isMinied = true;
-//		});
-//		bus.$on('expand-menu', () => {
-//			this.isMinied = false;
-//		});
-		bus.$on('clear-item-selected', args => {
+		},
+		clearItemSelectedHandler() {
 			this.caseItemSelected = "";
 			this.caseReportItemSelected = "";
-		});
-		//might not be needed anymore with vuetify 1.5.16
-		bus.$on('need-layout-resize', args => {
+		},
+		needLayoutResizeHandler() {
 			//resize the main content because it does not happen automatically
 			this.$nextTick(function () {
 				var content = document.getElementsByClassName("v-content");
@@ -424,24 +409,43 @@ Vue.component('main-menu', {
 				}
 
 			});
-		});
-		bus.$on('update-status', args => {
+		},
+		updateStatusHandler(args) {
 			this.statusVisible = true;
 			this.statusMessage = args[0];
-		});
-		bus.$on('update-status-off', args => {
+		},
+		updateStatusOffHandler() {
 			this.statusVisible = false;
 			this.statusMessage = "";
-		});
+		}
+	},
+	mounted() {
+		// this.getUserLeaderBoardInfo();
+	},
+	created: function () {
+		this.populateCases();
+		this.populateCasesWithReport();
+		bus.$on('clear-item-selected', this.clearItemSelectedHandler);
+		//might not be needed anymore with vuetify 1.5.16
+		bus.$on('need-layout-resize', this.needLayoutResizeHandler);
+		bus.$on('update-status', this.updateStatusHandler);
+		bus.$on('update-status-off', this.updateStatusOffHandler);
 		this.getVersion();
+	},
+	beforeDestroy() {
+		bus.$off('clear-item-selected', this.clearItemSelectedHandler);
+		//might not be needed anymore with vuetify 1.5.16
+		bus.$off('need-layout-resize', this.needLayoutResizeHandler);
+		bus.$off('update-status', this.updateStatusHandler);
+		bus.$off('update-status-off', this.updateStatusOffHandler);
 	},
 	destroyed: function () {
 //		bus.$off('shrink-menu');
 //		bus.$off('expand-menu');
-		bus.$off('clear-item-selected');
-		bus.$off('need-layout-resize');
-		bus.$off('update-status');
-		bus.$off('update-status-off');
+		// bus.$off('clear-item-selected');
+		// bus.$off('need-layout-resize');
+		// bus.$off('update-status');
+		// bus.$off('update-status-off');
 	},
 	watch: {
 		// isMinied: 'emitMenuChanged'

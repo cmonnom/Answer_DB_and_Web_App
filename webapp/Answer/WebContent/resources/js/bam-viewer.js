@@ -52,8 +52,4 @@ document.addEventListener("DOMContentLoaded", function () {
     igv.createBrowser(igvDiv, options);
 });
 
-// $( window ).unload(function() {
-//     window.opener.bus.$emit("bam-viewer-closed", null);
-// });
-
 

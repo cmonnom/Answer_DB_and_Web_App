@@ -3,7 +3,7 @@ Vue.component('advanced-filter', {
         title: {default: "Filters", type: String},
         type: {default: "snp", type: String}
     },
-    template: `<div>
+    template: /*html*/`<div>
     <!-- error message dialog -->
     <v-dialog v-model="messageDialogVisible" max-width="50%">
     <v-card>
@@ -272,7 +272,7 @@ Vue.component('advanced-filter', {
             <v-divider></v-divider>
             <!-- list of possible filters -->
             <v-container grid-list-md pl-1 pr-1 pt-1 pb-1>
-                <v-form :value="filtersValid" :class="[disableFiltering ? 'grey--text lighten-1' : '']">
+                <v-form ref="advancedFilterForm" v-model="filtersValid" lazy-validation :class="[disableFiltering ? 'grey--text lighten-1' : '']">
                     <v-layout row v-for="(filter, index3) in getFiltersByType(filters)" :key="index3" :class="[filter.button? '' : 'pr-3', 'pl-3']">
 
                         <v-flex xs12 v-if="filter.isSelect">
@@ -942,8 +942,7 @@ Vue.component('advanced-filter', {
                 bus.$emit("not-allowed", [this.reponse]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [this, response.reason]);
             }
             else if (response.isLogin) {
                 bus.$emit("login-needed", [this, callback])

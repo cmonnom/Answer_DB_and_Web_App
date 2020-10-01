@@ -31,7 +31,8 @@ Vue.component('lookup-panel-plot-utils', {
                 "#e5cf5a", //yellow4
                 "#7a7977", //blue5
                 "#fde345", //yellow5
-            ]
+            ],
+            plotsToPurge: []
         }
 
     },
@@ -151,6 +152,7 @@ Vue.component('lookup-panel-plot-utils', {
                         );
                     }
                 );
+                this.plotsToPurge.push(chartData.plotId);
             });
         },
         buildHorizontalBarPlot(response) {
@@ -178,6 +180,7 @@ Vue.component('lookup-panel-plot-utils', {
             }
             this.$nextTick(() => {
                 Plotly.newPlot(chartData.plotId, data, layout, this.plotlyConfig);
+                this.plotsToPurge.push(chartData.plotId);
             });
         },
         updateLolliplotPlot(plotId, url, currentGene) {
@@ -293,6 +296,7 @@ Vue.component('lookup-panel-plot-utils', {
                         }
                         this.$nextTick(() => {
                             Plotly.newPlot(chartData.plotId, data, layout, this.plotlyConfig);
+                            this.plotsToPurge.push(chartData.plotId);
                             //need to hide tick labels below 0. Use d3
                             var axisTickLabels = Plotly.d3.selectAll("#" + chartData.plotId + " .yaxislayer-above").selectAll('text')[0];
                             for (var i = 0; i < axisTickLabels.length; i++) {
@@ -365,6 +369,13 @@ Vue.component('lookup-panel-plot-utils', {
     mounted() {
     },
     created: function () {
+    },
+    beforeDestroy() {
+        for (var i = 0; i < this.plotsToPurge.length; i++) {
+            if (document.getElementById(this.plotsToPurge[i])) {
+                Plotly.purge(this.plotsToPurge[i])
+            }
+        }
     },
     destroyed: function () {
     },

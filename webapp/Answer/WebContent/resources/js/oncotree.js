@@ -1,4 +1,4 @@
-var oncotree = [
+const oncotree = [
   {
     "text": "AA",
     "label": "Aggressive Angiomyxoma",
