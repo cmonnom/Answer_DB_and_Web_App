@@ -1,1 +1,1 @@
-Answer is to replace Phillips in generating reports from MD Anderson and UTSW annotations
+A comprehensive tool to store, explore, annotate and select variants in a clinical or research setting and generate medical reports.
