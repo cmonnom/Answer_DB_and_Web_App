@@ -25,6 +25,7 @@ const variantStoreModuleMutations = {
             }
         }
     },
+    
     updateSelectedVariant(state, selection) {
         var item = state.allVariantItemsMap[selection.id];
         item.isSelected = selection.selected;
@@ -40,6 +41,7 @@ const variantStoreModuleMutations = {
             delete item.selectionPerAnnotator[selection.userId];
             delete item["dateSince" + selection.userId];
         }
+        state.allVariantItems = state.allVariantItems.slice();
     },
     updateCaseOwnerId(state, caseOwnerId) {
         state.caseOwnerId = caseOwnerId;
@@ -84,8 +86,11 @@ const variantStoreModuleGetters = {
     getSelectedVariantItems:  (state, getters) => {
         return getters.getAllVariantItems.filter(i => i.isSelected);
     },
+    getSelectedVariantItemsForAll:  (state, getters) => {
+        return getters.getAllVariantItems.filter(i => i.isSelected || Object.keys(i.selectionPerAnnotator).length > 0);
+    },
     getSelectedVariantItemsForReviewer: (state, getters) => {
-        return getters.getAllVariantItems.filter(i => i.isSelected && (i.selectionPerAnnotator[state.caseOwnerId] != null || i["dateSince" + state.caseOwnerId] != null));
+        return getters.getAllVariantItems.filter(i => (i.selectionPerAnnotator[state.caseOwnerId] != null || i["dateSince" + state.caseOwnerId] != null));
     },
     getSelectedVariantIds:  (state, getters) => {
         return getters.getSelectedVariantItems.map(i => i.oid);

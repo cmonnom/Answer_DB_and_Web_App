@@ -519,7 +519,7 @@ const OpenCase2 = {
 
 <v-slide-y-transition>
     <v-layout v-if="patientDetailsVisible">
-        <v-flex :class="isLookupVisible() ? ['xs12','md12','lg12','xl12'] : ['xs12','md12','lg12','xl10']">
+        <v-flex :class="isLookupVisible() || isAdvancedFilteringVisible() ? ['xs12','md12','lg12','xl12'] : ['xs12','md12','lg12','xl10']">
             <div class="text-xs-center pb-3">
                 <v-card>
                     <v-toolbar class="elevation-0" dense dark :color="colors.openCase">
@@ -822,6 +822,7 @@ const OpenCase2 = {
     <!-- lookup tools-->
 <lookup-panel ref="lookupTool" :standalone="false"
 :oncotree-items="oncotree"
+@reload-values="reloadLookupValues"
 ></lookup-panel>
 </v-flex>
 </v-layout>
@@ -2469,6 +2470,21 @@ const OpenCase2 = {
                     this.$refs.lookupTool.submitForm();
                 }
             })
+        },
+        reloadLookupValues(ref, cnvGeneName, activeButton) {
+            if (!ref) {
+                ref = this.$refs.lookupTool;
+            }
+            if (ref.currentlyActive && !activeButton) {
+                activeButton = ref.currentlyActive;
+            }
+            let oncotreeItems = oncotree.filter(o => o.text == this.patientDetailsOncoTreeDiagnosis.text);
+            let oncotreeCode = null;
+            if (oncotreeItems && oncotreeItems[0]) {
+                oncotreeCode = oncotreeItems[0];
+            }
+            ref.currentOncotreeCode = oncotreeCode;
+            ref.submitForm();
         },
         isLookupVisible() {
             return this.$refs.lookupTool && this.$refs.lookupTool.panelVisible;

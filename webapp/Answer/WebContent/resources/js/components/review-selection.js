@@ -252,7 +252,7 @@ Vue.component('review-selection', {
             <!-- SNP / Indel table -->
         <v-tab-item value="tab-selected-snp" class="pt-1">
         
-            <data-table  ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'SNP/Indel Variants from Case Owner ' + caseOwnerName"
+            <data-table class="mb-2" ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'SNP/Indel Variants from Case Owner ' + caseOwnerName"
             initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" color="primary"
             @refresh-requested="handleRefresh()">
             <v-fade-transition slot="action1">
@@ -286,7 +286,7 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s SNPs</span>
             </v-tooltip>
 
-            <data-table  ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
+            <data-table class="mb-2" ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
                 initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
@@ -295,7 +295,7 @@ Vue.component('review-selection', {
         </v-tab-item>
         <!-- CNV table -->
         <v-tab-item value="tab-selected-cnv"  class="pt-1">
-            <data-table  ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'CNVs from Case Owner ' + caseOwnerName" initial-sort="chrom"
+            <data-table class="mb-2"  ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'CNVs from Case Owner ' + caseOwnerName" initial-sort="chrom"
             no-data-text="No Data" :show-row-count="true" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
@@ -310,14 +310,14 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s CNVs</span>
             </v-tooltip>
 
-            <data-table  ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
+            <data-table class="mb-2" ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
                 no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
              </data-table>
         </v-tab-item>
         <!--  Fusion / Translocation table -->
         <v-tab-item value="tab-selected-translocation" class="pt-1">
-            <data-table  ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Fusions / Translocations from Case Owner '  + caseOwnerName"
+            <data-table class="mb-2" ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Fusions / Translocations from Case Owner '  + caseOwnerName"
             initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
@@ -332,7 +332,7 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s Fusions/Translocations</span>
             </v-tooltip>
 
-            <data-table  ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
+            <data-table class="mb-2" ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
                 initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
@@ -340,7 +340,7 @@ Vue.component('review-selection', {
 
         <!--  Virus table -->
         <v-tab-item value="tab-selected-virus" class="pt-1">
-            <data-table  ref="virusVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Virus from Case Owner '  + caseOwnerName"
+            <data-table class="mb-2" ref="virusVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Virus from Case Owner '  + caseOwnerName"
             initial-sort="virusName" no-data-text="No Data" :show-row-count="true"  color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
@@ -355,7 +355,7 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s Viruses</span>
             </v-tooltip>
 
-            <data-table  ref="virusVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Viruses from All Annotators"
+            <data-table class="mb-2" ref="virusVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Viruses from All Annotators"
                 initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
@@ -618,42 +618,45 @@ Vue.component('review-selection', {
             cnvHeaders, cnvHeaderOrderAll, cnvHeaderOrderReviewer,
             ftlHeaders, ftlHeaderOrderAll, ftlHeaderOrderReviewer,
             virHeaders, virHeaderOrderAll, virHeaderOrderReviewer) {
+                var snpHeadersReviewer = snpHeaders.filter(i => i.value != ("dateSince" + this.caseOwnerId));
+                var cnvHeadersReviewer = cnvHeaders.filter(i => i.value != ("dateSince" + this.caseOwnerId));
+                var ftlHeadersReviewer = ftlHeaders.filter(i => i.value != ("dateSince" + this.caseOwnerId));
+                var virHeadersReviewer = virHeaders.filter(i => i.value != ("dateSince" + this.caseOwnerId));
+
             this.getSnpTable().manualDataFilteredFromStore(
                 { items: [], headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderAll },
-                this.$store.getters["snpStore/getSelectedVariantItems"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
-
-           
+                this.$store.getters["snpStore/getSelectedVariantItemsForAll"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
             this.$refs.snpVariantsSelectedReviewer.manualDataFilteredFromStore(
-                { items: [], headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderReviewer },
+                { items: [], headers: snpHeadersReviewer, uniqueIdField: "oid", headerOrder: snpHeaderOrderReviewer },
                 this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
 
 
             this.getCnvTable().manualDataFilteredFromStore(
                 { items: [], headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderAll },
-                this.$store.getters["cnvStore/getSelectedVariantItems"]);
+                this.$store.getters["cnvStore/getSelectedVariantItemsForAll"]);
             this.$refs.cnvVariantsSelectedReviewer.manualDataFilteredFromStore(
-                { items: [], headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderReviewer },
+                { items: [], headers: cnvHeadersReviewer, uniqueIdField: "oid", headerOrder: cnvHeaderOrderReviewer },
                 this.$store.getters["cnvStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
 
             this.getFtlTable().manualDataFilteredFromStore(
                 { items: [], headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderAll },
-                this.$store.getters["ftlStore/getSelectedVariantItems"]);
+                this.$store.getters["ftlStore/getSelectedVariantItemsForAll"]);
             this.$refs.translocationVariantsSelectedReviewer.manualDataFilteredFromStore(
-                { items: [], headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer },
+                { items: [], headers: ftlHeadersReviewer, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer },
                 this.$store.getters["ftlStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
     
 
             this.getVirTable().manualDataFilteredFromStore(
                 { items: [], headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderAll },
-                this.$store.getters["virStore/getSelectedVariantItems"]);
+                this.$store.getters["virStore/getSelectedVariantItemsForAll"]);
             this.$refs.virusVariantsSelectedReviewer.manualDataFilteredFromStore(
-                { items: [], headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderReviewer },
+                { items: [], headers: virHeadersReviewer, uniqueIdField: "oid", headerOrder: virHeaderOrderReviewer },
                 this.$store.getters["virStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
                 
-        this.populateOtherAnnotators('snp', this.$store.getters["snpStore/getSelectedVariantItems"]); 
-            this.populateOtherAnnotators('cnv', this.$store.getters["cnvStore/getSelectedVariantItems"]); 
-            this.populateOtherAnnotators('ftl', this.$store.getters["ftlStore/getSelectedVariantItems"]);  
-            this.populateOtherAnnotators('vir', this.$store.getters["virStore/getSelectedVariantItems"]);   
+            this.populateOtherAnnotators('snp', this.$store.getters["snpStore/getSelectedVariantItemsForAll"]); 
+            this.populateOtherAnnotators('cnv', this.$store.getters["cnvStore/getSelectedVariantItemsForAll"]); 
+            this.populateOtherAnnotators('ftl', this.$store.getters["ftlStore/getSelectedVariantItemsForAll"]);  
+            this.populateOtherAnnotators('vir', this.$store.getters["virStore/getSelectedVariantItemsForAll"]);   
             this.stopLoading();    
         },
         getSnpTable() {
@@ -737,7 +740,7 @@ Vue.component('review-selection', {
                 dict = this.$store.getters["virStore/getAllVariantItemsMap"];
             }
             for (let i =0; i < variantIds.length; i++) {
-                if (caseOwnerVariantIds.indexOf(variantIds[i]) == -1 && !dict[variantIds[i]].selected) {
+                if (caseOwnerVariantIds.indexOf(variantIds[i]) == -1 && (dict[variantIds[i]] && !dict[variantIds[i]].selected)) {
                     diffIds.push(variantIds[i]);
                 }
             }
