@@ -389,7 +389,7 @@ Vue.component('lookup-panel', {
             this.panelVisible = !this.panelVisible;
             this.resetValues();
             if (!this.panelVisible) {
-                bus.$emit("need-layout-resize", this);
+                bus.$emit("need-layout-resize");
             }
         },
         resetValues() {
@@ -416,10 +416,10 @@ Vue.component('lookup-panel', {
                 bus.$emit("not-allowed", [this.reponse]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",  [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback]);
+                bus.$emit("login-needed", [null, callback]);
                 this.lastGene = null;
                 this.lastOncotreeCode = null;
                 this.lastOncotreeCodeLabel = null;
@@ -428,7 +428,7 @@ Vue.component('lookup-panel', {
             }
             else if (response.success === false) {
                 this.splashProgress = 100; //should dismiss the splash dialog
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         handleButton(button) {

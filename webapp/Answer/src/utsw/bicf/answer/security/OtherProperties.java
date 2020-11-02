@@ -12,6 +12,9 @@ public class OtherProperties {
 	String mutationalSignatureUrl;
 	String rootUrl;
 	String webappName;
+	
+	String epicHl7Hostname;
+	int epicHl7Port;
 
 	public static final String AUTH_LDAP = "ldap";
 	public static final String AUTH_AZURE_OAUTH = "azure_oauth";
@@ -99,6 +102,22 @@ public class OtherProperties {
 
 	public void setWebappName(String webappName) {
 		this.webappName = webappName;
+	}
+
+	public String getEpicHl7Hostname() {
+		return epicHl7Hostname;
+	}
+
+	public void setEpicHl7Hostname(String epicHl7Hostname) {
+		this.epicHl7Hostname = epicHl7Hostname;
+	}
+
+	public int getEpicHl7Port() {
+		return epicHl7Port;
+	}
+
+	public void setEpicHl7Port(int epicHl7Port) {
+		this.epicHl7Port = epicHl7Port;
 	}
 
 }

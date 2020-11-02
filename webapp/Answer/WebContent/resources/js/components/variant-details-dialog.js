@@ -58,10 +58,13 @@ Vue.component('variant-details-dialog', {
         ], type: Array},
         aberrationTypes: {default: () => [
             'amplification',
+            'amplification LOH',
+			'cnLOH',
             'gain',
+            'gain LOH',
             'hemizygous loss',
             'homozygous loss',
-            'ITD'
+            'ITD',
         ], type: Array},
         // oncotree: {default: () => [], type: Array},
     },
@@ -867,18 +870,18 @@ Vue.component('variant-details-dialog', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error", [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
         isSaveNeededBadgeVisible() {
             return this.isSaveNeededOverall;
@@ -1560,6 +1563,13 @@ Vue.component('variant-details-dialog', {
                         this.addCustomWarningFlagsForItem(this.currentItem);
                         this.patientDetailsOncoTreeDiagnosis = { text: response.data.patientDetailsOncoTreeDiagnosis.value, label: response.data.patientDetailsOncoTreeDiagnosis.text };
                         this.variantDataTables = [];
+                        var sampleType = "Unknown";
+                        if (this.currentVariant.SampleId && this.currentVariant.SampleId.indexOf("_N_") > -1) {
+                            sampleType = "Normal";
+                        }
+                        else if (this.currentVariant.SampleId && this.currentVariant.SampleId.indexOf("_T_") > -1) {
+                            sampleType = "Tumor";
+                        }
                         var infoTable = {
                             name: "infoTable",
                             items: [
@@ -1568,6 +1578,9 @@ Vue.component('variant-details-dialog', {
                                 },
                                 {
                                     label: "Virus Description", value: this.currentVariant.VirusDescription
+                                },
+                                {
+                                    label: "Sample Type", value: sampleType
                                 },
                                
                            

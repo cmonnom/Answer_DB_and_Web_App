@@ -1096,18 +1096,18 @@ const OpenCase2 = {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error", [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
         isSaveNeededBadgeVisible() {
             if (!this.saveAllNeeded) {
@@ -1143,6 +1143,8 @@ const OpenCase2 = {
             if (tooltip.length > 1) {
                 return tooltip.join("<br/>");
             }
+            this.saveAllNeeded = false;
+            this.$store.commit("updateOpenCaseSaveNeeded", this.saveAllNeeded);
             return "Nothing to Save";
         },
         isCaseAnnotationChanged() {
@@ -2425,6 +2427,7 @@ const OpenCase2 = {
             if (this.waitingForAjaxActive && this.waitingForAjaxCount <= 0) {
                 this.waitingForAjaxActive = false;
                 this.saveAllNeeded = false;
+                this.$store.commit("updateOpenCaseSaveNeeded", this.saveAllNeeded);
                 this.showSnackBarMessage(this.waitingForAjaxMessage);
                 clearInterval(this.autoSaveInterval);
                 this.createAutoSaveInterval();
@@ -2565,7 +2568,7 @@ const OpenCase2 = {
         }
     },
     mounted() {
-        bus.$emit("need-layout-resize", this);
+        bus.$emit("need-layout-resize");
         this.mountComponent();
         this.loadFromParams();
         this.updateBreadcrumbs();
@@ -2585,8 +2588,11 @@ const OpenCase2 = {
             return this.$store.getters["variantStore/getNeedSaving"]
         }
     },
+    beforeDestroy() {
+         clearInterval(this.autoSaveInterval);
+    },
     destroyed: function () {
-        clearInterval(this.autoSaveInterval);
+       
     },
     watch: {
         '$route': "handleRouteChanged",

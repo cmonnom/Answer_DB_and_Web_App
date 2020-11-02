@@ -113,18 +113,18 @@ Vue.component('report-pubmed-ids', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error", [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
         getPubmedLink(pmid) {
             return 'https://www.ncbi.nlm.nih.gov/pubmed/?term=' + pmid;

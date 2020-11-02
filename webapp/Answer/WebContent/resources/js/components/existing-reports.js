@@ -340,18 +340,18 @@ Vue.component('existing-reports', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",  [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
         readyToFinalize() {
             var nameMatch = this.getCurrentUserFullName().toUpperCase() == this.fullNameField.toUpperCase();

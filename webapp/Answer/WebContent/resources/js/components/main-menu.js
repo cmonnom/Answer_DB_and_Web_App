@@ -137,6 +137,7 @@ Vue.component('main-menu', {
 				{ title: 'Preferences', name: 'UserPrefs', regularItem: true, iconBefore: 'account_circle' },
 				{ title: 'Help', name: 'Help', regularItem: true, action: this.openHelp, skipRoute:true, iconBefore: 'mdi-lifebuoy', isButton: true },
 				{ title: 'Lookup Tool', name: 'LookupTool', regularItem: true, iconBefore: 'mdi-dna' },
+				{ title: 'Gene Search', name: 'Gene Search', regularItem: true, action: this.openGeneSearch, skipRoute:true, iconBefore: 'mdi-magnify', isButton: true },
 				{ title: 'Logout', name: 'LogOut', iconBefore: 'mdi-logout', regularItem: true }
 			],
 			caseItemSelected: null,
@@ -245,13 +246,13 @@ Vue.component('main-menu', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error", [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
 		},
 		displayMenuItem(menuItem) {
@@ -280,6 +281,9 @@ Vue.component('main-menu', {
 		openHelp() {
 			window.open(webAppRoot + "/help/index.html", "_blank");
 		},
+		openGeneSearch() {
+			window.open(webAppRoot + "/search/index.html", "_blank");
+		},
 		toggleMinied() {
 			// this.isMinied = !this.isMinied;
 			this.$nextTick(() => this.isMinied = true);
@@ -304,7 +308,7 @@ Vue.component('main-menu', {
 		// },
 		handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
 		},
 		isBetaVersion() {
             return this.versionName == "beta";

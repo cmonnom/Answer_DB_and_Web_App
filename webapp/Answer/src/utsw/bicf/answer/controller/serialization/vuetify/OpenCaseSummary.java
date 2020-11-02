@@ -166,11 +166,13 @@ public class OpenCaseSummary {
 	private static Set<String> getUniqueFTLFilters(OrderCase aCase) {
 		Set<String> ftlFilters = new HashSet<String>(); 
 		for (Translocation variant : aCase.getTranslocations()) {
-			for (String filter : variant.getFtlFilters()) {
-				String filterFormatted = TypeUtils.splitCamelCaseString(filter);
-				Variant.CHECKBOX_FTL_FILTERS_MAP.put(filterFormatted, filter);
-				if (!Variant.VALUE_FAIL.equals(filter) && !Variant.VALUE_PASS.equals(filter)) {
-					ftlFilters.add(filterFormatted);
+			if (variant.getFtlFilters() != null) {
+				for (String filter : variant.getFtlFilters()) {
+					String filterFormatted = TypeUtils.splitCamelCaseString(filter);
+					Variant.CHECKBOX_FTL_FILTERS_MAP.put(filterFormatted, filter);
+					if (!Variant.VALUE_FAIL.equals(filter) && !Variant.VALUE_PASS.equals(filter)) {
+						ftlFilters.add(filterFormatted);
+					}
 				}
 			}
 		}

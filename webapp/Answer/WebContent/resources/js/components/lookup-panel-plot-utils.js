@@ -363,7 +363,7 @@ Vue.component('lookup-panel-plot-utils', {
             }
         },
         handleDialogs(response, callback) {
-            this.$emit("handle-dialogs", [this, response, callback]);
+            this.$emit("handle-dialogs", [null, response, callback]);
         },
     },
     mounted() {

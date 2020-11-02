@@ -532,7 +532,8 @@ public class Report {
 			else {
 				biomarker = cnv.getChrom() + cnv.getCytobandTruncated();
 			}
-			int aberration = this.getAberrationValue(cnv.getAberrationType());
+//			int aberration = this.getAberrationValue(cnv.getAberrationType());
+			int aberration = this.getAberrationValue(cnv.getCopyNumber());
 			this.populateCNVColumn(biomarker, aberration);
 		}
 		for (TranslocationReport ftl : this.getTranslocations()) {
@@ -549,6 +550,26 @@ public class Report {
 		}
 		else if (aberrationType != null && aberrationType.contains("loss")) {
 			aberration = -1;
+		}
+		else if (aberrationType != null && aberrationType.equals("cnLOH")) {
+			aberration = -2;
+		}
+		return aberration;
+	}
+	
+	private int getAberrationValue(Integer aberrationType) {
+		int aberration = 0;
+		if (aberrationType == null) {
+			return aberration;
+		}
+		if (aberrationType > 2) {
+			aberration = 1;
+		}
+		else if (aberrationType < 2) {
+			aberration = -1;
+		}
+		else if (aberrationType == 2) {
+			aberration = -2;
 		}
 		return aberration;
 	}

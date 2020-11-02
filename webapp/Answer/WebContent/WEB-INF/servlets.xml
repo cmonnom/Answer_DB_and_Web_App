@@ -39,6 +39,7 @@
 	<mvc:resources location="file:/opt/answer/links/pdfs/" mapping="/pdfs/**" />
 	<mvc:resources location="file:/opt/answer/links/igv/" mapping="/igv/**" />
 	<mvc:resources location="file:/opt/answer/docs/html/" mapping="/help/**" />
+		<mvc:resources location="file:/opt/answer/search/html/" mapping="/search/**" />
 	<mvc:resources location="file:/opt/answer/links/media/" mapping="/media/**" />
 	<mvc:resources location="file:/opt/answer/links/images/" mapping="/images/**" />
 
@@ -172,6 +173,8 @@
 		<property name="authUrl" value="${auth.url}" />
 		<property name="rootUrl" value="${root.url}" />
 		<property name="webappName" value="${webapp.name}" />
+		<property name="epicHl7Hostname" value="${epic.hl7.host}" />
+		<property name="epicHl7Port" value="${epic.hl7.port}" />
 	</bean>
 	
 	<bean id="ncbiProps" class="utsw.bicf.answer.security.NCBIProperties">

@@ -690,7 +690,7 @@ Vue.component('data-table', {
             this.loading = false;
         },
         addNewRow() {
-            this.$emit("adding-new-row", this, this.newRow);
+            this.$emit("adding-new-row", null, this.newRow);
         },
         //Some external validation might be required or extra fields added.
         //The parent component should call this method to finish adding this.newRow to the table
@@ -822,7 +822,7 @@ Vue.component('data-table', {
         toggleFilters() {
             this.showDrawer = !this.showDrawer;
             if (!this.showDrawer) {
-                bus.$emit("need-layout-resize", this);
+                bus.$emit("need-layout-resize");
             }
         },
         // handleScroll(event) {
@@ -839,10 +839,10 @@ Vue.component('data-table', {
         // },
         handleDialogs(response, callback) {
             if (response.data.isXss) {
-                bus.$emit("xss-error", [this, response.data.reason]);
+                bus.$emit("xss-error", [null, response.data.reason]);
             }
             else {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
         },
         //function taken from vuetify.js directly to be used in customSort
@@ -1335,7 +1335,7 @@ Vue.component('data-table', {
         // window.removeEventListener('scroll', this.handleScroll);
         // $('#' + this.tableId).stickyTableHeaders('destroy');
         //make sure the layout is refreshed for other views
-        bus.$emit("need-layout-resize", this);
+        bus.$emit("need-layout-resize");
     },
     mounted: function () {
         // window.addEventListener('scroll', this.handleScroll);

@@ -762,6 +762,9 @@ public class FinalReportPDFTemplate {
 			else if (navigationRow.getCnvCount() == 1) {
 				aberrationType = "Gain";
 			}
+			else if (navigationRow.getCnvCount() == -2) {
+				aberrationType = "cnLOH";
+			}
 			cell = row.createCell(10, aberrationType);
 			this.applyNavigationCountCellFormatting(cell, defaultColor);
 			cell = row.createCell(10, navigationRow.getFusionCount() == 0 ? "" : navigationRow.getFusionCount() + "");
@@ -1685,10 +1688,11 @@ public class FinalReportPDFTemplate {
 		mainDocument.close();
 	}
 	
-	public void saveFinalized() throws IOException {
+	public File saveFinalized() throws IOException {
 		File finalizedFile = new File(fileProps.getPdfFinalizedFilesDir(), System.currentTimeMillis() + "_" + report.getMongoDBId().getOid() + ".pdf");
 		mainDocument.save(finalizedFile);
 		mainDocument.close();
+		return finalizedFile;
 	}
 
 	public String createPDFLink(FileProperties fileProps) throws IOException {

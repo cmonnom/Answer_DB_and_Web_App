@@ -21,6 +21,7 @@ public class VirusRow {
 	Boolean utswAnnotated;
 	FlagValue iconFlags;
 	Boolean isSelected;
+	String tumorNormalLabel = "Unknown";
 	
 	Map<Integer, AnnotatorSelection> selectionPerAnnotator;
 	String highestTier;
@@ -36,6 +37,12 @@ public class VirusRow {
 		this.virusReadCount = virus.getVirusReadCount();
 		this.numCasesSeen = virus.getNumCasesSeen();
 		this.virusDescription = virus.getVirusDescription();
+		if (virus.getSampleId() != null && virus.getSampleId().contains("_N_")) {
+			this.tumorNormalLabel = "Normal";
+		}
+		else if (virus.getSampleId() != null && virus.getSampleId().contains("_T_")) {
+			this.tumorNormalLabel = "Tumor";
+		}
 		
 		List<VuetifyIcon> icons = new ArrayList<VuetifyIcon>();
 //		if (utswAnnotated != null && utswAnnotated) {
@@ -161,6 +168,16 @@ public class VirusRow {
 
 	public void setNumCasesSeenFormatted(String numCasesSeenFormatted) {
 		this.numCasesSeenFormatted = numCasesSeenFormatted;
+	}
+
+
+	public String getTumorNormalLabel() {
+		return tumorNormalLabel;
+	}
+
+
+	public void setTumorNormalLabel(String tumorNormalLabel) {
+		this.tumorNormalLabel = tumorNormalLabel;
 	}
 
 

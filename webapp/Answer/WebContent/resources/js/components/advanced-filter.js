@@ -692,7 +692,7 @@ Vue.component('advanced-filter', {
         toggleFilters() {
             this.advancedFilteringVisible = !this.advancedFilteringVisible;
             if (!this.advancedFilteringVisible) {
-                bus.$emit("need-layout-resize", this);
+                bus.$emit("need-layout-resize");
             }
         },
         isFilterUsed(filter) {
@@ -934,7 +934,7 @@ Vue.component('advanced-filter', {
                 })
                 .catch(error => {
                     console.log(error);
-                    bus.$emit("some-error", [this, error]);
+                    bus.$emit("some-error", [null, error]);
                 });
         },
         handleDialogs(response, callback) {
@@ -942,14 +942,14 @@ Vue.component('advanced-filter', {
                 bus.$emit("not-allowed", [this.reponse]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error", [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
                 this.splashProgress = 100; //should dismiss the splash dialog
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         isCheckboxFilterActive(filter) {

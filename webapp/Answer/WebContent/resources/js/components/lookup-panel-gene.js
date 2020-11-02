@@ -220,7 +220,7 @@ Vue.component('lookup-panel-gene', {
     },
     methods: {
         handleDialogs(response, callback) {
-            this.$emit("handle-dialogs", [this, response, callback]);
+            this.$emit("handle-dialogs", [null, response, callback]);
         },
         reload() {
             this.toggleAllGenePanels(false);

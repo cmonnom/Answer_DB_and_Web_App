@@ -365,7 +365,7 @@ Vue.component('lookup-panel-cna', {
     },
     methods: {
         handleDialogs(response, callback) {
-            this.$emit("handle-dialogs", [this, response, callback]);
+            this.$emit("handle-dialogs", [null, response, callback]);
         },
         toggleAllVariantPanels(doOpen) {
             this.variantPanel = this.variantPanelTitles.map(i => doOpen);

@@ -527,6 +527,11 @@ public class OpenReportController {
 					if (clinicalTest == null) {
 						clinicalTest = modelDAO.getClinicalTest(FinalReportTemplateConstants.DEFAULT_TITLE);
 					}
+					String possibleDirtyData = reportDetails.createObjectJSON();
+					String cleanData = possibleDirtyData.replaceAll("\\\\t", " ").replaceAll("\\\\n", "<br/>");
+					ObjectMapper mapper = new ObjectMapper();
+					mapper.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER,	true);
+					reportDetails = mapper.readValue(cleanData, Report.class);
 					FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
 					pdfReport.saveFinalized();
 				}
