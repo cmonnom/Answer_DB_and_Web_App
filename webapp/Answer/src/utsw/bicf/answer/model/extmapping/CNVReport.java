@@ -57,6 +57,9 @@ public class CNVReport {
 		else if (c.getAberrationType() != null && c.getAberrationType().contains("loss")) {
 			aberrationType = "Loss ";
 		}
+		else if (c.getAberrationType() != null && c.getAberrationType().equals("cnLOH")) {
+			aberrationType = "cnLOH ";
+		}
 		this.cytobandTruncated = c.getCytoband().substring(0, 1);
 	}
 
@@ -103,7 +106,10 @@ public class CNVReport {
 		else {
 			this.cytobandTruncated = "";
 		}
-		if (this.copyNumber != null && this.copyNumber >= 2) {
+		if (this.copyNumber != null && this.copyNumber == 2) {
+			this.aberrationType = "cnLOH";
+		}
+		else if (this.copyNumber != null && this.copyNumber > 2) {
 			this.aberrationType = "gain";
 		}
 		else {

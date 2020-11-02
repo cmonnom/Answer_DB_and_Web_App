@@ -1,7 +1,4 @@
-Vue.config.devtools = true;
-// Vue.use(Vuetable);
-Vue.use(VueRouter)
-Vue.use(Vuetify)
+
 
 /**
  * This variable can be use for behavior specific to index.jsp
@@ -9,4 +6,11 @@ Vue.use(Vuetify)
  */
 var isHomepage = false;
 
-var bus = new Vue();
+if (typeof bus === 'undefined') {
+    Vue.config.devtools = true;
+    // Vue.use(Vuetable);
+    Vue.use(VueRouter)
+    Vue.use(Vuetify)
+    Vue.use(Vuex)
+    var bus = new Vue();
+}

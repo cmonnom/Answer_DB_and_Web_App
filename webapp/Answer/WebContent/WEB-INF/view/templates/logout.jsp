@@ -35,7 +35,7 @@ response.setDateHeader ("Expires", 0);
 </body>
 <!-- Start the Vue application -->
 <script>
-		var router = new VueRouter({
+		const router = new VueRouter({
 		mode: 'history',
 		routes: [
 		]

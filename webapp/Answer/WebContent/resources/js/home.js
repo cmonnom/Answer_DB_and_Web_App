@@ -4,7 +4,7 @@ const Home = {
 
         <v-snackbar :timeout="snackBarTimeout" :bottom="true" :value="snackBarVisible">
         {{ snackBarMessage }}
-        <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
+        <v-btn aria-label="Close Snackbar" flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
       </v-snackbar>
 
   <v-dialog v-model="assignDialogVisible" max-width="50%" scrollable>
@@ -41,12 +41,12 @@ const Home = {
       </v-card-text>
       <v-card-actions>
       <v-tooltip bottom class="pr-2">
-      <v-btn color="success" @click="assignToUser()" slot="activator" :disabled="assignToUserDisabled">Save
+      <v-btn aria-label="Assign to User" color="success" @click="assignToUser()" slot="activator" :disabled="assignToUserDisabled">Save
       <v-icon right dark>save</v-icon>
       </v-btn>
       <span>Answer will send an email notification<br/>to the selected users</span>
         </v-tooltip>
-        <v-btn class="mr-2" color="error" @click="cancelAssign()">Cancel
+        <v-btn aria-label="Cancel Assign to User" class="mr-2" color="error" @click="cancelAssign()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
         <v-checkbox v-model="receiveACopyOfEmail" label="Also send a notification to my email" hide-details class="no-margin-top-controls"></v-checkbox>
@@ -96,12 +96,12 @@ const Home = {
     </v-card-text>
     <v-card-actions>
     <v-tooltip bottom class="pr-2">
-      <v-btn color="success" @click="assignToGroup()" slot="activator">Save
+      <v-btn aria-label="Assign to Group" color="success" @click="assignToGroup()" slot="activator">Save
         <v-icon right dark>save</v-icon>
       </v-btn>
       <span></span>
       </v-tooltip>
-      <v-btn class="mr-2" color="error" @click="cancelAssignGroup()">Cancel
+      <v-btn aria-label="Cancel Assign to Group" class="mr-2" color="error" @click="cancelAssignGroup()">Cancel
         <v-icon right dark>cancel</v-icon>
       </v-btn>
       
@@ -112,7 +112,7 @@ const Home = {
   
   <v-toolbar dense dark color="primary" fixed app>
   <v-menu offset-y offset-x class="ml-0">
-  <v-btn slot="activator" flat icon dark>
+  <v-btn aria-label="Bookmark Current Tab" slot="activator" flat icon dark>
   <v-icon color="amber accent-2">mdi-home</v-icon>
           </v-btn>
           <v-list>
@@ -130,7 +130,7 @@ const Home = {
     </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-tooltip bottom>
-    <v-btn flat icon @click="saveTabPreference()" slot="activator" color="white">
+    <v-btn aria-label="Bookmark Current Tab" flat icon @click="saveTabPreference()" slot="activator" color="white">
         <v-icon>bookmark</v-icon>
     </v-btn>
     <span>Bookmark Current Tab</span>
@@ -138,18 +138,18 @@ const Home = {
    
 
   </v-toolbar>
-  <v-container grid-list-md fluid class="pl-0 pr-0 pt-0">
+  <v-container fluid class="pl-0 pr-0 pt-0">
 
     <v-tabs dark slider-color="amber accent-2" color="primary darken-1" fixed-tabs v-model="activateTab" hide-slider>
-        <v-tab href="#tab-userCases" :ripple="false" active-class="v-tabs__item--active primary">My Cases<v-icon class="pl-2" v-if="isDefaultTab('tab-userCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
-        <v-tab href="#tab-allCases" :ripple="false" active-class="v-tabs__item--active primary">All Cases<v-icon class="pl-2" v-if="isDefaultTab('tab-allCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
-        <v-tab href="#tab-finalizedCases" :ripple="false" active-class="v-tabs__item--active primary">Ready for Epic<v-icon class="pl-2" v-if="isDefaultTab('tab-finalizedCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
+        <v-tab href="#tab-userCases" :ripple="false" active-class="v-tabs__item--active primary pb-2">My Cases<v-icon class="pl-2" v-if="isDefaultTab('tab-userCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
+        <v-tab href="#tab-allCases" :ripple="false" active-class="v-tabs__item--active primary pb-2">All Cases<v-icon class="pl-2" v-if="isDefaultTab('tab-allCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
+        <v-tab href="#tab-finalizedCases" :ripple="false" active-class="v-tabs__item--active primary pb-2">Ready for Epic<v-icon class="pl-2" v-if="isDefaultTab('tab-finalizedCases')" :key="forceRenderKey">bookmark</v-icon></v-tab>
 
         <v-tabs-items>
-            <v-tab-item value="tab-userCases"  class="pt-1">
+            <v-tab-item value="tab-userCases" class="pa-1">
             <v-layout row wrap>
             <v-slide-x-transition>
-              <v-flex xs12 >
+              <v-flex xs12 class="pb-3">
                 <data-table ref="casesForUserTable" :fixed="false" :fetch-on-created="false" table-title="Active Cases" initial-sort="epicOrderDate"
                   no-data-text="No Data" :show-pagination="true" title-icon="star" @refresh-requested="handleRefresh()">
                 </data-table>
@@ -167,7 +167,7 @@ const Home = {
             </v-layout>
             </v-tab-item>
     
-            <v-tab-item value="tab-allCases"  class="pt-1">
+            <v-tab-item value="tab-allCases"  class="pa-1">
                 <v-layout row wrap>
                   <v-slide-x-transition>
                     <v-flex xs12>
@@ -179,7 +179,7 @@ const Home = {
                   </v-layout>
             </v-tab-item>
     
-            <v-tab-item value="tab-finalizedCases"  class="pt-1">
+            <v-tab-item value="tab-finalizedCases"  class="pa-1">
               <v-layout row wrap>
               <v-slide-x-transition>
               <v-flex xs12>
@@ -233,13 +233,13 @@ const Home = {
     methods: {
         handleDialogs(response, callback) {
             if (response.isXss) {
-                bus.$emit("xss-error", [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         getWorklists() {
@@ -538,29 +538,8 @@ const Home = {
         },
         getBaseUrl() {
             return webAppRoot;
-        }
-    },
-    mounted: function () {
-        this.getAllUsers();
-        this.getAllGroups();
-        this.getWorklists();
-
-    },
-    destroyed: function () {
-        bus.$off('assignToUser');
-        bus.$off('assignToGroup');
-        bus.$off('open');
-        bus.$off('open-read-only');
-        bus.$off('edit-report');
-        bus.$off('open-report-read-only');
-        bus.$off('sent-to-epic');
-        bus.$off('downloadPDFReport');
-        // bus.$off('showEaster');
-       
-    },
-    created: function () {
-        splashDialog = false; //disable splash screen if coming from Home
-        bus.$on('assignToUser', (item) => {
+        },
+        assignToUserHandler(item) {
             this.currentEpicOrderNumber = item.epicOrderNumber;
             this.currentPatientName = item.patientName;
             this.currentCaseId = item.caseId;
@@ -589,8 +568,8 @@ const Home = {
                 this.usersAssignedToCase.push(userAssigned);
             }
             this.assignDialogVisible = true;
-        });
-        bus.$on('assignToGroup', (item) => {
+        },
+        assignToGroupHandler(item) {
             this.currentEpicOrderNumber = item.epicOrderNumber;
             this.currentPatientName = item.patientName;
             this.currentCaseId = item.caseId;
@@ -610,30 +589,49 @@ const Home = {
                 this.groupsAssignedToCase.push(groupAssigned);
             }
             this.assignGroupDialogVisible = true;
-        });
-        // bus.$on('open', (item) => {
-        //     router.push("./openCase/" + item.caseId);
-        // });
-        // bus.$on('open-read-only', (item) => {
-        //     router.push("./openCaseReadOnly/" + item.caseId);
-        // });
-        // bus.$on('edit-report', (item) => {
-        //     router.push("./openReport/" + item.caseId);
-        // });
-        // bus.$on('open-report-read-only', (item) => {
-        //     router.push("./openReportReadOnly/" + item.caseId);
-        // });
-        bus.$on('sent-to-epic', (item, event) => {
+        },
+        sendToEpicHandler(item, event) {
             this.currentCaseId = item.caseId;
             this.currentEpicOrderNumber = item.epicOrderNumber;
             this.currentPatientName = item.patientName;
             this.positionx = event.clientX;
             this.positiony = event.clientY;
             this.confirmSentToEpicDialogVisible = true;
-        });
-        bus.$on('downloadPDFReport', (item) => {
+        },
+        createPDFReportHandler(item) {
             this.createPDFReport(item.reportId);
-        });
+        }
+    },
+    mounted: function () {
+        this.getAllUsers();
+        this.getAllGroups();
+        this.getWorklists();
+
+    },
+    destroyed: function () {
+        // bus.$off('assignToUser');
+        // bus.$off('assignToGroup');
+        // bus.$off('open');
+        // bus.$off('open-read-only');
+        // bus.$off('edit-report');
+        // bus.$off('open-report-read-only');
+        // bus.$off('sent-to-epic');
+        // bus.$off('downloadPDFReport');
+        // bus.$off('showEaster');
+       
+    },
+    beforeDestroy() {
+        bus.$off('assignToUser', this.assignToUserHandler);
+        bus.$off('assignToGroup', this.assignToGroupHandler);
+        bus.$off('sent-to-epic', this.sendToEpicHandler);
+        bus.$off('downloadPDFReport', this.createPDFReportHandler);
+    },
+    created: function () {
+        splashDialog = false; //disable splash screen if coming from Home
+        bus.$on('assignToUser', this.assignToUserHandler);
+        bus.$on('assignToGroup', this.assignToGroupHandler);
+        bus.$on('sent-to-epic', this.sendToEpicHandler);
+        bus.$on('downloadPDFReport', this.createPDFReportHandler);
         // bus.$on('showEaster', (item) => {
         //     this.showEaster = !this.showEaster;
         //     setTimeout(() => {

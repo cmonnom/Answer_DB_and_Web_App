@@ -1,6 +1,6 @@
 Vue.component('gene-sets-edit', {
   template:
-    `<div>
+    /*html*/`<div>
 
   <v-snackbar :timeout="4000" :bottom="true" :value="snackBarVisible">
     {{ snackBarMessage }}
@@ -85,8 +85,7 @@ Vue.component('gene-sets-edit', {
 
   <!-- Create new Gene sets -->
   <data-table ref="geneSetTable" :fixed="false" :fetch-on-created="true" table-title="Gene Sets" :initial-sort="'groupName'" no-data-text="No Data"
-  class="pt-3"
-    data-url="./getAllReportGroups" >
+    data-url="./getAllReportGroups" class="mt-2">
     <v-fade-transition slot="action1">
       <v-tooltip bottom>
         <v-btn flat icon @click="createGeneSet" slot="activator">
@@ -133,13 +132,13 @@ Vue.component('gene-sets-edit', {
     },
     handleDialogs(response, callback) {
       if (response.isXss) {
-        bus.$emit("xss-error", [this, response.reason]);
+        bus.$emit("xss-error", [null, response.reason]);
       }
       else if (response.isLogin) {
-        bus.$emit("login-needed", [this, callback])
+        bus.$emit("login-needed", [null, callback])
       }
       else if (response.success === false) {
-        bus.$emit("some-error", [this, response.message]);
+        bus.$emit("some-error", [null, response.message]);
       }
     },
 
@@ -227,22 +226,28 @@ Vue.component('gene-sets-edit', {
           alert(error);
           this.saveGeneSetDisabled = false;
         });
+    },
+    editReportGroupHandler(item) {
+      this.editReportGroup(item.reportGroupId);
+    },
+    deleteReportGroupHandler(item) {
+      this.confirmDeleteReportGroup(item.reportGroupId);
     }
 
   },
   mounted: function () {
   },
   destroyed: function () {
-    bus.$off('editReportGroup');
-    bus.$off('deleteReportGroup');
+    // bus.$off('editReportGroup');
+    // bus.$off('deleteReportGroup');
+  },
+  beforeDestroy() {
+    bus.$off('editReportGroup', this.editReportGroupHandler);
+    bus.$off('deleteReportGroup', this.deleteReportGroupHandler);
   },
   created: function () {
-    bus.$on('editReportGroup', (item) => {
-      this.editReportGroup(item.reportGroupId);
-    });
-    bus.$on('deleteReportGroup', (item) => {
-      this.confirmDeleteReportGroup(item.reportGroupId);
-    });
+    bus.$on('editReportGroup', this.editReportGroupHandler);
+    bus.$on('deleteReportGroup', this.deleteReportGroupHandler);
   },
   computed: {
   },

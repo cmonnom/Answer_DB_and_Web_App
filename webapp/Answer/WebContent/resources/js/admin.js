@@ -4,7 +4,7 @@ const Admin = {
 
   <v-snackbar :timeout="4000" :bottom="true" :value="snackBarVisible">
     {{ snackBarMessage }}
-    <v-btn flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
+    <v-btn aria-label="Close Snackbar" flat color="primary" @click.native="snackBarVisible = false">Close</v-btn>
   </v-snackbar>
 
   <!-- edit user dialog -->
@@ -16,7 +16,7 @@ const Admin = {
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
-          <v-btn icon @click="cancelEdits()" slot="activator">
+          <v-btn aria-label="Cancel Edits" icon @click="cancelEdits()" slot="activator">
             <v-icon>close</v-icon>
           </v-btn>
           <span>Cancel</span>
@@ -89,7 +89,7 @@ const Admin = {
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
-          <v-btn icon @click="cancelGroupEdits()" slot="activator">
+          <v-btn aria-label="Cancel Group Edits" icon @click="cancelGroupEdits()" slot="activator">
             <v-icon>close</v-icon>
           </v-btn>
           <span>Cancel</span>
@@ -115,10 +115,10 @@ const Admin = {
         </v-container>
       </v-card-text>
       <v-card-actions>
-        <v-btn class="mr-2" color="success" @click="saveGroupEdits()" :disabled="editGroupDialogSaveDisabled">Save
+        <v-btn aria-label="Save Group Edits" class="mr-2" color="success" @click="saveGroupEdits()" :disabled="editGroupDialogSaveDisabled">Save
           <v-icon right dark>save</v-icon>
         </v-btn>
-        <v-btn class="mr-2" color="error" @click="cancelGroupEdits()">Cancel
+        <v-btn aria-label="Cancel Group Edits" class="mr-2" color="error" @click="cancelGroupEdits()">Cancel
           <v-icon right dark>cancel</v-icon>
         </v-btn>
       </v-card-actions>
@@ -133,10 +133,10 @@ const Admin = {
   </v-toolbar>
 
   <data-table ref="userTable" :fixed="false" :fetch-on-created="true" table-title="Users" :initial-sort="'fullName'" no-data-text="No Data"
-    data-url="./getAllUsers" >
+    data-url="./getAllUsers" class="pb-3">
     <v-fade-transition slot="action1">
       <v-tooltip bottom>
-        <v-btn flat icon @click="addUser" slot="activator">
+        <v-btn aria-label="Add User" flat icon @click="addUser" slot="activator">
           <v-icon dark>mdi-account-plus</v-icon>
         </v-btn>
         <span>Add New User</span>
@@ -156,7 +156,7 @@ const Admin = {
     data-url="./getAllGroups" >
     <v-fade-transition slot="action1">
       <v-tooltip bottom>
-        <v-btn flat icon @click="addGroup" slot="activator">
+        <v-btn aria-label="Add Group" flat icon @click="addGroup" slot="activator">
           <v-icon dark>mdi-account-multiple-plus</v-icon>
         </v-btn>
         <span>Add New Group</span>
@@ -378,13 +378,13 @@ const Admin = {
     },
     handleDialogs(response, callback) {
       if (response.isXss) {
-        bus.$emit("xss-error", [this, response.reason]);
+        bus.$emit("xss-error", [null, response.reason]);
       }
       else if (response.isLogin) {
-        bus.$emit("login-needed", [this, callback])
+        bus.$emit("login-needed", [null, callback])
       }
       else if (response.success === false) {
-        bus.$emit("some-error", [this, response.message]);
+        bus.$emit("some-error", [null, response.message]);
       }
     },
     getAllUsersForGroups() {
@@ -423,6 +423,15 @@ const Admin = {
     },
     getAppVersion() {
       return "(version: " + version + ")";
+    },
+    editUserHandler(item) {
+      this.editUser(item.userId);
+    },
+    editGroupHanlder(item) {
+      this.editGroup(item.groupId);
+    },
+    blockUserHandler(item) {
+      this.blockUser(item.userId);
     }
   },
   mounted: function () {
@@ -430,22 +439,20 @@ const Admin = {
     this.getAllGroupsForUsers();
   },
   destroyed: function () {
-    bus.$off('editUser');
-    bus.$off('editGroup');
-    bus.$off('blockUser');
+    // bus.$off('editUser');
+    // bus.$off('editGroup');
+    // bus.$off('blockUser');
 
   },
+  beforeDestroy() {
+    bus.$off('editUser', this.editUserHandler);
+    bus.$off('editGroup', this.editGroupHanlder);
+    bus.$off('blockUser', this.blockUserHandler);
+  },
   created: function () {
-    bus.$on('editUser', (item) => {
-      this.editUser(item.userId);
-    });
-    bus.$on('editGroup', (item) => {
-      this.editGroup(item.groupId);
-    });
-    bus.$on('blockUser', (item) => {
-      this.blockUser(item.userId);
-    });
-
+    bus.$on('editUser', this.editUserHandler);
+    bus.$on('editGroup', this.editGroupHanlder);
+    bus.$on('blockUser', this.blockUserHandler);
   },
   computed: {
   },

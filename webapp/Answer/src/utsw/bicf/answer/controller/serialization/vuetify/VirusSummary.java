@@ -94,6 +94,10 @@ public class VirusSummary extends Summary<VirusRow> {
 		highestTier.setIsSafe(true);
 		headers.add(highestTier);
 		
+		Header sampleType = new Header(new String[] {"Sample", "Type"}, "tumorNormalLabel");
+		sampleType.setIsSafe(true);
+		headers.add(sampleType);
+		
 		Header virusAcc = new Header("Accession ID", "virusAcc");
 		virusAcc.setIsSafe(true);
 		headers.add(virusAcc);

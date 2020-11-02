@@ -239,7 +239,9 @@ Vue.component('login', {
         }
     },
     mounted() {
-        this.myMSALObj = new Msal.UserAgentApplication(this.msalConfig);
+        if (this.isCloudLogin()) {
+            this.myMSALObj = new Msal.UserAgentApplication(this.msalConfig);
+        }
     },
     created: function () {
     },

@@ -15,10 +15,6 @@ Vue.component('review-selection', {
         caseOwnerId: { default: "-1", type: String},
         caseOwnerName: {default: "", type: String},
         userId: { default: "-2", type: String},
-        unfilteredSNPsDict: {default: () => {}, type: Object},
-        unfilteredCNVsDict: {default: () => {}, type: Object},
-        unfilteredFTLsDict: {default: () => {}, type: Object},
-        unfilteredVIRsDict: {default: () => {}, type: Object},
         readonly: {default: false, type: Boolean},
         openReportUrl: {default: "", type: String}
     },
@@ -95,7 +91,7 @@ Vue.component('review-selection', {
                 <v-icon>more_vert</v-icon>
             </v-btn>
             <v-list>
-
+<!--
                 <v-list-tile avatar @click="sendToMDA()" :disabled="saveVariantDisabled || sendToMDALoading">
                     <v-list-tile-avatar>
                         MDA
@@ -104,7 +100,7 @@ Vue.component('review-selection', {
                         <v-list-tile-title>Download Moclia File</v-list-tile-title>
                     </v-list-tile-content>
                 </v-list-tile>
-
+-->
                 <v-list-tile avatar @click="markAsReadyForReview()"  v-if="canProceed('canAnnotate')">
                     <v-list-tile-avatar>
                         <v-icon>how_to_reg</v-icon>
@@ -159,12 +155,14 @@ Vue.component('review-selection', {
           </v-tooltip>
         </v-toolbar-title>
         <v-spacer></v-spacer>
+        <!--
         <v-tooltip bottom>
             <v-btn icon :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">
                 MDA
             </v-btn>
             <span>Download Moclia File</span>
         </v-tooltip>
+        -->
         <v-tooltip bottom v-if="canProceed('canAnnotate')">
         <v-btn icon  @click="markAsReadyForReview()" slot="activator" :loading="markingForReview">
             <v-icon>how_to_reg</v-icon>
@@ -216,7 +214,7 @@ Vue.component('review-selection', {
                                 <div class="subheading">
                                     {{ reportGroup.description }}
                                     <v-tooltip bottom>
-                                        <v-btn slot="activator" flat icon @click="openLink(reportGroup.link)" color="primary">
+                                        <v-btn slot="activator" flat icon :href="reportGroup.link" target="_blank" rel="noreferrer" color="primary">
                                             <v-icon>open_in_new</v-icon>
                                         </v-btn>
                                         <span>Open Link in New Tab</span>
@@ -254,8 +252,8 @@ Vue.component('review-selection', {
             <!-- SNP / Indel table -->
         <v-tab-item value="tab-selected-snp" class="pt-1">
         
-            <data-table disable-sticky-header ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'SNP/Indel Variants from Case Owner ' + caseOwnerName"
-            initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table class="mb-2" ref="snpVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'SNP/Indel Variants from Case Owner ' + caseOwnerName"
+            initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" color="primary"
             @refresh-requested="handleRefresh()">
             <v-fade-transition slot="action1">
                 <v-tooltip bottom >
@@ -288,8 +286,8 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s SNPs</span>
             </v-tooltip>
 
-            <data-table disable-sticky-header ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
-                initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table class="mb-2" ref="snpVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="SNP/Indel Variants from All Annotators"
+                initial-sort="chromPos" no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
 
@@ -297,8 +295,8 @@ Vue.component('review-selection', {
         </v-tab-item>
         <!-- CNV table -->
         <v-tab-item value="tab-selected-cnv"  class="pt-1">
-            <data-table disable-sticky-header ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'CNVs from Case Owner ' + caseOwnerName" initial-sort="chrom"
-            no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table class="mb-2"  ref="cnvVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'CNVs from Case Owner ' + caseOwnerName" initial-sort="chrom"
+            no-data-text="No Data" :show-row-count="true" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
 
@@ -312,15 +310,15 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s CNVs</span>
             </v-tooltip>
 
-            <data-table disable-sticky-header ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
-                no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table class="mb-2" ref="cnvVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="CNVs from All Annotators" initial-sort="chrom"
+                no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
              </data-table>
         </v-tab-item>
         <!--  Fusion / Translocation table -->
         <v-tab-item value="tab-selected-translocation" class="pt-1">
-            <data-table disable-sticky-header ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Fusions / Translocations from Case Owner '  + caseOwnerName"
-            initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table class="mb-2" ref="translocationVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Fusions / Translocations from Case Owner '  + caseOwnerName"
+            initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
 
@@ -334,16 +332,16 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s Fusions/Translocations</span>
             </v-tooltip>
 
-            <data-table disable-sticky-header ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
-                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table class="mb-2" ref="translocationVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Fusions / Translocations from All Annotators"
+                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
         </v-tab-item>
 
         <!--  Virus table -->
         <v-tab-item value="tab-selected-virus" class="pt-1">
-            <data-table disable-sticky-header ref="virusVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Virus from Case Owner '  + caseOwnerName"
-            initial-sort="virusName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table class="mb-2" ref="virusVariantsSelectedReviewer" :fixed="false" :fetch-on-created="false" :table-title="'Virus from Case Owner '  + caseOwnerName"
+            initial-sort="virusName" no-data-text="No Data" :show-row-count="true"  color="primary"
             @refresh-requested="handleRefresh()">
             </data-table>
 
@@ -357,8 +355,8 @@ Vue.component('review-selection', {
             <span v-else>You have already selected all of {{ otherAnnotator.userFullName }}'s Viruses</span>
             </v-tooltip>
 
-            <data-table disable-sticky-header ref="virusVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Viruses from All Annotators"
-                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" class="pb-3" color="primary"
+            <data-table class="mb-2" ref="virusVariantsSelected" :fixed="false" :fetch-on-created="false" table-title="Viruses from All Annotators"
+                initial-sort="fusionName" no-data-text="No Data" :show-row-count="true" color="primary"
                 @refresh-requested="handleRefresh()">
             </data-table>
         </v-tab-item>
@@ -367,11 +365,13 @@ Vue.component('review-selection', {
 
     </v-card-text>
     <v-card-actions class="card-actions-bottom">
+    <!--
         <v-tooltip top class="pr-2">
             <v-btn color="primary" :disabled="saveVariantDisabled" @click="sendToMDA()" slot="activator" :loading="sendToMDALoading">Moclia File
             </v-btn>
             <span>Download Moclia File</span>
         </v-tooltip>
+        -->
         <v-tooltip top v-if="canProceed('canAnnotate')" class="pr-2">
             <v-btn color="primary" @click="markAsReadyForReview()" slot="activator"  :loading="markingForReview">
                 Ready for Review
@@ -401,7 +401,7 @@ Vue.component('review-selection', {
    `,
     data() {
         return {
-            sendToMDALoading: false,
+            // sendToMDALoading: false,
             requiredReportGroups: [],
             markingForReview: false,
             markingForReport: false,
@@ -444,58 +444,57 @@ Vue.component('review-selection', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
             this.splashProgress = 100; //should dismiss the splash dialog
 
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
         breadcrumbNavigation(index) {
             this.$emit("breadcrumb-navigation", index);
         },
-        sendToMDA() {
-            // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
-            // Use a flag to disable the action in the meantime
-            if (this.saveVariantDisabled) {
-                return;
-            }
-            this.sendToMDALoading = true;
-            axios({
-                method: 'post',
-                url: webAppRoot + "/sendToMDA",
-                params: {
-                    caseId: this.$route.params.id
-                },
-                data: {
-                    filters: [],
-                    selectedSNPVariantIds: this.selectedIds.selectedSNPVariantIds,
-                    selectedCNVIds: this.selectedIds.selectedCNVIds,
-                    selectedTranslocationIds: this.selectedIds.selectedTranslocationIds,
-                    selectedVirusIds: this.selectedIds.selectedVirusIds
-                }
-            }).then(response => {
-                this.sendToMDALoading = false;
-                if (response.data.isAllowed && response.data.success) {
-                    this.createCSVFile(response.data.message);
-                }
-                else {
-                    this.handleDialogs(response.data, this.sendToMDA);
-                }
-            }).catch(error => {
-                this.sendToMDALoading = false;
-                this.handleAxiosError(error);
-            });
-        },
+        // sendToMDA() {
+        //     // There is a bug in vuetify 1.0.19 where a disabled menu still activates the click action.
+        //     // Use a flag to disable the action in the meantime
+        //     if (this.saveVariantDisabled) {
+        //         return;
+        //     }
+        //     this.sendToMDALoading = true;
+        //     axios({
+        //         method: 'post',
+        //         url: webAppRoot + "/sendToMDA",
+        //         params: {
+        //             caseId: this.$route.params.id
+        //         },
+        //         data: {
+        //             filters: [],
+        //             selectedSNPVariantIds: this.selectedIds.selectedSNPVariantIds,
+        //             selectedCNVIds: this.selectedIds.selectedCNVIds,
+        //             selectedTranslocationIds: this.selectedIds.selectedTranslocationIds,
+        //             selectedVirusIds: this.selectedIds.selectedVirusIds
+        //         }
+        //     }).then(response => {
+        //         this.sendToMDALoading = false;
+        //         if (response.data.isAllowed && response.data.success) {
+        //             this.createCSVFile(response.data.message);
+        //         }
+        //         else {
+        //             this.handleDialogs(response.data, this.sendToMDA);
+        //         }
+        //     }).catch(error => {
+        //         this.sendToMDALoading = false;
+        //         this.handleAxiosError(error);
+        //     });
+        // },
         createCSVFile(csvContent) {
         	 var blob = new Blob(
                      [csvContent],
@@ -573,12 +572,12 @@ Vue.component('review-selection', {
         } ,
         //to show hide the warning in the review dialog
         areReportableGeneSelected() {
-            if (!this.$refs.snpVariantsSelected || !this.reportGroups) {
+            if (!this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"] || !this.reportGroups) {
                 return false;
             }
             var selectedGenes = [];
-            for (var i = 0; i < this.$refs.snpVariantsSelected.items.length; i++) {
-                var item = this.$refs.snpVariantsSelected.items[i];
+            for (var i = 0; i < this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"].length; i++) {
+                var item = this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"].items[i];
                 selectedGenes.push(item.geneName);
             }
             var geneNamesToReport = [];
@@ -601,8 +600,8 @@ Vue.component('review-selection', {
         //to color the reportGroup gene if already selected
         isReportableGeneSelected(gene) {
             //TODO use reviewer table
-            for (var i = 0; i < this.$refs.snpVariantsSelected.items.length; i++) {
-                var item = this.$refs.snpVariantsSelected.items[i].geneName;
+            for (var i = 0; i < this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"].length; i++) {
+                var item = this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"][i].geneName;
                 if (item == gene) {
                     return true;
                 }
@@ -615,33 +614,49 @@ Vue.component('review-selection', {
         getDialogMaxHeight(offset) {
             getDialogMaxHeight(offset);
         },
-        updateSelectedVariantTable(selectedSNPVariants, selectedSNPVariantsReviewer, snpHeaders, snpHeaderOrderAll, snpHeaderOrderReviewer,
-            selectedCNVs, selectedCNVsReviewer, cnvHeaders, cnvHeaderOrderAll, cnvHeaderOrderReviewer,
-            selectedTranslocations, selectedTranslocationsReviewer, ftlHeaders, ftlHeaderOrderAll, ftlHeaderOrderReviewer,
-            selectedViruses, selectedVirusesReviewer, virHeaders, virHeaderOrderAll, virHeaderOrderReviewer) {
-            this.$refs.snpVariantsSelected.manualDataFiltered(
-                { items: selectedSNPVariants, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderAll });
-            this.$refs.snpVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedSNPVariantsReviewer, headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderReviewer });    
+        updateSelectedVariantTable(snpHeaders, snpHeaderOrderAll, snpHeaderOrderReviewer,
+            cnvHeaders, cnvHeaderOrderAll, cnvHeaderOrderReviewer,
+            ftlHeaders, ftlHeaderOrderAll, ftlHeaderOrderReviewer,
+            virHeaders, virHeaderOrderAll, virHeaderOrderReviewer) {
+                var snpHeadersReviewer = snpHeaders.filter(i => i.value != ("dateSince" + this.caseOwnerId));
+                var cnvHeadersReviewer = cnvHeaders.filter(i => i.value != ("dateSince" + this.caseOwnerId));
+                var ftlHeadersReviewer = ftlHeaders.filter(i => i.value != ("dateSince" + this.caseOwnerId));
+                var virHeadersReviewer = virHeaders.filter(i => i.value != ("dateSince" + this.caseOwnerId));
 
-            this.$refs.cnvVariantsSelected.manualDataFiltered(
-                { items: selectedCNVs, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderAll });
-            this.$refs.cnvVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedCNVsReviewer, headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderReviewer });
+            this.getSnpTable().manualDataFilteredFromStore(
+                { items: [], headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderAll },
+                this.$store.getters["snpStore/getSelectedVariantItemsForAll"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+            this.$refs.snpVariantsSelectedReviewer.manualDataFilteredFromStore(
+                { items: [], headers: snpHeadersReviewer, uniqueIdField: "oid", headerOrder: snpHeaderOrderReviewer },
+                this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+
+
+            this.getCnvTable().manualDataFilteredFromStore(
+                { items: [], headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderAll },
+                this.$store.getters["cnvStore/getSelectedVariantItemsForAll"]);
+            this.$refs.cnvVariantsSelectedReviewer.manualDataFilteredFromStore(
+                { items: [], headers: cnvHeadersReviewer, uniqueIdField: "oid", headerOrder: cnvHeaderOrderReviewer },
+                this.$store.getters["cnvStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+
+            this.getFtlTable().manualDataFilteredFromStore(
+                { items: [], headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderAll },
+                this.$store.getters["ftlStore/getSelectedVariantItemsForAll"]);
+            this.$refs.translocationVariantsSelectedReviewer.manualDataFilteredFromStore(
+                { items: [], headers: ftlHeadersReviewer, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer },
+                this.$store.getters["ftlStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
     
-            this.$refs.translocationVariantsSelected.manualDataFiltered(
-                { items: selectedTranslocations, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderAll });
-            this.$refs.translocationVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedTranslocationsReviewer, headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer });
 
-            this.$refs.virusVariantsSelected.manualDataFiltered(
-                { items: selectedViruses, headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderAll });
-            this.$refs.virusVariantsSelectedReviewer.manualDataFiltered(
-                { items: selectedVirusesReviewer, headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderReviewer });
-            this.populateOtherAnnotators('snp', selectedSNPVariants); 
-            this.populateOtherAnnotators('cnv', selectedCNVs); 
-            this.populateOtherAnnotators('ftl', selectedTranslocations);  
-            this.populateOtherAnnotators('vir', selectedViruses);   
+            this.getVirTable().manualDataFilteredFromStore(
+                { items: [], headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderAll },
+                this.$store.getters["virStore/getSelectedVariantItemsForAll"]);
+            this.$refs.virusVariantsSelectedReviewer.manualDataFilteredFromStore(
+                { items: [], headers: virHeadersReviewer, uniqueIdField: "oid", headerOrder: virHeaderOrderReviewer },
+                this.$store.getters["virStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+                
+            this.populateOtherAnnotators('snp', this.$store.getters["snpStore/getSelectedVariantItemsForAll"]); 
+            this.populateOtherAnnotators('cnv', this.$store.getters["cnvStore/getSelectedVariantItemsForAll"]); 
+            this.populateOtherAnnotators('ftl', this.$store.getters["ftlStore/getSelectedVariantItemsForAll"]);  
+            this.populateOtherAnnotators('vir', this.$store.getters["virStore/getSelectedVariantItemsForAll"]);   
             this.stopLoading();    
         },
         getSnpTable() {
@@ -660,30 +675,29 @@ Vue.component('review-selection', {
             this.$emit("open-report");
         },
         startLoading() {
-            this.$refs.snpVariantsSelected.startLoading();
+            this.getSnpTable().startLoading();
             this.$refs.snpVariantsSelectedReviewer.startLoading();
-            this.$refs.cnvVariantsSelected.startLoading();
+            this.getCnvTable().startLoading();
             this.$refs.cnvVariantsSelectedReviewer.startLoading();
-            this.$refs.translocationVariantsSelected.startLoading();
+            this.getFtlTable().startLoading();
             this.$refs.translocationVariantsSelectedReviewer.startLoading();
-            this.$refs.virusVariantsSelected.startLoading();
+            this.getVirTable().startLoading();
             this.$refs.virusVariantsSelectedReviewer.startLoading();
         },
         stopLoading() {
-            this.$refs.snpVariantsSelected.stopLoading();
+            this.getSnpTable().stopLoading();
             this.$refs.snpVariantsSelectedReviewer.stopLoading();
-            this.$refs.cnvVariantsSelected.stopLoading();
+            this.getCnvTable().stopLoading();
             this.$refs.cnvVariantsSelectedReviewer.stopLoading();
-            this.$refs.translocationVariantsSelected.stopLoading();
+            this.getFtlTable().stopLoading();
             this.$refs.translocationVariantsSelectedReviewer.stopLoading();
-            this.$refs.virusVariantsSelected.stopLoading();
+            this.getVirTable().stopLoading();
             this.$refs.virusVariantsSelectedReviewer.stopLoading();
         },
         handleRefresh() {
             this.$emit("review-selection-refresh");
         },
         acceptSelectionFrom(type, userId) {
-            // let diffIds = this.calcSelectionDiff(type, userId);
             let variantIds = [];
             if (type == "snp") {
                 variantIds = this.variantIdSNPPerAnnotator[userId + "_"];
@@ -708,25 +722,25 @@ Vue.component('review-selection', {
             if (type == "snp") {
                 variantIds = this.variantIdSNPPerAnnotator[userId + "_"];
                 caseOwnerVariantIds = this.variantIdsSNPForCaseOwner;
-                dict = this.unfilteredSNPsDict;
+                dict = this.$store.getters["snpStore/getAllVariantItemsMap"];
             }
             else if (type == "cnv") {
                 variantIds = this.variantIdCNVPerAnnotator[userId + "_"];
                 caseOwnerVariantIds = this.variantIdsCNVForCaseOwner;
-                dict = this.unfilteredCNVsDict;
+                dict = this.$store.getters["cnvStore/getAllVariantItemsMap"];
             }
             else if (type == "ftl") {
                 variantIds = this.variantIdFTLPerAnnotator[userId + "_"];
                 caseOwnerVariantIds = this.variantIdsFTLForCaseOwner;
-                dict = this.unfilteredFTLsDict;
+                dict = this.$store.getters["ftlStore/getAllVariantItemsMap"];
             }
             else if (type == "vir") {
                 variantIds = this.variantIdVIRPerAnnotator[userId + "_"];
                 caseOwnerVariantIds = this.variantIdsVIRForCaseOwner;
-                dict = this.unfilteredVIRsDict;
+                dict = this.$store.getters["virStore/getAllVariantItemsMap"];
             }
             for (let i =0; i < variantIds.length; i++) {
-                if (caseOwnerVariantIds.indexOf(variantIds[i]) == -1 && !dict[variantIds[i]].selected) {
+                if (caseOwnerVariantIds.indexOf(variantIds[i]) == -1 && (dict[variantIds[i]] && !dict[variantIds[i]].selected)) {
                     diffIds.push(variantIds[i]);
                 }
             }
@@ -803,7 +817,7 @@ Vue.component('review-selection', {
             this.autoVUSResultVisible = true;
         },
         updateSNPTablewithVUSResult(summary) {
-            var items = this.$refs.snpVariantsSelectedReviewer.items;
+            var items = this.getSelectedSNPItemsForReviewer;
             var successFlag = {temporary: true, chip: false, color: "blue", iconName: "mdi-thumb-up", size: null, tooltip: "Tier 3 gene annotation selected"}; 
             var errorFlag = {temporary: true, chip: false, color: "amber", iconName: "mdi-thumb-down", size: null, tooltip: "Could not auto-select"}; 
             var untouchedFlag = {temporary: true, chip: false, color: null, iconName: "mdi-equal-box", size: null, tooltip: "No change"}; 
@@ -828,7 +842,9 @@ Vue.component('review-selection', {
         }
     },
     computed: {
-
+        getSelectedSNPItemsForReviewer() {
+            return this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"];
+        },
     },
     created() {
 

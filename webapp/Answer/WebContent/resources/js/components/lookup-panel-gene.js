@@ -35,14 +35,14 @@ Vue.component('lookup-panel-gene', {
                             <div>{{ item }} <span v-show="!geneSummaries[item].summary && !geneSummaryLoading">(no
                                     summary found)</span>
                                 <v-tooltip bottom v-show="geneSummaries[item].url && !geneSummaryLoading">
-                                    <v-btn slot="activator" icon :href="geneSummaries[item].url" target="_blank"
+                                    <v-btn slot="activator" icon :href="geneSummaries[item].url" target="_blank" rel="noreferrer"
                                         @click.stop class="primary--text">
                                         <v-icon>mdi-open-in-new</v-icon>
                                     </v-btn>
                                     <span>Open {{ lastGene }} in {{ item }} (new tab).</span>
                                 </v-tooltip>
                                 <v-tooltip bottom v-show="geneSummaries[item].url2 && !geneSummaryLoading">
-                                    <v-btn slot="activator" icon :href="geneSummaries[item].url2" target="_blank"
+                                    <v-btn slot="activator" icon :href="geneSummaries[item].url2" target="_blank" rel="noreferrer"
                                         @click.stop class="primary--text">
                                         <v-icon>mdi-lock</v-icon>
                                     </v-btn>
@@ -56,7 +56,7 @@ Vue.component('lookup-panel-gene', {
                                 <span v-for="(item, index) in geneSummaries[item].summary" :key="index">
                                     <span v-if="item.type == 'text'">{{ item.text }}</span>
                                     <a v-else :href="'https://www.ncbi.nlm.nih.gov/pubmed/?term=' + item.text"
-                                        target="_blank">{{ item.text }}</a>
+                                        target="_blank" rel="noreferrer">{{ item.text }}</a>
                                 </span>
                             </v-card-text>
                         </v-card>
@@ -92,7 +92,7 @@ Vue.component('lookup-panel-gene', {
                         <span class="body-2"><b>GDC Data Portal</b></span>
                         <v-tooltip bottom v-if="ensemblId">
                             <v-btn icon slot="activator" :href="'https://portal.gdc.cancer.gov/genes/' + ensemblId"
-                                target="_blank">
+                                target="_blank" rel="noreferrer">
                                 <v-icon class="primary--text">mdi-open-in-new</v-icon>
                             </v-btn>
                             <span>Open {{ lastGene }} on the NIH GDC Data Portal</span>
@@ -136,7 +136,7 @@ Vue.component('lookup-panel-gene', {
                         <v-card-text class="pa-2" v-show="reactomeContentDetailUrl">
                             <div class="pa-1 body-2"><b>{{ lastGene }} locations</b>
                                 <v-tooltip bottom>
-                                    <v-btn slot="activator" icon :href="reactomeContentDetailUrl" target="_blank"
+                                    <v-btn slot="activator" icon :href="reactomeContentDetailUrl" target="_blank" rel="noreferrer"
                                         @click.stop class="primary--text">
                                         <v-icon>mdi-open-in-new</v-icon>
                                     </v-btn>
@@ -153,7 +153,7 @@ Vue.component('lookup-panel-gene', {
                                 <template v-slot:label="{ item }">
                                     <v-tooltip bottom>
                                         <a @click.stop class="body-1" slot="activator" v-if="item.url" :href="item.url"
-                                            target="_blank">{{ item.name }}</a>
+                                            target="_blank" rel="noreferrer">{{ item.name }}</a>
                                         <span>Open Reactome's PathwayBrowser</span>
                                     </v-tooltip>
                                     <span v-if="!item.rootLevel && !item.url" class="body-1"
@@ -220,7 +220,7 @@ Vue.component('lookup-panel-gene', {
     },
     methods: {
         handleDialogs(response, callback) {
-            this.$emit("handle-dialogs", [this, response, callback]);
+            this.$emit("handle-dialogs", [null, response, callback]);
         },
         reload() {
             this.toggleAllGenePanels(false);

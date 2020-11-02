@@ -7,7 +7,13 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,13 +35,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ca.uhn.hl7v2.HL7Exception;
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.ModelDAO;
-import utsw.bicf.answer.db.api.utils.ReportBuilder;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.ClinicalTest;
 import utsw.bicf.answer.model.CosmicFusion;
 import utsw.bicf.answer.model.CosmicSampleFusion;
 import utsw.bicf.answer.model.GenieCNA;
@@ -51,8 +60,9 @@ import utsw.bicf.answer.model.extmapping.CosmicRawData;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
-import utsw.bicf.answer.reporting.ehr.EpicXML;
 import utsw.bicf.answer.reporting.ehr.HL7v251Factory;
+import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
+import utsw.bicf.answer.reporting.finalreport.FinalReportTemplateConstants;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.EmailProperties;
 import utsw.bicf.answer.security.FileProperties;
@@ -782,7 +792,7 @@ public class APIController {
 	@ResponseBody
 	public String testEpicReportHL7(Model model, @RequestParam String token, 
 			@RequestParam String caseId, 
-			HttpSession httpSession) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
+			HttpSession httpSession, @RequestParam(defaultValue = "false") Boolean hl7Only ) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from testEpicReportHL7");
 		long now = System.currentTimeMillis();
 		// check that token is valid
@@ -812,6 +822,11 @@ public class APIController {
 		//TODO get the finalized report instead
 		Report testReport = reports.get(reports.size() - 1);
 		Report reportDetails = utils.getReportDetails(testReport.getMongoDBId().getOid());
+		String possibleDirtyData = reportDetails.createObjectJSON();
+		String cleanData = possibleDirtyData.replaceAll("\\\\t", " ").replaceAll("\\\\n", "<br/>");
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER,	true);
+		reportDetails = mapper.readValue(cleanData, Report.class);
 //		EpicXML epicXML = new EpicXML(reportDetails, caseSummary);
 //		String xml = epicXML.buildXML();
 //		
@@ -819,11 +834,112 @@ public class APIController {
 //		response.setSuccess(true);
 //		response.setPayload(xml);
 		
-		HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils);
-		String hl7 = hl7Factory.reportToHL7();
-		response.setIsAllowed(true);
-		response.setSuccess(true);
-		response.setPayload(hl7);
+		User signedBy = modelDAO.getUserByUserId(reportDetails.getModifiedBy());
+		ClinicalTest clinicalTest = modelDAO.getClinicalTest(caseSummary.getLabTestName());
+		if (clinicalTest == null) {
+			clinicalTest = modelDAO.getClinicalTest(FinalReportTemplateConstants.DEFAULT_TITLE);
+		}
+		try {
+			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
+			File pdfFile = pdfReport.saveFinalized();
+			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile);
+			String hl7 = hl7Factory.reportToHL7();
+			if (hl7Only) {
+				return hl7;
+			}
+			response.setIsAllowed(true);
+			response.setSuccess(true);
+			response.setPayload(hl7);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setMessage("Something went wrong when creating the report");
+		}
+		
+	
+		return response.createObjectJSON();
+	}
+	
+	@RequestMapping("/sendEpicReportHL7")
+	@ResponseBody
+	public String sendEpicReportHL7(Model model, @RequestParam String token, 
+			@RequestParam String caseId, 
+			HttpSession httpSession) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
+		httpSession.setAttribute("user", "API User from sendEpicReportHL7");
+		long now = System.currentTimeMillis();
+		// check that token is valid
+		Token theToken = modelDAO.getUpdateGenieDataToken(token);
+		AjaxResponse response = new AjaxResponse();
+		response.setSuccess(false);
+		response.setIsAllowed(false);
+		if (theToken == null) {
+			response.setMessage("You are not allowed to run this servlet.");
+			return response.createObjectJSON();
+		}
+		User user = ControllerUtil.getSessionUser(httpSession);
+		RequestUtils utils = new RequestUtils(modelDAO);
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		
+		if (caseSummary == null) {
+			response.setMessage("Case " + caseId + " does not exist.");
+			return response.createObjectJSON();
+		}
+		
+		List<Report> reports = utils.getExistingReports(caseId);
+		if (reports == null || reports.isEmpty()) {
+			response.setMessage("No report for " + caseId + ".");
+			return response.createObjectJSON();
+		}
+		//ATM getting the latest report
+		//TODO get the finalized report instead
+//		Report testReport = reports.get(reports.size() - 1);
+		Report finalReport = null;
+		for (Report r : reports) {
+			if (r.getFinalized() != null && r.getDateFinalized() != null && r.getFinalized() == true) {
+				finalReport = r;
+				break;
+			}
+		}
+		Report reportDetails = utils.getReportDetails(finalReport.getMongoDBId().getOid());
+		String possibleDirtyData = reportDetails.createObjectJSON();
+		String cleanData = possibleDirtyData.replaceAll("\\\\t", " ").replaceAll("\\\\n", "<br/>");
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER,	true);
+		reportDetails = mapper.readValue(cleanData, Report.class);
+		
+		User signedBy = modelDAO.getUserByUserId(reportDetails.getModifiedBy());
+		ClinicalTest clinicalTest = modelDAO.getClinicalTest(caseSummary.getLabTestName());
+		if (clinicalTest == null) {
+			clinicalTest = modelDAO.getClinicalTest(FinalReportTemplateConstants.DEFAULT_TITLE);
+		}
+		try {
+			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
+			File pdfFile = pdfReport.saveFinalized();
+			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile);
+			String hl7 = hl7Factory.reportToHL7();
+			
+			Socket socket = new Socket(otherProps.getEpicHl7Hostname(), otherProps.getEpicHl7Port());
+			
+			OutputStream output = socket.getOutputStream();
+			PrintWriter writer = new PrintWriter(output, true);
+			writer.println(hl7);
+			InputStream input = socket.getInputStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				System.out.println(line); //handle response?
+			}
+			response.setIsAllowed(true);
+			response.setSuccess(true);
+			response.setPayload(hl7);
+		} catch (UnknownHostException ex) {
+			System.out.println("Server not found: " + ex.getMessage());
+		} catch (IOException ex) {
+			System.out.println("I/O error: " + ex.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setMessage("Something went wrong when creating the report");
+		}
+
 	
 		return response.createObjectJSON();
 	}

@@ -21,7 +21,7 @@ Vue.component('edit-annotations', {
         caseIcon: {default: "", type: String},
         caseType: {default: "", type: String},
         userAnnotations: { default: () => [], type: Array },
-        oncotree: {default: () => [], type: Array},
+        // oncotree: {default: () => [], type: Array},
         single: {default: false, type: Boolean}, //only one annotation at a time (for editing outside of a case)
         outsideACase: {default: true, type: Boolean} //to display the variant details or not
     },
@@ -390,7 +390,7 @@ Vue.component('edit-annotations', {
                                                                 <v-tooltip bottom>
                                                                     <v-btn color="primary" slot="activator" flat icon @click="fetchNCTData(annotation)" 
                                                                     :disabled="annotation.trial.nctId && !isNCTNumberList(annotation.trial.nctId)"
-                                                                    :lodaing="loadingNCTData">
+                                                                    :loading="loadingNCTData">
                                                                         <v-icon>cloud_download</v-icon>
                                                                     </v-btn>
                                                                     <span>Auto populate Clinical Trial from NCT ID</span>
@@ -525,7 +525,7 @@ Vue.component('edit-annotations', {
                 :original-chr="currentVariant.chrom"
                 :original-pos="currentVariant.pos"
                 :original-pos-old-build="getHG19Pos()"
-                :oncotree-items="oncotree"
+                
                 @reload-values="reloadLookupValues"
                 ></lookup-panel>
                 </v-flex>
@@ -920,19 +920,18 @@ Vue.component('edit-annotations', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
         selectBreadth(annotation, breadth) {
             if (breadth && !annotation.selectedBreadth) {
@@ -1085,7 +1084,7 @@ Vue.component('edit-annotations', {
             return -1;
         },
         reloadLookupValues(ref, cnvGeneName, activeButton) {
-            this.$emit("reload-values", [this, ref, cnvGeneName, activeButton]);
+            this.$emit("reload-values", [null, ref, cnvGeneName, activeButton]);
         }
     },
     created: function () {

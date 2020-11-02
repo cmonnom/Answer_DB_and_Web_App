@@ -30,7 +30,7 @@ public class Virus {
 	Boolean selected;
 	List<MongoDBId> annotationIdsForReporting;
 	String type;
-
+	String caseId;
 	
 	Map<Integer, Boolean> annotatorSelections = new HashMap<Integer, Boolean>();
 	Map<Integer, String> annotatorDates = new HashMap<Integer, String>();
@@ -169,6 +169,14 @@ public class Virus {
 
 	public void setHighestTier(String highestTier) {
 		this.highestTier = highestTier;
+	}
+
+	public String getCaseId() {
+		return caseId;
+	}
+
+	public void setCaseId(String caseId) {
+		this.caseId = caseId;
 	}
 
 

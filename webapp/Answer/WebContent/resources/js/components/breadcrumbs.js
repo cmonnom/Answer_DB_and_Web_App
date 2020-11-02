@@ -15,21 +15,27 @@ Vue.component('breadcrumbs', {
 
   },
   methods: {
+    addLevelHandler(level) {
+      this.breadcrumbs.push(level);
+    },
+    removeLevelHandler() {
+      this.breadcrumbs.pop();
+      // bus.$emit("breadcrumb-level-down", this.breadcrumbs[this.breadcrumbs.length -1].closingFunction);
+    }
   },
   mounted: function() {
-    bus.$on('add-breadcrumb-level', (level) => {
-        this.breadcrumbs.push(level);
-    });
-    bus.$on('remove-breadcrumb-level', () => {
-        this.breadcrumbs.pop();
-        bus.$emit("breadcrumb-level-down", this.breadcrumbs[this.breadcrumbs.length -1].closingFunction);
-    });
+    // bus.$on('add-breadcrumb-level',this.addLevelHandler);
+    // bus.$on('remove-breadcrumb-level', this.removeLevelHandler);
   },
   created: function () {
   },
+  beforeDestroy() {
+    // bus.$off('add-breadcrumb-level',this.addLevelHandler);
+    // bus.$off('remove-breadcrumb-level', this.removeLevelHandler);
+  },
   destroyed: function () {
-    bus.$off('add-breadcrumb-level');
-    bus.$off('remove-breadcrumb-level');
+    // bus.$off('add-breadcrumb-level');
+    // bus.$off('remove-breadcrumb-level');
     
   },
   watch: {

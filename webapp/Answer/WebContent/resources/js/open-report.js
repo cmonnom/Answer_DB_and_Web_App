@@ -371,7 +371,7 @@ const OpenReport = {
             <div>
                 <data-table ref="indicatedTherapies" :fixed="false" :fetch-on-created="false" table-title="Indicated Therapies"
                     initial-sort="gene" no-data-text="No Data" :show-pagination="true" title-icon="mdi-pill" :color="colors.openReport"
-                    :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
+                    :add-row-button="canProceed('canReview') && !readonly"
                     add-row-description="(for this report only. Unsaved changes will be discarded)"
                     @adding-new-row="handleNewIndicatedTherapyRow">
                 </data-table>
@@ -380,12 +380,12 @@ const OpenReport = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-flex xs12 xl10 v-show="clinicalTrialsVisible" pb-3>
+        <v-flex xs12 xl9 v-show="clinicalTrialsVisible" pb-3>
             <div>
                 <data-table ref="clinicalTrials" :fixed="false" :fetch-on-created="false" table-title="Clinical Trials"
                 :enable-select-all="!fullReport.finalized"
                     initial-sort="biomarker" no-data-text="No Data" :show-pagination="true" title-icon="mdi-scale-balance"
-                    :color="colors.trials" icon-color="white" icon-active-color="error" :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
+                    :color="colors.trials" icon-color="white" icon-active-color="error"  :add-row-button="canProceed('canReview') && !readonly"
                     :enable-selection="canProceed('canReview') && !readonly"
                     @datatable-selection-changed="handleSelectionChanged"
                     add-row-description="(for this report only. Unsaved changes will be discarded)"
@@ -400,7 +400,7 @@ const OpenReport = {
         <div>
             <data-table ref="strongCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Strong Clinical Significance"
                 initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
-                :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
+                 :add-row-button="canProceed('canReview') && !readonly"
                 add-row-description="(for this report only. Unsaved changes will be discarded)"
                 @adding-new-row="handleNewStrongCSRow"
                 :additional-headers="additionalCSHeaders">
@@ -414,7 +414,7 @@ const OpenReport = {
     <div>
         <data-table ref="possibleCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Possible Clinical Significance"
             initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
-            :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
+             :add-row-button="canProceed('canReview') && !readonly"
             add-row-description="(for this report only. Unsaved changes will be discarded)"
             @adding-new-row="handleNewPossibleCSRow"
             :additional-headers="additionalCSHeaders">
@@ -428,7 +428,7 @@ const OpenReport = {
     <div>
         <data-table ref="unknownCS" :fixed="false" :fetch-on-created="false" table-title="Variants of Unknown Clinical Significance"
             initial-sort="geneVariant" no-data-text="No Data" :show-pagination="true" title-icon="mdi-message-bulleted" :color="colors.variants"
-            :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
+             :add-row-button="canProceed('canReview') && !readonly"
             add-row-description="(for this report only. Unsaved changes will be discarded)"
             @adding-new-row="handleNewUnknownCSRow">
         </data-table>
@@ -437,11 +437,11 @@ const OpenReport = {
 </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-flex xs12 xl9 v-show="copyNumberAlterationsVisible" pt-3>
+        <v-flex xs12 xl9 v-show="copyNumberAlterationsVisible" pb-3>
             <div>
                 <data-table ref="copyNumberAlterations" :fixed="false" :fetch-on-created="false" table-title="Copy Number Alterations"
                     initial-sort="gene" no-data-text="No Data" :show-pagination="true" title-icon="assignment" :color="colors.cnvs"
-                    :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
+                     :add-row-button="canProceed('canReview') && !readonly"
                     add-row-description="(for this report only. Unsaved changes will be discarded)"
                     @adding-new-row="handleNewCNVRow"             >
                 </data-table>
@@ -450,11 +450,11 @@ const OpenReport = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-        <v-flex xs12 xl9 v-show="geneFusionVisible" pt-3>
+        <v-flex xs12 xl9 v-show="geneFusionVisible" pb-3>
             <div>
                 <data-table ref="geneFusions" :fixed="false" :fetch-on-created="false" table-title="Gene Fusions"
                     initial-sort="fusionName" no-data-text="No Data" :show-pagination="true" title-icon="assignment"
-                    :color="colors.fusions" :disable-sticky-header="true" :add-row-button="canProceed('canReview') && !readonly"
+                    :color="colors.fusions"  :add-row-button="canProceed('canReview') && !readonly"
                     add-row-description="(for this report only. Unsaved changes will be discarded)"
                     @adding-new-row="handleNewFTLRow">
                 </data-table>
@@ -463,7 +463,7 @@ const OpenReport = {
     </v-slide-y-transition>
 
     <v-slide-y-transition>
-    <v-flex xs12 xl9 v-show="pmidPanelVisible" pt-3>
+    <v-flex xs12 xl9 v-show="pmidPanelVisible" pb-3>
         <report-pubmed-ids :color="colors.pubmeds" ref="pubmedTable"
         :pubmeds="fullReport.pubmeds"
         @close-pmid-panel="pmidPanelVisible = false"
@@ -473,11 +473,11 @@ const OpenReport = {
 </v-slide-y-transition>
 
 <v-slide-y-transition>
-        <v-flex xs12 xl9 v-show="lowCoverageVisible" pt-3>
+        <v-flex xs12 xl9 v-show="lowCoverageVisible" pb-3>
             <div>
                 <data-table ref="lowCoverages" :fixed="false" :fetch-on-created="false" table-title="Exons with Median Depth < 100X"
                     initial-sort="chr" no-data-text="No Data" :show-pagination="true" title-icon="assignment" 
-                    :disable-sticky-header="true"
+                    
                 >
                 </data-table>
             </div>
@@ -622,16 +622,20 @@ const OpenReport = {
         addNCTIDHeaderAction(headers) {
             for (var i = 0; i < headers.length; i++) {
                 if (headers[i].value == "nctid") {
-                    headers[i].itemAction = this.handleNCTIdLink;
+                    headers[i].urlForItem = this.getNCTIDLink;
                     headers[i].actionIcon = "open_in_new";
+                    headers[i].isLink = "true";
                     headers[i].actionTooltip = "Open Trial in new Tab";
                     break;
                 }
             }
         },
-        handleNCTIdLink(item) {
-            var link = "https://clinicaltrials.gov/ct2/show/" + item.nctid;
-            window.open(link, "_blank");
+        // handleNCTIdLink(item) {
+        //     var link = "https://clinicaltrials.gov/ct2/show/" + item.nctid;
+        //     window.open(link, "_blank");
+        // },
+        getNCTIDLink(item) {
+            return "https://clinicaltrials.gov/ct2/show/" + item.nctid;
         },
         isSaveDisabled() {
             return !this.canProceed('canReview') 
@@ -787,7 +791,7 @@ const OpenReport = {
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
         canProceed(field) {
             if (isAdmin) {
@@ -1028,14 +1032,13 @@ const OpenReport = {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
             this.splashProgress = 100; //should dismiss the splash dialog
 

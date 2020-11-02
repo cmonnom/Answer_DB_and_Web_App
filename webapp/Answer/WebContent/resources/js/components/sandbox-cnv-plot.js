@@ -766,14 +766,13 @@ Vue.component('sandbox-cnv-plot', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
             // this.splashProgress = 100; //should dismiss the splash dialog
             // this.waitingForAjaxMessage = "There were some errors while saving";
@@ -781,7 +780,7 @@ Vue.component('sandbox-cnv-plot', {
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
     },
     mounted: function () {
@@ -789,6 +788,11 @@ Vue.component('sandbox-cnv-plot', {
     },
     created: function () {
 
+    },
+    beforeDestroy() {
+        if (document.getElementById(this.cnvPlotId)) {
+            Plotly.purge(this.cnvPlotId);
+        }
     },
     destroyed: function () {
 

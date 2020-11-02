@@ -6,7 +6,6 @@ const AnnotationBrowser = {
     <v-dialog v-model="showGoodiesPanel" content-class="no-transition" full-width hide-overlay fullscreen>
     <v-layout row wrap fill-height text-xs-center>
     <v-flex xs12>
-    <goodies2 ref="goodiesPanel" @end-goodies="showGoodiesPanel = false"></goodies2>
     </v-flex>
     <v-flex xs12 >
     <span class="display-1">Enjoy a quick break...</span><br/>
@@ -75,7 +74,7 @@ const AnnotationBrowser = {
             <v-tabs-items v-model="annotationTabActive">
             <!-- Trials -->
                 <v-tab-item value="tab-trial">
-            <v-container grid-list-md fluid pt-0 pl-1 pr-1>
+            <v-container grid-list-md fluid  pa-0 pt-2>
                 <v-layout row wrap>
                     <v-slide-y-transition>
                         <v-flex xs12 v-show="searchTrialAnnotationsVisible">
@@ -109,7 +108,7 @@ const AnnotationBrowser = {
             </v-tab-item>
             <!-- SNPs -->
             <v-tab-item value="tab-snp">
-            <v-container grid-list-md fluid pt-0 pl-1 pr-1>
+            <v-container grid-list-md fluid pa-0 pt-2>
                 <v-layout row wrap>
                     <v-slide-y-transition>
                         <v-flex xs12 v-show="searchSNPAnnotationsVisible">
@@ -117,8 +116,8 @@ const AnnotationBrowser = {
                                 <v-card-text class="pl-2 pr-2 pb-3 subheading">
                                     <v-layout row wrap>
                                     <v-flex xs12>
-                                    <span v-show="snpGeneSearch">SNP Annotations for <b>{{ snpGeneSearch }}</b>: <span v-text="formatSNPCount()"></span></span>
-                                    <span v-show="!snpGeneSearch">Select a gene to show its annotations</b></span>
+                                    <span v-if="snpGeneSearch">SNP Annotations for <b>{{ snpGeneSearch }}</b>: <span v-text="formatSNPCount()"></span></span>
+                                    <span v-else>Select a gene to show its annotations</b></span>
                                     </v-flex>
                                     <v-flex xs12 md6 pt-3 mt-1>
                                     <v-layout row wrap>
@@ -290,13 +289,13 @@ const AnnotationBrowser = {
    
     handleDialogs(response, callback) {
       if (response.isXss) {
-        bus.$emit("xss-error", [this, response.reason]);
+        bus.$emit("xss-error", [null, response.reason]);
       }
       else if (response.isLogin) {
-        bus.$emit("login-needed", [this, callback])
+        bus.$emit("login-needed", [null, callback])
       }
       else if (response.success === false) {
-        bus.$emit("some-error", [this, response.message]);
+        bus.$emit("some-error", [null, response.message]);
       }
     },
     matchTrialAnnotationFilter() {
@@ -555,7 +554,7 @@ const AnnotationBrowser = {
     },
     handleAxiosError(error) {
       console.log(error);
-      bus.$emit("some-error", [this, error]);
+      bus.$emit("some-error", [null, error]);
     },
     handleEditAnnotationOpening() {
       if (this.urlQuery.edit === true) {

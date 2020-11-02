@@ -6,7 +6,7 @@ function getDialogMaxHeight(offset) {
     if (offset == null) {
         offset = 130;
     }
-    var height = window.innerHeight - offset;
+    let height = window.innerHeight - offset;
     return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: auto";
 }
 
@@ -14,7 +14,7 @@ function getDialogMaxHeightOuter(offset) {
     if (offset == null) {
         offset = 130;
     }
-    var height = window.outerHeight - offset;
+    let height = window.outerHeight - offset;
     return "min-height:" + height + "px;max-height:" + height + "px; overflow-y: hidden;";
 }
 
@@ -22,7 +22,7 @@ function getDialogMaxHeightNumber(offset) {
     if (offset == null) {
         offset = 130;
     }
-    var height = window.innerHeight - offset;
+    let height = window.innerHeight - offset;
     return height;
 }
 
@@ -33,9 +33,9 @@ var splashInterval;
 
 //format chromosome name with leading 0 if needed
 function formatChrom(chrom) {
-    var formattedChrNb = null;
+    let formattedChrNb = null;
     if (chrom && (chrom.startsWith("chr") || chrom.startsWith("CHR"))) {
-        var chrNb = chrom.substring(3, chrom.length);
+        let chrNb = chrom.substring(3, chrom.length);
         if (!isNaN(chrNb)) {
             formattedChrNb = "CHR" + (parseInt(chrNb) < 10 ? '0' : '') + chrNb;
         }
@@ -60,7 +60,7 @@ function setStart() {
  * the number of seconds (decimal) passed since
  */
 function displayDuration() {
-    var end = moment();
-    var duration = moment.duration(end.diff(start));
+    let end = moment();
+    let duration = moment.duration(end.diff(start));
     console.log(duration.asSeconds());
 }

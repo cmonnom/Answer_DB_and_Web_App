@@ -4,7 +4,7 @@ Vue.component('login-full-page2', {
     props: {
         dataUrlRoot: {default: webAppRoot, type: String}
     },
-    template: `<div>
+    template: /*html*/`<div>
 
     <v-dialog v-model="videoVisible" :max-width="isXSWidth() ? '100%' :'728'">
   <v-card>
@@ -23,7 +23,7 @@ Vue.component('login-full-page2', {
 
   <v-toolbar fixed app flat extended class="hidden-sm-and-up" >
     <div class="toolbar-image">
-      <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" />
+      <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" /> 
     </div>
     <v-toolbar-title class="headline">
       Answer
@@ -35,6 +35,10 @@ Vue.component('login-full-page2', {
         :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'">
     </div>
     <v-spacer></v-spacer>
+    <v-tooltip bottom>
+    <v-btn slot="activator" flat @click="openGeneSearch()" dark class="teal lighten-2">Gene Search</v-btn>
+    <span>Search and Download <br/> genes available in our panels</span>
+    </v-tooltip>
     <v-btn flat @click="doShowLoginDialog()" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
   </v-toolbar>
 
@@ -52,6 +56,10 @@ Vue.component('login-full-page2', {
     <img class="toolbar-image" alt="utsw master logo"
       :src="dataUrlRoot + '/resources/images/utsw-master-logo-lg.png'">
   </div>
+  <v-tooltip bottom>
+  <v-btn slot="activator" flat @click="openGeneSearch()" dark class="teal lighten-2">Gene Search</v-btn>
+  <span>Search and Download <br/> genes available in our panels</span>
+  </v-tooltip>
   <v-btn flat @click="doShowLoginDialog()" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
 </v-toolbar>
 
@@ -444,6 +452,9 @@ Vue.component('login-full-page2', {
           this.showLoginDialog = true;
           this.$nextTick(() => { this.stopCarousel();
           this.$refs.loginBox.userNameFocus()});
+        },
+        openGeneSearch() {
+          window.open("./search/index.html", "_blank");
         }
     },
     mounted: function () {

@@ -1,13 +1,17 @@
 package utsw.bicf.answer.reporting.ehr;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.client.ClientProtocolException;
 
 import ca.uhn.hl7v2.DefaultHapiContext;
@@ -16,9 +20,11 @@ import ca.uhn.hl7v2.HapiContext;
 import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.Type;
 import ca.uhn.hl7v2.model.v251.datatype.CWE;
+import ca.uhn.hl7v2.model.v251.datatype.ED;
 import ca.uhn.hl7v2.model.v251.datatype.NM;
 import ca.uhn.hl7v2.model.v251.datatype.ST;
 import ca.uhn.hl7v2.model.v251.message.ADT_A01;
+import ca.uhn.hl7v2.model.v251.segment.DG1;
 import ca.uhn.hl7v2.model.v251.segment.MSH;
 import ca.uhn.hl7v2.model.v251.segment.OBX;
 import ca.uhn.hl7v2.model.v251.segment.PID;
@@ -43,43 +49,66 @@ public class HL7v251Factory {
 	Report report;
 	OrderCase caseSummary;
 	RequestUtils requestUtils;
+	File pdfFile;
 	
-	
-	public HL7v251Factory(Report report, OrderCase caseSummary, RequestUtils requestUtils) {
+	public HL7v251Factory(Report report, OrderCase caseSummary, RequestUtils requestUtils, File pdfFile) {
 		super();
 		this.report = report;
 		this.caseSummary = caseSummary;
 		this.requestUtils = requestUtils;
+		this.pdfFile = pdfFile;
 	}
 	
 	public String reportToHL7() throws HL7Exception, IOException, URISyntaxException {
+//		ORM_O01 orm = new ORM_O01();
+//		orm.initQuickstart("ORM", "O01", null);
 		ADT_A01 adt = new ADT_A01();
-		adt.initQuickstart("ADT", "A01", "P");
-
+//		adt.initQuickstart("ADT", "A01", "P");
+		adt.initQuickstart("ORM", "O01", "T");
+		
 		generateData(adt);
+//		generateData(orm);
 		
 		// Now, let's encode the message and look at the output
 		HapiContext context = new DefaultHapiContext();
 		Parser parser = context.getPipeParser();
 		String encodedMessage = parser.encode(adt);
 		context.close();
-		return encodedMessage.replaceAll("\\r", "<br/>");
+		
+		encodedMessage = encodedMessage.replace("^ADT_A01", ""); //hack to be able to use ADT objects for Java
+		
+		//add MLP wrapper
+		encodedMessage = new String(new byte[] {0x0b}) + encodedMessage + new String(new byte[] {0x1c, 0x0d});
+		return encodedMessage;
 	}
 
-	public void generateData(ADT_A01 adt) throws DataTypeException, ClientProtocolException, IOException, URISyntaxException {
+	private void generateData(ADT_A01 orm) throws DataTypeException, ClientProtocolException, IOException, URISyntaxException {
 		// Populate the MSH Segment
-		MSH mshSegment = adt.getMSH();
-		mshSegment.getSendingApplication().getNamespaceID().setValue("Answer UTSW");
-		mshSegment.getSendingFacility().getNamespaceID().setValue("UTSW");
+		MSH mshSegment = orm.getMSH();
+		mshSegment.getSendingApplication().getNamespaceID().setValue(UTSWProps.SENDING_APPLICATION);
+		mshSegment.getSendingFacility().getNamespaceID().setValue(UTSWProps.SENDING_FACILITY);
+		mshSegment.getReceivingApplication().getNamespaceID().setValue(UTSWProps.RECEIVING_APPLICATION);
+		mshSegment.getReceivingFacility().getNamespaceID().setValue(UTSWProps.RECEIVING_FACILITY);
+		mshSegment.getDateTimeOfMessage().getTime().setValue(new Date());
 
 		// Populate the PID Segment
-		PID pid = adt.getPID(); 
+//		ORM_O01_PATIENT pid = orm.getPATIENT();
+//		pid.getPID().getSetIDPID().setValue("1");
+//		pid.getSetIDPID().setValue("1");
+		PID pid = orm.getPID();
 		pid.getSetIDPID().setValue("1");
 		String[] patientName = caseSummary.getPatientName().split(",");
 		pid.getPatientName(0).getFamilyName().getSurname().setValue(patientName[0]);
 		pid.getPatientName(0).getGivenName().setValue(patientName[1]);
-		pid.getPatientIdentifierList(0).getIDNumber().setValue(caseSummary.getCaseName());
-		pid.getPatientIdentifierList(1).getIDNumber().setValue(caseSummary.getCaseId());
+		pid.getPatientIdentifierList(0).getIDNumber().setValue(caseSummary.getMedicalRecordNumber());
+		pid.getPatientIdentifierList(1).getIDNumber().setValue(caseSummary.getEpicOrderNumber());
+		pid.getPatientIdentifierList(2).getIDNumber().setValue(caseSummary.getCaseId());
+		
+		//Diagnosis
+		DG1 diagnosis = orm.getDG1();
+		diagnosis.getSetIDDG1().setValue("1");
+		diagnosis.getDiagnosisCodingMethod().setValue(UTSWProps.DIAGNOSIS_CODING_METHOD);
+		diagnosis.getDiagnosisCodeDG1().getText().setValue(caseSummary.getIcd10());
 		
 		List<TempusTherapy> therapies = new ArrayList<TempusTherapy>();
 		List<TempusVariant> variants = new ArrayList<TempusVariant>();
@@ -101,7 +130,7 @@ public class HL7v251Factory {
 		}
 		
 		for (TempusVariant tv : variants) {
-			addVariant(adt, tv);
+			addVariant(orm, tv);
 		}
 		
 		for (IndicatedTherapy therapy :report.getIndicatedTherapies()) {
@@ -117,13 +146,13 @@ public class HL7v251Factory {
 		
 		//case level entries
 		
-		NM obxTMB = new NM(adt.getMessage());
+		NM obxTMB = new NM(orm.getMessage());
 		obxTMB.setValue(String.format("%.2f", caseSummary.getTumorMutationBurden()));
-		OBX tmbSegment = createCaseOBX(adt, LOINC.getCode("Tumor Mutational Burden (Gene Mut Tested Bld/T)"), obxTMB, null);
+		OBX tmbSegment = createCaseOBX(orm, LOINC.getCode("Tumor Mutational Burden (Gene Mut Tested Bld/T)"), obxTMB, null);
 		tmbSegment.getUnits().getIdentifier().setValue("m/MB");
 		
 		//Therapy
-		addTherapySegments(adt, therapies);
+		addTherapySegments(orm, therapies);
 		
 		//Trials
 		List<TempusTrial> trials = new ArrayList<TempusTrial>();
@@ -133,7 +162,15 @@ public class HL7v251Factory {
 			trial.setBiomarkers(Arrays.asList(biomarkerTrial.getBiomarker()));
 			trials.add(trial);
 		}
-		addClinicalTrialSegments(adt, trials);
+		addClinicalTrialSegments(orm, trials);
+		
+		//Base64 PDF
+		ED obxPDF = new ED(orm.getMessage());
+		obxPDF.getDataSubtype().setValue("PDF");
+		obxPDF.getEncoding().setValue("Base64");
+		byte[] bytes = FileUtils.readFileToByteArray(this.pdfFile);
+		obxPDF.getData().setValue(Base64.getEncoder().encodeToString(bytes));
+		OBX pdfSegment = createCaseOBX(orm, obxPDF);
 	}
 	
 	public TempusVariant buildVariant(String clinicalSignificance, GeneVariantAndAnnotation gva, boolean skipAnnotation) throws ClientProtocolException, IOException, URISyntaxException {
@@ -310,4 +347,16 @@ public class HL7v251Factory {
 		utils.incrementObservationCount();
 		return obxSegment;
 	}
+	
+	private OBX createCaseOBX(ADT_A01 adt, Type value) throws DataTypeException {
+		OBX obxSegment = adt.getOBX(utils.getObservationId() - 1);
+		obxSegment.getValueType().setValue(value.getName());
+		obxSegment.getSetIDOBX().setValue(utils.getObservationId() + "");
+		obxSegment.getObservationIdentifier().getIdentifier().setValue(UTSWProps.PDF_IDENTIFIER);
+		obxSegment.getObservationIdentifier().getText().setValue(UTSWProps.PDF_TEXT);
+		obxSegment.getObservationValue(0).setData(value);
+		utils.incrementObservationCount();
+		return obxSegment;
+	}
+	
 }

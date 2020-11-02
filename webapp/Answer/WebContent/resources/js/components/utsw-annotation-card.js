@@ -129,14 +129,14 @@ Vue.component('utsw-annotation-card', {
                 <v-flex xs12>
                     <span v-if="annotation.pmids" class="selectable">PubMed Ids:</span>
                     <v-tooltip v-if="id" bottom v-for="id in annotation.pmids" :key="id">
-                        <v-btn @click="handlePubMedIdLink(id)" slot="activator">
+                        <v-btn :href="getPubMedIdLink(id)" target="_blank" rel="noreferrer" slot="activator">
                             {{ id }}
                         </v-btn>
                         <span>Open in new tab</span>
                     </v-tooltip>
                     <span v-if="annotation.trial && annotation.trial.nctId" class="selectable">Open Trial:</span>
                     <v-tooltip v-if="annotation.trial" bottom>
-                        <v-btn @click="handleNCTIdLink(annotation.trial.nctId)" slot="activator">
+                        <v-btn :href="getNCTIDLink(annotation.trial.nctId)" target="_blank" rel="noreferrer" slot="activator">
                             {{ annotation.trial.nctId }}
                         </v-btn>
                         <span>Open in new tab</span>
@@ -163,13 +163,19 @@ Vue.component('utsw-annotation-card', {
         }
     },
     methods: {
-        handlePubMedIdLink(id) {
-            var link = "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id;
-            window.open(link, "_blank");
+        // handlePubMedIdLink(id) {
+        //     var link = "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id;
+        //     window.open(link, "_blank");
+        // },
+        getPubMedIdLink(id) {
+            return "https://www.ncbi.nlm.nih.gov/pubmed/?term=" + id;
         },
-        handleNCTIdLink(id) {
-            var link = "https://clinicaltrials.gov/ct2/show/" + id;
-            window.open(link, "_blank");
+        // handleNCTIdLink(id) {
+        //     var link = "https://clinicaltrials.gov/ct2/show/" + id;
+        //     window.open(link, "_blank");
+        // },
+        getNCTIDLink(id) {
+            return "https://clinicaltrials.gov/ct2/show/" + id;
         },
         parseDate(annotation) {
             if (annotation.modifiedDate) {

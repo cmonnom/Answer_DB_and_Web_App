@@ -2,7 +2,7 @@ Vue.component('lookup-panel', {
     props: {
         title: {default: "Lookup Tool", type: String},
         standalone: {default: true, type:Boolean},
-        oncotreeItems: {default: () => [], type:Array},
+        // oncotreeItems: {default: () => [], type:Array},
         originalVariant: {default: "", type:String},
         originalChr: {default: "", type:String},
         originalPos: {default: -1, type:Number},
@@ -21,7 +21,7 @@ Vue.component('lookup-panel', {
                 <td class="pr-2">{{ item.version }}</td>
                 <td>
                 <v-tooltip bottom>
-                    <v-btn slot="activator" icon :href="item.url" target="_blank"
+                    <v-btn slot="activator" icon :href="item.url" target="_blank" rel="noreferrer"
                         @click.stop class="ma-0 primary--text">
                         <v-icon>mdi-open-in-new</v-icon>
                     </v-btn>
@@ -240,7 +240,7 @@ Vue.component('lookup-panel', {
                                     v-if="oncotree.externalReferences && oncotree.externalReferences.NCI && currentOncotreeCode">
                                     <v-btn icon slot="activator"
                                         :href="'https://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI_Thesaurus&code=' + oncotree.externalReferences.NCI[0]"
-                                        target="_blank">
+                                        target="_blank" rel="noreferrer">
                                         <v-icon class="primary--text">mdi-open-in-new</v-icon>
                                     </v-btn>
                                     <span>Open {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }} in the
@@ -251,7 +251,7 @@ Vue.component('lookup-panel', {
                                     No NCI Thesaurus entry for {{ lastOncotreeCode }}: {{ lastOncotreeCodeLabel }}<br />
                                     You can try a manual search directly in the NCI Thesaurus here:
                                     <v-btn slot="activator" icon
-                                        href="https://ncit.nci.nih.gov/ncitbrowser/pages/home.jsf" target="_blank">
+                                        href="https://ncit.nci.nih.gov/ncitbrowser/pages/home.jsf" target="_blank" rel="noreferrer">
                                         <v-icon class="primary--text">mdi-open-in-new</v-icon>
                                     </v-btn>
                                 </span>
@@ -340,6 +340,7 @@ Vue.component('lookup-panel', {
             loading: false,
             currentOncotreeCode: {},
             oncotree: {},
+            oncotreeItems: [],
             currentVariant: "",
             geneSymbolErrorMessage: null,
            
@@ -388,7 +389,7 @@ Vue.component('lookup-panel', {
             this.panelVisible = !this.panelVisible;
             this.resetValues();
             if (!this.panelVisible) {
-                bus.$emit("need-layout-resize", this);
+                bus.$emit("need-layout-resize");
             }
         },
         resetValues() {
@@ -415,11 +416,10 @@ Vue.component('lookup-panel', {
                 bus.$emit("not-allowed", [this.reponse]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback]);
+                bus.$emit("login-needed", [null, callback]);
                 this.lastGene = null;
                 this.lastOncotreeCode = null;
                 this.lastOncotreeCodeLabel = null;
@@ -428,7 +428,7 @@ Vue.component('lookup-panel', {
             }
             else if (response.success === false) {
                 this.splashProgress = 100; //should dismiss the splash dialog
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         handleButton(button) {
@@ -462,15 +462,15 @@ Vue.component('lookup-panel', {
             }
            this.currentGene = this.$route.query.gene;
            this.currentVariant = this.$route.query.variant;
-           var oncotreeItems = this.oncotreeItems.filter(o => o.text == this.$route.query.oncotree);
+           var oncotreeItemsFiltered = oncotree.filter(o => o.text == this.$route.query.oncotree);
            this.currentAmpDel = this.$route.query.ampDel;
            this.currentFive = this.$route.query.five;
            this.currentThree = this.$route.query.three;
-           var oncotree = null;
-           if (oncotreeItems && oncotreeItems[0]) {
-               oncotree = oncotreeItems[0];
+           var oncotreeCode = null;
+           if (oncotreeItemsFiltered && oncotreeItemsFiltered[0]) {
+            oncotreeCode = oncotreeItemsFiltered[0];
            }
-           this.currentOncotreeCode = oncotree;
+           this.currentOncotreeCode = oncotreeCode;
            this.currentlyActive = this.$route.query.button;
         },
         submitForm() {
@@ -763,8 +763,12 @@ Vue.component('lookup-panel', {
     mounted() {
         this.uniqId = "_uniq" + Math.round(Math.random() * 10000);
         this.updateVersion();
+        this.oncotreeItems = oncotree;
     },
     created: function () {
+    },
+    beforeDestroy() {
+        this.oncotreeItems = [];
     },
     destroyed: function () {
     },

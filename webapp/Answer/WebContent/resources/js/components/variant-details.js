@@ -35,7 +35,7 @@ Vue.component('variant-details', {
     - Click on the legend to show/hide series<br/>
     - Mouse over a data point to get more information (tooltip)<br/>
     - You can highlight specific genes by clicking on the list in the CNV Variant Details panel.</span>
-    <img width="100%" :src="getCNVPlotImage()"></img>
+    <img width="100%" :src="getCNVPlotImage()"/>
     </v-card-text>
     </v-card>
     </v-dialog>
@@ -46,7 +46,7 @@ Vue.component('variant-details', {
               <v-icon color="amber accent-2">zoom_in</v-icon>
           </v-btn>
           <v-list>
-              <v-list-tile v-if="!noEdit" avatar @click="saveVariant()" :disabled="noEdit">
+              <v-list-tile v-if="!noEdit" avatar @click="saveAllVariants()" :disabled="noEdit">
                   <v-list-tile-avatar>
                       <v-icon>save</v-icon>
                   </v-list-tile-avatar>
@@ -115,7 +115,7 @@ Vue.component('variant-details', {
                                             </v-flex>
                                             <v-flex xs6 > 
                                             <v-text-field hide-details :class="['no-height-select', 'pb-1']"
-                                            @change="checkForErrors(item)"
+                                            @change="checkForErrorsAndUpdate(item)"
                                             :error="item.isValid === false"
                                             v-model="currentVariant[item.fieldName]"
                                             :value="currentVariant[item.fieldName]"
@@ -299,17 +299,6 @@ Vue.component('variant-details', {
                                         <v-flex xs12 md12 lg12 pl-3 class="cnv-list-height">
                                               <span v-text="genesVisibleTopLabel"></span>
                                               <span class="blue-grey--text text--lighten-1">{{ visibleGenesCN2OrSelected }}</span>
-                                             <!-- experimental code. do not implement
-                                              <v-tooltip bottom>
-                                              <v-btn icon flat slot="activator" @click="toggleGeneLabels" class="mt-0 mb-0 ml-0 mr-0"
-                                              :disabled="currentListOfVisibleGenes.length >= maxGenesForLabels">
-                                              <v-icon color="primary" v-if="showingGeneLabels">mdi-eye-off</v-icon>
-                                              <v-icon color="primary" v-else>mdi-eye</v-icon>
-                                              </v-btn>
-                                              <span>Show/Hide Chromosome labels
-                                              <br/>(if less than {{ maxGenesForLabels }} genes)</span>
-                                              </v-tooltip>
-                                             --> 
                                               <br/>
                                               <span v-text="genesVisibleBottomLabel"></span>
                                               <span class="blue-grey--text text--lighten-1">{{ visibleGenesOther }}</span>
@@ -362,7 +351,6 @@ Vue.component('variant-details', {
     data() {
         return {
             savingVariantDetails: false,
-            variantDetailsUnSaved: false,
             cnvPlotDataConfig: null,
             gui: {
                 behaviors: [
@@ -430,8 +418,8 @@ Vue.component('variant-details', {
         revertVariant() {
             this.$emit("revert-variant", this);
         },
-        saveVariant() {
-            this.$emit("save-variant", false);
+        saveAllVariants() {
+            this.$emit("save-all-variants", false);
         },
         showPanel() {
             this.$emit("show-panel", this);
@@ -537,12 +525,24 @@ Vue.component('variant-details', {
         handleButtonClick(item) {
            this.$emit(item.handler, this);
         },
-        // handleVariantDetailsChanged() {
-        //     this.$emit("variant-details-changed");
-        // }
         variantDetailsChanged() {
-            this.variantDetailsUnSaved = true;
-            // this.$emit("variant-details-changed");
+            this.$store.commit("variantStore/updateVariant", 
+            {variant: this.currentVariant, caseId: this.$route.params.id,
+                type: this.variantType});
+            var storeCommit = "snpStore/syncWithVariantDetails";
+            if (this.isCNV()) {
+                storeCommit = "cnvStore/syncWithVariantDetails";
+            }  
+            else if (this.isTranslocation()) {
+                storeCommit = "ftlStore/syncWithVariantDetails";
+            }
+            else if (this.isVirus()) {
+                storeCommit = "virStore/syncWithVariantDetails";
+            }        
+            this.$store.commit(storeCommit, {
+                oid: this.currentVariant._id["$oid"],
+                lightVariant: this.currentVariant
+            })
         },
         updateGenesSelected() {
             this.genesSelected.length = 0;
@@ -1004,14 +1004,13 @@ Vue.component('variant-details', {
                 bus.$emit("not-allowed", [this.reponse]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         getLegend() {
@@ -1127,12 +1126,13 @@ Vue.component('variant-details', {
             }
             );
         },
-        checkForErrors(item) {
+        checkForErrorsAndUpdate(item) {
             if (this.fieldsWithGeneRules.indexOf(item.fieldName) > -1) {
                 this.verifyGeneNamesAPI(this.currentVariant[item.fieldName]).then(response => {
                     item.isValid = response.success;
                 });
             }
+            // this.$store.commit("variantStore/updateVariant", {variant: this.currentVariant, caseId: this.$route.params.id});
         },
         verifyGeneNamesAPI(input) {
             return new Promise((resolve, reject) => {
@@ -1158,7 +1158,7 @@ Vue.component('variant-details', {
                         })
                         .catch(error => {
                             console.log(error);
-                            bus.$emit("some-error", [this, error]);
+                            bus.$emit("some-error", [null, error]);
                         });
 
                 }
@@ -1172,6 +1172,11 @@ Vue.component('variant-details', {
     created: function () {
 
     },
+    beforeDestroy() {
+        if (document.getElementById(this.cnvPlotId)) {
+            Plotly.purge(this.cnvPlotId);
+        }
+    },
     destroyed: function () {
 
     },
@@ -1183,17 +1188,11 @@ Vue.component('variant-details', {
                 // height: window.innerHeight - 120 + "px"
             }
         },
-        // genesSelected: {
-        //     get: function() {
-        //         return this.getGenesSelected();
-        //     },
-        //     set: function(newValue) {
-        //        this.genesSelectedPerVariantId[this.currentVariant._id.$oid] = newValue;
-        //     }
-        // }
+        variantDetailsUnSaved: function() {
+            return this.$store.getters["variantStore/getNeedSaving"];
+        }
     },
     watch: {
-        //   variantDetailsUnSaved: this.handleVariantDetailsChanged()
         currentVariant: "updateGenesSelected"
     }
 

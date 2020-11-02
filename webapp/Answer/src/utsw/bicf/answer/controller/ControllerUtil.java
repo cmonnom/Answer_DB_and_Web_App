@@ -47,6 +47,7 @@ public class ControllerUtil {
 	}
 	
 	private static void initJSFiles(Model model, ServletContext servletContext) throws IOException {
+		model.addAttribute("storesFiles", ControllerUtil.getAllStores(servletContext));
 		model.addAttribute("goodiesFiles", ControllerUtil.getAllGoodies(servletContext));
 		model.addAttribute("componentFiles", ControllerUtil.getAllComponents(servletContext));
 		model.addAttribute("jsFiles", ControllerUtil.getAllJSFiles(servletContext));
@@ -106,6 +107,11 @@ public class ControllerUtil {
 	
 	private static List<String> getAllComponents(ServletContext servletContext) throws IOException {
 		File resourcesJs = new File( servletContext.getRealPath("/resources/js/components") );
+		return buildFileNameList(resourcesJs);
+	}
+	
+	public static List<String> getAllStores(ServletContext servletContext) throws IOException {
+		File resourcesJs = new File( servletContext.getRealPath("/resources/js/stores") );
 		return buildFileNameList(resourcesJs);
 	}
 	

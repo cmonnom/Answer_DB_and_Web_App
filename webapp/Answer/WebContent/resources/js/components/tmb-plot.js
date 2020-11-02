@@ -1,7 +1,6 @@
 Vue.component('tmb-plot', {
     props: {
         canPlot: { default: false, type: Boolean },
-        oncotree: {default: () => [], type:Array },
         oncotreeCode: {default: null, type: String}
     },
     template: /*html*/`
@@ -87,19 +86,18 @@ Vue.component('tmb-plot', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
         createPlotTitle(code, nbOfCases) {
             let caseString = nbOfCases ? nbOfCases : 0;
@@ -112,7 +110,7 @@ Vue.component('tmb-plot', {
             return "TMB from " + this.getTissueFromOncotreeCode(code) +" tissues";
         },
         getTissueFromOncotreeCode(code) {
-            return this.oncotree.filter( i => {return i.text === code;})[0].tissue;
+            return oncotree.filter( i => {return i.text === code;})[0].tissue;
         },
         updateTMBPlot() {
             this.loading = true;
@@ -215,10 +213,13 @@ Vue.component('tmb-plot', {
     },
     created() {
     },
-    destroyed() {
+    beforeDestroy() {
         if (document.getElementById('tmbPlot')) {
             Plotly.purge('tmbPlot');
         }
+    },
+    destroyed() {
+       
     },
     watch: {
     }

@@ -63,11 +63,11 @@ Vue.component('lookup-panel-variant', {
             <template v-slot:header>
                 <div>{{ item }}
                 <v-tooltip bottom v-show="variantSummaries[item].url && !loading">
-                <v-btn slot="activator" icon :href="variantSummaries[item].url" target="_blank" @click.stop class="primary--text"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                <v-btn slot="activator" icon :href="variantSummaries[item].url" target="_blank" rel="noreferrer" @click.stop class="primary--text"><v-icon>mdi-open-in-new</v-icon></v-btn>
                 <span>Open {{ lastVariant }} in {{ item }} (new tab).</span>
                 </v-tooltip>
                 <v-tooltip bottom v-show="variantSummaries[item].url2 && !loading">
-                <v-btn slot="activator" icon :href="variantSummaries[item].url2" target="_blank" @click.stop class="primary--text"><v-icon>mdi-lock</v-icon></v-btn>
+                <v-btn slot="activator" icon :href="variantSummaries[item].url2" target="_blank" rel="noreferrer" @click.stop class="primary--text"><v-icon>mdi-lock</v-icon></v-btn>
                 <span>Open {{ lastVariant }} in {{ item }} (need paid subscription).</span>
                 </v-tooltip>
                 </div>
@@ -77,7 +77,7 @@ Vue.component('lookup-panel-variant', {
             <v-card-text class="pl-2 pr-2 pt-0">
                 <span v-for="(item, index) in variantSummaries[item].summary" :key="index">
                     <span v-if="item.type == 'text'">{{ item.text }}</span>
-                    <a v-else :href="'https://www.ncbi.nlm.nih.gov/pubmed/?term=' + item.text" target="_blank">{{ item.text }}</a>
+                    <a v-else :href="'https://www.ncbi.nlm.nih.gov/pubmed/?term=' + item.text" target="_blank" rel="noreferrer">{{ item.text }}</a>
                 </span>
             </v-card-text>
             </v-card>
@@ -118,7 +118,7 @@ Vue.component('lookup-panel-variant', {
                 <span class="font-weight-bold body-1 pl-2">OncoKB</span>
                 <v-tooltip bottom>
                 <v-btn slot="activator" icon :href="oncoKBVariantSummary.oncokbVariantUrl" 
-                target="_blank" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                target="_blank" rel="noreferrer" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                 <span>Open Variant in OncoKB</span>
                 </v-tooltip>
                 <div class="pa-2" v-for="indication in oncoKBVariantSummary.indications" :key="indication.drugs">
@@ -128,7 +128,7 @@ Vue.component('lookup-panel-variant', {
                     <div>
                     <span class="font-weight-bold">Pubmed:</span>
                     <v-tooltip bottom>
-                    <v-btn slot="activator" icon :href="indication.pubmedUrl" target="_blank" @click.stop class="primary--text"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                    <v-btn slot="activator" icon :href="indication.pubmedUrl" target="_blank" rel="noreferrer" @click.stop class="primary--text"><v-icon>mdi-open-in-new</v-icon></v-btn>
                     <span>Open Pubmed Article(s)</span>
                     </v-tooltip>
                     </div>
@@ -158,7 +158,7 @@ Vue.component('lookup-panel-variant', {
                      <span class="font-weight-bold body-1 pl-2">OncoKB</span>
                      <v-tooltip bottom>
                      <v-btn slot="activator" icon :href="oncoKBVariantSummary.oncokbVariantUrl" 
-                     target="_blank" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                     target="_blank" rel="noreferrer" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                      <span>Open Variant in OncoKB</span>
                      </v-tooltip>
                      <div class="pa-2" v-for="indication in oncoKBVariantSummary.investigationalIndications" :key="indication.drugs">
@@ -168,7 +168,7 @@ Vue.component('lookup-panel-variant', {
                          <div>
                          <span class="font-weight-bold">Pubmed:</span>
                          <v-tooltip bottom>
-                         <v-btn slot="activator" icon :href="indication.pubmedUrl" target="_blank" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                         <v-btn slot="activator" icon :href="indication.pubmedUrl" target="_blank" rel="noreferrer" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                          <span>Open Pubmed Article(s)</span>
                          </v-tooltip>
                          </div>
@@ -200,7 +200,7 @@ Vue.component('lookup-panel-variant', {
                     <span class="font-weight-bold body-1">OncoKB</span>
                     <v-tooltip bottom>
                 <v-btn slot="activator" icon :href="oncoKBVariantSummary.oncokbVariantUrl" 
-                target="_blank" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                target="_blank" rel="noreferrer" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                 <span>Open Variant in OncoKB</span>
                 </v-tooltip>
                         <div><span class="font-weight-bold">Drug resistance: </span><span v-if="oncoKBVariantSummary.drugResistance">{{ oncoKBVariantSummary.drugResistance }}</span>
@@ -244,7 +244,7 @@ Vue.component('lookup-panel-variant', {
                     <div>
                     <span class="font-weight-bold">{{ trial.NCTId[0] }}:</span>
                     <v-tooltip bottom>
-                    <v-btn slot="activator" icon :href="clinicalTrialStudyUrl + trial.NCTId[0]" target="_blank" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                    <v-btn slot="activator" icon :href="clinicalTrialStudyUrl + trial.NCTId[0]" target="_blank" rel="noreferrer" @click.stop class="primary--text ma-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                     <span>Open Study page on clinicaltrials.gov</span>
                     </v-tooltip>
                     </div>
@@ -281,7 +281,7 @@ Vue.component('lookup-panel-variant', {
                 <tr >
                     <td class="font-weight-bold pl-2 pr-2">OncoKB Mutation Effect</td><td class="pl-2 pr-2">Pubmed: 
                     <v-tooltip bottom>
-                    <v-btn slot="activator" icon :href="oncoKBVariantSummary.mutationEffectPubMedUrl" target="_blank" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                    <v-btn slot="activator" icon :href="oncoKBVariantSummary.mutationEffectPubMedUrl" target="_blank" rel="noreferrer" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                     <span>Open Mutation Effect Related PubMed Article(s)</span>
                     </v-tooltip>
                     </td>
@@ -290,7 +290,7 @@ Vue.component('lookup-panel-variant', {
                     <td :class="[fasmicUrl ? 'pl-2 pr-2' : 'pa-2', 'font-weight-bold', 'pt-0' ]">Fasmic</td><td :class="[fasmicUrl ? 'pl-2 pr-2' : 'pa-2', 'pt-0']">
                     <span v-if="fasmicSummary">{{ fasmicSummary }}</span>
                     <v-tooltip bottom v-if="fasmicUrl">
-                    <v-btn slot="activator" icon :href="fasmicUrl" target="_blank" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                    <v-btn slot="activator" icon :href="fasmicUrl" target="_blank" rel="noreferrer" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                     <span>Open MD Anderson Fasmic Website</span>
                     </v-tooltip>
                     <span v-else>No entry in Fasmic</span>
@@ -300,7 +300,7 @@ Vue.component('lookup-panel-variant', {
                     <td :class="[uniProtVariantUrl ? 'pl-2 pr-2' : 'pa-2', 'font-weight-bold', 'pt-0' ]">UniprotKB</td><td :class="[uniProtVariantUrl ? 'pl-2 pr-2' : 'pa-2', 'pt-0']">
                     <span v-if="uniProtVariantUrl">Present</span>
                     <v-tooltip bottom v-if="uniProtVariantUrl">
-                    <v-btn slot="activator" icon :href="uniProtVariantUrl" target="_blank" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                    <v-btn slot="activator" icon :href="uniProtVariantUrl" target="_blank" rel="noreferrer" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                     <span>Open MD Anderson Fasmic Website</span>
                     </v-tooltip>
                     <span v-else>No entry in UniprotKB</span>
@@ -333,7 +333,7 @@ Vue.component('lookup-panel-variant', {
                     <span v-if="hotspot.isHotspot">Yes</span>
                     <span v-else>No</span>
                     <v-tooltip bottom>
-                    <v-btn slot="activator" icon :href="hotspotSummary.moreInfoUrl" target="_blank" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                    <v-btn slot="activator" icon :href="hotspotSummary.moreInfoUrl" target="_blank" rel="noreferrer" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                     <span>Open MSK Cancer Hotspot Table</span>
                     </v-tooltip>
                     </div> 
@@ -345,7 +345,7 @@ Vue.component('lookup-panel-variant', {
                 <span v-if="hotspot.isThreeD">Yes</span>
                 <span v-else>No</span>
                 <v-tooltip bottom>
-                <v-btn slot="activator" icon :href="hotspotSummary.moreInfoUrl2" target="_blank" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
+                <v-btn slot="activator" icon :href="hotspotSummary.moreInfoUrl2" target="_blank" rel="noreferrer" @click.stop class="primary--text mt-0"><v-icon>mdi-open-in-new</v-icon></v-btn>
                 <span>Open MSK Cancer 3D Hotspot Table</span>
                 </v-tooltip>
                 </div> 
@@ -433,7 +433,7 @@ Vue.component('lookup-panel-variant', {
     },
     methods: {
         handleDialogs(response, callback) {
-            this.$emit("handle-dialogs", [this, response, callback]);
+            this.$emit("handle-dialogs", [null, response, callback]);
         },
         toggleAllVariantPanels(doOpen) {
             this.variantPanel = this.variantPanelTitles.map(i => doOpen);

@@ -6,7 +6,7 @@ Vue.component('report-pubmed-ids', {
         color: {default: "primary", type: String},
         addButton: {default: false, type: Boolean}
     },
-    template: `<v-card>
+    template: /*html*/`<v-card>
     <v-toolbar class="elevation-0" dense dark :color="color">
         <v-menu offset-y offset-x class="ml-0">
             <v-btn slot="activator" flat icon dark>
@@ -63,10 +63,10 @@ Vue.component('report-pubmed-ids', {
         <div>{{ item.description }}</div>
         <div>PMID: {{ item.pmid }} 
         <v-tooltip bottom>
-        <v-btn small slot="activator" icon flat @click="openPMIDLink(item.pmid)" :color="color" class="mt-0 ml-0 mb-0 mr-0">
+        <v-btn small slot="activator" icon flat :href="getPubmedLink(item.pmid)" target="_blank" rel="noreferrer" :color="color" class="mt-0 ml-0 mb-0 mr-0">
         <v-icon>open_in_new</v-icon>
         </v-btn>
-        <span>Open in New Tab</span>
+        <span>Open in Pubmed</span>
         </v-tooltip>
         </div>
     </v-flex>
@@ -113,22 +113,21 @@ Vue.component('report-pubmed-ids', {
                 bus.$emit("not-allowed", [this.response]);
             }
             if (response.isXss) {
-                bus.$emit("xss-error",
-                    [this, response.reason]);
+                bus.$emit("xss-error", [null, response.reason]);
             }
             else if (response.isLogin) {
-                bus.$emit("login-needed", [this, callback])
+                bus.$emit("login-needed", [null, callback])
             }
             else if (response.success === false) {
-                bus.$emit("some-error", [this, response.message]);
+                bus.$emit("some-error", [null, response.message]);
             }
         },
         handleAxiosError(error) {
             console.log(error);
-            bus.$emit("some-error", [this, error]);
+            bus.$emit("some-error", [null, error]);
         },
-        openPMIDLink(pmid) {
-            window.open('https://www.ncbi.nlm.nih.gov/pubmed/?term=' + pmid, "_blank");
+        getPubmedLink(pmid) {
+            return 'https://www.ncbi.nlm.nih.gov/pubmed/?term=' + pmid;
         },
         addNewPubMed() {
             this.$emit("add-pubmed-reference", this.currentPubMedIds);
