@@ -6,21 +6,6 @@ Vue.component('login-full-page2', {
     },
     template: /*html*/`<div>
 
-    <v-dialog v-model="videoVisible" :max-width="isXSWidth() ? '100%' :'728'">
-  <v-card>
-  <v-card-text class="black">
-  <video id='demo-video' class='video-js' controls preload='auto' 
-  data-setup='{"fluid": true}'>
-    <source :src='currentVideoUrl' type='video/mp4'>
-    <p class='vjs-no-js'>
-      To view this video please enable JavaScript, and consider upgrading to a web browser that
-      <a href='https://videojs.com/html5-video-support/' target='_blank'>supports HTML5 video</a>
-    </p>
-  </video>
-   </v-card-text>
-   </v-card>
-  </v-dialog>  
-
   <v-toolbar fixed app flat extended class="hidden-sm-and-up" >
     <div class="toolbar-image">
       <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" /> 
@@ -37,7 +22,7 @@ Vue.component('login-full-page2', {
     <v-spacer></v-spacer>
     <v-tooltip bottom>
     <v-btn slot="activator" flat @click="openGeneSearch()" dark class="teal lighten-2">Gene Search</v-btn>
-    <span>Search and Download <br/> genes available in our panels</span>
+    <span>Search and download<br/>genes available in our panels</span>
     </v-tooltip>
     <v-btn flat @click="doShowLoginDialog()" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
   </v-toolbar>
@@ -58,7 +43,7 @@ Vue.component('login-full-page2', {
   </div>
   <v-tooltip bottom>
   <v-btn slot="activator" flat @click="openGeneSearch()" dark class="teal lighten-2">Gene Search</v-btn>
-  <span>Search and Download <br/> genes available in our panels</span>
+  <span>Search and download<br/>genes available in our panels</span>
   </v-tooltip>
   <v-btn flat @click="doShowLoginDialog()" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
 </v-toolbar>
@@ -108,44 +93,36 @@ Vue.component('login-full-page2', {
       </v-img>  
       </v-flex>
     </v-layout>
-    <v-layout row wrap pb-5 align-center justify-center>
-      <v-flex v-for="(card, index) in cards" :key="index" xs12 md4 lg4 xl4 @mouseenter="handleMouseHover(index)"> 
-          <v-hover v-model="card.hover">
-            <v-card
-            :class="[card.hover ? 'elevation-6' : 'elevation-0', 'no-background pl-2 pr-2 pt-2 pb-2']">
-              <div class="title pb-3">
-                <v-icon>{{ icons[index] }} </v-icon><span class="pl-2">{{ card.text }}</span>
-              </div>
-              <div class="subheading" color="blue-grey lighten-2">
-                {{ subTexts[index] }}
-                <v-tooltip bottom v-if="card.link" >
-                <v-btn slot="activator" flat icon :href="links[index].url" class="table-btn pb-1">
-                    <v-icon>{{ links[index].icon }}</v-icon>
-                  </v-btn>
-                <span>{{ links[index].tooltip }} </span>  
-                </v-tooltip>  
-                </div>
-              </v-card>
-          </v-hover>
-        </v-flex>
-        <v-flex xs12 md4 lg4 xl4 @mouseenter="stopCarousel">
-        <v-hover v-model="hoverVideo">
-        <v-card
-        :class="[hoverVideo ? 'elevation-6' : 'elevation-0', 'no-background pl-2 pr-2 pt-2 pb-2']">
-          <div class="title">
-          <v-icon>mdi-play-box-outline </v-icon><span class="pl-2">Discover Answer's Features</span>
+        
+    <v-layout row wrap justify-center align-center pb-5>
+
+    <v-flex xs12>
+    <v-layout row wrap justify-center align-center pb-5>
+      <v-flex xs12 >
+          <v-card class="elevation-0 no-background pl-2 pr-2 pt-2 pb-2">
+            <div class="title pb-3">
+            <v-icon>mdi-play-box-outline </v-icon><span class="pl-2">Discover Answer's Features</span>
             </div>
-          <v-layout row wrap justify-center pb-3>
-          <v-flex xs pt-0>
-            <v-tooltip bottom>
-            <v-btn block slot="activator" large icon flat @click="playVideo">
-              <v-icon x-large>mdi-youtube</v-icon>
-            </v-btn>
-            <span>Play a Demo Video</span>
-            </v-tooltip>
-          </v-flex>
-          <v-flex xs pt-1>
-          <v-menu slot="activator" offset-y>
+            </v-card>
+        </v-flex>
+
+        <v-flex xs12 md11 lg9 xl7>
+        <v-card>
+        <v-card-text class="black">
+        <video id='demo-video' class='video-js vjs-big-play-centered' controls preload='auto' 
+        data-setup='{"fluid": true}' :poster="dataUrlRoot + '/resources/images/screenshots/answer-logo-large-background.png'">
+          <source :src='currentVideoUrl' type='video/mp4'>
+          <p class='vjs-no-js'>
+            To view this video please enable JavaScript, and consider upgrading to a web browser that
+            <a href='https://videojs.com/html5-video-support/' target='_blank'>supports HTML5 video</a>
+          </p>
+        </video>
+         </v-card-text>
+         </v-card>
+        </v-flex>  
+
+        <v-flex align-self-end>
+        <v-menu slot="activator" offset-y>
           <template v-slot:activator="{ on }">
           <v-tooltip right>
             <v-btn slot="activator" icon flat v-on="on">
@@ -160,23 +137,43 @@ Vue.component('login-full-page2', {
             License: CC BY (<a href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</a>) <br/>
             </v-card-text></v-card>
           </v-menu>
+        </v-flex>  
+
+    </v-layout>
+
+    </v-flex>
+
+
+    <v-flex xs12 v-for="(currentImgs, index) in allImages" :key="index" >
+
+      <v-layout row wrap justify-center align-center pb-5>
+        <v-flex xs12 :ref="refElements[index]">
+          <v-card class="elevation-0 no-background pl-2 pr-2 pt-2 pb-2">
+            <div class="title pb-3">
+              <v-icon>{{ icons[index] }} </v-icon><span class="pl-2">{{ cards[index].text }}</span>
+            </div>
+            <div class="subheading" color="blue-grey lighten-2">
+              {{ subTexts[index] }}
+              <v-tooltip bottom v-if="cards[index].link" >
+              <v-btn slot="activator" flat icon :href="links[index].url" class="table-btn pb-1">
+                  <v-icon>{{ links[index].icon }}</v-icon>
+                </v-btn>
+              <span>{{ links[index].tooltip }} </span>  
+              </v-tooltip>  
+              </div>
+            </v-card>
+        </v-flex>
+
+        <v-flex :class="flexClasses[index]" v-for="img in currentImgs" :key="img">
+          <v-card >
+              <v-img alt="snp filtering" :src="dataUrlRoot + '/resources/images/screenshots/' + img"></v-img>
+            </v-card>
           </v-flex>
-          </v-layout>
-          </v-card>
-          </v-hover>
-        </v-flex>
-      </v-layout>
-      
-      <v-slide-x-transition>
-    <v-layout row wrap justify-center align-center pb-5 v-show="showCarousel">
-      <v-flex :class="currentFlex" v-for="img in currentImgs" :key="img">
-        <v-card flat tile class="no-background">
-            <v-img alt="snp filtering" :src="dataUrlRoot + '/resources/images/screenshots/' + img"></v-img>
-          </v-card>
-        </v-flex>
-      </v-layout>
-    </v-slide-x-transition>
+        </v-layout>
+     </v-flex>
+     </v-layout>   
   </v-container>
+
   <v-layout row justify-center pt-3 v-if="allowResetPwd">
     <v-flex xs12 md6 lg6 xl6 class="text-xs-center">
       <a @click="openResetPasswordDialog">Reset Password</a>
@@ -210,6 +207,27 @@ Vue.component('login-full-page2', {
             allowResetPwd: false,
             showLogin: false,
             showLoginDialog: false,
+            allImages: [
+              ["filter1.png", "filter2.png", "filter3.png", "filter4.png"],
+              ["igv.png"],
+              ["snps.png", "cnv.png"],
+              ["trials.png", "annotations.png"],
+              ["report_html_1.png", "report_html_2.png", "report_pdf_1.png", "report_pdf_2.png"]
+            ],
+            flexClasses: [
+              "xs12 md6 lg3 xl3",
+              "xs12 md12 lg10 xl9",
+              "xs12 md12 lg6 xl6",
+              "xs12 md12 lg6 xl6",
+              "xs12 md12 lg6 xl6",
+            ],
+            refElements: [
+              "filters",
+              "igv",
+              "tables",
+              "annotations",
+              "reports"
+            ],
             filterImgs: ["filter1.png", "filter2.png", "filter3.png", "filter4.png"],
             externalResoucesImgs: ["igv.png", "musica.png"],
             annotationImgs: ["trials.png", "annotations.png"],
@@ -225,7 +243,7 @@ Vue.component('login-full-page2', {
             ],
             subTexts: [
                 "Focus on impactful mutations with simple yet powerful filters.",
-                "Open variants on external databases and visualizations such as the UCSC Genome Browser, ClinVar, COSMIC, MuSiCa, IGV...",
+                "Open variants on external databases and visualizations such as the UCSC Genome Browser, ClinVar, COSMIC, IGV...",
                 "Browse SNPs, Indels, CNS, Fusion and Translocations.",
                 "Create, share, and browse annotations, and link mutations to existing clinical trials.",
                 "Select variants and annotations to create meaningful reports that can be exported to PDFs."
@@ -250,7 +268,7 @@ Vue.component('login-full-page2', {
             currentIndex: -1,
             currentImgs: ["answer-logo-large.png"],
             currentFlex: "xs6 md6 lg3 xl3",
-            currentVisibility: [true],
+            currentVisibility: [true, true, true, true, true],
             timeoutId: null,
             showCarousel: true,
             hoverVideo: false,
@@ -378,48 +396,6 @@ Vue.component('login-full-page2', {
             }
             );
         },
-        showScreenshotsAndHighlight(index) {
-          this.showCarousel = false;
-          setTimeout(() => {
-            this.currentIndex = index;
-            this.currentImgs = this.carousel[index].imgs;
-            this.currentFlex = this.carousel[index].flex;
-            this.showCarousel = true;
-          }, 250);
-        },
-        populateCarousel() {
-            this.carousel = [
-                {imgs: this.filterImgs, flex: "xs12 md6 lg3 xl2"}, 
-                {imgs: this.externalResoucesImgs, flex: "xs12 md12 lg6 xl6"}, 
-                {imgs: this.variantsCNVsImgs, flex: "xs12 md12 lg6 xl6"}, 
-                {imgs: this.annotationImgs, flex: "xs12 md12 lg6 xl6"}, 
-                {imgs: this.reportImgs, flex: "xs12 md12 lg6 xl6"}, 
-            ];
-        },
-        startCarousel() {
-          this.timeoutId = setInterval(() => {
-            this.$vuetify.goTo(0);
-            let newIndex = 0;
-            if (this.currentIndex != -1) {
-              this.$nextTick(() => {this.cards[this.currentIndex].hover = false;})
-              newIndex = (this.currentIndex + 1) % this.carousel.length;
-            }
-            this.$nextTick(() => {this.cards[newIndex].hover = true; this.showScreenshotsAndHighlight(newIndex)})
-          }, 4000);
-        },
-        stopCarousel() {
-          if (this.timeoutId) {
-            clearInterval(this.timeoutId);
-            this.timeoutId = null;
-            for (let i = 0; i < this.cards.length; i++) {
-              this.cards[i].hover = false;
-            }
-          }
-        },
-        handleMouseHover(index) {
-          this.stopCarousel();
-          this.showScreenshotsAndHighlight(index);
-        },
         playVideo() {
           this.videoVisible = true;
         },
@@ -436,7 +412,20 @@ Vue.component('login-full-page2', {
             return;
           }
           this.scrollBarAtBottom = document.documentElement.scrollHeight <=  (document.documentElement.clientHeight + document.documentElement.scrollTop) * 1.10;
+          // for (var i = 0; i < this.refElements.length; i++) {
+          //   this.currentVisibility[i] = this.isElementInViewport(this.$refs[this.refElements[i]][0]);
+          // }
+          // console.log(this.currentVisibility);
         },
+        // isElementInViewport(el) {
+        //   var rect = el.getBoundingClientRect();
+        //   return (
+        //     rect.top >= 0 &&
+        //     // rect.left >= 0 &&
+        //     rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) 
+        //     // && rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        //   );
+        // },
         scrollTo() {
           if (this.scrollBarAtBottom) {
             this.$vuetify.goTo(0);
@@ -450,18 +439,13 @@ Vue.component('login-full-page2', {
         },
         doShowLoginDialog() {
           this.showLoginDialog = true;
-          this.$nextTick(() => { this.stopCarousel();
-          this.$refs.loginBox.userNameFocus()});
+          this.$nextTick(() => { this.$refs.loginBox.userNameFocus()});
         },
         openGeneSearch() {
           window.open("./search/index.html", "_blank");
-        }
+        },
     },
     mounted: function () {
-       this.populateCarousel();
-       if (!this.isXSWidth()) {
-         this.startCarousel();
-       }
        window.HELP_IMPROVE_VIDEOJS = false;
        this.videoPlayer = videojs("demo-video", {}, function onPlayerReady() {
          console.log("ready");

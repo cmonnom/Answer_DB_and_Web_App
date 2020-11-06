@@ -1875,7 +1875,6 @@ Vue.component('variant-details-dialog', {
             }
         },
         commitAnnotations() {
-            this.handleAnnotationSelectionChanged();
             axios({
                 method: 'post',
                 url: webAppRoot + "/commitAnnotations",
@@ -1903,16 +1902,32 @@ Vue.component('variant-details-dialog', {
                             this.snackBarLink = "";
                         }
                         if (this.isSNP()) {
-                            this.getVariantDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+                            this.getVariantDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant)
+                            .then(() => {
+                                this.formatAnnotations();
+                                this.handleAnnotationSelectionChanged();
+                            });
                         }
                         else if (this.isCNV()) {
-                            this.getCNVDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+                            this.getCNVDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant)
+                            .then(() => {
+                                this.formatAnnotations();
+                                this.handleAnnotationSelectionChanged();
+                            });
                         }
                         else if (this.isTranslocation()) {
-                            this.getTranslocationDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+                            this.getTranslocationDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant)
+                            .then(() => {
+                                this.formatAnnotations();
+                                this.handleAnnotationSelectionChanged();
+                            });
                         }
                         else if (this.isVirus()) {
-                            this.getVirusDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant);
+                            this.getVirusDetails(this.$route.query.variantId, this.isFirstVariant, this.isLastVariant)
+                            .then(() => {
+                                this.formatAnnotations();
+                                this.handleAnnotationSelectionChanged();
+                            });
                         }
                         this.$nextTick(() => {
                             this.cancelAnnotations();
@@ -1924,44 +1939,6 @@ Vue.component('variant-details-dialog', {
                             
                         });
 
-                        // //keep track of the selected variants and refresh
-                        // this.getSelectedVariantIds(true)
-                        // .then(response => {
-                        //     this.currentSelectedVariantIds = response;
-                        //     if (this.currentSelectedVariantIds) {
-                        //         this.tempSelectedSNPVariants = this.currentSelectedVariantIds.selectedSNPVariantIds;
-                        //         this.tempSelectedCNVs = this.currentSelectedVariantIds.selectedCNVIds;
-                        //         this.tempSelectedTranslocations = this.currentSelectedVariantIds.selectedTranslocationIds;
-    
-                        //         //once refreshed, reselect rows that were selected but not saved yet
-                        //         this.$once('get-case-details-done', (annotations) => {
-                        //             for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
-                        //                 var row = this.$refs.geneVariantDetails.items[i];
-                        //                 if (this.tempSelectedSNPVariants.includes(row.oid)) {
-                        //                     row.isSelected = true;
-                        //                 }
-                        //             }
-                        //             for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
-                        //                 var row = this.$refs.cnvDetails.items[i];
-                        //                 if (this.tempSelectedCNVs.includes(row.oid)) {
-                        //                     row.isSelected = true;
-                        //                 }
-                        //             }
-                        //             for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
-                        //                 var row = this.$refs.translocationDetails.items[i];
-                        //                 if (this.tempSelectedTranslocations.includes(row.oid)) {
-                        //                     row.isSelected = true;
-                        //                 }
-                        //             }
-                        //             this.updateSelectedVariantTable();
-                        //         });
-                        //     }
-                        // }).catch(error => {
-                        //     this.handleDialogs(error.data, this.commitAnnotations.bind(null, this.userAnnotations));
-                        //     this.$refs.annotationDialog.saving = false; 
-                        //     this.$refs.cnvAnnotationDialog.saving = false;
-                        //     this.$refs.translocationAnnotationDialog.saving = false;
-                        // });
                     } else {
                         this.handleDialogs(response.data, this.commitAnnotations.bind(null, this.userAnnotations));
                         this.$refs.annotationDialog.saving = false; 
@@ -1969,6 +1946,8 @@ Vue.component('variant-details-dialog', {
                         this.$refs.translocationAnnotationDialog.saving = false;
                         this.$refs.virusAnnotationDialog.saving = false;
                     }
+                    this.formatAnnotations();
+                    this.handleAnnotationSelectionChanged();
                 })
                 .catch(error => {
                     this.handleAxiosError(error);

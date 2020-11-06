@@ -1461,7 +1461,7 @@ const OpenCase2 = {
             this.isVariantOpening = true;
             this.urlQuery.variantType = "snp";
             this.urlQuery.variantId = item.oid;
-            item.loading = true;
+            // item.loading = true;
             this.currentItem = item;
             this.$refs.variantDetailsDialog.setSelected();
             this.updateRoute();
@@ -1473,7 +1473,7 @@ const OpenCase2 = {
             this.urlQuery.variantType = "cnv";
             this.urlQuery.variantId = item.oid;
             this.currentItem = item;
-            item.loading = true;
+            // item.loading = true;
             this.updateRoute();
         },
         openTranslocation(item) {
@@ -1483,7 +1483,7 @@ const OpenCase2 = {
             this.urlQuery.variantType = "translocation";
             this.urlQuery.variantId = item.oid;
             this.currentItem = item;
-            item.loading = true;
+            // item.loading = true;
             this.updateRoute();
         },
         openVirus(item) {
@@ -1493,7 +1493,7 @@ const OpenCase2 = {
             this.urlQuery.variantType = "virus";
             this.urlQuery.variantId = item.oid;
             this.currentItem = item;
-            item.loading = true;
+            // item.loading = true;
             this.updateRoute();
         },
         extractPatientDetailsInfo() {
@@ -2239,7 +2239,7 @@ const OpenCase2 = {
         },
         variantDetailsEndedLoading() {
             if (this.currentItem) {
-                this.currentItem.loading = false;
+                // this.currentItem.loading = false;
             }
         },
         getPatientDetailsFlexClass(item) {
