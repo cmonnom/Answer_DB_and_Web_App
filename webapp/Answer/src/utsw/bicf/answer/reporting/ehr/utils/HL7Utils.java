@@ -2,7 +2,7 @@ package utsw.bicf.answer.reporting.ehr.utils;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TempusUtils {
+public class HL7Utils {
 	
 	private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 	private AtomicInteger obxId = new AtomicInteger(1);

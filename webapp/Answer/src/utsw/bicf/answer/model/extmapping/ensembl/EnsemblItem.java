@@ -15,6 +15,8 @@ public class EnsemblItem {
 	String ensemblGeneId;
 	@JsonProperty("uniprot_ids")
 	List<String> uniProtIds;
+	@JsonProperty("hgnc_id")
+	String hgnc;
 	
 	
 	
@@ -68,6 +70,18 @@ public class EnsemblItem {
 
 	public void setUniProtIds(List<String> uniProtIds) {
 		this.uniProtIds = uniProtIds;
+	}
+
+
+
+	public String getHgnc() {
+		return hgnc;
+	}
+
+
+
+	public void setHgnc(String hgnc) {
+		this.hgnc = hgnc;
 	}
 
 	

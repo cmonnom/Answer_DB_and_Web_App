@@ -65,6 +65,7 @@ import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
 import utsw.bicf.answer.reporting.finalreport.FinalReportTemplateConstants;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.EmailProperties;
+import utsw.bicf.answer.security.EnsemblProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NCBIProperties;
 import utsw.bicf.answer.security.NotificationUtils;
@@ -84,6 +85,8 @@ public class APIController {
 	OtherProperties otherProps;
 	@Autowired
 	NCBIProperties ncbiProps;
+	@Autowired
+	EnsemblProperties ensemblProps;
 	
 
 	@RequestMapping("/parseMDAEmail")
@@ -792,9 +795,14 @@ public class APIController {
 	@ResponseBody
 	public String testEpicReportHL7(Model model, @RequestParam String token, 
 			@RequestParam String caseId, 
+			@RequestParam(required = false) String overridePatientName, 
+			@RequestParam(required = false) String overrideMRN, 
+			@RequestParam(required = false) String overrideDOB, 
+			@RequestParam(required = false) String overrideGender, 
+			@RequestParam(required = false) String overrideOrder, 
 			HttpSession httpSession, @RequestParam(defaultValue = "false") Boolean hl7Only ) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from testEpicReportHL7");
-		long now = System.currentTimeMillis();
+//		long now = System.currentTimeMillis();
 		// check that token is valid
 		Token theToken = modelDAO.getUpdateGenieDataToken(token);
 		AjaxResponse response = new AjaxResponse();
@@ -804,7 +812,7 @@ public class APIController {
 			response.setMessage("You are not allowed to run this servlet.");
 			return response.createObjectJSON();
 		}
-		User user = ControllerUtil.getSessionUser(httpSession);
+//		User user = ControllerUtil.getSessionUser(httpSession);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
 		
@@ -818,10 +826,18 @@ public class APIController {
 			response.setMessage("No report for " + caseId + ".");
 			return response.createObjectJSON();
 		}
-		//ATM getting the latest report
-		//TODO get the finalized report instead
-		Report testReport = reports.get(reports.size() - 1);
-		Report reportDetails = utils.getReportDetails(testReport.getMongoDBId().getOid());
+		Report finalReport = null;
+		for (Report r : reports) {
+			if (r.getFinalized() != null && r.getDateFinalized() != null && r.getFinalized() == true) {
+				finalReport = r;
+				break;
+			}
+		}
+		if (finalReport == null) {
+			response.setMessage("No finalized report for " + caseId + ".");
+			return response.createObjectJSON();
+		}
+		Report reportDetails = utils.getReportDetails(finalReport.getMongoDBId().getOid());
 		String possibleDirtyData = reportDetails.createObjectJSON();
 		String cleanData = possibleDirtyData.replaceAll("\\\\t", " ").replaceAll("\\\\n", "<br/>");
 		ObjectMapper mapper = new ObjectMapper();
@@ -842,8 +858,8 @@ public class APIController {
 		try {
 			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
 			File pdfFile = pdfReport.saveFinalized();
-			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile);
-			String hl7 = hl7Factory.reportToHL7();
+			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile, ensemblProps, otherProps, overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder);
+			String hl7 = hl7Factory.reportToHL7(true);
 			if (hl7Only) {
 				return hl7;
 			}
@@ -862,10 +878,15 @@ public class APIController {
 	@RequestMapping("/sendEpicReportHL7")
 	@ResponseBody
 	public String sendEpicReportHL7(Model model, @RequestParam String token, 
-			@RequestParam String caseId, 
+			@RequestParam(required = false) String caseId, 
+			@RequestParam(required = false) String overridePatientName, 
+			@RequestParam(required = false) String overrideMRN, 
+			@RequestParam(required = false) String overrideDOB, 
+			@RequestParam(required = false) String overrideGender, 
+			@RequestParam(required = false) String overrideOrder, 
 			HttpSession httpSession) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from sendEpicReportHL7");
-		long now = System.currentTimeMillis();
+//		long now = System.currentTimeMillis();
 		// check that token is valid
 		Token theToken = modelDAO.getUpdateGenieDataToken(token);
 		AjaxResponse response = new AjaxResponse();
@@ -875,7 +896,7 @@ public class APIController {
 			response.setMessage("You are not allowed to run this servlet.");
 			return response.createObjectJSON();
 		}
-		User user = ControllerUtil.getSessionUser(httpSession);
+//		User user = ControllerUtil.getSessionUser(httpSession);
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
 		
@@ -889,15 +910,16 @@ public class APIController {
 			response.setMessage("No report for " + caseId + ".");
 			return response.createObjectJSON();
 		}
-		//ATM getting the latest report
-		//TODO get the finalized report instead
-//		Report testReport = reports.get(reports.size() - 1);
 		Report finalReport = null;
 		for (Report r : reports) {
 			if (r.getFinalized() != null && r.getDateFinalized() != null && r.getFinalized() == true) {
 				finalReport = r;
 				break;
 			}
+		}
+		if (finalReport == null) {
+			response.setMessage("No finalized report for " + caseId + ".");
+			return response.createObjectJSON();
 		}
 		Report reportDetails = utils.getReportDetails(finalReport.getMongoDBId().getOid());
 		String possibleDirtyData = reportDetails.createObjectJSON();
@@ -911,22 +933,36 @@ public class APIController {
 		if (clinicalTest == null) {
 			clinicalTest = modelDAO.getClinicalTest(FinalReportTemplateConstants.DEFAULT_TITLE);
 		}
+		Socket socket = null;
+		PrintWriter writer = null;
+		OutputStream output = null;
+		InputStream input = null;
+		BufferedReader reader = null;
 		try {
 			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
 			File pdfFile = pdfReport.saveFinalized();
-			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile);
-			String hl7 = hl7Factory.reportToHL7();
+			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile, ensemblProps, otherProps
+					,overridePatientName, 
+					overrideMRN, 
+					overrideDOB, 
+					overrideGender, 
+					overrideOrder );
+			String hl7 = hl7Factory.reportToHL7(false);
 			
-			Socket socket = new Socket(otherProps.getEpicHl7Hostname(), otherProps.getEpicHl7Port());
-			
-			OutputStream output = socket.getOutputStream();
-			PrintWriter writer = new PrintWriter(output, true);
+			socket = new Socket(otherProps.getEpicHl7Hostname(), otherProps.getEpicHl7Port());
+			output = socket.getOutputStream();
+			writer = new PrintWriter(output, true);
 			writer.println(hl7);
-			InputStream input = socket.getInputStream();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+			input = socket.getInputStream();
+			reader = new BufferedReader(new InputStreamReader(input));
 			String line;
 			while ((line = reader.readLine()) != null) {
 				System.out.println(line); //handle response?
+				//Somehow the line is never null
+				//use code below to exit the loop
+				if (line.length() < 3) { //minimum segment is 3
+					break;
+				}
 			}
 			response.setIsAllowed(true);
 			response.setSuccess(true);
@@ -938,6 +974,17 @@ public class APIController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			response.setMessage("Something went wrong when creating the report");
+		} finally {
+			if (input != null) 
+				input.close();
+			if (reader != null) 
+				reader.close();
+			if (writer != null) 
+				writer.close();
+			if (output != null) 
+				output.close();
+			if (socket != null) 
+				socket.close();
 		}
 
 	

@@ -9,6 +9,7 @@ public class EnsemblResponse {
 	String entrezId;
 	String ensemblId;
 	String uniProtId;
+	String hgncId;
 	
 	public EnsemblResponse() {
 		super();
@@ -31,6 +32,7 @@ public class EnsemblResponse {
 			if (item.getUniProtIds() != null && !item.getUniProtIds().isEmpty()) {
 				uniProtId = item.getUniProtIds().get(0);
 			}
+			hgncId = item.getHgnc();
 		}
 	}
 
@@ -56,6 +58,14 @@ public class EnsemblResponse {
 
 	public void setUniProtId(String uniProtId) {
 		this.uniProtId = uniProtId;
+	}
+
+	public String getHgncId() {
+		return hgncId;
+	}
+
+	public void setHgncId(String hgncId) {
+		this.hgncId = hgncId;
 	}
 
 

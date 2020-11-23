@@ -30,6 +30,11 @@ public class TypeUtils {
 	public static final DateTimeFormatter shortMonthYearFormatter = DateTimeFormatter.ofPattern("MMM yyyy");
 	public static final DateTimeFormatter shortDayMonthYearFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
 	
+	public static final DateTimeFormatter mongoDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
+	public static final DateTimeFormatter hl7DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+	
+	
+	
 	static final NumberFormat pctFormatter = NumberFormat.getPercentInstance();
 	static final DateFormat sqlDateFormatter = DateFormat.getDateTimeInstance();
 	
