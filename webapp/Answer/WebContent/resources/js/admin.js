@@ -218,52 +218,59 @@ const Admin = {
   },
   methods: {
     editUser(userId) {
-      this.editAdd = "Edit";
-      var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
-      this.currentEditUserId = user.userId;
-      this.editFirstName = user.firstName;
-      this.editLastName = user.lastName;
-      this.editUsername = user.userName;
-      this.editEmail = user.email;
-      this.currentEditUserFullName = user.fullName;
-      this.editView = user.viewValue.pass;
-      this.editAnnotate = user.annotateValue.pass;
-      this.editSelect = user.selectValue.pass;
-      this.editAssign = user.assignValue.pass;
-      this.editReview = user.reviewValue.pass;
-      this.editHide = user.hideValue.pass;
-      this.editNotification = user.notificationValue.pass;
-      this.editAdmin = user.adminValue.pass;
-      this.currentEditGroupsInUser = user.groupIds;
-      this.editUserDialogSaveDisabled = false;
-      this.editUserDialogVisible = true;
+      if (this.$refs.userTable) {
+        this.editAdd = "Edit";
+        var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
+        this.currentEditUserId = user.userId;
+        this.editFirstName = user.firstName;
+        this.editLastName = user.lastName;
+        this.editUsername = user.userName;
+        this.editEmail = user.email;
+        this.currentEditUserFullName = user.fullName;
+        this.editView = user.viewValue.pass;
+        this.editAnnotate = user.annotateValue.pass;
+        this.editSelect = user.selectValue.pass;
+        this.editAssign = user.assignValue.pass;
+        this.editReview = user.reviewValue.pass;
+        this.editHide = user.hideValue.pass;
+        this.editNotification = user.notificationValue.pass;
+        this.editAdmin = user.adminValue.pass;
+        this.currentEditGroupsInUser = user.groupIds;
+        this.editUserDialogSaveDisabled = false;
+        this.editUserDialogVisible = true;
+      }
     },
     editGroup(groupId) {
-      this.editAdd = "Edit";
-      var group = this.$refs.groupTable.items.filter(item => item.groupId == groupId)[0];
-      this.currentEditGroupId = group.groupId;
-      this.editGroupName = group.name;
-      this.editDescription = group.description;
-      this.currentEditUsersInGroup = group.userIds;
-      this.editGroupDialogVisible = true;
+      if (this.$refs.groupTable) {
+        this.editAdd = "Edit";
+        var group = this.$refs.groupTable.items.filter(item => item.groupId == groupId)[0];
+        this.currentEditGroupId = group.groupId;
+        this.editGroupName = group.name;
+        this.editDescription = group.description;
+        this.currentEditUsersInGroup = group.userIds;
+        this.editGroupDialogVisible = true;
+
+      }
     },
     blockUser(userId) {
-      console.log("blocking user " + userId);
-      this.editView = false;
-      this.editAnnotate = false;
-      this.editSelect = false;
-      this.editAssign = false;
-      this.editReview = false;
-      this.editHide = false;
-      this.editNotification = false;
-      this.editAdmin = false;
-      var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
-      this.currentEditUserId = userId;
-      this.editFirstName = user.firstName;
-      this.editLastName = user.lastName;
-      this.editUsername = user.userName;
-      this.editEmail = user.email;
-      this.saveEdits();
+      if (this.$refs.userTable) {
+        console.log("blocking user " + userId);
+        this.editView = false;
+        this.editAnnotate = false;
+        this.editSelect = false;
+        this.editAssign = false;
+        this.editReview = false;
+        this.editHide = false;
+        this.editNotification = false;
+        this.editAdmin = false;
+        var user = this.$refs.userTable.items.filter(item => item.userId == userId)[0];
+        this.currentEditUserId = userId;
+        this.editFirstName = user.firstName;
+        this.editLastName = user.lastName;
+        this.editUsername = user.userName;
+        this.editEmail = user.email;
+        this.saveEdits();
+      }
     },
     saveEdits() {
       this.editUserDialogSaveDisabled = true;
@@ -294,10 +301,12 @@ const Admin = {
       })
         .then(response => {
           if (response.data.isAllowed && response.data.success) {
-            this.$refs.userTable.getAjaxData();
-            this.$refs.groupTable.getAjaxData();
-            this.cancelEdits();
-            this.snackBarVisible = true;
+            if (this.$refs.userTable && this.$refs.groupTable) {
+              this.$refs.userTable.getAjaxData();
+              this.$refs.groupTable.getAjaxData();
+              this.cancelEdits();
+              this.snackBarVisible = true;
+            }
           }
           else {
             this.handleDialogs(response.data, this.saveEdits);
@@ -327,10 +336,12 @@ const Admin = {
       })
         .then(response => {
           if (response.data.isAllowed && response.data.success) {
-            this.$refs.groupTable.getAjaxData();
-            this.$refs.userTable.getAjaxData();
-            this.cancelGroupEdits();
-            this.snackBarVisible = true;
+            if (this.$refs.userTable && this.$refs.groupTable) {
+              this.$refs.groupTable.getAjaxData();
+              this.$refs.userTable.getAjaxData();
+              this.cancelGroupEdits();
+              this.snackBarVisible = true;
+            }
           }
           else {
             this.handleDialogs(response.data, this.saveGroupEdits);

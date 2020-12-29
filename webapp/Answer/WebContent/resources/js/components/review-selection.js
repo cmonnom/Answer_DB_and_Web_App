@@ -626,32 +626,39 @@ Vue.component('review-selection', {
             this.getSnpTable().manualDataFilteredFromStore(
                 { items: [], headers: snpHeaders, uniqueIdField: "oid", headerOrder: snpHeaderOrderAll },
                 this.$store.getters["snpStore/getSelectedVariantItemsForAll"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
-            this.$refs.snpVariantsSelectedReviewer.manualDataFilteredFromStore(
+            if (this.$refs.snpVariantsSelectedReviewer) {
+                this.$refs.snpVariantsSelectedReviewer.manualDataFilteredFromStore(
                 { items: [], headers: snpHeadersReviewer, uniqueIdField: "oid", headerOrder: snpHeaderOrderReviewer },
                 this.$store.getters["snpStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
-
+            }
 
             this.getCnvTable().manualDataFilteredFromStore(
                 { items: [], headers: cnvHeaders, uniqueIdField: "oid", headerOrder: cnvHeaderOrderAll },
                 this.$store.getters["cnvStore/getSelectedVariantItemsForAll"]);
-            this.$refs.cnvVariantsSelectedReviewer.manualDataFilteredFromStore(
-                { items: [], headers: cnvHeadersReviewer, uniqueIdField: "oid", headerOrder: cnvHeaderOrderReviewer },
-                this.$store.getters["cnvStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+            if (this.$refs.cnvVariantsSelectedReviewer) {    
+                this.$refs.cnvVariantsSelectedReviewer.manualDataFilteredFromStore(
+                    { items: [], headers: cnvHeadersReviewer, uniqueIdField: "oid", headerOrder: cnvHeaderOrderReviewer },
+                    this.$store.getters["cnvStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+            }
 
             this.getFtlTable().manualDataFilteredFromStore(
                 { items: [], headers: ftlHeaders, uniqueIdField: "oid", headerOrder: ftlHeaderOrderAll },
                 this.$store.getters["ftlStore/getSelectedVariantItemsForAll"]);
-            this.$refs.translocationVariantsSelectedReviewer.manualDataFilteredFromStore(
-                { items: [], headers: ftlHeadersReviewer, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer },
-                this.$store.getters["ftlStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+            if (this.$refs.translocationVariantsSelectedReviewer) {  
+                this.$refs.translocationVariantsSelectedReviewer.manualDataFilteredFromStore(
+                    { items: [], headers: ftlHeadersReviewer, uniqueIdField: "oid", headerOrder: ftlHeaderOrderReviewer },
+                    this.$store.getters["ftlStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+            }  
     
 
             this.getVirTable().manualDataFilteredFromStore(
                 { items: [], headers: virHeaders, uniqueIdField: "oid", headerOrder: virHeaderOrderAll },
                 this.$store.getters["virStore/getSelectedVariantItemsForAll"]);
-            this.$refs.virusVariantsSelectedReviewer.manualDataFilteredFromStore(
-                { items: [], headers: virHeadersReviewer, uniqueIdField: "oid", headerOrder: virHeaderOrderReviewer },
-                this.$store.getters["virStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+            if (this.$refs.translocationVariantsSelectedReviewer) { 
+                this.$refs.virusVariantsSelectedReviewer.manualDataFilteredFromStore(
+                    { items: [], headers: virHeadersReviewer, uniqueIdField: "oid", headerOrder: virHeaderOrderReviewer },
+                    this.$store.getters["virStore/getSelectedVariantItemsForReviewer"]); //this can freeze the UI in datatable this.items = data.items; Not sure how to speed it up
+            }
                 
             this.populateOtherAnnotators('snp', this.$store.getters["snpStore/getSelectedVariantItemsForAll"]); 
             this.populateOtherAnnotators('cnv', this.$store.getters["cnvStore/getSelectedVariantItemsForAll"]); 
@@ -676,23 +683,31 @@ Vue.component('review-selection', {
         },
         startLoading() {
             this.getSnpTable().startLoading();
-            this.$refs.snpVariantsSelectedReviewer.startLoading();
+            if (this.$refs.snpVariantsSelectedReviewer)
+                this.$refs.snpVariantsSelectedReviewer.startLoading();
             this.getCnvTable().startLoading();
-            this.$refs.cnvVariantsSelectedReviewer.startLoading();
+            if (this.$refs.cnvVariantsSelectedReviewer)
+                this.$refs.cnvVariantsSelectedReviewer.startLoading();
             this.getFtlTable().startLoading();
-            this.$refs.translocationVariantsSelectedReviewer.startLoading();
+            if (this.$refs.translocationVariantsSelectedReviewer)
+                this.$refs.translocationVariantsSelectedReviewer.startLoading();
             this.getVirTable().startLoading();
-            this.$refs.virusVariantsSelectedReviewer.startLoading();
+            if (this.$refs.virusVariantsSelectedReviewer)
+                this.$refs.virusVariantsSelectedReviewer.startLoading();
         },
         stopLoading() {
             this.getSnpTable().stopLoading();
-            this.$refs.snpVariantsSelectedReviewer.stopLoading();
+            if (this.$refs.snpVariantsSelectedReviewer)
+                this.$refs.snpVariantsSelectedReviewer.stopLoading();
             this.getCnvTable().stopLoading();
-            this.$refs.cnvVariantsSelectedReviewer.stopLoading();
+            if (this.$refs.cnvVariantsSelectedReviewer)
+                this.$refs.cnvVariantsSelectedReviewer.stopLoading();
             this.getFtlTable().stopLoading();
-            this.$refs.translocationVariantsSelectedReviewer.stopLoading();
+            if (this.$refs.translocationVariantsSelectedReviewer)
+                this.$refs.translocationVariantsSelectedReviewer.stopLoading();
             this.getVirTable().stopLoading();
-            this.$refs.virusVariantsSelectedReviewer.stopLoading();
+            if (this.$refs.virusVariantsSelectedReviewer)
+                this.$refs.virusVariantsSelectedReviewer.stopLoading();
         },
         handleRefresh() {
             this.$emit("review-selection-refresh");

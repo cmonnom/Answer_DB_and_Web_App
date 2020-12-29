@@ -54,7 +54,6 @@ import utsw.bicf.answer.db.api.utils.OncotreeRequestUtils;
 import utsw.bicf.answer.db.api.utils.ReactomeRequestUtils;
 import utsw.bicf.answer.db.api.utils.UniProtRequestUtils;
 import utsw.bicf.answer.model.GenieMutation;
-import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.IndividualPermission;
 import utsw.bicf.answer.model.LookupVersion;
 import utsw.bicf.answer.model.MSKHotspot;
@@ -1150,8 +1149,8 @@ public class LookupController {
 			response.setIsAllowed(true);
 			response.setSuccess(false);
 			hugoSymbol = hugoSymbol.trim();
-			List<GenieSummary> dataAll = modelDAO.getGenieSummary(GenieSummary.CATEGORY_CANCER_COUNT);
-			List<GenericBarPlotData> dataGene = modelDAO.getGeniePatientCountForGene(hugoSymbol, dataAll.stream().map(d -> d.getLabel()).collect(Collectors.toList()));
+			List<GenericBarPlotData> dataAll = modelDAO.getGenieGenomicInfoForGene(hugoSymbol);
+			List<GenericBarPlotData> dataGene = modelDAO.getGeniePatientCountForGene(hugoSymbol, dataAll.stream().map(d -> d.getY()).collect(Collectors.toList()));
 			Map<String, GenericBarPlotData> geneCountPerCancer = dataGene.stream().collect(Collectors.toMap(GenericBarPlotData::getY, Function.identity()));
 			if (dataAll != null && dataGene != null && !dataGene.isEmpty()) {
 				BarPlotData chart = new BarPlotData();
@@ -1161,10 +1160,10 @@ public class LookupController {
 				//need to sort by pct. Need a list too because there could be duplicate pct (key)
 				List<GenericBarPlotDataSummary> toSortData = new ArrayList<GenericBarPlotDataSummary>();
 				for (int i = dataAll.size() -1; i >=0; i--) {
-					GenieSummary dAll = dataAll.get(i);
-					GenericBarPlotData dGene = geneCountPerCancer.get(dAll.getLabel());
+					GenericBarPlotData dAll = dataAll.get(i);
+					GenericBarPlotData dGene = geneCountPerCancer.get(dAll.getY());
 					if (dGene != null) {
-						float pct = dGene.getX().floatValue() / dAll.getTally().floatValue() * 100;
+						float pct = dGene.getX().floatValue() / dAll.getX().floatValue() * 100;
 						toSortData.add(new GenericBarPlotDataSummary(dAll, dGene, pct));
 					}
 				}
@@ -1174,12 +1173,14 @@ public class LookupController {
 						return o1.getKey().compareTo(o2.getKey());
 					}
 				}).collect(Collectors.toList());
+				int size = toSortData.size();
+				toSortData = toSortData.subList(Math.max(size - 10,  0), size);
 				for (GenericBarPlotDataSummary s : toSortData) {
 					trace.addX(s.getKey());
-					trace.addY(s.getdAll().getLabel());
-					trace.addLabel("<b>Cancer:</b> " + s.getdAll().getLabel() 
+					trace.addY(s.getdAll().getY());
+					trace.addLabel("<b>Cancer:</b> " + s.getdAll().getY() 
 					+ "<br><b>Altered Cases:</b> " + s.getdGene().getX()
-					+ "<br><b>Total Cases:</b> " + s.getdAll().getTally()
+					+ "<br><b>Total Cases:</b> " + s.getdAll().getX()
 					+ "<br><b>Percent:</b> " + String.format("%.2f", s.getKey()));
 				}
 				chart.setTrace(trace);

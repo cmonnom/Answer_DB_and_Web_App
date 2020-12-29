@@ -944,8 +944,10 @@ const OpenCase2 = {
             this.confirmationDialogVisible = false;
         },
         toggleFilters(type) {
-            this.currentFilterType = type;
-            this.$refs.advancedFilter.toggleFilters();
+            if (this.$refs.advancedFilter) {
+                this.currentFilterType = type;
+                this.$refs.advancedFilter.toggleFilters();
+            }
         },
         canProceed(field) {
             if (isAdmin) {
@@ -984,7 +986,7 @@ const OpenCase2 = {
                 });
         },
         openFPKMChart() {
-            if (this.tmbVisible) {
+            if (this.tmbVisible && this.$refs.tmbPlot) {
                 this.fpkmPositionx = this.$refs.tmbPlot.$el.getBoundingClientRect().x - this.$refs.tmbPlot.$el.clientWidth - 10;
             }
             else {
@@ -994,7 +996,8 @@ const OpenCase2 = {
             this.fpkmVisible = true;
             this.$nextTick(() => {
                 setTimeout(() => {
-                    this.$refs.fpkmPlot.loadDefaultFPKMPlot();
+                    if (this.$refs.fpkmPlot)
+                        this.$refs.fpkmPlot.loadDefaultFPKMPlot();
                 }, 1000);
             });
         },
@@ -1007,7 +1010,7 @@ const OpenCase2 = {
              });
         },
         openTMBChart() {
-            if (this.fpkmVisible) {
+            if (this.fpkmVisible && this.$refs.fpkmPlot) {
                 this.tmbPositionx = this.$refs.fpkmPlot.$el.getBoundingClientRect().x - this.$refs.fpkmPlot.$el.clientWidth - 10;
             }
             else {
@@ -1017,7 +1020,8 @@ const OpenCase2 = {
             this.tmbVisible = true;
             this.$nextTick(() => {
                 setTimeout(() => {
-                    this.$refs.tmbPlot.loadDefaultTMBPlot();
+                    if (this.$refs.tmbPlot)
+                        this.$refs.tmbPlot.loadDefaultTMBPlot();
                 }, 1000);
             });
         },
@@ -1040,7 +1044,9 @@ const OpenCase2 = {
             this.mutSigVisible = false;
         },
         openBamViewerLinkWebFLT3() {
-            this.$refs.bamViewerLinkFLT3.$el.click();
+            if (this.$refs.bamViewerLinkFLT3) {
+                this.$refs.bamViewerLinkFLT3.$el.click();
+            }
         },
         createBamViewerLinkFLT3() {
             var igvRange = "chr13:28,033,867-28,034,235";
@@ -1253,6 +1259,9 @@ const OpenCase2 = {
                 });
             }
             this.loadingVariantDetails = true;
+            if (!this.$refs.advancedFilter) {
+                return;
+            }
             this.$refs.advancedFilter.loading = true;
             this.mutSigTableData = [];
             return new Promise((resolve, reject) => {
@@ -1268,6 +1277,9 @@ const OpenCase2 = {
                         filters: this.$refs.advancedFilter.filters
                     }
                 }).then(response => {
+                    if (!this.$refs.advancedFilter) {
+                        return;
+                    }
                     if (response.data.isAllowed) {
                         if (this.readonly) {
                             bus.$emit("update-status", ["VIEW ONLY MODE"]);
@@ -1317,16 +1329,20 @@ const OpenCase2 = {
                       
                         
                         this.$store.commit("snpStore/updateAllVariantSummary", snpIndelVariantSummary);
-                        this.$refs.geneVariantDetails.manualDataFilteredFromStore(this.$store.getters["snpStore/getCurrentVariantSummary"], this.$store.getters["snpStore/getCurrentVariantSummaryItems"]);
+                        if (this.$refs.geneVariantDetails)
+                            this.$refs.geneVariantDetails.manualDataFilteredFromStore(this.$store.getters["snpStore/getCurrentVariantSummary"], this.$store.getters["snpStore/getCurrentVariantSummaryItems"]);
 
                         this.$store.commit("cnvStore/updateAllVariantSummary", cnvSummary);
-                        this.$refs.cnvDetails.manualDataFilteredFromStore(this.$store.getters["cnvStore/getCurrentVariantSummary"], this.$store.getters["cnvStore/getCurrentVariantSummaryItems"]); 
+                        if (this.$refs.cnvDetails)
+                            this.$refs.cnvDetails.manualDataFilteredFromStore(this.$store.getters["cnvStore/getCurrentVariantSummary"], this.$store.getters["cnvStore/getCurrentVariantSummaryItems"]); 
                         
                         this.$store.commit("ftlStore/updateAllVariantSummary", translocationSummary);
-                        this.$refs.translocationDetails.manualDataFilteredFromStore(this.$store.getters["ftlStore/getCurrentVariantSummary"], this.$store.getters["ftlStore/getCurrentVariantSummaryItems"]); 
+                        if (this.$refs.translocationDetails)
+                            this.$refs.translocationDetails.manualDataFilteredFromStore(this.$store.getters["ftlStore/getCurrentVariantSummary"], this.$store.getters["ftlStore/getCurrentVariantSummaryItems"]); 
                         
                         this.$store.commit("virStore/updateAllVariantSummary", virusSummary);
-                        this.$refs.virusDetails.manualDataFilteredFromStore(this.$store.getters["virStore/getCurrentVariantSummary"], this.$store.getters["virStore/getCurrentVariantSummaryItems"]); 
+                        if (this.$refs.virusDetails)
+                            this.$refs.virusDetails.manualDataFilteredFromStore(this.$store.getters["virStore/getCurrentVariantSummary"], this.$store.getters["virStore/getCurrentVariantSummaryItems"]); 
 
 
                         this.$refs.advancedFilter.effects = response.data.effects;
@@ -1348,8 +1364,8 @@ const OpenCase2 = {
 
                         this.removeCurrentUserSelectionColumnFromHeaders(snpIndelVariantSummary.headerOrder, cnvSummary.headerOrder, translocationSummary.headerOrder
                             , response.data.virusSummary.headerOrder);
-
-                        this.$refs.variantDetailsDialog.setSelected();
+                        if (this.$refs.variantDetailsDialog)
+                            this.$refs.variantDetailsDialog.setSelected();
 
                         //TODo might need to handle currentRow
 
@@ -1455,7 +1471,7 @@ const OpenCase2 = {
             router.push({ query: this.urlQuery });
         },
         openVariant(item) {
-            if (this.isVariantOpening) {
+            if (this.isVariantOpening || !this.$refs.variantDetailsDialog) {
                 return;
             }
             this.isVariantOpening = true;
@@ -1769,12 +1785,14 @@ const OpenCase2 = {
                             this.getVariantDetails(this.urlQuery.variantId)
                                 .then((response) => {
                                     if (response.success) {
-                                        this.$refs.variantDetailsDialog.setSelected();
-                                        this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
-                                        this.isVariantOpening = false;
-                                        //open other dialogs if needed
-                                        if (this.urlQuery.edit) {
-                                            this.$refs.variantDetailsDialog.startUserAnnotations();
+                                        if (this.$refs.variantDetailsDialog) {
+                                            this.$refs.variantDetailsDialog.setSelected();
+                                            this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
+                                            this.isVariantOpening = false;
+                                            //open other dialogs if needed
+                                            if (this.urlQuery.edit) {
+                                                this.$refs.variantDetailsDialog.startUserAnnotations();
+                                            }
                                         }
                                     }
                                 })
@@ -1791,12 +1809,14 @@ const OpenCase2 = {
                             this.getCNVDetails(this.urlQuery.variantId)
                                 .then((response) => {
                                     if (response.success) {
-                                        this.$refs.variantDetailsDialog.setSelected();
-                                        this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
-                                        this.isVariantOpening = false;
-                                        //open other dialogs if needed
-                                        if (this.urlQuery.edit) {
-                                            this.$refs.variantDetailsDialog.startUserAnnotations();
+                                        if (this.$refs.variantDetailsDialog) {
+                                            this.$refs.variantDetailsDialog.setSelected();
+                                            this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
+                                            this.isVariantOpening = false;
+                                            //open other dialogs if needed
+                                            if (this.urlQuery.edit) {
+                                                this.$refs.variantDetailsDialog.startUserAnnotations();
+                                            }
                                         }
                                     }
                                 });
@@ -1809,13 +1829,15 @@ const OpenCase2 = {
                             this.getTranslocationDetails(this.urlQuery.variantId)
                                 .then((response) => {
                                     if (response.success) {
-                                        this.$refs.variantDetailsDialog.setSelected();
-                                        this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
-                                        this.isVariantOpening = false;
-                                        //open other dialogs if needed
-                                        if (this.urlQuery.edit) {
-                                            this.$refs.variantDetailsDialog.startUserAnnotations();
-                                            this.closeSplashScreen();
+                                        if (this.$refs.variantDetailsDialog) {
+                                            this.$refs.variantDetailsDialog.setSelected();
+                                            this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
+                                            this.isVariantOpening = false;
+                                            //open other dialogs if needed
+                                            if (this.urlQuery.edit) {
+                                                this.$refs.variantDetailsDialog.startUserAnnotations();
+                                                this.closeSplashScreen();
+                                            }
                                         }
                                     }
                                 });
@@ -1828,13 +1850,15 @@ const OpenCase2 = {
                             this.getVirusDetails(this.urlQuery.variantId)
                                 .then((response) => {
                                     if (response.success) {
-                                        this.$refs.variantDetailsDialog.setSelected();
-                                        this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
-                                        this.isVariantOpening = false;
-                                        //open other dialogs if needed
-                                        if (this.urlQuery.edit) {
-                                            this.$refs.variantDetailsDialog.startUserAnnotations();
-                                            this.closeSplashScreen();
+                                        if (this.$refs.variantDetailsDialog) {
+                                            this.$refs.variantDetailsDialog.setSelected();
+                                            this.$refs.variantDetailsDialog.handleAnnotationSelectionChanged(true);
+                                            this.isVariantOpening = false;
+                                            //open other dialogs if needed
+                                            if (this.urlQuery.edit) {
+                                                this.$refs.variantDetailsDialog.startUserAnnotations();
+                                                this.closeSplashScreen();
+                                            }
                                         }
                                     }
                                 });
@@ -1891,7 +1915,7 @@ const OpenCase2 = {
         closeSplashScreen() {
             setTimeout(() => {
                 //make sure the dialogs are stacked up properly
-                if (this.urlQuery.showReview && this.urlQuery.variantId) {
+                if (this.urlQuery.showReview && this.urlQuery.variantId && this.$refs.reviewDialog) {
                     let styleVariantDetails = document.getElementsByClassName("variantDetailsDialog")[0].parentElement.style;
                     var styleShowReview = this.$refs.reviewDialog.$parent.$parent.$children[0].$el.parentElement.style;
                     var zIndexVariantDetails = styleVariantDetails.zIndex == "" ? 200 : parseInt(styleVariantDetails.zIndex);
@@ -1916,7 +1940,9 @@ const OpenCase2 = {
                 this.currentVariantType = "snp";
                 var table; //could be the selected variant table or the regular one
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getSnpTable();
+                    if (this.$refs.reviewDialog) {
+                        table = this.$refs.reviewDialog.getSnpTable();
+                    }
                 }
                 else {
                     table = this.$refs.geneVariantDetails;
@@ -1929,20 +1955,21 @@ const OpenCase2 = {
                     isFirstVariant = table.isFirstItem(currentIndex);
                     isLastVariant = table.isLastItem(currentIndex);
                 }
-
-                this.$refs.variantDetailsDialog.getVariantDetails(variantId, isFirstVariant, isLastVariant)
-                    .then(response => {
-                        if (response.success) {
-                            //open the variant details dialog
-                            this.variantDetailsVisible = true;
-                            this.variantDetailsEndedLoading();
-                            resolve({ success: true });
-                        }
-                    })
-                    .catch(response => {
-                        this.handleDialogs(response.data, this.getVariantDetails.bind(null,
-                            this.urlQuery.variantId));
-                    });
+                if (this.$refs.variantDetailsDialog) {
+                    this.$refs.variantDetailsDialog.getVariantDetails(variantId, isFirstVariant, isLastVariant)
+                        .then(response => {
+                            if (response.success) {
+                                //open the variant details dialog
+                                this.variantDetailsVisible = true;
+                                this.variantDetailsEndedLoading();
+                                resolve({ success: true });
+                            }
+                        })
+                        .catch(response => {
+                            this.handleDialogs(response.data, this.getVariantDetails.bind(null,
+                                this.urlQuery.variantId));
+                        });
+                }
 
             });
 
@@ -1952,7 +1979,8 @@ const OpenCase2 = {
                 this.currentVariantType = "cnv";
                 var table; //could be the selected variant table or the regular one
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getCnvTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getCnvTable();
                 }
                 else {
                     table = this.$refs.cnvDetails;
@@ -1965,21 +1993,21 @@ const OpenCase2 = {
                     isFirstVariant = table.isFirstItem(currentIndex);
                     isLastVariant = table.isLastItem(currentIndex);
                 }
-
-                this.$refs.variantDetailsDialog.getCNVDetails(variantId, isFirstVariant, isLastVariant)
-                    .then(response => {
-                        if (response.success) {
-                            //open the variant details dialog
-                            this.variantDetailsVisible = true;
-                            this.variantDetailsEndedLoading();
-                            resolve({ success: true });
-                        }
-                    })
-                    .catch(response => {
-                        this.handleDialogs(response.data, this.getVariantDetails.bind(null,
-                            this.urlQuery.variantId));
-                    });
-
+                if (this.$refs.variantDetailsDialog) {
+                    this.$refs.variantDetailsDialog.getCNVDetails(variantId, isFirstVariant, isLastVariant)
+                        .then(response => {
+                            if (response.success) {
+                                //open the variant details dialog
+                                this.variantDetailsVisible = true;
+                                this.variantDetailsEndedLoading();
+                                resolve({ success: true });
+                            }
+                        })
+                        .catch(response => {
+                            this.handleDialogs(response.data, this.getVariantDetails.bind(null,
+                                this.urlQuery.variantId));
+                        });
+                }
 
             });
 
@@ -1989,7 +2017,8 @@ const OpenCase2 = {
                 this.currentVariantType = "translocation";
                 var table; //could be the selected variant table or the regular one
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getFtlTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getFtlTable();
                 }
                 else {
                     table = this.$refs.translocationDetails;
@@ -2002,22 +2031,21 @@ const OpenCase2 = {
                     isFirstVariant = table.isFirstItem(currentIndex);
                     isLastVariant = table.isLastItem(currentIndex);
                 }
-
-                this.$refs.variantDetailsDialog.getTranslocationDetails(variantId, isFirstVariant, isLastVariant)
-                    .then(response => {
-                        if (response.success) {
-                            //open the variant details dialog
-                            this.variantDetailsVisible = true;
-                            this.variantDetailsEndedLoading();
-                            resolve({ success: true });
-                        }
-                    })
-                    .catch(response => {
-                        this.handleDialogs(response.data, this.getVariantDetails.bind(null,
-                            this.urlQuery.variantId));
-                    });
-                ;
-
+                if (this.$refs.variantDetailsDialog) {
+                    this.$refs.variantDetailsDialog.getTranslocationDetails(variantId, isFirstVariant, isLastVariant)
+                        .then(response => {
+                            if (response.success) {
+                                //open the variant details dialog
+                                this.variantDetailsVisible = true;
+                                this.variantDetailsEndedLoading();
+                                resolve({ success: true });
+                            }
+                        })
+                        .catch(response => {
+                            this.handleDialogs(response.data, this.getVariantDetails.bind(null,
+                                this.urlQuery.variantId));
+                        });
+                }
             });
 
         },
@@ -2026,7 +2054,8 @@ const OpenCase2 = {
                 this.currentVariantType = "virus";
                 var table; //could be the selected variant table or the regular one
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getVirusTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getVirusTable();
                 }
                 else {
                     table = this.$refs.virusDetails;
@@ -2039,21 +2068,21 @@ const OpenCase2 = {
                     isFirstVariant = table.isFirstItem(currentIndex);
                     isLastVariant = table.isLastItem(currentIndex);
                 }
-
-                this.$refs.variantDetailsDialog.getVirusDetails(variantId, isFirstVariant, isLastVariant)
-                    .then(response => {
-                        if (response.success) {
-                            //open the variant details dialog
-                            this.variantDetailsVisible = true;
-                            this.variantDetailsEndedLoading();
-                            resolve({ success: true });
-                        }
-                    })
-                    .catch(response => {
-                        this.handleDialogs(response.data, this.getVariantDetails.bind(null,
-                            this.urlQuery.variantId));
-                    });
-                ;
+                if (this.$refs.variantDetailsDialog) {
+                    this.$refs.variantDetailsDialog.getVirusDetails(variantId, isFirstVariant, isLastVariant)
+                        .then(response => {
+                            if (response.success) {
+                                //open the variant details dialog
+                                this.variantDetailsVisible = true;
+                                this.variantDetailsEndedLoading();
+                                resolve({ success: true });
+                            }
+                        })
+                        .catch(response => {
+                            this.handleDialogs(response.data, this.getVariantDetails.bind(null,
+                                this.urlQuery.variantId));
+                        });
+                }
 
             });
 
@@ -2062,7 +2091,8 @@ const OpenCase2 = {
             var table; //could be the selected table or the regular one
             if (this.isSNP()) {
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getSnpTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getSnpTable();
                 }
                 else {
                     table = this.$refs.geneVariantDetails;
@@ -2074,7 +2104,8 @@ const OpenCase2 = {
             }
             else if (this.isCNV()) {
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getCnvTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getCnvTable();
                 }
                 else {
                     table = this.$refs.cnvDetails;
@@ -2086,7 +2117,8 @@ const OpenCase2 = {
             }
             else if (this.isTranslocation()) {
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getFtlTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getFtlTable();
                 }
                 else {
                     table = this.$refs.translocationDetails;
@@ -2098,7 +2130,8 @@ const OpenCase2 = {
             }
             else if (this.isVirus()) {
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getVirTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getVirTable();
                 }
                 else {
                     table = this.$refs.virusDetails;
@@ -2121,7 +2154,8 @@ const OpenCase2 = {
                 return;
             }
             this.updatingSelectedVariantTable = true;
-            this.$refs.reviewDialog.startLoading();
+            if (this.$refs.reviewDialog)
+                this.$refs.reviewDialog.startLoading();
 
             this.saveVariantDisabled = ( this.$store.getters["snpStore/getSelectedVariantItems"].length == 0 
             && this.$store.getters["cnvStore/getSelectedVariantItems"].length == 0 
@@ -2131,25 +2165,34 @@ const OpenCase2 = {
 
 
             //add the current user column headerOrder but only to the all annotator table
-            snpAllHeaderOrder = this.$refs.geneVariantDetails.headerOrder.slice();
-            cnvAllHeaderOrder = this.$refs.cnvDetails.headerOrder.slice();
-            ftlAllHeaderOrder = this.$refs.translocationDetails.headerOrder.slice();
-            virAllHeaderOrder = this.$refs.virusDetails.headerOrder.slice();
+            if (this.$refs.geneVariantDetails)
+                snpAllHeaderOrder = this.$refs.geneVariantDetails.headerOrder.slice();
+            if (this.$refs.cnvDetails)
+                cnvAllHeaderOrder = this.$refs.cnvDetails.headerOrder.slice();
+            if (this.$refs.translocationDetails)
+                ftlAllHeaderOrder = this.$refs.translocationDetails.headerOrder.slice();
+            if (this.$refs.virusDetails)
+                virAllHeaderOrder = this.$refs.virusDetails.headerOrder.slice();
 
             this.addCurrentUserSelectionColumnToHeaders(snpAllHeaderOrder, cnvAllHeaderOrder, ftlAllHeaderOrder, virAllHeaderOrder);
 
-            this.$refs.reviewDialog.updateSelectedVariantTable(
-                this.$refs.geneVariantDetails.headers, snpAllHeaderOrder, this.$refs.geneVariantDetails.headerOrder,
-                this.$refs.cnvDetails.headers, cnvAllHeaderOrder, this.$refs.cnvDetails.headerOrder,
-                this.$refs.translocationDetails.headers, ftlAllHeaderOrder, this.$refs.translocationDetails.headerOrder,
-                this.$refs.virusDetails.headers, virAllHeaderOrder, this.$refs.virusDetails.headerOrder);
+            if (this.$refs.reviewDialog && this.$refs.geneVariantDetails
+                && this.$refs.cnvDetails && this.$refs.translocationDetails
+                && this.$refs.virusDetails) {
+                    this.$refs.reviewDialog.updateSelectedVariantTable(
+                        this.$refs.geneVariantDetails.headers, snpAllHeaderOrder, this.$refs.geneVariantDetails.headerOrder,
+                        this.$refs.cnvDetails.headers, cnvAllHeaderOrder, this.$refs.cnvDetails.headerOrder,
+                        this.$refs.translocationDetails.headers, ftlAllHeaderOrder, this.$refs.translocationDetails.headerOrder,
+                        this.$refs.virusDetails.headers, virAllHeaderOrder, this.$refs.virusDetails.headerOrder);
+                }
             this.updatingSelectedVariantTable = false;
         },
         loadNextVariant() {
             var table; //could be the selected table or the regular one
             if (this.isSNP()) {
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getSnpTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getSnpTable();
                 }
                 else {
                     table = this.$refs.geneVariantDetails;
@@ -2161,7 +2204,8 @@ const OpenCase2 = {
             }
             else if (this.isCNV()) {
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getCnvTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getCnvTable();
                 }
                 else {
                     table = this.$refs.cnvDetails;
@@ -2173,7 +2217,8 @@ const OpenCase2 = {
             }
             else if (this.isTranslocation()) {
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getFtlTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getFtlTable();
                 }
                 else {
                     table = this.$refs.translocationDetails;
@@ -2185,7 +2230,8 @@ const OpenCase2 = {
             }
             else if (this.isVirus()) {
                 if (this.reviewDialogVisible) {
-                    table = this.$refs.reviewDialog.getVirTable();
+                    if (this.$refs.reviewDialog)
+                        table = this.$refs.reviewDialog.getVirTable();
                 }
                 else {
                     table = this.$refs.virusDetails;
@@ -2201,12 +2247,14 @@ const OpenCase2 = {
             this.updateRoute();
         },
         closeVariantDetails() {
-            this.isVariantOpening = false;
-            this.variantDetailsVisible = false;
-            this.urlQuery.variantId = null;
-            this.urlQuery.variantType = null;
-            this.urlQuery.edit = false; //also close edit but it should have been done earlier
-            this.$refs.variantDetailsDialog.resetCNVChart();
+            if (this.urlQuery && this.$refs.variantDetailsDialog) {
+                this.isVariantOpening = false;
+                this.variantDetailsVisible = false;
+                this.urlQuery.variantId = null;
+                this.urlQuery.variantType = null;
+                this.urlQuery.edit = false; //also close edit but it should have been done earlier
+                this.$refs.variantDetailsDialog.resetCNVChart();
+            }
         },
         handleTabChanged(newValue, oldValue) {
             //SNP/Indel tab need to be active to allow filtering
@@ -2291,12 +2339,12 @@ const OpenCase2 = {
 
             if (this.waitingForAjaxCount > 0) {
                 this.waitingForAjaxActive = true;
-                if (this.variantDetailsUnsaved) {
+                if (this.variantDetailsUnsaved && this.$refs.variantDetailsDialog) {
                     this.$refs.variantDetailsDialog.saveAllVariants(true).then(() => {
                         this.waitingForAjaxCount--;
                     });
                 }
-                if (this.annotationSelectionUnSaved) {
+                if (this.annotationSelectionUnSaved && this.$refs.variantDetailsDialog) {
                     this.$refs.variantDetailsDialog.saveAllAnnotationSelections(true).then(() => {
                         this.waitingForAjaxCount--;
                     });
@@ -2435,7 +2483,7 @@ const OpenCase2 = {
         },
         createAutoSaveInterval() {
             this.autoSaveInterval = setInterval(() => {
-                var editing = this.$route.query.edit === true || this.$route.query.edit === "true";
+                var editing = this.$route.query.edit === true || this.$route.query.edit === "true" || (this.$refs.caseNotes && this.$refs.caseNotes.isFocused);
                 var reviewing = this.$route.query.showReview === true || this.$route.query.showReview === "true";
                 if (!this.waitingForAjaxActive && !editing && !reviewing) {
                     this.handleSaveAll(true);
@@ -2465,14 +2513,16 @@ const OpenCase2 = {
             return path;
         },
         toggleLookupTool() {
-            this.$refs.lookupTool.panelVisible = !this.$refs.lookupTool.panelVisible;
-            this.$nextTick(() => {
-                this.$refs.lookupTool.currentlyActive = "Cancer";
-                this.$refs.lookupTool.currentOncotreeCode = this.patientDetailsOncoTreeDiagnosis;
-                if (this.$refs.lookupTool.isFormValid()) {
-                    this.$refs.lookupTool.submitForm();
-                }
-            })
+            if (this.$refs.lookupTool) {
+                this.$refs.lookupTool.panelVisible = !this.$refs.lookupTool.panelVisible;
+                this.$nextTick(() => {
+                    this.$refs.lookupTool.currentlyActive = "Cancer";
+                    this.$refs.lookupTool.currentOncotreeCode = this.patientDetailsOncoTreeDiagnosis;
+                    if (this.$refs.lookupTool.isFormValid()) {
+                        this.$refs.lookupTool.submitForm();
+                    }
+                });
+            }
         },
         reloadLookupValues(ref, cnvGeneName, activeButton) {
             if (!ref) {
@@ -2493,7 +2543,8 @@ const OpenCase2 = {
             return this.$refs.lookupTool && this.$refs.lookupTool.panelVisible;
         },
         addOtherAnnotatorSelection(type, annotatorId, variantIds) {
-            this.$refs.reviewDialog.startLoading();
+            if (this.$refs.reviewDialog)
+                this.$refs.reviewDialog.startLoading();
             this.waitingForAjaxActive = true;
             //update dicts of selected from selectionPerAnnotator
             if (type) {
@@ -2510,7 +2561,8 @@ const OpenCase2 = {
             });
         },
         copyLink() {
-            this.$refs.copyTextField.focus();
+            if (this.$refs.copyTextField)
+                this.$refs.copyTextField.focus();
             document.execCommand("copy");
             this.showSnackBarMessage("Text copied!");
         },
@@ -2522,27 +2574,32 @@ const OpenCase2 = {
             window.open(link, "_blank", 'noopener');
         },
         autoSelectVUSs() {
-            this.$refs.reviewDialog.autoVUSLoading = true;
-            axios.get(
-                webAppRoot + "/selectVUSAnnotations",
-                {
-                    params: {
-                        caseId: this.$route.params.id
-                    }
-                })
-                .then(response => {
-                    if (response.data.isAllowed && response.data.success) {
-                        console.log(response.data.payload);
-                        this.$refs.reviewDialog.openAutoSelectVUSSummary(response.data.payload);
-                    }
-                    else {
-                        this.$refs.reviewDialog.autoVUSLoading = false;
-                        this.handleDialogs(response.data, this.selectVUSAnnotations);
-                    }
-                }).catch(error => {
-                    this.$refs.reviewDialog.autoVUSLoading = false;
-                    this.handleAxiosError(error);
-                });
+            if (this.$refs.reviewDialog) {
+                this.$refs.reviewDialog.autoVUSLoading = true;
+                axios.get(
+                    webAppRoot + "/selectVUSAnnotations",
+                    {
+                        params: {
+                            caseId: this.$route.params.id
+                        }
+                    })
+                    .then(response => {
+                        if (response.data.isAllowed && response.data.success) {
+                            console.log(response.data.payload);
+                            if (this.$refs.reviewDialog)
+                                this.$refs.reviewDialog.openAutoSelectVUSSummary(response.data.payload);
+                        }
+                        else {
+                            if (this.$refs.reviewDialog)
+                                this.$refs.reviewDialog.autoVUSLoading = false;
+                            this.handleDialogs(response.data, this.selectVUSAnnotations);
+                        }
+                    }).catch(error => {
+                        if (this.$refs.reviewDialog)
+                            this.$refs.reviewDialog.autoVUSLoading = false;
+                        this.handleAxiosError(error);
+                    });
+            }
         },
         openAddFusionDialog() {
             this.addFusionDialogVisible = true;

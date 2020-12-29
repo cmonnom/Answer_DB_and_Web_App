@@ -17,9 +17,10 @@ response.setDateHeader ("Expires", 0);
 <%@include file="/WEB-INF/view/templates/header.jsp"%>
 
 <!-- Just for the launch of the final version -->
-<script src="${pageContext.request.contextPath}/resources/js/goodies/sketch.min.js"></script>
-<script src="${pageContext.request.contextPath}/resources/js/components/goodies2.js"></script>
-<script src="${pageContext.request.contextPath}/resources/js/goodies/fireworks.js"></script>
+<!-- <script src="${pageContext.request.contextPath}/resources/js/goodies/sketch.min.js"></script> -->
+<!-- <script src="${pageContext.request.contextPath}/resources/js/components/goodies2.js"></script> -->
+<!-- <script src="${pageContext.request.contextPath}/resources/js/goodies/fireworks.js"></script> -->
+
 <link rel="stylesheet" href="https://vjs.zencdn.net/7.6.5/video-js.css" integrity="sha384-61rYdFd3nS4hgsKoxpxFcg8RiMfBpWXKmL84K2HdfDF8c5sGAxnBimcBev2PVgX5" crossorigin="anonymous">
 <script src="https://vjs.zencdn.net/7.6.5/video.js" integrity="sha384-qWr6a0KvuD2O1tYBWipMVvDTWTHCWWXN3DfMyDEuoQrLlheP3Ebk9WIqS1SAA37j" crossorigin="anonymous"></script>
 <script>

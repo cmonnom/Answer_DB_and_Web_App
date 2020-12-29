@@ -15,6 +15,8 @@ response.setDateHeader ("Expires", 0);
 <head>
 <title>Answer</title>
 <%@include file="/WEB-INF/view/templates/header.jsp" %>
+
+
 <script src="${pageContext.request.contextPath}/resources/js/components/login-full-page2.js"></script>
 
 <!-- Just for the launch of the final version 

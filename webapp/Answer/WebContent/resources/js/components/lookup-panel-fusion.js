@@ -552,54 +552,58 @@ Vue.component('lookup-panel-fusion', {
             || this.fusionGeniePlotLoading;
         },
         fetchFusionPlots() {
-            this.fusionGeniePlotLoading = true;
-            this.fusionGeniePlotError = false;
-            var promise1 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidenceAbsFusion", {
-                geneFive: this.currentFive,
-                geneThree: this.currentThree,
-                plotId: "fusionAbsPlot" + this.uniqId,
-            });
-            var promise2 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidencePctFusion", {
-                geneFive: this.currentFive,
-                geneThree: this.currentThree,
-                plotId: "fusionPctPlot" + this.uniqId,
-            });
-            Promise.all([promise1, promise2]).then(values => {
-                this.fusionGeniePlotLoading = false;
-                if (values.filter(v => v.success).length != values.length) {
-                    console.log("Some plots did not finish properly");
-                    this.fusionGeniePlotError = true;
-                }
-                else {
-                    this.fusionGeniePlotError = false;
-                }
-            })
+            if (this.$refs.plotUtils) {
+                this.fusionGeniePlotLoading = true;
+                this.fusionGeniePlotError = false;
+                var promise1 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidenceAbsFusion", {
+                    geneFive: this.currentFive,
+                    geneThree: this.currentThree,
+                    plotId: "fusionAbsPlot" + this.uniqId,
+                });
+                var promise2 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidencePctFusion", {
+                    geneFive: this.currentFive,
+                    geneThree: this.currentThree,
+                    plotId: "fusionPctPlot" + this.uniqId,
+                });
+                Promise.all([promise1, promise2]).then(values => {
+                    this.fusionGeniePlotLoading = false;
+                    if (values.filter(v => v.success).length != values.length) {
+                        console.log("Some plots did not finish properly");
+                        this.fusionGeniePlotError = true;
+                    }
+                    else {
+                        this.fusionGeniePlotError = false;
+                    }
+                });
+            }
         },
         fetchCosmicFusionPlots() {
-            this.fusionCosmicPlotLoading = true;
-            this.fusionCosmicPlotError = false;
-            var promise1 = this.$refs.plotUtils.updateBarPlot("/getBreakPointPlot", {
-                geneFive: this.currentFive,
-                geneThree: this.currentThree,
-                plotId: "fusionBreakpointFivePlot" + this.uniqId,
-                plotFive: true
-            });
-            var promise2 = this.$refs.plotUtils.updateBarPlot("/getBreakPointPlot", {
-                geneFive: this.currentFive,
-                geneThree: this.currentThree,
-                plotId: "fusionBreakpointThreePlot" + this.uniqId,
-                plotFive: false
-            });
-            Promise.all([promise1, promise2]).then(values => {
-                this.fusionCosmicPlotLoading = false;
-                if (values.filter(v => v.success).length != values.length) {
-                    console.log("Some plots did not finish properly");
-                    this.fusionCosmicPlotError = true;
-                }
-                else {
-                    this.fusionCosmicPlotError = false;
-                }
-            })
+            if (this.$refs.plotUtils) {
+                this.fusionCosmicPlotLoading = true;
+                this.fusionCosmicPlotError = false;
+                var promise1 = this.$refs.plotUtils.updateBarPlot("/getBreakPointPlot", {
+                    geneFive: this.currentFive,
+                    geneThree: this.currentThree,
+                    plotId: "fusionBreakpointFivePlot" + this.uniqId,
+                    plotFive: true
+                });
+                var promise2 = this.$refs.plotUtils.updateBarPlot("/getBreakPointPlot", {
+                    geneFive: this.currentFive,
+                    geneThree: this.currentThree,
+                    plotId: "fusionBreakpointThreePlot" + this.uniqId,
+                    plotFive: false
+                });
+                Promise.all([promise1, promise2]).then(values => {
+                    this.fusionCosmicPlotLoading = false;
+                    if (values.filter(v => v.success).length != values.length) {
+                        console.log("Some plots did not finish properly");
+                        this.fusionCosmicPlotError = true;
+                    }
+                    else {
+                        this.fusionCosmicPlotError = false;
+                    }
+                });
+            }
         },
         formatTrialArray(items) {
             if (items) {

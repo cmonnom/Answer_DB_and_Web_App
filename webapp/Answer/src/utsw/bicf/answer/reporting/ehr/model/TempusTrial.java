@@ -7,6 +7,7 @@ public class TempusTrial {
 	
 	List<String> biomarkers = new ArrayList<String>();
 	String nctId;
+	String title;
 	
 	public List<String> getBiomarkers() {
 		return biomarkers;
@@ -19,6 +20,12 @@ public class TempusTrial {
 	}
 	public void setNctId(String nctId) {
 		this.nctId = nctId;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
 	}
 	
 

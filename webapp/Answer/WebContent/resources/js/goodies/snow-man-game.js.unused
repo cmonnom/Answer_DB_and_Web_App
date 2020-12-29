@@ -1,0 +1,214 @@
+Vue.component('snow-man-game', {
+    props: {
+        dataUrlRoot: {default: webAppRoot, type: String}
+    },
+    template: /*html*/`<div>
+
+    <v-dialog v-model="gameon" fullscreen hide-overlay>
+    <v-toolbar>
+    <v-btn @click="reset()" class="teal lighten-2" dark>RESET</v-btn>
+    <v-btn @click="screenshot()" class="teal lighten-2" dark :loading="loadingImage">Download</v-btn>
+    <v-btn @click="gameon = false" class="teal lighten-2" dark>CLOSE</v-btn>
+    <v-toolbar-title>
+    <span>Please share a screenshot of your masterpiece on Slack!</span>
+    </v-toolbar-title>
+    </v-toolbar> 
+    <v-card height="100%">
+    <v-card-text id="snapshot-card">
+        <v-layout row wrap>
+            <v-flex xs6 id="snapshot">
+            <img v-if="currentBackground" :src="dataUrlRoot + '/resources/images/goodies/snowman/' + currentBackground.img" width="100%">
+            <img id="body" :src="dataUrlRoot + '/resources/images/goodies/snowman/body.svg'" style="position:absolute; bottom: 200px; left: 150px;">
+            </v-flex>
+
+            <v-flex xs6>
+            <v-container grid-list-sm fluid>
+            <v-layout row wrap>
+                <v-flex xs12>
+                <img  v-for="item in items" :key="item.img"
+                :ref="item.img" :id="item.img"
+                :src="dataUrlRoot + '/resources/images/goodies/snowman/' + item.img + '.svg'">
+                </v-flex>
+                <v-flex xs12>
+                <v-layout row wrap>
+                    <v-container grid-list-sm fluid>
+                    <v-layout row wrap>
+                    <v-flex xs v-for="item in landscapes" :key="item.img" >
+                    <img @click="" :class="isSelected(item) ? 'goodies-border' : ''" @click="changeBackground(item)" 
+                    width="200px"
+                :src="dataUrlRoot + '/resources/images/goodies/snowman/' + item.img">
+                    </v-flex>
+                    <v-flex xs>
+                        <v-btn @click="currentBackground = null">No Background</v-btn>
+                    </v-flex>
+                    </v-layout>
+                    </v-container>
+                </v-layout>
+                </v-flex>
+            </v-layout>
+            </v-container>
+            </v-flex>
+        </v-layout>
+    </v-card-text>
+    </v-card>
+    </v-dialog>
+    </div>
+`,
+    data() {
+        return {
+            firstime: true,
+            gameon: false,
+            loadingImage: false,
+            items: [
+                {img:"nose01", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"nose02", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"nose03", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+
+                {img:"hand_left01", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"hand_left02", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+
+                {img:"hand_right01", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"hand_right02", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+
+                {img:"neck01", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"neck02", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"neck03", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"neck04", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"neck05", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+
+                {img:"eyes01", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"eyes02", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"eyes03", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"eyes04", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"eyes05", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"eyes06", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+
+                {img:"head01", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"head02", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"head03", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"head04", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"head05", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"head06", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+
+                {img:"mouth01", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"mouth02", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+                {img:"mouth03", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+
+                {img:"belt", x: 100, y:100, prevX: 100, prevY: 100, hasMoved: false},
+
+
+            ],
+            landscapes: [
+                {img: "landscape-1.jpg"},
+                {img: "landscape-2.jpg"},
+                {img: "landscape-3.jpg"},
+                {img: "landscape-4.jpg"},
+                {img: "landscape-5.jpg"},
+            ],
+            currentBackground: null
+        }
+
+    },
+    methods: {
+        handleDragStart(event, item) {
+            item.hasMoved = true;
+            console.log("dragging");
+            // event.dataTransfer.setDragImage(this.$refs[item.img][0], event.clientX , event.clientY);
+            item.prevX = event.clientX;
+            item.prevY = event.clientY;
+        },
+        handleDragEnd(event, item) {
+            console.log(item.x, event.clientX, item.prevX);
+            // item.x = item.x + event.clientX - item.prevX;
+            // item.y = item.y + event.clientY - item.prevY;
+            item.x = event.clientX;
+            item.y = event.clientY;
+        },
+        changeBackground(item) {
+            this.currentBackground = item;
+        },
+        spreadItems() {
+            if (this.firstime && this.gameon) {
+                this.$nextTick(()=> {
+                    setTimeout(() => {
+                        $('#body').draggable(
+                            {
+                                containment: $('#snapshot-card'),
+                                drag: function(){
+                                    var offset = $(this).offset();
+                                },
+                                stop: function(){
+                                }
+                        });
+                        for (var i = 0; i < this.items.length; i++) {
+                            var item = this.items[i];
+                            $('#' + item.img).draggable(
+                                {
+                                    containment: $('#snapshot-card'),
+                                    drag: function(){
+                                        var offset = $(this).offset();
+                                    },
+                                    stop: function(){
+                                    }
+                                });
+                        }
+                        this.firstime = false;
+                    }, 1000);
+                });
+            }
+        },
+        isSelected(item) {
+            return item == this.currentBackground;
+        },
+        reset() {
+            this.currentBackground = null;
+            this.firstime = true;
+            for (var i = 0; i < this.items.length; i++) {
+                var item = this.items[i];
+                $('#' + item.img).draggable("destroy");
+                document.getElementById(item.img).style = "";
+            }
+            this.spreadItems();
+        },
+        screenshot() {
+            // html2canvas($("body")[0], {
+            //     onrendered: function(canvas) {
+            //         // canvas is the final rendered <canvas> element
+            //         var myImage = canvas.toDataURL("image/png");
+            //         window.open(myImage);
+            //     }
+            // });
+            this.loadingImage = true;
+            var width = document.querySelector("#snapshot-card").clientWidth / 2
+            html2canvas(document.querySelector("#snapshot-card"),{
+                x:0, y:0, width: width
+            }).then(canvas => {
+                // document.body.appendChild(canvas)
+                var image = canvas.toDataURL("image/png");
+                var hiddenElement = document.createElement('a');
+                hiddenElement.href = image;
+                hiddenElement.download = "masterpiece.png";
+                document.body.appendChild(hiddenElement);
+                hiddenElement.click();
+                document.body.removeChild(hiddenElement);
+                this.loadingImage = false;
+            });
+        }
+    },
+    computed: {
+    },
+    created() {
+    },
+    mounted() {
+        this.spreadItems();
+    },
+    beforeDestroy() {
+    },
+    destroyed() {
+    },
+    watch: {
+        "gameon": "spreadItems"
+    }
+
+
+});

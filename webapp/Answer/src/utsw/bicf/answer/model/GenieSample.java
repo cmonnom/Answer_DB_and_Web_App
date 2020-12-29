@@ -31,6 +31,9 @@ public class GenieSample {
 	
 	@Column(name="cancer_type")
 	String cancerType;
+	
+	@Column(name="assay_id")
+	String assayId;
 
 	public Integer getGenieSampleId() {
 		return genieSampleId;
@@ -70,5 +73,13 @@ public class GenieSample {
 
 	public void setCancerType(String cancerType) {
 		this.cancerType = cancerType;
+	}
+
+	public String getAssayId() {
+		return assayId;
+	}
+
+	public void setAssayId(String assayId) {
+		this.assayId = assayId;
 	}
 }

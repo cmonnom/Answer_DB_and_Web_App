@@ -534,28 +534,30 @@ Vue.component('lookup-panel-cna', {
         //     })
         // },
         fetchCNVPlots() {
-            this.cnvPlotLoading = true;
-            this.cnvPlotError = false;
-            var promise1 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidenceAbsCNV", {
-                hugoSymbol: this.currentGene,
-                ampDel: this.currentAmpDel,
-                plotId: "cnvAbsPlot" + this.uniqId,
-            });
-            var promise2 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidencePctCNV", {
-                hugoSymbol: this.currentGene,
-                ampDel: this.currentAmpDel,
-                plotId: "cnvPctPlot" + this.uniqId,
-            });
-            Promise.all([promise1, promise2]).then(values => {
-                this.cnvPlotLoading = false;
-                if (values.filter(v => v.success).length != values.length) {
-                    console.log("Some plots did not finish properly");
-                    this.cnvPlotError = true;
-                }
-                else {
-                    this.cnvPlotError = false;
-                }
-            })
+            if (this.$refs.plotUtils) {
+                this.cnvPlotLoading = true;
+                this.cnvPlotError = false;
+                var promise1 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidenceAbsCNV", {
+                    hugoSymbol: this.currentGene,
+                    ampDel: this.currentAmpDel,
+                    plotId: "cnvAbsPlot" + this.uniqId,
+                });
+                var promise2 = this.$refs.plotUtils.updateBarPlot("/getHighestIndidencePctCNV", {
+                    hugoSymbol: this.currentGene,
+                    ampDel: this.currentAmpDel,
+                    plotId: "cnvPctPlot" + this.uniqId,
+                });
+                Promise.all([promise1, promise2]).then(values => {
+                    this.cnvPlotLoading = false;
+                    if (values.filter(v => v.success).length != values.length) {
+                        console.log("Some plots did not finish properly");
+                        this.cnvPlotError = true;
+                    }
+                    else {
+                        this.cnvPlotError = false;
+                    }
+                });
+            }
         },
         formatTrialArray(items) {
             if (items) {

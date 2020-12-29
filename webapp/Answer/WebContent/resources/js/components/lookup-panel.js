@@ -480,8 +480,10 @@ Vue.component('lookup-panel', {
             if (this.isFormValid("Gene") && this.needsReloading("Gene")) {
             setTimeout(() => {
                     this.$nextTick(() => {
-                        this.$refs.genePanel.reload();
-                        this.lastGene = this.currentGene;
+                        if (this.$refs.genePanel) {
+                            this.$refs.genePanel.reload();
+                            this.lastGene = this.currentGene;
+                        }
                     });
                 }, this.currentlyActive == "Gene" ? 0 : timeout);
             }
@@ -498,11 +500,13 @@ Vue.component('lookup-panel', {
             if (this.isFormValid("Variant") && this.needsReloading("Variant")) {
             setTimeout(() => {
                     this.$nextTick(() => {
-                        this.$refs.variantPanel.reload();
-                        this.lastGene = this.currentGene;
-                        this.lastVariant = this.currentVariant;
-                        this.lastOncotreeCode = this.currentOncotreeCode.text;
-                        this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
+                        if (this.$refs.variantPanel) {
+                            this.$refs.variantPanel.reload();
+                            this.lastGene = this.currentGene;
+                            this.lastVariant = this.currentVariant;
+                            this.lastOncotreeCode = this.currentOncotreeCode.text;
+                            this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
+                        }
                     });
                 }, this.currentlyActive == "Variant" ? 0 : timeout);
             }
@@ -511,11 +515,13 @@ Vue.component('lookup-panel', {
             if (this.isFormValid("CNV") && this.needsReloading("CNV")) {
                 setTimeout(() => {
                         this.$nextTick(() => {
-                            this.$refs.cnvPanel.reload();
-                            this.lastGene = this.currentGene;
-                            this.lastAmpDel = this.currentAmpDel;
-                            this.lastOncotreeCode = this.currentOncotreeCode.text;
-                            this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
+                            if (this.$refs.cnvPanel) {
+                                this.$refs.cnvPanel.reload();
+                                this.lastGene = this.currentGene;
+                                this.lastAmpDel = this.currentAmpDel;
+                                this.lastOncotreeCode = this.currentOncotreeCode.text;
+                                this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
+                            }
                         });
                     }, this.currentlyActive == "CNV" ? 0 : timeout);
             }
@@ -523,11 +529,13 @@ Vue.component('lookup-panel', {
             if (this.isFormValid("Fusion") && this.needsReloading("Fusion")) {
                 setTimeout(() => {
                         this.$nextTick(() => {
-                            this.$refs.fusionPanel.reload();
-                            this.lastFive = this.currentFive;
-                            this.lastThree = this.currentThree;
-                            this.lastOncotreeCode = this.currentOncotreeCode.text;
-                            this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
+                            if (this.$refs.fusionPanel) {
+                                this.$refs.fusionPanel.reload();
+                                this.lastFive = this.currentFive;
+                                this.lastThree = this.currentThree;
+                                this.lastOncotreeCode = this.currentOncotreeCode.text;
+                                this.lastOncotreeCodeLabel = this.currentOncotreeCode.label;
+                            }
                         });
                     }, this.currentlyActive == "Fusion" ? 0 : timeout);
             }
@@ -696,7 +704,7 @@ Vue.component('lookup-panel', {
             this.$emit("reload-values");
         },
         fetchCancerPlot() {
-            if (this.currentOncotreeCode) {
+            if (this.currentOncotreeCode && this.$refs.plotUtils) {
                 this.cancerPlotLoading = true;
                 this.cancerPlotError = false;
                 var promise1 = this.$refs.plotUtils.updateBarPlot("/getMutatedGeneByCancer", {

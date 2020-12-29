@@ -82,7 +82,7 @@ Vue.component('reset-password', {
         submitForm() {
             this.showError = false;
             this.loading = true;
-            if (this.$refs.form.validate()) {
+            if (this.$refs.form && this.$refs.form.validate()) {
                 var ajax = axios({
                     method: 'post',
                     url: webAppRoot + "/updatePassword",

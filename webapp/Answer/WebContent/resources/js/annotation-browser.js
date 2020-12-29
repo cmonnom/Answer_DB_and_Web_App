@@ -394,7 +394,9 @@ const AnnotationBrowser = {
         annotation.modifiedSince = annotations[i].modifiedSince;
         annotation.pmids = annotations[i].pmids;
         // annotation.nctIds = annotations[i].nctIds;
-        annotation.scopeTooltip = this.$refs.annotationDialog.createLevelInformation(annotations[i]);
+        if (this.$refs.annotationDialog) {
+          annotation.scopeTooltip = this.$refs.annotationDialog.createLevelInformation(annotations[i]);
+        }
         annotation.tier = annotations[i].tier;
         annotation.classification = annotations[i].classification;
         annotation.isSelected = annotations[i].isSelected;
@@ -454,16 +456,18 @@ const AnnotationBrowser = {
                         }
                         this.getAllTrials();
                         this.$nextTick(() => {
+                          if (this.$refs.annotationDialog) {
                             this.$refs.annotationDialog.cancelAnnotations();
                             this.snackBarVisible = true;
                             if (this.waitingForGoodies) {
                                 this.waitingForGoodies = false;
                                 this.snackBarTimeout = 4000;
-                                setTimeout(() => {
-                                    this.showGoodiesPanel = true;
-                                    this.$refs.goodiesPanel.activateGoodies();
-                                }, this.snackBarTimeout); //4sec might help with having the proper top/left calculated
+                                // setTimeout(() => {
+                                //     this.showGoodiesPanel = true;
+                                //     this.$refs.goodiesPanel.activateGoodies();
+                                // }, this.snackBarTimeout); //4sec might help with having the proper top/left calculated
                             }
+                          }
                         });
                     } else {
                         this.handleDialogs(response.data, this.commitCaseAgnosticAnnotations.bind(null, userAnnotations));
@@ -504,7 +508,7 @@ const AnnotationBrowser = {
       this.urlQuery.variantType = 'snp'
       this.urlQuery.edit = this.$route.query.edit === true || this.$route.query.edit === "true";
 
-      if (!this.urlQuery.edit) { //close edit annotation
+      if (!this.urlQuery.edit && this.$refs.annotationDialog) { //close edit annotation
         this.$refs.annotationDialog.cancelAnnotations();
       }
       else if (this.urlQuery.edit && this.urlQuery.annotationId) {
@@ -533,24 +537,26 @@ const AnnotationBrowser = {
       
     },
     initEditAnnotation(annotation) {
-      this.currentAnnotation = annotation;
-      if (annotation) {
-        this.$refs.annotationDialog.userAnnotations = [this.currentAnnotation];
-        if (annotation.isVariantSpecific) {
-          this.$refs.annotationDialog.getVariantsForGene(annotation.geneId, annotation);
+      if (this.$refs.annotationDialog) {
+        this.currentAnnotation = annotation;
+        if (annotation) {
+          this.$refs.annotationDialog.userAnnotations = [this.currentAnnotation];
+          if (annotation.isVariantSpecific) {
+            this.$refs.annotationDialog.getVariantsForGene(annotation.geneId, annotation);
+          }
+          this.annotationId = this.currentAnnotation._id.$oid;
+          this.singleAnnotation = true;
+          
         }
-        this.annotationId = this.currentAnnotation._id.$oid;
-        this.singleAnnotation = true;
-        
+        else {
+          this.$refs.annotationDialog.userAnnotations = [];
+          this.annotationId = "";
+          this.singleAnnotation = false;
+        }
+        this.urlQuery.annotationId =  this.annotationId;
+        this.urlQuery.edit = true;
+        this.updateRoute();
       }
-      else {
-        this.$refs.annotationDialog.userAnnotations = [];
-        this.annotationId = "";
-        this.singleAnnotation = false;
-      }
-      this.urlQuery.annotationId =  this.annotationId;
-      this.urlQuery.edit = true;
-      this.updateRoute();
     },
     handleAxiosError(error) {
       console.log(error);
@@ -559,7 +565,9 @@ const AnnotationBrowser = {
     handleEditAnnotationOpening() {
       if (this.urlQuery.edit === true) {
         setTimeout(() => {
-          this.$refs.annotationDialog.startUserAnnotations();
+          if (this.$refs.annotationDialog) {
+           this.$refs.annotationDialog.startUserAnnotations();
+          }
         }, 1000);
       }
     },
@@ -573,7 +581,7 @@ const AnnotationBrowser = {
       }
   },
   handleSearchFocus() {
-    if (this.searchTrialAnnotationsVisible) {
+    if (this.searchTrialAnnotationsVisible && this.$refs.annotationTextSearch) {
       this.$nextTick(this.$refs.annotationTextSearch.focus);
     }
   },

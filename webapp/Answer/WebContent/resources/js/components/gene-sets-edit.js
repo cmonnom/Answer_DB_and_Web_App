@@ -152,21 +152,25 @@ Vue.component('gene-sets-edit', {
       this.editGeneSetDialogVisible = true;
     },
     editReportGroup(reportGroupId) {
-      this.editAdd = "Edit";
-      var reportGroup = this.$refs.geneSetTable.items.filter(item => item.reportGroupId == reportGroupId)[0];
-      this.currentEditGeneSetReportGroupId = reportGroup.reportGroupId;
-      this.currentEditGeneSetGroupName = reportGroup.groupName;
-      this.editGroupName = reportGroup.groupName;
-      this.editDescription = reportGroup.description;
-      this.editReference = reportGroup.referenceUrl;
-      this.editGenes = reportGroup.genes;
-      this.editGeneSetDialogVisible = true;
+      if (this.$refs.geneSetTable) {
+        this.editAdd = "Edit";
+        var reportGroup = this.$refs.geneSetTable.items.filter(item => item.reportGroupId == reportGroupId)[0];
+        this.currentEditGeneSetReportGroupId = reportGroup.reportGroupId;
+        this.currentEditGeneSetGroupName = reportGroup.groupName;
+        this.editGroupName = reportGroup.groupName;
+        this.editDescription = reportGroup.description;
+        this.editReference = reportGroup.referenceUrl;
+        this.editGenes = reportGroup.genes;
+        this.editGeneSetDialogVisible = true;
+      }
     },
     confirmDeleteReportGroup(reportGroupId) {
-      var reportGroup = this.$refs.geneSetTable.items.filter(item => item.reportGroupId == reportGroupId)[0];
-      this.currentEditGeneSetReportGroupId = reportGroup.reportGroupId;
-      this.currentEditGeneSetGroupName = reportGroup.groupName;
-      this.deleteGeneSetDialogVisible = true;
+      if (this.$refs.geneSetTable) {
+        var reportGroup = this.$refs.geneSetTable.items.filter(item => item.reportGroupId == reportGroupId)[0];
+        this.currentEditGeneSetReportGroupId = reportGroup.reportGroupId;
+        this.currentEditGeneSetGroupName = reportGroup.groupName;
+        this.deleteGeneSetDialogVisible = true;
+      }
     },
     deleteReportGroup(reportGroupId) {
       this.snackBarMessage = 'Gene Set deleted successfully';
@@ -178,9 +182,11 @@ Vue.component('gene-sets-edit', {
       })
         .then(response => {
           if (response.data.isAllowed && response.data.success) {
-            this.$refs.geneSetTable.getAjaxData();
-            this.snackBarVisible = true;
-            this.deleteGeneSetDialogVisible = false;
+            if (this.$refs.geneSetTable) {
+              this.$refs.geneSetTable.getAjaxData();
+              this.snackBarVisible = true;
+              this.deleteGeneSetDialogVisible = false;
+            }
           }
           else {
             this.handleDialogs(response.data, this.saveEdits);
@@ -213,9 +219,11 @@ Vue.component('gene-sets-edit', {
       })
         .then(response => {
           if (response.data.isAllowed && response.data.success) {
-            this.$refs.geneSetTable.getAjaxData();
-            this.snackBarVisible = true;
-            this.editGeneSetDialogVisible = false;
+            if (this.$refs.geneSetTable) {
+              this.$refs.geneSetTable.getAjaxData();
+              this.snackBarVisible = true;
+              this.editGeneSetDialogVisible = false;
+            }
           }
           else {
             this.handleDialogs(response.data, this.saveEditsGeneSet);

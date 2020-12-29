@@ -33,7 +33,10 @@ public class OtherProperties {
 	}
 
 	public String getProxyHostname() {
-		return proxyHostname;
+		if (proxyHostname != null && !proxyHostname.equals("")) {
+			return proxyHostname;
+		}
+		return null;
 	}
 
 	public void setProxyHostname(String proxyHostname) {

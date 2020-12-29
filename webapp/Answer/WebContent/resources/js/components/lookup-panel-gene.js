@@ -329,7 +329,9 @@ Vue.component('lookup-panel-gene', {
                 });
         },
         openCloseAllReactome(doOpen) {
-            this.$refs.reactome.updateAll(doOpen);
+            if (this.$refs.reactome) {
+                this.$refs.reactome.updateAll(doOpen);
+            }
         },
         openReactomeRoot(item) {
             var textToParse = JSON.stringify(item).match(this.reactomeRegex);
@@ -358,7 +360,7 @@ Vue.component('lookup-panel-gene', {
             }
         },
         fetchGenePlot() {
-            if (this.currentGene) {
+            if (this.currentGene && this.$refs.plotUtils) {
                 this.genePlotLoading = true;
                 this.genePlotError = false;
                 var promise1 = this.$refs.plotUtils.updateBarPlot("/getAlterationByCancer", {

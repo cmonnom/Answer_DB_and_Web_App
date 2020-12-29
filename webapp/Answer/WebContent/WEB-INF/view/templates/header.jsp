@@ -41,7 +41,7 @@ Authors Dr. B. Cantarel, Dr J. Gagan, Benjamin Wakeland and Guillaume Jimenez
 <link rel="stylesheet" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700">
 <link rel="stylesheet" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <link rel="stylesheet" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
-<link rel="stylesheet" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://cdn.materialdesignicons.com/4.5.95/css/materialdesignicons.min.css">
+<link rel="stylesheet" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/5.8.55/css/materialdesignicons.min.css" integrity="sha512-x96qcyADhiw/CZY7QLOo7dB8i/REOEHZDhNfoDuJlyQ+yZzhdy91eAa4EkO7g3egt8obvLeJPoUKEKu5C5JYjA=="  crossorigin="anonymous">
 <!-- <link rel="stylesheet" href="https://unpkg.com/vuetify@1.0.19/dist/vuetify.min.css" > -->
 <link href="https://unpkg.com/vuetify@1.5.17/dist/vuetify.min.css" rel="stylesheet">
 

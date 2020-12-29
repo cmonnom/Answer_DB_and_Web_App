@@ -44,10 +44,18 @@ const annotationStoreModule = {
             Object.values(lightVariant.selectionStatus).filter(s => s.isSelected).map(s=> s.id);
             state.unsavedAnnotationValues = Object.values(state.unsavedAnnotationMap);
         },
-        clearAfterSaving: state => {
+        clearAfterSaving: (state, currentVariantId) => {
+            var dontDeleteYet = null;
+            if (currentVariantId) {
+                var dontDeleteYet = state.unsavedAnnotationMap[currentVariantId];
+            }
             state.unsavedAnnotationMap = {};
             state.needSaving = false;
             state.unsavedAnnotationValues = [];
+            if (dontDeleteYet) {
+                state.unsavedAnnotationMap[currentVariantId] = dontDeleteYet;
+                state.unsavedAnnotationValues.push(dontDeleteYet);
+            }
         },
     },
     getters: {

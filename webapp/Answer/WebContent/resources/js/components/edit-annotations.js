@@ -681,8 +681,10 @@ Vue.component('edit-annotations', {
             //scroll to show new annotation
             setTimeout(() => {
                 this.$nextTick( () => {
-                    var height = this.$refs.scrollableEditContent.scrollHeight;
-                     this.$refs.scrollableEditContent.scrollTo(0,height);
+                    if (this.$refs.scrollableEditContent) {
+                        var height = this.$refs.scrollableEditContent.scrollHeight;
+                         this.$refs.scrollableEditContent.scrollTo(0,height);
+                    }
                 });
             }, 500);
         },

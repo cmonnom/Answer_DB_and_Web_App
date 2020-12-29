@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -258,6 +258,9 @@ public class Variant {
 
 
 	public List<String> getIds() {
+		if (ids != null) {
+			return ids.stream().collect(Collectors.toSet()).stream().collect(Collectors.toList());
+		}
 		return ids;
 	}
 

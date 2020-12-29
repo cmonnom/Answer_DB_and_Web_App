@@ -1167,7 +1167,10 @@ Vue.component('data-table', {
             this.$emit('datatable-selection-changed', this.selected.length, item, this.idType);
         },
         getFilteredItems() {
+          if (this.$refs.dataTable) {
             return this.$refs.dataTable.filteredItems;
+          }
+          return null;
         },
         getCurrentItemIndex(currentUniqueId) {
             var length = this.getFilteredItems().length;

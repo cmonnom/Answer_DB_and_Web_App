@@ -40,7 +40,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.uhn.hl7v2.HL7Exception;
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
-import utsw.bicf.answer.controller.ControllerUtil;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
@@ -50,16 +49,15 @@ import utsw.bicf.answer.model.CosmicSampleFusion;
 import utsw.bicf.answer.model.GenieCNA;
 import utsw.bicf.answer.model.GenieCNACount;
 import utsw.bicf.answer.model.GenieFusion;
+import utsw.bicf.answer.model.GenieGenomicInfoSummary;
 import utsw.bicf.answer.model.GenieMutation;
 import utsw.bicf.answer.model.GenieSample;
-import utsw.bicf.answer.model.GenieSummary;
 import utsw.bicf.answer.model.LookupVersion;
 import utsw.bicf.answer.model.Token;
 import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CosmicRawData;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
-import utsw.bicf.answer.model.hybrid.GenericBarPlotData;
 import utsw.bicf.answer.reporting.ehr.HL7v251Factory;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
 import utsw.bicf.answer.reporting.finalreport.FinalReportTemplateConstants;
@@ -167,6 +165,7 @@ public class APIController {
 	@ResponseBody
 	public String updateGenieData(Model model, @RequestParam String token, 
 			@RequestParam String sampleDataPath, 
+			@RequestParam String genomicInfoDataPath, 
 			@RequestParam String mutationDataPath, 
 			@RequestParam String cnaDataPath,
 			@RequestParam String fusionDataPath,
@@ -185,11 +184,13 @@ public class APIController {
 		}
 		
 		File sampleDataFile = new File(sampleDataPath);
+		File genomicInfoDataFile = new File(genomicInfoDataPath);
 		File mutationDataFile = new File(mutationDataPath);
 		File cnaDataFile = new File(cnaDataPath);
 		File fusionDataFile = new File(fusionDataPath);
 		
 		if (sampleDataFile.exists() && sampleDataFile.canRead()
+				&& genomicInfoDataFile.exists() && genomicInfoDataFile.canRead()
 				&& mutationDataFile.exists() && mutationDataFile.canRead()
 				&& cnaDataFile.exists() && cnaDataFile.canRead()
 				&& fusionDataFile.exists() && fusionDataFile.canRead()) {
@@ -203,6 +204,7 @@ public class APIController {
 						List<Object> toSave = new ArrayList<Object>();
 						int counter = 0;
 						importSamples(sampleDataFile, toSave, counter);
+						importGenomicInfo(genomicInfoDataFile, toSave, counter);
 						Map<String, Integer> sampleIdFKey = modelDAO.getAllGenieSampleIdByTumorBarcode();
 						importMutations(mutationDataFile, toSave, sampleIdFKey);
 						
@@ -211,14 +213,6 @@ public class APIController {
 						
 						long afterRequest = System.currentTimeMillis();
 						System.out.println("After request " + (afterRequest - now) + "ms");
-						
-//						modelDAO.test();
-						//insert summary (intermediate results)
-						List<GenericBarPlotData> summaryData = modelDAO.getGeniePatientCountPerCancer();
-						List<Object> summaryToSave = summaryData
-								.stream().map(i -> new GenieSummary(i.getX().intValue(), i.getY(), GenieSummary.CATEGORY_CANCER_COUNT))
-								.collect(Collectors.toList());
-						modelDAO.saveBatch(summaryToSave);
 						
 						LookupVersion genieVersion = modelDAO.getLookupVersion("genie");
 						if (genieVersion == null) {
@@ -273,6 +267,7 @@ public class APIController {
 			s.setSampleId(items[1]);
 			s.setOncotreeCode(items[3]);
 			s.setCancerType(items[6]);
+			s.setAssayId(items[5]);
 //							modelDAO.saveObject(s);
 			toSave.add(s);
 			counter++;
@@ -282,6 +277,42 @@ public class APIController {
 				toSave = new ArrayList<Object>();
 			}
 		}
+		if (!toSave.isEmpty() ) {
+			modelDAO.saveBatch(toSave);
+			toSave = new ArrayList<Object>();
+		}
+		reader1.close();
+	}
+	
+	public void importGenomicInfo(File genomicInfoDataFile, List<Object> toSave, int counter)
+			throws FileNotFoundException, IOException {
+		String line;
+		BufferedReader reader1 = new BufferedReader(new FileReader(genomicInfoDataFile));
+		while ((line = reader1.readLine()) != null) {
+			if (line.startsWith("Chromosome")) {
+				break;
+			}
+			continue; //skip until the first sample row
+		}
+		Map<String, GenieGenomicInfoSummary> genomicByGene = new HashMap<String, GenieGenomicInfoSummary>();
+		while ((line = reader1.readLine()) != null) {
+			String[] items = line.split("\t");
+			GenieGenomicInfoSummary s = new GenieGenomicInfoSummary();
+			s.setHugoSymbol(items[3]);
+			s.setAssayId(items[5]);
+			genomicByGene.put(s.getHugoSymbol() + ":" + s.getAssayId(), s);
+		}
+		
+		for (GenieGenomicInfoSummary ggis : genomicByGene.values()) {
+			toSave.add(ggis);
+			counter++;
+			if (counter % 1000 == 0) {
+				System.out.println("Genomic Info: " + counter);
+				modelDAO.saveBatch(toSave);
+				toSave = new ArrayList<Object>();
+			}
+		}
+		
 		if (!toSave.isEmpty() ) {
 			modelDAO.saveBatch(toSave);
 			toSave = new ArrayList<Object>();
@@ -388,7 +419,7 @@ public class APIController {
 			String hugoSymbol = items[0];
 			for (int i = 1; i < items.length; i++) {
 				String item = items[i];
-				if (!item.equals("NA")) {
+				if (item != null && !item.equals("") && !item.equals("NA")) {
 					float value = Float.parseFloat(item);
 					if (value <= -2 || value >= 2) {
 						GenieCNA cna = new GenieCNA();
@@ -800,7 +831,10 @@ public class APIController {
 			@RequestParam(required = false) String overrideDOB, 
 			@RequestParam(required = false) String overrideGender, 
 			@RequestParam(required = false) String overrideOrder, 
-			HttpSession httpSession, @RequestParam(defaultValue = "false") Boolean hl7Only ) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
+			@RequestParam(required = false) String overrideProviderIdName,
+			@RequestParam(required = false) boolean includeFusion,
+			HttpSession httpSession, @RequestParam(defaultValue = "false") Boolean hl7Only
+			) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from testEpicReportHL7");
 //		long now = System.currentTimeMillis();
 		// check that token is valid
@@ -858,7 +892,9 @@ public class APIController {
 		try {
 			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
 			File pdfFile = pdfReport.saveFinalized();
-			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile, ensemblProps, otherProps, overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder);
+			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile, ensemblProps, otherProps, 
+					overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder,
+					overrideProviderIdName, includeFusion);
 			String hl7 = hl7Factory.reportToHL7(true);
 			if (hl7Only) {
 				return hl7;
@@ -884,6 +920,8 @@ public class APIController {
 			@RequestParam(required = false) String overrideDOB, 
 			@RequestParam(required = false) String overrideGender, 
 			@RequestParam(required = false) String overrideOrder, 
+			@RequestParam(required = false) String overrideProviderIdName,
+			@RequestParam(required = false) boolean includeFusion,
 			HttpSession httpSession) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from sendEpicReportHL7");
 //		long now = System.currentTimeMillis();
@@ -946,7 +984,8 @@ public class APIController {
 					overrideMRN, 
 					overrideDOB, 
 					overrideGender, 
-					overrideOrder );
+					overrideOrder,
+					overrideProviderIdName, includeFusion);
 			String hl7 = hl7Factory.reportToHL7(false);
 			
 			socket = new Socket(otherProps.getEpicHl7Hostname(), otherProps.getEpicHl7Port());

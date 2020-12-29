@@ -5,8 +5,9 @@ Vue.component('existing-reports', {
         currentReportId: {default: "", type: String},
         readonly: {default: true, type: Boolean},
         reportUnsaved: {default: true, type: Boolean},
+        loadingReportDetails: {default: true, type: Boolean},
     },
-    template: `<div>
+    template: /*html*/`<div>
     
     <v-dialog v-model="finalizeConfirmationVisible" max-width="700px">
     <v-toolbar dense dark color="primary">
@@ -114,7 +115,7 @@ Vue.component('existing-reports', {
     <v-container grid-list-md fluid pl-2 pr-2 pt-2 pb-2>
     <v-layout row wrap>
     <v-flex xs12>
-        <v-btn @click="getReportDetails()">New Report</v-btn>
+        <v-btn @click="getReportDetails()" :disabled="loadingReportDetails">New Report</v-btn>
     </v-flex>
     <v-flex xs12 lg4 xl3 v-for="report in existingReports" :key="report._id['$oid']">
         <v-card :color="isReportSelected(report) ? 'amber accent-2' : ''">
@@ -211,7 +212,7 @@ Vue.component('existing-reports', {
             <v-layout row wrap>
             <v-flex>
             <v-btn @click="getReportDetails(report._id['$oid'])"
-            :disabled="isReportSelected(report)">
+            :disabled="isReportSelected(report) || loadingReportDetails">
             Load Report
             </v-btn>
             </v-fleX>

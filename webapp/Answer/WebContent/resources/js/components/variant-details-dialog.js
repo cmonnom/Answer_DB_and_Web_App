@@ -863,7 +863,9 @@ Vue.component('variant-details-dialog', {
             return igvRange;
         },
         openBamViewerLinkWeb() {
-            this.$refs.bamViewerLink.$el.click();
+            if (this.$refs.bamViewerLink) {
+                this.$refs.bamViewerLink.$el.click();
+            }
         },
         handleDialogs(response, callback) {
             if (response == "not-allowed") {
@@ -976,10 +978,14 @@ Vue.component('variant-details-dialog', {
                 this.currentVariantType = "snp";
 
                 //put panels in loading state
-                this.$refs.relatedVariantAnnotation.startLoading();
-                this.$refs.relatedCNVAnnotation.startLoading();
-                this.$refs.canonicalVariantAnnotation.startLoading();
-                this.$refs.otherVariantAnnotations.startLoading();
+                if (this.$refs.relatedVariantAnnotation)
+                    this.$refs.relatedVariantAnnotation.startLoading();
+                if (this.$refs.relatedVariantAnnotation)
+                    this.$refs.relatedCNVAnnotation.startLoading();
+                if (this.$refs.relatedVariantAnnotation)
+                    this.$refs.canonicalVariantAnnotation.startLoading();
+                if (this.$refs.relatedVariantAnnotation)
+                    this.$refs.otherVariantAnnotations.startLoading();
 
             axios.get(
                 webAppRoot + "/getVariantDetails",
@@ -1179,7 +1185,8 @@ Vue.component('variant-details-dialog', {
                         };
                         this.variantDataTables.push(dataTable);
                         if (response.data.relatedSummary) {
-                            this.$refs.relatedVariantAnnotation.manualDataFiltered(response.data.relatedSummary);
+                            if (this.$refs.relatedVariantAnnotation)
+                                this.$refs.relatedVariantAnnotation.manualDataFiltered(response.data.relatedSummary);
                             if (response.data.relatedSummary.items.length > 0) {
                                 this.currentVariantHasRelatedVariants = true;
                                 this.annotationVariantRelatedVisible = true;
@@ -1189,7 +1196,8 @@ Vue.component('variant-details-dialog', {
                             this.currentVariantHasRelatedVariants = false;
                         }
                         if (response.data.cnvRelatedSummary) {
-                            this.$refs.relatedCNVAnnotation.manualDataFiltered(response.data.cnvRelatedSummary);
+                            if (this.$refs.relatedCNVAnnotation)
+                                this.$refs.relatedCNVAnnotation.manualDataFiltered(response.data.cnvRelatedSummary);
                             if (response.data.cnvRelatedSummary.items.length > 0) {
                                 this.currentVariantHasRelatedCNV = true;
                                 this.annotationCNVRelatedVisible = true;
@@ -1198,8 +1206,10 @@ Vue.component('variant-details-dialog', {
                         else {
                             this.currentVariantHasRelatedCNV = false;
                         }
-                        this.$refs.canonicalVariantAnnotation.manualDataFiltered(response.data.canonicalSummary);
-                        this.$refs.otherVariantAnnotations.manualDataFiltered(response.data.otherSummary);
+                        if (this.$refs.canonicalVariantAnnotation)
+                            this.$refs.canonicalVariantAnnotation.manualDataFiltered(response.data.canonicalSummary);
+                        if (this.$refs.otherVariantAnnotations)
+                            this.$refs.otherVariantAnnotations.manualDataFiltered(response.data.otherSummary);
                         this.userAnnotations = this.currentVariant.referenceVariant.utswAnnotations.filter(a => a.userId == this.userId);
                         this.utswAnnotations = this.currentVariant.referenceVariant.utswAnnotations;
                         // this.reloadPreviousSelectedState();
@@ -1809,7 +1819,6 @@ Vue.component('variant-details-dialog', {
                         skipSnackBar: skipSnackBar
                     },
                     data: {
-                        // filters: this.$refs.advancedFilter.filters,
                         variants: this.$store.getters["variantStore/getVariantsToSave"]
                     }
                 }).then(response => {
@@ -1941,10 +1950,14 @@ Vue.component('variant-details-dialog', {
 
                     } else {
                         this.handleDialogs(response.data, this.commitAnnotations.bind(null, this.userAnnotations));
-                        this.$refs.annotationDialog.saving = false; 
-                        this.$refs.cnvAnnotationDialog.saving = false;
-                        this.$refs.translocationAnnotationDialog.saving = false;
-                        this.$refs.virusAnnotationDialog.saving = false;
+                        if (this.$refs.annotationDialog)
+                            this.$refs.annotationDialog.saving = false; 
+                        if (this.$refs.cnvAnnotationDialog)
+                            this.$refs.cnvAnnotationDialog.saving = false;
+                        if (this.$refs.translocationAnnotationDialog)
+                            this.$refs.translocationAnnotationDialog.saving = false;
+                        if (this.$refs.virusAnnotationDialog)
+                            this.$refs.virusAnnotationDialog.saving = false;
                     }
                     this.formatAnnotations();
                     this.handleAnnotationSelectionChanged();
@@ -1955,16 +1968,16 @@ Vue.component('variant-details-dialog', {
         },
          // Use this when need to close the annotation dialog from outside the edit-annotations component
          cancelAnnotations() {
-            if (this.isSNP()) {
+            if (this.isSNP() && this.$refs.annotationDialog) {
                 this.$refs.annotationDialog.cancelAnnotations();
             }
-            else if (this.isCNV()) {
+            else if (this.isCNV() && this.$refs.cnvAnnotationDialog) {
                 this.$refs.cnvAnnotationDialog.cancelAnnotations();
             }
-            else if (this.isTranslocation()) {
+            else if (this.isTranslocation() && this.$refs.translocationAnnotationDialog) {
                 this.$refs.translocationAnnotationDialog.cancelAnnotations();
             }
-            else if (this.isVirus()) {
+            else if (this.isVirus()&& this.$refs.virusAnnotationDialog) {
                 this.$refs.virusAnnotationDialog.cancelAnnotations();
             }
         },
@@ -2006,56 +2019,6 @@ Vue.component('variant-details-dialog', {
             } 
             return text;
         },
-        // saveAnnotationSelection(skipSnackBar) {
-        //     if (!this.canProceed('canAnnotate')) {
-        //         return;
-        //     }
-        //     this.savingAnnotationSelection = true;
-        //     var lightVariant = {};
-        //     lightVariant["_id"] = this.currentVariant._id;
-        //     lightVariant["annotationIdsForReporting"] = [];
-        //     for (var i = 0; i < this.utswAnnotationsFormatted.length; i++) {
-        //         if (this.utswAnnotationsFormatted[i].isSelected) {
-        //             lightVariant["annotationIdsForReporting"].push(this.utswAnnotationsFormatted[i]._id);
-        //         }
-        //     }
-        //     return new Promise((resolve, reject) => {
-        //     axios({
-        //         method: 'post',
-        //         url: webAppRoot + "/saveSelectedAnnotationsForVariant",
-        //         params: {
-        //             variantType: this.currentVariantType,
-        //             caseId: this.$route.params.id,
-        //             skipSnackBar: skipSnackBar
-        //         },
-        //         data: {
-        //             // filters: this.$refs.advancedFilter.filters,
-        //             variant: lightVariant
-        //         }
-        //     }).then(response => {
-        //         this.waitingForAjaxCount--;
-        //         if (response.data.isAllowed) {
-        //             this.revertAnnotationSelection();
-        //             if (!response.data.skipSnackBar) {
-        //                 this.snackBarMessage = "Annotation Selection Saved";
-        //                 this.snackBarLink = "";
-        //                 this.snackBarVisible = true;
-        //                 // this.annotationSelectionUnSaved = false;
-        //             }
-        //             resolve({success: true});
-        //         }
-        //         else {
-        //             this.handleDialogs(response.data, this.saveAnnotationSelection.bind(null, response.data.skipSnackBar));
-        //         }
-        //         this.savingAnnotationSelection = false;
-        //         this.$emit("annotation-selection-saved");
-        //     }).catch(error => {
-        //         this.savingAnnotationSelection = false;
-        //         this.handleAxiosError(error);
-        //         reject(error);
-        //     });
-        // });
-        // },
         saveAllAnnotationSelections(skipSnackBar) {
             if (!this.canProceed('canAnnotate')) {
                 return;
@@ -2069,7 +2032,6 @@ Vue.component('variant-details-dialog', {
                     skipSnackBar: skipSnackBar
                 },
                 data: {
-                    // filters: this.$refs.advancedFilter.filters,
                     variants: this.$store.getters["annotationStore/getAnnotationSelectionToSave"]
                 }
             }).then(response => {
@@ -2082,7 +2044,7 @@ Vue.component('variant-details-dialog', {
                         this.snackBarVisible = true;
                         // this.annotationSelectionUnSaved = false;
                     }
-                    this.$store.commit("annotationStore/clearAfterSaving");
+                    this.$store.commit("annotationStore/clearAfterSaving", this.urlQuery.variantId);
                     resolve({success: true});
                 }
                 else {
@@ -2097,11 +2059,6 @@ Vue.component('variant-details-dialog', {
             });
         });
         },
-        // revertAnnotationSelection() {
-            // this.annotationIdsForReporting = []; //reset the unsaved list of ids
-            // this.annotationSelectionUnSaved = false; //update badge on save button
-            // this.$emit("annotation-selection-changed", this.annotationSelectionUnSaved);
-        // },
         handlePanelVisibility(visible) {
             if (visible == null) {
                 if (this.urlQuery.edit) {
@@ -2223,7 +2180,8 @@ Vue.component('variant-details-dialog', {
         },
         closeVariantDetails() {
             this.$emit("close-variant-details");
-            this.$refs.lookupTool.panelVisible = false;
+            if (this.$refs.lookupTool)
+                this.$refs.lookupTool.panelVisible = false;
         },
         createUCSCLink() {
             return "https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position="
@@ -2384,7 +2342,8 @@ Vue.component('variant-details-dialog', {
                 annotation.modifiedDate = annotations[i].modifiedDate;
                 annotation.modifiedSince = annotations[i].modifiedSince;
                 annotation.pmids = annotations[i].pmids;
-                annotation.scopeTooltip = this.$refs.cnvAnnotationDialog.createLevelInformation(annotations[i]);
+                if (this.$refs.cnvAnnotationDialog)
+                    annotation.scopeTooltip = this.$refs.cnvAnnotationDialog.createLevelInformation(annotations[i]);
                 annotation.tier = annotations[i].tier;
                 annotation.classification = annotations[i].classification;
                 annotation.isSelected = annotations[i].isSelected;
@@ -2446,7 +2405,8 @@ Vue.component('variant-details-dialog', {
                 annotation.isSelected = annotations[i].isSelected;
                 annotation.leftGene = annotations[i].leftGene;
                 annotation.rightGene = annotations[i].rightGene;
-                annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
+                if (this.$refs.translocationAnnotationDialog)
+                    annotation.scopeTooltip = this.$refs.translocationAnnotationDialog.createLevelInformation(annotations[i]);
                 annotation.trial = annotations[i].trial;
                 annotation.warningLevel = annotations[i].warningLevel;
                 annotation.drugResistant = annotations[i].drugResistant;
@@ -2499,7 +2459,8 @@ Vue.component('variant-details-dialog', {
                 annotation.modifiedSince = annotations[i].modifiedSince;
                 annotation.pmids = annotations[i].pmids;
                 // annotation.nctIds = annotations[i].nctIds;
-                annotation.scopeTooltip = this.$refs.annotationDialog ? this.$refs.annotationDialog.createLevelInformation(annotations[i]) : "";
+                if (this.$refs.annotationDialog)
+                    annotation.scopeTooltip = this.$refs.annotationDialog ? this.$refs.annotationDialog.createLevelInformation(annotations[i]) : "";
                 annotation.tier = annotations[i].tier;
                 annotation.classification = annotations[i].classification;
                 annotation.isSelected = annotations[i].isSelected;
@@ -2632,32 +2593,6 @@ Vue.component('variant-details-dialog', {
                         //reload the variant
                         // console.log("success");
                         this.revertVariant(true);
-                        // var variantId = this.currentVariant._id["$oid"];
-                        // if (this.isSNP()) {
-                        //     for (var i = 0; i < this.$refs.geneVariantDetails.items.length; i++) {
-                        //         if (this.$refs.geneVariantDetails.items[i].oid == variantId) {
-                        //                 this.$nextTick(this.getVariantDetails(this.$refs.geneVariantDetails.items[i]));
-                        //                 break;
-                        //         }
-                        //     }
-                        // }
-                        // else if (this.isCNV()) {
-                        //     for (var i = 0; i < this.$refs.cnvDetails.items.length; i++) {
-                        //         if (this.$refs.cnvDetails.items[i].oid == variantId) {
-                        //                 this.$nextTick(this.getCNVDetails(this.$refs.cnvDetails.items[i]));
-                        //                 break;
-                        //         }
-                        //     }
-                        // }
-                        // else if (this.isTranslocation()) {
-                        //     for (var i = 0; i < this.$refs.translocationDetails.items.length; i++) {
-                        //         if (this.$refs.translocationDetails.items[i].oid == variantId) {
-                        //                 this.$nextTick(this.getTranslocationDetails(this.$refs.translocationDetails.items[i]));
-                        //                 break;
-                        //         }
-                        //     }
-                        // }
-                        // this.showSnackBarMessageWithParams(response.data.message, null, null, 4000);
                         this.showSnackBarMessage(response.data.message);
                     }
                     else {
@@ -2762,13 +2697,13 @@ Vue.component('variant-details-dialog', {
         },
         getLookupRef() {
             var ref = this.$refs.lookupTool;
-            if (this.urlQuery.edit && this.isSNP()) {
+            if (this.urlQuery.edit && this.isSNP() && this.$refs.annotationDialog) {
                 ref = this.$refs.annotationDialog.$refs.lookupTool;
             }
-            else if (this.urlQuery.edit && this.isCNV()) {
+            else if (this.urlQuery.edit && this.isCNV() && this.$refs.cnvAnnotationDialog) {
                 ref = this.$refs.cnvAnnotationDialog.$refs.lookupTool;
             }
-            else if (this.urlQuery.edit && this.isTranslocation()) {
+            else if (this.urlQuery.edit && this.isTranslocation() && this.$refs.translocationAnnotationDialog) {
                 ref = this.$refs.translocationAnnotationDialog.$refs.lookupTool;
             }
             return ref;

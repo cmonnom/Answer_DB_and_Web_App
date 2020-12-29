@@ -584,29 +584,31 @@ Vue.component('lookup-panel-variant', {
             || this.codonPlotLoading;
         },
         fetchCodonPlot() {
-            this.codonPlotLoading = true;
-            this.codonPlotError = false;
-            var promise1 = this.$refs.plotUtils.updateBarPlot("/getCodonDiseaseDistributionData", {
-                geneTerm: this.currentGene,
-                oncotreeCode: this.currentOncotreeCode.text,
-                hgvs: this.currentVariant,
-                originalVariant: this.originalVariant,
-                plotId: "codonPlot" + this.uniqId,
-                posGRC38: this.originalPos,
-                posHG19: this.originalPosOldBuild,
-                chr: this.originalChr
-
-            }, true);
-            Promise.all([promise1]).then(values => {
-                this.codonPlotLoading = false;
-                if (values.filter(v => v.success).length != values.length) {
-                    console.log("Some plots did not finish properly");
-                    this.codonPlotError = true;
-                }
-                else {
-                    this.codonPlotError = false;
-                }
-            })
+            if (this.$refs.plotUtils) {
+                this.codonPlotLoading = true;
+                this.codonPlotError = false;
+                var promise1 = this.$refs.plotUtils.updateBarPlot("/getCodonDiseaseDistributionData", {
+                    geneTerm: this.currentGene,
+                    oncotreeCode: this.currentOncotreeCode.text,
+                    hgvs: this.currentVariant,
+                    originalVariant: this.originalVariant,
+                    plotId: "codonPlot" + this.uniqId,
+                    posGRC38: this.originalPos,
+                    posHG19: this.originalPosOldBuild,
+                    chr: this.originalChr
+    
+                }, true);
+                Promise.all([promise1]).then(values => {
+                    this.codonPlotLoading = false;
+                    if (values.filter(v => v.success).length != values.length) {
+                        console.log("Some plots did not finish properly");
+                        this.codonPlotError = true;
+                    }
+                    else {
+                        this.codonPlotError = false;
+                    }
+                });
+            }
         },
         formatTrialArray(items) {
             if (items) {

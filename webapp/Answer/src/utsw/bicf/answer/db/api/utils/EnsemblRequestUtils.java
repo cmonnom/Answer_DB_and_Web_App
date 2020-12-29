@@ -56,7 +56,7 @@ public class EnsemblRequestUtils extends AbstractRequestUtils{
 			return ensembl;
 		}
 		else {
-			logger.info("Something went wrong UniProtRequest:114 HTTP_STATUS: " + statusCode);
+			logger.info("Something went wrong EnsemblRequest:59 HTTP_STATUS: " + statusCode);
 		}
 		this.closeGetRequest();
 		return null;

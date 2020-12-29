@@ -291,6 +291,7 @@ const OpenReport = {
             :report-unsaved="reportUnsaved"
             @amend-report="amendReport"
             @addend-report="addendReport"
+            :loading-report-details="loadingReportDetails"
            >
             </existing-reports>
             </v-flex>
@@ -589,7 +590,9 @@ const OpenReport = {
         },
         handleRouteChanged(newRoute, oldRoute) {
             if (newRoute.path != oldRoute.path) { //prevent reloading data if only changing the query router.push({query: {test:"hello3"}})
-                this.$refs.existingReports.getExistingReports();
+                if (this.$refs.existingReports) {
+                    this.$refs.existingReports.getExistingReports();
+                }
             }
             else { //look at the query
                 // console.log(newRoute.query, oldRoute.query);
@@ -959,13 +962,15 @@ const OpenReport = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        this.snackBarMessage = "Report Saved";
-                        this.snackBarVisible = true;
-                        this.urlQuery.reportId = response.data.message;
-                        this.updateRoute();
-                        this.$refs.existingReports.getExistingReports();
-                        this.getReportDetails(response.data.message);
-                        // this.confirmationSaveDialogVisible = false;
+                        if (this.$refs.existingReports) {
+                            this.snackBarMessage = "Report Saved";
+                            this.snackBarVisible = true;
+                            this.urlQuery.reportId = response.data.message;
+                            this.updateRoute();
+                            this.$refs.existingReports.getExistingReports();
+                            this.getReportDetails(response.data.message);
+                            // this.confirmationSaveDialogVisible = false;
+                        }
                     } else {
                         this.handleDialogs(response.data, this.saveReport);
                         // this.confirmationSaveDialogVisible = false;
@@ -979,13 +984,6 @@ const OpenReport = {
                 });
         },
         saveOrUpdateButtonName() {
-            // if (this.$refs.existingReports) {
-            //     for (var i = 0; i < this.$refs.existingReports.existingReports.length; i++) {
-            //         if (this.fullReport.reportName == this.$refs.existingReports.existingReports[i].reportName) {
-            //             return "Update";
-            //         }
-            //     }
-            // }
             if (this.fullReport.reportName == this.currentReportName) {
                 return "  Save  ";
             }
@@ -1014,7 +1012,8 @@ const OpenReport = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
+                        if (this.$refs.patientDetails)
+                            this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
                         window.open(webAppRoot + "/pdfs/" + response.data.message, "_blank");
                     } else {
                         this.handleDialogs(response.data, this.previewReport);
@@ -1023,7 +1022,8 @@ const OpenReport = {
                 })
                 .catch(error => {
                     this.savingReport = false;
-                    this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
+                    if (this.$refs.patientDetails)
+                        this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
                     this.handleAxiosError(error);
                 });
         },
@@ -1053,7 +1053,8 @@ const OpenReport = {
                 return;
             }
             // console.log("Amending Report") + reportId;
-            this.$refs.existingReports.amendingReportLoading = true;
+            if (this.$refs.existingReports)
+                this.$refs.existingReports.amendingReportLoading = true;
             axios({
                 method: 'post',
                 url: webAppRoot + "/amendReport",
@@ -1066,19 +1067,25 @@ const OpenReport = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        this.snackBarMessage = "Report amended.";
-                        this.snackBarVisible = true;
-                        this.urlQuery.reportId = "";
-                        this.updateRoute();
-                        this.$refs.existingReports.getExistingReports();
-                        this.$refs.existingReports.amendmentDialogVisible = false;
+                        if (this.$refs.existingReports) {
+                            this.snackBarMessage = "Report amended.";
+                            this.snackBarVisible = true;
+                            this.urlQuery.reportId = "";
+                            this.updateRoute();
+                            this.$refs.existingReports.getExistingReports();
+                            this.$refs.existingReports.amendmentDialogVisible = false;
+                        }
                     } else {
                         this.handleDialogs(response.data, this.amendReport.bind(this, reportId));
                     }
-                    this.$refs.existingReports.amendingReportLoading = false;
+                    if (this.$refs.existingReports) {
+                        this.$refs.existingReports.amendingReportLoading = false;
+                    }
                 })
                 .catch(error => {
-                    this.$refs.existingReports.amendingReportLoading = false;
+                    if (this.$refs.existingReports) {
+                        this.$refs.existingReports.amendingReportLoading = false;
+                    }
                     this.handleAxiosError(error);
                 });
             this.getReportDetails();
@@ -1089,7 +1096,8 @@ const OpenReport = {
                 return;
             }
             // console.log("Addending Report") + reportId;
-            this.$refs.existingReports.addendingReportLoading = true;
+            if (this.$refs.existingReports) 
+                this.$refs.existingReports.addendingReportLoading = true;
             axios({
                 method: 'post',
                 url: webAppRoot + "/addendReport",
@@ -1099,20 +1107,26 @@ const OpenReport = {
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
-                        this.snackBarMessage = "Report addended.";
-                        this.snackBarVisible = true;
-                        this.urlQuery.reportId = response.data.message;
-                        this.updateRoute();
-                        this.$refs.existingReports.getExistingReports();
-                        this.$refs.existingReports.addendumDialogVisible = false;
+                        if (this.$refs.existingReports) {
+                            this.snackBarMessage = "Report addended.";
+                            this.snackBarVisible = true;
+                            this.urlQuery.reportId = response.data.message;
+                            this.updateRoute();
+                            this.$refs.existingReports.getExistingReports();
+                            this.$refs.existingReports.addendumDialogVisible = false;
+                        }
+
                     } else {
                         this.handleDialogs(response.data, this.addendReport.bind(this, reportId));
                     }
-                    this.$refs.existingReports.addendingReportLoading = false;
+                    if (this.$refs.existingReports)
+                        this.$refs.existingReports.addendingReportLoading = false;
                 })
                 .catch(error => {
-                    this.$refs.existingReports.addendingReportLoading = false;
-                    this.handleAxiosError(error);
+                    if (this.$refs.existingReports) {
+                        this.$refs.existingReports.addendingReportLoading = false;
+                        this.handleAxiosError(error);
+                    }
                 });
             this.getReportDetails();
         },
@@ -1371,7 +1385,8 @@ const OpenReport = {
                 bus.$emit("update-status", ["VIEW ONLY MODE"]);
             }, 4200); //show after snackbar is dismissed
         }
-        this.$refs.existingReports.getExistingReports();
+        if (this.$refs.existingReports)
+            this.$refs.existingReports.getExistingReports();
         splashDialog = false; //prevent splash dialog when user navigate to open case for the 1st time
         this.toggleHTMLOverlay(); // if coming from the opencase->review, the scrollbar is hidden. Reset to default
     },

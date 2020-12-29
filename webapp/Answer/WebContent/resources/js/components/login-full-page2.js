@@ -8,7 +8,7 @@ Vue.component('login-full-page2', {
 
   <v-toolbar fixed app flat extended class="hidden-sm-and-up" >
     <div class="toolbar-image">
-      <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" /> 
+    <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" /> 
     </div>
     <v-toolbar-title class="headline">
       Answer
@@ -313,9 +313,11 @@ Vue.component('login-full-page2', {
             if (this.changingVersion) {
                 this.changingVersion = false;
                 this.magicClass = "";
-                this.$refs.goodiesPanel.createFireworks();
+                if (this.$refs.goodiesPanel) {
+                  this.$refs.goodiesPanel.createFireworks();
+                  setTimeout(this.$refs.goodiesPanel.clearFireworks, 10000);
+                }
                 this.updateToVersion1();
-                setTimeout(this.$refs.goodiesPanel.clearFireworks, 10000);
             }
             else {
                 if (Date.now() >= new Date("02/27/2019").getTime()) {

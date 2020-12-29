@@ -228,7 +228,9 @@ Vue.component('login', {
             });
         },
         userNameFocus() {
-            this.$refs.username.focus();
+            if (this.$refs.username) {
+                this.$refs.username.focus();
+            }
         }
         ///Azure///
 

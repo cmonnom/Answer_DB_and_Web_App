@@ -374,8 +374,8 @@ Vue.component('main-menu', {
 			// document.getElementById("main-app").style.background = "#0F8A5F";
 			// document.getElementsByClassName("v-navigation-drawer v-navigation-drawer--fixed v-navigation-drawer--open theme--light")[0].style.background = "#0F8A5F";
 			// makeItSnow();
-			this.goodiesActive = !this.goodiesActive;
-			bus.$emit("showEaster");
+			// this.goodiesActive = !this.goodiesActive;
+			// bus.$emit("showEaster");
 		},
 		showGoodies() {
 			var now = moment();

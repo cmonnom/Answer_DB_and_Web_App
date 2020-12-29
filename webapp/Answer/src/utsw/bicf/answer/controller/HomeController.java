@@ -488,6 +488,9 @@ public class HomeController {
 			}catch (EncodingGlyphException e) {
 				response.setSuccess(false);
 				response.setMessage(e.getMessage());
+			}catch (IOException e) {
+				response.setSuccess(false);
+				response.setMessage(e.getMessage());
 			}
 		}
 		else {

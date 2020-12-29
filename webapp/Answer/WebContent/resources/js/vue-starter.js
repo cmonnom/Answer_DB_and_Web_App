@@ -174,13 +174,13 @@ const store = new Vuex.Store( {
 		updateOpenCaseSaveNeeded: (state, isSaveNeeded) => {
 			state.openCaseSaveNeeded = isSaveNeeded;
 		},
-		resetAll: (state) => {
+		resetAll: (state, currentVariantId) => {
 			state.openCaseSaveNeeded = false;
 			store.commit("snpStore/resetAll");
 			store.commit("cnvStore/resetAll");
 			store.commit("ftlStore/resetAll");
 			store.commit("virStore/resetAll");
-			store.commit("annotationStore/clearAfterSaving");
+			store.commit("annotationStore/clearAfterSaving", currentVariantId);
 			store.commit("variantStore/clearAfterSaving");
 		}
 	}

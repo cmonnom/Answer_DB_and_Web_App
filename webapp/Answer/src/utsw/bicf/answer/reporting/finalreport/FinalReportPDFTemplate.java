@@ -1684,14 +1684,28 @@ public class FinalReportPDFTemplate {
 	}
 
 	public void saveTemp() throws IOException {
-		mainDocument.save(tempFile);
-		mainDocument.close();
+		try {
+			mainDocument.save(tempFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (mainDocument != null) {
+				mainDocument.close();
+			}
+		}
 	}
 	
 	public File saveFinalized() throws IOException {
 		File finalizedFile = new File(fileProps.getPdfFinalizedFilesDir(), System.currentTimeMillis() + "_" + report.getMongoDBId().getOid() + ".pdf");
-		mainDocument.save(finalizedFile);
-		mainDocument.close();
+		try {
+			mainDocument.save(finalizedFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (mainDocument != null) {
+				mainDocument.close();
+			}
+		}
 		return finalizedFile;
 	}
 

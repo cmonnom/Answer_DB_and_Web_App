@@ -1,6 +1,7 @@
 package utsw.bicf.answer.reporting.ehr.model;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import utsw.bicf.answer.reporting.ehr.loinc.LOINCItem;
@@ -20,7 +21,7 @@ public class HL7Variant {
 	Float allFreq;
 	Integer depth;
 	String hgncCode;
-	String annotation;
+	List<String> annotations;
 	String ensemblCode;
 	String dbSNPId;
 	String[] variantCategory;
@@ -36,7 +37,24 @@ public class HL7Variant {
 	String ftlRightExon;
 	String cytoband;
 	
+	String[] structuralVariantType;
+	String leftGene;
+	String rightGene;
+	String leftDNARegion;
+	String rightDNARegion;
+	String leftHGNC;
+	String rightHGNC;
 	
+	String displayName;
+	
+	String somaticStatus;
+	
+	String fusedGenes;
+	
+	String cosmicMVariantId;
+	String cosmicVVariantId;
+	String dbSNPVariantId;
+	String clinvarVariantId;
 	
 	public String getGene() {
 		return gene;
@@ -97,12 +115,6 @@ public class HL7Variant {
 	}
 	public void setHgncCode(String hgncCode) {
 		this.hgncCode = hgncCode;
-	}
-	public String getAnnotation() {
-		return annotation;
-	}
-	public void setAnnotation(String annotation) {
-		this.annotation = annotation;
 	}
 	public String getEnsemblCode() {
 		return ensemblCode;
@@ -205,6 +217,96 @@ public class HL7Variant {
 	}
 	public void setEnd2018v(Integer end2018v) {
 		this.end2018v = end2018v;
+	}
+	public String getLeftGene() {
+		return leftGene;
+	}
+	public void setLeftGene(String leftGene) {
+		this.leftGene = leftGene;
+	}
+	public String getRightGene() {
+		return rightGene;
+	}
+	public void setRightGene(String rightGene) {
+		this.rightGene = rightGene;
+	}
+	public String getLeftHGNC() {
+		return leftHGNC;
+	}
+	public void setLeftHGNC(String leftHGNC) {
+		this.leftHGNC = leftHGNC;
+	}
+	public String getRightHGNC() {
+		return rightHGNC;
+	}
+	public void setRightHGNC(String rightHGNC) {
+		this.rightHGNC = rightHGNC;
+	}
+	public String getLeftDNARegion() {
+		return leftDNARegion;
+	}
+	public void setLeftDNARegion(String leftDNARegion) {
+		this.leftDNARegion = leftDNARegion;
+	}
+	public String getRightDNARegion() {
+		return rightDNARegion;
+	}
+	public void setRightDNARegion(String rightDNARegion) {
+		this.rightDNARegion = rightDNARegion;
+	}
+	public String[] getStructuralVariantType() {
+		return structuralVariantType;
+	}
+	public void setStructuralVariantType(String[] structuralVariantType) {
+		this.structuralVariantType = structuralVariantType;
+	}
+	public String getDisplayName() {
+		return displayName;
+	}
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+	public List<String> getAnnotations() {
+		return annotations;
+	}
+	public void setAnnotations(List<String> annotations) {
+		this.annotations = annotations;
+	}
+	public String getSomaticStatus() {
+		return somaticStatus;
+	}
+	public void setSomaticStatus(String somaticStatus) {
+		this.somaticStatus = somaticStatus;
+	}
+	public String getFusedGenes() {
+		return fusedGenes;
+	}
+	public void setFusedGenes(String fusedGenes) {
+		this.fusedGenes = fusedGenes;
+	}
+	public String getDbSNPVariantId() {
+		return dbSNPVariantId;
+	}
+	public void setDbSNPVariantId(String dbSNPVariantId) {
+		this.dbSNPVariantId = dbSNPVariantId;
+	}
+	public String getClinvarVariantId() {
+		return clinvarVariantId;
+	}
+	public void setClinvarVariantId(String clinvarVariantId) {
+		this.clinvarVariantId = clinvarVariantId;
+	}
+	public String getCosmicMVariantId() {
+		return cosmicMVariantId;
+	}
+	public void setCosmicMVariantId(String cosmicMVariantId) {
+		this.cosmicMVariantId = cosmicMVariantId;
+	}
+	public String getCosmicVVariantId() {
+		return cosmicVVariantId;
+	}
+	public void setCosmicVVariantId(String cosmicVVariantId) {
+		this.cosmicVVariantId = cosmicVVariantId;
 	}
 	
 	

@@ -47,7 +47,11 @@ public class UTSWProps {
 	public static String PDF_TEXT = "Answer Report"; 
 	
 	public static String[] GRCh38 = new String[] {"GRCh38", "GRCh38", "LA26806-2"}; 
-	public static String[] GENOMIC_SOURCE_CLASS_SOMATIC = new String[] {"Somatic", "Somatic", "LA6684-0"}; 
 	public static String[] VARIANT_ANALYSIS_METHOD_SEQUENCING = new String[] {"Sequencing", "Sequencing", "LA26398-0"}; 
+	public static String[] GENETIC_VARIANT_ASSESSMENT_PRESENT = new String[] {"Present", "Present", "LA9633-4"}; 
 	
+	public static String COSMIC_M = "COSMIC-SMPL"; 
+	public static String COSMIC_V = "COSMIC-SMPL"; 
+	public static String DB_SNP = "dbSNP"; 
+	public static String CLINVAR = "ClinVar-V"; 
 }
