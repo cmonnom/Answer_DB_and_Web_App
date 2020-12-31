@@ -53,7 +53,6 @@ import utsw.bicf.answer.model.extmapping.ensembl.EnsemblResponse;
 import utsw.bicf.answer.model.hybrid.PubMed;
 import utsw.bicf.answer.reporting.ehr.loinc.LOINC;
 import utsw.bicf.answer.reporting.ehr.loinc.LOINCAAChangeType;
-import utsw.bicf.answer.reporting.ehr.loinc.LOINCChromosomes;
 import utsw.bicf.answer.reporting.ehr.loinc.LOINCDNAChangeType;
 import utsw.bicf.answer.reporting.ehr.loinc.LOINCGenomicSource;
 import utsw.bicf.answer.reporting.ehr.loinc.LOINCItem;
@@ -63,7 +62,6 @@ import utsw.bicf.answer.reporting.ehr.loinc.LOINCVariantCategory;
 import utsw.bicf.answer.reporting.ehr.model.HL7Therapy;
 import utsw.bicf.answer.reporting.ehr.model.HL7Variant;
 import utsw.bicf.answer.reporting.ehr.model.TempusTrial;
-import utsw.bicf.answer.reporting.ehr.snomed.SNOMEDChromosomes;
 import utsw.bicf.answer.reporting.ehr.utils.HL7Utils;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.security.EnsemblProperties;
@@ -807,22 +805,43 @@ public class HL7v251Factory {
 		
 		//Discrete genetic variant
 		counter = 1;
-		String notation = (v.getcNotation() != null ? (v.getcNotation() + " ") : "") + (v.getpNotation() != null ? v.getpNotation() : "");
-		if (this.notNullOrEmpty(v.getCosmicMVariantId())) {
-			generateExternalId(oru, v.getCosmicMVariantId(), UTSWProps.COSMIC_M, currentVariantId, counter, notation);
-			counter++;
+		String notation = v.getTranscript();
+		if (this.notNullOrEmpty(v.getGene())) {
+			notation += "(" + v.getGene() + ")";
 		}
-		if (this.notNullOrEmpty(v.getCosmicVVariantId())) {
-			generateExternalId(oru, v.getCosmicVVariantId(), UTSWProps.COSMIC_V, currentVariantId, counter, notation);
-			counter++;
+		else {
+			notation = null;
 		}
-		if (this.notNullOrEmpty(v.getDbSNPVariantId())) {
-			generateExternalId(oru, v.getDbSNPVariantId(), UTSWProps.DB_SNP, currentVariantId, counter, notation);
-			counter++;
+		if (this.notNullOrEmpty(v.getcNotation())) {
+			notation += ":" + v.getcNotation();
 		}
-		if (this.notNullOrEmpty(v.getClinvarVariantId())) {
-			generateExternalId(oru, v.getClinvarVariantId(), UTSWProps.CLINVAR, currentVariantId, counter, notation);
-			counter++;
+		else {
+			notation = null;
+		}
+		if (this.notNullOrEmpty(v.getpNotation())) {
+			notation += " (" + v.getpNotation() + ")";
+		}
+		else {
+			notation = null;
+		}
+		//abort if any field above is null
+		if (notation != null) {
+			if (this.notNullOrEmpty(v.getCosmicMVariantId())) {
+				generateExternalId(oru, v.getCosmicMVariantId(), UTSWProps.COSMIC_M, currentVariantId, counter, notation);
+				counter++;
+			}
+			if (this.notNullOrEmpty(v.getCosmicVVariantId())) {
+				generateExternalId(oru, v.getCosmicVVariantId(), UTSWProps.COSMIC_V, currentVariantId, counter, notation);
+				counter++;
+			}
+			if (this.notNullOrEmpty(v.getDbSNPVariantId())) {
+				generateExternalId(oru, v.getDbSNPVariantId(), UTSWProps.DB_SNP, currentVariantId, counter, notation);
+				counter++;
+			}
+			if (this.notNullOrEmpty(v.getClinvarVariantId())) {
+				generateExternalId(oru, v.getClinvarVariantId(), UTSWProps.CLINVAR, currentVariantId, counter, notation);
+				counter++;
+			}
 		}
 		
 		//Chromosome

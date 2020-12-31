@@ -2211,11 +2211,16 @@ public class RequestUtils {
 
 		HttpResponse response = client.execute(requestGet);
 
-		AjaxResponse mongoDBResponse = null;
+		AjaxResponse mongoDBResponse = new AjaxResponse();
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == HttpStatus.SC_OK) {
 			mongoDBResponse = mapper.readValue(response.getEntity().getContent(), AjaxResponse.class);
 		}
+		else {
+			mongoDBResponse.setSuccess(false);
+			mongoDBResponse.setMessage("status code: " + statusCode);
+		}
+		System.out.println(mapper.writeValueAsString(mongoDBResponse));
 		this.closeGetRequest();
 		return mongoDBResponse;
 	}
