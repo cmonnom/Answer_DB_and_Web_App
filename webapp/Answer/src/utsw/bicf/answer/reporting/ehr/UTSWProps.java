@@ -54,4 +54,9 @@ public class UTSWProps {
 	public static String COSMIC_V = "COSMIC-SMPL"; 
 	public static String DB_SNP = "dbSNP"; 
 	public static String CLINVAR = "ClinVar-V"; 
+	
+	public static String PAN_CANCER_NAME = "NGS SOLID TISSUE REPORT"; 
+	public static String HEME_NAME = "NGS HEMATOLYMPHOID REPORT"; 
+	
+	
 }

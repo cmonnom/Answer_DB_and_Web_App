@@ -18,6 +18,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.xml.sax.SAXException;
 
+import com.google.common.base.Splitter;
+
 import ca.uhn.hl7v2.DefaultHapiContext;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.HapiContext;
@@ -39,8 +41,10 @@ import ca.uhn.hl7v2.parser.EncodingCharacters;
 import ca.uhn.hl7v2.parser.Parser;
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
+import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.EnsemblRequestUtils;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
+import utsw.bicf.answer.model.ClinicalTest;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
@@ -86,11 +90,13 @@ public class HL7v251Factory {
 	String overrideProviderIdName;
 	boolean humanReadable;
 	boolean includeFusion;
+	String beakerId;
+	String overrideTestName;
 	
 	public HL7v251Factory(Report report, OrderCase caseSummary, RequestUtils requestUtils, File pdfFile, 
-			EnsemblProperties ensemblProps, OtherProperties otherProps, 
+			EnsemblProperties ensemblProps, OtherProperties otherProps,
 			String overridePatientName, String overrideMRN, String overrideDOB, 
-			String overrideGender, String overrideOrder, String overrideProviderIdName, boolean includeFusion) {
+			String overrideGender, String overrideOrder, String overrideProviderIdName, boolean includeFusion, String beakerId, String overrideTestName) {
 		super();
 		this.report = report;
 		this.caseSummary = caseSummary;
@@ -107,6 +113,8 @@ public class HL7v251Factory {
 		this.overrideProviderIdName = overrideProviderIdName;
 		
 		this.includeFusion = includeFusion;
+		this.beakerId = beakerId;
+		this.overrideTestName = overrideTestName;
 	}
 	
 	public String reportToHL7(boolean humanReadable) throws HL7Exception, IOException, URISyntaxException {
@@ -161,6 +169,16 @@ public class HL7v251Factory {
 		if (this.overrideProviderIdName != null) {
 			caseSummary.setOrderingPhysician(overrideProviderIdName);
 		}
+		if (this.overrideTestName != null) {
+			caseSummary.setLabTestName(overrideTestName);
+		}
+		
+		if (caseSummary.getTumorPanel() == null || caseSummary.getTumorPanel().equalsIgnoreCase("Solid")) {
+			caseSummary.setLabTestName(UTSWProps.PAN_CANCER_NAME);
+		}
+		else if (caseSummary.getTumorPanel() != null && caseSummary.getTumorPanel().equalsIgnoreCase("Hematolymphoid")) {
+			caseSummary.setLabTestName(UTSWProps.HEME_NAME);
+		}
 		
 		// Populate the PID Segment
 		PID pid = oru.getPATIENT_RESULT().getPATIENT().getPID();
@@ -190,8 +208,18 @@ public class HL7v251Factory {
 		obr.getObservationDateTime().getTime().setValue(this.sanitizeHL7Text(caseSummary.getEpicOrderDate().replace("-", "")));
 		obr.getSetIDOBR().setValue("1");
 		obr.getPlacerOrderNumber().getEntityIdentifier().setValue(caseSummary.getEpicOrderNumber());
-		obr.getUniversalServiceIdentifier().getIdentifier().setValue("NGSPCT");
+		if (caseSummary.getLabTestName().equals(UTSWProps.HEME_NAME)) {
+			obr.getUniversalServiceIdentifier().getIdentifier().setValue("170170");
+		}
+		else if (caseSummary.getLabTestName().equals(UTSWProps.PAN_CANCER_NAME)) {
+			obr.getUniversalServiceIdentifier().getIdentifier().setValue("170169");
+		}
 		obr.getUniversalServiceIdentifier().getText().setValue(caseSummary.getLabTestName());
+		
+		if (this.notNullOrEmpty(beakerId)) {
+			obr.getFillerOrderNumber().getEntityIdentifier().setValue(beakerId);
+			obr.getFillerOrderNumber().getNamespaceID().setValue("Beaker");
+		}
 		
 		//TODO wait to see if it's Authorized by or Ordered By
 		String[] physicianNameAndId = caseSummary.getOrderingPhysician().split("[, ]");
@@ -416,21 +444,35 @@ public class HL7v251Factory {
 			}
 			v.setVariantCategory(LOINCVariantCategory.getLoincCode(gva.getType()));
 			
+			//skip for now
+//			for (String id : variant.getIds()) {
+//				if (!this.notNullOrEmpty(id)) {
+//					continue;
+//				}
+//				if (id.startsWith("COSM")) {
+//					v.setCosmicMVariantId(id);
+//					break;
+//				}
+//				else if (id.startsWith("COSV")) {
+////					v.setCosmicVVariantId(id);
+//				}
+//				else if (id.startsWith("rs")) {
+//					v.setDbSNPVariantId(id);
+//					break;
+//				}
+//				else {
+//					v.setClinvarVariantId(id);
+//					break;
+//				}
+//			}
 			for (String id : variant.getIds()) {
-				if (!this.notNullOrEmpty(id)) {
+				if (!this.notNullOrEmpty(id) || id.startsWith("COSM")
+						|| id.startsWith("COSV") || id.startsWith("rs")) {
 					continue;
-				}
-				if (id.startsWith("COSM")) {
-					v.setCosmicMVariantId(id);
-				}
-				else if (id.startsWith("COSV")) {
-					v.setCosmicVVariantId(id);
-				}
-				else if (id.startsWith("rs")) {
-					v.setDbSNPVariantId(id);
 				}
 				else {
 					v.setClinvarVariantId(id);
+					break;
 				}
 			}
 			
@@ -442,8 +484,12 @@ public class HL7v251Factory {
 		else if (gva.getType().contentEquals("cnv")) {
 			HL7Variant v = new HL7Variant();
 
-			v.setGene(gva.getGene());
-			v.setHgncCode(fetchHGNC(gva.getGene()));
+			String gene = gva.getGene();
+			if (gene.equals("FLT3-ITD")) {
+				gene = "FLT3";
+			}
+			v.setGene(gene);
+			v.setHgncCode(fetchHGNC(gene));
 //			v.setAaChange(gva.getVariant());
 			CNV variant = requestUtils.getCNVDetails(gva.getOid());
 			v.setChr(variant.getChrom());
@@ -511,6 +557,9 @@ public class HL7v251Factory {
 		HL7Variant v = new HL7Variant();
 		if (this.notNullOrEmpty(cnv.getGenes())) { //only the first one
 			String gene = cnv.getGenes().split(" ")[0].trim();
+			if (gene.equals("FLT3-ITD")) {
+				gene = "FLT3";
+			}
 			v.setGene(gene);
 			v.setHgncCode(fetchHGNC(gene));
 		}
@@ -520,6 +569,7 @@ public class HL7v251Factory {
 		v.setCytoband(cnv.getCytoband());
 		
 		if (cnv.getAberrationType() != null && cnv.getAberrationType().equals("ITD")) {
+			
 			v.setDnaChangeType("Duplication");
 		}
 		v.setCopyNumber(cnv.getCopyNumber());
@@ -957,6 +1007,13 @@ public class HL7v251Factory {
 		if (v.getAnnotations() != null) {
 			counter = 1;
 			for (String annotation : v.getAnnotations()) {
+//				for (String splitAnnotation : Splitter.fixedLength(200).split(annotation)) {
+//					ST obxAnnotation = new ST(oru.getMessage());
+//					obxAnnotation.setValue(splitAnnotation);
+//					String subVariantId = currentVariantId + "." + utils.getNextVariantIdSub(counter) ;
+//					createVariantOBX(oru, subVariantId, LOINC.getCode("Annotation comment [Interpretation] Narrative"), obxAnnotation);
+//					counter++;
+//				}
 				ST obxAnnotation = new ST(oru.getMessage());
 				obxAnnotation.setValue(annotation);
 				String subVariantId = currentVariantId + "." + utils.getNextVariantIdSub(counter) ;

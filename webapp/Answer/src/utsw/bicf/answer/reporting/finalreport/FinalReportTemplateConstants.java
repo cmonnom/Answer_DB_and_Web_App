@@ -67,6 +67,7 @@ public class FinalReportTemplateConstants {
 	public static final List<String> ADDRESS = new ArrayList<String>();
 	public static final String TRIAL_URL = "https://clinicaltrials.gov/ct2/show/";
 	public static final String PUBMED_URL = "https://www.ncbi.nlm.nih.gov/pubmed/?term=";
+	public static final String CLINVAR_URL = "https://www.ncbi.nlm.nih.gov/clinvar/variation/";
 
 	public static final List<Header> TREATMENT_OPTIONS_SUMMARY_HEADERS = new ArrayList<Header>();
 	

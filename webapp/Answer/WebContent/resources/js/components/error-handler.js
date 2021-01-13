@@ -11,7 +11,7 @@ Vue.component('error-handler', {
     </v-card>
     </v-dialog>
     <v-dialog v-model="showLoginDialog" max-width="300px">
-        <login-ajax></login-ajax>
+        <login-ajax :message="message"></login-ajax>
     </v-dialog>
 </div>`,
     data() {
@@ -19,6 +19,7 @@ Vue.component('error-handler', {
             showDialog: false,
             errorMessage: null,
             showLoginDialog: false,
+            message: authMessage,
             callBacks: [],
             busy: false
         }

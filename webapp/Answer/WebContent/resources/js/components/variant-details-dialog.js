@@ -321,7 +321,7 @@ Vue.component('variant-details-dialog', {
                                 <v-icon>mdi-dna</v-icon>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
-                                <v-list-tile-title>Open Lookup Tool (Beta)</v-list-tile-title>
+                                <v-list-tile-title>Open Lookup Tool</v-list-tile-title>
                             </v-list-tile-content>
                             </v-list-tile>
     

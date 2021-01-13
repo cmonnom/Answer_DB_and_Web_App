@@ -1105,6 +1105,11 @@ public class FinalReportPDFTemplate {
 				cellContent.append("<b>").append(geneVariant).append("</b><br/>")
 				.append("<b>Pos: </b>").append(item.getPosition()).append("<br/>");
 				if (item.getType().equals("snp")) {
+					if (item.getClinvarId() != null) {
+						String clinVarRow = "<b>ClinVar Id: </b>" + item.getClinvarId() + "<br/>";
+						cellContent.append(clinVarRow);
+						links.add(new Link("ClinVar Id: " + item.getClinvarId(), FinalReportTemplateConstants.CLINVAR_URL + item.getClinvarId()));
+					}
 					cellContent
 					.append("<b>Ref: </b>").append(item.getRef()).append("<br/>")
 					.append("<b>Alt: </b>").append(item.getAlt()).append("<br/>")

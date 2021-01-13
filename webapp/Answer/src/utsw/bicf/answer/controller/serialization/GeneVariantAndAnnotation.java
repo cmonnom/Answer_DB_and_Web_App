@@ -2,7 +2,7 @@ package utsw.bicf.answer.controller.serialization;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;import com.fasterxml.jackson.databind.ser.std.NumberSerializer;
 
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.Variant;
@@ -26,6 +26,7 @@ public class GeneVariantAndAnnotation {
 	String type;
 	String ref;
 	String alt;
+	String clinvarId;
 	
 	public GeneVariantAndAnnotation() {
 	}
@@ -44,6 +45,13 @@ public class GeneVariantAndAnnotation {
 		this.type = "snp";
 		this.ref = v.getReference();
 		this.alt = v.getAlt();
+		if (v.getIds() != null) {
+			for (String id : v.getIds()) {
+				if (id != null && !id.equals("") && id.matches("[0-9]+")) {
+					this.clinvarId = id;
+				}
+			}
+		}
 	}
 	
 	public GeneVariantAndAnnotation(CNV v, String genes, Map<String, String> annotationsByCategory) {
@@ -176,6 +184,14 @@ public class GeneVariantAndAnnotation {
 
 	public void setAlt(String alt) {
 		this.alt = alt;
+	}
+
+	public String getClinvarId() {
+		return clinvarId;
+	}
+
+	public void setClinvarId(String clinvarId) {
+		this.clinvarId = clinvarId;
 	}
 
 	

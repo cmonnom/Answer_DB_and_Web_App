@@ -833,6 +833,8 @@ public class APIController {
 			@RequestParam(required = false) String overrideOrder, 
 			@RequestParam(required = false) String overrideProviderIdName,
 			@RequestParam(required = false) boolean includeFusion,
+			@RequestParam(required = false) String beakerId,
+			@RequestParam(required = false) String overrideTestName,
 			HttpSession httpSession, @RequestParam(defaultValue = "false") Boolean hl7Only
 			) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from testEpicReportHL7");
@@ -894,7 +896,7 @@ public class APIController {
 			File pdfFile = pdfReport.saveFinalized();
 			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile, ensemblProps, otherProps, 
 					overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder,
-					overrideProviderIdName, includeFusion);
+					overrideProviderIdName, includeFusion, beakerId, overrideTestName);
 			String hl7 = hl7Factory.reportToHL7(true);
 			if (hl7Only) {
 				return hl7;
@@ -922,6 +924,8 @@ public class APIController {
 			@RequestParam(required = false) String overrideOrder, 
 			@RequestParam(required = false) String overrideProviderIdName,
 			@RequestParam(required = false) boolean includeFusion,
+			@RequestParam(required = false) String beakerId,
+			@RequestParam(required = false) String overrideTestName,
 			HttpSession httpSession) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from sendEpicReportHL7");
 //		long now = System.currentTimeMillis();
@@ -985,7 +989,7 @@ public class APIController {
 					overrideDOB, 
 					overrideGender, 
 					overrideOrder,
-					overrideProviderIdName, includeFusion);
+					overrideProviderIdName, includeFusion, beakerId, overrideTestName);
 			String hl7 = hl7Factory.reportToHL7(false);
 			
 			socket = new Socket(otherProps.getEpicHl7Hostname(), otherProps.getEpicHl7Port());
