@@ -51,6 +51,9 @@ public class DataTableFilter {
 	//button will add a button next to the filter to handle such action
 	Button button;
 	
+	//Some checkbox filters need to be grouped in flags instead of with the other checkboxes
+	String group;
+	
 	//Booleans need to be handled a bit differently because they can have 4 states: include/not include if true, include/not include if false, 
 	//For instance Pass QC:
 	//We need a flag for  "include Pass QC" or "do not include Pass QC"
@@ -267,6 +270,14 @@ public class DataTableFilter {
 
 	public void setUiFilterType(String uiFilterType) {
 		this.uiFilterType = uiFilterType;
+	}
+
+	public String getGroup() {
+		return group;
+	}
+
+	public void setGroup(String group) {
+		this.group = group;
 	}
 
 	

@@ -293,7 +293,7 @@ public class RequestUtils {
 			}
 		}
 		String filterParam = filterList.createJSON();
-//		System.out.println(filterParam);
+		System.out.println(filterParam);
 
 		ExecutorService executor = Executors.newFixedThreadPool(2);
 		final OrderCase orderCase = new OrderCase();

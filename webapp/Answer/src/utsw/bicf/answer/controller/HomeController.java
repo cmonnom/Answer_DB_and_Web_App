@@ -1,24 +1,11 @@
 package utsw.bicf.answer.controller;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.URI;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -32,21 +19,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.azure.storage.blob.BlobContainerClient;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.StorageCredentialsAccountAndKey;
-import com.microsoft.azure.storage.blob.BlobContainerPermissions;
-import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
-import com.microsoft.azure.storage.blob.CloudBlob;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import com.microsoft.azure.storage.blob.ListBlobItem;
-import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
-import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
 
+import utsw.bicf.answer.controller.api.APIController;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.vuetify.AllOrderCasesSummary;
 import utsw.bicf.answer.controller.serialization.vuetify.OrderCaseAllSummary;
@@ -73,6 +49,7 @@ import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
 import utsw.bicf.answer.reporting.finalreport.FinalReportTemplateConstants;
 import utsw.bicf.answer.reporting.parse.EncodingGlyphException;
 import utsw.bicf.answer.security.EmailProperties;
+import utsw.bicf.answer.security.EnsemblProperties;
 import utsw.bicf.answer.security.FileProperties;
 import utsw.bicf.answer.security.NotificationUtils;
 import utsw.bicf.answer.security.OtherProperties;
@@ -107,6 +84,8 @@ public class HomeController {
 	LoginDAO loginDAO;
 	@Autowired
 	QcAPIAuthentication qcAPI;
+	@Autowired
+	EnsemblProperties ensemblProps;
 	
 //	private static final Logger logger = Logger.getLogger(AOPAspect.class);
 
@@ -413,6 +392,48 @@ public class HomeController {
 				}
 				else {
 					utils.markAsSentToEpic(response, caseId, qcAPI);
+				}
+			}
+			else {
+				response.setSuccess(false);
+				response.setMessage("The case id " + caseId + " does not exist.");
+			}
+		}
+		else {
+			response.setMessage("You are not allowed to edit this case");
+		}
+		return response.createObjectJSON();
+	}
+	
+	@RequestMapping(value = "/toggleSendingToEpicStatusForCase")
+	@ResponseBody
+	public String toggleSendingToEpicStatusForCase(Model model, HttpSession session, 
+			@RequestParam String caseId) throws Exception {
+
+		// send user to Ben's API
+		RequestUtils utils = new RequestUtils(modelDAO);
+		User user = ControllerUtil.getSessionUser(session);
+		AjaxResponse response = new AjaxResponse();
+		OrderCase caseSummary = utils.getCaseSummary(caseId);
+		if (caseSummary != null) {
+			if (CaseHistory.lastStepMatches(caseSummary, CaseHistory.STEP_FINALIZED)) {
+				if (!ControllerUtil.areUserAndCaseInSameGroup(user, caseSummary)) {
+					return ControllerUtil.initializeModelNotAllowed(model, servletContext);
+				}
+				else {
+					//TODO once ready to send to Epic
+					APIController.sendReportToEpic(caseId, null, null, null, null, null, null, true, null, null, false, null, response, utils, caseSummary, modelDAO, fileProps, ensemblProps, otherProps);
+					if (response.getSuccess()) {
+						utils.markAsSentToEpic(response, caseId, qcAPI);
+						response.setSuccess(true);
+						response.setIsAllowed(true);
+					}
+//					//for testing:
+//					response = APIController.testHL7Report(caseId, null, null, null, null, null, null, false, null, null, null, true, utils, caseSummary, modelDAO, fileProps, ensemblProps, otherProps);
+//					if (response.getSuccess()) {
+//						response.setSuccess(true);
+//						response.setIsAllowed(true);
+//					}
 				}
 			}
 			else {

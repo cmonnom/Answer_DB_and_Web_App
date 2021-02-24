@@ -338,9 +338,8 @@ Vue.component('advanced-filter', {
 
 
                     <!-- filter flags -->
-                    <v-layout row :class="[getFilterColor(), 'pl-3', 'mr-3']" v-if="getFiltersByType(flagFilters).length > 0">
-                        <v-expansion-panel expand class="expandable-filter elevation-0"  :value="flagExpansion">
-                            <v-expansion-panel-content>
+                    <v-layout row :class="['pl-3', 'mr-3']" v-if="getFiltersByType(flagFilters).length > 0">
+                        <v-flex xs12>
                                 <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">Flags</div>
                                 <v-layout row class="pt-3" v-for="filter in getFiltersByType(flagFilters)" :key="filter.fieldName" align-end>
                                     <v-flex xs6>
@@ -384,8 +383,34 @@ Vue.component('advanced-filter', {
                                         </v-tooltip>
                                     </v-flex>
                                 </v-layout>
-                            </v-expansion-panel-content>
-                        </v-expansion-panel>
+                        </v-flex>
+                    </v-layout>
+
+                    <!-- checkbox under flag (special case) -->
+                    <v-layout row v-for="filter in getFiltersByGroup(checkboxFilters, 'flag')" :key="filter.headerText" :class="['pl-3', 'pr-3', 'mt-2', 'mr-3']">
+                        <v-flex xs12 v-if="filter.isCheckBox" class="elevation-0" :value="checkboxExpansion">
+                                <div slot="header" :class="[disableFiltering ? 'grey--text lighten-1' : '', 'subheading', 'pl-1']">
+                                    <v-tooltip top>
+                                    <span slot="activator">{{ filter.headerText }}</span>
+                                    <span>{{ filter.tooltip }}</span>
+                                    </v-tooltip>
+                                    <v-tooltip right>
+                                    <v-btn small slot="activator" :disabled="disableFiltering" flat @click.stop="toggleAllCheckBoxes(filter)" icon >
+                                        <v-icon>done_all</v-icon>
+                                    </v-btn>
+                                    <span>Select/Unselect All</span>
+                                </v-tooltip>
+                                </div>
+                                <v-layout row wrap>
+                                    <v-flex xs12 lg6 v-for="(checkBox, index) in filter.checkBoxes" :key="index">
+                                        <v-tooltip bottom>
+                                            <v-checkbox class="mt-0" :disabled="disableFiltering" color="primary" slot="activator" hide-details :label="checkBox.name" v-model="checkBox.value"
+                                                @change="updateFilterNeedsReload(true)"></v-checkbox>
+                                            <span>{{ checkBox.name }}</span>
+                                        </v-tooltip>
+                                    </v-flex>
+                                </v-layout>
+                        </v-flex>
                     </v-layout>
 
                     <!-- filter numbers -->
@@ -462,6 +487,8 @@ Vue.component('advanced-filter', {
             effects: null,
             failedFilters: null,
             ftlFilters: null,
+            checkBoxDiseaseDatabaseLabelsByValue: {},
+            checkBoxTroubledRegionLabelsByValue: {},
             flagFilters: [],
             checkboxFilters: [],
             numberFilters: [],
@@ -546,6 +573,30 @@ Vue.component('advanced-filter', {
                         if (this.ftlFilters) { //add a check on type between snp and ftl
                             for (var j = 0; j < this.ftlFilters.length; j++) {
                                 filter.checkBoxes.push({ name: this.ftlFilters[j], value: false});
+                            }
+                        }
+                        filter.checkBoxes.sort((a,b) => {return this.checkBoxCompare(a,b)});
+                    }
+                    else if (filter.fieldName == 'diseaseDatabases') {
+                        if (filter.checkBoxes.length > 0) {
+                            continue;
+                        }
+                        filter.checkBoxes = [];
+                        if (this.diseaseDatabaseFilters) { //add a check on type between snp and ftl
+                            for (var j = 0; j < this.diseaseDatabaseFilters.length; j++) {
+                                filter.checkBoxes.push({ name: this.diseaseDatabaseFilters[j], value: false});
+                            }
+                        }
+                        filter.checkBoxes.sort((a,b) => {return this.checkBoxCompare(a,b)});
+                    }
+                    else if (filter.fieldName == 'troubledRegions') {
+                        if (filter.checkBoxes.length > 0) {
+                            continue;
+                        }
+                        filter.checkBoxes = [];
+                        if (this.troubledRegionFilters) { //add a check on type between snp and ftl
+                            for (var j = 0; j < this.troubledRegionFilters.length; j++) {
+                                filter.checkBoxes.push({ name: this.troubledRegionFilters[j], value: false});
                             }
                         }
                         filter.checkBoxes.sort((a,b) => {return this.checkBoxCompare(a,b)});
@@ -783,12 +834,16 @@ Vue.component('advanced-filter', {
             this.currentFilterSet = this.filterSets.filter(f => f.variantFilterListId == filterSet.value)[0];
             for (var i = 0; i < this.currentFilterSet.filters.length; i++) {
                 var filter = this.currentFilterSet.filters[i];
-                var filterToPopulate = this.filters.filter(f => f.fieldName == filter.field && f.type == filter.type && f.uiFilterType == filter.uiFilterType)[0];
+                //some tricky manipulation with ftlFilters
+                var filterToPopulate = this.filters.filter(f => (f.fieldName == filter.field || f.fieldName == "ftlFilters" ) && f.type == filter.type && f.uiFilterType == filter.uiFilterType)[0];
                 this.populateFilter(filterToPopulate, filter);
             }
             this.$emit("refresh-data", null);
         },
         populateFilter(filterToPopulate, loadedFilter) {
+            if (!filterToPopulate) {
+                return;
+            }
             var multiplier = 1;
             if (filterToPopulate.fieldName.includes("Frequency")) {
                 multiplier = 100;
@@ -810,8 +865,17 @@ Vue.component('advanced-filter', {
                 if (filterToPopulate.type == 'ftl') {
                     checkboxMap = this.checkBoxFTLLabelsByValue;
                 }
+                if (filterToPopulate.fieldName == "effects") {
+                    checkboxMap = this.checkBoxLabelsByValue;
+                }
+                if (filterToPopulate.fieldName == "diseaseDatabases") {
+                    checkboxMap = this.checkBoxDiseaseDatabaseLabelsByValue;
+                }
+                if (filterToPopulate.fieldName == "troubledRegions") {
+                    checkboxMap = this.checkBoxTroubledRegionLabelsByValue;
+                }
                 for (var i = 0; i < filterToPopulate.checkBoxes.length; i++) {
-                    var field = this.checkboxMap[filterToPopulate.checkBoxes[i].name];
+                    var field = checkboxMap[filterToPopulate.checkBoxes[i].name];
                     var checkboxHasValue = false;
                     for (var j = 0; j < loadedFilter.stringValues.length; j++) {
                         var currentCheckBoxValue = loadedFilter.stringValues[j].filterString;
@@ -858,7 +922,10 @@ Vue.component('advanced-filter', {
             return this.isInputNumberValid(filter) ? 'primary' : 'error';
         },
         getFiltersByType(filters) {
-            return filters.filter(f => f.type == this.type);
+            return filters.filter(f => f.type == this.type && f.group != "flag");
+        },
+        getFiltersByGroup(filters, group) {
+            return filters.filter(f => f.type == this.type && f.group == group);
         },
         getFormattedType(type) {
             if (type == "snp" || type == "cnv" || type == "ftl" || type == "vir") {

@@ -10,6 +10,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,8 +18,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.xml.sax.SAXException;
-
-import com.google.common.base.Splitter;
 
 import ca.uhn.hl7v2.DefaultHapiContext;
 import ca.uhn.hl7v2.HL7Exception;
@@ -43,8 +42,9 @@ import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.EnsemblRequestUtils;
+import utsw.bicf.answer.db.api.utils.ReportBuilder;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
-import utsw.bicf.answer.model.ClinicalTest;
+import utsw.bicf.answer.model.extmapping.Annotation;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
@@ -52,6 +52,7 @@ import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.Translocation;
 import utsw.bicf.answer.model.extmapping.TranslocationReport;
+import utsw.bicf.answer.model.extmapping.VCFAnnotation;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.extmapping.ensembl.EnsemblResponse;
 import utsw.bicf.answer.model.hybrid.PubMed;
@@ -61,7 +62,6 @@ import utsw.bicf.answer.reporting.ehr.loinc.LOINCDNAChangeType;
 import utsw.bicf.answer.reporting.ehr.loinc.LOINCGenomicSource;
 import utsw.bicf.answer.reporting.ehr.loinc.LOINCItem;
 import utsw.bicf.answer.reporting.ehr.loinc.LOINCMSI;
-import utsw.bicf.answer.reporting.ehr.loinc.LOINCStructuralVariantType;
 import utsw.bicf.answer.reporting.ehr.loinc.LOINCVariantCategory;
 import utsw.bicf.answer.reporting.ehr.model.HL7Therapy;
 import utsw.bicf.answer.reporting.ehr.model.HL7Variant;
@@ -81,6 +81,7 @@ public class HL7v251Factory {
 	File pdfFile;
 	EnsemblProperties ensemblProps;
 	OtherProperties otherProps;
+	ModelDAO modelDAO;
 	
 	String overridePatientName;
 	String overrideMRN;
@@ -92,11 +93,19 @@ public class HL7v251Factory {
 	boolean includeFusion;
 	String beakerId;
 	String overrideTestName;
+	String overrideReportDate;
+	EnsemblRequestUtils ensemblUtils;
+	
+	
 	
 	public HL7v251Factory(Report report, OrderCase caseSummary, RequestUtils requestUtils, File pdfFile, 
 			EnsemblProperties ensemblProps, OtherProperties otherProps,
 			String overridePatientName, String overrideMRN, String overrideDOB, 
-			String overrideGender, String overrideOrder, String overrideProviderIdName, boolean includeFusion, String beakerId, String overrideTestName) {
+			String overrideGender, String overrideOrder, 
+			String overrideProviderIdName, boolean includeFusion,
+			String beakerId, String overrideTestName,
+			String overrideReportDate, 
+			ModelDAO modelDAO) {
 		super();
 		this.report = report;
 		this.caseSummary = caseSummary;
@@ -115,6 +124,9 @@ public class HL7v251Factory {
 		this.includeFusion = includeFusion;
 		this.beakerId = beakerId;
 		this.overrideTestName = overrideTestName;
+		this.overrideReportDate = overrideReportDate;
+		this.ensemblUtils = new EnsemblRequestUtils(ensemblProps, otherProps);
+		this.modelDAO = modelDAO;
 	}
 	
 	public String reportToHL7(boolean humanReadable) throws HL7Exception, IOException, URISyntaxException {
@@ -126,7 +138,7 @@ public class HL7v251Factory {
 		
 		// Now, let's encode the message and look at the output
 		HapiContext context = new DefaultHapiContext();
-		Parser parser = context.getPipeParser();
+		Parser parser = context.getGenericParser();
 		String encodedMessage = parser.encode(oru);
 		context.close();
 		
@@ -139,6 +151,7 @@ public class HL7v251Factory {
 		else {
 			encodedMessage = encodedMessage.replaceAll("OBX.+999999", "");
 		}
+		pdfFile.delete();
 		return encodedMessage;
 	}
 
@@ -150,7 +163,6 @@ public class HL7v251Factory {
 		mshSegment.getReceivingApplication().getNamespaceID().setValue(UTSWProps.RECEIVING_APPLICATION);
 		mshSegment.getReceivingFacility().getNamespaceID().setValue(UTSWProps.RECEIVING_FACILITY);
 		mshSegment.getDateTimeOfMessage().getTime().setValue(TypeUtils.hl7DateTimeFormatter.format(LocalDateTime.now()));
-
 		if (this.overridePatientName != null) {
 			caseSummary.setPatientName(this.overridePatientName);
 		}
@@ -164,13 +176,14 @@ public class HL7v251Factory {
 			caseSummary.setGender(overrideGender);
 		}
 		if (this.overrideOrder != null) {
-			caseSummary.setEpicOrderNumber(overrideOrder);
+			caseSummary.setHl7OrderId(overrideOrder);
 		}
 		if (this.overrideProviderIdName != null) {
 			caseSummary.setOrderingPhysician(overrideProviderIdName);
 		}
 		if (this.overrideTestName != null) {
 			caseSummary.setLabTestName(overrideTestName);
+			caseSummary.setTumorPanel(overrideTestName);
 		}
 		
 		if (caseSummary.getTumorPanel() == null || caseSummary.getTumorPanel().equalsIgnoreCase("Solid")) {
@@ -178,6 +191,9 @@ public class HL7v251Factory {
 		}
 		else if (caseSummary.getTumorPanel() != null && caseSummary.getTumorPanel().equalsIgnoreCase("Hematolymphoid")) {
 			caseSummary.setLabTestName(UTSWProps.HEME_NAME);
+		}
+		if (this.beakerId != null) {
+			caseSummary.setHl7SampleId(beakerId);
 		}
 		
 		// Populate the PID Segment
@@ -207,7 +223,7 @@ public class HL7v251Factory {
 		OBR obr = oru.getPATIENT_RESULT().getORDER_OBSERVATION().getOBR();
 		obr.getObservationDateTime().getTime().setValue(this.sanitizeHL7Text(caseSummary.getEpicOrderDate().replace("-", "")));
 		obr.getSetIDOBR().setValue("1");
-		obr.getPlacerOrderNumber().getEntityIdentifier().setValue(caseSummary.getEpicOrderNumber());
+		obr.getPlacerOrderNumber().getEntityIdentifier().setValue(caseSummary.getHl7OrderId());
 		if (caseSummary.getLabTestName().equals(UTSWProps.HEME_NAME)) {
 			obr.getUniversalServiceIdentifier().getIdentifier().setValue("170170");
 		}
@@ -217,11 +233,10 @@ public class HL7v251Factory {
 		obr.getUniversalServiceIdentifier().getText().setValue(caseSummary.getLabTestName());
 		
 		if (this.notNullOrEmpty(beakerId)) {
-			obr.getFillerOrderNumber().getEntityIdentifier().setValue(beakerId);
+			obr.getFillerOrderNumber().getEntityIdentifier().setValue(caseSummary.getHl7SampleId());
 			obr.getFillerOrderNumber().getNamespaceID().setValue("Beaker");
 		}
 		
-		//TODO wait to see if it's Authorized by or Ordered By
 		String[] physicianNameAndId = caseSummary.getOrderingPhysician().split("[, ]");
 		if (physicianNameAndId[0] != null) {
 			obr.getOrderingProvider(0).getIDNumber().setValue(this.sanitizeHL7Text(physicianNameAndId[0]));
@@ -236,7 +251,11 @@ public class HL7v251Factory {
 			obr.getOrderingProvider(0).getSecondAndFurtherGivenNamesOrInitialsThereof().setValue(this.sanitizeHL7Text(physicianNameAndId[3]));
 		}
 		
-		if (report.getDateFinalized() != null) {
+		if (this.overrideReportDate != null) {
+			report.setDateFinalized(overrideReportDate);
+			obr.getResultsRptStatusChngDateTime().getTime().setValue(overrideReportDate);
+		}
+		else if (report.getDateFinalized() != null) {
 			LocalDateTime finalizedData = LocalDateTime.parse(report.getDateFinalized(), TypeUtils.mongoDateTimeFormatter);
 			obr.getResultsRptStatusChngDateTime().getTime().setValue(finalizedData.format(TypeUtils.hl7DateTimeFormatter));
 		}
@@ -357,6 +376,13 @@ public class HL7v251Factory {
 		obxMSI.getNameOfCodingSystem().setValue(msiLoinc.getSystem());
 		createCaseOBX(oru, msiLoinc, obxMSI, null);
 	
+		//Report Summary
+//		createCaseNTE(oru);
+		ST obxSummary = new ST(oru.getMessage());
+		obxSummary.setValue(this.sanitizeHL7Text(report.getSummary()));
+		LOINCItem summaryLOINC = LOINC.getCode("Case Summary");
+		createCaseOBX(oru, summaryLOINC, obxSummary, null);
+		
 		
 //		if (humanReadable) {
 			//Base64 PDF
@@ -369,8 +395,6 @@ public class HL7v251Factory {
 		createCaseOBX(oru, reportLOINC, obxPDF);
 //		}
 		
-		//Report Summary
-		createCaseNTE(oru);
 	}
 	
 	public List<HL7Variant> buildVariant(String clinicalSignificanceSomatic, String clinicalSignificanceGermline, GeneVariantAndAnnotation gva, boolean skipAnnotation) throws ClientProtocolException, IOException, URISyntaxException {
@@ -378,6 +402,7 @@ public class HL7v251Factory {
 		if (gva.getType().contentEquals("snp")) {
 			HL7Variant v = new HL7Variant();
 			v.setGene(gva.getGene());
+			v.setHgncCode("0");
 //			v.setAaChange(gva.getVariant());
 			Variant variant = requestUtils.getVariantDetails(gva.getOid());
 			v.setRef(variant.getReference());
@@ -392,11 +417,31 @@ public class HL7v251Factory {
 			else {
 				v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceSomatic));
 			}
-			v.setTranscript(variant.getVcfAnnotations().get(0).getFeatureId());
+			String featureId = "";
+			if (variant.getVcfAnnotations() != null && !variant.getVcfAnnotations().isEmpty()) {
+				featureId = variant.getVcfAnnotations().get(0).getFeatureId();
+				if (featureId.contains("ENST")) {
+					featureId = "ENST" + featureId.split("ENST")[1];
+				}
+			}
+			v.setTranscript(featureId);
 			v.setAllFreq(variant.getTumorAltFrequency());
 			v.setDepth(variant.getTumorTotalDepth());
-			v.setHgncCode(fetchHGNC(gva.getGene()));
-			v.setEnsemblCode(variant.getVcfAnnotations().get(0).getGeneId());
+			VCFAnnotation workingAnn = variant.getVcfAnnotations().get(0);
+			for (VCFAnnotation vcfAnn : variant.getVcfAnnotations()) {
+				String gene = vcfAnn.getGeneName();
+				String hgnc = fetchHGNC(gene, false);
+				if (!this.notNullOrEmpty(hgnc)) {
+					hgnc = fetchHGNC(gene, true);
+				}
+				if (this.notNullOrEmpty(hgnc)) {
+					v.setGene(gene);
+					v.setHgncCode(hgnc);
+					workingAnn = vcfAnn;
+					break;
+				}
+			}
+			v.setEnsemblCode(workingAnn.getGeneId());
 //			v.setDisplayName(variant.getGeneName() + " " + variant.getNotation());
 			v.setDisplayName(gva.getGeneVariant());
 			v.setSomaticStatus(variant.getSomaticStatus());
@@ -410,11 +455,11 @@ public class HL7v251Factory {
 //				}
 //			}
 //			v.setDbSNPId(dbSNPId);
-			String cNotation = variant.getVcfAnnotations().get(0).getCodingNotation();
+			String cNotation = workingAnn.getCodingNotation();
 			if (cNotation != null) {
 				v.setcNotation(cNotation);
 			}
-			String pNotation = variant.getVcfAnnotations().get(0).getProteinNotation();
+			String pNotation = workingAnn.getProteinNotation();
 			if (this.notNullOrEmpty(pNotation)) {
 				v.setpNotation(pNotation);
 			}
@@ -489,11 +534,14 @@ public class HL7v251Factory {
 				gene = "FLT3";
 			}
 			v.setGene(gene);
-			v.setHgncCode(fetchHGNC(gene));
+			String hgnc = fetchHGNC(gene, false);
+			if (!this.notNullOrEmpty(hgnc)) {
+				hgnc = fetchHGNC(gene, true);
+			}
+			v.setHgncCode(hgnc);
 //			v.setAaChange(gva.getVariant());
 			CNV variant = requestUtils.getCNVDetails(gva.getOid());
 			v.setChr(variant.getChrom());
-			v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceSomatic));
 			v.setCytoband(variant.getCytoband());
 			v.setDisplayName(gva.getGeneVariant());
 			v.setSomaticStatus("Somatic");
@@ -521,8 +569,19 @@ public class HL7v251Factory {
 			v12.setRightGene(ftl.getRightGene());
 			v12.setLeftDNARegion(ftl.getFirstExon());
 			v12.setRightDNARegion(ftl.getLastExon());
-			v12.setLeftHGNC(fetchHGNC(ftl.getLeftGene()));
-			v12.setRightHGNC(fetchHGNC(ftl.getRightGene()));
+			
+			String hgncLeft = fetchHGNC(ftl.getLeftGene(), false);
+			if (!this.notNullOrEmpty(hgncLeft)) {
+				hgncLeft = fetchHGNC(ftl.getLeftGene(), true);
+			}
+			v12.setLeftHGNC(hgncLeft);
+			
+			String hgncRight = fetchHGNC(ftl.getRightGene(), false);
+			if (!this.notNullOrEmpty(hgncRight)) {
+				hgncRight = fetchHGNC(ftl.getRightGene(), true);
+			}
+			v12.setRightHGNC(hgncRight);
+			
 			v12.setDisplayName(gva.getGeneVariant());
 			v12.setSomaticStatus("Somatic");
 			v12.setClinicalSignificance(LOINC.getCode(clinicalSignificanceSomatic));
@@ -533,14 +592,23 @@ public class HL7v251Factory {
 				Integer right = Integer.parseInt(ftl.getRightBreakpoint().split(":")[1]);
 				v12.setStructuralVariantLength(Math.abs(left - right));
 				v12.setStructuralVariantInnerStartEnd(new Integer[] {Math.min(left,  right), Math.max(left,  right)});
+				
+				v12.setLeftDNARegion(ftl.getChrDistance());
 			}
+			else if (ftl.getChrType() != null && ftl.getChrType().equals("INTRACHROMOSOMAL")) {
+				String chr = ftl.getLeftBreakpoint().split(":")[0];
+				String left = ftl.getLeftBreakpoint().split(":")[1];
+				String right = ftl.getRightBreakpoint().split(":")[1];
+				v12.setLeftDNARegion(chr + ":" + left + "-" + right);
+			}
+			
 //			v1.setDnaRegion(variant.getFirstExon());
 //			v2.setDnaRegion(variant.getLastExon());
 //			vList.add(v1);
 //			vList.add(v2);
 			vList.add(v12);
 			v12.setVariantCategory(LOINCVariantCategory.getLoincCode("translocation"));
-			v12.setStructuralVariantType(LOINCStructuralVariantType.getLoincCode("Translocation"));
+//			v12.setStructuralVariantType(LOINCStructuralVariantType.getLoincCode("Translocation"));
 			
 			v12.setFusedGenes(ftl.getLeftGene() + "~" + ftl.getRightGene());
 
@@ -561,7 +629,11 @@ public class HL7v251Factory {
 				gene = "FLT3";
 			}
 			v.setGene(gene);
-			v.setHgncCode(fetchHGNC(gene));
+			String hgnc = fetchHGNC(gene, false);
+			if (!this.notNullOrEmpty(hgnc)) {
+				hgnc = fetchHGNC(gene, true);
+			}
+			v.setHgncCode(hgnc);
 		}
 //			v.setAaChange(gva.getVariant());
 //		CNV variant = requestUtils.getCNVDetails(gva.getOid());
@@ -613,20 +685,40 @@ public class HL7v251Factory {
 		v12.setRightGene(ftl.getRightGene());
 		v12.setLeftDNARegion(ftl.getFirstExon());
 		v12.setRightDNARegion(ftl.getLastExon());
-		v12.setLeftHGNC(fetchHGNC(ftl.getLeftGene()));
-		v12.setRightHGNC(fetchHGNC(ftl.getRightGene()));
+
+		String hgncLeft = fetchHGNC(ftl.getLeftGene(), false);
+		if (!this.notNullOrEmpty(hgncLeft)) {
+			hgncLeft = fetchHGNC(ftl.getLeftGene(), true);
+		}
+		v12.setLeftHGNC(hgncLeft);
+		
+		String hgncRight = fetchHGNC(ftl.getRightGene(), false);
+		if (!this.notNullOrEmpty(hgncRight)) {
+			hgncRight = fetchHGNC(ftl.getRightGene(), true);
+		}
+		v12.setRightHGNC(hgncRight);
+		
 		v12.setDisplayName(ftl.getFusionName());
 		v12.setSomaticStatus("Somatic");
-		if (variant.getHighestTier() != null) {
-			if (variant.getHighestTier().equals("1A") || variant.getHighestTier().equals("1B")) {
+		
+		if (ftl.getHighestAnnotationTier() == null) {
+			fixMissingHighestAnnotationTier(ftl, variant);
+		}
+		
+		System.out.println("FTL from HL7: " + ftl.getFusionName() + " tier: " + ftl.getHighestAnnotationTier() + ".");
+		if (ftl.getHighestAnnotationTier() != null) {
+			if (ftl.getHighestAnnotationTier().equals("1A") || ftl.getHighestAnnotationTier().equals("1B")) {
 				v12.setClinicalSignificance(LOINC.getCode("Tier 1"));
 			}
-			else if (variant.getHighestTier().equals("2C") || variant.getHighestTier().equals("2D")) {
+			else if (ftl.getHighestAnnotationTier().equals("2C") || ftl.getHighestAnnotationTier().equals("2D")) {
 				v12.setClinicalSignificance(LOINC.getCode("Tier 2"));
 			}
 			else {
 				v12.setClinicalSignificance(LOINC.getCode("Tier 3"));
 			}
+		}
+		else {
+			v12.setClinicalSignificance(LOINC.getCode("Tier 3"));
 		}
 		v12.setFusedGenes(ftl.getLeftGene() + "~" + ftl.getRightGene());
 		
@@ -635,6 +727,13 @@ public class HL7v251Factory {
 			Integer right = Integer.parseInt(variant.getRightBreakpoint().split(":")[1]);
 			v12.setStructuralVariantLength(Math.abs(left - right));
 			v12.setStructuralVariantInnerStartEnd(new Integer[] {Math.min(left,  right), Math.max(left,  right)});
+			v12.setLeftDNARegion(variant.getChrDistance());
+		}
+		else if (variant.getChrType() != null && variant.getChrType().equals("INTRACHROMOSOMAL")) {
+			String chr = variant.getLeftBreakpoint().split(":")[0];
+			String left = variant.getLeftBreakpoint().split(":")[1];
+			String right = variant.getRightBreakpoint().split(":")[1];
+			v12.setLeftDNARegion(chr + ":" + left + "-" + right);
 		}
 //		v1.setDnaRegion(variant.getFirstExon());
 //		v2.setDnaRegion(variant.getLastExon());
@@ -642,11 +741,24 @@ public class HL7v251Factory {
 //		vList.add(v2);
 		vList.add(v12);
 		v12.setVariantCategory(LOINCVariantCategory.getLoincCode("translocation"));
-		v12.setStructuralVariantType(LOINCStructuralVariantType.getLoincCode("Translocation"));
+//		v12.setStructuralVariantType(LOINCStructuralVariantType.getLoincCode("Translocation"));
 		if (!skipAnnotation) {
 			v12.setAnnotations(Arrays.asList(ftl.getComment()));
 		}
 		return vList;
+	}
+	
+	public void fixMissingHighestAnnotationTier(TranslocationReport ftl, Translocation variant) {
+		System.out.println("FTL from fixing: " + ftl.getFusionName() + " tier: " + ftl.getHighestAnnotationTier() + ".");
+		 //try to recalculate the highestTier 
+		variant.getReferenceTranslocation().getUtswAnnotations().stream().forEach(a -> Annotation.init(a, variant.getAnnotationIdsForReporting(), modelDAO));
+		List<Annotation> selectedAnnotations = variant.getReferenceTranslocation().getUtswAnnotations().stream().filter(a -> a.getIsSelected()).collect(Collectors.toList());
+		selectedAnnotations.stream().filter(a -> a.getClassification() != null || a.getCategory() != null).forEach(a -> ReportBuilder.overrideTier(a));
+		//set Uncategorized if needed
+		selectedAnnotations.stream().forEach(a -> a.setCategory(a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory()));
+		String highestTier = selectedAnnotations.stream().filter(a -> a.getTier() != null).map(a -> a.getTier()).sorted().collect(Collectors.toList()).get(0);
+		ftl.setHighestAnnotationTier(highestTier);
+		System.out.println("FTL after fixing: " + ftl.getFusionName() + " tier: " + highestTier + ".");
 	}
 
 	public void addTherapySegments(ORU_R01 oru, List<HL7Therapy> therapies) throws DataTypeException {
@@ -679,8 +791,14 @@ public class HL7v251Factory {
 
 	private void buildDupTherapy(ORU_R01 oru, int counter, HL7Therapy t) throws DataTypeException {
 		//Gene
-		if (t.getVariant().getHgncCode() != null) {
-			CWE obxGene = createCWEGene(oru, t.getVariant().getHgncCode(), t.getVariant().getGene());
+		if (this.notNullOrEmpty(t.getVariant().getHgncCode())) {
+			Type obxGene = null;
+			if (t.getVariant().getHgncCode().equals("0")) {
+				obxGene = createSTGene(oru, t.getVariant().getHgncCode(), t.getVariant().getGene());
+			}
+			else {
+				obxGene = createCWEGene(oru, t.getVariant().getHgncCode(), t.getVariant().getGene());
+			}
 			createCaseOBX(oru, LOINC.getCode("THERAPYGENE"), obxGene, counter);
 		}
 		//Variant
@@ -772,27 +890,45 @@ public class HL7v251Factory {
 			LOINCItem variantCategoryLoinc = LOINC.getCode("Variant category");
 			obxVariantCategory.getIdentifier().setValue(this.sanitizeHL7Text(v.getVariantCategory()[1]));
 			obxVariantCategory.getText().setValue(this.sanitizeHL7Text(v.getVariantCategory()[0]));
-			obxVariantCategory.getNameOfCodingSystem().setValue(variantCategoryLoinc.getSystem());
+			obxVariantCategory.getNameOfCodingSystem().setValue(this.sanitizeHL7Text(v.getVariantCategory()[2]));
 			createVariantOBX(oru, currentVariantId, variantCategoryLoinc, obxVariantCategory);
 		}
 		//Gene
 		if (this.notNullOrEmpty(v.getHgncCode())) {
-			CWE obxGeneValue = createCWEGene(oru, v.getHgncCode(), v.getGene());
+			Type obxGeneValue = null;
+			if (v.getHgncCode().equals("0")) {
+				obxGeneValue = createSTGene(oru, v.getHgncCode(), v.getGene());
+			}
+			else {
+				obxGeneValue = createCWEGene(oru, v.getHgncCode(), v.getGene());
+			}
 			createVariantOBX(oru, currentVariantId, LOINC.getCode("Gene studied"), obxGeneValue);
 		}
 		if (this.notNullOrEmpty(v.getLeftHGNC()) || this.notNullOrEmpty(v.getLeftGene()) ) {
 			CWE obxGeneValue = createCWEGene(oru, v.getLeftHGNC(), v.getLeftGene());
-			createVariantOBX(oru, currentVariantId + ".a", LOINC.getCode("Gene studied"), obxGeneValue);
+			createVariantOBX(oru, currentVariantId, LOINC.getCode("Gene studied"), obxGeneValue);
 		}
-		if (this.notNullOrEmpty(v.getRightHGNC()) || this.notNullOrEmpty(v.getRightGene())) {
-			CWE obxGeneValue = createCWEGene(oru, v.getRightHGNC(), v.getRightGene());
-			createVariantOBX(oru, currentVariantId + ".b", LOINC.getCode("Gene studied"), obxGeneValue);
-		}
+//		if (this.notNullOrEmpty(v.getLeftHGNC()) || this.notNullOrEmpty(v.getLeftGene()) ) {
+//			CWE obxGeneValue = createCWEGene(oru, v.getLeftHGNC(), v.getLeftGene());
+//			createVariantOBX(oru, currentVariantId + ".a", LOINC.getCode("Gene studied"), obxGeneValue);
+//		}
+//		if (this.notNullOrEmpty(v.getRightHGNC()) || this.notNullOrEmpty(v.getRightGene())) {
+//			CWE obxGeneValue = createCWEGene(oru, v.getRightHGNC(), v.getRightGene());
+//			createVariantOBX(oru, currentVariantId + ".b", LOINC.getCode("Gene studied"), obxGeneValue);
+//		}
 		
 		//Fused Genes
 		if (this.notNullOrEmpty(v.getFusedGenes())) {
-			ST obxFusedGenes = new ST(oru.getMessage());
-			obxFusedGenes.setValue(this.sanitizeHL7Text(v.getFusedGenes()));
+//			ST obxFusedGenes = new ST(oru.getMessage());
+			ST[] obxFusedGenes = new ST[2];
+			ST obxFusedGene1 = new ST(oru.getMessage());
+			obxFusedGene1.setValue(this.sanitizeHL7Text(v.getLeftGene()));
+			ST obxFusedGene2 = new ST(oru.getMessage());
+			obxFusedGene2.setValue(this.sanitizeHL7Text(v.getRightGene()));
+			obxFusedGenes[0] = obxFusedGene1;
+			obxFusedGenes[1] = obxFusedGene2;
+//			obxFusedGenes.setValue(this.sanitizeHL7Text(v.getFusedGenes()));
+//			obxFusedGenes.setValue(v.getFusedGenes());
 			createVariantOBX(oru, currentVariantId, LOINC.getCode("Fused Genes"), obxFusedGenes);
 		}
 		
@@ -913,11 +1049,13 @@ public class HL7v251Factory {
 			createVariantOBX(oru, currentVariantId, LOINC.getCode("Genomic alt allele"), obxAlt);
 		}
 		//Clinical Significance
-		CWE obxClinicalSignificance = new CWE(oru.getMessage());
-		obxClinicalSignificance.getIdentifier().setValue(this.sanitizeHL7Text(v.getClinicalSignificance().getId()));
-		obxClinicalSignificance.getText().setValue(this.sanitizeHL7Text(v.getClinicalSignificance().getText()));
-		obxClinicalSignificance.getNameOfCodingSystem().setValue(v.getClinicalSignificance().getSystem());
-		createVariantOBX(oru, currentVariantId, LOINC.getCode("Genetic sequence variation clinical significance [Imp]"), obxClinicalSignificance);
+		if (v.getClinicalSignificance() != null) {
+			CWE obxClinicalSignificance = new CWE(oru.getMessage());
+			obxClinicalSignificance.getIdentifier().setValue(this.sanitizeHL7Text(v.getClinicalSignificance().getId()));
+			obxClinicalSignificance.getText().setValue(this.sanitizeHL7Text(v.getClinicalSignificance().getText()));
+			obxClinicalSignificance.getNameOfCodingSystem().setValue(v.getClinicalSignificance().getSystem());
+			createVariantOBX(oru, currentVariantId, LOINC.getCode("Genetic sequence variation clinical significance [Imp]"), obxClinicalSignificance);
+		}
 		//StartEnd 2020v
 //		if (v.getStartEnd2020v() != null) {
 //			ST obxStartEnd = new ST(oru.getMessage());
@@ -934,7 +1072,7 @@ public class HL7v251Factory {
 		//TAF
 		if (v.getAllFreq() != null) {
 			NM obxTAF = new NM(oru.getMessage());
-			obxTAF.setValue(String.format("%.2f", v.getAllFreq()));
+			obxTAF.setValue(String.format("%.4f", v.getAllFreq()));
 			createVariantOBX(oru, currentVariantId, LOINC.getCode("Sample variant allelic frequency [NFr]"), obxTAF);
 		}
 		//Allelic Tumor Depth
@@ -964,13 +1102,18 @@ public class HL7v251Factory {
 		if (this.notNullOrEmpty(v.getLeftDNARegion())) {
 			ST obxDNARegion = new ST(oru.getMessage());
 			obxDNARegion.setValue(v.getLeftDNARegion());
-			createVariantOBX(oru, currentVariantId + ".a", LOINC.getCode("DNA region name [Identifier]"), obxDNARegion);
+			createVariantOBX(oru, currentVariantId, LOINC.getCode("DNA region name [Identifier]"), obxDNARegion);
 		}
-		if (this.notNullOrEmpty(v.getRightDNARegion())) {
-			ST obxDNARegion = new ST(oru.getMessage());
-			obxDNARegion.setValue(v.getRightDNARegion());
-			createVariantOBX(oru, currentVariantId + ".b", LOINC.getCode("DNA region name [Identifier]"), obxDNARegion);
-		}
+//		if (this.notNullOrEmpty(v.getLeftDNARegion())) {
+//			ST obxDNARegion = new ST(oru.getMessage());
+//			obxDNARegion.setValue(v.getLeftDNARegion());
+//			createVariantOBX(oru, currentVariantId + ".a", LOINC.getCode("DNA region name [Identifier]"), obxDNARegion);
+//		}
+//		if (this.notNullOrEmpty(v.getRightDNARegion())) {
+//			ST obxDNARegion = new ST(oru.getMessage());
+//			obxDNARegion.setValue(v.getRightDNARegion());
+//			createVariantOBX(oru, currentVariantId + ".b", LOINC.getCode("DNA region name [Identifier]"), obxDNARegion);
+//		}
 		//Structural Variant Inner Start End
 		if (v.getStructuralVariantInnerStartEnd() != null) {
 			NR obxVariantRange = new NR(oru.getMessage());
@@ -1015,7 +1158,7 @@ public class HL7v251Factory {
 //					counter++;
 //				}
 				ST obxAnnotation = new ST(oru.getMessage());
-				obxAnnotation.setValue(annotation);
+				obxAnnotation.setValue(this.sanitizeHL7Text(annotation));
 				String subVariantId = currentVariantId + "." + utils.getNextVariantIdSub(counter) ;
 				createVariantOBX(oru, subVariantId, LOINC.getCode("Annotation comment [Interpretation] Narrative"), obxAnnotation);
 				counter++;
@@ -1046,6 +1189,12 @@ public class HL7v251Factory {
 		obxGeneValue.getText().setValue(gene);
 		return obxGeneValue;
 	}
+	
+	private ST createSTGene(ORU_R01 oru, String hgnc, String gene) throws DataTypeException {
+		ST obxGeneValue = new ST(oru.getMessage());
+		obxGeneValue.setValue(this.sanitizeHL7Text(gene));
+		return obxGeneValue;
+	}
 
 	private OBX createVariantOBX(ORU_R01 oru, String subId, LOINCItem loincItem, Type value) throws DataTypeException {
 //		OBX obxSegment = adt.getOBX(utils.getObservationId() - 1);
@@ -1058,6 +1207,22 @@ public class HL7v251Factory {
 		obxSegment.getObservationIdentifier().getNameOfCodingSystem().setValue(loincItem.getSystem());
 		obxSegment.getObservationSubID().setValue(subId);
 		obxSegment.getObservationValue(0).setData(value);
+		utils.incrementObservationCount();
+		return obxSegment;
+	}
+	
+	private OBX createVariantOBX(ORU_R01 oru, String subId, LOINCItem loincItem, Type[] value) throws DataTypeException {
+//		OBX obxSegment = adt.getOBX(utils.getObservationId() - 1);
+//		OBX obxSegment = orm.getORDER().getORDER_DETAIL().getOBSERVATION(utils.getObservationId() - 1).getOBX();
+		OBX obxSegment = oru.getPATIENT_RESULT().getORDER_OBSERVATION().getOBSERVATION(utils.getObservationId() - 1).getOBX();
+		obxSegment.getValueType().setValue(value[0].getName());
+		obxSegment.getSetIDOBX().setValue(utils.getObservationId() + "");
+		obxSegment.getObservationIdentifier().getIdentifier().setValue(loincItem.getId());
+		obxSegment.getObservationIdentifier().getText().setValue(loincItem.getText());
+		obxSegment.getObservationIdentifier().getNameOfCodingSystem().setValue(loincItem.getSystem());
+		obxSegment.getObservationSubID().setValue(subId);
+		obxSegment.getObservationValue(0).setData(value[0]);
+		obxSegment.getObservationValue(1).setData(value[1]);
 		utils.incrementObservationCount();
 		return obxSegment;
 	}
@@ -1099,16 +1264,22 @@ public class HL7v251Factory {
 	private NTE createCaseNTE(ORU_R01 oru) throws DataTypeException {
 		NTE nteSegment = oru.getPATIENT_RESULT().getORDER_OBSERVATION().getNTE();
 		nteSegment.getSetIDNTE().setValue("1");
+//		Character c1 = report.getSummary().charAt(3);
+//		System.out.println(c1.charValue() + " " + c1.hashCode());
+//		Character c2 = report.getSummary().charAt(41);
+//		System.out.println(c2.charValue() + " " + c2.hashCode());
+//		Character c3 = report.getSummary().charAt(72);
+//		System.out.println(c3.charValue() + " " + c3.hashCode());
+		
 		nteSegment.getComment(0).setValue(this.sanitizeHL7Text(report.getSummary()));
 		utils.incrementObservationCount();
 		return nteSegment;
 	}
 	
-	private String fetchHGNC(String geneTerm) {
-		EnsemblRequestUtils utils = new EnsemblRequestUtils(ensemblProps, otherProps);
+	private String fetchHGNC(String geneTerm, boolean tryPrev) {
 		EnsemblResponse ensembl;
 		try {
-			ensembl = utils.fetchEnsembl(geneTerm);
+			ensembl = ensemblUtils.fetchEnsembl(geneTerm);
 			if (ensembl != null) {
 				ensembl.init();
 				if (ensembl.getHgncId() != null) {
@@ -1132,7 +1303,20 @@ public class HL7v251Factory {
 	
 	private String sanitizeHL7Text(String text) {
 		if (text != null) {
-			return hl7Escaping.escape(text, EncodingCharacters.defaultInstance());
+//			return hl7Escaping.escape(text, EncodingCharacters.defaultInstance());
+			//unescape seems to avoid escaping the escape characters
+			// \R\ vs \E\R\E
+
+			for (String c : HL7Utils.UTF8_CHARSET.keySet()) {
+				text = text.replaceAll(c, HL7Utils.UTF8_CHARSET.get(c));
+			}
+			for (String c : HL7Utils.GREEK_CHARSET.keySet()) {
+				text = text.replaceAll(c, HL7Utils.GREEK_CHARSET.get(c));
+			}
+			text = text.replaceAll("<br/>", "\\\\.br\\\\");
+			
+			String test =  hl7Escaping.escape(text, EncodingCharacters.defaultInstance());
+			return hl7Escaping.unescape(test, EncodingCharacters.defaultInstance());
 		}
 		return null;
 	}
@@ -1143,7 +1327,8 @@ public class HL7v251Factory {
 	
 	private List<String> concatInterpretation(GeneVariantAndAnnotation gva) {
 		List<String> annotations = new ArrayList<String>();
-		for (String category : gva.getAnnotationsByCategory().keySet()) {
+		List<String> sortedCategories = gva.getAnnotationsByCategory().keySet().stream().sorted().collect(Collectors.toList());
+		for (String category : sortedCategories) {
 			annotations.add(category + ": " + gva.getAnnotationsByCategory().get(category));
 		}
 		return annotations;

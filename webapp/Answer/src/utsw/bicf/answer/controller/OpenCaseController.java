@@ -461,6 +461,22 @@ public class OpenCaseController {
 		passQCFilter.setType("snp");
 		passQCFilter.setBoolean(true);
 		filters.add(passQCFilter);
+		
+//		DataTableFilter dbFilter = new DataTableFilter("Disease Databases", Variant.FIELD_DISEASE_DATABASES);
+//		dbFilter.setType("snp");
+//		dbFilter.setCheckBox(true);
+//		dbFilter.setCategory("FILTER");
+//		dbFilter.setGroup("flag");
+//		dbFilter.setTooltip("Variant is in any of the databases below");
+//		filters.add(dbFilter);
+//		
+//		DataTableFilter regionFilter = new DataTableFilter("Avoid Troubled Regions", Variant.FIELD_TROUBLED_REGIONS);
+//		regionFilter.setType("snp");
+//		regionFilter.setCheckBox(true);
+//		regionFilter.setCategory("FILTER");
+//		regionFilter.setGroup("flag");
+//		regionFilter.setTooltip("Avoid any region below");
+//		filters.add(regionFilter);
 
 		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Not Annotated", Variant.FIELD_ANNOTATIONS);
 		annotatedFilter.setType("snp");

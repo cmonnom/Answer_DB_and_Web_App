@@ -8,7 +8,7 @@ public class LOINCStructuralVariantType {
 	private static final Map<String, String[]> loincCodes = new HashMap<String, String[]>();
 	
 	static {
-		loincCodes.put("Translocation", new String[] {"Translocation","LA26331-1"});
+		loincCodes.put("Translocation", new String[] {"Translocation","", ""});
 	}
 	
 	public static String[] getLoincCode(String code) {

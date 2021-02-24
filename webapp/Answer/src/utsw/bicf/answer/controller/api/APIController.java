@@ -35,7 +35,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.uhn.hl7v2.HL7Exception;
@@ -835,6 +838,8 @@ public class APIController {
 			@RequestParam(required = false) boolean includeFusion,
 			@RequestParam(required = false) String beakerId,
 			@RequestParam(required = false) String overrideTestName,
+			@RequestParam(required = false) boolean hidePatientInfo,
+			@RequestParam(required = false) String overrideReportDate,
 			HttpSession httpSession, @RequestParam(defaultValue = "false") Boolean hl7Only
 			) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from testEpicReportHL7");
@@ -852,15 +857,38 @@ public class APIController {
 		RequestUtils utils = new RequestUtils(modelDAO);
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
 		
+		String res = testHL7Report(caseId, overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder,
+				overrideProviderIdName, includeFusion, beakerId, overrideTestName, overrideReportDate, hl7Only,
+				utils, caseSummary,
+				modelDAO, fileProps, ensemblProps, otherProps).createObjectJSON();
+		
+	
+		return res;
+	}
+
+	public static AjaxResponse testHL7Report(String caseId, String overridePatientName, String overrideMRN, String overrideDOB,
+			String overrideGender, String overrideOrder, String overrideProviderIdName, boolean includeFusion,
+			String beakerId, String overrideTestName, String overrideReportDate, Boolean hl7Only,
+			RequestUtils utils, OrderCase caseSummary,
+			ModelDAO modelDAO, FileProperties fileProps, EnsemblProperties ensemblProps,
+			OtherProperties otherProps)
+			throws JsonProcessingException, JsonParseException, JsonMappingException, IOException, URISyntaxException {
+		AjaxResponse response = new AjaxResponse();
+		response.setSuccess(false);
+		response.setIsAllowed(false);
 		if (caseSummary == null) {
 			response.setMessage("Case " + caseId + " does not exist.");
-			return response.createObjectJSON();
+			return response;
+		}
+		if (caseSummary.getHl7OrderId() == null || caseSummary.getHl7SampleId() == null) {
+			response.setMessage("Case " + caseId + " is missing the reportOrderNumber or reportAccessionId.");
+			return response;
 		}
 		
 		List<Report> reports = utils.getExistingReports(caseId);
 		if (reports == null || reports.isEmpty()) {
 			response.setMessage("No report for " + caseId + ".");
-			return response.createObjectJSON();
+			return response;
 		}
 		Report finalReport = null;
 		for (Report r : reports) {
@@ -871,7 +899,7 @@ public class APIController {
 		}
 		if (finalReport == null) {
 			response.setMessage("No finalized report for " + caseId + ".");
-			return response.createObjectJSON();
+			return response;
 		}
 		Report reportDetails = utils.getReportDetails(finalReport.getMongoDBId().getOid());
 		String possibleDirtyData = reportDetails.createObjectJSON();
@@ -892,15 +920,15 @@ public class APIController {
 			clinicalTest = modelDAO.getClinicalTest(FinalReportTemplateConstants.DEFAULT_TITLE);
 		}
 		try {
-			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
-			File pdfFile = pdfReport.saveFinalized();
+			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest, true);
+			File pdfFile = pdfReport.saveFinalized(true);
 			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile, ensemblProps, otherProps, 
 					overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder,
-					overrideProviderIdName, includeFusion, beakerId, overrideTestName);
+					overrideProviderIdName, includeFusion, beakerId, overrideTestName, overrideReportDate, modelDAO);
 			String hl7 = hl7Factory.reportToHL7(true);
-			if (hl7Only) {
-				return hl7;
-			}
+//			if (hl7Only) {
+//				return hl7;
+//			}
 			response.setIsAllowed(true);
 			response.setSuccess(true);
 			response.setPayload(hl7);
@@ -908,9 +936,7 @@ public class APIController {
 			e.printStackTrace();
 			response.setMessage("Something went wrong when creating the report");
 		}
-		
-	
-		return response.createObjectJSON();
+		return response;
 	}
 	
 	@RequestMapping("/sendEpicReportHL7")
@@ -926,6 +952,8 @@ public class APIController {
 			@RequestParam(required = false) boolean includeFusion,
 			@RequestParam(required = false) String beakerId,
 			@RequestParam(required = false) String overrideTestName,
+			@RequestParam(required = false) boolean hidePatientInfo,
+			@RequestParam(required = false) String overrideReportDate,
 			HttpSession httpSession) throws IOException, InterruptedException, URISyntaxException, HL7Exception {
 		httpSession.setAttribute("user", "API User from sendEpicReportHL7");
 //		long now = System.currentTimeMillis();
@@ -946,11 +974,31 @@ public class APIController {
 			response.setMessage("Case " + caseId + " does not exist.");
 			return response.createObjectJSON();
 		}
+		if (caseSummary.getHl7OrderId() == null || caseSummary.getHl7SampleId() == null) {
+			response.setMessage("Case " + caseId + " is missing the reportOrderNumber or reportAccessionId.");
+			return response.createObjectJSON();
+		}
 		
+		sendReportToEpic(caseId, overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder,
+				overrideProviderIdName, includeFusion, beakerId, overrideTestName, hidePatientInfo, overrideReportDate,
+				response, utils, caseSummary,
+				modelDAO, fileProps, ensemblProps, otherProps);
+
+	
+		return response.createObjectJSON();
+	}
+
+	public static void sendReportToEpic(String caseId, String overridePatientName, String overrideMRN, String overrideDOB,
+			String overrideGender, String overrideOrder, String overrideProviderIdName, boolean includeFusion,
+			String beakerId, String overrideTestName, boolean hidePatientInfo, String overrideReportDate,
+			AjaxResponse response, RequestUtils utils, OrderCase caseSummary,
+			ModelDAO modelDAO, FileProperties fileProps, EnsemblProperties ensemblProps,
+			OtherProperties otherProps)
+			throws JsonParseException, JsonMappingException, IOException, URISyntaxException, JsonProcessingException {
 		List<Report> reports = utils.getExistingReports(caseId);
 		if (reports == null || reports.isEmpty()) {
 			response.setMessage("No report for " + caseId + ".");
-			return response.createObjectJSON();
+			return;
 		}
 		Report finalReport = null;
 		for (Report r : reports) {
@@ -961,7 +1009,7 @@ public class APIController {
 		}
 		if (finalReport == null) {
 			response.setMessage("No finalized report for " + caseId + ".");
-			return response.createObjectJSON();
+			return;
 		}
 		Report reportDetails = utils.getReportDetails(finalReport.getMongoDBId().getOid());
 		String possibleDirtyData = reportDetails.createObjectJSON();
@@ -981,15 +1029,16 @@ public class APIController {
 		InputStream input = null;
 		BufferedReader reader = null;
 		try {
-			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest);
-			File pdfFile = pdfReport.saveFinalized();
+			FinalReportPDFTemplate pdfReport = new FinalReportPDFTemplate(reportDetails, fileProps, caseSummary, otherProps, signedBy, clinicalTest, hidePatientInfo);
+			File pdfFile = pdfReport.saveFinalized(true);
 			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile, ensemblProps, otherProps
 					,overridePatientName, 
 					overrideMRN, 
 					overrideDOB, 
 					overrideGender, 
 					overrideOrder,
-					overrideProviderIdName, includeFusion, beakerId, overrideTestName);
+					overrideProviderIdName, includeFusion, beakerId, overrideTestName,
+					overrideReportDate, modelDAO);
 			String hl7 = hl7Factory.reportToHL7(false);
 			
 			socket = new Socket(otherProps.getEpicHl7Hostname(), otherProps.getEpicHl7Port());
@@ -1029,8 +1078,5 @@ public class APIController {
 			if (socket != null) 
 				socket.close();
 		}
-
-	
-		return response.createObjectJSON();
 	}
 }

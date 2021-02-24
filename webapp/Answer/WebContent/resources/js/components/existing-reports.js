@@ -364,7 +364,6 @@ Vue.component('existing-reports', {
             this.reportIdToFinalize = null;
         },
         finalizeReport() {
-            // return; //TODO remove after testing
             if (!this.readyToFinalize()) {
                 return;
             }

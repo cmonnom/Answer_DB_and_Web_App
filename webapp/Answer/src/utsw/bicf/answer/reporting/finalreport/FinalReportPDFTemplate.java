@@ -75,6 +75,7 @@ public class FinalReportPDFTemplate {
 	Map<Integer, List<FooterColor>> colorPerPage = new HashMap<Integer, List<FooterColor>>();
 	User signedBy;
 	ClinicalTest clinicalTest;
+	boolean hidePatientInfo;
 
 	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, OtherProperties otherProps, User signedBy, ClinicalTest clinicalTest) throws EncodingGlyphException {
 		this.otherProps = otherProps;
@@ -83,6 +84,29 @@ public class FinalReportPDFTemplate {
 		this.caseSummary = caseSummary;
 		this.signedBy = signedBy;
 		this.clinicalTest = clinicalTest;
+		try {
+			this.tempFile = new File(fileProps.getPdfFilesDir(), System.currentTimeMillis() + "_temp.pdf");
+			if (tempFile.exists()) {
+				tempFile.delete();
+			}
+			init();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public FinalReportPDFTemplate(Report report, FileProperties fileProps, OrderCase caseSummary, 
+			OtherProperties otherProps, User signedBy, ClinicalTest clinicalTest,
+			boolean hidePatientInfo) throws EncodingGlyphException {
+		this.otherProps = otherProps;
+		this.report = report;
+		this.fileProps = fileProps;
+		this.caseSummary = caseSummary;
+		this.signedBy = signedBy;
+		this.clinicalTest = clinicalTest;
+		this.hidePatientInfo = hidePatientInfo;
 		try {
 			this.tempFile = new File(fileProps.getPdfFilesDir(), System.currentTimeMillis() + "_temp.pdf");
 			if (tempFile.exists()) {
@@ -611,28 +635,33 @@ public class FinalReportPDFTemplate {
 	}
 
 	public void formatPatientCells(float defaultFont, BaseTable rightTable, CellItem item) throws IOException {
-		if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
-			if (item.getValue() != null) {
-				item.setValue(item.getValue() + "%");
-			}
-			else {
-				item.setValue("");
-			}
+		if (hidePatientInfo) {
+			item.setValue("HIDDEN");
 		}
-		else if (item.getField() != null && item.getField().equals("tumorPercent")) {
-			if (item.getValue() != null) {
-				item.setValue(item.getValue() + "%");
+		else {
+			if (item.getField() != null && item.getField().equals("dedupPctOver100X")) {
+				if (item.getValue() != null) {
+					item.setValue(item.getValue() + "%");
+				}
+				else {
+					item.setValue("");
+				}
 			}
-			else {
-				item.setValue("");
+			else if (item.getField() != null && item.getField().equals("tumorPercent")) {
+				if (item.getValue() != null) {
+					item.setValue(item.getValue() + "%");
+				}
+				else {
+					item.setValue("");
+				}
 			}
-		}
-		else if (item.getField() != null && item.getField().equals("msi")) {
-			String value = item.getValue() == null || item.getValue().equals("Not calculated") ? "" : item.getValue() + "%";
-			item.setValue(value);
-		}
-		if (item.getValue2() != null && !item.getValue2().equals("")) {
-			item.setValue(item.getValue2() + "<br/>" + item.getValue());
+			else if (item.getField() != null && item.getField().equals("msi")) {
+				String value = item.getValue() == null || item.getValue().equals("Not calculated") ? "" : item.getValue() + "%";
+				item.setValue(value);
+			}
+			if (item.getValue2() != null && !item.getValue2().equals("")) {
+				item.setValue(item.getValue2() + "<br/>" + item.getValue());
+			}
 		}
 	
 		this.createRow(rightTable, item.getLabel(), item.getValue(), defaultFont);
@@ -1610,7 +1639,12 @@ public class FinalReportPDFTemplate {
 //			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 32f);
 //			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 30f);
 			this.createFooterCell(row, testName, HorizontalAlignment.LEFT, 42f);
-			this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 29f);
+			if (hidePatientInfo) {
+				this.createFooterCell(row, "MRN " + "HIDDEN", HorizontalAlignment.CENTER, 29f);
+			}
+			else {
+				this.createFooterCell(row, "MRN " + caseSummary.getMedicalRecordNumber() + " " + caseSummary.getPatientName(), HorizontalAlignment.CENTER, 29f);
+			}
 			this.createFooterCell(row, "page " + (i + 1) + "/" + pageTotal, HorizontalAlignment.RIGHT, 25f);
 			float width = 2f;
 			if (colors.size() > 1) {
@@ -1700,8 +1734,18 @@ public class FinalReportPDFTemplate {
 		}
 	}
 	
-	public File saveFinalized() throws IOException {
-		File finalizedFile = new File(fileProps.getPdfFinalizedFilesDir(), System.currentTimeMillis() + "_" + report.getMongoDBId().getOid() + ".pdf");
+	/**
+	 * Save the PDF in the finalized directory
+	 * @param isTemp so has to not overwrite the previous finalized report (eg. with HL7)
+	 * @return
+	 * @throws IOException
+	 */
+	public File saveFinalized(boolean isTemp) throws IOException {
+		String filename = System.currentTimeMillis() + "_" + report.getMongoDBId().getOid();
+		if (isTemp) {
+			filename += "_hl7";
+		}
+		File finalizedFile = new File(fileProps.getPdfFinalizedFilesDir(), filename + ".pdf");
 		try {
 			mainDocument.save(finalizedFile);
 		} catch (IOException e) {
@@ -1712,6 +1756,10 @@ public class FinalReportPDFTemplate {
 			}
 		}
 		return finalizedFile;
+	}
+	
+	public File saveFinalized() throws IOException {
+		return this.saveFinalized(false);
 	}
 
 	public String createPDFLink(FileProperties fileProps) throws IOException {

@@ -75,6 +75,8 @@ public class VariantFilterList {
 		filtersType.put(Variant.FIELD_GNOMAD_LCR, "snp");
 		filtersType.put(Variant.FIELD_LIKELY_ARTIFACT, "snp");
 		filtersType.put(Variant.FIELD_EFFECTS, "snp");
+		filtersType.put(Variant.FIELD_DISEASE_DATABASES, "snp");
+		filtersType.put(Variant.FIELD_TROUBLED_REGIONS, "snp");
 		
 	}
 

@@ -3,6 +3,8 @@ package utsw.bicf.answer.model.extmapping;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import utsw.bicf.answer.reporting.finalreport.FTLReportWithHighestTier;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TranslocationReport {
 	
@@ -17,22 +19,25 @@ public class TranslocationReport {
 	String firstExon;
 	String lastExon;
 	boolean readonly;
+	String highestAnnotationTier;
 	
 	public TranslocationReport() {
 		
 	}
 
-	public TranslocationReport(String text, Translocation t) {
-		mongoDBId = t.getMongoDBId();
-		this.leftGene = t.getLeftGene();
-		this.rightGene = t.getRightGene();
-		this.fusionName = t.getFusionName();
+	public TranslocationReport(String text, FTLReportWithHighestTier ftlWithTier) {
+		Translocation ftl = ftlWithTier.getFtl();
+		mongoDBId = ftl.getMongoDBId();
+		this.leftGene = ftl.getLeftGene();
+		this.rightGene = ftl.getRightGene();
+		this.fusionName = ftl.getFusionName();
 //		this.firstExon = t.getFirstExon();
 //		this.lastExon = t.getLastExon();
 		//reverse the 2 exons for the report
-		this.firstExon = t.getLastExon();
-		this.lastExon = t.getFirstExon();
+		this.firstExon = ftl.getLastExon();
+		this.lastExon = ftl.getFirstExon();
 		this.comment = text;
+		this.highestAnnotationTier = ftlWithTier.getHighestAnnotationTier();
 	}
 
 	public Boolean getIsAllowed() {
@@ -105,6 +110,14 @@ public class TranslocationReport {
 
 	public void setReadonly(boolean readonly) {
 		this.readonly = readonly;
+	}
+
+	public String getHighestAnnotationTier() {
+		return highestAnnotationTier;
+	}
+
+	public void setHighestAnnotationTier(String highestAnnotationTier) {
+		this.highestAnnotationTier = highestAnnotationTier;
 	}
 
 

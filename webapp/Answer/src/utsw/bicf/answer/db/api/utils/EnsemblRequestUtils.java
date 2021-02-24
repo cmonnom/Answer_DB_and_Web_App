@@ -36,12 +36,15 @@ public class EnsemblRequestUtils extends AbstractRequestUtils{
 		this.setupClient();
 	}
 
-	public EnsemblResponse fetchEnsembl(String geneTerm)
+	public EnsemblResponse fetchEnsembl(String geneTerm, boolean tryPrev)
 			throws URISyntaxException, ClientProtocolException, IOException, JAXBException,
 			UnsupportedOperationException, SAXException, ParserConfigurationException {
 		StringBuilder sbUrl = new StringBuilder(ensemblProps.getFetchUrl());
 		sbUrl.append(geneTerm);
 		URI uri = new URI(sbUrl.toString());
+		if (tryPrev) {
+			uri = new URI(sbUrl.toString().replace("/symbol/", "/prev_symbol/"));
+		}
 		requestGet = new HttpGet(uri);
 		HttpClientContext context = HttpClientContext.create();
 		requestGet.addHeader("Content-Type", "application/json;charset=utf-8");
@@ -60,6 +63,10 @@ public class EnsemblRequestUtils extends AbstractRequestUtils{
 		}
 		this.closeGetRequest();
 		return null;
+	}
+	
+	public EnsemblResponse fetchEnsembl(String geneTerm) throws ClientProtocolException, UnsupportedOperationException, URISyntaxException, IOException, JAXBException, SAXException, ParserConfigurationException {
+		return this.fetchEnsembl(geneTerm, false);
 	}
 
 }

@@ -69,7 +69,8 @@ Vue.component('report-patient-details', {
         closePatientDetails() {
             this.$emit("close-patient-details");
         },
-        extractPatientDetailsInfo(caseName) {
+        extractPatientDetailsInfo(caseName, fieldToReturn) {
+            var valueToReturn = null;
             for (var i = 0; i < this.patientTables.length; i++) {
                 for (var j = 0; j < this.patientTables[i].items.length; j++) {
                     var item = this.patientTables[i].items[j];
@@ -82,8 +83,13 @@ Vue.component('report-patient-details', {
                     else if (item.value != "Not calculated" && (item.field == "tumorPercent" || item.field == "msi")) {
                         item.value += "%";
                     }
+                    if (fieldToReturn && (item.field == fieldToReturn)) {
+                        valueToReturn = item.value;
+                    }
+
                 }
             }
+            return valueToReturn;
         },
         updateCaseName(fullCaseName) {
             this.$emit("update-case-name", fullCaseName);

@@ -81,6 +81,39 @@ const Home = {
   </v-card>
 </v-menu>
 
+<v-menu v-model="confirmSendingToEpicDialogVisible" :position-x="positionx"  :position-y="positiony"
+:close-on-content-click="false">
+<v-card>
+<v-toolbar color="primary" dark>
+  <v-toolbar-title class="title">
+  Report for Case: {{ currentEpicOrderNumber }} ({{currentPatientName}})
+  </v-toolbar-title>
+</v-toolbar>
+<v-card-text class="pl-0 pr-0">
+<v-list>
+  <v-list-tile @click="toggleSendingToEpicStatusForCase(currentCaseId)">
+  <v-list-tile-action>
+  <v-icon  color="green">check_circle</v-icon>
+  </v-list-tile-action>
+  <v-list-tile-title>
+  <span v-if="sendingToEpic">SENDING... 
+  <v-progress-circular
+  indeterminate
+  color="primary"
+></v-progress-circular></span>
+  <span v-else>SEND (Upload the report to Epic)</span>
+  </v-list-tile-title>
+  </v-list-tile>
+  <v-list-tile @click="confirmSendingToEpicDialogVisible = false">
+  <v-list-tile-action>
+  <v-icon color="red">cancel</v-icon>
+  </v-list-tile-action>
+  <v-list-tile-title>CANCEL (Do nothing for now)</v-list-tile-title></v-list-tile>
+</v-list>
+</v-card-text>
+</v-card>
+</v-menu>
+
   <v-dialog v-model="assignGroupDialogVisible" max-width="50%" scrollable>
   <v-card>
     <v-toolbar dense dark color="primary">
@@ -227,7 +260,9 @@ const Home = {
             positionx: 0,
             positiony: 0,
             confirmSentToEpicDialogVisible: false,
-            showEaster: false
+            confirmSendingToEpicDialogVisible: false,
+            showEaster: false,
+            sendingToEpic: false
         }
     },
     methods: {
@@ -414,6 +449,31 @@ const Home = {
                     alert(error);
                 });
         },
+        toggleSendingToEpicStatusForCase(caseId) {
+            if (this.sendingToEpic) {
+                return; //only one at a time
+            }
+            this.sendingToEpic = true;
+            axios.get("./toggleSendingToEpicStatusForCase", {
+                params: {
+                    caseId: caseId
+                }
+            })
+                .then(response => {
+                    this.sendingToEpic = false;
+                    if (response.data.isAllowed && response.data.success) {
+                        this.confirmSendingToEpicDialogVisible = false;
+                        this.getWorklists();
+                    }
+                    else {
+                        this.handleDialogs(response.data, this.toggleSendingToEpicStatusForCase.bind(null, caseId));
+                    }
+                })
+                .catch(error => {
+                    this.sendingToEpic = false;
+                    alert(error);
+                });
+        },
         cancelAssign() {
             this.assignDialogVisible = false;
             this.usersAssignedToCase = [];
@@ -485,6 +545,10 @@ const Home = {
                 this.handleAxiosError(error);
             });
         },
+        handleAxiosError(error) {
+            console.log(error);
+            bus.$emit("some-error", [null, error]);
+          },
         saveTabPreference() {
             axios({
                 method: 'post',
@@ -598,6 +662,17 @@ const Home = {
             this.positiony = event.clientY;
             this.confirmSentToEpicDialogVisible = true;
         },
+        sendingToEpicHandler(item, event) {
+            if (this.sendingToEpic) {
+                return;
+            }
+            this.currentCaseId = item.caseId;
+            this.currentEpicOrderNumber = item.epicOrderNumber;
+            this.currentPatientName = item.patientName;
+            this.positionx = event.clientX;
+            this.positiony = event.clientY;
+            this.confirmSendingToEpicDialogVisible = true;
+        },
         createPDFReportHandler(item) {
             this.createPDFReport(item.reportId);
         }
@@ -624,6 +699,7 @@ const Home = {
         bus.$off('assignToUser', this.assignToUserHandler);
         bus.$off('assignToGroup', this.assignToGroupHandler);
         bus.$off('sent-to-epic', this.sendToEpicHandler);
+        bus.$off('sending-to-epic', this.sendingToEpicHandler);
         bus.$off('downloadPDFReport', this.createPDFReportHandler);
     },
     created: function () {
@@ -631,6 +707,7 @@ const Home = {
         bus.$on('assignToUser', this.assignToUserHandler);
         bus.$on('assignToGroup', this.assignToGroupHandler);
         bus.$on('sent-to-epic', this.sendToEpicHandler);
+        bus.$on('sending-to-epic', this.sendingToEpicHandler);
         bus.$on('downloadPDFReport', this.createPDFReportHandler);
         // bus.$on('showEaster', (item) => {
         //     this.showEaster = !this.showEaster;

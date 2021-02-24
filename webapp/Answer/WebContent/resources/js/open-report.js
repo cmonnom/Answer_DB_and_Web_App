@@ -271,7 +271,10 @@ const OpenReport = {
             <v-icon>save</v-icon>
         </v-btn>
         <span v-if="!isSaveDisabled()">Save Report</span>
-        <span v-else>You cannot make changes to this report.<br/>It's probably finalized.</span>
+        <span v-else>
+            <span v-if="oncotreeDiagnosisValue">You cannot make changes to this report.<br/>It's probably finalized.</span>
+            <span v-else>The report is missing an OncoTree Diagnosis.<br/>Open the case to edit the missing value.</span>
+        </span>    
        </v-tooltip>
        </v-badge>
  
@@ -579,7 +582,8 @@ const OpenReport = {
                     width: "200px",
                     hint: ""
                 },],
-                commitingAnnotations: false
+                commitingAnnotations: false,
+                oncotreeDiagnosisValue: null
         }
     }, methods: {
         readOnlyReportNotes() {
@@ -646,7 +650,8 @@ const OpenReport = {
             || this.savingReport 
             || !this.fullReport.reportName
             || this.fullReport.amended
-            || this.fullReport.finalized;
+            || this.fullReport.finalized
+            || !this.oncotreeDiagnosisValue;
         },
         isPreviewDisabled() {
             return this.savingReport 
@@ -712,7 +717,7 @@ const OpenReport = {
                         }
                         this.originalFullReportSummary = this.fullReport.summary;
                         this.$refs.patientDetails.patientTables = this.fullReport.patientInfo.patientTables;
-                        this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
+                        this.oncotreeDiagnosisValue = this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName, "oncotree");
                         this.$refs.indicatedTherapies.manualDataFiltered(this.fullReport.indicatedTherapySummary);
                         if (this.canProceed("canReview") && !this.readonly) {
                             this.addIndicatedTherapyHeaderAction(this.fullReport.indicatedTherapySummary.headers);
@@ -1013,7 +1018,7 @@ const OpenReport = {
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
                         if (this.$refs.patientDetails)
-                            this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
+                            this.oncotreeDiagnosisValue = this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName, "oncotree");
                         window.open(webAppRoot + "/pdfs/" + response.data.message, "_blank");
                     } else {
                         this.handleDialogs(response.data, this.previewReport);
@@ -1023,7 +1028,7 @@ const OpenReport = {
                 .catch(error => {
                     this.savingReport = false;
                     if (this.$refs.patientDetails)
-                        this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName);
+                        this.oncotreeDiagnosisValue = this.$refs.patientDetails.extractPatientDetailsInfo(this.fullReport.caseName, "oncotree");
                     this.handleAxiosError(error);
                 });
         },

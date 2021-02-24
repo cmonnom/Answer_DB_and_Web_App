@@ -73,6 +73,8 @@ public class LOINC {
 		codes.put("Fused Genes", new LOINCItem("Fused Genes", "", "")); //no LOINC code?
 		
 		codes.put("LINEBREAK", new LOINCItem("LINEBREAK", "", "")); //no LOINC code?
+		
+		codes.put("Case Summary", new LOINCItem("CASESUMMARY", "Case Summary", ""));
 	}
 
 	public static LOINCItem getCode(String name) {

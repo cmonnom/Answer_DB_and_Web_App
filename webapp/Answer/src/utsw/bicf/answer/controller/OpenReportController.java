@@ -239,7 +239,13 @@ public class OpenReportController {
 		if (!ControllerUtil.areUserAndCaseInSameGroup(currentUser, caseSummary)) {
 			return ControllerUtil.initializeModelNotAllowed(model, servletContext);
 		}
-		
+		//check if there is an oncotree code
+		if (caseSummary != null && 
+				(caseSummary.getOncotreeDiagnosis() == null 
+				|| caseSummary.getOncotreeDiagnosis().equals(""))) {
+			response.setMessage("A report cannot be saved  without an OncoTree Diagnosis");
+			return response.createObjectJSON();
+		}
 		boolean canProceed = isAssigned && currentUser.getIndividualPermission().getCanReview();
 		response.setIsAllowed(canProceed);
 		if (canProceed) {

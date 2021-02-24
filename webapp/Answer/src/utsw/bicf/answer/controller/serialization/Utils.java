@@ -101,6 +101,14 @@ public class Utils {
 							if (fieldName != null) {
 								vf.getStringValues().add(new FilterStringValue(fieldName));
 							}
+							fieldName = Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP.get(cb.getName());
+							if (fieldName != null) {
+								vf.getStringValues().add(new FilterStringValue(fieldName));
+							}
+							fieldName = Variant.CHECKBOX_TROUBLED_REGION_FILTERS_MAP.get(cb.getName());
+							if (fieldName != null) {
+								vf.getStringValues().add(new FilterStringValue(fieldName));
+							}
 						}
 					}
 				}

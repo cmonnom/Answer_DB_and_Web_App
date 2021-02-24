@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -103,6 +102,11 @@ public class OrderCase {
 	String mutationalSignatureLinkName;
 	List<MutationalSignatureData> mutationalSignatureData;
 	String tumorPanel;
+	//TODO
+	@JsonProperty("reportOrderNumber")
+	String hl7OrderId;
+	@JsonProperty("reportAccessionId")
+	String hl7SampleId;
 	
 	public OrderCase() {
 		
@@ -722,6 +726,26 @@ public class OrderCase {
 
 	public void setTumorPanel(String tumorPanel) {
 		this.tumorPanel = tumorPanel;
+	}
+
+
+	public String getHl7OrderId() {
+		return hl7OrderId;
+	}
+
+
+	public void setHl7OrderId(String hl7OrderId) {
+		this.hl7OrderId = hl7OrderId;
+	}
+
+
+	public String getHl7SampleId() {
+		return hl7SampleId;
+	}
+
+
+	public void setHl7SampleId(String hl7SampleId) {
+		this.hl7SampleId = hl7SampleId;
 	}
 
 

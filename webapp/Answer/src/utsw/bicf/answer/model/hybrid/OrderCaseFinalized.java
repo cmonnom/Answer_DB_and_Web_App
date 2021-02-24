@@ -103,8 +103,10 @@ public class OrderCaseFinalized {
 					this.reportId = lastFinalized.getMongoDBId().getOid();
 					buttons.add(new Button("mdi-pdf-box", "downloadPDFReport", "Download Finalized Report", "info"));
 					if (orderCase.getActive() != null && orderCase.getActive()) {
-						//TODO uncomment this when ready
 						buttons.add(new Button("mdi-check", "sent-to-epic", "Report was sent to Epic", "info"));
+						if (orderCase.getHl7OrderId() != null && orderCase.getHl7SampleId() != null) {
+							buttons.add(new Button("mdi-file-send-outline", "sending-to-epic", "Send report to Epic", "info"));
+						}
 					}
 				}
 			} catch (UnsupportedOperationException e) {

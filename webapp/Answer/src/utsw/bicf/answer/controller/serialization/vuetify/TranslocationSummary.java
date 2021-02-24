@@ -88,7 +88,7 @@ public class TranslocationSummary extends Summary<TranslocationRow> {
 		highestTier.setIsSafe(true);
 		headers.add(highestTier);
 		
-		Header filters = new Header("QC Tags", "filters");
+		Header filters = new Header("QC Tags", Variant.FIELD_FTL_FILTERS);
 //		leftGene.setWidth("100px");
 		filters.setIsSafe(true);
 		headers.add(filters);

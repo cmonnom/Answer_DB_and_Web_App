@@ -1346,11 +1346,15 @@ const OpenCase2 = {
 
 
                         this.$refs.advancedFilter.effects = response.data.effects;
+                        this.$refs.advancedFilter.diseaseDatabaseFilters = response.data.diseaseDatabaseFilters;
+                        this.$refs.advancedFilter.troubledRegionFilters = response.data.troubledRegionFilters;
                         this.$refs.advancedFilter.failedFilters = response.data.failedFilters;
-                        //TODO populate ftlFilters
+                        //populate ftlFilters
                         this.$refs.advancedFilter.ftlFilters = response.data.ftlFilters;
                         this.$refs.advancedFilter.checkBoxLabelsByValue = response.data.checkBoxLabelsByValue;
                         this.$refs.advancedFilter.checkBoxFTLLabelsByValue = response.data.checkBoxFTLLabelsByValue;
+                        this.$refs.advancedFilter.checkBoxDiseaseDatabaseLabelsByValue = response.data.checkBoxDiseaseDatabaseLabelsByValue;
+                        this.$refs.advancedFilter.checkBoxTroubledRegionLabelsByValue = response.data.checkBoxTroubledRegionLabelsByValue;
                         this.userId = response.data.userId;
                         this.$refs.advancedFilter.populateCheckBoxes();
 

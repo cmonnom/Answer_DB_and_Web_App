@@ -38,6 +38,8 @@ public class OpenCaseSummary {
 	Set<String> failedFilters; //unique list of failed QC filters. Used for filtering by checking which failed reason should be included
 	Set<String> ftlFilters; //unique list of failed QC filters. Used for filtering by checking which failed reason should be included
 	Set<String> virFilters;
+	Set<String> diseaseDatabaseFilters;
+	Set<String> troubledRegionFilters;
 	Integer userId;
 	SNPIndelVariantSummary snpIndelVariantSummary;
 	CNVSummary cnvSummary;
@@ -52,6 +54,8 @@ public class OpenCaseSummary {
 	boolean reportReady;
 	Map<String, String> checkBoxLabelsByValue;
 	Map<String, String> checkBoxFTLLabelsByValue;
+	Map<String, String> checkBoxDiseaseDatabaseLabelsByValue; //unique list of failed QC filters. Used for filtering by checking which failed reason should be included
+	Map<String, String> checkBoxTroubledRegionLabelsByValue;
 	String caseOwnerId;
 	String caseOwnerName;
 	String mutationalSignatureLinkName;
@@ -73,6 +77,8 @@ public class OpenCaseSummary {
 		this.effects = getUniqueEffects(aCase);
 		this.failedFilters = getUniqueFailedFilters(aCase);
 		this.ftlFilters = getUniqueFTLFilters(aCase);
+		this.diseaseDatabaseFilters = Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP.keySet();
+		this.troubledRegionFilters = Variant.CHECKBOX_TROUBLED_REGION_FILTERS_MAP.keySet();
 		this.isAllowed = true;
 		this.reportGroups = reportGroups;
 		this.qcUrl = qcAPI.getUrl();
@@ -90,6 +96,8 @@ public class OpenCaseSummary {
 		
 		this.checkBoxLabelsByValue = Variant.CHECKBOX_FILTERS_MAP;
 		this.checkBoxFTLLabelsByValue = Variant.CHECKBOX_FTL_FILTERS_MAP;
+		this.checkBoxDiseaseDatabaseLabelsByValue = Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP;
+		this.checkBoxTroubledRegionLabelsByValue = Variant.CHECKBOX_TROUBLED_REGION_FILTERS_MAP;
 //		for (String formattedValue : Variant.CHECKBOX_FILTERS_MAP.keySet()) {
 //			this.checkBoxLabelsByValue.put(Variant.CHECKBOX_FILTERS_MAP.get(formattedValue), formattedValue);
 //		}
@@ -180,6 +188,39 @@ public class OpenCaseSummary {
 		
 	}
 
+//	/**
+//	 * Create a unique list of effects in the current case.
+//	 * Sort alphabetically and tries to make the string prettier
+//	 * @return
+//	 */
+//	private static Set<String> getUniqueDiseaseDatabaseFilters() {
+//		Set<String> diseaseDatabaseFilters = new HashSet<String>(); 
+//		Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP.put("In Cosmic", Variant.FIELD_IN_COSMIC);
+//		diseaseDatabaseFilters.add("In Cosmic");
+//		Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP.put("In ClinVar", Variant.FIELD_IN_CLINVAR);
+//		diseaseDatabaseFilters.add("In ClinVar");
+//		Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP.put("In OncoKB", Variant.FIELD_IN_CLINVAR);
+//		diseaseDatabaseFilters.add("In OncoKB");
+//		return diseaseDatabaseFilters;
+//		
+//	}
+	
+//	/**
+//	 * Create a unique list of effects in the current case.
+//	 * Sort alphabetically and tries to make the string prettier
+//	 * @return
+//	 */
+//	private static Set<String> getUniqueTroubledRedionFilters() {
+//		Set<String> troubledRegionFilters = new HashSet<String>(); 
+//		Variant.CHECKBOX_TROUBLED_REGION_FILTERS_MAP.put("Avoid Repeats", Variant.FIELD_AVOID_REPEATS);
+//		troubledRegionFilters.add("Avoid Repeats");
+//		Variant.CHECKBOX_TROUBLED_REGION_FILTERS_MAP.put("Avoid LCR", Variant.FIELD_GNOMAD_LCR);
+//		troubledRegionFilters.add("Avoid LCR");
+//		Variant.CHECKBOX_TROUBLED_REGION_FILTERS_MAP.put("Avoid Artifacts", Variant.FIELD_AVOID_LIKELY_ARTIFACT);
+//		troubledRegionFilters.add("Avoid Artifacts");
+//		return troubledRegionFilters;
+//		
+//	}
 	
 	public String createVuetifyObjectJSON() throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
@@ -425,6 +466,48 @@ public class OpenCaseSummary {
 	public void setMutationalSignatureData(List<MutationalSignatureData> mutationalSignatureData) {
 		this.mutationalSignatureData = mutationalSignatureData;
 	}
+
+
+	public Map<String, String> getCheckBoxDiseaseDatabaseLabelsByValue() {
+		return checkBoxDiseaseDatabaseLabelsByValue;
+	}
+
+
+	public void setCheckBoxDiseaseDatabaseLabelsByValue(Map<String, String> checkBoxDiseaseDatabaseLabelsByValue) {
+		this.checkBoxDiseaseDatabaseLabelsByValue = checkBoxDiseaseDatabaseLabelsByValue;
+	}
+
+
+	public Map<String, String> getCheckBoxTroubledRegionLabelsByValue() {
+		return checkBoxTroubledRegionLabelsByValue;
+	}
+
+
+	public void setCheckBoxTroubledRegionLabelsByValue(Map<String, String> checkBoxTroubledRegionLabelsByValue) {
+		this.checkBoxTroubledRegionLabelsByValue = checkBoxTroubledRegionLabelsByValue;
+	}
+
+
+	public Set<String> getDiseaseDatabaseFilters() {
+		return diseaseDatabaseFilters;
+	}
+
+
+	public void setDiseaseDatabaseFilters(Set<String> diseaseDatabaseFilters) {
+		this.diseaseDatabaseFilters = diseaseDatabaseFilters;
+	}
+
+
+	public Set<String> getTroubledRegionFilters() {
+		return troubledRegionFilters;
+	}
+
+
+	public void setTroubledRegionFilters(Set<String> troubledRegionFilters) {
+		this.troubledRegionFilters = troubledRegionFilters;
+	}
+
+
 
 
 

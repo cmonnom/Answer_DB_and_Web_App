@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,9 +37,9 @@ import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.hybrid.AnswerLowExonCoverage;
 import utsw.bicf.answer.model.hybrid.PatientInfo;
 import utsw.bicf.answer.model.hybrid.PubMed;
-import utsw.bicf.answer.model.hybrid.SampleLowCoverageFromQC;
 import utsw.bicf.answer.reporting.finalreport.CNVClinicalSignificance;
 import utsw.bicf.answer.reporting.finalreport.CNVReportWithHighestTier;
+import utsw.bicf.answer.reporting.finalreport.FTLReportWithHighestTier;
 import utsw.bicf.answer.reporting.finalreport.VariantReport;
 import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
@@ -58,7 +57,7 @@ public class ReportBuilder {
 	private static final String CAT_CLINICAL_TRIAL = "Clinical Trial";
 	private static final String CAT_THERAPY = "Therapy";
 	private static final String TIER_2D = "2D";
-	private static final String TIER_2C = "2D";
+	private static final String TIER_2C = "2C";
 	
 
 	ModelDAO modelDAO;
@@ -118,7 +117,7 @@ public class ReportBuilder {
 		//filter out unselected annotations and variants without tiered annotations
 		Map<VariantReport, List<Annotation>> annotationsPerSNP = extractAnnotationsForSNPs(variantsSelected);
 		Map<CNVReportWithHighestTier, List<Annotation>> annotationsPerCNV = extractAnnotationsForCNVs(cnvsSelected);
-		Map<Translocation, List<Annotation>> annotationsPerFTL = extractAnnotationsForFTLs(ftlsSelected);
+		Map<FTLReportWithHighestTier, List<Annotation>> annotationsPerFTL = extractAnnotationsForFTLs(ftlsSelected);
 		
 		//Now we should only be left with valid variants and annotations
 		List<Annotation> allAnnotations = new ArrayList<Annotation>();
@@ -148,7 +147,8 @@ public class ReportBuilder {
 	}
 
 	private Map<String, GeneVariantAndAnnotation> setClinicalSignificances(
-			Map<VariantReport, List<Annotation>> annotationsPerSNP, Map<CNVReportWithHighestTier, List<Annotation>> annotationsPerCNV) {
+			Map<VariantReport, List<Annotation>> annotationsPerSNP, 
+			Map<CNVReportWithHighestTier, List<Annotation>> annotationsPerCNV) {
 		Map<String, GeneVariantAndAnnotation> annotationsStrongByVariant = new HashMap<String, GeneVariantAndAnnotation>();
 		Map<String, GeneVariantAndAnnotation> annotationsPossibleByVariant = new HashMap<String, GeneVariantAndAnnotation>();
 		Map<String, GeneVariantAndAnnotation> annotationsUnknownByVariant = new HashMap<String, GeneVariantAndAnnotation>();
@@ -217,7 +217,7 @@ public class ReportBuilder {
 		return null;
 	}
 	
-	private String getTierFromClassification(String classification) {
+	private static String getTierFromClassification(String classification) {
 		if (classification != null && classification.equals(Variant.CATEGORY_LIKELY_PATHOGENIC)) {
 			return "1B";
 		}
@@ -270,7 +270,7 @@ public class ReportBuilder {
 		return annotationsPerSNP;
 	}
 	
-	private void overrideTier(Annotation a) {
+	public static void overrideTier(Annotation a) {
 		if (a.getClassification() != null && a.getTier() == null) {
 			a.setTier(getTierFromClassification(a.getClassification()));
 		}
@@ -343,8 +343,8 @@ public class ReportBuilder {
 	 * @throws URISyntaxException 
 	 * @throws ClientProtocolException 
 	 */
-	private Map<Translocation, List<Annotation>> extractAnnotationsForFTLs(List<Translocation> variantsSelected) throws ClientProtocolException, URISyntaxException, IOException {
-		Map<Translocation, List<Annotation>> annotationsPerFTL = new HashMap<Translocation, List<Annotation>>();
+	private Map<FTLReportWithHighestTier, List<Annotation>> extractAnnotationsForFTLs(List<Translocation> variantsSelected) throws ClientProtocolException, URISyntaxException, IOException {
+		Map<FTLReportWithHighestTier, List<Annotation>> annotationsPerFTL = new HashMap<FTLReportWithHighestTier, List<Annotation>>();
 		for (Translocation v : variantsSelected) {
 			final Translocation vDetails = utils.getTranslocationDetails(v.getMongoDBId().getOid());
 			boolean annotationsAreValid = true;
@@ -360,7 +360,9 @@ public class ReportBuilder {
 					annotationsAreValid = false;
 				}
 				else {
-					annotationsPerFTL.put(vDetails, selectedAnnotations);
+					String highestTier = selectedAnnotations.stream().filter(a -> a.getTier() != null).map(a -> a.getTier()).sorted().collect(Collectors.toList()).get(0);
+					FTLReportWithHighestTier detailedFTL = new FTLReportWithHighestTier(vDetails, highestTier);
+					annotationsPerFTL.put(detailedFTL, selectedAnnotations);
 					report.getFtlIds().add(v.getMongoDBId().getOid());
 				}
 			}
@@ -375,6 +377,39 @@ public class ReportBuilder {
 		}
 		return annotationsPerFTL;
 	}
+	
+//	private Map<Translocation, List<Annotation>> extractAnnotationsForFTLs(List<Translocation> variantsSelected) throws ClientProtocolException, URISyntaxException, IOException {
+//		Map<Translocation, List<Annotation>> annotationsPerFTL = new HashMap<Translocation, List<Annotation>>();
+//		for (Translocation v : variantsSelected) {
+//			final Translocation vDetails = utils.getTranslocationDetails(v.getMongoDBId().getOid());
+//			boolean annotationsAreValid = true;
+//			if (!isEmptyList(vDetails.getReferenceTranslocation().getUtswAnnotations())) {
+//				vDetails.getReferenceTranslocation().getUtswAnnotations().stream().forEach(a -> Annotation.init(a, vDetails.getAnnotationIdsForReporting(), modelDAO));
+//				List<Annotation> selectedAnnotations = vDetails.getReferenceTranslocation().getUtswAnnotations().stream().filter(a -> a.getIsSelected()).collect(Collectors.toList());
+//				selectedAnnotations.stream().filter(a -> a.getClassification() != null || a.getCategory() != null).forEach(a -> this.overrideTier(a));
+//				//set Uncategorized if needed
+//				selectedAnnotations.stream().forEach(a -> a.setCategory(a.getCategory() == null ? Variant.CATEGORY_UNCATEGORIZED : a.getCategory()));
+//				long tiersFound = selectedAnnotations.stream().filter(a -> a.getTier() != null).count();
+//				long moreThanTherapy = selectedAnnotations.stream().filter(a -> !a.getCategory().equals(CAT_THERAPY) && !a.getCategory().equals(CAT_CLINICAL_TRIAL)).count();
+//				if (tiersFound == 0 || moreThanTherapy == 0) { //at least one annotation should have a tier
+//					annotationsAreValid = false;
+//				}
+//				else {
+//					annotationsPerFTL.put(vDetails, selectedAnnotations);
+//					report.getFtlIds().add(v.getMongoDBId().getOid());
+//				}
+//			}
+//			else {
+//				annotationsAreValid = false;
+//			}
+//			if (!annotationsAreValid) { //report annotations missing a tier or variant without selected annotations
+//				List<Translocation> missingAnnotationFTLs = report.getMissingTierFTLs();
+//				missingAnnotationFTLs.add(vDetails);
+//				report.setMissingTierFTLs(missingAnnotationFTLs);
+//			}
+//		}
+//		return annotationsPerFTL;
+//	}
 
 	/**
 	 * Fetches all trials from MDA and all selected annotations
@@ -425,7 +460,7 @@ public class ReportBuilder {
 	 */
 	private List<IndicatedTherapy> getIndicatedTherapies(Map<VariantReport, List<Annotation>> annotationsPerSNP,
 			Map<CNVReportWithHighestTier, List<Annotation>> annotationsPerCNV, 
-			Map<Translocation, List<Annotation>> annotationsPerFTL ) {
+			Map<FTLReportWithHighestTier, List<Annotation>> annotationsPerFTL ) {
 		List<IndicatedTherapy> indicatedTherapies = new ArrayList<IndicatedTherapy>();
 		for (VariantReport v : annotationsPerSNP.keySet()) {
 			List<IndicatedTherapy> therapyCards = annotationsPerSNP.get(v).stream().filter(a -> annotationGoesInTherapyTable(a)).map(a -> new IndicatedTherapy(a, v.getVariant())).collect(Collectors.toList());
@@ -435,8 +470,8 @@ public class ReportBuilder {
 			List<IndicatedTherapy> therapyCards = annotationsPerCNV.get(v).stream().filter(a -> annotationGoesInTherapyTable(a)).map(a -> new IndicatedTherapy(a, v.getCnv())).collect(Collectors.toList());
 			indicatedTherapies.addAll(therapyCards);
 		}
-		for (Translocation v : annotationsPerFTL.keySet()) {
-			List<IndicatedTherapy> therapyCards = annotationsPerFTL.get(v).stream().filter(a -> annotationGoesInTherapyTable(a)).map(a -> new IndicatedTherapy(a, v)).collect(Collectors.toList());
+		for (FTLReportWithHighestTier v : annotationsPerFTL.keySet()) {
+			List<IndicatedTherapy> therapyCards = annotationsPerFTL.get(v).stream().filter(a -> annotationGoesInTherapyTable(a)).map(a -> new IndicatedTherapy(a, v.getFtl())).collect(Collectors.toList());
 			indicatedTherapies.addAll(therapyCards);
 		}
 		
@@ -473,9 +508,9 @@ public class ReportBuilder {
 	}
 	
 	
-	private List<TranslocationReport> getFTLs(Map<Translocation, List<Annotation>> annotationsPerFTL) {
+	private List<TranslocationReport> getFTLs(Map<FTLReportWithHighestTier, List<Annotation>> annotationsPerFTL) {
 		List<TranslocationReport> ftls = new ArrayList<TranslocationReport>();
-		for (Translocation ftl : annotationsPerFTL.keySet()) {
+		for (FTLReportWithHighestTier ftl : annotationsPerFTL.keySet()) {
 			String concatText = annotationsPerFTL.get(ftl).stream().filter(a -> annotationGoesInFTLTable(a)).map(a -> a.getText()).collect(Collectors.joining(" "));
 			long itemCount = annotationsPerFTL.get(ftl).stream().filter(a -> annotationGoesInFTLTable(a)).count();
 			if (itemCount != 0) {
@@ -509,7 +544,7 @@ public class ReportBuilder {
 		return list == null || list.isEmpty();
 	}
 
-	private boolean isStringEqual(String s1, String s2) {
+	private static boolean isStringEqual(String s1, String s2) {
 		return s1 != null && s2 != null && s1.equals(s2);
 	}
 	

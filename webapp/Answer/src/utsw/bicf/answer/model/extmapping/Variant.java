@@ -34,6 +34,7 @@ public class Variant {
 	public static final String FIELD_MAX_COSMIC_PATIENTS = "maxCosmicPatients";
 	public static final String FIELD_IN_COSMIC = "inCosmic";
 	public static final String FIELD_IN_CLINVAR = "inClinvar";
+	public static final String FIELD_IN_ONCOKB = "inOncokb";
 	public static final String FIELD_OLD_BUILDS = "oldBuilds";
 	public static final String FIELD_SOMATIC_STATUS = "somaticStatus";
 	public static final String FIELD_FTL_SOMATIC_STATUS = "ftlSomaticStatus";
@@ -49,6 +50,7 @@ public class Variant {
 	public static final String VALUE_PASS = "PASS";
 	public static final String VALUE_FAIL = "FailedQC";
 	public static final String FIELD_HAS_REPEATS = "isRepeat";
+	public static final String FIELD_AVOID_REPEATS = "avoidRepeat";
 	public static final String FIELD_IMPACT = "impact";
 	
 	public static final String CATEGORY_PATHOGENIC = "Pathogenic";
@@ -56,10 +58,25 @@ public class Variant {
 	public static final String CATEGORY_UNCATEGORIZED = "Uncategorized";
 	public static final String FIELD_GNOMAD_LCR = "gnomadLcr";
 	public static final String FIELD_LIKELY_ARTIFACT = "likelyArtifact";
+	public static final String FIELD_AVOID_LIKELY_ARTIFACT = "avoidLikelyArtifact";
+	
+	public static final String FIELD_DISEASE_DATABASES = "diseaseDatabases";
+	public static final String FIELD_TROUBLED_REGIONS = "troubledRegions";
 	
 	//keep track of the mapping between the value in the VCF and the displayed value
 	public static final Map<String, String> CHECKBOX_FILTERS_MAP = new HashMap<String, String>();
 	public static final Map<String, String> CHECKBOX_FTL_FILTERS_MAP = new HashMap<String, String>();
+	public static final Map<String, String> CHECKBOX_DISEASE_DATABASE_FILTERS_MAP = new HashMap<String, String>();
+	public static final Map<String, String> CHECKBOX_TROUBLED_REGION_FILTERS_MAP = new HashMap<String, String>();
+	
+	static {
+		Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP.put("In Cosmic", Variant.FIELD_IN_COSMIC);
+		Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP.put("In ClinVar", Variant.FIELD_IN_CLINVAR);
+		Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP.put("In OncoKB", Variant.FIELD_IN_CLINVAR);
+		Variant.CHECKBOX_TROUBLED_REGION_FILTERS_MAP.put("Avoid Repeats", Variant.FIELD_AVOID_REPEATS);
+		Variant.CHECKBOX_TROUBLED_REGION_FILTERS_MAP.put("Avoid LCR", Variant.FIELD_GNOMAD_LCR);
+		Variant.CHECKBOX_TROUBLED_REGION_FILTERS_MAP.put("Avoid Artifacts", Variant.FIELD_AVOID_LIKELY_ARTIFACT);
+	}
 	
 	Boolean isAllowed = true;
 	
