@@ -7,7 +7,7 @@ Vue.component('login', {
         popup: { default: true, type: Boolean },
         dataUrlRoot: { default: webAppRoot, type: String },
     },
-    template: `<div>
+    template: /*html*/`<div>
             <v-container pl-3 pr-3 pt-3 pb-3>
                 <div v-if="isCloudLogin()">
                 <v-btn block dark color="teal" @click="azureSignIn" :disabled="loading">Sign in with Azure</v-btn>

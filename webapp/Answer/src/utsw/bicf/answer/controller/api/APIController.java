@@ -880,7 +880,8 @@ public class APIController {
 			response.setMessage("Case " + caseId + " does not exist.");
 			return response;
 		}
-		if (caseSummary.getHl7OrderId() == null || caseSummary.getHl7SampleId() == null) {
+		if (caseSummary.getHl7OrderId() == null || caseSummary.getHl7SampleId() == null
+				|| caseSummary.getHl7OrderId().equals("N/A") || caseSummary.getHl7SampleId().equals("N/A")) {
 			response.setMessage("Case " + caseId + " is missing the reportOrderNumber or reportAccessionId.");
 			return response;
 		}
@@ -974,7 +975,8 @@ public class APIController {
 			response.setMessage("Case " + caseId + " does not exist.");
 			return response.createObjectJSON();
 		}
-		if (caseSummary.getHl7OrderId() == null || caseSummary.getHl7SampleId() == null) {
+		if (caseSummary.getHl7OrderId() == null || caseSummary.getHl7SampleId() == null
+				|| caseSummary.getHl7OrderId().equals("N/A") || caseSummary.getHl7SampleId().equals("N/A")) {
 			response.setMessage("Case " + caseId + " is missing the reportOrderNumber or reportAccessionId.");
 			return response.createObjectJSON();
 		}
@@ -1040,7 +1042,7 @@ public class APIController {
 					overrideProviderIdName, includeFusion, beakerId, overrideTestName,
 					overrideReportDate, modelDAO);
 			String hl7 = hl7Factory.reportToHL7(false);
-			
+			System.out.println(hl7);
 			socket = new Socket(otherProps.getEpicHl7Hostname(), otherProps.getEpicHl7Port());
 			output = socket.getOutputStream();
 			writer = new PrintWriter(output, true);

@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
+import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 
 @Controller
@@ -25,6 +26,8 @@ public class CronController {
 	FileProperties fileProps;
 	@Autowired
 	ModelDAO modelDAO;
+	@Autowired
+	LoginDAO loginDAO;
 	
 
 	@Scheduled(fixedDelay = 600000) //run every 10min after the last task ended (10 * 60 * 1000 milliseconds)

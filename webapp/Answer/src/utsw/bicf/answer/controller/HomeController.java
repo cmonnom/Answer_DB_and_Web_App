@@ -68,6 +68,7 @@ public class HomeController {
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".createPDFReport", IndividualPermission.CAN_VIEW);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".toggleSentToEpicStatusForCase", IndividualPermission.CAN_ASSIGN);
 		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".saveTabPreference", IndividualPermission.CAN_VIEW);
+		PermissionUtils.addPermission(HomeController.class.getCanonicalName() + ".toggleSendingToEpicStatusForCase", IndividualPermission.CAN_ASSIGN);
 	}
 
 	@Autowired

@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -232,7 +234,7 @@ public class HL7v251Factory {
 		}
 		obr.getUniversalServiceIdentifier().getText().setValue(caseSummary.getLabTestName());
 		
-		if (this.notNullOrEmpty(beakerId)) {
+		if (this.notNullOrEmpty(caseSummary.getHl7SampleId())) {
 			obr.getFillerOrderNumber().getEntityIdentifier().setValue(caseSummary.getHl7SampleId());
 			obr.getFillerOrderNumber().getNamespaceID().setValue("Beaker");
 		}
@@ -257,7 +259,8 @@ public class HL7v251Factory {
 		}
 		else if (report.getDateFinalized() != null) {
 			LocalDateTime finalizedData = LocalDateTime.parse(report.getDateFinalized(), TypeUtils.mongoDateTimeFormatter);
-			obr.getResultsRptStatusChngDateTime().getTime().setValue(finalizedData.format(TypeUtils.hl7DateTimeFormatter));
+			ZonedDateTime zonedDateTime = finalizedData.atZone(ZoneId.systemDefault());
+			obr.getResultsRptStatusChngDateTime().getTime().setValue(zonedDateTime.format(TypeUtils.hl7DateTimeFormatter));
 		}
 		obr.getResultStatus().setValue("F"); //always final
 		
@@ -349,7 +352,9 @@ public class HL7v251Factory {
 		}
 		
 		//case level entries
-		createCaseOBXFromUTSWProp(oru, UTSWProps.GRCh38, LOINC.getCode("Human reference sequence assembly version"));
+		if (variants != null && !variants.isEmpty()) {
+			createCaseOBXFromUTSWProp(oru, UTSWProps.GRCh38, LOINC.getCode("Human reference sequence assembly version"));
+		}
 		
 		if (report.getTumorPanel() != null) {
 			ST obxGenePanel = new ST(oru.getMessage());
@@ -411,11 +416,18 @@ public class HL7v251Factory {
 			v.setStartEnd2020v(variant.getChrom() + ":" + variant.getPos());
 			v.setStart2018v(variant.getPos());
 			v.setEnd2018v(variant.getPos() + v.getRef().length() - v.getAlt().length());
-			if (variant.getSomaticStatus() != null && variant.getSomaticStatus().equals("Germline")) {
-				v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceGermline));
+//			if (variant.getSomaticStatus() != null && variant.getSomaticStatus().equals("Germline")) {
+//				v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceGermline));
+//			}
+//			else {
+//				v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceSomatic));
+//			}
+			//Germline and Unknown are treated the same way
+			if (variant.getSomaticStatus() != null && variant.getSomaticStatus().equals("Somatic")) {
+				v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceSomatic));
 			}
 			else {
-				v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceSomatic));
+				v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceGermline));
 			}
 			String featureId = "";
 			if (variant.getVcfAnnotations() != null && !variant.getVcfAnnotations().isEmpty()) {
@@ -527,40 +539,54 @@ public class HL7v251Factory {
 			vList.add(v);
 		}
 		else if (gva.getType().contentEquals("cnv")) {
-			HL7Variant v = new HL7Variant();
 
-			String gene = gva.getGene();
-			if (gene.equals("FLT3-ITD")) {
-				gene = "FLT3";
-			}
-			v.setGene(gene);
-			String hgnc = fetchHGNC(gene, false);
-			if (!this.notNullOrEmpty(hgnc)) {
-				hgnc = fetchHGNC(gene, true);
-			}
-			v.setHgncCode(hgnc);
+			String[] genes = gva.getGene().split(" ");
+			for (String gene : genes) {
+				gene = gene.trim();
+				HL7Variant v = new HL7Variant();
+				v.setHgncCode("0");
+				if (gene.equals("FLT3-ITD")) {
+					gene = "FLT3";
+				}
+				v.setGene(gene);
+				v.setHgncCode("0");
+				String hgnc = fetchHGNC(gene, false);
+				if (!this.notNullOrEmpty(hgnc)) {
+					hgnc = fetchHGNC(gene, true);
+				}
+				if (this.notNullOrEmpty(hgnc)) {
+					v.setHgncCode(hgnc);
+				}
+				
 //			v.setAaChange(gva.getVariant());
-			CNV variant = requestUtils.getCNVDetails(gva.getOid());
-			v.setChr(variant.getChrom());
-			v.setCytoband(variant.getCytoband());
-			v.setDisplayName(gva.getGeneVariant());
-			v.setSomaticStatus("Somatic");
+				CNV variant = requestUtils.getCNVDetails(gva.getOid());
+				v.setChr(variant.getChrom());
+				v.setCytoband(variant.getCytoband());
+				//TODO maybe use CNV type
+//				gva.getAberrationType()
+				v.setSomaticStatus("Somatic");
 //			v.setDisplayName(variant.getChrom() + " " + variant.getGenes().stream().collect(Collectors.joining(" ")));
-			if (variant.getAberrationType() != null && variant.getAberrationType().equals("ITD")) {
-				v.setDnaChangeType("Duplication");
+				if (variant.getAberrationType() != null && variant.getAberrationType().equals("ITD")) {
+					v.setDnaChangeType("Duplication");
+					v.setDisplayName(gene + " " + v.getDnaChangeType());
+				}
+				if (variant.getAberrationType() != null) {
+					v.setDisplayName(gene + " " + variant.getAberrationType());
+				}
+				v.setCopyNumber(variant.getCopyNumber());
+				v.setStructuralVariantLength(Math.abs(variant.getEnd() - variant.getStart()));
+				v.setStructuralVariantInnerStartEnd(new Integer[] {Math.min(variant.getEnd(),  variant.getStart()), Math.max(variant.getEnd(),  variant.getStart())});
+				
+				v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceSomatic));
+				
+				v.setVariantCategory(LOINCVariantCategory.getLoincCode(gva.getType()));
+				if (!skipAnnotation) {
+					v.setAnnotations(this.concatInterpretation(gva));
+				}
+				
+				vList.add(v);
 			}
-			v.setCopyNumber(variant.getCopyNumber());
-			v.setStructuralVariantLength(Math.abs(variant.getEnd() - variant.getStart()));
-			v.setStructuralVariantInnerStartEnd(new Integer[] {Math.min(variant.getEnd(),  variant.getStart()), Math.max(variant.getEnd(),  variant.getStart())});
 			
-			v.setClinicalSignificance(LOINC.getCode(clinicalSignificanceSomatic));
-			
-			v.setVariantCategory(LOINCVariantCategory.getLoincCode(gva.getType()));
-			if (!skipAnnotation) {
-				v.setAnnotations(this.concatInterpretation(gva));
-			}
-			
-			vList.add(v);
 		}
 		else if (gva.getType().contentEquals("translocation") && includeFusion) {
 			Translocation ftl = requestUtils.getTranslocationDetails(gva.getOid());
@@ -587,20 +613,31 @@ public class HL7v251Factory {
 			v12.setClinicalSignificance(LOINC.getCode(clinicalSignificanceSomatic));
 //			v12.setDisplayName(ftl.getFusionName());
 			
-			if (ftl.getChrType() != null && ftl.getChrType().equals("INTERCHROMOSOMAL")) {
-				Integer left = Integer.parseInt(ftl.getLeftBreakpoint().split(":")[1]);
-				Integer right = Integer.parseInt(ftl.getRightBreakpoint().split(":")[1]);
+			String chrLeft = ftl.getLeftBreakpoint().split(":")[0];
+			String chrRight = ftl.getRightBreakpoint().split(":")[0];
+			Integer left = Integer.parseInt(ftl.getLeftBreakpoint().split(":")[1]);
+			Integer right = Integer.parseInt(ftl.getRightBreakpoint().split(":")[1]);
+			v12.setLeftDNARegion(chrLeft + "-" + chrRight);
+
+			if (ftl.getChrType() != null && ftl.getChrType().equals("INTRACHROMOSOMAL")) {
 				v12.setStructuralVariantLength(Math.abs(left - right));
 				v12.setStructuralVariantInnerStartEnd(new Integer[] {Math.min(left,  right), Math.max(left,  right)});
-				
-				v12.setLeftDNARegion(ftl.getChrDistance());
 			}
-			else if (ftl.getChrType() != null && ftl.getChrType().equals("INTRACHROMOSOMAL")) {
-				String chr = ftl.getLeftBreakpoint().split(":")[0];
-				String left = ftl.getLeftBreakpoint().split(":")[1];
-				String right = ftl.getRightBreakpoint().split(":")[1];
-				v12.setLeftDNARegion(chr + ":" + left + "-" + right);
-			}
+			
+//			if (ftl.getChrType() != null && ftl.getChrType().equals("INTERCHROMOSOMAL")) {
+//				Integer left = Integer.parseInt(ftl.getLeftBreakpoint().split(":")[1]);
+//				Integer right = Integer.parseInt(ftl.getRightBreakpoint().split(":")[1]);
+//				v12.setStructuralVariantLength(Math.abs(left - right));
+//				v12.setStructuralVariantInnerStartEnd(new Integer[] {Math.min(left,  right), Math.max(left,  right)});
+//				
+//				v12.setLeftDNARegion(ftl.getChrDistance());
+//			}
+//			else if (ftl.getChrType() != null && ftl.getChrType().equals("INTRACHROMOSOMAL")) {
+//				String chr = ftl.getLeftBreakpoint().split(":")[0];
+//				String left = ftl.getLeftBreakpoint().split(":")[1];
+//				String right = ftl.getRightBreakpoint().split(":")[1];
+//				v12.setLeftDNARegion(chr + ":" + left + "-" + right);
+//			}
 			
 //			v1.setDnaRegion(variant.getFirstExon());
 //			v2.setDnaRegion(variant.getLastExon());
@@ -705,7 +742,7 @@ public class HL7v251Factory {
 			fixMissingHighestAnnotationTier(ftl, variant);
 		}
 		
-		System.out.println("FTL from HL7: " + ftl.getFusionName() + " tier: " + ftl.getHighestAnnotationTier() + ".");
+//		System.out.println("FTL from HL7: " + ftl.getFusionName() + " tier: " + ftl.getHighestAnnotationTier() + ".");
 		if (ftl.getHighestAnnotationTier() != null) {
 			if (ftl.getHighestAnnotationTier().equals("1A") || ftl.getHighestAnnotationTier().equals("1B")) {
 				v12.setClinicalSignificance(LOINC.getCode("Tier 1"));
@@ -722,19 +759,32 @@ public class HL7v251Factory {
 		}
 		v12.setFusedGenes(ftl.getLeftGene() + "~" + ftl.getRightGene());
 		
-		if (variant.getChrType() != null && variant.getChrType().equals("INTERCHROMOSOMAL")) {
-			Integer left = Integer.parseInt(variant.getLeftBreakpoint().split(":")[1]);
-			Integer right = Integer.parseInt(variant.getRightBreakpoint().split(":")[1]);
+		String chrLeft = variant.getLeftBreakpoint().split(":")[0];
+		String chrRight = variant.getRightBreakpoint().split(":")[0];
+		Integer left = Integer.parseInt(variant.getLeftBreakpoint().split(":")[1]);
+		Integer right = Integer.parseInt(variant.getRightBreakpoint().split(":")[1]);
+		v12.setLeftDNARegion(chrLeft + "-" + chrRight);
+		
+		if (variant.getChrType() != null && variant.getChrType().equals("INTRACHROMOSOMAL")) {
 			v12.setStructuralVariantLength(Math.abs(left - right));
 			v12.setStructuralVariantInnerStartEnd(new Integer[] {Math.min(left,  right), Math.max(left,  right)});
-			v12.setLeftDNARegion(variant.getChrDistance());
 		}
-		else if (variant.getChrType() != null && variant.getChrType().equals("INTRACHROMOSOMAL")) {
-			String chr = variant.getLeftBreakpoint().split(":")[0];
-			String left = variant.getLeftBreakpoint().split(":")[1];
-			String right = variant.getRightBreakpoint().split(":")[1];
-			v12.setLeftDNARegion(chr + ":" + left + "-" + right);
-		}
+//		
+//		if (variant.getChrType() != null && variant.getChrType().equals("INTERCHROMOSOMAL")) {
+//			Integer left = Integer.parseInt(variant.getLeftBreakpoint().split(":")[1]);
+//			Integer right = Integer.parseInt(variant.getRightBreakpoint().split(":")[1]);
+//			
+//			v12.setStructuralVariantLength(Math.abs(left - right));
+//			v12.setStructuralVariantInnerStartEnd(new Integer[] {Math.min(left,  right), Math.max(left,  right)});
+////			v12.setLeftDNARegion(variant.getChrDistance());
+//			v12.setLeftDNARegion(variant.get);
+//		}
+//		else if (variant.getChrType() != null && variant.getChrType().equals("INTRACHROMOSOMAL")) {
+//			String chr = variant.getLeftBreakpoint().split(":")[0];
+//			String left = variant.getLeftBreakpoint().split(":")[1];
+//			String right = variant.getRightBreakpoint().split(":")[1];
+//			v12.setLeftDNARegion(chr + ":" + left + "-" + right);
+//		}
 //		v1.setDnaRegion(variant.getFirstExon());
 //		v2.setDnaRegion(variant.getLastExon());
 //		vList.add(v1);
@@ -1302,7 +1352,7 @@ public class HL7v251Factory {
 	}
 	
 	private String sanitizeHL7Text(String text) {
-		if (text != null) {
+		if (text != null) { 
 //			return hl7Escaping.escape(text, EncodingCharacters.defaultInstance());
 			//unescape seems to avoid escaping the escape characters
 			// \R\ vs \E\R\E

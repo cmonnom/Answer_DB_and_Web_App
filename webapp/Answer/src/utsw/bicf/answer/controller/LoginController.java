@@ -3,6 +3,7 @@ package utsw.bicf.answer.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
@@ -110,13 +111,14 @@ public class LoginController {
 		}
 		loginAttempt.setCounter(loginAttempt.getCounter() + 1); //at this point, either it's the user's login attempt or a null user login attempt. So loginAttempt should not be null
 		//check to see if user waited 10 sec after 5 attempts
-		if (loginAttempt.getCounter() < 5 || loginAttempt.getLastAttemptDatetime().plusSeconds(10).isBefore(LocalDateTime.now())) {
+		if (loginAttempt.getCounter() < 5 || loginAttempt.getLastAttemptDatetime().plusSeconds(10).isBefore(LocalDateTime.now(ZoneOffset.UTC))) {
 			proceed = true;
 		}
 		else {
 			proceed = false;
 			logReason = "Too many failed logins. Please wait 10 sec.";
 		}
+		loginAttempt.setLastAttemptDatetime(LocalDateTime.now(ZoneOffset.UTC));
 		if (proceed && user != null){
 			proceed = false;
 			if (OtherProperties.AUTH_AZURE_OAUTH.equals(otherProps.getAuthenticateWith())) {
@@ -130,7 +132,7 @@ public class LoginController {
 				AuthUtils utils = new AuthUtils(modelDAO, otherProps);
 				credentials.setUsername(user.getUserId() + ""); //switch to userId for the auth
 				credentials.setPassword(credentials.getPassword());
-				utils.checkDevCredentials(response, credentials);
+				utils.checkDevCredentials(response, credentials, user);
 				proceed = response.getSuccess();
 			}
 			else { //local auth check

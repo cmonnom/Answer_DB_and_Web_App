@@ -16,13 +16,17 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.mindrot.jbcrypt.BCrypt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.UserCredentials;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.model.DevPassword;
 import utsw.bicf.answer.model.Token;
+import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.security.OtherProperties;
 
 /**
@@ -126,17 +130,21 @@ public class AuthUtils {
 	/**
 	 * CAREFUL WHEN USING THIS METHOD.
 	 * The goal is to bypass LDAP during development
-	 *  All users would use the same pwd stored in the Token table (dev-login).
-	 *  DO NOT USE THIS PARAM on test or prod. Only on local instances like AnswerVM
+	 *  All users would use the pwd stored in dev_password table.
+	 *  DO NOT USE THIS PARAM on test or prod. Only on training instances
 	 *  
-	 *  Using this method, you can also become any registered user
 	 *  
 	 * @param ajaxResponse
 	 * @param userCreds
+	 * @param user 
 	 */
-	public void checkDevCredentials(AjaxResponse ajaxResponse, UserCredentials userCreds) {
-		Token token = modelDAO.getDevLoginToken();
-		if (token != null && token.getToken().equals(userCreds.getPassword())) {
+	public void checkDevCredentials(AjaxResponse ajaxResponse, UserCredentials userCreds, User user) {
+		//TODO remove this
+//		encodePassword(userCreds.getPassword());
+		DevPassword pwd = modelDAO.getDevPasswordForUser(user.getUserId());
+		if (TypeUtils.notNullNotEmpty(userCreds.getPassword()) && pwd != null 
+				&& TypeUtils.notNullNotEmpty(pwd.getPassword()) 
+				&& verifyDevPassword(pwd.getPassword(), userCreds.getPassword())) {
 			ajaxResponse.setIsAllowed(true);
 			ajaxResponse.setSuccess(true);
 		}
@@ -147,5 +155,15 @@ public class AuthUtils {
 		}
 	}
 
+	public static String encodePassword(String originalPwd) {
+		String generatedPwd = BCrypt.hashpw(originalPwd, BCrypt.gensalt(12));
+		//TODO remove this
+//		System.out.println(generatedPwd);
+		return generatedPwd;
+	}
+	
+	public static boolean verifyDevPassword(String dbPassword, String userInput) {
+		return BCrypt.checkpw(userInput, dbPassword);
+	}
 
 }

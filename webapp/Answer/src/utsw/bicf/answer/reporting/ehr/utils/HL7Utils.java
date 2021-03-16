@@ -13,6 +13,7 @@ public class HL7Utils {
 	//replace all characters here
 	private static final String EN_DASH = String.valueOf('\u2013');
 	private static final String EM_DASH = String.valueOf('\u2014');
+	private static final String MINUS_SIGN = String.valueOf('\u2212');
 	private static final String HORIZONTAL_BAR = String.valueOf('\u2015');
 	private static final String DOUBLE_LOW_LINE = String.valueOf('\u2017');
 	private static final String LEFT_SINGLE_QUOTATION_MARK = String.valueOf('\u2018');
@@ -38,6 +39,7 @@ public class HL7Utils {
 	
 	private static final String EN_DASH_SUB = "-";
 	private static final String EM_DASH_SUB = "-";
+	private static final String MINUS_SIGN_SUB = "-";
 	private static final String HORIZONTAL_BAR_SUB = "-";
 	private static final String DOUBLE_LOW_LINE_SUB = "-";
 	private static final String LEFT_SINGLE_QUOTATION_MARK_SUB = "'";
@@ -86,6 +88,7 @@ public class HL7Utils {
 	static {
 		UTF8_CHARSET.put(EN_DASH, EN_DASH_SUB);
 		UTF8_CHARSET.put(EM_DASH, EM_DASH_SUB);
+		UTF8_CHARSET.put(MINUS_SIGN, MINUS_SIGN_SUB);
 		UTF8_CHARSET.put(HORIZONTAL_BAR, HORIZONTAL_BAR_SUB);
 		UTF8_CHARSET.put(DOUBLE_LOW_LINE, DOUBLE_LOW_LINE_SUB);
 		UTF8_CHARSET.put(LEFT_SINGLE_QUOTATION_MARK, LEFT_SINGLE_QUOTATION_MARK_SUB);

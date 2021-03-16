@@ -104,7 +104,8 @@ public class OrderCaseFinalized {
 					buttons.add(new Button("mdi-pdf-box", "downloadPDFReport", "Download Finalized Report", "info"));
 					if (orderCase.getActive() != null && orderCase.getActive()) {
 						buttons.add(new Button("mdi-check", "sent-to-epic", "Report was sent to Epic", "info"));
-						if (orderCase.getHl7OrderId() != null && orderCase.getHl7SampleId() != null) {
+						if (orderCase.getHl7OrderId() != null && orderCase.getHl7SampleId() != null
+								&& (!"N/A".equals(orderCase.getHl7OrderId()) && !"N/A".equals(orderCase.getHl7SampleId()))) {
 							buttons.add(new Button("mdi-file-send-outline", "sending-to-epic", "Send report to Epic", "info"));
 						}
 					}

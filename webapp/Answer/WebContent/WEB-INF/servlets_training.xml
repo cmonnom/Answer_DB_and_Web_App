@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:util="http://www.springframework.org/schema/util" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+
+	
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans
+    	http://www.springframework.org/schema/beans/spring-beans.xsd
+    	http://www.springframework.org/schema/context
+    	http://www.springframework.org/schema/context/spring-context.xsd
+    	http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util.xsd
+        http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx.xsd">
+		
+	<aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+
+	<!-- Add support for component scanning -->
+	<context:component-scan base-package="utsw.bicf.answer" />
+
+	<!-- Add support for conversion, formatting and clear support -->
+	<mvc:annotation-driven />
+	
+	<!-- Add support for reading web resources: css, images, js, etc... -->
+	<mvc:resources location="/resources/" mapping="/resources/**" />
+	<mvc:resources location="file:/opt/answer/links/bams/" mapping="/bams/**" />
+	<mvc:resources location="file:/opt/answer/links/vcfs/" mapping="/vcfs/**" />
+	<mvc:resources location="file:/opt/answer/links/pdfs/" mapping="/pdfs/**" />
+	<mvc:resources location="file:/opt/answer/links/igv/" mapping="/igv/**" />
+	<mvc:resources location="file:/opt/answer/docs/html/" mapping="/help/**" />
+		<mvc:resources location="file:/opt/answer/search/html/" mapping="/search/**" />
+	<mvc:resources location="file:/opt/answer/links/media/" mapping="/media/**" />
+	<mvc:resources location="file:/opt/answer/links/images/" mapping="/images/**" />
+
+	<!-- Define Spring MVC view resolver -->
+	<bean	id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/view/templates/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+	
+<!-- 	SSH connection when needing TCP over SSH -->
+<!-- 	<bean id="sshConnection" class="utsw.bicf.answer.security.SSHConnection"> -->
+<!-- 		<property name="needed" value="${ssh.needed}" /> -->
+<!-- 		<property name="serverHostname" value="${ssh.server.hostname}" /> -->
+<!-- 		<property name="dbHostname" value="${ssh.db.hostname}" /> -->
+<!-- 		<property name="serverUsername" value="${ssh.server.username}" /> -->
+<!-- 		<property name="localPrivateKeyPath" value="${ssh.local.private.key.path}" /> -->
+<!-- 		<property name="localPublicKeyPath" value="${ssh.local.public.key.path}" /> -->
+<!-- 		<property name="dbPortForwarded" value="${ssh.db.port.forwarded}" /> -->
+<!-- 		<property name="localPortForwarding" value="${db.port}" /> -->
+<!-- 		<property name="knownHostsPath" value="${ssh.known.hosts.path}" /> -->
+<!-- 		<property name="localPrivateKeyPassphrase" value="${ssh.local.private.key.passphrase}" /> -->
+<!-- 	</bean> -->
+
+	<!-- Define Database DataSource / connection pool -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" 
+		destroy-method="close" >
+		<property name="driverClass" value="com.mysql.jdbc.Driver" />
+        <property name="jdbcUrl" value="jdbc:mysql://${db.url}:${db.port}/${db.name}?useSSL=false&amp;allowPublicKeyRetrieval=true" />
+        <property name="user" value="${db.user}" />
+        <property name="password" value="${db.password}" /> 
+		<!-- these are connection pool properties for C3P0 -->
+		<property name="initialPoolSize" value="5" />
+		<property name="minPoolSize" value="5" />
+		<property name="maxPoolSize" value="20" />
+		<property name="maxIdleTime" value="30000" />
+		<property name="acquireRetryDelay" value="10000" />
+		<property name="acquireRetryAttempts" value="5" />
+	</bean>
+	
+	<bean id="ldapAuthentication" class="utsw.bicf.answer.security.LDAPAuthentication">
+		<property name="username" value="${ldap.username}" />
+		<property name="password" value="${ldap.password}" />
+		<property name="url" value="${ldap.url}" />
+	</bean>
+	
+	<bean id="azureOAuth" class="utsw.bicf.answer.security.AzureOAuth">
+		<property name="msGraphUrl" value="${azure.graph.url}" />
+		<property name="accountName" value="${azure.account.name}" />
+		<property name="accountKey" value="${azure.account.key}" />
+		<property name="containerName" value="${azure.container.name}" />
+	</bean>
+	
+	<bean id="clarityAPIAuthentication" class="utsw.bicf.answer.security.ClarityAPIAuthentication">
+		<property name="username" value="${clarity.api.username}" />
+		<property name="password" value="${clarity.api.password}" />
+		<property name="url" value="${clarity.api.url}" />
+	</bean>
+	
+	<bean id="qcAPIAuthentication" class="utsw.bicf.answer.security.QcAPIAuthentication">
+		<property name="url" value="${qc.data.url}" />
+<!-- 		<property name="api" value="${qc.api.url}" /> -->
+		<property name="token" value="${qc.token}" />
+		<property name="epic" value="${qc.api.epic}" />
+		<property name="lowCov" value="${qc.api.low.coverage}" />
+	</bean>
+	
+<!-- 	<bean id="requestUtils" class="utsw.bicf.answer.clarity.api.utils.RequestUtils"> -->
+<!-- 	</bean> -->
+	
+	<!-- Setup Hibernate session factory -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean" depends-on="dataSource">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="utsw.bicf.answer.model" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.show_sql">false</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<bean id="multipartResolver"
+	class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+
+		 <!-- setting maximum upload size -->
+		<property name="maxUploadSize" value="1000000" />
+	</bean>
+	
+	<bean id="fileProps" class="utsw.bicf.answer.security.FileProperties">
+		<property name="mdaFilesPath" value="${mda.file.location}" />
+		<property name="excelFilesPath" value="${excel.file.location}" />
+		<property name="bamLinksPath" value="${bam.link.location}" />
+		<property name="bamFilesPath" value="${bam.file.location}" />
+		<property name="vcfLinksPath" value="${vcf.link.location}" />
+		<property name="vcfFilesPath" value="${vcf.file.location}" />
+		<property name="igvLinksPath" value="${igv.link.location}" />
+		<property name="igvTemplateFilesPath" value="${igv.file.location}" />
+		<property name="pdfFontPath" value="${pdf.font.location}" />
+		<property name="pdfFontBoldPath" value="${pdf.font.bold.location}" />
+		<property name="genePanelSearchUrl" value="${gene.panel.search.url}" />
+		<property name="pdfFilesPath" value="${pdf.temp.location}" />
+		<property name="pdfFinalizedFilesPath" value="${pdf.finalized.location}" />
+		<property name="pdfLogoPath" value="${pdf.logo.location}" />
+		<property name="pdfLinksPath" value="${pdf.link.location}" />
+		<property name="pdfFinalizedFilesBackupPath" value="${pdf.finalized.backup}" />
+		<property name="pdfNGSLogoName" value="${pdf.ngs.logo.name}" />
+		<property name="pdfUTSWLogoName" value="${pdf.utsw.logo.name}" />
+		<property name="pdfDraftWatermarkName" value="${pdf.draft.watermark.name}" />
+		<property name="imageLinksPath" value="${image.link.location}" />
+		<property name="imageFilesPath" value="${image.file.location}" />
+		
+	</bean>
+	
+	<bean id="emailProps" class="utsw.bicf.answer.security.EmailProperties">
+		<property name="from" value="${email.from}" />
+		<property name="signature" value="${email.signature}" />
+		<property name="rootUrl" value="${email.root.url}" />
+		<property name="doSend" value="${email.do.send}" />
+		<property name="remoteDesktopName" value="${email.remote.desktop.name}" />
+	</bean>
+	
+		<bean id="otherProps" class="utsw.bicf.answer.security.OtherProperties">
+		<property name="productionEnv" value="${production.env}" />
+		<property name="proxyHostname" value="${proxy.hostname}" />
+		<property name="proxyPort" value="${proxy.port}" />
+		<property name="oncoKBGeniePortalUrl" value="${oncokb.url}" />
+		<property name="mutationalSignatureUrl" value="${mut.sign.url}" />
+		<property name="authenticateWith" value="${auth.type}" />
+		<property name="authMessage" value="${auth.message}" />
+		<property name="authUrl" value="${auth.url}" />
+		<property name="rootUrl" value="${root.url}" />
+		<property name="webappName" value="${webapp.name}" />
+		<property name="epicHl7Hostname" value="${epic.hl7.host}" />
+		<property name="epicHl7Port" value="${epic.hl7.port}" />
+	</bean>
+	
+	<bean id="ncbiProps" class="utsw.bicf.answer.security.NCBIProperties">
+		<property name="url" value="${ncbi.pubmed.url}" />
+		<property name="epost" value="${ncbi.pubmed.epost.servlet}" />
+		<property name="esearchGene" value="${ncbi.gene.esearch.servlet}" />
+		<property name="esummary" value="${ncbi.pubmed.esummary.servlet}" />
+		<property name="esummaryGene" value="${ncbi.gene.esummary.servlet}" />
+		<property name="queryKey" value="${ncbi.pubmed.esummary.querykey}" />
+		<property name="webEnv" value="${ncbi.pubmed.esummary.webenv}" />
+		<property name="apiKey" value="${ncbi.api.key}" />
+		<property name="ncbiGeneUrl" value="${ncbi.gene.url}" />
+	</bean>
+	
+	<bean id="uniprotProps" class="utsw.bicf.answer.security.UniProtProperties">
+		<property name="queryUrl" value="${uniprot.search.servlet}" />
+		<property name="uniprotGeneUrl" value="${uniprot.gene.url}" />
+	</bean>
+		
+	<bean id="civicProps" class="utsw.bicf.answer.security.CivicProperties">
+		<property name="queryUrl" value="${civic.gene.servlet}" />
+		<property name="civicGeneUrl" value="${civic.gene.url}" />
+		<property name="variantServlet" value="${civic.variant.servlet}" />
+		<property name="variantUrl" value="${civic.variant.url}" />
+	</bean>
+	
+	<bean id="oncoKBProps" class="utsw.bicf.answer.security.OncoKBProperties">
+		<property name="searchUrl" value="${oncokb.gene.search.servlet}" />
+		<property name="variantSearchUrl" value="${oncokb.evidence.search.servlet}" />
+		<property name="summaryUrl" value="${oncokb.gene.summary.servlet}" />
+		<property name="oncoKBGeneUrl" value="${oncokb.gene.url}" />
+	</bean>
+	
+	<bean id="ensemblProps" class="utsw.bicf.answer.security.EnsemblProperties">
+		<property name="fetchUrl" value="${ensembl.gene.fetch}" />
+	</bean>
+	
+		<bean id="oncotreeProps" class="utsw.bicf.answer.security.OncotreeProperties">
+		<property name="tumorTypeUrl" value="${oncotree.tumortype.search}" />
+	</bean>
+	
+	<bean id="jaxckbProps" class="utsw.bicf.answer.security.JaxCKBProperties">
+		<property name="geneServlet" value="${jaxckb.gene.servlet}" />
+		<property name="geneUrl" value="${jaxckb.gene.url}" />
+		<property name="genePaidUrl" value="${jaxckb.gene.paid.url}" />
+		<property name="variantServlet" value="${jaxckb.variant.servlet}" />
+		<property name="variantUrl" value="${jaxckb.variant.url}" />
+		<property name="variantPaidUrl" value="${jaxckb.variant.paid.url}" />
+	</bean>	
+	
+	<bean id="reactomeProps" class="utsw.bicf.answer.security.ReactomeProperties">
+		<property name="searchUrl" value="${reactome.search.url}" />
+		<property name="eventUrl" value="${reactome.event.url}" />
+		<property name="browserUrl" value="${reactome.pathway.browser.url}" />
+		<property name="contentDetailUrl" value="${reactome.content.detail.url}" />
+	</bean>	
+	
+		<bean id="interProProps" class="utsw.bicf.answer.security.InterProProperties">
+		<property name="apiUrl" value="${interpro.pfam.api}" />
+		<property name="webpageUrl" value="${interpro.pfam.url}" />
+	</bean>
+	
+	<bean id="fasmicProps" class="utsw.bicf.answer.security.FasmicProperties">
+		<property name="searchUrl" value="${mda.fasmic.search.url}" />
+		<property name="webpageUrl" value="${mda.fasmic.url}" />
+	</bean>
+	
+	<bean id="mskProps" class="utsw.bicf.answer.security.MSKProperties">
+		<property name="hotspotUrl" value="${msk.hotspots.url.variants}" />
+		<property name="threeDUrl" value="${msk.3dhotspots.url.variants}" />
+	</bean>
+	
+	<bean id="clinicalTrialsProps" class="utsw.bicf.answer.security.ClinicalTrialsProperties">
+		<property name="apiUrl" value="${clinical.trials.api}" />
+		<property name="studyUrl" value="${clinical.trials.study.url}" />
+	</bean>	
+	<!-- Setup Hibernate transaction manager -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	
+	<!-- Enable configuration of transactional behavior based on annotations -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+<context:property-placeholder location="file:///opt/answer/conf/answer_training.properties"/>
+
+</beans>
+
+
+
+
+
+

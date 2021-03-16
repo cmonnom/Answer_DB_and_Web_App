@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.DataReportGroup;
 import utsw.bicf.answer.controller.serialization.UserCredentials;
@@ -33,6 +34,7 @@ import utsw.bicf.answer.controller.serialization.vuetify.UserTableSummary;
 import utsw.bicf.answer.dao.LoginDAO;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.db.api.utils.AuthUtils;
+import utsw.bicf.answer.model.DevPassword;
 import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.Group;
 import utsw.bicf.answer.model.IndividualPermission;
@@ -168,6 +170,8 @@ public class AdminController {
 		user.setUsername(userParams.getUsername());
 		user.setEmail(userParams.getEmail());
 		
+		String devPasswordString = user.getDevPassword();
+		
 		IndividualPermission individualPermission = user.getIndividualPermission();
 		if (individualPermission == null) {
 			individualPermission = new IndividualPermission();
@@ -214,6 +218,16 @@ public class AdminController {
 			else {
 				utils.updateUser(response, userCreds);
 			}
+		}
+		else if (OtherProperties.AUTH_DEV.equals(otherProps.getAuthenticateWith())
+				&& TypeUtils.notNullNotEmpty(devPasswordString)) {
+			DevPassword devPassword = modelDAO.getDevPasswordForUser(userId);
+			if (devPassword == null) {
+				devPassword = new DevPassword();
+				devPassword.setAnswerUserId(userId);
+			}
+			devPassword.setPassword(AuthUtils.encodePassword(devPasswordString));
+			modelDAO.saveObject(devPassword);
 		}
 		return response.createObjectJSON();
 	}

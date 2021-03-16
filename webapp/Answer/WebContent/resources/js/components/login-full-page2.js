@@ -24,7 +24,7 @@ Vue.component('login-full-page2', {
     <v-btn slot="activator" flat @click="openGeneSearch()" dark class="teal lighten-2">Gene Search</v-btn>
     <span>Search and download<br/>genes available in our panels</span>
     </v-tooltip>
-    <v-btn flat @click="doShowLoginDialog()" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
+    <v-btn flat @click="doShowLoginDialog()" :disabled="!showLogin" dark class="teal lighten-2">Login</v-btn>
   </v-toolbar>
 
   <v-toolbar fixed app flat ref="regularToolbar" class="hidden-xs-only">
@@ -45,7 +45,7 @@ Vue.component('login-full-page2', {
   <v-btn slot="activator" flat @click="openGeneSearch()" dark class="teal lighten-2">Gene Search</v-btn>
   <span>Search and download<br/>genes available in our panels</span>
   </v-tooltip>
-  <v-btn flat @click="doShowLoginDialog()" v-show="showLogin" dark class="teal lighten-2">Login</v-btn>
+  <v-btn flat @click="doShowLoginDialog()" :disabled="!showLogin" dark class="teal lighten-2">Login</v-btn>
 </v-toolbar>
 
   <v-snackbar :timeout="0" :bottom="true" :value="snackBarVisible">
@@ -440,6 +440,9 @@ Vue.component('login-full-page2', {
           return window.outerWidth < 600;
         },
         doShowLoginDialog() {
+          if (!this.showLogin) {
+            return;
+          }
           this.showLoginDialog = true;
           this.$nextTick(() => { this.$refs.loginBox.userNameFocus()});
         },

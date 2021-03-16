@@ -107,4 +107,11 @@ public class LoginDAO {
 		}
 		return loginAttempt;
 	}
+	
+	@Transactional
+	public List<LoginAttempt> getAllLoginAttempt() {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from LoginAttempt";
+		return session.createQuery(hql.toString(), LoginAttempt.class).list();
+	}
 }

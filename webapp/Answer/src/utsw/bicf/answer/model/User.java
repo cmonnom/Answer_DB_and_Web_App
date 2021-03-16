@@ -76,6 +76,9 @@ public class User {
 	@Transient
 	String fullName;
 	
+	@Transient
+	String devPassword; //to store the possible dev password from the admin page. Goes into the DevPassword table 
+	
 	public Integer getUserId() {
 		return userId;
 	}
@@ -206,5 +209,13 @@ public class User {
 
 	public void setFullName(String fullName) {
 		this.fullName = fullName;
+	}
+
+	public String getDevPassword() {
+		return devPassword;
+	}
+
+	public void setDevPassword(String devPassword) {
+		this.devPassword = devPassword;
 	}
 }

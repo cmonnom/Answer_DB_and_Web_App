@@ -24,6 +24,7 @@ import utsw.bicf.answer.db.api.utils.LookupUtils;
 import utsw.bicf.answer.model.AnswerDBCredentials;
 import utsw.bicf.answer.model.ClinicalTest;
 import utsw.bicf.answer.model.CosmicFusion;
+import utsw.bicf.answer.model.DevPassword;
 import utsw.bicf.answer.model.GeneToReport;
 import utsw.bicf.answer.model.GenieFusionCount;
 import utsw.bicf.answer.model.GenieMutation;
@@ -1261,5 +1262,14 @@ public class ModelDAO {
 		return session.createQuery(hql, ClinicalTest.class)
 		.setParameter("labTestName", labTestName)
 		.uniqueResult();
+	}
+	
+	@Transactional
+	public DevPassword getDevPasswordForUser(Integer userId) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from DevPassword where answerUserId = :userId";
+		DevPassword pwd = session.createQuery(hql, DevPassword.class)
+				.setParameter("userId", userId).uniqueResult();
+		return pwd;
 	}
 }

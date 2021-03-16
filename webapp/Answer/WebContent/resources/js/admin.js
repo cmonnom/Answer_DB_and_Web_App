@@ -66,6 +66,22 @@ const Admin = {
                 </v-card-text>
               </v-card>
             </v-flex>
+            <v-flex xs7 md4 lg3 xl2 v-if="getAuthType() == 'dev'">
+            <v-card class="pl-2 pr-2">
+              <v-card-title>
+                <div class="title">Dev Password</div>
+              </v-card-title>
+              <v-card-text>
+              <v-text-field label="Password"
+              v-model="password" 
+              required
+              :append-icon="showPasswordIcon ? 'visibility' : 'visibility_off'" 
+              @click:append="() => (showPasswordIcon = !showPasswordIcon)"
+              :type="showPasswordIcon ? 'password' : 'text'"
+              ></v-text-field>
+              </v-card-text>
+            </v-card>
+          </v-flex>
           </v-layout>
         </v-container>
       </v-card-text>
@@ -214,6 +230,8 @@ const Admin = {
       currentEditUserFullName: "",
       editGroupName: "",
       editDescription: "",
+      showPasswordIcon: true,
+      editPassword: ""
     }
   },
   methods: {
@@ -238,6 +256,7 @@ const Admin = {
         this.currentEditGroupsInUser = user.groupIds;
         this.editUserDialogSaveDisabled = false;
         this.editUserDialogVisible = true;
+        this.editPassword = "";
       }
     },
     editGroup(groupId) {
@@ -296,7 +315,8 @@ const Admin = {
             canHide: this.editHide,
             receiveAllNotifications: this.editNotification,
             admin: this.editAdmin,
-          }
+          },
+          devPassword: this.editPassword
         }
       })
         .then(response => {
@@ -373,6 +393,7 @@ const Admin = {
       this.editNotification = false;
       this.editAdmin = false;
       this.editUserDialogVisible = true;
+      this.editPassword = "";
     },
     addGroup() {
       this.editAdd = "Add";
@@ -443,6 +464,9 @@ const Admin = {
     },
     blockUserHandler(item) {
       this.blockUser(item.userId);
+    },
+    getAuthType() {
+      return authType;
     }
   },
   mounted: function () {

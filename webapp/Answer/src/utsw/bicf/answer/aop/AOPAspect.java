@@ -117,11 +117,19 @@ public class AOPAspect {
 //				long startTime = System.currentTimeMillis();
 				String argString = (String) args[i];
 				argString = argString.replaceAll("<br/>", " "); //skip line return (for instance in trial)
+				//some alt allele values have <> that should be skipped
+				argString = argString.replaceAll("<BND>", "BND");
+				argString = argString.replaceAll("<DEL>", "DEL");
+				argString = argString.replaceAll("<INS>", "INS");
+				argString = argString.replaceAll("<DUP>", "DUP");
+				argString = argString.replaceAll("<INV>", "INV");
 				if (argString.length() > 1000) { //just do detection. Faster. Block input if found
 					Matcher m = SHORT_PATTERN.matcher(argString);
 					boolean found = m.find();
 					isValid &= !found;
 					if (!isValid) {
+						//check if could be in exclusion list
+						
 						logger.info("The following string is invalid: <START>" + argString + "<END>");
 						logger.info("A blocked character was found among: <START>" + SHORT_PATTERN + "<END>");
 						break; //don't process the rest
