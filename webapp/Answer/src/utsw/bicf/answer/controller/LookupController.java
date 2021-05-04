@@ -33,6 +33,7 @@ import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.controller.serialization.plotly.BarPlotData;
 import utsw.bicf.answer.controller.serialization.plotly.LollipopPlotData;
@@ -1123,6 +1124,7 @@ public class LookupController {
 				BarPlotData chart = new BarPlotData();
 				chart.setPlotId(plotId);
 				chart.setPlotTitle(hugoSymbol + " Alterations by Cancer");
+				chart.setCallback("fetchGene-lollipop-plot-only");
 				Trace trace = new Trace();
 				for (int i = data.size() -1; i >=0; i--) {
 					GenericBarPlotData d = data.get(i);
@@ -1156,6 +1158,7 @@ public class LookupController {
 				BarPlotData chart = new BarPlotData();
 				chart.setPlotId(plotId);
 				chart.setPlotTitle("Cancers with most " + hugoSymbol + " Alterations by Percent");
+				chart.setCallback("fetchGene-lollipop-plot-only");
 				Trace trace = new Trace();
 				//need to sort by pct. Need a list too because there could be duplicate pct (key)
 				List<GenericBarPlotDataSummary> toSortData = new ArrayList<GenericBarPlotDataSummary>();
@@ -1173,6 +1176,7 @@ public class LookupController {
 						return o1.getKey().compareTo(o2.getKey());
 					}
 				}).collect(Collectors.toList());
+				toSortData = toSortData.stream().filter(s -> s.getdGene().getX().intValue() >= 3).collect(Collectors.toList());
 				int size = toSortData.size();
 				toSortData = toSortData.subList(Math.max(size - 10,  0), size);
 				for (GenericBarPlotDataSummary s : toSortData) {
@@ -1196,7 +1200,7 @@ public class LookupController {
 	@RequestMapping("/getGenieGeneLollipop")
 	@ResponseBody
 	public String getGenieGeneLollipop(Model model, HttpSession session, @RequestParam String hugoSymbol, 
-			@RequestParam String plotId) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
+			@RequestParam String plotId, @RequestParam(required = false) String cancerType) throws ClientProtocolException, URISyntaxException, IOException, UnsupportedOperationException, JAXBException, SAXException, ParserConfigurationException {
 
 		AjaxResponse response = new AjaxResponse();
 		response.setIsAllowed(true);
@@ -1208,7 +1212,11 @@ public class LookupController {
 		if (ensembl != null && ensembl.getUniProtId() != null) {
 			ExecutorService executor = Executors.newFixedThreadPool(2);
 			LollipopPlotData chart = new LollipopPlotData();
-			chart.setPlotTitle("Lollipop Plot of Genie " + hugoSymbolTrimmed + " Variants");
+			String plotTitle = "Lollipop Plot of Genie " + hugoSymbolTrimmed + " Variants";
+			if (TypeUtils.notNullNotEmpty(cancerType)) {
+				plotTitle += "<br> (" + cancerType + " only)";
+			}
+			chart.setPlotTitle(plotTitle);
 			Runnable pfamWorker = new Runnable() {
 				@Override
 				public void run() {
@@ -1260,14 +1268,25 @@ public class LookupController {
 			Runnable dbWorker = new Runnable() {
 				@Override
 				public void run() {
-					List<GenericLollipopPlotData> dataAll = modelDAO.getGeniePatientCountForGene(hugoSymbolTrimmed);
-					if (dataAll != null && !dataAll.isEmpty()) {
+					List<GenericLollipopPlotData> dataAll = modelDAO.getGeniePatientCountForGene(hugoSymbolTrimmed, cancerType);
+					if (dataAll != null) {
 
 						chart.setPlotId(plotId);
-						Trace trace = new Trace();
+						Map<String, Trace> tracesByCategory = new HashMap<String, Trace>();
 						//need to create the proper label and count the number of variants per row
 						for (GenericLollipopPlotData row : dataAll) {
 							StringBuilder sb = new StringBuilder();
+							String cat = row.getGroupAs();
+							if (cat != null) {
+								cat = row.getGroupAs().split(",")[0];
+								row.setGroupAs(cat);
+							}
+							Trace trace = tracesByCategory.get(cat);
+							if (trace == null) {
+								trace = new Trace();
+								trace.setName(row.getGroupAs());
+								tracesByCategory.put(cat, trace);
+							}
 							if (row.getLabel2() != null) {
 								List<String> variants = Arrays.asList(row.getLabel2().split("/"));
 								Map<String, StringSortableByInteger> variantCount = new HashMap<String, StringSortableByInteger>();
@@ -1283,17 +1302,31 @@ public class LookupController {
 								.append("Variant Count: ").append(row.getY()).append("<br>");
 								if (!variantCount.isEmpty()) {
 									String sortedVariants = variantCount.values().stream().sorted().map(s -> s.getStringValue()).collect(Collectors.joining("/"));
-									sb.append("Variants: ").append(sortedVariants);
+									sb.append("Variants: ").append(sortedVariants).append("<br>");
 								}
+								sb.append("Category: ").append(row.getGroupAs());
 							}
 							trace.addLabel(sb.toString());
 							trace.addX(row.getX());
 							trace.addY(row.getY());
 
 						}
-						chart.setTrace(trace);
-						Number maxY = (Number) chart.getTrace().getY().stream().max(Comparators.comparable()).get();
-						chart.setMaxY(maxY);
+						List<Trace> traces = new ArrayList<Trace>();
+						for (String cat : GenieMutation.CATEGORIES) {
+							Trace trace = tracesByCategory.get(cat);
+							if (trace != null) {
+								traces.add(trace);
+							}
+						}
+						chart.setTraces(traces);
+						if (chart.getTraces() == null || chart.getTraces().isEmpty() || chart.getTraces().get(0).getY() == null || chart.getTraces().get(0).getY().isEmpty()) {
+							chart.setMaxY(75);
+						}
+						else {
+							Number maxY = dataAll.stream().map(d -> d.getY()).max(Comparators.comparable()).get();
+//							Number maxY = (Number) chart.getTraces().get(0).getY().stream().max(Comparators.comparable()).get();
+							chart.setMaxY(maxY);
+						}
 					}
 				}
 			};
@@ -1303,6 +1336,9 @@ public class LookupController {
 			try {
 				executor.awaitTermination(10, TimeUnit.SECONDS);
 				response.setSuccess(true);
+				if (chart.getTraces() == null || chart.getTraces().isEmpty() || chart.getTraces().get(0).getY() == null || chart.getTraces().get(0).getY().isEmpty()) {
+					chart.setPlotTitle("No Variants for " + hugoSymbolTrimmed + " (" + cancerType + " only)");
+				}
 				response.setPayload(chart);
 			} catch (InterruptedException e) {
 				e.printStackTrace();

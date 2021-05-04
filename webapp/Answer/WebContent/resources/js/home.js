@@ -300,7 +300,7 @@ const Home = {
                         this.$refs.casesForUserCompletedTable.manualDataFiltered(response.data.casesForUserCompleted);
                         if (this.$refs.casesFinalizedTable)
                         this.$refs.casesFinalizedTable.manualDataFiltered(response.data.casesFinalized);
-                        this.openDefaultTab();
+                        // this.openDefaultTab();
                     }
                     else {
                         this.handleDialogs(response.data, this.getWorklists);
@@ -678,6 +678,7 @@ const Home = {
         }
     },
     mounted: function () {
+        this.openDefaultTab();
         this.getAllUsers();
         this.getAllGroups();
         this.getWorklists();

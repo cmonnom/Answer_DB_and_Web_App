@@ -1,12 +1,16 @@
 package utsw.bicf.answer.reporting.ehr.loinc;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class LOINCAAChangeType {
 	
 	private static final Map<String, String[]> loincCodes = new HashMap<String, String[]>();
 	private static final Map<String, String> effectToLoinc = new HashMap<String, String>();
+	private static final Map<String, EffectPriority> effectPriorities = new HashMap<String, EffectPriority>();
 	
 	static {
 		loincCodes.put("Wild type", new String[] {"Wild type","LA9658-1"});
@@ -46,6 +50,16 @@ public class LOINCAAChangeType {
 		effectToLoinc.put("stop_retained_variant", "Silent");
 		effectToLoinc.put("stop_lost", "Stop Codon Mutation");
 
+		effectPriorities.put("Frameshift", new EffectPriority("Frameshift", 1));
+		effectPriorities.put("Stop Codon Mutation", new EffectPriority("Stop Codon Mutation",2));
+		effectPriorities.put("Nonsense", new EffectPriority("Nonsense", 3));
+		effectPriorities.put("Duplication", new EffectPriority("Duplication", 4));
+		effectPriorities.put("Insertion",new EffectPriority("Insertion", 5));
+		effectPriorities.put("Deletion", new EffectPriority("Deletion",6));
+		effectPriorities.put("Insertion and Deletion", new EffectPriority("Insertion and Deletion", 7));
+		effectPriorities.put("Initiating Methionine", new EffectPriority("Initiating Methionine", 8));
+		effectPriorities.put("Missense", new EffectPriority("Missense", 9));
+		effectPriorities.put("Silent", new EffectPriority("Silent", 10));
 
 	}
 	
@@ -55,6 +69,15 @@ public class LOINCAAChangeType {
 
 	public static String getLoincCodeKeyFromEffect(String effect) {
 		return effectToLoinc.get(effect);
+	}
+	
+	public static String selectMainEffect(List<String> effects) {
+		List<EffectPriority> effectsToSort = new ArrayList<EffectPriority>();
+		for (String effect : effects) {
+			effectsToSort.add(effectPriorities.get(effect));
+		}
+		Collections.sort(effectsToSort);
+		return effectsToSort.get(0).effect;
 	}
 	
 	

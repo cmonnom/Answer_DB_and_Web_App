@@ -1,5 +1,10 @@
 package utsw.bicf.answer.model;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -11,6 +16,30 @@ import javax.persistence.Table;
 @Table(name="genie_mutation")
 public class GenieMutation {
 	
+	public static final List<String> CATEGORIES = Arrays.asList("Missense",
+            "Truncating",
+            "Splice",
+            "Inframe",
+            "Other");
+	
+	public static final Map<String, String> CATEGORY_MAP = new HashMap<String, String>();
+	
+	static {
+		CATEGORY_MAP.put("Frame_Shift_Del","Truncating");
+		CATEGORY_MAP.put("Frame_Shift_Ins","Truncating");
+		CATEGORY_MAP.put("In_Frame_Del","Inframe");
+		CATEGORY_MAP.put("In_Frame_Ins","Inframe");
+		CATEGORY_MAP.put("Missense_Mutation","Missense");
+		CATEGORY_MAP.put("Nonsense_Mutation","Truncating");
+		CATEGORY_MAP.put("Nonstop_Mutation","Other");
+		CATEGORY_MAP.put("RNA","Other");
+		CATEGORY_MAP.put("Silent","Missense");
+		CATEGORY_MAP.put("Splice_Region","Splice");
+		CATEGORY_MAP.put("Splice_Site","Splice");
+		CATEGORY_MAP.put("Translation_Start_Site","Other"); 
+	}
+	
+
 	public GenieMutation() {
 		
 	}
@@ -58,6 +87,9 @@ public class GenieMutation {
 	
 	@Column(name="end_pos")
 	Integer endPos;
+	
+	@Column(name="category")
+	String category;
 
 	public Integer getGenieMutationId() {
 		return genieMutationId;
@@ -169,6 +201,14 @@ public class GenieMutation {
 
 	public void setEndPos(Integer endPos) {
 		this.endPos = endPos;
+	}
+
+	public String getCategory() {
+		return category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
 	}
 
 }

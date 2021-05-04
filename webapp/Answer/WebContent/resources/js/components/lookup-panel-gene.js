@@ -89,7 +89,8 @@ Vue.component('lookup-panel-gene', {
                         </v-tooltip>
                     </v-toolbar>
                     <v-card-text class="pa-3">
-                        <span class="body-2"><b>GDC Data Portal</b></span>
+                        <span class="body-2"><b>GDC Data Portal</b>
+                        </span>
                         <v-tooltip bottom v-if="ensemblId">
                             <v-btn icon slot="activator" :href="'https://portal.gdc.cancer.gov/genes/' + ensemblId"
                                 target="_blank" rel="noreferrer">
@@ -97,12 +98,15 @@ Vue.component('lookup-panel-gene', {
                             </v-btn>
                             <span>Open {{ lastGene }} on the NIH GDC Data Portal</span>
                         </v-tooltip>
+                        <span v-show="!geneLolliplotPlotLoading">Click on a cancer type to show it in the lollipop plot.</span>
 
                         <div :class="[genePlotLoading ? 'alpha-54' : '']">
                             <div v-if="genePlotError && !genePlotLoading">No Genie Data could be found for gene
                                 {{ lastGene }}</div>
                             <div v-if="!genePlotError" v-show="showGeneGeniePanel" width="100%">
-                                <div :id="'genieLollipopPlot' + uniqId"></div>
+                                <div :class="[geneLolliplotPlotLoading ? 'alpha-54' : '']">
+                                    <div :id="'genieLollipopPlot' + uniqId"></div>
+                                </div>
                                 <div :id="'alterationByCancerPlot' + uniqId"></div>
                                 <div :id="'cancerByPercentPlot' + uniqId"></div>
                             </div>
@@ -180,7 +184,8 @@ Vue.component('lookup-panel-gene', {
 
         </v-layout>
         <lookup-panel-plot-utils ref="plotUtils"
-        :standalone="standalone" @handle-dialogs="handleDialogs"></lookup-panel-plot-utils>
+        :standalone="standalone" @handle-dialogs="handleDialogs"
+        @fetchGene-lollipop-plot-only="fetchGeneLollipopPlotOnly"></lookup-panel-plot-utils>
     </v-flex>
 
 </v-layout>`, data() {
@@ -215,6 +220,15 @@ Vue.component('lookup-panel-gene', {
             reactomeError: null,
             cancerPlotLoading: false,
             cancerPlotError: false,
+            geneLolliplotPlotLoading: false,
+            geneLollipopPlotError: false,
+            cividisColors: {
+                "blue75": "#38486b", //blue75
+                "Deletion": "#38486b", //blue75
+                "Amplification": "#a39a76", //brown50
+                "SNP/Indel": "#e4cf5b", //yellow25
+                "DEL": "#e4cf5b", //yellow25
+            },
         }
 
     },
@@ -362,6 +376,7 @@ Vue.component('lookup-panel-gene', {
         fetchGenePlot() {
             if (this.currentGene && this.$refs.plotUtils) {
                 this.genePlotLoading = true;
+                this.geneLolliplotPlotLoading = true;
                 this.genePlotError = false;
                 var promise1 = this.$refs.plotUtils.updateBarPlot("/getAlterationByCancer", {
                     hugoSymbol: this.currentGene,
@@ -374,6 +389,7 @@ Vue.component('lookup-panel-gene', {
                 var promise3 = this.$refs.plotUtils.updateLolliplotPlot("genieLollipopPlot" + this.uniqId, "/getGenieGeneLollipop", this.currentGene);
                 Promise.all([promise1, promise2, promise3]).then(values => {
                     this.genePlotLoading = false;
+                    this.geneLolliplotPlotLoading = false;
                     if (values.filter(v => v.success).length != values.length) {
                         console.log("Some plots did not finish properly");
                         this.genePlotError = true;
@@ -384,6 +400,42 @@ Vue.component('lookup-panel-gene', {
                 })
             }
         },
+        // call back function from a horizontal bar chart with a cancer name
+        fetchGeneLollipopPlotOnly(cancerType) {
+            if (this.currentGene && this.$refs.plotUtils) {
+                this.geneLolliplotPlotLoading = true;
+                this.geneLollipopPlotError = false;
+                var promise3 = this.$refs.plotUtils.updateLolliplotPlot("genieLollipopPlot" + this.uniqId, "/getGenieGeneLollipop", this.currentGene, cancerType);
+                Promise.all([promise3]).then(values => {
+                    this.geneLolliplotPlotLoading = false;
+                    if (values.filter(v => v.success).length != values.length) {
+                        console.log("Some plots did not finish properly");
+                        this.geneLollipopPlotError = true;
+                    }
+                    else {
+                        this.geneLollipopPlotError = false;
+                    }
+                });
+                this.updateSelectedBarPlot(cancerType);
+            }
+        },
+        updateSelectedBarPlot(cancerType) {
+            var plotIds = ['alterationByCancerPlot' + this.uniqId, 'cancerByPercentPlot' + this.uniqId,]
+            for (var i = 0; i < plotIds.length; i++) {
+                var thePlot = document.getElementById(plotIds[i]);
+                var data = thePlot.data[0];
+                var colors= data.marker.color;
+                for (var j =0; j < colors.length; j++) {
+                colors[j] = this.cividisColors.blue75; //reset original colors
+            }
+                var pointClicked = data.y.indexOf(cancerType);
+                if (pointClicked != -1) {
+                    colors[pointClicked] = this.cividisColors.DEL
+                }
+                var update = {'marker':{color: colors}};
+                Plotly.restyle(thePlot, update);
+            }
+        }
     },
     mounted() {
         this.toggleAllGenePanels(true);

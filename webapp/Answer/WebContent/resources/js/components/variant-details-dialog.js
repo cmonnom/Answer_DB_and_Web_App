@@ -66,6 +66,11 @@ Vue.component('variant-details-dialog', {
             'homozygous loss',
             'ITD',
         ], type: Array},
+        somaticItems: {default: () => [
+            'Germline',
+            'Somatic',
+            'Unknown',
+            ], type: Array},
         // oncotree: {default: () => [], type: Array},
     },
     template: /*html*/`<div>
@@ -954,6 +959,7 @@ Vue.component('variant-details-dialog', {
                     this.currentVariant.tier = lightVariant.tier;
                     this.currentVariant.notation = lightVariant.notation;
                     this.currentVariant.geneName = lightVariant.geneName;
+                    this.currentVariant.somaticStatus = lightVariant.somaticStatus;
                 }
                 else if (this.isCNV()) {
                     this.currentVariant.tier = lightVariant.tier;
@@ -1064,7 +1070,11 @@ Vue.component('variant-details-dialog', {
                                 },
                                 {
                                     label: "Somatic Status",
-                                    value: this.currentVariant.somaticStatus
+                                    value: this.currentVariant.somaticStatus,
+                                    type: "select",
+                                    fieldName: "somaticStatus",
+                                    tooltip: "Select a Status",
+                                    items: this.somaticItems
                                 }]
                         };
                         this.variantDataTables.push(infoTable);

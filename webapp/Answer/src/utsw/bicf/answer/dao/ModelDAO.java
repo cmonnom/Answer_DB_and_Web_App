@@ -19,6 +19,7 @@ import org.hibernate.transform.ResultTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.plotly.Trace;
 import utsw.bicf.answer.db.api.utils.LookupUtils;
 import utsw.bicf.answer.model.AnswerDBCredentials;
@@ -680,20 +681,73 @@ public class ModelDAO {
 	
 	@SuppressWarnings({"deprecation", "unchecked" })
 	@Transactional
-	public List<GenericLollipopPlotData> getGeniePatientCountForGene(String hugoSymbol) {
+	public List<GenericLollipopPlotData> getGeniePatientCountForGene(String hugoSymbol, String cancerType) {
 		Session session = sessionFactory.getCurrentSession();
+//		StringBuilder sb = new StringBuilder();
+//		sb.append("select")
+//		.append(" count(amino_acid_notation) as y, ")
+//		.append(" amino_acid_notation as label1,  ")
+//		.append(" group_concat(variant_change separator '/') as label2,  ")
+//		.append(" amino_acid_position as x, ")
+////		.append(" case ")
+////		.append(" when gm.variant_classification = 'Frame_Shift_Del' then 'Truncating' ")
+////		.append(" when gm.variant_classification = 'Frame_Shift_Ins' then 'Truncating' ")
+////		.append(" when gm.variant_classification = 'In_Frame_Del' then 'Inframe' ")
+////		.append(" when gm.variant_classification = 'In_Frame_Ins' then 'Inframe' ")
+////		.append(" when gm.variant_classification = 'Missense_Mutation' then 'Missense' ")
+////		.append(" when gm.variant_classification = 'Nonsense_Mutation' then 'Truncating' ")
+////		.append(" when gm.variant_classification = 'Nonstop_Mutation' then 'Other' ")
+////		.append(" when gm.variant_classification = 'RNA' then 'Other' ")
+////		.append(" when gm.variant_classification = 'Silent' then 'Missense' ")
+////		.append(" when gm.variant_classification = 'Splice_Region' then 'Splice' ")
+////		.append(" when gm.variant_classification = 'Splice_Site' then 'Splice' ")
+////		.append(" when gm.variant_classification = 'Translation_Start_Site' then 'Other'  ")
+////		.append(" end as group_as  ")
+//		.append(" category as group_as")
+//		.append(" from genie_mutation gm");
+//		if (TypeUtils.notNullNotEmpty(cancerType)) {
+//			sb.append(" , genie_sample gs ");
+//		}
+//		sb.append(" where hugo_symbol = :hugoSymbol and amino_acid_position is not null");
+//		if (TypeUtils.notNullNotEmpty(cancerType)) {
+//			sb.append(" and gm.genie_sample_id = gs.genie_sample_id")
+//			.append(" and cancer_type = :cancerType");
+//		}
+////		sb.append(" group by amino_acid_notation, amino_acid_position, gm.variant_classification ")
+//		sb.append(" group by amino_acid_notation, amino_acid_position, gm.category ")
+//		.append(" order by amino_acid_position ");
+//		Query<GenericLollipopPlotData> query = session.createNativeQuery(sb.toString())
+//				.setParameter("hugoSymbol", hugoSymbol);
+//		if (TypeUtils.notNullNotEmpty(cancerType)) {
+//			query.setParameter("cancerType", cancerType);
+//		}
+		
 		StringBuilder sb = new StringBuilder();
-		sb.append("select")
+		sb.append("select sum(y) as y, label1, group_concat(label2 separator '/') as label2, x, group_concat(group_as order by y desc separator ',') as group_as")
+		.append(" from (")
+		.append(" select")
 		.append(" count(amino_acid_notation) as y, ")
 		.append(" amino_acid_notation as label1,  ")
 		.append(" group_concat(variant_change separator '/') as label2,  ")
-		.append(" amino_acid_position as x ")
-		.append(" from genie_mutation ")
-		.append(" where hugo_symbol = :hugoSymbol and amino_acid_position is not null")
-		.append(" group by amino_acid_notation, amino_acid_position ")
-		.append(" order by amino_acid_position ");
+		.append(" amino_acid_position as x, ")
+		.append(" category as group_as")
+		.append(" from genie_mutation gm");
+		if (TypeUtils.notNullNotEmpty(cancerType)) {
+			sb.append(" , genie_sample gs ");
+		}
+		sb.append(" where hugo_symbol = :hugoSymbol and amino_acid_position is not null");
+		if (TypeUtils.notNullNotEmpty(cancerType)) {
+			sb.append(" and gm.genie_sample_id = gs.genie_sample_id")
+			.append(" and cancer_type = :cancerType");
+		}
+		sb.append(" group by amino_acid_notation, amino_acid_position, gm.category ")
+		.append(" order by amino_acid_position ) as sub")
+		.append(" group by label1, x ");
 		Query<GenericLollipopPlotData> query = session.createNativeQuery(sb.toString())
 				.setParameter("hugoSymbol", hugoSymbol);
+		if (TypeUtils.notNullNotEmpty(cancerType)) {
+			query.setParameter("cancerType", cancerType);
+		}
 		
 		return query.setResultTransformer(new ResultTransformer() {
 			private static final long serialVersionUID = 1L;
@@ -1271,5 +1325,26 @@ public class ModelDAO {
 		DevPassword pwd = session.createQuery(hql, DevPassword.class)
 				.setParameter("userId", userId).uniqueResult();
 		return pwd;
+	}
+
+	@Transactional
+	public List<GenieMutation> getGenieMutationMissingId() {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from GenieMutation where entrezId is null or entrezId = 0";
+		return session.createQuery(hql, GenieMutation.class)
+				.list();
+	}
+
+	@Transactional
+	public GenieMutation getGenieMutationByGeneName(String hugoSymbol) {
+		Session session = sessionFactory.getCurrentSession();
+		String hql = "from GenieMutation where hugoSymbol = :hugoSymbol and entrezId is not null and entrezId != 0";
+		List<GenieMutation> results = session.createQuery(hql, GenieMutation.class)
+				.setParameter("hugoSymbol", hugoSymbol)
+				.list();
+		if (results != null && !results.isEmpty()) {
+			return results.get(0);
+		}
+		return null;
 	}
 }

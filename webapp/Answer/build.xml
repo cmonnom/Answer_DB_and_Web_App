@@ -129,7 +129,7 @@
 		</target>
 	
 	<target name="package-training" depends="final-clean, compile, version, copy-resources-training" description="create a war file for training">
-		<zip destfile="${target.dir}/Answer.war" basedir="${web.dir}">
+		<zip destfile="${target.dir}/AnswerTraining.war" basedir="${web.dir}">
 		</zip>
 	</target>
 	
@@ -185,7 +185,7 @@
 		</target>
 	
 	<target name="scp-test-training" description="SCP training to answer server">
-		<scp file="${target.dir}/Answer.war" trust="yes"
+		<scp file="${target.dir}/AnswerTraining.war" trust="yes"
 			todir="${answer.test.username}:${answer.test.password}@${answer.test.host}:${answer.war.test.destination.path}"/>
 		<scp file="${target.dir}/html.zip" trust="yes"
 		todir="${answer.test.username}:${answer.test.password}@${answer.test.host}:${answer.war.test.destination.path}"/>

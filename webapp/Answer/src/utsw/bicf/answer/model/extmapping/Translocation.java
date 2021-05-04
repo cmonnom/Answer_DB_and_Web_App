@@ -292,11 +292,12 @@ public class Translocation {
 	}
 
 	public void formatFilters() {
-		filtersFormatted = ftlFilters.stream()
-		.filter(f -> !Variant.VALUE_FAIL.equals(f))
-		.map(f -> TypeUtils.splitCamelCaseString(f))
-		.collect(Collectors.joining(", "));
-		
+		if (ftlFilters != null) {
+			filtersFormatted = ftlFilters.stream()
+					.filter(f -> !Variant.VALUE_FAIL.equals(f))
+					.map(f -> TypeUtils.splitCamelCaseString(f))
+					.collect(Collectors.joining(", "));
+		}
 	}
 
 	public String getFtlSomaticStatus() {

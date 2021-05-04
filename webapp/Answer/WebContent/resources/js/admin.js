@@ -73,7 +73,7 @@ const Admin = {
               </v-card-title>
               <v-card-text>
               <v-text-field label="Password"
-              v-model="password" 
+              v-model="editPassword" 
               required
               :append-icon="showPasswordIcon ? 'visibility' : 'visibility_off'" 
               @click:append="() => (showPasswordIcon = !showPasswordIcon)"

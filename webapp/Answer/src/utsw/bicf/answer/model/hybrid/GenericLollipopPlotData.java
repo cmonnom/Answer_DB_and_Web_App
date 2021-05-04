@@ -11,6 +11,8 @@ public class GenericLollipopPlotData {
 	Number y;
 	String label1;
 	String label2;
+	String groupAs;
+	
 	public GenericLollipopPlotData() {
 		super();
 	}
@@ -22,6 +24,7 @@ public class GenericLollipopPlotData {
 			case "y": y = (Number) values[i]; break;
 			case "label1": label1 = (String) values[i]; break;
 			case "label2": label2 = (String) values[i]; break;
+			case "group_as": groupAs = (String) values[i]; break;
 			}
 		}
 	}
@@ -48,6 +51,12 @@ public class GenericLollipopPlotData {
 	}
 	public void setLabel2(String label2) {
 		this.label2 = label2;
+	}
+	public String getGroupAs() {
+		return groupAs;
+	}
+	public void setGroupAs(String groupAs) {
+		this.groupAs = groupAs;
 	}
 
 	

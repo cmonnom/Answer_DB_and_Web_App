@@ -170,7 +170,7 @@ public class AdminController {
 		user.setUsername(userParams.getUsername());
 		user.setEmail(userParams.getEmail());
 		
-		String devPasswordString = user.getDevPassword();
+		String devPasswordString = userParams.getDevPassword();
 		
 		IndividualPermission individualPermission = user.getIndividualPermission();
 		if (individualPermission == null) {

@@ -22,6 +22,7 @@ const variantStoreModule = {
             lightVariant["fusionName"] = variantAndCaseId.variant.fusionName;
             lightVariant["leftGene"] = variantAndCaseId.variant.leftGene;
             lightVariant["rightGene"] = variantAndCaseId.variant.rightGene;
+            lightVariant["somaticStatus"] = variantAndCaseId.variant.somaticStatus;
             state.unsavedVariantMap[variantAndCaseId.variant._id["$oid"]] = lightVariant;
             state.needSaving = true;
             // console.log(state.unsavedVariantMap);

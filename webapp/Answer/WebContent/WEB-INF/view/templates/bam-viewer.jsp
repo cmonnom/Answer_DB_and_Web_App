@@ -23,7 +23,7 @@ response.setDateHeader ("Expires", 0);
 								
 								<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/igv@2.2.5/dist/igv.min.js"></script> -->
 								<!-- <script src="https://cdn.jsdelivr.net/npm/igv@2.4.0/dist/igv.min.js" integrity="sha384-BzBUWTCtRcjC4nWXiyKFbrzTtsl2VbdZQneyaQtiRKOaeycZbQKYixzQccsVGAOm" crossorigin="anonymous"></script> -->
-								<script src="https://cdn.jsdelivr.net/npm/igv@2.6.2/dist/igv.min.js" integrity="sha384-Ing1sfL6mxDMiypkAFv1cSRtbUa/0I/PWcUbvDa28HTq8gPxD8keq8iq9Txe4eSp" crossorigin="anonymous"></script>
+								<script src="https://cdn.jsdelivr.net/npm/igv@2.7.9/dist/igv.min.js" integrity="sha384-dBf2VcAVtlmmfDF2dPZG5KUSh0M80qQetkbNWg+Tw04Ffjbn3yTvMXNXgLKGF6Lf" crossorigin="anonymous"></script>
 							</head>
 		
 							<body>

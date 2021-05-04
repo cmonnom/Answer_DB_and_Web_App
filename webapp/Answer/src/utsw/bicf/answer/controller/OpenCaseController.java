@@ -462,51 +462,52 @@ public class OpenCaseController {
 		passQCFilter.setBoolean(true);
 		filters.add(passQCFilter);
 		
-//		DataTableFilter dbFilter = new DataTableFilter("Disease Databases", Variant.FIELD_DISEASE_DATABASES);
-//		dbFilter.setType("snp");
-//		dbFilter.setCheckBox(true);
-//		dbFilter.setCategory("FILTER");
-//		dbFilter.setGroup("flag");
-//		dbFilter.setTooltip("Variant is in any of the databases below");
-//		filters.add(dbFilter);
-//		
-//		DataTableFilter regionFilter = new DataTableFilter("Avoid Troubled Regions", Variant.FIELD_TROUBLED_REGIONS);
-//		regionFilter.setType("snp");
-//		regionFilter.setCheckBox(true);
-//		regionFilter.setCategory("FILTER");
-//		regionFilter.setGroup("flag");
-//		regionFilter.setTooltip("Avoid any region below");
-//		filters.add(regionFilter);
+		DataTableFilter dbFilter = new DataTableFilter("Disease Databases", Variant.FIELD_DISEASE_DATABASES);
+		dbFilter.setType("snp");
+		dbFilter.setCheckBox(true);
+		dbFilter.setCategory("FILTER");
+		dbFilter.setGroup("flag");
+		dbFilter.setTooltip("Variant is in any of the databases below");
+		filters.add(dbFilter);
+		
+		DataTableFilter regionFilter = new DataTableFilter("Avoid Troubled Regions", Variant.FIELD_TROUBLED_REGIONS);
+		regionFilter.setType("snp");
+		regionFilter.setCheckBox(true);
+		regionFilter.setCategory("FILTER");
+		regionFilter.setGroup("flag");
+		regionFilter.setTooltip("Avoid any region below");
+		filters.add(regionFilter);
 
 		DataTableFilter annotatedFilter = new DataTableFilter("Annotated", "Not Annotated", Variant.FIELD_ANNOTATIONS);
 		annotatedFilter.setType("snp");
 		annotatedFilter.setBoolean(true);
 		filters.add(annotatedFilter);
 
-		DataTableFilter cosmicFilter = new DataTableFilter("In COSMIC", "Not In COSMIC", Variant.FIELD_IN_COSMIC);
-		cosmicFilter.setType("snp");
-		cosmicFilter.setBoolean(true);
-		filters.add(cosmicFilter);
-		
-		DataTableFilter clinvarFilter = new DataTableFilter("In ClinVar", "Not In ClinVar", Variant.FIELD_IN_CLINVAR);
-		clinvarFilter.setType("snp");
-		clinvarFilter.setBoolean(true);
-		filters.add(clinvarFilter);
-		
-		DataTableFilter repeatFilter = new DataTableFilter("Has Repeats", "No Repeats", Variant.FIELD_HAS_REPEATS);
-		repeatFilter.setType("snp");
-		repeatFilter.setBoolean(true);
-		filters.add(repeatFilter);
-		
-		DataTableFilter lcrFilter = new DataTableFilter("Is in LCR", "Not in LCR", Variant.FIELD_GNOMAD_LCR);
-		lcrFilter.setType("snp");
-		lcrFilter.setBoolean(true);
-		filters.add(lcrFilter);
-		
-		DataTableFilter artifactFilter = new DataTableFilter("Is an Artifact", "Not an Artifact", Variant.FIELD_LIKELY_ARTIFACT);
-		artifactFilter.setType("snp");
-		artifactFilter.setBoolean(true);
-		filters.add(artifactFilter);
+		//The following filters have been replaced by Disease Databases and Troubled Regions
+//		DataTableFilter cosmicFilter = new DataTableFilter("In COSMIC", "Not In COSMIC", Variant.FIELD_IN_COSMIC);
+//		cosmicFilter.setType("snp");
+//		cosmicFilter.setBoolean(true);
+//		filters.add(cosmicFilter);
+//		
+//		DataTableFilter clinvarFilter = new DataTableFilter("In ClinVar", "Not In ClinVar", Variant.FIELD_IN_CLINVAR);
+//		clinvarFilter.setType("snp");
+//		clinvarFilter.setBoolean(true);
+//		filters.add(clinvarFilter);
+//		
+//		DataTableFilter repeatFilter = new DataTableFilter("Has Repeats", "No Repeats", Variant.FIELD_HAS_REPEATS);
+//		repeatFilter.setType("snp");
+//		repeatFilter.setBoolean(true);
+//		filters.add(repeatFilter);
+//		
+//		DataTableFilter lcrFilter = new DataTableFilter("Is in LCR", "Not in LCR", Variant.FIELD_GNOMAD_LCR);
+//		lcrFilter.setType("snp");
+//		lcrFilter.setBoolean(true);
+//		filters.add(lcrFilter);
+//		
+//		DataTableFilter artifactFilter = new DataTableFilter("Is an Artifact", "Not an Artifact", Variant.FIELD_LIKELY_ARTIFACT);
+//		artifactFilter.setType("snp");
+//		artifactFilter.setBoolean(true);
+//		filters.add(artifactFilter);
 
 
 		DataTableFilter tafFilter = new DataTableFilter("Tumor Alt %", Variant.FIELD_TUMOR_ALT_FREQUENCY);

@@ -423,7 +423,7 @@ public class HomeController {
 				}
 				else {
 					//TODO once ready to send to Epic
-					APIController.sendReportToEpic(caseId, null, null, null, null, null, null, true, null, null, false, null, response, utils, caseSummary, modelDAO, fileProps, ensemblProps, otherProps);
+					APIController.sendReportToEpic(caseId, null, null, null, null, null, null, null, null, false, null, response, utils, caseSummary, modelDAO, fileProps, ensemblProps, otherProps);
 					if (response.getSuccess()) {
 						utils.markAsSentToEpic(response, caseId, qcAPI);
 						response.setSuccess(true);

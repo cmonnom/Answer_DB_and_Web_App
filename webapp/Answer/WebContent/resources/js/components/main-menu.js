@@ -115,14 +115,6 @@ Vue.component('main-menu', {
 		</v-list-tile-content>
 		</v-list-tile>
 		</v-slide-x-transition>
-		<!--
-		<v-tooltip bottom>
-			<v-btn slot="activator" icon v-if="showGoodies()" flat @click="activateGoodies" :class="goodiesActive ? 'error' : ''">
-				<v-icon>mdi-baguette</v-icon>
-			</v-btn>
-			<span>Bastille Day!</span>
-		</v-tooltip>
-			-->
 	</v-list>
 </v-navigation-drawer>`,
 	data() {
@@ -337,7 +329,12 @@ Vue.component('main-menu', {
 				if (this.isMinied) {
 					return this.baseUrl + '/resources/images/answer-logo-vertical-medium.png';
 				}
-				return this.baseUrl + '/resources/images/answer-logo-medium.png';
+				if (authType == 'dev') {
+					return this.baseUrl + '/resources/images/answer-logo-medium-training.png';
+				}
+				else {
+					return this.baseUrl + '/resources/images/answer-logo-medium.png';
+				}
 			}
 			else {
 				if (this.isMinied) {
@@ -376,10 +373,11 @@ Vue.component('main-menu', {
 			// makeItSnow();
 			// this.goodiesActive = !this.goodiesActive;
 			// bus.$emit("showEaster");
+			window.open(webAppRoot + "/goodies/index.html", "_blank");
 		},
 		showGoodies() {
 			var now = moment();
-			if (now.isBefore("2020-07-14") || now.isAfter("2020-07-15")) {
+			if (now.isBefore("2021-04-01") || now.isAfter("2021-04-05")) {
 				return false;
 			}
 			// return false;
@@ -390,11 +388,11 @@ Vue.component('main-menu', {
             // || userFullName == "Erika Villa") {
             //     return this.$route.name == "Home";
 			// }
-			if ( this.$route.name == "Home") {
-				return true;
-			}
-			this.goodiesActive = false;
-            return false;
+			// if ( this.$route.name == "Home") {
+			// 	return true;
+			// }
+			this.goodiesActive = true;
+            return true;
 		},
 		clearItemSelectedHandler() {
 			this.caseItemSelected = "";

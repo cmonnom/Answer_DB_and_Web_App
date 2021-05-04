@@ -267,7 +267,7 @@ Vue.component('fpkm-plot', {
                             },
                             hovertemplate: "%{text}: %{y}"
                         }
-                        var data = [allDataTrace, currentCaseTrace, outliersTrace];
+                        var data = [allDataTrace, outliersTrace, currentCaseTrace];
                         ymax = Math.max(1, chartData.max);
                         var layout = {
                             title: this.createPlotTitle(chartData.label, chartData.nbOfCases),

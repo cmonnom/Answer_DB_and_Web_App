@@ -92,7 +92,6 @@ public class HL7v251Factory {
 	String overrideOrder;
 	String overrideProviderIdName;
 	boolean humanReadable;
-	boolean includeFusion;
 	String beakerId;
 	String overrideTestName;
 	String overrideReportDate;
@@ -104,7 +103,7 @@ public class HL7v251Factory {
 			EnsemblProperties ensemblProps, OtherProperties otherProps,
 			String overridePatientName, String overrideMRN, String overrideDOB, 
 			String overrideGender, String overrideOrder, 
-			String overrideProviderIdName, boolean includeFusion,
+			String overrideProviderIdName,
 			String beakerId, String overrideTestName,
 			String overrideReportDate, 
 			ModelDAO modelDAO) {
@@ -123,7 +122,6 @@ public class HL7v251Factory {
 		this.overrideOrder = overrideOrder;
 		this.overrideProviderIdName = overrideProviderIdName;
 		
-		this.includeFusion = includeFusion;
 		this.beakerId = beakerId;
 		this.overrideTestName = overrideTestName;
 		this.overrideReportDate = overrideReportDate;
@@ -259,7 +257,8 @@ public class HL7v251Factory {
 		}
 		else if (report.getDateFinalized() != null) {
 			LocalDateTime finalizedData = LocalDateTime.parse(report.getDateFinalized(), TypeUtils.mongoDateTimeFormatter);
-			ZonedDateTime zonedDateTime = finalizedData.atZone(ZoneId.systemDefault());
+			ZonedDateTime zonedDateTime = ZonedDateTime.of(finalizedData, ZoneId.of("UTC"));
+			zonedDateTime = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault());
 			obr.getResultsRptStatusChngDateTime().getTime().setValue(zonedDateTime.format(TypeUtils.hl7DateTimeFormatter));
 		}
 		obr.getResultStatus().setValue("F"); //always final
@@ -290,12 +289,14 @@ public class HL7v251Factory {
 			variants.addAll(vList);
 		}
 		for (CNVReport cnv : report.getCnvs()) {
-			List<HL7Variant> vList = this.buildCNV(cnv, false);
-			variantsByOid.put(cnv.getMongoDBId().getOid(), vList.get(0));
-			variants.addAll(vList);
+			if (cnv != null && cnv.getMongoDBId() != null) {
+				List<HL7Variant> vList = this.buildCNV(cnv, false);
+				variantsByOid.put(cnv.getMongoDBId().getOid(), vList.get(0));
+				variants.addAll(vList);
+			}
 		}
-		if (includeFusion) {
-			for (TranslocationReport ftl : report.getTranslocations()) {
+		for (TranslocationReport ftl : report.getTranslocations()) {
+			if (ftl != null && ftl.getMongoDBId() != null) {
 				List<HL7Variant> vList = this.buildFTL(ftl, false);
 				variantsByOid.put(ftl.getMongoDBId().getOid(), vList.get(0));
 				variants.addAll(vList);
@@ -362,10 +363,12 @@ public class HL7v251Factory {
 			createCaseOBX(oru, LOINC.getCode("Description of ranges of DNA sequences examined"), obxGenePanel, null);
 		}
 		
-		NM obxTMB = new NM(oru.getMessage());
-		obxTMB.setValue(String.format("%.2f", caseSummary.getTumorMutationBurden()));
-		OBX tmbSegment = createCaseOBX(oru, LOINC.getCode("Gene mutations tested for [#] in Blood or Tissue by Molecular genetics method"), obxTMB, null);
-		tmbSegment.getUnits().getIdentifier().setValue("m/MB");
+		if (caseSummary.getTumorMutationBurden() != null) {
+			NM obxTMB = new NM(oru.getMessage());
+			obxTMB.setValue(String.format("%.2f", caseSummary.getTumorMutationBurden()));
+			OBX tmbSegment = createCaseOBX(oru, LOINC.getCode("Gene mutations tested for [#] in Blood or Tissue by Molecular genetics method"), obxTMB, null);
+			tmbSegment.getUnits().getIdentifier().setValue("m/MB");
+		}
 		
 		CWE obxMSI = new CWE(oru.getMessage());
 		LOINCItem msiLoinc = LOINC.getCode("Microsatellite instability [Interpretation] in Cancer specimen Qualitative");
@@ -483,10 +486,18 @@ public class HL7v251Factory {
 				v.setDnaChangeType("Substitution");
 			}
 			//AA Change Type
+			//TODO only pick one.
+			List<String> loincEffects = new ArrayList<String>();
 			for (String effect : variant.getEffects()) {
 				String loincKey = LOINCAAChangeType.getLoincCodeKeyFromEffect(effect);
 				if (loincKey != null) {
-					v.getAaChangeTypes().add(loincKey);
+					loincEffects.add(loincKey);
+				}
+			}
+			if (!loincEffects.isEmpty()) {
+				String mainEffect = LOINCAAChangeType.selectMainEffect(loincEffects);
+				if (mainEffect != null) {
+					v.setAaMainChangeType(mainEffect);
 				}
 			}
 			//DNA Region
@@ -588,7 +599,7 @@ public class HL7v251Factory {
 			}
 			
 		}
-		else if (gva.getType().contentEquals("translocation") && includeFusion) {
+		else if (gva.getType().contentEquals("translocation")) {
 			Translocation ftl = requestUtils.getTranslocationDetails(gva.getOid());
 			HL7Variant v12 = new HL7Variant();
 			v12.setLeftGene(ftl.getLeftGene());
@@ -715,7 +726,7 @@ public class HL7v251Factory {
 //		v1.setHgncCode(fetchHGNC(ftl.getLeftGene()));
 //		v2.setGene(ftl.getRightGene());
 //		v2.setHgncCode(fetchHGNC(ftl.getRightGene()));
-		Translocation variant = requestUtils.getTranslocationDetails(ftl.getMongoDBId().getOid());
+		Translocation variant = requestUtils.getTranslocationDetails(ftl.getMongoDBId().getOid()); //possibly no mongo id for old cases?
 //		v1.setGene(variant.getLeftGene());
 		
 		v12.setLeftGene(ftl.getLeftGene());
@@ -759,13 +770,24 @@ public class HL7v251Factory {
 		}
 		v12.setFusedGenes(ftl.getLeftGene() + "~" + ftl.getRightGene());
 		
-		String chrLeft = variant.getLeftBreakpoint().split(":")[0];
-		String chrRight = variant.getRightBreakpoint().split(":")[0];
-		Integer left = Integer.parseInt(variant.getLeftBreakpoint().split(":")[1]);
-		Integer right = Integer.parseInt(variant.getRightBreakpoint().split(":")[1]);
+		String chrLeft = null;
+		Integer left = null;
+		String chrRight = null;
+		Integer right = null;
+		
+		if (notNullOrEmpty(variant.getLeftBreakpoint())) {
+			chrLeft = variant.getLeftBreakpoint().split(":")[0];
+			left = Integer.parseInt(variant.getLeftBreakpoint().split(":")[1]);
+		}
+		if (notNullOrEmpty(variant.getRightBreakpoint())) {
+			chrRight = variant.getRightBreakpoint().split(":")[0];
+			right = Integer.parseInt(variant.getRightBreakpoint().split(":")[1]);
+		}
+		if (notNullOrEmpty(chrLeft) && notNullOrEmpty(chrRight))
 		v12.setLeftDNARegion(chrLeft + "-" + chrRight);
 		
-		if (variant.getChrType() != null && variant.getChrType().equals("INTRACHROMOSOMAL")) {
+		if (variant.getChrType() != null && variant.getChrType().equals("INTRACHROMOSOMAL")
+				&& left != null && right != null) {
 			v12.setStructuralVariantLength(Math.abs(left - right));
 			v12.setStructuralVariantInnerStartEnd(new Integer[] {Math.min(left,  right), Math.max(left,  right)});
 		}
@@ -1025,22 +1047,19 @@ public class HL7v251Factory {
 			createVariantOBX(oru, currentVariantId, aaChangeLoinc, obxAAChange);
 		}
 		//AA Change Type
-		LOINCItem aaChangeTypeLoinc = LOINC.getCode("Amino acid change [Type]");
-		int counter = 1;
-		for (String loincKey : v.getAaChangeTypes()) {
-			String[] loincCode = LOINCAAChangeType.getLoincCode(loincKey);
+		if (this.notNullOrEmpty(v.getAaMainChangeType())) {
+			LOINCItem aaChangeTypeLoinc = LOINC.getCode("Amino acid change [Type]");
+			String[] loincCode = LOINCAAChangeType.getLoincCode(v.getAaMainChangeType());
 			CWE obxAAChangeType = new CWE(oru.getMessage());
 			obxAAChangeType.getIdentifier().setValue(loincCode[1]);
 			obxAAChangeType.getText().setValue(loincCode[0]);
 			obxAAChangeType.getNameOfCodingSystem().setValue(aaChangeTypeLoinc.getSystem());
-			String subVariantId = currentVariantId + "." + utils.getNextVariantIdSub(counter) ;
-			createVariantOBX(oru, subVariantId, aaChangeTypeLoinc, obxAAChangeType);
-			counter++;
+			createVariantOBX(oru, currentVariantId, aaChangeTypeLoinc, obxAAChangeType);
 		}
 		//DNA Change type
 		
 		//Discrete genetic variant
-		counter = 1;
+		int counter = 1;
 		String notation = v.getTranscript();
 		if (this.notNullOrEmpty(v.getGene())) {
 			notation += "(" + v.getGene() + ")";

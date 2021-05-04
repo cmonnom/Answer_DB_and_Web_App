@@ -28,7 +28,7 @@ public class HL7Variant {
 	String cNotation;
 	String pNotation;
 	String dnaChangeType;
-	Set<String> aaChangeTypes = new HashSet<String>();
+	String aaMainChangeType;
 	Integer copyNumber;
 	Integer structuralVariantLength;
 	Integer[] structuralVariantInnerStartEnd;
@@ -151,12 +151,6 @@ public class HL7Variant {
 	}
 	public void setDnaChangeType(String dnaChangeType) {
 		this.dnaChangeType = dnaChangeType;
-	}
-	public Set<String> getAaChangeTypes() {
-		return aaChangeTypes;
-	}
-	public void setAaChangeTypes(Set<String> aaChangeTypes) {
-		this.aaChangeTypes = aaChangeTypes;
 	}
 	public Integer getCopyNumber() {
 		return copyNumber;
@@ -307,6 +301,12 @@ public class HL7Variant {
 	}
 	public void setCosmicVVariantId(String cosmicVVariantId) {
 		this.cosmicVVariantId = cosmicVVariantId;
+	}
+	public String getAaMainChangeType() {
+		return aaMainChangeType;
+	}
+	public void setAaMainChangeType(String aaMainChangeType) {
+		this.aaMainChangeType = aaMainChangeType;
 	}
 	
 	

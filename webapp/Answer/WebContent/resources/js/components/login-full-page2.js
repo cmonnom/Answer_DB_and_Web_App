@@ -11,7 +11,7 @@ Vue.component('login-full-page2', {
     <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" /> 
     </div>
     <v-toolbar-title class="headline">
-      Answer
+      Answer <span v-text="authType == 'dev' ? 'Training' : ''"></span>
     </v-toolbar-title>
     <div class="toolbar-image margin-auto" slot="extension">
       <img class="toolbar-image pt-2 pb-2" alt="ngs logo"
@@ -32,7 +32,7 @@ Vue.component('login-full-page2', {
     <img class="toolbar-image pt-1 pb-1" :src="dataUrlRoot + '/resources/images/answer-logo-icon-medium.png'" />
   </div>
   <v-toolbar-title class="headline">
-    Answer
+    Answer <span v-text="authType == 'dev' ? 'Training' : ''"></span>
   </v-toolbar-title>
   <v-spacer></v-spacer>
   <div class="toolbar-image">

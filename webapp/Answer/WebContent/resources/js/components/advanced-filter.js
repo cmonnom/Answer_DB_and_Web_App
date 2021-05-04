@@ -487,6 +487,8 @@ Vue.component('advanced-filter', {
             effects: null,
             failedFilters: null,
             ftlFilters: null,
+            troubledRegionFilters: null,
+            diseaseDatabaseFilters: null,
             checkBoxDiseaseDatabaseLabelsByValue: {},
             checkBoxTroubledRegionLabelsByValue: {},
             flagFilters: [],

@@ -18,8 +18,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -27,13 +29,17 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpSession;
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -45,6 +51,7 @@ import ca.uhn.hl7v2.HL7Exception;
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
 import utsw.bicf.answer.dao.ModelDAO;
+import utsw.bicf.answer.db.api.utils.EnsemblRequestUtils;
 import utsw.bicf.answer.db.api.utils.RequestUtils;
 import utsw.bicf.answer.model.ClinicalTest;
 import utsw.bicf.answer.model.CosmicFusion;
@@ -61,6 +68,7 @@ import utsw.bicf.answer.model.User;
 import utsw.bicf.answer.model.extmapping.CosmicRawData;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
+import utsw.bicf.answer.model.extmapping.ensembl.EnsemblResponse;
 import utsw.bicf.answer.reporting.ehr.HL7v251Factory;
 import utsw.bicf.answer.reporting.finalreport.FinalReportPDFTemplate;
 import utsw.bicf.answer.reporting.finalreport.FinalReportTemplateConstants;
@@ -214,6 +222,8 @@ public class APIController {
 						importCNA(cnaDataFile, toSave, sampleIdFKey);
 						importFusion(fusionDataFile, toSave, sampleIdFKey);
 						
+						fixGeneIds();
+						
 						long afterRequest = System.currentTimeMillis();
 						System.out.println("After request " + (afterRequest - now) + "ms");
 						
@@ -345,10 +355,19 @@ public class APIController {
 		Pattern variantPattern = Pattern.compile("([a-z]\\.)([A-Z]+)([0-9]+)([*_=A-Z])([0-9a-z]*)");
 		while ((line = reader2.readLine()) != null ) {
 			String[] items = line.split("\t");
+			String variantClassification = items[headerByPos.get("Variant_Classification")];
+			String notation = items[headerByPos.get("HGVSp_Short")];
+			if (!TypeUtils.notNullNotEmpty(variantClassification) || variantClassification.equals("Intron")
+					|| !TypeUtils.notNullNotEmpty(notation)) {
+				continue;
+			}
 			GenieMutation m = new GenieMutation();
 			m.setHugoSymbol(items[headerByPos.get("Hugo_Symbol")]);
-			m.setEntrezId(Integer.parseInt(items[headerByPos.get("Entrez_Gene_Id")]));
-			m.setVariantClassification(items[headerByPos.get("Variant_Classification")]);
+			String geneId = items[headerByPos.get("Entrez_Gene_Id")];
+			if (TypeUtils.notNullNotEmpty(geneId)) {
+				m.setEntrezId(Integer.parseInt(geneId));
+			}
+			m.setVariantClassification(variantClassification);
 			m.setVariantType(items[headerByPos.get("Variant_Type")]);
 			m.setTumorSampleBarcode(items[headerByPos.get("Tumor_Sample_Barcode")]);
 //							Integer fkey = modelDAO.getGenieSampleIdByTumorBarcode(m.getTumorSampleBarcode());
@@ -362,7 +381,6 @@ public class APIController {
 			if (endString != null) {
 				m.setEndPos(Integer.parseInt(endString));
 			}
-			String notation = items[headerByPos.get("HGVSp_Short")];
 			m.setVariantNotation(notation);
 			if (notation != null && !notation.equals("")) {
 				Matcher matcher = variantPattern.matcher(notation);
@@ -384,6 +402,12 @@ public class APIController {
 					}
 				}
 			}
+			//select category (used in lollipop plot)
+			String cat = GenieMutation.CATEGORY_MAP.get(m.getVariantClassification());
+			if (cat == null) {
+				cat = "Other";
+			}
+			m.setCategory(cat);
 			
 			toSave.add(m);
 			counter++;
@@ -400,6 +424,84 @@ public class APIController {
 		reader2.close();
 	}
 
+	/**
+	 * Fix missing gene ids in mutation table
+	 * @throws ParserConfigurationException 
+	 * @throws SAXException 
+	 * @throws JAXBException 
+	 * @throws IOException 
+	 * @throws URISyntaxException 
+	 * @throws UnsupportedOperationException 
+	 * @throws ClientProtocolException 
+	 */
+	public void fixGeneIds() throws ClientProtocolException, UnsupportedOperationException, URISyntaxException, IOException, JAXBException, SAXException, ParserConfigurationException {
+		List<GenieMutation> missingGeneIds = modelDAO.getGenieMutationMissingId();
+		System.out.println("Fixing missing Entrez Id " + missingGeneIds.size() + " missing.");
+		if (missingGeneIds.isEmpty()) {
+			System.out.println("Nothing to fix");
+			return;
+		}
+		EnsemblRequestUtils utils = new EnsemblRequestUtils(ensemblProps, otherProps);
+		List<Object> toSave = new ArrayList<Object>();
+		List<GenieMutation> stillMissing = new ArrayList<GenieMutation>();
+		Map<String, GenieMutation> alreadyFound = new HashMap<String, GenieMutation>();
+		Set<String> cantFind = new HashSet<String>();
+		for (GenieMutation mut : missingGeneIds) {
+			if (!cantFind.contains(mut.getHugoSymbol())) {
+				GenieMutation possibleId = alreadyFound.get(mut.getHugoSymbol());
+				if (possibleId == null) {
+					possibleId = modelDAO.getGenieMutationByGeneName(mut.getHugoSymbol());
+				}
+				if (possibleId == null) {
+					EnsemblResponse ensembl = utils.fetchEnsembl(mut.getHugoSymbol());
+					possibleId = fetchGenieMutationFromEnsembl(ensembl, mut.getHugoSymbol());
+					if (possibleId == null) {
+						ensembl = utils.fetchEnsembl(mut.getHugoSymbol(), true);
+						possibleId = fetchGenieMutationFromEnsembl(ensembl, mut.getHugoSymbol());
+					}
+				}
+				if (possibleId != null) {
+					mut.setEntrezId(possibleId.getEntrezId());
+					toSave.add(mut);
+					alreadyFound.put(possibleId.getHugoSymbol(), possibleId);
+				}
+				else {
+					//maintain a list of impossible to find hugo symbols
+					//so that they can be skipped over next time (avoid MysQL and APIs)
+					stillMissing.add(mut);
+					cantFind.add(mut.getHugoSymbol());
+					System.out.println("Missing EntrezId: " + mut.getGenieMutationId() + " " + mut.getHugoSymbol() + " will be deleted");
+				}
+			}
+			else {
+				stillMissing.add(mut);
+			}
+		}
+		modelDAO.saveBatch(toSave);
+		for (GenieMutation mut : stillMissing) {
+			modelDAO.deleteObject(mut);
+		}
+		System.out.println("Fixed: " + toSave.size());
+		
+	}
+	
+	private GenieMutation fetchGenieMutationFromEnsembl(EnsemblResponse ensembl, String symbol) {
+		GenieMutation possibleId = null;
+		if (ensembl == null) {
+			return null;
+		}
+		else {
+			ensembl.init();
+		}
+		if (ensembl != null && TypeUtils.notNullNotEmpty(ensembl.getEntrezId())) {
+			Integer entrezId = Integer.parseInt(ensembl.getEntrezId());
+			possibleId = new GenieMutation();
+			possibleId.setEntrezId(entrezId);
+			possibleId.setHugoSymbol(symbol);
+		}
+		return possibleId;
+	}
+	
 	public void importCNA(File cnaDataFile, List<Object> toSave, Map<String, Integer> sampleIdFKey)
 			throws FileNotFoundException, IOException {
 		int counter;
@@ -835,7 +937,6 @@ public class APIController {
 			@RequestParam(required = false) String overrideGender, 
 			@RequestParam(required = false) String overrideOrder, 
 			@RequestParam(required = false) String overrideProviderIdName,
-			@RequestParam(required = false) boolean includeFusion,
 			@RequestParam(required = false) String beakerId,
 			@RequestParam(required = false) String overrideTestName,
 			@RequestParam(required = false) boolean hidePatientInfo,
@@ -858,16 +959,16 @@ public class APIController {
 		OrderCase caseSummary = utils.getCaseSummary(caseId);
 		
 		String res = testHL7Report(caseId, overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder,
-				overrideProviderIdName, includeFusion, beakerId, overrideTestName, overrideReportDate, hl7Only,
+				overrideProviderIdName, beakerId, overrideTestName, overrideReportDate, hl7Only,
 				utils, caseSummary,
 				modelDAO, fileProps, ensemblProps, otherProps).createObjectJSON();
 		
-	
+		httpSession.invalidate();
 		return res;
 	}
 
 	public static AjaxResponse testHL7Report(String caseId, String overridePatientName, String overrideMRN, String overrideDOB,
-			String overrideGender, String overrideOrder, String overrideProviderIdName, boolean includeFusion,
+			String overrideGender, String overrideOrder, String overrideProviderIdName,
 			String beakerId, String overrideTestName, String overrideReportDate, Boolean hl7Only,
 			RequestUtils utils, OrderCase caseSummary,
 			ModelDAO modelDAO, FileProperties fileProps, EnsemblProperties ensemblProps,
@@ -879,6 +980,12 @@ public class APIController {
 		if (caseSummary == null) {
 			response.setMessage("Case " + caseId + " does not exist.");
 			return response;
+		}
+		if (TypeUtils.notNullNotEmpty(overrideOrder)) {
+			caseSummary.setHl7OrderId(overrideOrder);
+		}
+		if (TypeUtils.notNullNotEmpty(beakerId)) {
+			caseSummary.setHl7SampleId(beakerId);
 		}
 		if (caseSummary.getHl7OrderId() == null || caseSummary.getHl7SampleId() == null
 				|| caseSummary.getHl7OrderId().equals("N/A") || caseSummary.getHl7SampleId().equals("N/A")) {
@@ -925,7 +1032,7 @@ public class APIController {
 			File pdfFile = pdfReport.saveFinalized(true);
 			HL7v251Factory hl7Factory = new HL7v251Factory(reportDetails, caseSummary, utils, pdfFile, ensemblProps, otherProps, 
 					overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder,
-					overrideProviderIdName, includeFusion, beakerId, overrideTestName, overrideReportDate, modelDAO);
+					overrideProviderIdName, beakerId, overrideTestName, overrideReportDate, modelDAO);
 			String hl7 = hl7Factory.reportToHL7(true);
 //			if (hl7Only) {
 //				return hl7;
@@ -950,7 +1057,6 @@ public class APIController {
 			@RequestParam(required = false) String overrideGender, 
 			@RequestParam(required = false) String overrideOrder, 
 			@RequestParam(required = false) String overrideProviderIdName,
-			@RequestParam(required = false) boolean includeFusion,
 			@RequestParam(required = false) String beakerId,
 			@RequestParam(required = false) String overrideTestName,
 			@RequestParam(required = false) boolean hidePatientInfo,
@@ -982,16 +1088,16 @@ public class APIController {
 		}
 		
 		sendReportToEpic(caseId, overridePatientName, overrideMRN, overrideDOB, overrideGender, overrideOrder,
-				overrideProviderIdName, includeFusion, beakerId, overrideTestName, hidePatientInfo, overrideReportDate,
+				overrideProviderIdName, beakerId, overrideTestName, hidePatientInfo, overrideReportDate,
 				response, utils, caseSummary,
 				modelDAO, fileProps, ensemblProps, otherProps);
 
-	
+		httpSession.invalidate();
 		return response.createObjectJSON();
 	}
 
 	public static void sendReportToEpic(String caseId, String overridePatientName, String overrideMRN, String overrideDOB,
-			String overrideGender, String overrideOrder, String overrideProviderIdName, boolean includeFusion,
+			String overrideGender, String overrideOrder, String overrideProviderIdName,
 			String beakerId, String overrideTestName, boolean hidePatientInfo, String overrideReportDate,
 			AjaxResponse response, RequestUtils utils, OrderCase caseSummary,
 			ModelDAO modelDAO, FileProperties fileProps, EnsemblProperties ensemblProps,
@@ -1039,7 +1145,7 @@ public class APIController {
 					overrideDOB, 
 					overrideGender, 
 					overrideOrder,
-					overrideProviderIdName, includeFusion, beakerId, overrideTestName,
+					overrideProviderIdName, beakerId, overrideTestName,
 					overrideReportDate, modelDAO);
 			String hl7 = hl7Factory.reportToHL7(false);
 			System.out.println(hl7);

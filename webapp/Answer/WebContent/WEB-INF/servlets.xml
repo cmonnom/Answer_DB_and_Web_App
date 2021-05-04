@@ -42,6 +42,7 @@
 		<mvc:resources location="file:/opt/answer/search/html/" mapping="/search/**" />
 	<mvc:resources location="file:/opt/answer/links/media/" mapping="/media/**" />
 	<mvc:resources location="file:/opt/answer/links/images/" mapping="/images/**" />
+	<mvc:resources location="file:/opt/answer/goodies/" mapping="/goodies/**" />
 
 	<!-- Define Spring MVC view resolver -->
 	<bean	id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">

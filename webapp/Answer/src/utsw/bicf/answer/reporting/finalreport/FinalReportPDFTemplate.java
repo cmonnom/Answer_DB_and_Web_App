@@ -847,7 +847,8 @@ public class FinalReportPDFTemplate {
 		List<IndicatedTherapy> sortedItems = items.stream().sorted(new Comparator<IndicatedTherapy>() {
 			@Override
 			public int compare(IndicatedTherapy o1, IndicatedTherapy o2) {
-				if (o1.getTier() != null && o2.getTier() != null) {
+				if (o1.getTier() != null && o2.getTier() != null
+						&& o1.getDrugs() != null && o2.getDrugs() != null) {
 					int compared = o1.getTier().compareTo(o2.getTier());
 					//sort by drugs after tier
 					if (compared == 0) {

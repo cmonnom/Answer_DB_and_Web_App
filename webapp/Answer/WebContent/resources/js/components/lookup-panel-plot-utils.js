@@ -13,6 +13,42 @@ Vue.component('lookup-panel-plot-utils', {
                 'toggleSpikelines', 'autoScale2d'],
                 responsive: true
             },
+            plotlyConfigWithReset: {
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['sendDataToCloud', 'editInChartStudio', 'select2d',
+                'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian',
+                'toggleSpikelines', 'autoScale2d'],
+                modeBarButtonsToAdd: [
+                    {
+                        name: 'Color Palette',
+                        icon: Plotly.Icons.pencil,
+                        direction: 'up',
+                        click: gd => {
+                          this.getNextColorPalette();
+                          for (var i = 0; i < this.categoryIndices.length; i++) {
+                              var trace = document.getElementById(gd.id).data[this.categoryIndices[i]];
+                              var update = {'marker':{color: this[this.currentColorPalette][trace.name],
+                                line: {
+                                    color: "#edf6f9",
+                                    width: 4
+                                  }}};
+                            Plotly.restyle(gd.id, update, [this.categoryIndices[i]]);
+                        }
+                        //   this.$emit("fetchGene-lollipop-plot-only");
+                      }
+                    },
+                    {
+                      name: 'Reset',
+                      icon: Plotly.Icons.undo,
+                      direction: 'up',
+                      click: gd => {
+                        this.$emit("fetchGene-lollipop-plot-only");
+                        }
+                    },
+                  ],
+                responsive: true
+            },
             cividisColors: {
                 "blue75": "#38486b", //blue75
                 "Deletion": "#38486b", //blue75
@@ -32,7 +68,39 @@ Vue.component('lookup-panel-plot-utils', {
                 "#7a7977", //blue5
                 "#fde345", //yellow5
             ],
-            plotsToPurge: []
+            cividisCategories: {
+                "Missense": "#E4CF5B",
+                "Truncating": "#07090D",
+                "Splice": "#002566",
+                "Inframe": "#8B8779",
+                "Other": "#CDBC68",
+            },
+            viridisCategories: {
+                "Missense": "#F8E620",
+                "Truncating": "#07090D",
+                "Splice": "#68CD5B",
+                "Inframe": "#831DAF",
+                "Other": "#32658E",
+            },
+            customCategories: {
+                "Missense": "#E9C46A",
+                "Truncating": "#07090D",
+                "Splice": "#E76F51",
+                "Inframe": "#2A9D8F",
+                "Other": "#F4A261",
+            },
+            variantCategoryLines: {
+                "Missense": "#E4CF5B",
+                "Truncating": "#07090D",
+                "Splice": "#FFFFFF",
+                "Inframe": "#A39A76",
+                "Other": "#CDCCCB",
+            },
+            colorPalettes: ["customCategories", "viridisCategories", "cividisCategories"],
+            currentColorPalette: "customCategories",
+            categoryIndices: [],
+            lollipopSize: 6,
+            plotsToPurge: [],
         }
 
     },
@@ -158,10 +226,15 @@ Vue.component('lookup-panel-plot-utils', {
         buildHorizontalBarPlot(response) {
             var chartData = response.data;
             var trace = chartData.trace;
+            var callback = chartData.callback;
             trace.type = "bar";
             trace.orientation = "h";
             trace.text = trace.labels;
-            trace.marker = { color: this.cividisColors.blue75};
+            var colors = [];
+            for (var i =0; i < trace.labels.length; i++) {
+                 colors.push(this.cividisColors.blue75)
+            }
+            trace.marker = { color: colors};
             trace.hovertemplate = "%{text}<extra></extra>"
             var data = [trace];
             var layout = {
@@ -181,48 +254,73 @@ Vue.component('lookup-panel-plot-utils', {
             this.$nextTick(() => {
                 Plotly.newPlot(chartData.plotId, data, layout, this.plotlyConfig);
                 this.plotsToPurge.push(chartData.plotId);
+
+                if (callback) {
+                    var thePlot = document.getElementById(chartData.plotId);
+                    this.addCallbackOnClick(thePlot, callback);
+                }
             });
         },
-        updateLolliplotPlot(plotId, url, currentGene) {
+        addCallbackOnClick(thePlot, callback) {
+            thePlot.on('plotly_click', data => {
+                var param = null;
+                for (var i = 0; i < data.points.length; i++) {
+                    param = data.points[i].y;
+                }
+                this.$emit(callback, param);
+            });
+        },
+        updateLolliplotPlot(plotId, url, currentGene, cancerType) {
             return new Promise((resolve, reject) => {
             axios.get(webAppRoot + url, {
                 params: {
                     hugoSymbol: currentGene,
                     plotId: plotId,
+                    cancerType: cancerType
                 }
             })
                 .then(response => {
                     if (response.data.isAllowed && response.data.success) {
+                        this.categoryIndices = [];
                         var chartData = response.data.payload;
-                        var trace = chartData.trace;
-                        if (!trace) {
+                        var traces = chartData.traces;
+                        if (!traces) {
                             resolve({success: false});
                             return;
                         }
-                        trace.type = "scattergl";
-                        trace.mode = 'markers';
-                        trace.marker = { size: 9, color: this.cividisColors.blue75};
-                        trace.text = trace.labels;
-                        trace.yaxis = "y";
-                        trace.opacity = 0.8;
-                        trace.hovertemplate = "%{text}<extra></extra>"
                         var data = [];
                         var shapes = [];
-                        var lineTraces = trace.x.map((x,index) => ({
-                            type: 'scattergl',
-                            mode: "lines",
-                            x: [x, x],
-                            y: [0, trace.y[index]],
-                            line: {
-                                color:'grey',
-                                width: 1
-                            },
-                            hoverinfo:'skip'
+                        for (var i = 0; i < traces.length; i++) {
+                            var trace = traces[i];
+                            trace.type = "scattergl";
+                            trace.mode = 'markers';
+                            trace.marker = { size: this.lollipopSize, color: this[this.currentColorPalette][trace.name],
+                                line: {
+                                    color: "#edf6f9",
+                                    width: 1
+                                  }
+                                };
+                            trace.text = trace.labels;
+                            trace.yaxis = "y";
+                            trace.opacity = 1;
+                            trace.hovertemplate = "%{text}<extra></extra>"
+                            var lineTraces = trace.x.map((x,index) => ({
+                                type: 'scattergl',
+                                mode: "lines",
+                                x: [x, x],
+                                y: [0, trace.y[index]],
+                                line: {
+                                    color:'grey',
+                                    width: 0.5
+                                },
+                                hoverinfo:'skip'
+                            }
+                                )
+                            );
+                            data.push(...lineTraces);
+                            this.categoryIndices.push(data.length);
+                            data.push(trace);
                         }
-                            )
-                        );
-                        data.push(...lineTraces);
-                        data.push(trace);
                         var annotations = [];
                         var y1Even = chartData.maxY * -0.1;
                         var y0Even = y1Even * 0.1;
@@ -295,7 +393,7 @@ Vue.component('lookup-panel-plot-utils', {
                                
                         }
                         this.$nextTick(() => {
-                            Plotly.newPlot(chartData.plotId, data, layout, this.plotlyConfig);
+                            Plotly.newPlot(chartData.plotId, data, layout, this.plotlyConfigWithReset);
                             this.plotsToPurge.push(chartData.plotId);
                             //need to hide tick labels below 0. Use d3
                             var axisTickLabels = Plotly.d3.selectAll("#" + chartData.plotId + " .yaxislayer-above").selectAll('text')[0];
@@ -315,7 +413,7 @@ Vue.component('lookup-panel-plot-utils', {
                         });
                     }
                     else {
-                        this.handleDialogs(response.data, this.updateLolliplotPlot.bind(null, plotId, url));
+                        this.handleDialogs(response.data, this.updateLolliplotPlot.bind(null, plotId, url, currentGene, cancerType));
                     }
                 })
                 .catch(error => {
@@ -325,6 +423,11 @@ Vue.component('lookup-panel-plot-utils', {
                     });
                 });
             });
+        },
+        getNextColorPalette() {
+            var currentIndex = this.colorPalettes.indexOf(this.currentColorPalette);
+            var nextIndex = (currentIndex + 1) % this.colorPalettes.length;
+            this.currentColorPalette = this.colorPalettes[nextIndex];
         },
         getPlotTopMargin() {
             return this.standalone ? 30 : null;

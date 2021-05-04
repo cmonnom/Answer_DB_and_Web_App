@@ -7,11 +7,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,10 +38,15 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.TrustStrategy;
 import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -52,7 +59,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import utsw.bicf.answer.clarity.api.utils.TypeUtils;
 import utsw.bicf.answer.controller.serialization.AjaxResponse;
-import utsw.bicf.answer.controller.serialization.GeneVariantAndAnnotation;
 import utsw.bicf.answer.controller.serialization.Utils;
 import utsw.bicf.answer.dao.ModelDAO;
 import utsw.bicf.answer.model.AnswerDBCredentials;
@@ -67,29 +73,22 @@ import utsw.bicf.answer.model.extmapping.CNSData;
 import utsw.bicf.answer.model.extmapping.CNV;
 import utsw.bicf.answer.model.extmapping.CNVPlotData;
 import utsw.bicf.answer.model.extmapping.CNVPlotDataRaw;
-import utsw.bicf.answer.model.extmapping.CNVReport;
 import utsw.bicf.answer.model.extmapping.CaseAnnotation;
 import utsw.bicf.answer.model.extmapping.CloudBams;
 import utsw.bicf.answer.model.extmapping.ExistingReports;
 import utsw.bicf.answer.model.extmapping.FPKMPerCaseData;
 import utsw.bicf.answer.model.extmapping.ITD;
-import utsw.bicf.answer.model.extmapping.IndicatedTherapy;
 import utsw.bicf.answer.model.extmapping.MutationalSignatureData;
 import utsw.bicf.answer.model.extmapping.OrderCase;
 import utsw.bicf.answer.model.extmapping.Report;
 import utsw.bicf.answer.model.extmapping.SelectedVariantIds;
 import utsw.bicf.answer.model.extmapping.TMBPerCaseData;
 import utsw.bicf.answer.model.extmapping.Translocation;
-import utsw.bicf.answer.model.extmapping.TranslocationReport;
 import utsw.bicf.answer.model.extmapping.Trial;
 import utsw.bicf.answer.model.extmapping.Variant;
 import utsw.bicf.answer.model.extmapping.Virus;
 import utsw.bicf.answer.model.extmapping.WhiskerPerCaseData;
 import utsw.bicf.answer.model.hybrid.AnswerLowExonCoverage;
-import utsw.bicf.answer.model.hybrid.PatientInfo;
-import utsw.bicf.answer.model.hybrid.PubMed;
-import utsw.bicf.answer.model.hybrid.SampleLowCoverageFromQC;
-import utsw.bicf.answer.reporting.parse.BiomarkerTrialsRow;
 import utsw.bicf.answer.reporting.parse.MDAReportTemplate;
 import utsw.bicf.answer.security.AzureOAuth;
 import utsw.bicf.answer.security.NCBIProperties;
@@ -129,10 +128,36 @@ public class RequestUtils {
 	private HttpPost requestPost = null;
 	private HttpPut requestPut = null;
 	private HttpClient client = HttpClientBuilder.create().build();
+	private HttpClient clientNoSSL = buildNoSSLClient();
 	private ObjectMapper mapper = new ObjectMapper();
 
 	private void addAuthenticationHeader(HttpGet requestMethod) {
 		requestMethod.setHeader(HttpHeaders.AUTHORIZATION, createAuthHeader());
+	}
+
+	private HttpClient buildNoSSLClient() {
+		 CloseableHttpClient httpClient = null;
+		    try {
+		        httpClient = HttpClients.custom().
+		                setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).
+		                setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy()
+		                {
+		                    public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException
+		                    {
+		                        return true;
+		                    }
+		                }).build()).build();
+		    } catch (KeyManagementException e) {
+		    	System.out.println("KeyManagementException in creating http client instance");
+		        e.printStackTrace();
+		    } catch (NoSuchAlgorithmException e) {
+		    	e.printStackTrace();
+		    	System.out.println("NoSuchAlgorithmException in creating http client instance");
+		    } catch (KeyStoreException e) {
+		    	e.printStackTrace();
+		    	System.out.println("KeyStoreException in creating http client instance");
+		    }
+		    return httpClient;
 	}
 
 	private void addAuthenticationHeader(HttpPost requestMethod) {
@@ -1775,7 +1800,7 @@ public class RequestUtils {
 				requestPost.setEntity(entity);
 //				requestPost.setHeader("Accept", "application/json");
 //				requestPost.setHeader("Content-type", "application/json");
-				response = client.execute(requestPost);
+				response = clientNoSSL.execute(requestPost);
 				statusCode = response.getStatusLine().getStatusCode();
 				if (statusCode == HttpStatus.SC_OK) {
 					ajaxResponse.setSuccess(true);
@@ -1806,11 +1831,17 @@ public class RequestUtils {
 			 params.add(new BasicNameValuePair("token", qcAPI.getToken()));
 			StringEntity entity = new UrlEncodedFormEntity(params);
 			requestPost.setEntity(entity);
-			HttpResponse response = client.execute(requestPost);
-			int statusCode = response.getStatusLine().getStatusCode();
-			if (statusCode == HttpStatus.SC_OK) {
-				qcResponse = mapper.readValue(response.getEntity().getContent(), AnswerLowExonCoverage.class);
-			}
+//			try {
+//				HttpResponse response = client.execute(requestPost);
+				HttpResponse response = clientNoSSL.execute(requestPost);
+				int statusCode = response.getStatusLine().getStatusCode();
+				if (statusCode == HttpStatus.SC_OK) {
+					qcResponse = mapper.readValue(response.getEntity().getContent(), AnswerLowExonCoverage.class);
+				}
+//			} catch(Exception e) {
+//				qcResponse = new AnswerLowExonCoverage();
+//				qcResponse.setSuccess(false);
+//			}
 		}
 		this.closePostRequest();
 		return qcResponse;

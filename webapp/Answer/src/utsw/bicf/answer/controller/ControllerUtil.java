@@ -40,8 +40,12 @@ public class ControllerUtil {
 	
 	public static User getSessionUser(HttpSession httpSession) {
 		User user = null;
-		if (httpSession.getAttribute("user") instanceof User) {
-			user = (User) httpSession.getAttribute("user");
+		try {
+			if (httpSession.getAttribute("user") instanceof User) {
+				user = (User) httpSession.getAttribute("user");
+			}
+		} catch (IllegalStateException e) {
+			System.out.println("Session already invalided");
 		}
 		return user;
 	}

@@ -4,18 +4,12 @@ import java.util.List;
 
 public class LollipopPlotData extends PlotlyChartData {
 	
-	Trace trace;
+	List<Trace> traces;
 	List<Trace> underlineTraces;
 	List<String> annotations;
 	Number maxY;
 	
 	String plotId;
-	public Trace getTrace() {
-		return trace;
-	}
-	public void setTrace(Trace trace) {
-		this.trace = trace;
-	}
 	public String getPlotId() {
 		return plotId;
 	}
@@ -39,6 +33,12 @@ public class LollipopPlotData extends PlotlyChartData {
 	}
 	public void setMaxY(Number maxY) {
 		this.maxY = maxY;
+	}
+	public List<Trace> getTraces() {
+		return traces;
+	}
+	public void setTraces(List<Trace> traces) {
+		this.traces = traces;
 	}
 	
 
