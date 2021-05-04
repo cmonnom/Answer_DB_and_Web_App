@@ -641,6 +641,11 @@ public class OpenCaseController {
 		ftlNormalDNAReadsFilter.setNumber(true);
 		filters.add(ftlNormalDNAReadsFilter);
 		
+		DataTableFilter ftlRNAReadsFilter = new DataTableFilter("RNA Reads", Variant.FIELD_FTL_RNA_READS);
+		ftlRNAReadsFilter.setType("ftl");
+		ftlRNAReadsFilter.setNumber(true);
+		filters.add(ftlRNAReadsFilter);
+		
 		DataTableFilter ftlSomaticFilter = new DataTableFilter("Somatic Status", Variant.FIELD_FTL_SOMATIC_STATUS);
 		ftlSomaticFilter.setType("ftl");
 		ftlSomaticFilter.setSelect(true);

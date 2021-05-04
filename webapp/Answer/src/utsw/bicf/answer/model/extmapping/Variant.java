@@ -44,6 +44,7 @@ public class Variant {
 	
 	public static final String FIELD_FTL_FILTERS = "ftlFilters";
 	public static final String FIELD_FTL_NORMAL_DNA_READS = "normalDnaReads";
+	public static final String FIELD_FTL_RNA_READS = "rnaReads";
 	
 	//Some values like filter pass/fail need to be translated into boolean
 	//keep the values expected in the JSON string here

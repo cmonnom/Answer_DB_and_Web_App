@@ -53,6 +53,7 @@ public class VariantFilterList {
 		
 		filtersType.put(Variant.FIELD_FTL_FILTERS, "ftl");
 		filtersType.put(Variant.FIELD_FTL_NORMAL_DNA_READS, "ftl");
+		filtersType.put(Variant.FIELD_FTL_RNA_READS, "ftl");
 		
 		filtersType.put(Variant.FIELD_CHROM, "snp");
 		filtersType.put(Variant.FIELD_GENE_NAME, "snp");

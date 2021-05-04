@@ -86,14 +86,13 @@ public class OpenCaseSummary {
 		this.assignedToIds = aCase.getAssignedTo();
 		this.type = aCase.getType();
 		this.caseOwnerId = aCase.getCaseOwner();
+		this.caseOwnerName = "";
 		if (this.caseOwnerId != null) {
 			User caseOwner = modelDAO.getUserByUserId(Integer.parseInt(this.caseOwnerId));
-			this.caseOwnerName = caseOwner.getFullName();
+			if (caseOwner != null) {
+				this.caseOwnerName = caseOwner.getFullName();
+			}
 		}
-		else {
-			this.caseOwnerName = "";
-		}
-		
 		this.checkBoxLabelsByValue = Variant.CHECKBOX_FILTERS_MAP;
 		this.checkBoxFTLLabelsByValue = Variant.CHECKBOX_FTL_FILTERS_MAP;
 		this.checkBoxDiseaseDatabaseLabelsByValue = Variant.CHECKBOX_DISEASE_DATABASE_FILTERS_MAP;
